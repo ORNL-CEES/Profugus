@@ -21,9 +21,9 @@
 
 //---------------------------------------------------------------------------//
 /*!
- * \page Nemesis_DBC Using the Nemesis Design-by-Contract Macros
+ * \page Utils_DBC Using the Utils Design-by-Contract Macros
  *
- * \section ddbc Using the Nemesis Design-by-Contract Macros
+ * \section ddbc Using the Utils Design-by-Contract Macros
  *
  * The assertion macros are intended to be used for validating preconditions
  * which must be true in order for following code to be correct, etc.  For

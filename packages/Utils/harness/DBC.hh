@@ -24,7 +24,7 @@ namespace profugus
 //===========================================================================//
 /*!
  * \class assertion
- * \brief Exception notification class for Nemesis specific assertions.
+ * \brief Exception notification class for Utils specific assertions.
  *
  * This class is derived from std::runtime_error.  In fact, this class
  * provides no significant change in functionality from std::runtime_error.
@@ -34,7 +34,7 @@ namespace profugus
  * -# profugus::assertion does provide an alternate constructor that allows us
  *    to automatically insert file name and line location into error messages.
  * -# It provides a specialized form of std::runtime_error.  This allows
- *    nemesis code to handle nemesis specific assertions differently from
+ *    utils code to handle utils specific assertions differently from
  *    generic C++ or STL exceptions.  For example
  *    \code
  *    try
@@ -43,7 +43,7 @@ namespace profugus
  *    }
  *    catch ( profugus::assertion &a )
  *    {
- *       // Catch nemesis exceptions first.
+ *       // Catch utils exceptions first.
  *       cout << a.what() << endl;
  *       exit(1);
  *    }
@@ -62,7 +62,7 @@ namespace profugus
  * \note Assertion should always be thrown as objects on the stack and caught
  *       as references.
  *
- * \sa \ref Nemesis_DBC
+ * \sa \ref Utils_DBC
  */
 /*!
  * \example harness/test/tstDBC.cc

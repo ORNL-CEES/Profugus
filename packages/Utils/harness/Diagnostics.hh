@@ -83,7 +83,7 @@ extern Diag_Vec_Double_t vec_doubles;
 
 //---------------------------------------------------------------------------//
 /*!
- * \page nemesis_diagnostics Diagnostics Levels
+ * \page utils_diagnostics Diagnostics Levels
  *
  * The diagnostics can be turned on in three different levels based on logical
  * bit comparisions.  The following shows the levels:

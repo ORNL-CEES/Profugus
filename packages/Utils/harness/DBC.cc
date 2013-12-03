@@ -23,7 +23,7 @@ namespace profugus
  * This constructor creates a ds++ exception object.  This object is
  * derived form std::runtime_error and has identical functionality.  The
  * principal purpose for this class is to provide an exception class that
- * is specialized for nemesis.  See the notes on the overall class for more
+ * is specialized for utils.  See the notes on the overall class for more
  * details.
  *
  * \param msg The error message saved with the exception.
@@ -40,7 +40,7 @@ assertion::assertion( std::string const & msg )
  *
  * This constructor creates a ds++ exception object.  This object is
  * derived form std::runtime_error and has identical functionality.  This
- * constructor is specialized for use by nemesis DbC commands (Require,
+ * constructor is specialized for use by utils DbC commands (Require,
  * Ensure, Check, and Insist).  It forms the error message from the test
  * condition and the file and line number of the DbC command.
  *

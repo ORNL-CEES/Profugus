@@ -26,14 +26,14 @@ ELSE()
   SET(UTILS_DBC 0 CACHE STRING "Value of Design-by-Contract [0-7]")
 ENDIF()
 
-MESSAGE(STATUS "Value of DBC in Nemesis set to ${UTILS_DBC}")
+MESSAGE(STATUS "Value of DBC in Utils set to ${UTILS_DBC}")
 
 ##---------------------------------------------------------------------------##
 ## DIAGNOSTICS
 
 SET(UTILS_DIAGNOSTICS 1
   CACHE STRING
-  "Value of nemesis diagnostics, 1 by default")
+  "Value of utils diagnostics, 1 by default")
 
 ##---------------------------------------------------------------------------##
 ## WARNINGS
