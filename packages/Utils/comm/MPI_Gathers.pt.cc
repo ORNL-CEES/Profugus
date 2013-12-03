@@ -15,7 +15,7 @@
 
 #include "MPI.t.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -42,7 +42,7 @@ template void gather(const float *, float *, int, int);
 template void gather(const double *, double *, int, int);
 template void gather(const long double *, long double *, int, int);
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_MPI
 

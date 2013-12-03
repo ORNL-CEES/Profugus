@@ -20,7 +20,7 @@
 #include "harness/DBC.hh"
 #include "Functions.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -77,7 +77,7 @@ void broadcast(ForwardIterator first,
     }
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_MPI
 

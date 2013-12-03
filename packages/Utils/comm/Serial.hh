@@ -24,7 +24,7 @@
 #include "Request.hh"
 #include "Definitions.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -488,7 +488,7 @@ void gather(const T* sendbuf, T* recvbuf, int num_els, int root)
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_SCALAR
 

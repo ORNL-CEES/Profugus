@@ -13,7 +13,7 @@
 
 #include <mpi.h>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -106,7 +106,7 @@ struct MPI_Traits<long double>
     static MPI_Datatype element_type() { return MPI_LONG_DOUBLE; }
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_MPI_Traits_hh
 

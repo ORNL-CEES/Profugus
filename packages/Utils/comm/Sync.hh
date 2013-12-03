@@ -14,7 +14,7 @@
 #include "global.hh"
 #include "Sync.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -58,7 +58,7 @@ class TSync
     virtual ~TSync() { if (sync) global_barrier(); }
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Sync_hh
 

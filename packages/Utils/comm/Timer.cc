@@ -11,7 +11,7 @@
 #include <iomanip>
 #include "Timer.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 #ifdef HAVE_SYS_TIMES_H
@@ -90,7 +90,7 @@ bool Timer::setIsMPIWtimeAvailable() const
 
 #endif // HAVE_SYS_TIMES_H
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Timer.cc

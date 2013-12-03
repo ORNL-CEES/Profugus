@@ -14,7 +14,7 @@
 #include <iostream>
 #include "global.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -197,7 +197,7 @@ extern P_Out pcout;  // always on
 extern P_Out pnout;  // off when NEMESIS_POUT undefined
 extern P_Out pncout; // always on
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 // INLINE AND TEMPLATE DEFINITIONS

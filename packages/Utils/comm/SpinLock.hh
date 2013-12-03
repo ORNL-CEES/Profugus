@@ -16,7 +16,7 @@
 
 #include "Sync.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -116,7 +116,7 @@ class HTSyncSpinLock : public HSync, public TSync, public SpinLock
     HTSyncSpinLock(int b, int e) : HSync(1),  TSync(1), SpinLock(b, e) {}
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //! SPINLOCK macro.
 #define SPINLOCK(a)            \

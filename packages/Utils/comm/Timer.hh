@@ -33,7 +33,7 @@
 #if defined(HAVE_SYS_TIMES_H)
 #include <sys/times.h>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -224,12 +224,12 @@ inline std::ostream& operator<<( std::ostream &out, const Timer &t )
     return out;
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #elif defined(HAVE_WINDOWS_H)
 #include <windows.h>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -294,11 +294,11 @@ class Timer
     double time() const { return static_cast<double>(d_end-d_begin)/d_f; }
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #else
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -322,7 +322,7 @@ class Timer
     double user_cpu()   const { return 0.0; }
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // HAVE_SYS_TIMES_H
 

@@ -15,7 +15,7 @@
 
 #include "MPI.t.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -94,7 +94,7 @@ template void receive_async_comm(Request &, float *, const MPI_Comm&, int, int, 
 template void receive_async_comm(Request &, double *, const MPI_Comm&, int, int, int);
 template void receive_async_comm(Request &, long double *, const MPI_Comm&, int, int, int);
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_MPI
 

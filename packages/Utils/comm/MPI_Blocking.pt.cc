@@ -15,7 +15,7 @@
 
 #include "MPI.t.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -94,7 +94,7 @@ template int broadcast(float *, const MPI_Comm&, int, int);
 template int broadcast(double *, const MPI_Comm&, int, int);
 template int broadcast(long double *, const MPI_Comm&, int, int);
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_MPI
 

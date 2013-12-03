@@ -19,7 +19,7 @@
 
 #include "Definitions.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -153,7 +153,7 @@ class Request
             const Communicator_t& comm, int nels, int source, int tag);
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Request_hh
 

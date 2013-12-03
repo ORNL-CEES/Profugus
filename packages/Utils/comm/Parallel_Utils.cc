@@ -17,7 +17,7 @@
 using std::endl;
 using std::cout;
 
-namespace nemesis
+namespace profugus
 {
 //---------------------------------------------------------------------------//
 // SPECIAL GLOBAL EQUIVALENCE FUNCTIONALITY
@@ -136,7 +136,7 @@ bool check_global_equiv(double local_value, double eps)
     return pass;
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Parallel_Utils.cc

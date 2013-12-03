@@ -13,7 +13,7 @@
 #include "harness/DBC.hh"
 #include "Request.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -185,7 +185,7 @@ unsigned Request::RequestRef::count()
 #endif
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Request.cc

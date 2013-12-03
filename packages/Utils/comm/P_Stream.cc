@@ -13,7 +13,7 @@
 #include "harness/DBC.hh"
 #include "P_Stream.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -208,7 +208,7 @@ P_Out pcout;
 /// It gets the node assigned later in the call to initialize().
 P_Out pncout;
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of P_Stream.cc

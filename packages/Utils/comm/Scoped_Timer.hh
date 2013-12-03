@@ -16,7 +16,7 @@
 #include "Timing_Diagnostics.hh"
 #include "Timer.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -67,7 +67,7 @@ class Scoped_Timer
     }
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Scoped_Timer_hh
 

@@ -11,7 +11,7 @@
 #ifndef comm_P_Stream_i_hh
 #define comm_P_Stream_i_hh
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -52,7 +52,7 @@ P_Out& P_Out::operator<<(const P_Manip<T> &p)
     return *this;
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_P_Stream_i_hh
 

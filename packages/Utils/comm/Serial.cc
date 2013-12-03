@@ -21,7 +21,7 @@
 
 #include "Serial.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 Communicator_t default_communicator = 0;
@@ -236,7 +236,7 @@ namespace internals
 std::map<int, void*> buffers;
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_SCALAR
 

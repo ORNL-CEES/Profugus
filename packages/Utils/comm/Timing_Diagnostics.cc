@@ -17,7 +17,7 @@
 #include "harness/DBC.hh"
 #include "global.hh"
 
-namespace nemesis
+namespace profugus
 {
 //---------------------------------------------------------------------------//
 // STATIC PUBLIC FUNCTIONAL INTERFACE
@@ -198,7 +198,7 @@ void Timing_Diagnostics::report(std::ostream& out, double total)
 
 std::map<std::string, double> Timing_Diagnostics::timers;
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Timing_Diagnostics.cc

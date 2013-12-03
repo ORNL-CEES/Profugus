@@ -12,7 +12,7 @@
 #include "global.hh"
 #include "SpinLock.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -67,7 +67,7 @@ SpinLock::~SpinLock()
         send( &d_trash, 0, d_node + 1, SL_Next );
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of SpinLock.cc

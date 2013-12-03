@@ -11,7 +11,7 @@
 #ifndef comm_Parallel_Utils_hh
 #define comm_Parallel_Utils_hh
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -34,7 +34,7 @@ bool check_global_equiv(double local_value, double eps = 1.0e-8);
  */
 //---------------------------------------------------------------------------//
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Parallel_Utils_hh
 

@@ -25,7 +25,7 @@
 #include "Comm_Traits.hh"
 #include "Definitions.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -639,7 +639,7 @@ int abort(int error = 1);
  */
 bool isScalar();
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Functions_hh
 

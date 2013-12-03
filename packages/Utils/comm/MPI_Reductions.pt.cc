@@ -15,7 +15,7 @@
 
 #include "MPI.t.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -264,7 +264,7 @@ template void all_to_all(const double *, const int *, const int *,
 template void all_to_all(const long double *, const int *, const int *,
                                long double *, const int *, const int *);
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_MPI
 

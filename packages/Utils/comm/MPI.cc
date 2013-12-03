@@ -21,7 +21,7 @@
 #include "MPI.hh"
 #include "P_Stream.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -319,7 +319,7 @@ bool isScalar()
     return ! initialized;
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_MPI
 

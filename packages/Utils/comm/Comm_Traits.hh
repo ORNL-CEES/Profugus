@@ -11,7 +11,7 @@
 #ifndef comm_Comm_Traits_hh
 #define comm_Comm_Traits_hh
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -169,7 +169,7 @@ struct Comm_Traits<long double *>
     static const int tag = 461;
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Comm_Traits_hh
 

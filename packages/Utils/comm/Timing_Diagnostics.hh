@@ -16,7 +16,7 @@
 #include <vector>
 #include <iosfwd>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -104,7 +104,7 @@ class Timing_Diagnostics
     ~Timing_Diagnostics();
 };
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Timing_Diagnostics_hh
 

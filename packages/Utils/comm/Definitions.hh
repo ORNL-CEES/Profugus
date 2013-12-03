@@ -17,7 +17,7 @@
 #include <mpi.h>
 #endif
 
-namespace nemesis
+namespace profugus
 {
 //---------------------------------------------------------------------------//
 
@@ -38,7 +38,7 @@ const int COMM_SUCCESS = 0;
 
 //---------------------------------------------------------------------------//
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // comm_Definitions_hh
 

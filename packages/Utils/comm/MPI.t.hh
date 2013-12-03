@@ -24,7 +24,7 @@
 #include "Request.hh"
 #include "Definitions.hh"
 
-namespace nemesis
+namespace profugus
 {
 //---------------------------------------------------------------------------//
 // BLOCKING SEND/RECEIVE OPERATIONS
@@ -647,7 +647,7 @@ void all_to_all(const T   *sendbuf,     const int *sendcounts,
                   MPI_Traits<T>::element_type(), communicator);
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // COMM_MPI
 
