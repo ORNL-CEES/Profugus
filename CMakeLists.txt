@@ -49,7 +49,7 @@ SET(EpetraExt_ENABLE_HDF5 OFF CACHE BOOL "Turn off HDF5 in Trilinos.")
 TRIBITS_PROJECT()
 
 # Add the final documentation
-add_subdirectory(doc)
+#add_subdirectory(doc)
 
 ##---------------------------------------------------------------------------##
 ## end of CMakeLists.txt

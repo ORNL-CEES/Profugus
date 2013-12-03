@@ -16,7 +16,7 @@
 #include <sstream>
 #include <iostream>
 
-#include <harness/config.h>
+#include <Utils/config.h>
 
 namespace nemesis
 {

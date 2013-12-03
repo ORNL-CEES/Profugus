@@ -15,7 +15,7 @@
 #include <vector>
 #include <string>
 
-#include <harness/config.h>
+#include <Utils/config.h>
 
 namespace nemesis
 {

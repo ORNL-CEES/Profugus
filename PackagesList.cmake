@@ -11,8 +11,7 @@ INCLUDE(TribitsListHelpers)
 ##---------------------------------------------------------------------------##
 
 SET(Profugus_PACKAGES_AND_DIRS_AND_CLASSIFICATIONS
-  Utils  packages/Utils
-  SPn    packages/SPn
+  Utils  packages/Utils  SS
   )
 
 ##---------------------------------------------------------------------------##

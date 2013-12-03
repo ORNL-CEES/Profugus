@@ -82,10 +82,7 @@ LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 # C/C++ source
 SET(SOURCES
   DBC.cc
-  Demangle_Type.cc
   Diagnostics.cc
-  Scalar_Unit_Test.cc
-  Unit_Test.cc
   Warnings.cc
   )
 
@@ -94,13 +91,13 @@ SET(SOURCES
 ##---------------------------------------------------------------------------##
 
 TRIBITS_ADD_LIBRARY(
-  Nemesis_harness
+  Utils_harness
   SOURCES ${SOURCES})
 
 INSTALL(FILES
   ${HEADERS}
   DESTINATION
-  include/Nemesis/harness)
+  include/Utils/harness)
 
 TRIBITS_ADD_TEST_DIRECTORIES(test)
 

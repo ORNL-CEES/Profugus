@@ -16,7 +16,7 @@
 #include <sstream>
 
 // add the harness package configure
-#include <harness/config.h>
+#include <Utils/config.h>
 
 namespace nemesis
 {

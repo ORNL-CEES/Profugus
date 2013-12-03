@@ -14,16 +14,16 @@
 #define harness_config_h
 
 /* DBC ENVIRONMENTS */
-#define NEMESIS_DBC @NEMESIS_DBC@
+#define UTILS_DBC @UTILS_DBC@
 
 /* DIAGNOSTICS */
-#define NEMESIS_DIAGNOSTICS @NEMESIS_DIAGNOSTICS@
+#define UTILS_DIAGNOSTICS @UTILS_DIAGNOSTICS@
 
 /* WARNINGS */
-#cmakedefine NEMESIS_WARNINGS_ENABLED
+#cmakedefine UTILS_WARNINGS_ENABLED
 
 /* WARNINGS */
-#cmakedefine NEMESIS_WARNINGS_IMMEDIATE
+#cmakedefine UTILS_WARNINGS_IMMEDIATE
 
 /* SIZE OF PODs */
 #cmakedefine SIZEOF_SHORT @SIZEOF_SHORT@
@@ -40,49 +40,49 @@
 
 /* 2-Byte integers; short */
 #if SIZEOF_UNSIGNED_SHORT == 2
-#define NEMESIS_UNSIGNED_INT2 unsigned short
+#define UTILS_UNSIGNED_INT2 unsigned short
 #endif
 
 /* 4-Byte integers; int, short, long */
 #if SIZEOF_INT == 4
-#define NEMESIS_INT4 int
+#define UTILS_INT4 int
 #endif
 
 /* 8-Byte integers; long, long long */
 #if SIZEOF_LONG == 8
-#define NEMESIS_INT8 long
+#define UTILS_INT8 long
 #elif SIZEOF_LONG_LONG == 8
-#define NEMESIS_INT8 long long
+#define UTILS_INT8 long long
 #endif
 
 /* 4-Byte reals; float */
 #if SIZEOF_FLOAT == 4
-#define NEMESIS_REAL4 float
+#define UTILS_REAL4 float
 #endif
 
 /* 8-Byte reals; double */
 #if SIZEOF_DOUBLE == 8
-#define NEMESIS_REAL8 double
+#define UTILS_REAL8 double
 #endif
 
-#if defined(NEMESIS_UNSIGNED_INT2)
-#define NEMESIS_UNSIGNED_INT2_SET
+#if defined(UTILS_UNSIGNED_INT2)
+#define UTILS_UNSIGNED_INT2_SET
 #endif
 
-#if defined(NEMESIS_INT4)
-#define NEMESIS_INT4_SET
+#if defined(UTILS_INT4)
+#define UTILS_INT4_SET
 #endif
 
-#if defined(NEMESIS_INT8)
-#define NEMESIS_INT8_SET
+#if defined(UTILS_INT8)
+#define UTILS_INT8_SET
 #endif
 
-#if defined(NEMESIS_REAL4)
-#define NEMESIS_REAL4_SET
+#if defined(UTILS_REAL4)
+#define UTILS_REAL4_SET
 #endif
 
-#if defined(NEMESIS_REAL8)
-#define NEMESIS_REAL8_SET
+#if defined(UTILS_REAL8)
+#define UTILS_REAL8_SET
 #endif
 
 /* FORTRAN WRAPPERS */
