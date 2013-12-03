@@ -15,7 +15,7 @@
 #include <iterator>
 #include "DBC.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -131,7 +131,7 @@ inline bool soft_equiv(
     return passed;
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // harness_Soft_Equivalence_hh
 

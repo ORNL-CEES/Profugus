@@ -17,7 +17,7 @@
 
 #include <Utils/config.h>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -79,7 +79,7 @@ extern Diag_Vec_Double_t vec_doubles;
 
 } // end of namespace Diagnostics
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 /*!

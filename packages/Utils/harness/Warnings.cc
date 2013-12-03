@@ -11,7 +11,7 @@
 #include "Warnings.hh"
 #include "DBC.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -62,7 +62,7 @@ std::string Warnings::pop()
     return w;
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Warnings.cc

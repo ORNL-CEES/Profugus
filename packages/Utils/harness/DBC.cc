@@ -11,7 +11,7 @@
 #include <sstream>
 #include "DBC.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -192,7 +192,7 @@ void insist( const char* const  cond,
     throw assertion( myMessage.str() );
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of DBC.cc

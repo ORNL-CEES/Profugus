@@ -10,7 +10,7 @@
 
 #include "Diagnostics.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 namespace Diagnostics
@@ -32,7 +32,7 @@ Diag_Vec_Double_t  vec_doubles;
 
 } // end namespace Diagnostics
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Diagnostics.cc

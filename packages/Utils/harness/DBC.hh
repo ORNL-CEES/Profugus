@@ -18,7 +18,7 @@
 // add the harness package configure
 #include <Utils/config.h>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -155,7 +155,7 @@ void toss_validation_cookies(
         const char*        file,
         int                line);
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 // Load macros

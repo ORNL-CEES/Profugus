@@ -18,7 +18,7 @@
 
 #include <Utils/config.h>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -82,7 +82,7 @@ extern Warnings warnings;
 
 } // end of warn
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 /*!
