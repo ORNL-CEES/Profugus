@@ -38,7 +38,7 @@ namespace profugus
  * global, file scope they can be accessed from any routine.  The general
  * usage is as follows:
  * \code
- *   nemesis::Diagnostics::integers["Num_cells_per_proc"] = 1000;
+ *   profugus::Diagnostics::integers["Num_cells_per_proc"] = 1000;
  * \endcode
  * A compile-time switching mechanism for using these maps is provided by the
  * macros DIAGNOSTICS_ONE, DIAGNOSTICS_TWO, and DIAGNOSTICS_THREE.
@@ -147,21 +147,21 @@ extern Diag_Vec_Double_t vec_doubles;
 
 #if UTILS_DIAGNOSTICS & 1
 #define UTILS_DIAGNOSTICS_LEVEL_1
-#define DIAGNOSTICS_ONE(member) nemesis::Diagnostics::member
+#define DIAGNOSTICS_ONE(member) profugus::Diagnostics::member
 #else
 #define DIAGNOSTICS_ONE(member)
 #endif
 
 #if UTILS_DIAGNOSTICS & 2
 #define UTILS_DIAGNOSTICS_LEVEL_2
-#define DIAGNOSTICS_TWO(member) nemesis::Diagnostics::member
+#define DIAGNOSTICS_TWO(member) profugus::Diagnostics::member
 #else
 #define DIAGNOSTICS_TWO(member)
 #endif
 
 #if UTILS_DIAGNOSTICS & 4
 #define UTILS_DIAGNOSTICS_LEVEL_3
-#define DIAGNOSTICS_THREE(member) nemesis::Diagnostics::member
+#define DIAGNOSTICS_THREE(member) profugus::Diagnostics::member
 #else
 #define DIAGNOSTICS_THREE(member)
 #endif

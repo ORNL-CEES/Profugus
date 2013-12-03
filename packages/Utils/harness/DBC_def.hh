@@ -137,7 +137,7 @@
  * http://cnicholson.net/2009/02/stupid-c-tricks-adventures-in-assert/
  */
 #define UTILS_ASSERT_(COND) \
-    do { if (!(COND)) ::nemesis::toss_cookies( \
+    do { if (!(COND)) ::profugus::toss_cookies( \
             #COND, __FILE__, __LINE__); } while (0)
 #define UTILS_NOASSERT_(COND) \
     do { (void)sizeof(COND); } while (0)
@@ -170,11 +170,11 @@
 #endif
 
 #define Insist(COND, MSG) \
-    do { if (!(COND)) ::nemesis::insist( \
+    do { if (!(COND)) ::profugus::insist( \
             #COND, MSG, __FILE__, __LINE__); } while (0)
 
 #define Not_Implemented(MSG) \
-    throw ::nemesis::not_implemented_error(MSG, __FILE__, __LINE__)
+    throw ::profugus::not_implemented_error(MSG, __FILE__, __LINE__)
 
 #define Validate(COND, MSG_STREAM) \
     do \
@@ -183,7 +183,7 @@
         { \
             std::ostringstream msg; \
             msg << MSG_STREAM; \
-            ::nemesis::toss_validation_cookies(msg.str(), __FILE__, __LINE__); \
+            ::profugus::toss_validation_cookies(msg.str(), __FILE__, __LINE__); \
         } \
     } while (0)
 

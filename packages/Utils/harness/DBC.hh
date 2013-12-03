@@ -31,7 +31,7 @@ namespace profugus
  * This class provides the following features in addition to those found in
  * std::runtime_error:
  *
- * -# nemesis::assertion does provide an alternate constructor that allows us
+ * -# profugus::assertion does provide an alternate constructor that allows us
  *    to automatically insert file name and line location into error messages.
  * -# It provides a specialized form of std::runtime_error.  This allows
  *    nemesis code to handle nemesis specific assertions differently from
@@ -39,9 +39,9 @@ namespace profugus
  *    \code
  *    try
  *    {
- *       throw nemesis::assertion( "My error message." );
+ *       throw profugus::assertion( "My error message." );
  *    }
- *    catch ( nemesis::assertion &a )
+ *    catch ( profugus::assertion &a )
  *    {
  *       // Catch nemesis exceptions first.
  *       cout << a.what() << endl;
@@ -78,7 +78,7 @@ class assertion : public std::logic_error
     // Default constructor for ds++/assertion class.
     explicit assertion( std::string const & msg );
 
-    // \brief Specialized constructor for nemesis::assertion class.
+    // \brief Specialized constructor for profugus::assertion class.
     assertion( std::string const & cond,
                std::string const & file,
                int const line );
@@ -138,12 +138,12 @@ class validation_error : public assertion
 // FREE NAMESPACE FUNCTIONS
 //---------------------------------------------------------------------------//
 
-//! Throw a nemesis::assertion for Require, Check, Ensure.
+//! Throw a profugus::assertion for Require, Check, Ensure.
 void toss_cookies(char const * const cond,
                   char const * const file,
                   int          const line );
 
-//! Throw a nemesis::assertion for Insist.
+//! Throw a profugus::assertion for Insist.
 void insist( const char* const  cond,
              const std::string& msg,
              const char* const  file,

@@ -36,7 +36,7 @@ assertion::assertion( std::string const & msg )
 
 //===========================================================================//
 /*!
- * \brief Specialized constructor for nemesis::assertion class.
+ * \brief Specialized constructor for profugus::assertion class.
  *
  * This constructor creates a ds++ exception object.  This object is
  * derived form std::runtime_error and has identical functionality.  This
@@ -137,7 +137,7 @@ validation_error::validation_error(
 // FREE FUNCTIONS
 //===========================================================================//
 /*!
- * \brief Throw a nemesis::assertion for Require, Check, Ensure macros.
+ * \brief Throw a profugus::assertion for Require, Check, Ensure macros.
  * \return Throws an assertion.
  * \note We do not provide unit tests for functions whose purpose is to throw
  * or exit.
@@ -152,7 +152,7 @@ toss_cookies(char const * const cond,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Throw a nemesis::assertion for Validate macros.
+ * \brief Throw a profugus::assertion for Validate macros.
  * \return Throws an assertion.
  * \note We do not provide unit tests for functions whose purpose is to throw
  * or exit.
@@ -177,7 +177,7 @@ void toss_validation_cookies(
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Throw a nemesis::assertion for Insist macros.
+ * \brief Throw a profugus::assertion for Insist macros.
  */
 void insist( const char* const  cond,
              const std::string& msg,

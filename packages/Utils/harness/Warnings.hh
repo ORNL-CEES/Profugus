@@ -114,7 +114,7 @@ extern Warnings warnings;
  * The warnings object can also be accessed manually, in which case the
  * registered warnings are \b always stored, ie:
  * \code
-   nemesis::warn::warnings.add("a warning");
+   profugus::warn::warnings.add("a warning");
 
    // or, equivalently
    UTILS_WARNINGS.add("a warning");
@@ -138,7 +138,7 @@ extern Warnings warnings;
  */
 //---------------------------------------------------------------------------//
 
-#define UTILS_WARNINGS ::nemesis::warn::warnings
+#define UTILS_WARNINGS ::profugus::warn::warnings
 
 #ifdef UTILS_WARNINGS_IMMEDIATE
 #define ADD_WARNING(b) do { \
