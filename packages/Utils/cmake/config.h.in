@@ -130,6 +130,20 @@
 #define MPI_VENDOR 3
 #cmakedefine MPI_IMP @MPI_IMP@
 
+/* >>> GTEST VARIABLES */
+
+/* PTHREAD SETTINGS */
+#cmakedefine01 GTEST_HAS_PTHREAD
+
+/* SHARED LIBRARY SETTING */
+#cmakedefine01 GTEST_CREATE_SHARED_LIBRARY
+
+/* INTEL TUPLE SETTINGS */
+#cmakedefine01 GTEST_HAS_TR1_TUPLE
+
+/* C++11 settings */
+#cmakedefine01 GTEST_LANG_CXX11
+
 #endif /* Utils_config_h */
 
 /*---------------------------------------------------------------------------*/

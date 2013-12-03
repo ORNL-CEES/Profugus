@@ -13,7 +13,7 @@
 
 #include "gtest.h"
 
-namespace nemesis
+namespace profugus
 {
 //===========================================================================//
 
@@ -211,7 +211,7 @@ inline ::testing::AssertionResult IsVecEq(
 }
 
 //===========================================================================//
-} // end namespace nemesis
+} // end namespace profugus
 
 #endif // gtest_Gtest_Functions_hh
 

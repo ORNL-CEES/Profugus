@@ -8,7 +8,7 @@
  *
  * This file allows the client to include the message passing services
  * provided by comm.  The function declarations and class definitions are
- * contained in the nemesis namespace.
+ * contained in the profugus namespace.
  */
 //---------------------------------------------------------------------------//
 

@@ -10,7 +10,7 @@
 
 #include "Gtest_Functions.hh"
 
-#include <gtest/config.h>
+#include <Utils/config.h>
 #include <vector>
 #include <iomanip>
 #include <sstream>
@@ -21,7 +21,6 @@
 #include "harness/Soft_Equivalence.hh"
 #include "harness/DBC.hh"
 #include "harness/Warnings.hh"
-#include "release/Release.hh"
 #include "comm/global.hh"
 
 #include "gtest.h"
@@ -50,7 +49,7 @@ unsigned int calc_num_digits(std::size_t number)
 }
 //---------------------------------------------------------------------------//
 
-namespace nemesis
+namespace profugus
 {
 //---------------------------------------------------------------------------//
 // INTERNAL-USE CLAASES
@@ -60,8 +59,8 @@ class ParallelHandler : public ::testing::EmptyTestEventListener
   public:
     // This will only be called after MPI_Init, so we can access these data
     ParallelHandler()
-      : d_node(nemesis::node())
-      , d_num_nodes(nemesis::nodes())
+      : d_node(profugus::node())
+      , d_num_nodes(profugus::nodes())
     {
         /* * */
     }
@@ -70,7 +69,7 @@ class ParallelHandler : public ::testing::EmptyTestEventListener
     virtual void OnTestStart(const ::testing::TestInfo& test_info)
     {
         // Barrier before starting the run
-        nemesis::global_barrier();
+        profugus::global_barrier();
     }
 
     virtual void OnTestEnd(const ::testing::TestInfo& test_info);
@@ -87,15 +86,15 @@ void ParallelHandler::OnTestEnd(const ::testing::TestInfo& test_info)
     using ::testing::internal::COLOR_YELLOW;
 
     // Barrier after finishing the test part
-    nemesis::global_barrier();
+    profugus::global_barrier();
 
     // Print warnings
-    if (!NEMESIS_WARNINGS.empty())
+    if (!UTILS_WARNINGS.empty())
     {
         ColoredPrintf(COLOR_YELLOW,
                 "%d WARNING%s noted on node %d in subtest '%s'\n",
-                  NEMESIS_WARNINGS.num_warnings(),
-                  NEMESIS_WARNINGS.num_warnings() > 1 ? "S" : "",
+                  UTILS_WARNINGS.num_warnings(),
+                  UTILS_WARNINGS.num_warnings() > 1 ? "S" : "",
                   d_node,
                   test_info.name());
     }
@@ -103,45 +102,44 @@ void ParallelHandler::OnTestEnd(const ::testing::TestInfo& test_info)
     if (d_node == 0)
     {
         // Print warnings
-        while (!NEMESIS_WARNINGS.empty())
+        while (!UTILS_WARNINGS.empty())
         {
             ColoredPrintf(COLOR_YELLOW, "*** ");
-            std::cout << NEMESIS_WARNINGS.pop() << std::endl;
+            std::cout << UTILS_WARNINGS.pop() << std::endl;
         }
     }
     else
     {
         // Suppress warnings on other processors
-        NEMESIS_WARNINGS.clear();
+        UTILS_WARNINGS.clear();
     }
 
-    nemesis::global_barrier();
+    profugus::global_barrier();
 }
 
 //---------------------------------------------------------------------------//
-// NEMESIS FUNCTIONS
+// UTILS FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
  * \fn gtest_main
  * \brief Implementation for the harness' "main" function.
  *
- * This should be called by the main() function in each Google-based unit test.
- * It handles MPI initialization, the running and "finalizing" of the unit test
- * data (to ensure that if only one processor on a multi-processor run fails,
- * the overall result is a failure), etc. It also prints warnings at the end of
- * each test.
+ * This should be called by the main() function in each Google-based unit
+ * test.  It handles MPI initialization, the running and "finalizing" of the
+ * unit test data (to ensure that if only one processor on a multi-processor
+ * run fails, the overall result is a failure), etc. It also prints warnings
+ * at the end of each test.
  */
 int gtest_main(int argc, char *argv[])
 {
     // Initialize MPI
-    nemesis::initialize(argc, argv);
-    const int node      = nemesis::node();
-    const int num_nodes = nemesis::nodes();
+    profugus::initialize(argc, argv);
+    const int node      = profugus::node();
+    const int num_nodes = profugus::nodes();
 
     if (node == 0)
     {
-        std::cout << "Using " << num_nodes << " processors" << std::endl
-            << "Exnihilo " << nemesis::release::long_version() << std::endl;
+        std::cout << "Using " << num_nodes << " processors" << std::endl;
     }
     else
     {
@@ -162,19 +160,19 @@ int gtest_main(int argc, char *argv[])
     int failed = RUN_ALL_TESTS();
 
     // Accumulate the result so that all processors will have the same result
-    nemesis::global_sum(failed);
+    profugus::global_sum(failed);
 
     // Finish MPI
-    nemesis::global_barrier();
-    nemesis::finalize();
+    profugus::global_barrier();
+    profugus::finalize();
 
     // Print final results
     if (node == 0)
     {
         // Print warnings
-        while (!NEMESIS_WARNINGS.empty())
+        while (!UTILS_WARNINGS.empty())
         {
-            std::cout << NEMESIS_WARNINGS.pop() << std::endl;
+            std::cout << UTILS_WARNINGS.pop() << std::endl;
         }
 
         if (argc)
@@ -215,7 +213,7 @@ void print_skip_message()
         double actual,
         double eps)
 {
-    if (nemesis::soft_equiv(actual, expected, eps))
+    if (profugus::soft_equiv(actual, expected, eps))
     {
         return ::testing::AssertionSuccess();
     }
@@ -280,7 +278,7 @@ void print_skip_message()
     // Now loop through elements of the vectors and check for soft equivalence
     for (size_type i = 0; i < expected_size; ++i)
     {
-        if (!nemesis::soft_equiv(actual[i], expected[i], eps))
+        if (!profugus::soft_equiv(actual[i], expected[i], eps))
         {
             failed_indices.push_back(i);
         }
@@ -478,7 +476,7 @@ template ::testing::AssertionResult IsIterEq<double>(
         const double*, const double*);
 
 //---------------------------------------------------------------------------//
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Gtest_Functions.cc

@@ -143,6 +143,34 @@ ENDIF()
 CHECK_INCLUDE_FILE(sys/times.h HAVE_SYS_TIMES_H)
 CHECK_INCLUDE_FILE(unistd.h    HAVE_UNISTD_H)
 CHECK_INCLUDE_FILE(windows.h   HAVE_WINDOWS_H)
+##---------------------------------------------------------------------------##
+
+# for now always turn off pthreads
+SET (GTEST_HAS_PTHREAD OFF CACHE BOOL "Set GTEST pthreads")
+
+# Build shared libraries?
+SET(GTEST_CREATE_SHARED_LIBRARY OFF)
+IF (BUILD_SHARED_LIBS)
+  SET(GTEST_CREATE_SHARED_LIBRARY ON)
+ENDIF()
+
+# Turn off TUPLES when using INTEL
+SET(GTEST_HAS_TR1_TUPLE ON)
+IF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  SET(GTEST_HAS_TR1_TUPLE OFF)
+ENDIF()
+
+# Enable c++11 support if appropriate
+SET(GTEST_LANG_CXX11 OFF)
+IF (${PROJECT_NAME}_ENABLE_CXX11)
+  SET(GTEST_LANG_CXX11 ON)
+ENDIF()
+
+# Turn off variadic-macros warnings when using gtest
+IF (CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
+  SET(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -Wno-variadic-macros")
+ENDIF()
 
 ##---------------------------------------------------------------------------##
 ## POSIX FLAGS
@@ -191,6 +219,17 @@ SET(COMM_SOURCES
   comm/Timing_Diagnostics.cc)
 LIST(APPEND HEADERS ${COMM_HEADERS})
 LIST(APPEND SOURCES ${COMM_SOURCES})
+
+# gtest sources
+
+FILE(GLOB GTEST_HEADERS gtest/*.hh)
+SET(GTEST_SOURCES
+  gtest/Gtest_Functions.cc
+  gtest/gtest-all.cc)
+LIST(APPEND HEADERS ${GTEST_HEADERS})
+LIST(APPEND SOURCES ${GTEST_SOURCES})
+
+LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 ##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS

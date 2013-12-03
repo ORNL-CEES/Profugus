@@ -52,7 +52,7 @@
 #define GTEST_INCLUDE_GTEST_GTEST_H_
 
 // CMake-defined config variables
-#include <gtest/config.h>
+#include <Utils/config.h>
 
 #include <limits>
 #include <ostream>
