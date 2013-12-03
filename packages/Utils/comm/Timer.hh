@@ -53,7 +53,7 @@ namespace profugus
  * \code
  * #include <iostream>
  * #include "comm/Timer.hh"
- * using nemesis::Timer;
+ * using profugus::Timer;
  *
  * Timer t;
  * t.start();

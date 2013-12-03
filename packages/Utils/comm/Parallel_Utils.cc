@@ -34,8 +34,8 @@ namespace profugus
  */
 bool check_global_equiv(int local_value)
 {
-    int node  = nemesis::node();
-    int nodes = nemesis::nodes();
+    int node  = profugus::node();
+    int nodes = profugus::nodes();
 
     // passing condition
     bool pass = false;
@@ -50,18 +50,18 @@ bool check_global_equiv(int local_value)
 
         if (node > 0 && node < nodes - 1)
         {
-            nemesis::send(&local_value, 1, node - 1, 600);
-            nemesis::receive(&neighbors_value, 1, node + 1, 600);
+            profugus::send(&local_value, 1, node - 1, 600);
+            profugus::receive(&neighbors_value, 1, node + 1, 600);
             if (local_value == neighbors_value) pass = true;
         }
         else if (node == nodes - 1)
         {
-            nemesis::send(&local_value, 1, node - 1, 600);
+            profugus::send(&local_value, 1, node - 1, 600);
             pass = true;
         }
         else if (node == 0)
         {
-            nemesis::receive(&neighbors_value, 1, node + 1, 600);
+            profugus::receive(&neighbors_value, 1, node + 1, 600);
             if (local_value == neighbors_value) pass = true;
         }
         else
@@ -71,7 +71,7 @@ bool check_global_equiv(int local_value)
     }
 
     // sync everything so we don't leave before all processors are finished
-    nemesis::global_barrier();
+    profugus::global_barrier();
 
     // return result
     return pass;
@@ -91,10 +91,10 @@ bool check_global_equiv(int local_value)
  */
 bool check_global_equiv(double local_value, double eps)
 {
-    using nemesis::soft_equiv;
+    using profugus::soft_equiv;
 
-    int node  = nemesis::node();
-    int nodes = nemesis::nodes();
+    int node  = profugus::node();
+    int nodes = profugus::nodes();
 
     // passing condition
     bool pass = false;
@@ -109,18 +109,18 @@ bool check_global_equiv(double local_value, double eps)
 
         if (node > 0 && node < nodes - 1)
         {
-            nemesis::send(&local_value, 1, node - 1, 600);
-            nemesis::receive(&neighbors_value, 1, node + 1, 600);
+            profugus::send(&local_value, 1, node - 1, 600);
+            profugus::receive(&neighbors_value, 1, node + 1, 600);
             pass = soft_equiv(neighbors_value, local_value, eps);
         }
         else if (node == nodes - 1)
         {
-            nemesis::send(&local_value, 1, node - 1, 600);
+            profugus::send(&local_value, 1, node - 1, 600);
             pass = true;
         }
         else if (node == 0)
         {
-            nemesis::receive(&neighbors_value, 1, node + 1, 600);
+            profugus::receive(&neighbors_value, 1, node + 1, 600);
             pass = soft_equiv(neighbors_value, local_value, eps);
         }
         else
@@ -130,7 +130,7 @@ bool check_global_equiv(double local_value, double eps)
     }
 
     // sync everything so we don't leave before all processors are finished
-    nemesis::global_barrier();
+    profugus::global_barrier();
 
     // return result
     return pass;

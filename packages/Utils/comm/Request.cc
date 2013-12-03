@@ -165,7 +165,7 @@ bool Request::RequestRef::complete()
     return indicator;
 #endif
 #ifdef COMM_SCALAR
-    throw nemesis::assertion(
+    throw profugus::assertion(
         "Send to self machinery has not been implemented in scalar mode.");
 #endif
 }

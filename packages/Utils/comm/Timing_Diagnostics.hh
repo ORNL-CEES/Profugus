@@ -33,7 +33,7 @@ namespace profugus
  *   // do work
  *   ...
  *   // stop timer
- *   nemesis::Timing_Diagnostics::update_timer("Solver", time);
+ *   profugus::Timing_Diagnostics::update_timer("Solver", time);
  * \endcode
  * There is no need to "add" the timer entry for "Solver" before an update.
  * If the key "Solver" does not exist it is added with value 0.0 before

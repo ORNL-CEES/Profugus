@@ -23,8 +23,8 @@ namespace profugus
  */
 SpinLock::SpinLock( int _lock /*=1*/ )
     : d_lock(_lock)
-    , d_node(nemesis::node())
-    , d_nodes(nemesis::nodes())
+    , d_node(profugus::node())
+    , d_nodes(profugus::nodes())
     , d_first(0)
     , d_last(d_nodes - 1)
 {
@@ -41,8 +41,8 @@ SpinLock::SpinLock( int _lock /*=1*/ )
 SpinLock::SpinLock(int begin,
                    int end)
     : d_lock(1)
-    , d_node(nemesis::node())
-    , d_nodes(nemesis::nodes())
+    , d_node(profugus::node())
+    , d_nodes(profugus::nodes())
     , d_first(begin)
     , d_last(end - 1)
 {

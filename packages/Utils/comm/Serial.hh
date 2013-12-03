@@ -48,7 +48,7 @@ int send(
     // blocking sends should never be used for send-to-self; althought the
     // spec doesn't specifically disallow it but says it is unsafe and
     // non-portable, so we disallow it here:
-    throw nemesis::assertion("Blocking self-communication not allowed.");
+    throw profugus::assertion("Blocking self-communication not allowed.");
 }
 
 //---------------------------------------------------------------------------//
@@ -64,7 +64,7 @@ int send_comm(
     // blocking sends should never be used for send-to-self; althought the
     // spec doesn't specifically disallow it but says it is unsafe and
     // non-portable, so we disallow it here:
-    throw nemesis::assertion("Blocking self-communication not allowed.");
+    throw profugus::assertion("Blocking self-communication not allowed.");
 }
 
 //---------------------------------------------------------------------------//
@@ -79,7 +79,7 @@ int receive(
     // blocking receives should never be used for receive-from-self; althought
     // the spec doesn't specifically disallow it but says it is unsafe and
     // non-portable, so we disallow it here:
-    throw nemesis::assertion("Blocking self-communication not allowed.");
+    throw profugus::assertion("Blocking self-communication not allowed.");
 }
 
 //---------------------------------------------------------------------------//
@@ -95,7 +95,7 @@ int receive_comm(
     // blocking receives should never be used for receive-from-self; althought
     // the spec doesn't specifically disallow it but says it is unsafe and
     // non-portable, so we disallow it here:
-    throw nemesis::assertion("Blocking self-communication not allowed.");
+    throw profugus::assertion("Blocking self-communication not allowed.");
 }
 
 //---------------------------------------------------------------------------//

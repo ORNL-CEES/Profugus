@@ -109,18 +109,18 @@ class P_Manip
  *
  * There are four P_Out objects defined in global scope:
  *
- * \arg nemesis::pout can be toggled on/off via UTILS_POUT at configure
+ * \arg profugus::pout can be toggled on/off via UTILS_POUT at configure
  * time; only does output on node 0
  *
- * \arg nemesis::pcout is always on; only does output on node 0
+ * \arg profugus::pcout is always on; only does output on node 0
  *
- * \arg nemesis::pnout can be toggled on/off via UTILS_POUT at configure
+ * \arg profugus::pnout can be toggled on/off via UTILS_POUT at configure
  * time; does output from the local node
  *
- * \arg nemesis::pncout is always on; does output from the local node
+ * \arg profugus::pncout is always on; does output from the local node
  *
- * In effect nemesis::pnout and nemesis::pout will give identical behavior as
- * std::cout wit the exception that nemesis::pnout can be toggled off.
+ * In effect profugus::pnout and profugus::pout will give identical behavior as
+ * std::cout wit the exception that profugus::pnout can be toggled off.
  *
  * \sa P_Manip, UTILS_POUT, pout, pcout, pnout, pncout
  */

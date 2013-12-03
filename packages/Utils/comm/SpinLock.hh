@@ -123,7 +123,7 @@ class HTSyncSpinLock : public HSync, public TSync, public SpinLock
 {                              \
     std::cout << std::flush;   \
     std::fflush(std::stdout);  \
-    nemesis::HTSyncSpinLock h; \
+    profugus::HTSyncSpinLock h; \
     a;                         \
     std::cout << std::flush;   \
 }

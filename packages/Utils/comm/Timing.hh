@@ -20,8 +20,8 @@
  *
  * Four macros are defined here; these macros insert timer calls into code if
  * a global definition, UTILS_TIMING, is greater then 0.  The default value
- * is to set UTILS_TIMING == 1. They use the nemesis::Timer and
- * nemesis::Timing_Diagnostics classes.
+ * is to set UTILS_TIMING == 1. They use the profugus::Timer and
+ * profugus::Timing_Diagnostics classes.
  *
  * The build system sets UTILS_TIMING through the configure option \c
  * --with-timing-diagnostics.  The following settings apply:
@@ -64,7 +64,7 @@
  *
  * If UTILS_TIMING_ON is defined, TIMER( timer_name) expands to:
  * \code
- *     nemesis::Timer timer_name
+ *     profugus::Timer timer_name
  * \endcode
  * Otherwise it is empty.
  */
@@ -94,7 +94,7 @@
  *
  * If UTILS_TIMING_ON > 0, TIMER_RECORD( name, timer) expands to:
  * \code
- *     nemesis::Timing_Diagnostics::update_timer(name, timer.wall_clock())
+ *     profugus::Timing_Diagnostics::update_timer(name, timer.wall_clock())
  * \endcode
  * Otherwise it is empty.
  */
@@ -138,17 +138,17 @@
 
 #define UTILS_TIMING_ON
 
-#define TIMER( timer) nemesis::Timer timer
+#define TIMER( timer) profugus::Timer timer
 
 #define TIMER_START( timer) timer.start()
 
 #define TIMER_STOP( timer) timer.stop()
 
 #define TIMER_RECORD( name, timer)                                      \
-    nemesis::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
+    profugus::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
 
 #define SCOPED_TIMER(name) \
-    nemesis::Scoped_Timer scoped_timer_(name)
+    profugus::Scoped_Timer scoped_timer_(name)
 
 #endif
 
@@ -157,17 +157,17 @@
 
 #define UTILS_TIMING_2_ON
 
-#define TIMER_2( timer) nemesis::Timer timer
+#define TIMER_2( timer) profugus::Timer timer
 
 #define TIMER_START_2( timer) timer.start()
 
 #define TIMER_STOP_2( timer) timer.stop()
 
 #define TIMER_RECORD_2( name, timer)                                      \
-    nemesis::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
+    profugus::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
 
 #define SCOPED_TIMER_2(name) \
-    nemesis::Scoped_Timer scoped_timer_(name)
+    profugus::Scoped_Timer scoped_timer_(name)
 
 #else
 
@@ -188,17 +188,17 @@
 
 #define UTILS_TIMING_3_ON
 
-#define TIMER_3( timer) nemesis::Timer timer
+#define TIMER_3( timer) profugus::Timer timer
 
 #define TIMER_START_3( timer) timer.start()
 
 #define TIMER_STOP_3( timer) timer.stop()
 
 #define TIMER_RECORD_3( name, timer)                                      \
-    nemesis::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
+    profugus::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
 
 #define SCOPED_TIMER_3(name) \
-    nemesis::Scoped_Timer scoped_timer_(name)
+    profugus::Scoped_Timer scoped_timer_(name)
 
 #else
 
