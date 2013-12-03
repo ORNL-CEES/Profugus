@@ -240,6 +240,11 @@ TRIBITS_ADD_LIBRARY(
   SOURCES ${SOURCES})
 
 ##---------------------------------------------------------------------------##
+# Add tests to this package
+
+TRIBITS_ADD_TEST_DIRECTORIES(harness/test)
+
+##---------------------------------------------------------------------------##
 ## FINISH SETUP
 
 # Exclude files for source package.
