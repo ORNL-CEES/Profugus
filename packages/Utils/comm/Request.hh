@@ -11,7 +11,7 @@
 #ifndef comm_Request_hh
 #define comm_Request_hh
 
-#include <comm/config.h>
+#include <Utils/config.h>
 
 #ifdef COMM_MPI
 #include <mpi.h>

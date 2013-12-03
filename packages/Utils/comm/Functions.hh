@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include <comm/config.h>
+#include <Utils/config.h>
 
 #ifdef HAVE_SYS_TIMES_H
 #include <sys/times.h> // defines the struct tms.

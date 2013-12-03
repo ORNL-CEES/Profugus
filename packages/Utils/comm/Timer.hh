@@ -11,7 +11,7 @@
 #ifndef comm_Timer_hh
 #define comm_Timer_hh
 
-#include <comm/config.h>
+#include <Utils/config.h>
 
 #include <iostream>
 #include "harness/DBC.hh"

@@ -50,8 +50,8 @@
       2      Ensure
 \endverbatim
  *
- * So for instance, \c -DNEMESIS_DBC=7 turns them all on, \c -DNEMESIS_DBC=0
- * turns them all off, and \c -DNEMESIS_DBC=1 turns on \c Require but turns
+ * So for instance, \c -DUTILS_DBC=7 turns them all on, \c -DUTILS_DBC=0
+ * turns them all off, and \c -DUTILS_DBC=1 turns on \c Require but turns
  * off \c Check and \c Ensure.  The default is to have them all enabled.
  *
  * The \c Insist macro is akin to the \c Assert macro, but it provides the
@@ -72,17 +72,17 @@
 /*!
  * \def Require(condition)
  *
- * Pre-condition checking macro.  On when NEMESIS_DBC & 1 is true.
+ * Pre-condition checking macro.  On when UTILS_DBC & 1 is true.
  */
 /*!
  * \def Check(condition)
  *
- * Intra-scope checking macro.  On when NEMESIS_DBC & 2 is true.
+ * Intra-scope checking macro.  On when UTILS_DBC & 2 is true.
  */
 /*!
  * \def Ensure(condition)
  *
- * Post-condition checking macro.  On when NEMESIS_DBC & 4 is true.
+ * Post-condition checking macro.  On when UTILS_DBC & 4 is true.
  */
 /*!
  * \def Remember(code)
@@ -93,7 +93,7 @@
  *     // ...
  *     Ensure (x == old);
  * \endcode
- * On when NEMESIS_DBC & 4 is true.
+ * On when UTILS_DBC & 4 is true.
  */
 /*!
  * \def Insist(condition, message)
@@ -109,7 +109,7 @@
  * that causes lots of "no return statement in function returning non-void"
  * errors. Better to let the compiler know that we're throwing directly.
  *
- * If NEMESIS_DBC is nonzero, we print out the file and line of failure.
+ * If UTILS_DBC is nonzero, we print out the file and line of failure.
  * Otherwise we hide it from the user.
  */
 /*!
@@ -120,13 +120,13 @@
  * what value failed in the output. Because "condition" can be a complicated
  * piece of code, we don't echo it to the user.
  *
- * If NEMESIS_DBC is nonzero, we print out the file and line of failure.
+ * If UTILS_DBC is nonzero, we print out the file and line of failure.
  * Otherwise we hide it from the user.
  */
 //---------------------------------------------------------------------------//
 
-#if !defined(NEMESIS_DBC)
-#define NEMESIS_DBC 7
+#if !defined(UTILS_DBC)
+#define UTILS_DBC 7
 #endif
 
 /* The following definitions of assertions help ensure that they're always
@@ -136,36 +136,36 @@
  * See:
  * http://cnicholson.net/2009/02/stupid-c-tricks-adventures-in-assert/
  */
-#define NEMESIS_ASSERT_(COND) \
+#define UTILS_ASSERT_(COND) \
     do { if (!(COND)) ::nemesis::toss_cookies( \
             #COND, __FILE__, __LINE__); } while (0)
-#define NEMESIS_NOASSERT_(COND) \
+#define UTILS_NOASSERT_(COND) \
     do { (void)sizeof(COND); } while (0)
 
 
-#if NEMESIS_DBC & 1
+#if UTILS_DBC & 1
 #define REQUIRE_ON
-#define Require(c) NEMESIS_ASSERT_(c)
+#define Require(c) UTILS_ASSERT_(c)
 #else
-#define Require(c) NEMESIS_NOASSERT_(c)
+#define Require(c) UTILS_NOASSERT_(c)
 #endif
 
-#if NEMESIS_DBC & 2
+#if UTILS_DBC & 2
 #define CHECK_ON
-#define Check(c) NEMESIS_ASSERT_(c)
-#define Assert(c) NEMESIS_ASSERT_(c)
+#define Check(c) UTILS_ASSERT_(c)
+#define Assert(c) UTILS_ASSERT_(c)
 #else
-#define Check(c) NEMESIS_NOASSERT_(c)
-#define Assert(c) NEMESIS_NOASSERT_(c)
+#define Check(c) UTILS_NOASSERT_(c)
+#define Assert(c) UTILS_NOASSERT_(c)
 #endif
 
-#if NEMESIS_DBC & 4
+#if UTILS_DBC & 4
 #define REMEMBER_ON
 #define ENSURE_ON
-#define Ensure(c) NEMESIS_ASSERT_(c)
+#define Ensure(c) UTILS_ASSERT_(c)
 #define Remember(c) c
 #else
-#define Ensure(c) NEMESIS_NOASSERT_(false)
+#define Ensure(c) UTILS_NOASSERT_(false)
 #define Remember(c)
 #endif
 

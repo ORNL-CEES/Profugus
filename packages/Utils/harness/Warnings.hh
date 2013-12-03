@@ -97,17 +97,17 @@ extern Warnings warnings;
    ADD_WARNING("This value " << x << " is potentially out of range");
 
    // get the warnings in the order that they were emplaced
-   while (!NEMESIS_WARNINGS.empty())
+   while (!UTILS_WARNINGS.empty())
    {
-       std::cout << NEMESIS_WARNINGS.pop() << std::endl;
+       std::cout << UTILS_WARNINGS.pop() << std::endl;
    }
    \endcode
  *
  * To print warnings to \c std::cout rather than save them for later, set the
- * ENABLE_NEMESIS_IMMEDIATE_WARN CMake option.
+ * ENABLE_UTILS_IMMEDIATE_WARN CMake option.
  *
  * Storing warnings is on by default, although it is up to the client to output
- * them.  Disable warning storage by setting the ENABLE_NEMESIS_WARNINGS cmake
+ * them.  Disable warning storage by setting the ENABLE_UTILS_WARNINGS cmake
  * option.  The code does not have to change in either case (as long as the
  * macros are used).
  *
@@ -117,18 +117,18 @@ extern Warnings warnings;
    nemesis::warn::warnings.add("a warning");
 
    // or, equivalently
-   NEMESIS_WARNINGS.add("a warning");
+   UTILS_WARNINGS.add("a warning");
 
-   // NEMESIS_WARNINGS is always defined, so these statements are \b always
+   // UTILS_WARNINGS is always defined, so these statements are \b always
    // equivalent
-   // whether NEMESIS_WARNINGS_ENABLED is defined or not
+   // whether UTILS_WARNINGS_ENABLED is defined or not
    \endcode
- * The macro flag \c NEMESIS_WARNINGS_ENABLED is defined when warnings are
+ * The macro flag \c UTILS_WARNINGS_ENABLED is defined when warnings are
  * enabled.
  * \code
    #include <harness/config.h>
 
-   #ifdef NEMESIS_WARNINGS_ENABLED
+   #ifdef UTILS_WARNINGS_ENABLED
    cout << "Here are some warnings" << endl;
    // ...
    #else
@@ -138,15 +138,15 @@ extern Warnings warnings;
  */
 //---------------------------------------------------------------------------//
 
-#define NEMESIS_WARNINGS ::nemesis::warn::warnings
+#define UTILS_WARNINGS ::nemesis::warn::warnings
 
-#ifdef NEMESIS_WARNINGS_IMMEDIATE
+#ifdef UTILS_WARNINGS_IMMEDIATE
 #define ADD_WARNING(b) do { \
         std::cout << "*** Warning: " << b << std::endl; \
     } while (0)
-#elif defined(NEMESIS_WARNINGS_ENABLED)
+#elif defined(UTILS_WARNINGS_ENABLED)
 #define ADD_WARNING(b) do { \
-        std::ostringstream m_; m_ << b; NEMESIS_WARNINGS.add(m_.str()); \
+        std::ostringstream m_; m_ << b; UTILS_WARNINGS.add(m_.str()); \
     } while (0)
 #else
 #define ADD_WARNING(b) do { } while (0)

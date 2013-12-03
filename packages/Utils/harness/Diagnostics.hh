@@ -116,8 +116,8 @@ extern Diag_Vec_Double_t vec_doubles;
  * \code
  *     DIAGNOSTICS_ONE(integers["Variable"] = 1);
  * \endcode
- * On when NEMESIS_DIAGNOSTICS & 1 is true.  Defines
- * NEMESIS_DIAGNOSTICS_LEVEL_1.
+ * On when UTILS_DIAGNOSTICS & 1 is true.  Defines
+ * UTILS_DIAGNOSTICS_LEVEL_1.
  */
 /*!
  * \def DIAGNOSTICS_TWO(Diagnostics::member)
@@ -126,8 +126,8 @@ extern Diag_Vec_Double_t vec_doubles;
  * \code
  *     DIAGNOSTICS_TWO(integers["Variable"] = 1);
  * \endcode
- * On when NEMESIS_DIAGNOSTICS & 2 is true.  Defines
- * NEMESIS_DIAGNOSTICS_LEVEL_2.
+ * On when UTILS_DIAGNOSTICS & 2 is true.  Defines
+ * UTILS_DIAGNOSTICS_LEVEL_2.
  */
 /*!
  * \def DIAGNOSTICS_THREE(Diagnostics::member)
@@ -136,31 +136,31 @@ extern Diag_Vec_Double_t vec_doubles;
  * \code
  *     DIAGNOSTICS_THREE(integers["Variable"] = 1);
  * \endcode
- * On when NEMESIS_DIAGNOSTICS & 4 is true.  Defines
- * NEMESIS_DIAGNOSTICS_LEVEL_3.
+ * On when UTILS_DIAGNOSTICS & 4 is true.  Defines
+ * UTILS_DIAGNOSTICS_LEVEL_3.
  */
 //---------------------------------------------------------------------------//
 
-#if !defined(NEMESIS_DIAGNOSTICS)
-#define NEMESIS_DIAGNOSTICS 1
+#if !defined(UTILS_DIAGNOSTICS)
+#define UTILS_DIAGNOSTICS 1
 #endif
 
-#if NEMESIS_DIAGNOSTICS & 1
-#define NEMESIS_DIAGNOSTICS_LEVEL_1
+#if UTILS_DIAGNOSTICS & 1
+#define UTILS_DIAGNOSTICS_LEVEL_1
 #define DIAGNOSTICS_ONE(member) nemesis::Diagnostics::member
 #else
 #define DIAGNOSTICS_ONE(member)
 #endif
 
-#if NEMESIS_DIAGNOSTICS & 2
-#define NEMESIS_DIAGNOSTICS_LEVEL_2
+#if UTILS_DIAGNOSTICS & 2
+#define UTILS_DIAGNOSTICS_LEVEL_2
 #define DIAGNOSTICS_TWO(member) nemesis::Diagnostics::member
 #else
 #define DIAGNOSTICS_TWO(member)
 #endif
 
-#if NEMESIS_DIAGNOSTICS & 4
-#define NEMESIS_DIAGNOSTICS_LEVEL_3
+#if UTILS_DIAGNOSTICS & 4
+#define UTILS_DIAGNOSTICS_LEVEL_3
 #define DIAGNOSTICS_THREE(member) nemesis::Diagnostics::member
 #else
 #define DIAGNOSTICS_THREE(member)

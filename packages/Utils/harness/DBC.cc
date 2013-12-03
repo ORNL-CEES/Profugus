@@ -110,7 +110,7 @@ std::string not_implemented_error::build_notimpl_message(
 {
     std::ostringstream out;
     out << "Regrettably, " << msg << " is not currently implemented. ";
-#if NEMESIS_DBC > 0
+#if UTILS_DBC > 0
     out << "\n ^^^ at " << file << ":" << line << "\n";
 #else
     // Debug mode is off, so don't trouble the user with the particulars
@@ -164,7 +164,7 @@ void toss_validation_cookies(
 {
     std::ostringstream out;
     out << msg;
-#if NEMESIS_DBC > 0
+#if UTILS_DBC > 0
     out << "\n ^^^ at " << file << ":" << line << "\n";
 #else
     // Debug mode is off, so don't trouble the user with the particulars

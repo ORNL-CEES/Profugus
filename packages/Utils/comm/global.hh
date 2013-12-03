@@ -16,7 +16,7 @@
 #define comm_global_hh
 
 // comm package configure
-#include <comm/config.h>
+#include <Utils/config.h>
 
 // comm Message Passing Functions
 #include "Functions.hh"

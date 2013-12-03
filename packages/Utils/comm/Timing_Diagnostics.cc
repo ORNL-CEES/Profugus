@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <comm/config.h>
+#include <Utils/config.h>
 
 #include "harness/DBC.hh"
 #include "global.hh"

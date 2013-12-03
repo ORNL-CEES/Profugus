@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <comm/config.h>
+#include <Utils/config.h>
 #ifdef COMM_SCALAR
 
 #ifdef HAVE_SYS_TIMES_H

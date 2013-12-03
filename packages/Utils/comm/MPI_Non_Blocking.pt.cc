@@ -10,7 +10,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <comm/config.h>
+#include <Utils/config.h>
 #ifdef COMM_MPI
 
 #include "MPI.t.hh"

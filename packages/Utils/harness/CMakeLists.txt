@@ -21,36 +21,36 @@ TRIBITS_SUBPACKAGE(Harness)
 
 # set DBC to full on if enable-debug
 IF (${PROJECT_NAME}_ENABLE_DEBUG)
-  SET(NEMESIS_DBC 7 CACHE STRING "Value of Design-by-Contract [0-7]")
+  SET(UTILS_DBC 7 CACHE STRING "Value of Design-by-Contract [0-7]")
 ELSE()
-  SET(NEMESIS_DBC 0 CACHE STRING "Value of Design-by-Contract [0-7]")
+  SET(UTILS_DBC 0 CACHE STRING "Value of Design-by-Contract [0-7]")
 ENDIF()
 
-MESSAGE(STATUS "Value of DBC in Nemesis set to ${NEMESIS_DBC}")
+MESSAGE(STATUS "Value of DBC in Nemesis set to ${UTILS_DBC}")
 
 ##---------------------------------------------------------------------------##
 ## DIAGNOSTICS
 
-SET(NEMESIS_DIAGNOSTICS 1
+SET(UTILS_DIAGNOSTICS 1
   CACHE STRING
   "Value of nemesis diagnostics, 1 by default")
 
 ##---------------------------------------------------------------------------##
 ## WARNINGS
 
-TRIBITS_ADD_OPTION_AND_DEFINE(ENABLE_NEMESIS_WARNINGS
-  NEMESIS_WARNINGS_ENABLED
+TRIBITS_ADD_OPTION_AND_DEFINE(ENABLE_UTILS_WARNINGS
+  UTILS_WARNINGS_ENABLED
   "Enable storage of warnings for later retreival"
   ON)
 
-TRIBITS_ADD_OPTION_AND_DEFINE(ENABLE_NEMESIS_IMMEDIATE_WARN
-  NEMESIS_WARNINGS_IMMEDIATE
+TRIBITS_ADD_OPTION_AND_DEFINE(ENABLE_UTILS_IMMEDIATE_WARN
+  UTILS_WARNINGS_IMMEDIATE
   "Turn on immediate output of all warnings (default: no)"
   OFF)
 
-IF(NEMESIS_IMMEDIATE_WARN AND NOT NEMESIS_WARNINGS)
+IF(UTILS_IMMEDIATE_WARN AND NOT UTILS_WARNINGS)
   MESSAGE(STATUS "Disabling 'immediate warn' option because warnings are off")
-  SET(NEMESIS_WARNINGS_IMMEDIATE OFF)
+  SET(UTILS_WARNINGS_IMMEDIATE OFF)
 ENDIF()
 
 ##---------------------------------------------------------------------------##

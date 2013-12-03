@@ -11,7 +11,7 @@
 #ifndef comm_MPI_hh
 #define comm_MPI_hh
 
-#include <comm/config.h>
+#include <Utils/config.h>
 #ifdef COMM_MPI
 
 #include <algorithm>
