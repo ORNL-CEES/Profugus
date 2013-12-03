@@ -120,7 +120,7 @@ void initialize(int &argc, char **&argv)
     // Initialize globally defined parallel streams to the local node
 
     // conditionally set pnout
-#ifdef NEMESIS_POUT
+#ifdef UTILS_POUT
     pnout.set_master(node());
 #endif
 

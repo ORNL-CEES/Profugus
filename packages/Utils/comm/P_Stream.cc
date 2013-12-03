@@ -182,7 +182,7 @@ P_Manip<int> setprecision(int n)
 // GLOBAL EXTERNAL DEFINITIONS
 //---------------------------------------------------------------------------//
 
-#ifdef NEMESIS_POUT
+#ifdef UTILS_POUT
 
 //! Use the default master as processor 0.
 P_Out pout;

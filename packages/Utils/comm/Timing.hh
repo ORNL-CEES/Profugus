@@ -19,11 +19,11 @@
  * \page comm_timing Macros for timing
  *
  * Four macros are defined here; these macros insert timer calls into code if
- * a global definition, NEMESIS_TIMING, is greater then 0.  The default value
- * is to set NEMESIS_TIMING == 1. They use the nemesis::Timer and
+ * a global definition, UTILS_TIMING, is greater then 0.  The default value
+ * is to set UTILS_TIMING == 1. They use the nemesis::Timer and
  * nemesis::Timing_Diagnostics classes.
  *
- * The build system sets NEMESIS_TIMING through the configure option \c
+ * The build system sets UTILS_TIMING through the configure option \c
  * --with-timing-diagnostics.  The following settings apply:
  * - 0 turns off all TIMER macros
  * - 1 turns on TIMER, TIMER_START, TIMER_STOP
@@ -47,7 +47,7 @@
  * The key "Snippet" can be used to access the stored time through the
  * Timer_Diagnostics class:
  * \code
- * #ifdef NEMESIS_TIMING_ON
+ * #ifdef UTILS_TIMING_ON
  *   vector<string> keys = Timing_Diagnostics::timer_keys();
  *   for (int i = 0; i < keys.size(); i++)
  *   {
@@ -62,7 +62,7 @@
 /*!
  * \def TIMER( timer_name)
  *
- * If NEMESIS_TIMING_ON is defined, TIMER( timer_name) expands to:
+ * If UTILS_TIMING_ON is defined, TIMER( timer_name) expands to:
  * \code
  *     nemesis::Timer timer_name
  * \endcode
@@ -72,7 +72,7 @@
 /*!
  * \def TIMER_START( timer_name)
  *
- * If NEMESIS_TIMING > 0 TIMER_START( timer_name) expands to:
+ * If UTILS_TIMING > 0 TIMER_START( timer_name) expands to:
  * \code
  *     timer_name.start()
  * \endcode
@@ -82,7 +82,7 @@
 /*!
  * \def TIMER_STOP( timer_name)
  *
- * If NEMESIS_TIMING_ON > 0, TIMER_STOP( timer_name) expands to:
+ * If UTILS_TIMING_ON > 0, TIMER_STOP( timer_name) expands to:
  * \code
  *     timer_name.stop()
  * \endcode
@@ -92,7 +92,7 @@
 /*!
  * \def TIMER_RECORD( name, timer)
  *
- * If NEMESIS_TIMING_ON > 0, TIMER_RECORD( name, timer) expands to:
+ * If UTILS_TIMING_ON > 0, TIMER_RECORD( name, timer) expands to:
  * \code
  *     nemesis::Timing_Diagnostics::update_timer(name, timer.wall_clock())
  * \endcode
@@ -100,15 +100,15 @@
  */
 //---------------------------------------------------------------------------//
 
-#if !defined(NEMESIS_TIMING)
-#define NEMESIS_TIMING 1
+#if !defined(UTILS_TIMING)
+#define UTILS_TIMING 1
 #endif
 
 //---------------------------------------------------------------------------//
 /*
  * All timing operations are inactive.
  */
-#if NEMESIS_TIMING == 0
+#if UTILS_TIMING == 0
 
 #define TIMER( timer)
 
@@ -131,12 +131,12 @@
  */
 
 // LEVEL 1
-#if NEMESIS_TIMING > 0
+#if UTILS_TIMING > 0
 
 #include "Timer.hh"
 #include "Scoped_Timer.hh"
 
-#define NEMESIS_TIMING_ON
+#define UTILS_TIMING_ON
 
 #define TIMER( timer) nemesis::Timer timer
 
@@ -153,9 +153,9 @@
 #endif
 
 // LEVEL 2
-#if NEMESIS_TIMING > 1
+#if UTILS_TIMING > 1
 
-#define NEMESIS_TIMING_2_ON
+#define UTILS_TIMING_2_ON
 
 #define TIMER_2( timer) nemesis::Timer timer
 
@@ -184,9 +184,9 @@
 #endif
 
 // LEVEL 3
-#if NEMESIS_TIMING > 2
+#if UTILS_TIMING > 2
 
-#define NEMESIS_TIMING_3_ON
+#define UTILS_TIMING_3_ON
 
 #define TIMER_3( timer) nemesis::Timer timer
 

@@ -109,12 +109,12 @@ class P_Manip
  *
  * There are four P_Out objects defined in global scope:
  *
- * \arg nemesis::pout can be toggled on/off via NEMESIS_POUT at configure
+ * \arg nemesis::pout can be toggled on/off via UTILS_POUT at configure
  * time; only does output on node 0
  *
  * \arg nemesis::pcout is always on; only does output on node 0
  *
- * \arg nemesis::pnout can be toggled on/off via NEMESIS_POUT at configure
+ * \arg nemesis::pnout can be toggled on/off via UTILS_POUT at configure
  * time; does output from the local node
  *
  * \arg nemesis::pncout is always on; does output from the local node
@@ -122,7 +122,7 @@ class P_Manip
  * In effect nemesis::pnout and nemesis::pout will give identical behavior as
  * std::cout wit the exception that nemesis::pnout can be toggled off.
  *
- * \sa P_Manip, NEMESIS_POUT, pout, pcout, pnout, pncout
+ * \sa P_Manip, UTILS_POUT, pout, pcout, pnout, pncout
  */
 /*!
  * \example comm/test/tstP_Stream.cc
@@ -184,7 +184,7 @@ P_Manip<int> setprecision(int n);
 // EXTERNAL, GLOBAL PARALLEL STREAM OUTPUT OBJECTS
 //---------------------------------------------------------------------------//
 /*!
- * \page NEMESIS_POUT Using the Nemesis Parallel Output Facility
+ * \page UTILS_POUT Using the Nemesis Parallel Output Facility
  *
  * If defined, then pout will output to processor 0.  Otherwise, output does
  * not occur.
@@ -192,9 +192,9 @@ P_Manip<int> setprecision(int n);
 //---------------------------------------------------------------------------//
 
 // Standard parallel stream output.
-extern P_Out pout;   // off when NEMESIS_POUT undefined
+extern P_Out pout;   // off when UTILS_POUT undefined
 extern P_Out pcout;  // always on
-extern P_Out pnout;  // off when NEMESIS_POUT undefined
+extern P_Out pnout;  // off when UTILS_POUT undefined
 extern P_Out pncout; // always on
 
 } // end namespace profugus

@@ -128,7 +128,7 @@ void Timing_Diagnostics::delete_timers()
  */
 void Timing_Diagnostics::report(std::ostream& out, double total)
 {
-#if NEMESIS_TIMING > 0
+#if UTILS_TIMING > 0
 
     using std::vector;
     using std::setw;
