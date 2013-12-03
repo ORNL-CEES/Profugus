@@ -101,6 +101,50 @@ CHECK_TYPE_SIZE(float            SIZEOF_FLOAT)
 CHECK_TYPE_SIZE(double           SIZEOF_DOUBLE)
 
 ##---------------------------------------------------------------------------##
+## MPI
+
+IF (TPL_ENABLE_MPI)
+  SET(COMM_MPI ON)
+ELSE()
+  SET(COMM_SCALAR ON)
+ENDIF()
+
+## Set Comm MPI implementation
+IF (DEFINED Utils_MPI_IMP)
+  SET(MPI_IMP ${Utils_MPI_IMP})
+ENDIF()
+
+##---------------------------------------------------------------------------##
+## TIMING
+
+IF (NOT UTILS_TIMING)
+  SET(UTILS_TIMING 1
+          CACHE STRING
+          "Value for Utils timing, 1 by default")
+ENDIF()
+
+##---------------------------------------------------------------------------##
+## PARALLEL OUTPUT
+
+IF (NOT UTILS_POUT)
+  SET(UTILS_POUT ON CACHE BOOL "Turn on Utils Parallel Output.")
+ENDIF()
+
+##---------------------------------------------------------------------------##
+## INCLUDES
+
+CHECK_INCLUDE_FILE(sys/times.h HAVE_SYS_TIMES_H)
+CHECK_INCLUDE_FILE(unistd.h    HAVE_UNISTD_H)
+CHECK_INCLUDE_FILE(windows.h   HAVE_WINDOWS_H)
+
+##---------------------------------------------------------------------------##
+## POSIX FLAGS
+
+IF (DEFINED _POSIX_C_SOURCE)
+  OPTION(_POSIX_SOURCE "Do not include non-POSIX code." ON)
+ENDIF()
+
+##---------------------------------------------------------------------------##
 # C) Process the subpackages
 ##---------------------------------------------------------------------------##
 
@@ -121,6 +165,25 @@ SET(HARNESS_SOURCES
   harness/Warnings.cc)
 LIST(APPEND HEADERS ${HARNESS_HEADERS})
 LIST(APPEND SOURCES ${HARNESS_SOURCES})
+
+# comm sources
+
+FILE(GLOB COMM_HEADERS comm/*.hh)
+SET(COMM_SOURCES
+  comm/MPI.cc
+  comm/MPI_Blocking.pt.cc
+  comm/MPI_Gathers.pt.cc
+  comm/MPI_Non_Blocking.pt.cc
+  comm/MPI_Reductions.pt.cc
+  comm/P_Stream.cc
+  comm/Parallel_Utils.cc
+  comm/Request.cc
+  comm/Serial.cc
+  comm/SpinLock.cc
+  comm/Timer.cc
+  comm/Timing_Diagnostics.cc)
+LIST(APPEND HEADERS ${COMM_HEADERS})
+LIST(APPEND SOURCES ${COMM_SOURCES})
 
 ##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
