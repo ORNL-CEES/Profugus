@@ -107,10 +107,10 @@
 #define OMPI_SKIP_MPICXX
 
 /* COMM DIAGNOSTICS TIMING LEVEL */
-#cmakedefine NEMESIS_TIMING @NEMESIS_TIMING@
+#cmakedefine UTILS_TIMING @UTILS_TIMING@
 
 /* Parallel output */
-#cmakedefine NEMESIS_POUT
+#cmakedefine UTILS_POUT
 
 /* TIMING MACROS */
 #ifndef HAVE_UNISTD_H

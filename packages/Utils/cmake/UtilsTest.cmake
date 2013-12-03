@@ -40,7 +40,7 @@ INCLUDE(TribitsAddAdvancedTest)
 ##---------------------------------------------------------------------------##
 ## ADDING UNIT TEST
 ##---------------------------------------------------------------------------##
-# ADD_NEMESIS_TEST(
+# ADD_UTILS_TEST(
 #   SOURCE_FILE
 #   [NP 1 [2 [...]]]
 #   [DEPLIBS lib1 [lib2 ...]]
@@ -69,7 +69,7 @@ INCLUDE(TribitsAddAdvancedTest)
 # If DISABLE is specified, we will build the test executable but omit it from
 # the list of tests to run through CTest.
 #
-FUNCTION(ADD_NEMESIS_TEST SOURCE_FILE)
+FUNCTION(ADD_UTILS_TEST SOURCE_FILE)
   cmake_parse_arguments(PARSE
     "LEGACY;ISOLATE;DISABLE"
     ""
@@ -165,7 +165,7 @@ FUNCTION(ADD_NEMESIS_TEST SOURCE_FILE)
 
 ENDFUNCTION()
 
-# SETUP_NEMESIS_PYTEST(
+# SETUP_UTILS_PYTEST(
 #   PKGDEPS [subpackage [subpackage2 ...]]
 #   [ROOT dir]
 #   )
@@ -176,22 +176,22 @@ ENDFUNCTION()
 # The ROOT directory option specifies where the test files are to be found. The
 # default directory is 'python'.
 
-MACRO(SETUP_NEMESIS_PYTEST)
+MACRO(SETUP_UTILS_PYTEST)
   cmake_parse_arguments(PARSE "" "ROOT" "PKGDEPS" ${ARGN})
 
   # Construct python include path from PACKAGES argument.
-  SET(NEMESIS_PYTHONPATH "${${SUBPACKAGE_FULLNAME}_BINARY_DIR}")
+  SET(UTILS_PYTHONPATH "${${SUBPACKAGE_FULLNAME}_BINARY_DIR}")
   FOREACH(package ${PARSE_PKGDEPS})
-    SET(NEMESIS_PYTHONPATH "${NEMESIS_PYTHONPATH}:${${package}_BINARY_DIR}")
+    SET(UTILS_PYTHONPATH "${UTILS_PYTHONPATH}:${${package}_BINARY_DIR}")
   ENDFOREACH()
 
-  SET(NEMESIS_PYTHONTESTROOT ${PARSE_ROOT})
-  IF(NOT NEMESIS_PYTHONTESTROOT)
-    SET(NEMESIS_PYTHONTESTROOT "python/")
+  SET(UTILS_PYTHONTESTROOT ${PARSE_ROOT})
+  IF(NOT UTILS_PYTHONTESTROOT)
+    SET(UTILS_PYTHONTESTROOT "python/")
   ENDIF()
 ENDMACRO()
 
-# ADD_NEMESIS_PYTEST(
+# ADD_UTILS_PYTEST(
 #   PYTHON_FILE
 #   [NP 1 [2 [...]]]
 #   [ENVIRONMENT VAR=value [VAR2=value2 ...]]
@@ -200,7 +200,7 @@ ENDMACRO()
 #
 # Create and add a unit test from the source file at python/PYTHON_FILE. We also
 # modify the test PYTHONPATH to include the subpackages specfied in
-# SETUP_NEMESIS_PYTEST.
+# SETUP_UTILS_PYTEST.
 #
 # NP specifies the number of processors to use for this unit test. The default
 # is to use UtilsNP (1, 2, and 4) for MPI builds and 1 for serial builds.
@@ -208,7 +208,7 @@ ENDMACRO()
 # If LEGACY is specified, we use the old "tester.py" module. Otherwise we
 # use the pythonic "denovo_unittest.py" harness.
 
-FUNCTION(ADD_NEMESIS_PYTEST SOURCE_FILE)
+FUNCTION(ADD_UTILS_PYTEST SOURCE_FILE)
   cmake_parse_arguments(PARSE
     "LEGACY"
     ""
@@ -252,7 +252,7 @@ FUNCTION(ADD_NEMESIS_PYTEST SOURCE_FILE)
       "${PYTHON_EXECUTABLE}"
       NOEXEPREFIX NOEXESUFFIX
       NAME "${PYNAME}"
-      ARGS "${CMAKE_CURRENT_SOURCE_DIR}/${NEMESIS_PYTHONTESTROOT}${PYNAME}.py ${SYS_ARGV}"
+      ARGS "${CMAKE_CURRENT_SOURCE_DIR}/${UTILS_PYTHONTESTROOT}${PYNAME}.py ${SYS_ARGV}"
       COMM ${COMM}
       NUM_MPI_PROCS ${np}
       PASS_REGULAR_EXPRESSION "${PASS_RE}"
@@ -267,7 +267,7 @@ FUNCTION(ADD_NEMESIS_PYTEST SOURCE_FILE)
     # Change the python path and any other user environment settings
     SET_PROPERTY(TEST "${TEST_NAME}"
       PROPERTY ENVIRONMENT
-      PYTHONPATH=${NEMESIS_PYTHONPATH}
+      PYTHONPATH=${UTILS_PYTHONPATH}
       ${PARSE_ENVIRONMENT}
       )
   ENDFOREACH()

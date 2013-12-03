@@ -184,7 +184,7 @@ P_Manip<int> setprecision(int n);
 // EXTERNAL, GLOBAL PARALLEL STREAM OUTPUT OBJECTS
 //---------------------------------------------------------------------------//
 /*!
- * \page UTILS_POUT Using the Nemesis Parallel Output Facility
+ * \page UTILS_POUT Using the Utils Parallel Output Facility
  *
  * If defined, then pout will output to processor 0.  Otherwise, output does
  * not occur.
