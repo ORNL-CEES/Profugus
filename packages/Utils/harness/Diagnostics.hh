@@ -116,8 +116,7 @@ extern Diag_Vec_Double_t vec_doubles;
  * \code
  *     DIAGNOSTICS_ONE(integers["Variable"] = 1);
  * \endcode
- * On when UTILS_DIAGNOSTICS & 1 is true.  Defines
- * UTILS_DIAGNOSTICS_LEVEL_1.
+ * On when UTILS_DIAGNOSTICS & 1 is true.  Defines UTILS_DIAGNOSTICS_LEVEL_1.
  */
 /*!
  * \def DIAGNOSTICS_TWO(Diagnostics::member)
@@ -126,8 +125,7 @@ extern Diag_Vec_Double_t vec_doubles;
  * \code
  *     DIAGNOSTICS_TWO(integers["Variable"] = 1);
  * \endcode
- * On when UTILS_DIAGNOSTICS & 2 is true.  Defines
- * UTILS_DIAGNOSTICS_LEVEL_2.
+ * On when UTILS_DIAGNOSTICS & 2 is true.  Defines UTILS_DIAGNOSTICS_LEVEL_2.
  */
 /*!
  * \def DIAGNOSTICS_THREE(Diagnostics::member)
@@ -136,8 +134,7 @@ extern Diag_Vec_Double_t vec_doubles;
  * \code
  *     DIAGNOSTICS_THREE(integers["Variable"] = 1);
  * \endcode
- * On when UTILS_DIAGNOSTICS & 4 is true.  Defines
- * UTILS_DIAGNOSTICS_LEVEL_3.
+ * On when UTILS_DIAGNOSTICS & 4 is true.  Defines UTILS_DIAGNOSTICS_LEVEL_3.
  */
 //---------------------------------------------------------------------------//
 

@@ -71,6 +71,13 @@ ENDIF()
 MESSAGE(STATUS "Value of DBC in Utils set to ${UTILS_DBC}")
 
 ##---------------------------------------------------------------------------##
+## DIAGNOSTICS
+
+SET(UTILS_DIAGNOSTICS 1
+  CACHE STRING
+  "Value of utils diagnostics, 1 by default")
+
+##---------------------------------------------------------------------------##
 ## WARNINGS
 
 TRIBITS_ADD_OPTION_AND_DEFINE(ENABLE_UTILS_WARNINGS
