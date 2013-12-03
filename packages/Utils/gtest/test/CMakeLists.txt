@@ -1,26 +1,21 @@
 ##---------------------------------------------------------------------------##
-## Profugus/PackagesList.cmake
-## Thomas M. Evans
-## Monday December 2 21:24:6 2013
+## gtest/test/CMakeLists.txt
+## Seth R Johnson
+## Thu Apr 11 10:01:15 2013
+##---------------------------------------------------------------------------##
+## Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+##---------------------------------------------------------------------------##
+## CMAKE for gtest
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsListHelpers)
+INCLUDE(NemesisTest)
 
 ##---------------------------------------------------------------------------##
-## PACKAGES PROVIDED
+## FILES
 ##---------------------------------------------------------------------------##
 
-SET(Profugus_PACKAGES_AND_DIRS_AND_CLASSIFICATIONS
-  Utils  packages/Utils
-  SPn    packages/SPn
-  )
+ADD_NEMESIS_TEST(tstGtest_Functions NP 1)
 
 ##---------------------------------------------------------------------------##
-## PLATFORM SUPPORT
-##---------------------------------------------------------------------------##
-
-PACKAGE_DISABLE_ON_PLATFORMS(Profugus Windows)
-
-##---------------------------------------------------------------------------##
-## end of PackagesList.cmake
+##                        end of gtest/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##

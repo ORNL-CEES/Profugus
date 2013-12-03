@@ -1,0 +1,1919 @@
+!-----------------------------------------------------------------------------!
+! \file   comm/Comm_FC.fm4
+! \author Thomas M. Evans
+! \date   Thu Sep  3 23:32:46 2009
+! \brief  Test functions for nemesis comm.
+! \note   Copyright (C) 2009 Oak Ridge National Laboratory, UT-Battelle, LLC.
+!-----------------------------------------------------------------------------!
+! $Id: template.fm4,v 1.1 2009/09/03 01:59:52 9te Exp $
+!-----------------------------------------------------------------------------!
+
+!-----------------------------------------------------------------------------!
+! UNIT TESTING FUNCTION
+!-----------------------------------------------------------------------------!
+
+DEFINE([UNIT_TEST], [dnl testing function
+if (.not. ($1)) then
+   num_fails = num_fails + 1
+   print*, "Test failed in __FILE__ on line __LINE__"
+end if
+])
+
+!-----------------------------------------------------------------------------!
+! Build comm data
+!-----------------------------------------------------------------------------!
+
+subroutine build_comm()
+
+  use nemesis_comm
+  implicit none
+
+  call build_types
+
+end subroutine build_comm
+
+!-----------------------------------------------------------------------------!
+! Simple interface tests
+!-----------------------------------------------------------------------------!
+
+subroutine test_rank(num_passes, num_fails, ref_node, ref_nodes)
+
+  use nemesis_comm, only : node, nodes, global_barrier
+  implicit none
+
+  ! >>> INPUT DATA
+  
+  ! Test results.
+  integer, intent(out) :: num_passes, num_fails
+
+  ! Comparisons.
+  integer, intent(in) :: ref_node, ref_nodes
+
+  ! >>> BODY
+
+  ! initialize test counters
+  num_passes = 0
+  num_fails  = 0
+
+
+  if (node() == ref_node) then
+     num_passes = num_passes + 1
+  else
+     num_fails = num_fails + 1
+  end if
+
+  if (nodes() == ref_nodes) then
+     num_passes = num_passes + 1
+  else
+     num_fails = num_fails + 1
+  end if
+
+  call global_barrier
+  
+end subroutine test_rank
+
+!-----------------------------------------------------------------------------!
+! Broadcast tests
+!-----------------------------------------------------------------------------!
+
+subroutine test_broadcast(num_passes, num_fails)
+
+  use nemesis_comm,       only : node, nodes, broadcast, global_barrier
+  use harness_data_types, only : REAL4, REAL8, INT4, LOGIC
+  implicit none
+  
+  ! >>> IO DATA
+  
+  ! Test results.
+  integer, intent(out) :: num_passes, num_fails
+  
+  ! >>> LOCAL DATA
+
+  ! Test data.
+  integer(INT4), dimension(4) :: i4s
+  real(REAL4)  , dimension(3) :: r4s
+  real(REAL8)  , dimension(5) :: r8s
+  integer(INT4) :: i4
+  real(REAL4)   :: r4
+  real(REAL8)   :: r8
+  ! POD types.
+  integer, dimension(3) :: ints
+
+  ! Allocatable types
+  integer(INT4), dimension(:, :), allocatable :: x
+
+
+  !> kbb: additional types
+  integer(INT4),parameter:: M=3,N=4,L=2
+  real(REAL4)    :: r4_a(M),r4_b(M,N),r4_c(M,N,L),r4_d(M,N,L,L)
+  real(REAL8)    :: r8_a(M),r8_b(M,N),r8_c(M,N,L),r8_d(M,N,L,L)
+  integer(INT4)  :: i4_a(M),i4_b(M,N),i4_c(M,N,L),i4_d(M,N,L,L)
+  character(len=1) :: c1
+  character(len=3) :: c2
+  character(len=3) :: c3_a(M),c3_b(M,N),c3_c(M,N,L),c3_d(M,N,L,L)
+  ! Loop.
+  integer :: i, j, k
+
+  ! >>> BODY
+
+  ! initialize test counters
+  num_passes = 0
+  num_fails  = 0
+
+  ! make arrays of data on 0
+  if (node() == 0) then
+     i4s    = (/ 1, 2, 4, 8 /)
+     r4s    = (/ 1.1_REAL4, 2.1_REAL4, 3.1_REAL4 /)
+     r8s    = (/ 1.11_REAL8, 2.11_REAL8, 3.11_REAL8, 4.11_REAL8, 9.12_REAL8 /)
+
+     ints = (/ 5, 7, 9 /)
+
+     i4 = 12
+     r4 = 12.2_REAL4
+     r8 = 12.223141_REAL8
+  else
+     i4s  = 0
+     r4s  = 0.0
+     r8s  = 0.0
+
+     ints = 0
+
+     i4 = 0
+     r4 = 0
+     r8 = 0
+  end if
+  
+  ! broadcast and check
+  call broadcast(i4s, 0)
+  call broadcast(r4s, 0)
+  call broadcast(r8s, 0)
+
+  call broadcast(ints, 0)
+
+  call broadcast(i4, 0)
+  call broadcast(r4, 0)
+  call broadcast(r8, 0)
+
+  UNIT_TEST(i4s(1) == 1) 
+  UNIT_TEST(i4s(2) == 2) 
+  UNIT_TEST(i4s(3) == 4) 
+  UNIT_TEST(i4s(4) == 8)
+
+  UNIT_TEST(r4s(1) == 1.1_REAL4) 
+  UNIT_TEST(r4s(2) == 2.1_REAL4) 
+  UNIT_TEST(r4s(3) == 3.1_REAL4) 
+
+  UNIT_TEST(r8s(1) == 1.11_REAL8) 
+  UNIT_TEST(r8s(2) == 2.11_REAL8) 
+  UNIT_TEST(r8s(3) == 3.11_REAL8) 
+  UNIT_TEST(r8s(4) == 4.11_REAL8) 
+  UNIT_TEST(r8s(5) == 9.12_REAL8) 
+
+  UNIT_TEST(ints(1) == 5) 
+  UNIT_TEST(ints(2) == 7) 
+  UNIT_TEST(ints(3) == 9) 
+
+  UNIT_TEST(i4 == 12)              
+  UNIT_TEST(r4 == 12.2_REAL4)      
+  UNIT_TEST(r8 == 12.223141_REAL8) 
+
+  ! test allocatable
+  allocate(x(4, 3))
+
+  if (node() == 0) then
+     x(1, 1) = 1
+     x(1, 2) = 2
+     x(1, 3) = 3
+     x(2, 1) = 3
+     x(2, 2) = 4
+     x(2, 3) = 5
+     x(3, 1) = 4
+     x(3, 2) = 5
+     x(3, 3) = 6
+     x(4, 1) = 5
+     x(4, 2) = 6
+     x(4, 3) = 7
+  else
+     x = 0
+  end if
+  
+  do j = 1, 3
+     call broadcast(x(:, j), 0)
+  end do
+
+  UNIT_TEST(x(1, 1) == 1) 
+  UNIT_TEST(x(1, 2) == 2) 
+  UNIT_TEST(x(1, 3) == 3) 
+  UNIT_TEST(x(2, 1) == 3) 
+  UNIT_TEST(x(2, 2) == 4) 
+  UNIT_TEST(x(2, 3) == 5) 
+  UNIT_TEST(x(3, 1) == 4) 
+  UNIT_TEST(x(3, 2) == 5) 
+  UNIT_TEST(x(3, 3) == 6) 
+  UNIT_TEST(x(4, 1) == 5) 
+  UNIT_TEST(x(4, 2) == 6) 
+  UNIT_TEST(x(4, 3) == 7) 
+
+  ! test broadcast  for additional data types
+  ! test array with rank 2
+  if(node()==0) x=x*10
+  call broadcast(x, 0)
+
+
+  UNIT_TEST(x(1, 1) == 10) 
+  UNIT_TEST(x(1, 2) == 20) 
+  UNIT_TEST(x(1, 3) == 30) 
+  UNIT_TEST(x(2, 1) == 30) 
+  UNIT_TEST(x(2, 2) == 40) 
+  UNIT_TEST(x(2, 3) == 50) 
+  UNIT_TEST(x(3, 1) == 40) 
+  UNIT_TEST(x(3, 2) == 50) 
+  UNIT_TEST(x(3, 3) == 60) 
+  UNIT_TEST(x(4, 1) == 50) 
+  UNIT_TEST(x(4, 2) == 60) 
+  UNIT_TEST(x(4, 3) == 70) 
+
+  deallocate(x)
+
+
+  !> kbb: initialize the arrays of rank 1,2 and 3
+  if(node()==0) then
+   !> kbb: additional types, REAL4
+	r4_a=(/1.1_REAL4,2.2_REAL4,3.3_REAL4/)
+	r4_b(1,:)=(/1.1_REAL4,2.2_REAL4,3.3_REAL4,4.4_REAL4/)
+	r4_b(2,:)=(/5.5_REAL4,6.6_REAL4,7.7_REAL4,8.8_REAL4/)
+	r4_b(3,:)=(/9.9_REAL4,10.11_REAL4,11.01_REAL4,12.33_REAL4/)
+	r4_c(:,:,1)=r4_b
+	r4_c(:,:,2)=10.0_REAL4*r4_b
+	r4_d(:,:,:,1)=r4_c
+	r4_d(:,:,:,2)=1000.0_REAL4+r4_c
+   !> kbb: additional types, REAL8
+	r8_a=(/1.1_REAL8,2.2_REAL8,3.3_REAL8/)
+	r8_b(1,:)=(/1.1_REAL8,2.2_REAL8,3.3_REAL8,4.4_REAL8/)
+	r8_b(2,:)=(/5.5_REAL8,6.6_REAL8,7.7_REAL8,8.8_REAL8/)
+	r8_b(3,:)=(/9.9_REAL8,10.11_REAL8,11.01_REAL8,12.33_REAL8/)
+	r8_c(:,:,1)=r8_b
+	r8_c(:,:,2)=10.0_REAL8*r8_b
+	r8_d(:,:,:,1)=r8_c
+	r8_d(:,:,:,2)=1000_REAL8+r8_c
+   !> kbb: additional types, INT4
+	i4_a=(/1_INT4,2_INT4,3_INT4/)
+	i4_b(1,:)=(/1_INT4,2_INT4,3_INT4,4_INT4/)
+	i4_b(2,:)=(/5_INT4,6_INT4,7_INT4,8_INT4/)
+	i4_b(3,:)=(/9_INT4,10_INT4,11_INT4,12_INT4/)
+	i4_c(:,:,1)=i4_b
+	i4_c(:,:,2)=10*i4_b
+	i4_d(:,:,:,1)=i4_c
+	i4_d(:,:,:,2)=10*i4_c
+   !> kbb: additional types, CHAR
+	c1 = "A"
+	c2 = "kbb"
+	c3_a = (/"kbb","bkb","bbk"/)
+	c3_b(1,:) = (/"abb","akb","abk","ABB"/)
+	c3_b(2,:) = (/"bbb","bkb","bbk","BBB"/)
+	c3_b(3,:) = (/"cbb","ckb","cbk","CBB"/)
+	c3_c(:,:,1) = c3_b
+	c3_c(:,:,2) = c3_b
+	c3_d(:,:,:,1)=c3_c
+	c3_d(:,:,:,2)=c3_c
+  endif	
+
+
+
+  call broadcast(r4_a,0)
+  call broadcast(r4_b,0)
+  call broadcast(r4_c,0)
+  call broadcast(r4_d,0)
+
+  !> kbb: check data
+
+  UNIT_TEST(r4_a(1) == 1.1_REAL4)
+  UNIT_TEST(r4_a(2) == 2.2_REAL4)
+  UNIT_TEST(r4_a(3) == 3.3_REAL4)
+! ---	
+  UNIT_TEST(r4_b(1,1) == 1.1_REAL4)
+  UNIT_TEST(r4_b(1,2) == 2.2_REAL4)
+  UNIT_TEST(r4_b(1,3) == 3.3_REAL4)
+  UNIT_TEST(r4_b(1,4) == 4.4_REAL4)
+  UNIT_TEST(r4_b(2,1) == 5.5_REAL4)
+  UNIT_TEST(r4_b(2,2) == 6.6_REAL4)
+  UNIT_TEST(r4_b(2,3) == 7.7_REAL4)
+  UNIT_TEST(r4_b(2,4) == 8.8_REAL4)
+  UNIT_TEST(r4_b(3,1) == 9.9_REAL4)
+  UNIT_TEST(r4_b(3,2) == 10.11_REAL4)
+  UNIT_TEST(r4_b(3,3) == 11.01_REAL4)
+  UNIT_TEST(r4_b(3,4) == 12.33_REAL4)
+! ---
+  UNIT_TEST(r4_c(1,1,1) == 1.1_REAL4)
+  UNIT_TEST(r4_c(1,2,1) == 2.2_REAL4)
+  UNIT_TEST(r4_c(1,3,1) == 3.3_REAL4)
+  UNIT_TEST(r4_c(1,4,1) == 4.4_REAL4)
+  UNIT_TEST(r4_c(2,1,1) == 5.5_REAL4)
+  UNIT_TEST(r4_c(2,2,1) == 6.6_REAL4)
+  UNIT_TEST(r4_c(2,3,1) == 7.7_REAL4)
+  UNIT_TEST(r4_c(2,4,1) == 8.8_REAL4)
+  UNIT_TEST(r4_c(3,1,1) == 9.9_REAL4)
+  UNIT_TEST(r4_c(3,2,1) == 10.11_REAL4)
+  UNIT_TEST(r4_c(3,3,1) == 11.01_REAL4)
+  UNIT_TEST(r4_c(3,4,1) == 12.33_REAL4)
+  UNIT_TEST(r4_c(1,1,2) == 11.0_REAL4)
+  UNIT_TEST(r4_c(1,2,2) == 22.0_REAL4)
+  UNIT_TEST(r4_c(1,3,2) == 33.0_REAL4)
+  UNIT_TEST(r4_c(1,4,2) == 44.0_REAL4)
+  UNIT_TEST(r4_c(2,1,2) == 55.0_REAL4)
+  UNIT_TEST(r4_c(2,2,2) == 66.0_REAL4)
+  UNIT_TEST(r4_c(2,3,2) == 77.0_REAL4)
+  UNIT_TEST(r4_c(2,4,2) == 88.0_REAL4)
+  UNIT_TEST(r4_c(3,1,2) == 99.0_REAL4)
+  UNIT_TEST(r4_c(3,2,2) == 101.1_REAL4)
+  UNIT_TEST(r4_c(3,4,2) == 123.3_REAL4)
+! ---
+  UNIT_TEST(r4_d(1,1,1,1) == 1.1_REAL4)
+  UNIT_TEST(r4_d(1,2,1,1) == 2.2_REAL4)
+  UNIT_TEST(r4_d(1,3,1,1) == 3.3_REAL4)
+  UNIT_TEST(r4_d(1,4,1,1) == 4.4_REAL4)
+  UNIT_TEST(r4_d(2,1,1,1) == 5.5_REAL4)
+  UNIT_TEST(r4_d(2,2,1,1) == 6.6_REAL4)
+  UNIT_TEST(r4_d(2,3,1,1) == 7.7_REAL4)
+  UNIT_TEST(r4_d(2,4,1,1) == 8.8_REAL4)
+  UNIT_TEST(r4_d(3,1,1,1) == 9.9_REAL4)
+  UNIT_TEST(r4_d(3,2,1,1) == 10.11_REAL4)
+  UNIT_TEST(r4_d(3,3,1,1) == 11.01_REAL4)
+  UNIT_TEST(r4_d(3,4,1,1) == 12.33_REAL4)
+  UNIT_TEST(r4_d(1,1,2,1) == 11.0_REAL4)
+  UNIT_TEST(r4_d(1,2,2,1) == 22.0_REAL4)
+  UNIT_TEST(r4_d(1,3,2,1) == 33.0_REAL4)
+  UNIT_TEST(r4_d(1,4,2,1) == 44.0_REAL4)
+  UNIT_TEST(r4_d(2,1,2,1) == 55.0_REAL4)
+  UNIT_TEST(r4_d(2,2,2,1) == 66.0_REAL4)
+  UNIT_TEST(r4_d(2,3,2,1) == 77.0_REAL4)
+  UNIT_TEST(r4_d(2,4,2,1) == 88.0_REAL4)
+  UNIT_TEST(r4_d(3,1,2,1) == 99.0_REAL4)
+  UNIT_TEST(r4_d(3,2,2,1) == 101.1_REAL4)
+  UNIT_TEST(r4_d(3,4,2,1) == 123.3_REAL4)
+! ---
+  UNIT_TEST(r4_d(1,1,1,2) == 1001.1_REAL4)
+  UNIT_TEST(r4_d(1,2,1,2) == 1002.2_REAL4)
+  UNIT_TEST(r4_d(1,3,1,2) == 1003.3_REAL4)
+  UNIT_TEST(r4_d(1,4,1,2) == 1004.4_REAL4)
+  UNIT_TEST(r4_d(2,1,1,2) == 1005.5_REAL4)
+  UNIT_TEST(r4_d(2,2,1,2) == 1006.6_REAL4)
+  UNIT_TEST(r4_d(2,3,1,2) == 1007.7_REAL4)
+  UNIT_TEST(r4_d(2,4,1,2) == 1008.8_REAL4)
+  UNIT_TEST(r4_d(3,1,1,2) == 1009.9_REAL4)
+  UNIT_TEST(r4_d(3,2,1,2) == 1010.11_REAL4)
+  UNIT_TEST(r4_d(3,3,1,2) == 1011.01_REAL4)
+  UNIT_TEST(r4_d(3,4,1,2) == 1012.33_REAL4)
+  UNIT_TEST(r4_d(1,1,2,2) == 1011.0_REAL4)
+  UNIT_TEST(r4_d(1,2,2,2) == 1022.0_REAL4)
+  UNIT_TEST(r4_d(1,3,2,2) == 1033.0_REAL4)
+  UNIT_TEST(r4_d(1,4,2,2) == 1044.0_REAL4)
+  UNIT_TEST(r4_d(2,1,2,2) == 1055.0_REAL4)
+  UNIT_TEST(r4_d(2,2,2,2) == 1066.0_REAL4)
+  UNIT_TEST(r4_d(2,3,2,2) == 1077.0_REAL4)
+  UNIT_TEST(r4_d(2,4,2,2) == 1088.0_REAL4)
+  UNIT_TEST(r4_d(3,1,2,2) == 1099.0_REAL4)
+  UNIT_TEST(r4_d(3,2,2,2) == 1101.1_REAL4)
+  UNIT_TEST(r4_d(3,4,2,2) == 1123.3_REAL4)
+! ---
+
+
+
+! -------------------
+  call broadcast(r8_a,0)
+  call broadcast(r8_b,0)
+  call broadcast(r8_c,0)
+  call broadcast(r8_d,0)
+
+
+  UNIT_TEST(r8_a(1) == 1.1_REAL8)
+  UNIT_TEST(r8_a(2) == 2.2_REAL8)
+  UNIT_TEST(r8_a(3) == 3.3_REAL8)
+! ---	
+  UNIT_TEST(r8_b(1,1) == 1.1_REAL8)
+  UNIT_TEST(r8_b(1,2) == 2.2_REAL8)
+  UNIT_TEST(r8_b(1,3) == 3.3_REAL8)
+  UNIT_TEST(r8_b(1,4) == 4.4_REAL8)
+  UNIT_TEST(r8_b(2,1) == 5.5_REAL8)
+  UNIT_TEST(r8_b(2,2) == 6.6_REAL8)
+  UNIT_TEST(r8_b(2,3) == 7.7_REAL8)
+  UNIT_TEST(r8_b(2,4) == 8.8_REAL8)
+  UNIT_TEST(r8_b(3,1) == 9.9_REAL8)
+  UNIT_TEST(r8_b(3,2) == 10.11_REAL8)
+  UNIT_TEST(r8_b(3,3) == 11.01_REAL8)
+  UNIT_TEST(r8_b(3,4) == 12.33_REAL8)
+! ---
+  UNIT_TEST(r8_c(1,1,1) == 1.1_REAL8)
+  UNIT_TEST(r8_c(1,2,1) == 2.2_REAL8)
+  UNIT_TEST(r8_c(1,3,1) == 3.3_REAL8)
+  UNIT_TEST(r8_c(1,4,1) == 4.4_REAL8)
+  UNIT_TEST(r8_c(2,1,1) == 5.5_REAL8)
+  UNIT_TEST(r8_c(2,2,1) == 6.6_REAL8)
+  UNIT_TEST(r8_c(2,3,1) == 7.7_REAL8)
+  UNIT_TEST(r8_c(2,4,1) == 8.8_REAL8)
+  UNIT_TEST(r8_c(3,1,1) == 9.9_REAL8)
+  UNIT_TEST(r8_c(3,2,1) == 10.11_REAL8)
+  UNIT_TEST(r8_c(3,3,1) == 11.01_REAL8)
+  UNIT_TEST(r8_c(3,4,1) == 12.33_REAL8)
+  UNIT_TEST(r8_c(1,1,2) == 11.0_REAL8)
+  UNIT_TEST(r8_c(1,2,2) == 22.0_REAL8)
+  UNIT_TEST(r8_c(1,3,2) == 33.0_REAL8)
+  UNIT_TEST(r8_c(1,4,2) == 44.0_REAL8)
+  UNIT_TEST(r8_c(2,1,2) == 55.0_REAL8)
+  UNIT_TEST(r8_c(2,2,2) == 66.0_REAL8)
+  UNIT_TEST(r8_c(2,3,2) == 77.0_REAL8)
+  UNIT_TEST(r8_c(2,4,2) == 88.0_REAL8)
+  UNIT_TEST(r8_c(3,1,2) == 99.0_REAL8)
+  UNIT_TEST(r8_c(3,2,2) == 101.1_REAL8)
+  UNIT_TEST(r8_c(3,3,2) == 110.1_REAL8)
+  UNIT_TEST(r8_c(3,4,2) == 123.3_REAL8)
+! -------------------
+! ---
+  UNIT_TEST(r8_d(1,1,1,1) == 1.1_REAL8)
+  UNIT_TEST(r8_d(1,2,1,1) == 2.2_REAL8)
+  UNIT_TEST(r8_d(1,3,1,1) == 3.3_REAL8)
+  UNIT_TEST(r8_d(1,4,1,1) == 4.4_REAL8)
+  UNIT_TEST(r8_d(2,1,1,1) == 5.5_REAL8)
+  UNIT_TEST(r8_d(2,2,1,1) == 6.6_REAL8)
+  UNIT_TEST(r8_d(2,3,1,1) == 7.7_REAL8)
+  UNIT_TEST(r8_d(2,4,1,1) == 8.8_REAL8)
+  UNIT_TEST(r8_d(3,1,1,1) == 9.9_REAL8)
+  UNIT_TEST(r8_d(3,2,1,1) == 10.11_REAL8)
+  UNIT_TEST(r8_d(3,3,1,1) == 11.01_REAL8)
+  UNIT_TEST(r8_d(3,4,1,1) == 12.33_REAL8)
+  UNIT_TEST(r8_d(1,1,2,1) == 11.0_REAL8)
+  UNIT_TEST(r8_d(1,2,2,1) == 22.0_REAL8)
+  UNIT_TEST(r8_d(1,3,2,1) == 33.0_REAL8)
+  UNIT_TEST(r8_d(1,4,2,1) == 44.0_REAL8)
+  UNIT_TEST(r8_d(2,1,2,1) == 55.0_REAL8)
+  UNIT_TEST(r8_d(2,2,2,1) == 66.0_REAL8)
+  UNIT_TEST(r8_d(2,3,2,1) == 77.0_REAL8)
+  UNIT_TEST(r8_d(2,4,2,1) == 88.0_REAL8)
+  UNIT_TEST(r8_d(3,1,2,1) == 99.0_REAL8)
+  UNIT_TEST(r8_d(3,2,2,1) == 101.1_REAL8)
+  UNIT_TEST(r8_d(3,4,2,1) == 123.3_REAL8)
+! ---
+! ---
+  UNIT_TEST(r8_d(1,1,1,2) == 1001.1_REAL8)
+  UNIT_TEST(r8_d(1,2,1,2) == 1002.2_REAL8)
+  UNIT_TEST(r8_d(1,3,1,2) == 1003.3_REAL8)
+  UNIT_TEST(r8_d(1,4,1,2) == 1004.4_REAL8)
+  UNIT_TEST(r8_d(2,1,1,2) == 1005.5_REAL8)
+  UNIT_TEST(r8_d(2,2,1,2) == 1006.6_REAL8)
+  UNIT_TEST(r8_d(2,3,1,2) == 1007.7_REAL8)
+  UNIT_TEST(r8_d(2,4,1,2) == 1008.8_REAL8)
+  UNIT_TEST(r8_d(3,1,1,2) == 1009.9_REAL8)
+  UNIT_TEST(r8_d(3,2,1,2) == 1010.11_REAL8)
+  UNIT_TEST(r8_d(3,3,1,2) == 1011.01_REAL8)
+  UNIT_TEST(r8_d(3,4,1,2) == 1012.33_REAL8)
+  UNIT_TEST(r8_d(1,1,2,2) == 1011.0_REAL8)
+  UNIT_TEST(r8_d(1,2,2,2) == 1022.0_REAL8)
+  UNIT_TEST(r8_d(1,3,2,2) == 1033.0_REAL8)
+  UNIT_TEST(r8_d(1,4,2,2) == 1044.0_REAL8)
+  UNIT_TEST(r8_d(2,1,2,2) == 1055.0_REAL8)
+  UNIT_TEST(r8_d(2,2,2,2) == 1066.0_REAL8)
+  UNIT_TEST(r8_d(2,3,2,2) == 1077.0_REAL8)
+  UNIT_TEST(r8_d(2,4,2,2) == 1088.0_REAL8)
+  UNIT_TEST(r8_d(3,1,2,2) == 1099.0_REAL8)
+  UNIT_TEST(r8_d(3,2,2,2) == 1101.1_REAL8)
+  UNIT_TEST(r8_d(3,4,2,2) == 1123.3_REAL8)
+! --
+
+
+  call broadcast(i4_a,0)
+  call broadcast(i4_b,0)
+  call broadcast(i4_c,0)
+  call broadcast(i4_d,0)
+
+
+  UNIT_TEST(i4_a(1) == 1_INT4)
+  UNIT_TEST(i4_a(2) == 2_INT4)
+  UNIT_TEST(i4_a(3) == 3_INT4)
+! ---	
+  UNIT_TEST(i4_b(1,1) == 1_INT4)
+  UNIT_TEST(i4_b(1,2) == 2_INT4)
+  UNIT_TEST(i4_b(1,3) == 3_INT4)
+  UNIT_TEST(i4_b(1,4) == 4_INT4)
+  UNIT_TEST(i4_b(2,1) == 5_INT4)
+  UNIT_TEST(i4_b(2,2) == 6_INT4)
+  UNIT_TEST(i4_b(2,3) == 7_INT4)
+  UNIT_TEST(i4_b(2,4) == 8_INT4)
+  UNIT_TEST(i4_b(3,1) == 9_INT4)
+  UNIT_TEST(i4_b(3,2) == 10_INT4)
+  UNIT_TEST(i4_b(3,3) == 11_INT4)
+  UNIT_TEST(i4_b(3,4) == 12_INT4)
+! ---
+  UNIT_TEST(i4_c(1,1,1) == 1_INT4)
+  UNIT_TEST(i4_c(1,2,1) == 2_INT4)
+  UNIT_TEST(i4_c(1,3,1) == 3_INT4)
+  UNIT_TEST(i4_c(1,4,1) == 4_INT4)
+  UNIT_TEST(i4_c(2,1,1) == 5_INT4)
+  UNIT_TEST(i4_c(2,2,1) == 6_INT4)
+  UNIT_TEST(i4_c(2,3,1) == 7_INT4)
+  UNIT_TEST(i4_c(2,4,1) == 8_INT4)
+  UNIT_TEST(i4_c(3,1,1) == 9_INT4)
+  UNIT_TEST(i4_c(3,2,1) == 10_INT4)
+  UNIT_TEST(i4_c(3,3,1) == 11_INT4)
+  UNIT_TEST(i4_c(3,4,1) == 12_INT4)
+  UNIT_TEST(i4_c(1,1,2) == 10_INT4)
+  UNIT_TEST(i4_c(1,2,2) == 20_INT4)
+  UNIT_TEST(i4_c(1,3,2) == 30_INT4)
+  UNIT_TEST(i4_c(1,4,2) == 40_INT4)
+  UNIT_TEST(i4_c(2,1,2) == 50_INT4)
+  UNIT_TEST(i4_c(2,2,2) == 60_INT4)
+  UNIT_TEST(i4_c(2,3,2) == 70_INT4)
+  UNIT_TEST(i4_c(2,4,2) == 80_INT4)
+  UNIT_TEST(i4_c(3,1,2) == 90_INT4)
+  UNIT_TEST(i4_c(3,2,2) == 100_INT4)
+  UNIT_TEST(i4_c(3,3,2) == 110_INT4)
+  UNIT_TEST(i4_c(3,4,2) == 120_INT4)
+! ---
+  UNIT_TEST(i4_d(1,1,1,1) == 1_INT4)
+  UNIT_TEST(i4_d(1,2,1,1) == 2_INT4)
+  UNIT_TEST(i4_d(1,3,1,1) == 3_INT4)
+  UNIT_TEST(i4_d(1,4,1,1) == 4_INT4)
+  UNIT_TEST(i4_d(2,1,1,1) == 5_INT4)
+  UNIT_TEST(i4_d(2,2,1,1) == 6_INT4)
+  UNIT_TEST(i4_d(2,3,1,1) == 7_INT4)
+  UNIT_TEST(i4_d(2,4,1,1) == 8_INT4)
+  UNIT_TEST(i4_d(3,1,1,1) == 9_INT4)
+  UNIT_TEST(i4_d(3,2,1,1) == 10_INT4)
+  UNIT_TEST(i4_d(3,3,1,1) == 11_INT4)
+  UNIT_TEST(i4_d(3,4,1,1) == 12_INT4)
+  UNIT_TEST(i4_d(1,1,2,1) == 10_INT4)
+  UNIT_TEST(i4_d(1,2,2,1) == 20_INT4)
+  UNIT_TEST(i4_d(1,3,2,1) == 30_INT4)
+  UNIT_TEST(i4_d(1,4,2,1) == 40_INT4)
+  UNIT_TEST(i4_d(2,1,2,1) == 50_INT4)
+  UNIT_TEST(i4_d(2,2,2,1) == 60_INT4)
+  UNIT_TEST(i4_d(2,3,2,1) == 70_INT4)
+  UNIT_TEST(i4_d(2,4,2,1) == 80_INT4)
+  UNIT_TEST(i4_d(3,1,2,1) == 90_INT4)
+  UNIT_TEST(i4_d(3,2,2,1) == 100_INT4)
+  UNIT_TEST(i4_d(3,3,2,1) == 110_INT4)
+  UNIT_TEST(i4_d(3,4,2,1) == 120_INT4)
+! ---
+  UNIT_TEST(i4_d(1,1,1,2) == 10_INT4)
+  UNIT_TEST(i4_d(1,2,1,2) == 20_INT4)
+  UNIT_TEST(i4_d(1,3,1,2) == 30_INT4)
+  UNIT_TEST(i4_d(1,4,1,2) == 40_INT4)
+  UNIT_TEST(i4_d(2,1,1,2) == 50_INT4)
+  UNIT_TEST(i4_d(2,2,1,2) == 60_INT4)
+  UNIT_TEST(i4_d(2,3,1,2) == 70_INT4)
+  UNIT_TEST(i4_d(2,4,1,2) == 80_INT4)
+  UNIT_TEST(i4_d(3,1,1,2) == 90_INT4)
+  UNIT_TEST(i4_d(3,2,1,2) == 100_INT4)
+  UNIT_TEST(i4_d(3,3,1,2) == 110_INT4)
+  UNIT_TEST(i4_d(3,4,1,2) == 120_INT4)
+  UNIT_TEST(i4_d(1,1,2,2) == 100_INT4)
+  UNIT_TEST(i4_d(1,2,2,2) == 200_INT4)
+  UNIT_TEST(i4_d(1,3,2,2) == 300_INT4)
+  UNIT_TEST(i4_d(1,4,2,2) == 400_INT4)
+  UNIT_TEST(i4_d(2,1,2,2) == 500_INT4)
+  UNIT_TEST(i4_d(2,2,2,2) == 600_INT4)
+  UNIT_TEST(i4_d(2,3,2,2) == 700_INT4)
+  UNIT_TEST(i4_d(2,4,2,2) == 800_INT4)
+  UNIT_TEST(i4_d(3,1,2,2) == 900_INT4)
+  UNIT_TEST(i4_d(3,2,2,2) == 1000_INT4)
+  UNIT_TEST(i4_d(3,3,2,2) == 1100_INT4)
+  UNIT_TEST(i4_d(3,4,2,2) == 1200_INT4)
+! -------------------
+	
+  call broadcast(c1,0)
+  call broadcast(c2,0)
+  call broadcast(c3_a,0)
+  call broadcast(c3_b,0)
+  call broadcast(c3_c,0)
+  call broadcast(c3_d,0)
+
+! --------------------
+  UNIT_TEST(c1 == "A")	
+  UNIT_TEST(c2 == "kbb")	
+!
+  UNIT_TEST(c3_a(1) == "kbb")
+  UNIT_TEST(c3_a(2) == "bkb")
+  UNIT_TEST(c3_a(3) == "bbk")
+! ---	
+  UNIT_TEST(c3_b(1,1) == "abb")
+  UNIT_TEST(c3_b(1,2) == "akb")
+  UNIT_TEST(c3_b(1,3) == "abk")
+  UNIT_TEST(c3_b(1,4) == "ABB")
+  UNIT_TEST(c3_b(2,1) == "bbb")
+  UNIT_TEST(c3_b(2,2) == "bkb")
+  UNIT_TEST(c3_b(2,3) == "bbk")
+  UNIT_TEST(c3_b(2,4) == "BBB")
+  UNIT_TEST(c3_b(3,1) == "cbb")
+  UNIT_TEST(c3_b(3,2) == "ckb")
+  UNIT_TEST(c3_b(3,3) == "cbk")
+  UNIT_TEST(c3_b(3,4) == "CBB")
+! ---
+  UNIT_TEST(c3_c(1,1,1) == "abb")
+  UNIT_TEST(c3_c(1,2,1) == "akb")
+  UNIT_TEST(c3_c(1,3,1) == "abk")
+  UNIT_TEST(c3_c(1,4,1) == "ABB")
+  UNIT_TEST(c3_c(2,1,1) == "bbb")
+  UNIT_TEST(c3_c(2,2,1) == "bkb")
+  UNIT_TEST(c3_c(2,3,1) == "bbk")
+  UNIT_TEST(c3_c(2,4,1) == "BBB")
+  UNIT_TEST(c3_c(3,1,1) == "cbb")
+  UNIT_TEST(c3_c(3,2,1) == "ckb")
+  UNIT_TEST(c3_c(3,3,1) == "cbk")
+  UNIT_TEST(c3_c(3,4,1) == "CBB")
+! ---
+  UNIT_TEST(c3_c(1,1,2) == "abb")
+  UNIT_TEST(c3_c(1,2,2) == "akb")
+  UNIT_TEST(c3_c(1,3,2) == "abk")
+  UNIT_TEST(c3_c(1,4,2) == "ABB")
+  UNIT_TEST(c3_c(2,1,2) == "bbb")
+  UNIT_TEST(c3_c(2,2,2) == "bkb")
+  UNIT_TEST(c3_c(2,3,2) == "bbk")
+  UNIT_TEST(c3_c(2,4,2) == "BBB")
+  UNIT_TEST(c3_c(3,1,2) == "cbb")
+  UNIT_TEST(c3_c(3,2,2) == "ckb")
+  UNIT_TEST(c3_c(3,3,2) == "cbk")
+  UNIT_TEST(c3_c(3,4,2) == "CBB")
+!
+! ---
+  UNIT_TEST(c3_d(1,1,1,1) == "abb")
+  UNIT_TEST(c3_d(1,2,1,1) == "akb")
+  UNIT_TEST(c3_d(1,3,1,1) == "abk")
+  UNIT_TEST(c3_d(1,4,1,1) == "ABB")
+  UNIT_TEST(c3_d(2,1,1,1) == "bbb")
+  UNIT_TEST(c3_d(2,2,1,1) == "bkb")
+  UNIT_TEST(c3_d(2,3,1,1) == "bbk")
+  UNIT_TEST(c3_d(2,4,1,1) == "BBB")
+  UNIT_TEST(c3_d(3,1,1,1) == "cbb")
+  UNIT_TEST(c3_d(3,2,1,1) == "ckb")
+  UNIT_TEST(c3_d(3,3,1,1) == "cbk")
+  UNIT_TEST(c3_d(3,4,1,1) == "CBB")
+! ---
+  UNIT_TEST(c3_d(1,1,2,1) == "abb")
+  UNIT_TEST(c3_d(1,2,2,1) == "akb")
+  UNIT_TEST(c3_d(1,3,2,1) == "abk")
+  UNIT_TEST(c3_d(1,4,2,1) == "ABB")
+  UNIT_TEST(c3_d(2,1,2,1) == "bbb")
+  UNIT_TEST(c3_d(2,2,2,1) == "bkb")
+  UNIT_TEST(c3_d(2,3,2,1) == "bbk")
+  UNIT_TEST(c3_d(2,4,2,1) == "BBB")
+  UNIT_TEST(c3_d(3,1,2,1) == "cbb")
+  UNIT_TEST(c3_d(3,2,2,1) == "ckb")
+  UNIT_TEST(c3_d(3,3,2,1) == "cbk")
+  UNIT_TEST(c3_d(3,4,2,1) == "CBB")
+! ---
+  UNIT_TEST(c3_d(1,1,1,2) == "abb")
+  UNIT_TEST(c3_d(1,2,1,2) == "akb")
+  UNIT_TEST(c3_d(1,3,1,2) == "abk")
+  UNIT_TEST(c3_d(1,4,1,2) == "ABB")
+  UNIT_TEST(c3_d(2,1,1,2) == "bbb")
+  UNIT_TEST(c3_d(2,2,1,2) == "bkb")
+  UNIT_TEST(c3_d(2,3,1,2) == "bbk")
+  UNIT_TEST(c3_d(2,4,1,2) == "BBB")
+  UNIT_TEST(c3_d(3,1,1,2) == "cbb")
+  UNIT_TEST(c3_d(3,2,1,2) == "ckb")
+  UNIT_TEST(c3_d(3,3,1,2) == "cbk")
+  UNIT_TEST(c3_d(3,4,1,2) == "CBB")
+! ---
+  UNIT_TEST(c3_d(1,1,2,2) == "abb")
+  UNIT_TEST(c3_d(1,2,2,2) == "akb")
+  UNIT_TEST(c3_d(1,3,2,2) == "abk")
+  UNIT_TEST(c3_d(1,4,2,2) == "ABB")
+  UNIT_TEST(c3_d(2,1,2,2) == "bbb")
+  UNIT_TEST(c3_d(2,2,2,2) == "bkb")
+  UNIT_TEST(c3_d(2,3,2,2) == "bbk")
+  UNIT_TEST(c3_d(2,4,2,2) == "BBB")
+  UNIT_TEST(c3_d(3,1,2,2) == "cbb")
+  UNIT_TEST(c3_d(3,2,2,2) == "ckb")
+  UNIT_TEST(c3_d(3,3,2,2) == "cbk")
+  UNIT_TEST(c3_d(3,4,2,2) == "CBB")
+
+
+  call global_barrier
+
+end subroutine test_broadcast
+
+!-----------------------------------------------------------------------------!
+! Broadcast tests
+!-----------------------------------------------------------------------------!
+
+subroutine test_reduction(num_passes, num_fails)
+
+  use nemesis_comm,             only : node, nodes, global_sum, global_prod,   &
+       &                               global_min, global_max, global_barrier
+  use harness_data_types,       only : REAL4, REAL8, INT4
+  use harness_soft_equivalence, only : soft_equiv
+  implicit none
+  
+  ! >>> IO DATA
+  
+  ! Test results.
+  integer, intent(out) :: num_passes, num_fails
+  
+  ! >>> LOCAL DATA
+
+  ! Test data.
+  integer(INT4), dimension(4) :: i4s
+  real(REAL4), dimension(3)   :: r4s
+  real(REAL8), dimension(5)   :: r8s
+  integer(INT4) :: i4
+  real(REAL4)   :: r4
+  real(REAL8)   :: r8
+
+  !> kbb: additional test data
+  integer(INT4),parameter:: M=3,N=4,L=2
+  real(REAL4)   :: r4_a(M),r4_b(M,N),r4_c(M,N,L)
+  real(REAL8)   :: r8_a(M),r8_b(M,N),r8_c(M,N,L)
+  integer(INT4) :: i4_a(M),i4_b(M,N),i4_c(M,N,L)
+  integer       :: i,j,k	
+
+
+
+  ! >>> BODY
+
+  ! initialize test counters
+  num_passes = 0
+  num_fails  = 0
+
+  ! Make data
+  i4s = (/ 1, 2, 3, 4 /)
+  r4s = (/ 1.1_REAL4, 1.2_REAL4, 1.3_REAL4 /)
+  r8s = (/ 2.1_REAL8, 2.2_REAL8, 2.3_REAL8, 2.4_REAL8, 2.5_REAL8 /)
+
+  !> kbb: Make additional data for testing arrays with rank 1, 2 and 3
+   !> kbb: additional types, REAL4
+	r4_a=(/1.1_REAL4,2.2_REAL4,3.3_REAL4/)
+	r4_b(1,:)=(/1.1_REAL4,2.2_REAL4,3.3_REAL4,4.4_REAL4/)
+	r4_b(2,:)=(/5.5_REAL4,6.6_REAL4,7.7_REAL4,8.8_REAL4/)
+	r4_b(3,:)=(/9.9_REAL4,10.11_REAL4,11.01_REAL4,12.33_REAL4/)
+	r4_c(:,:,1)=r4_b
+	r4_c(:,:,2)=10.0_REAL4*r4_b
+   !> kbb: additional types, REAL8
+	r8_a=(/1.1_REAL8,2.2_REAL8,3.3_REAL8/)
+	r8_b(1,:)=(/1.1_REAL8,2.2_REAL8,3.3_REAL8,4.4_REAL8/)
+	r8_b(2,:)=(/5.5_REAL8,6.6_REAL8,7.7_REAL8,8.8_REAL8/)
+	r8_b(3,:)=(/9.9_REAL8,10.11_REAL8,11.01_REAL8,12.33_REAL8/)
+	r8_c(:,:,1)=r8_b
+	r8_c(:,:,2)=10.0_REAL8*r8_b
+   !> kbb: additional types, INT4
+	i4_a=(/1_INT4,2_INT4,3_INT4/)
+	i4_b(1,:)=(/1_INT4,2_INT4,3_INT4,4_INT4/)
+	i4_b(2,:)=(/5_INT4,6_INT4,7_INT4,8_INT4/)
+	i4_b(3,:)=(/9_INT4,10_INT4,11_INT4,12_INT4/)
+	i4_c(:,:,1)=i4_b
+	i4_c(:,:,2)=10*i4_b
+
+
+
+  ! Global sum
+  call global_sum(i4s)
+  call global_sum(r4s)
+  call global_sum(r8s)
+
+  UNIT_TEST(i4s(1) == 1 * nodes()) 
+  UNIT_TEST(i4s(2) == 2 * nodes()) 
+  UNIT_TEST(i4s(3) == 3 * nodes()) 
+  UNIT_TEST(i4s(4) == 4 * nodes()) 
+
+  UNIT_TEST(r4s(1) == 1.1_REAL4 * real(nodes(), REAL4)) 
+  UNIT_TEST(r4s(2) == 1.2_REAL4 * real(nodes(), REAL4)) 
+  UNIT_TEST(r4s(3) == 1.3_REAL4 * real(nodes(), REAL4)) 
+
+  UNIT_TEST(r8s(1) == 2.1_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(2) == 2.2_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(3) == 2.3_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(4) == 2.4_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(5) == 2.5_REAL8 * real(nodes(), REAL8)) 
+
+
+  !> kbb: global sum
+  call global_sum(r4_a)
+  call global_sum(r4_b)
+  call global_sum(r4_c)
+
+  !> kbb: check data
+
+  UNIT_TEST(r4_a(1) == 1.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_a(2) == 2.2_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_a(3) == 3.3_REAL4 * real(nodes(), REAL4))
+! ---	
+  UNIT_TEST(r4_b(1,1) == 1.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(1,2) == 2.2_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(1,3) == 3.3_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(1,4) == 4.4_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,1) == 5.5_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,2) == 6.6_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,3) == 7.7_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,4) == 8.8_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,1) == 9.9_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,2) == 10.11_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,3) == 11.01_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,4) == 12.33_REAL4 * real(nodes(), REAL4))
+! ---
+  UNIT_TEST(r4_c(1,1,1) == 1.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,2,1) == 2.2_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,3,1) == 3.3_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,4,1) == 4.4_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,1,1) == 5.5_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,2,1) == 6.6_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,3,1) == 7.7_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,4,1) == 8.8_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,1,1) == 9.9_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,2,1) == 10.11_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,3,1) == 11.01_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,4,1) == 12.33_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,1,2) == 11.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,2,2) == 22.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,3,2) == 33.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,4,2) == 44.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,1,2) == 55.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,2,2) == 66.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,3,2) == 77.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,4,2) == 88.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,1,2) == 99.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,2,2) == 101.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,4,2) == 123.3_REAL4 * real(nodes(), REAL4))
+
+  !> kbb: global sum
+  call global_sum(r8_a)
+  call global_sum(r8_b)
+  call global_sum(r8_c)
+
+  !> kbb: check data
+  UNIT_TEST(r8_a(1) == 1.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_a(2) == 2.2_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_a(3) == 3.3_REAL8 * real(nodes(), REAL8))
+! ---	
+  UNIT_TEST(r8_b(1,1) == 1.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(1,2) == 2.2_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(1,3) == 3.3_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(1,4) == 4.4_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,1) == 5.5_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,2) == 6.6_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,3) == 7.7_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,4) == 8.8_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,1) == 9.9_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,2) == 10.11_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,3) == 11.01_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,4) == 12.33_REAL8 * real(nodes(), REAL8))
+! ---
+  UNIT_TEST(r8_c(1,1,1) == 1.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,2,1) == 2.2_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,3,1) == 3.3_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,4,1) == 4.4_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,1,1) == 5.5_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,2,1) == 6.6_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,3,1) == 7.7_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,4,1) == 8.8_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,1,1) == 9.9_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,2,1) == 10.11_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,3,1) == 11.01_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,4,1) == 12.33_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,1,2) == 11.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,2,2) == 22.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,3,2) == 33.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,4,2) == 44.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,1,2) == 55.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,2,2) == 66.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,3,2) == 77.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,4,2) == 88.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,1,2) == 99.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,2,2) == 101.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,3,2) == 110.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,4,2) == 123.3_REAL8 * real(nodes(), REAL8))
+
+
+  !> kbb: global sum
+  call global_sum(i4_a)
+  call global_sum(i4_b)
+  call global_sum(i4_c)
+
+
+  UNIT_TEST(i4_a(1) == 1_INT4 * nodes())
+  UNIT_TEST(i4_a(2) == 2_INT4 * nodes())
+  UNIT_TEST(i4_a(3) == 3_INT4 * nodes())
+! ---	
+  UNIT_TEST(i4_b(1,1) == 1_INT4 * nodes())
+  UNIT_TEST(i4_b(1,2) == 2_INT4 * nodes())
+  UNIT_TEST(i4_b(1,3) == 3_INT4 * nodes())
+  UNIT_TEST(i4_b(1,4) == 4_INT4 * nodes())
+  UNIT_TEST(i4_b(2,1) == 5_INT4 * nodes())
+  UNIT_TEST(i4_b(2,2) == 6_INT4 * nodes())
+  UNIT_TEST(i4_b(2,3) == 7_INT4 * nodes())
+  UNIT_TEST(i4_b(2,4) == 8_INT4 * nodes())
+  UNIT_TEST(i4_b(3,1) == 9_INT4 * nodes())
+  UNIT_TEST(i4_b(3,2) == 10_INT4 * nodes())
+  UNIT_TEST(i4_b(3,3) == 11_INT4 * nodes())
+  UNIT_TEST(i4_b(3,4) == 12_INT4 * nodes())
+! ---
+  UNIT_TEST(i4_c(1,1,1) == 1_INT4 * nodes())
+  UNIT_TEST(i4_c(1,2,1) == 2_INT4 * nodes())
+  UNIT_TEST(i4_c(1,3,1) == 3_INT4 * nodes())
+  UNIT_TEST(i4_c(1,4,1) == 4_INT4 * nodes())
+  UNIT_TEST(i4_c(2,1,1) == 5_INT4 * nodes())
+  UNIT_TEST(i4_c(2,2,1) == 6_INT4 * nodes())
+  UNIT_TEST(i4_c(2,3,1) == 7_INT4 * nodes())
+  UNIT_TEST(i4_c(2,4,1) == 8_INT4 * nodes())
+  UNIT_TEST(i4_c(3,1,1) == 9_INT4 * nodes())
+  UNIT_TEST(i4_c(3,2,1) == 10_INT4 * nodes())
+  UNIT_TEST(i4_c(3,3,1) == 11_INT4 * nodes())
+  UNIT_TEST(i4_c(3,4,1) == 12_INT4 * nodes())
+  UNIT_TEST(i4_c(1,1,2) == 10_INT4 * nodes())
+  UNIT_TEST(i4_c(1,2,2) == 20_INT4 * nodes())
+  UNIT_TEST(i4_c(1,3,2) == 30_INT4 * nodes())
+  UNIT_TEST(i4_c(1,4,2) == 40_INT4 * nodes())
+  UNIT_TEST(i4_c(2,1,2) == 50_INT4 * nodes())
+  UNIT_TEST(i4_c(2,2,2) == 60_INT4 * nodes())
+  UNIT_TEST(i4_c(2,3,2) == 70_INT4 * nodes())
+  UNIT_TEST(i4_c(2,4,2) == 80_INT4 * nodes())
+  UNIT_TEST(i4_c(3,1,2) == 90_INT4 * nodes())
+  UNIT_TEST(i4_c(3,2,2) == 100_INT4 * nodes())
+  UNIT_TEST(i4_c(3,3,2) == 110_INT4 * nodes())
+  UNIT_TEST(i4_c(3,4,2) == 120_INT4 * nodes())
+! -------------------
+	
+
+
+  ! Global product
+  i4s = (/ 1, 2, 3, 4 /)
+  r4s = (/ 1.1_REAL4, 1.2_REAL4, 1.3_REAL4 /)
+  r8s = (/ 2.1_REAL8, 2.2_REAL8, 2.3_REAL8, 2.4_REAL8, 2.5_REAL8 /)
+
+  !> kbb: Make additional data for testing arrays with rank 1, 2 and 3
+   !> kbb: additional types, REAL4
+	r4_a=(/1.1_REAL4,2.2_REAL4,3.3_REAL4/)
+	r4_b(1,:)=(/1.1_REAL4,2.2_REAL4,3.3_REAL4,4.4_REAL4/)
+	r4_b(2,:)=(/5.5_REAL4,6.6_REAL4,7.7_REAL4,8.8_REAL4/)
+	r4_b(3,:)=(/9.9_REAL4,10.11_REAL4,11.01_REAL4,12.33_REAL4/)
+	r4_c(:,:,1)=r4_b
+	r4_c(:,:,2)=10.0_REAL4*r4_b
+   !> kbb: additional types, REAL8
+	r8_a=(/1.1_REAL8,2.2_REAL8,3.3_REAL8/)
+	r8_b(1,:)=(/1.1_REAL8,2.2_REAL8,3.3_REAL8,4.4_REAL8/)
+	r8_b(2,:)=(/5.5_REAL8,6.6_REAL8,7.7_REAL8,8.8_REAL8/)
+	r8_b(3,:)=(/9.9_REAL8,10.11_REAL8,11.01_REAL8,12.33_REAL8/)
+	r8_c(:,:,1)=r8_b
+	r8_c(:,:,2)=10.0_REAL8*r8_b
+   !> kbb: additional types, INT4
+	i4_a=(/1_INT4,2_INT4,3_INT4/)
+	i4_b(1,:)=(/1_INT4,2_INT4,3_INT4,4_INT4/)
+	i4_b(2,:)=(/5_INT4,6_INT4,7_INT4,8_INT4/)
+	i4_b(3,:)=(/9_INT4,10_INT4,11_INT4,12_INT4/)
+	i4_c(:,:,1)=i4_b
+	i4_c(:,:,2)=10*i4_b
+
+  call global_prod(i4s)
+  call global_prod(r4s)
+  call global_prod(r8s)
+
+  UNIT_TEST(i4s(1) == 1**nodes()) 
+  UNIT_TEST(i4s(2) == 2**nodes()) 
+  UNIT_TEST(i4s(3) == 3**nodes()) 
+  UNIT_TEST(i4s(4) == 4**nodes()) 
+
+  UNIT_TEST(soft_equiv(r4s(1), 1.1_REAL4**real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4s(2), 1.2_REAL4**real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4s(3), 1.3_REAL4**real(nodes(), REAL4), 1.0e-6_REAL4)) 
+
+  UNIT_TEST(soft_equiv(r8s(1), 2.1_REAL8**real(nodes(), REAL8))) 
+  UNIT_TEST(soft_equiv(r8s(2), 2.2_REAL8**real(nodes(), REAL8))) 
+  UNIT_TEST(soft_equiv(r8s(3), 2.3_REAL8**real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8s(4), 2.4_REAL8**real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8s(5), 2.5_REAL8**real(nodes(), REAL8)))
+
+
+
+  !> kbb: global product
+  call global_prod(r4_a)
+  call global_prod(r4_b)
+  call global_prod(r4_c)
+
+  !> kbb: check data
+
+  UNIT_TEST(soft_equiv(r4_a(1), 1.1_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_a(2), 2.2_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_a(3), 3.3_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+! ---	
+  UNIT_TEST(soft_equiv(r4_b(1,1), 1.1_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(1,2), 2.2_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(1,3), 3.3_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(1,4), 4.4_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(2,1), 5.5_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(2,2), 6.6_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(2,3), 7.7_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(2,4), 8.8_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(3,1), 9.9_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(3,2), 10.11_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(3,3), 11.01_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_b(3,4), 12.33_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+! ---
+  UNIT_TEST(soft_equiv(r4_c(1,1,1), 1.1_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(1,2,1), 2.2_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(1,3,1), 3.3_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(1,4,1), 4.4_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,1,1), 5.5_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,2,1), 6.6_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,3,1), 7.7_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,4,1), 8.8_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(3,1,1), 9.9_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(3,2,1), 10.11_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(3,3,1), 11.01_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(3,4,1), 12.33_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(1,1,2), 11.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(1,2,2), 22.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(1,3,2), 33.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(1,4,2), 44.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,1,2), 55.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,2,2), 66.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,3,2), 77.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(2,4,2), 88.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(3,1,2), 99.0_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(3,2,2), 101.1_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+  UNIT_TEST(soft_equiv(r4_c(3,4,2), 123.3_REAL4 ** real(nodes(), REAL4), 1.0e-6_REAL4))
+
+  !> kbb: global product
+  call global_prod(r8_a)
+  call global_prod(r8_b)
+  call global_prod(r8_c)
+
+  !> kbb: check data
+  UNIT_TEST(soft_equiv(r8_a(1), 1.1_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_a(2), 2.2_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_a(3), 3.3_REAL8 ** real(nodes(), REAL8)))
+! ---	
+  UNIT_TEST(soft_equiv(r8_b(1,1), 1.1_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(1,2), 2.2_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(1,3), 3.3_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(1,4), 4.4_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(2,1), 5.5_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(2,2), 6.6_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(2,3), 7.7_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(2,4), 8.8_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(3,1), 9.9_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(3,2), 10.11_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(3,3), 11.01_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_b(3,4), 12.33_REAL8 ** real(nodes(), REAL8)))
+! ---
+  UNIT_TEST(soft_equiv(r8_c(1,1,1), 1.1_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(1,2,1), 2.2_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(1,3,1), 3.3_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(1,4,1), 4.4_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,1,1), 5.5_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,2,1), 6.6_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,3,1), 7.7_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,4,1), 8.8_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,1,1), 9.9_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,2,1), 10.11_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,3,1), 11.01_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,4,1), 12.33_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(1,1,2), 11.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(1,2,2), 22.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(1,3,2), 33.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(1,4,2), 44.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,1,2), 55.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,2,2), 66.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,3,2), 77.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(2,4,2), 88.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,1,2), 99.0_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,2,2), 101.1_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,3,2), 110.1_REAL8 ** real(nodes(), REAL8)))
+  UNIT_TEST(soft_equiv(r8_c(3,4,2), 123.3_REAL8 ** real(nodes(), REAL8)))
+
+
+  !> kbb: global product
+  call global_prod(i4_a)
+  call global_prod(i4_b)
+  call global_prod(i4_c)
+
+
+  UNIT_TEST(i4_a(1) == 1_INT4 ** nodes())
+  UNIT_TEST(i4_a(2) == 2_INT4 ** nodes())
+  UNIT_TEST(i4_a(3) == 3_INT4 ** nodes())
+! ---	
+  UNIT_TEST(i4_b(1,1) == 1_INT4 ** nodes())
+  UNIT_TEST(i4_b(1,2) == 2_INT4 ** nodes())
+  UNIT_TEST(i4_b(1,3) == 3_INT4 ** nodes())
+  UNIT_TEST(i4_b(1,4) == 4_INT4 ** nodes())
+  UNIT_TEST(i4_b(2,1) == 5_INT4 ** nodes())
+  UNIT_TEST(i4_b(2,2) == 6_INT4 ** nodes())
+  UNIT_TEST(i4_b(2,3) == 7_INT4 ** nodes())
+  UNIT_TEST(i4_b(2,4) == 8_INT4 ** nodes())
+  UNIT_TEST(i4_b(3,1) == 9_INT4 ** nodes())
+  UNIT_TEST(i4_b(3,2) == 10_INT4 ** nodes())
+  UNIT_TEST(i4_b(3,3) == 11_INT4 ** nodes())
+  UNIT_TEST(i4_b(3,4) == 12_INT4 ** nodes())
+! ---
+  UNIT_TEST(i4_c(1,1,1) == 1_INT4 ** nodes())
+  UNIT_TEST(i4_c(1,2,1) == 2_INT4 ** nodes())
+  UNIT_TEST(i4_c(1,3,1) == 3_INT4 ** nodes())
+  UNIT_TEST(i4_c(1,4,1) == 4_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,1,1) == 5_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,2,1) == 6_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,3,1) == 7_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,4,1) == 8_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,1,1) == 9_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,2,1) == 10_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,3,1) == 11_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,4,1) == 12_INT4 ** nodes())
+  UNIT_TEST(i4_c(1,1,2) == 10_INT4 ** nodes())
+  UNIT_TEST(i4_c(1,2,2) == 20_INT4 ** nodes())
+  UNIT_TEST(i4_c(1,3,2) == 30_INT4 ** nodes())
+  UNIT_TEST(i4_c(1,4,2) == 40_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,1,2) == 50_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,2,2) == 60_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,3,2) == 70_INT4 ** nodes())
+  UNIT_TEST(i4_c(2,4,2) == 80_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,1,2) == 90_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,2,2) == 100_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,3,2) == 110_INT4 ** nodes())
+  UNIT_TEST(i4_c(3,4,2) == 120_INT4 ** nodes())
+! -------------------
+	
+
+
+
+  ! Global minimum
+  i4s = (/ 1, 2, 3, 4 /)
+  r4s = (/ 1.1_REAL4, 1.2_REAL4, 1.3_REAL4 /)
+  r8s = (/ 2.1_REAL8, 2.2_REAL8, 2.3_REAL8, 2.4_REAL8, 2.5_REAL8 /)
+
+  i4s = i4s * (node() + 1)
+  r4s = r4s * (real(node(), REAL4) + 1.0_REAL4)
+  r8s = r8s * (real(node(), REAL8) + 1.0_REAL8)
+
+
+  !> kbb: Make additional data for testing arrays with rank 1, 2 and 3
+   !> kbb: additional types, REAL4
+	r4_a=(/1.1_REAL4,2.2_REAL4,3.3_REAL4/)
+	r4_b(1,:)=(/1.1_REAL4,2.2_REAL4,3.3_REAL4,4.4_REAL4/)
+	r4_b(2,:)=(/5.5_REAL4,6.6_REAL4,7.7_REAL4,8.8_REAL4/)
+	r4_b(3,:)=(/9.9_REAL4,10.11_REAL4,11.01_REAL4,12.33_REAL4/)
+	r4_c(:,:,1)=r4_b
+	r4_c(:,:,2)=10.0_REAL4*r4_b
+   !> kbb: additional types, REAL8
+	r8_a=(/1.1_REAL8,2.2_REAL8,3.3_REAL8/)
+	r8_b(1,:)=(/1.1_REAL8,2.2_REAL8,3.3_REAL8,4.4_REAL8/)
+	r8_b(2,:)=(/5.5_REAL8,6.6_REAL8,7.7_REAL8,8.8_REAL8/)
+	r8_b(3,:)=(/9.9_REAL8,10.11_REAL8,11.01_REAL8,12.33_REAL8/)
+	r8_c(:,:,1)=r8_b
+	r8_c(:,:,2)=10.0_REAL8*r8_b
+   !> kbb: additional types, INT4
+	i4_a=(/1_INT4,2_INT4,3_INT4/)
+	i4_b(1,:)=(/1_INT4,2_INT4,3_INT4,4_INT4/)
+	i4_b(2,:)=(/5_INT4,6_INT4,7_INT4,8_INT4/)
+	i4_b(3,:)=(/9_INT4,10_INT4,11_INT4,12_INT4/)
+	i4_c(:,:,1)=i4_b
+	i4_c(:,:,2)=10*i4_b
+
+  i4_a = i4_a * (node() + 1)
+  i4_b = i4_b * (node() + 1)
+  i4_c = i4_c * (node() + 1)
+
+  r4_a = r4_a * (real(node(), REAL4) + 1.0_REAL4)
+  r4_b = r4_b * (real(node(), REAL4) + 1.0_REAL4)
+  r4_c = r4_c * (real(node(), REAL4) + 1.0_REAL4)
+
+  r8_a = r8_a * (real(node(), REAL8) + 1.0_REAL8)
+  r8_b = r8_b * (real(node(), REAL8) + 1.0_REAL8)
+  r8_c = r8_c * (real(node(), REAL8) + 1.0_REAL8)
+
+	
+
+  call global_min(i4s)
+  call global_min(r4s)
+  call global_min(r8s)
+
+  UNIT_TEST(i4s(1) == 1) 
+  UNIT_TEST(i4s(2) == 2) 
+  UNIT_TEST(i4s(3) == 3) 
+  UNIT_TEST(i4s(4) == 4) 
+
+  UNIT_TEST(r4s(1) == 1.1_REAL4) 
+  UNIT_TEST(r4s(2) == 1.2_REAL4) 
+  UNIT_TEST(r4s(3) == 1.3_REAL4) 
+
+  UNIT_TEST(r8s(1) == 2.1_REAL8) 
+  UNIT_TEST(r8s(2) == 2.2_REAL8) 
+  UNIT_TEST(r8s(3) == 2.3_REAL8) 
+  UNIT_TEST(r8s(4) == 2.4_REAL8) 
+  UNIT_TEST(r8s(5) == 2.5_REAL8) 
+
+ !> kbb: global minimum
+  call global_min(r4_a)
+  call global_min(r4_b)
+  call global_min(r4_c)
+
+  !> kbb: check data
+
+  UNIT_TEST(r4_a(1) == 1.1_REAL4)
+  UNIT_TEST(r4_a(2) == 2.2_REAL4)
+  UNIT_TEST(r4_a(3) == 3.3_REAL4)
+! ---
+  UNIT_TEST(r4_b(1,1) == 1.1_REAL4)
+  UNIT_TEST(r4_b(1,2) == 2.2_REAL4)
+  UNIT_TEST(r4_b(1,3) == 3.3_REAL4)
+  UNIT_TEST(r4_b(1,4) == 4.4_REAL4)
+  UNIT_TEST(r4_b(2,1) == 5.5_REAL4)
+  UNIT_TEST(r4_b(2,2) == 6.6_REAL4)
+  UNIT_TEST(r4_b(2,3) == 7.7_REAL4)
+  UNIT_TEST(r4_b(2,4) == 8.8_REAL4)
+  UNIT_TEST(r4_b(3,1) == 9.9_REAL4)
+  UNIT_TEST(r4_b(3,2) == 10.11_REAL4)
+  UNIT_TEST(r4_b(3,3) == 11.01_REAL4)
+  UNIT_TEST(r4_b(3,4) == 12.33_REAL4)
+! ---
+  UNIT_TEST(r4_c(1,1,1) == 1.1_REAL4)
+  UNIT_TEST(r4_c(1,2,1) == 2.2_REAL4)
+  UNIT_TEST(r4_c(1,3,1) == 3.3_REAL4)
+  UNIT_TEST(r4_c(1,4,1) == 4.4_REAL4)
+  UNIT_TEST(r4_c(2,1,1) == 5.5_REAL4)
+  UNIT_TEST(r4_c(2,2,1) == 6.6_REAL4)
+  UNIT_TEST(r4_c(2,3,1) == 7.7_REAL4)
+  UNIT_TEST(r4_c(2,4,1) == 8.8_REAL4)
+  UNIT_TEST(r4_c(3,1,1) == 9.9_REAL4)
+  UNIT_TEST(r4_c(3,2,1) == 10.11_REAL4)
+  UNIT_TEST(r4_c(3,3,1) == 11.01_REAL4)
+  UNIT_TEST(r4_c(3,4,1) == 12.33_REAL4)
+  UNIT_TEST(r4_c(1,1,2) == 11.0_REAL4)
+  UNIT_TEST(r4_c(1,2,2) == 22.0_REAL4)
+  UNIT_TEST(r4_c(1,3,2) == 33.0_REAL4)
+  UNIT_TEST(r4_c(1,4,2) == 44.0_REAL4)
+  UNIT_TEST(r4_c(2,1,2) == 55.0_REAL4)
+  UNIT_TEST(r4_c(2,2,2) == 66.0_REAL4)
+  UNIT_TEST(r4_c(2,3,2) == 77.0_REAL4)
+  UNIT_TEST(r4_c(2,4,2) == 88.0_REAL4)
+  UNIT_TEST(r4_c(3,1,2) == 99.0_REAL4)
+  UNIT_TEST(r4_c(3,2,2) == 101.1_REAL4)
+  UNIT_TEST(r4_c(3,4,2) == 123.3_REAL4)
+
+  !> kbb: global minimum
+  call global_min(r8_a)
+  call global_min(r8_b)
+  call global_min(r8_c)
+
+  !> kbb: check data
+  UNIT_TEST(r8_a(1) == 1.1_REAL8)
+  UNIT_TEST(r8_a(2) == 2.2_REAL8)
+  UNIT_TEST(r8_a(3) == 3.3_REAL8)
+! ---
+  UNIT_TEST(r8_b(1,1) == 1.1_REAL8)
+  UNIT_TEST(r8_b(1,2) == 2.2_REAL8)
+  UNIT_TEST(r8_b(1,3) == 3.3_REAL8)
+  UNIT_TEST(r8_b(1,4) == 4.4_REAL8)
+  UNIT_TEST(r8_b(2,1) == 5.5_REAL8)
+  UNIT_TEST(r8_b(2,2) == 6.6_REAL8)
+  UNIT_TEST(r8_b(2,3) == 7.7_REAL8)
+  UNIT_TEST(r8_b(2,4) == 8.8_REAL8)
+  UNIT_TEST(r8_b(3,1) == 9.9_REAL8)
+  UNIT_TEST(r8_b(3,2) == 10.11_REAL8)
+  UNIT_TEST(r8_b(3,3) == 11.01_REAL8)
+  UNIT_TEST(r8_b(3,4) == 12.33_REAL8)
+! ---
+  UNIT_TEST(r8_c(1,1,1) == 1.1_REAL8)
+  UNIT_TEST(r8_c(1,2,1) == 2.2_REAL8)
+  UNIT_TEST(r8_c(1,3,1) == 3.3_REAL8)
+  UNIT_TEST(r8_c(1,4,1) == 4.4_REAL8)
+  UNIT_TEST(r8_c(2,1,1) == 5.5_REAL8)
+  UNIT_TEST(r8_c(2,2,1) == 6.6_REAL8)
+  UNIT_TEST(r8_c(2,3,1) == 7.7_REAL8)
+  UNIT_TEST(r8_c(2,4,1) == 8.8_REAL8)
+  UNIT_TEST(r8_c(3,1,1) == 9.9_REAL8)
+  UNIT_TEST(r8_c(3,2,1) == 10.11_REAL8)
+  UNIT_TEST(r8_c(3,3,1) == 11.01_REAL8)
+  UNIT_TEST(r8_c(3,4,1) == 12.33_REAL8)
+  UNIT_TEST(r8_c(1,1,2) == 11.0_REAL8)
+  UNIT_TEST(r8_c(1,2,2) == 22.0_REAL8)
+  UNIT_TEST(r8_c(1,3,2) == 33.0_REAL8)
+  UNIT_TEST(r8_c(1,4,2) == 44.0_REAL8)
+  UNIT_TEST(r8_c(2,1,2) == 55.0_REAL8)
+  UNIT_TEST(r8_c(2,2,2) == 66.0_REAL8)
+  UNIT_TEST(r8_c(2,3,2) == 77.0_REAL8)
+  UNIT_TEST(r8_c(2,4,2) == 88.0_REAL8)
+  UNIT_TEST(r8_c(3,1,2) == 99.0_REAL8)
+  UNIT_TEST(r8_c(3,2,2) == 101.1_REAL8)
+  UNIT_TEST(r8_c(3,3,2) == 110.1_REAL8)
+  UNIT_TEST(r8_c(3,4,2) == 123.3_REAL8)
+
+  !> kbb: global minimum
+  call global_min(i4_a)
+  call global_min(i4_b)
+  call global_min(i4_c)
+
+
+  UNIT_TEST(i4_a(1) == 1_INT4)
+  UNIT_TEST(i4_a(2) == 2_INT4)
+  UNIT_TEST(i4_a(3) == 3_INT4)
+! ---
+  UNIT_TEST(i4_b(1,1) == 1_INT4)
+  UNIT_TEST(i4_b(1,2) == 2_INT4)
+  UNIT_TEST(i4_b(1,3) == 3_INT4)
+  UNIT_TEST(i4_b(1,4) == 4_INT4)
+  UNIT_TEST(i4_b(2,1) == 5_INT4)
+  UNIT_TEST(i4_b(2,2) == 6_INT4)
+  UNIT_TEST(i4_b(2,3) == 7_INT4)
+  UNIT_TEST(i4_b(2,4) == 8_INT4)
+  UNIT_TEST(i4_b(3,1) == 9_INT4)
+  UNIT_TEST(i4_b(3,2) == 10_INT4)
+  UNIT_TEST(i4_b(3,3) == 11_INT4)
+  UNIT_TEST(i4_b(3,4) == 12_INT4)
+! ---
+  UNIT_TEST(i4_c(1,1,1) == 1_INT4)
+  UNIT_TEST(i4_c(1,2,1) == 2_INT4)
+  UNIT_TEST(i4_c(1,3,1) == 3_INT4)
+  UNIT_TEST(i4_c(1,4,1) == 4_INT4)
+  UNIT_TEST(i4_c(2,1,1) == 5_INT4)
+  UNIT_TEST(i4_c(2,2,1) == 6_INT4)
+  UNIT_TEST(i4_c(2,3,1) == 7_INT4)
+  UNIT_TEST(i4_c(2,4,1) == 8_INT4)
+  UNIT_TEST(i4_c(3,1,1) == 9_INT4)
+  UNIT_TEST(i4_c(3,2,1) == 10_INT4)
+  UNIT_TEST(i4_c(3,3,1) == 11_INT4)
+  UNIT_TEST(i4_c(3,4,1) == 12_INT4)
+  UNIT_TEST(i4_c(1,1,2) == 10_INT4)
+  UNIT_TEST(i4_c(1,2,2) == 20_INT4)
+  UNIT_TEST(i4_c(1,3,2) == 30_INT4)
+  UNIT_TEST(i4_c(1,4,2) == 40_INT4)
+  UNIT_TEST(i4_c(2,1,2) == 50_INT4)
+  UNIT_TEST(i4_c(2,2,2) == 60_INT4)
+  UNIT_TEST(i4_c(2,3,2) == 70_INT4)
+  UNIT_TEST(i4_c(2,4,2) == 80_INT4)
+  UNIT_TEST(i4_c(3,1,2) == 90_INT4)
+  UNIT_TEST(i4_c(3,2,2) == 100_INT4)
+  UNIT_TEST(i4_c(3,3,2) == 110_INT4)
+  UNIT_TEST(i4_c(3,4,2) == 120_INT4)
+! -------------------
+
+
+
+  ! Global maximum
+  i4s = (/ 1, 2, 3, 4 /)
+  r4s = (/ 1.1_REAL4, 1.2_REAL4, 1.3_REAL4 /)
+  r8s = (/ 2.1_REAL8, 2.2_REAL8, 2.3_REAL8, 2.4_REAL8, 2.5_REAL8 /)
+
+  i4s = i4s * (node() + 1)
+  r4s = r4s * (real(node(), REAL4) + 1.0_REAL4)
+  r8s = r8s * (real(node(), REAL8) + 1.0_REAL8)
+
+  !> kbb: Make additional data for testing arrays with rank 1, 2 and 3
+   !> kbb: additional types, REAL4
+	r4_a=(/1.1_REAL4,2.2_REAL4,3.3_REAL4/)
+	r4_b(1,:)=(/1.1_REAL4,2.2_REAL4,3.3_REAL4,4.4_REAL4/)
+	r4_b(2,:)=(/5.5_REAL4,6.6_REAL4,7.7_REAL4,8.8_REAL4/)
+	r4_b(3,:)=(/9.9_REAL4,10.11_REAL4,11.01_REAL4,12.33_REAL4/)
+	r4_c(:,:,1)=r4_b
+	r4_c(:,:,2)=10.0_REAL4*r4_b
+   !> kbb: additional types, REAL8
+	r8_a=(/1.1_REAL8,2.2_REAL8,3.3_REAL8/)
+	r8_b(1,:)=(/1.1_REAL8,2.2_REAL8,3.3_REAL8,4.4_REAL8/)
+	r8_b(2,:)=(/5.5_REAL8,6.6_REAL8,7.7_REAL8,8.8_REAL8/)
+	r8_b(3,:)=(/9.9_REAL8,10.11_REAL8,11.01_REAL8,12.33_REAL8/)
+	r8_c(:,:,1)=r8_b
+	r8_c(:,:,2)=10.0_REAL8*r8_b
+   !> kbb: additional types, INT4
+	i4_a=(/1_INT4,2_INT4,3_INT4/)
+	i4_b(1,:)=(/1_INT4,2_INT4,3_INT4,4_INT4/)
+	i4_b(2,:)=(/5_INT4,6_INT4,7_INT4,8_INT4/)
+	i4_b(3,:)=(/9_INT4,10_INT4,11_INT4,12_INT4/)
+	i4_c(:,:,1)=i4_b
+	i4_c(:,:,2)=10*i4_b
+
+  i4_a = i4_a * (node() + 1)
+  i4_b = i4_b * (node() + 1)
+  i4_c = i4_c * (node() + 1)
+
+  r4_a = r4_a * (real(node(), REAL4) + 1.0_REAL4)
+  r4_b = r4_b * (real(node(), REAL4) + 1.0_REAL4)
+  r4_c = r4_c * (real(node(), REAL4) + 1.0_REAL4)
+
+  r8_a = r8_a * (real(node(), REAL8) + 1.0_REAL8)
+  r8_b = r8_b * (real(node(), REAL8) + 1.0_REAL8)
+  r8_c = r8_c * (real(node(), REAL8) + 1.0_REAL8)
+
+
+  call global_max(i4s)
+  call global_max(r4s)
+  call global_max(r8s)
+
+  UNIT_TEST(i4s(1) == 1 * nodes()) 
+  UNIT_TEST(i4s(2) == 2 * nodes()) 
+  UNIT_TEST(i4s(3) == 3 * nodes()) 
+  UNIT_TEST(i4s(4) == 4 * nodes()) 
+
+  UNIT_TEST(r4s(1) == 1.1_REAL4 * real(nodes(), REAL4)) 
+  UNIT_TEST(r4s(2) == 1.2_REAL4 * real(nodes(), REAL4)) 
+  UNIT_TEST(r4s(3) == 1.3_REAL4 * real(nodes(), REAL4)) 
+
+  UNIT_TEST(r8s(1) == 2.1_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(2) == 2.2_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(3) == 2.3_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(4) == 2.4_REAL8 * real(nodes(), REAL8)) 
+  UNIT_TEST(r8s(5) == 2.5_REAL8 * real(nodes(), REAL8)) 
+
+
+
+  !> kbb: global maximum
+  call global_max(r4_a)
+  call global_max(r4_b)
+  call global_max(r4_c)
+
+  !> kbb: check data
+
+  UNIT_TEST(r4_a(1) == 1.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_a(2) == 2.2_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_a(3) == 3.3_REAL4 * real(nodes(), REAL4))
+! ---	
+  UNIT_TEST(r4_b(1,1) == 1.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(1,2) == 2.2_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(1,3) == 3.3_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(1,4) == 4.4_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,1) == 5.5_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,2) == 6.6_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,3) == 7.7_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(2,4) == 8.8_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,1) == 9.9_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,2) == 10.11_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,3) == 11.01_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_b(3,4) == 12.33_REAL4 * real(nodes(), REAL4))
+! ---
+  UNIT_TEST(r4_c(1,1,1) == 1.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,2,1) == 2.2_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,3,1) == 3.3_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,4,1) == 4.4_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,1,1) == 5.5_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,2,1) == 6.6_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,3,1) == 7.7_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,4,1) == 8.8_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,1,1) == 9.9_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,2,1) == 10.11_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,3,1) == 11.01_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,4,1) == 12.33_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,1,2) == 11.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,2,2) == 22.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,3,2) == 33.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(1,4,2) == 44.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,1,2) == 55.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,2,2) == 66.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,3,2) == 77.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(2,4,2) == 88.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,1,2) == 99.0_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,2,2) == 101.1_REAL4 * real(nodes(), REAL4))
+  UNIT_TEST(r4_c(3,4,2) == 123.3_REAL4 * real(nodes(), REAL4))
+
+  !> kbb: global maximum
+  call global_max(r8_a)
+  call global_max(r8_b)
+  call global_max(r8_c)
+
+  !> kbb: check data
+  UNIT_TEST(r8_a(1) == 1.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_a(2) == 2.2_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_a(3) == 3.3_REAL8 * real(nodes(), REAL8))
+! ---	
+  UNIT_TEST(r8_b(1,1) == 1.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(1,2) == 2.2_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(1,3) == 3.3_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(1,4) == 4.4_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,1) == 5.5_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,2) == 6.6_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,3) == 7.7_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(2,4) == 8.8_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,1) == 9.9_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,2) == 10.11_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,3) == 11.01_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_b(3,4) == 12.33_REAL8 * real(nodes(), REAL8))
+! ---
+  UNIT_TEST(r8_c(1,1,1) == 1.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,2,1) == 2.2_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,3,1) == 3.3_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,4,1) == 4.4_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,1,1) == 5.5_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,2,1) == 6.6_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,3,1) == 7.7_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,4,1) == 8.8_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,1,1) == 9.9_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,2,1) == 10.11_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,3,1) == 11.01_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,4,1) == 12.33_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,1,2) == 11.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,2,2) == 22.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,3,2) == 33.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(1,4,2) == 44.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,1,2) == 55.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,2,2) == 66.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,3,2) == 77.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(2,4,2) == 88.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,1,2) == 99.0_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,2,2) == 101.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,3,2) == 110.1_REAL8 * real(nodes(), REAL8))
+  UNIT_TEST(r8_c(3,4,2) == 123.3_REAL8 * real(nodes(), REAL8))
+
+
+  !> kbb: global maximum
+  call global_max(i4_a)
+  call global_max(i4_b)
+  call global_max(i4_c)
+
+
+  UNIT_TEST(i4_a(1) == 1_INT4 * nodes())
+  UNIT_TEST(i4_a(2) == 2_INT4 * nodes())
+  UNIT_TEST(i4_a(3) == 3_INT4 * nodes())
+! ---	
+  UNIT_TEST(i4_b(1,1) == 1_INT4 * nodes())
+  UNIT_TEST(i4_b(1,2) == 2_INT4 * nodes())
+  UNIT_TEST(i4_b(1,3) == 3_INT4 * nodes())
+  UNIT_TEST(i4_b(1,4) == 4_INT4 * nodes())
+  UNIT_TEST(i4_b(2,1) == 5_INT4 * nodes())
+  UNIT_TEST(i4_b(2,2) == 6_INT4 * nodes())
+  UNIT_TEST(i4_b(2,3) == 7_INT4 * nodes())
+  UNIT_TEST(i4_b(2,4) == 8_INT4 * nodes())
+  UNIT_TEST(i4_b(3,1) == 9_INT4 * nodes())
+  UNIT_TEST(i4_b(3,2) == 10_INT4 * nodes())
+  UNIT_TEST(i4_b(3,3) == 11_INT4 * nodes())
+  UNIT_TEST(i4_b(3,4) == 12_INT4 * nodes())
+! ---
+  UNIT_TEST(i4_c(1,1,1) == 1_INT4 * nodes())
+  UNIT_TEST(i4_c(1,2,1) == 2_INT4 * nodes())
+  UNIT_TEST(i4_c(1,3,1) == 3_INT4 * nodes())
+  UNIT_TEST(i4_c(1,4,1) == 4_INT4 * nodes())
+  UNIT_TEST(i4_c(2,1,1) == 5_INT4 * nodes())
+  UNIT_TEST(i4_c(2,2,1) == 6_INT4 * nodes())
+  UNIT_TEST(i4_c(2,3,1) == 7_INT4 * nodes())
+  UNIT_TEST(i4_c(2,4,1) == 8_INT4 * nodes())
+  UNIT_TEST(i4_c(3,1,1) == 9_INT4 * nodes())
+  UNIT_TEST(i4_c(3,2,1) == 10_INT4 * nodes())
+  UNIT_TEST(i4_c(3,3,1) == 11_INT4 * nodes())
+  UNIT_TEST(i4_c(3,4,1) == 12_INT4 * nodes())
+  UNIT_TEST(i4_c(1,1,2) == 10_INT4 * nodes())
+  UNIT_TEST(i4_c(1,2,2) == 20_INT4 * nodes())
+  UNIT_TEST(i4_c(1,3,2) == 30_INT4 * nodes())
+  UNIT_TEST(i4_c(1,4,2) == 40_INT4 * nodes())
+  UNIT_TEST(i4_c(2,1,2) == 50_INT4 * nodes())
+  UNIT_TEST(i4_c(2,2,2) == 60_INT4 * nodes())
+  UNIT_TEST(i4_c(2,3,2) == 70_INT4 * nodes())
+  UNIT_TEST(i4_c(2,4,2) == 80_INT4 * nodes())
+  UNIT_TEST(i4_c(3,1,2) == 90_INT4 * nodes())
+  UNIT_TEST(i4_c(3,2,2) == 100_INT4 * nodes())
+  UNIT_TEST(i4_c(3,3,2) == 110_INT4 * nodes())
+  UNIT_TEST(i4_c(3,4,2) == 120_INT4 * nodes())
+! -------------------
+	
+
+
+! -------------------
+
+end subroutine test_reduction
+
+!-----------------------------------------------------------------------------!
+
+subroutine test_blocking(num_passes, num_fails)
+
+  use nemesis_comm,       only : node, nodes, global_barrier, send, receive
+  use harness_data_types, only : REAL4, REAL8, INT4, LOGIC
+  implicit none
+  
+  ! >>> IO DATA
+  
+  ! Test results.
+  integer, intent(out) :: num_passes, num_fails
+  
+  ! >>> LOCAL DATA
+
+  ! Test data.
+  integer(INT4), dimension(4) :: i4s
+  real(REAL4), dimension(3)   :: r4s
+  real(REAL8), dimension(5)   :: r8s
+
+  integer(INT4) :: i4
+  real(REAL4)   :: r4
+  real(REAL8)   :: r8
+
+  !> kbb: additional types
+  integer(INT4),parameter:: M=3,N=4,L=2
+  real(REAL4) :: r4_a(M),r4_b(M,N),r4_c(M,N,L)
+  real(REAL8) :: r8_a(M),r8_b(M,N),r8_c(M,N,L)
+  integer(INT4) :: i4_a(M),i4_b(M,N),i4_c(M,N,L)
+  character(len=1) :: c1
+  character(len=3) :: c2
+  character(len=3) :: c3_a(M),c3_b(M,N),c3_c(M,N,L)
+
+  ! Loop.
+  integer::i,j,k
+
+  ! Nodes.
+  integer :: proc, procs
+
+  ! >>> BODY
+
+  ! initialize test counters
+  num_passes = 0
+  num_fails  = 0
+
+  proc  = node()
+  procs = nodes()
+
+  ! send from processor 0 to processor 1
+  if (proc == 0) then
+
+     i4s = (/ 1, 2, 3, 4 /)
+     r4s = (/ 1.1_REAL4, 1.2_REAL4, 1.3_REAL4 /)
+     r8s = (/ 2.1_REAL8, 2.2_REAL8, 2.3_REAL8, 2.4_REAL8, 2.5_REAL8 /)
+
+     i4 = 5
+     r4 = 6.1_REAL4
+     r8 = 7.2_REAL8
+
+   !> kbb: additional types, REAL4
+	r4_a=(/1.1_REAL4,2.2_REAL4,3.3_REAL4/)
+	r4_b(1,:)=(/1.1_REAL4,2.2_REAL4,3.3_REAL4,4.4_REAL4/)
+	r4_b(2,:)=(/5.5_REAL4,6.6_REAL4,7.7_REAL4,8.8_REAL4/)
+	r4_b(3,:)=(/9.9_REAL4,10.11_REAL4,11.01_REAL4,12.33_REAL4/)
+	r4_c(:,:,1)=r4_b
+	r4_c(:,:,2)=10.0_REAL4*r4_b
+   !> kbb: additional types, REAL8
+	r8_a=(/1.1_REAL8,2.2_REAL8,3.3_REAL8/)
+	r8_b(1,:)=(/1.1_REAL8,2.2_REAL8,3.3_REAL8,4.4_REAL8/)
+	r8_b(2,:)=(/5.5_REAL8,6.6_REAL8,7.7_REAL8,8.8_REAL8/)
+	r8_b(3,:)=(/9.9_REAL8,10.11_REAL8,11.01_REAL8,12.33_REAL8/)
+	r8_c(:,:,1)=r8_b
+	r8_c(:,:,2)=10.0_REAL8*r8_b
+   !> kbb: additional types, INT4
+	i4_a=(/1_INT4,2_INT4,3_INT4/)
+	i4_b(1,:)=(/1_INT4,2_INT4,3_INT4,4_INT4/)
+	i4_b(2,:)=(/5_INT4,6_INT4,7_INT4,8_INT4/)
+	i4_b(3,:)=(/9_INT4,10_INT4,11_INT4,12_INT4/)
+	i4_c(:,:,1)=i4_b
+	i4_c(:,:,2)=10*i4_b
+   !> kbb: additional types, CHAR
+	c1 = "A"
+	c2 = "kbb"
+	c3_a = (/"kbb","bkb","bbk"/)
+	c3_b(1,:) = (/"abb","akb","abk","ABB"/)
+	c3_b(2,:) = (/"bbb","bkb","bbk","BBB"/)
+	c3_b(3,:) = (/"cbb","ckb","cbk","CBB"/)
+	c3_c(:,:,1) = c3_b
+	c3_c(:,:,2) = c3_b
+
+     call send(i4s, 1, 101)
+     call send(r4s, 1, 102)
+     call send(r8s, 1, 103)
+
+     call send(i4, 1, 104)
+     call send(r4, 1, 105)
+     call send(r8, 1, 106)
+
+
+     call send(r4_a,1,110)
+     call send(r4_b,1,111)
+     call send(r4_c,1,112)
+
+     call send(r8_a,1,120)
+     call send(r8_b,1,121)
+     call send(r8_c,1,122)
+
+     call send(i4_a,1,130)
+     call send(i4_b,1,131)
+     call send(i4_c,1,132)
+
+     call send(c1,1,140)
+     call send(c2,1,141)
+     call send(c3_a,1,142)
+     call send(c3_b,1,143)
+     call send(c3_c,1,144)
+
+  endif
+
+  ! receive on processor 1 from processor 0
+  if (proc == 1) then
+
+     call receive(i4s, 0, 101)
+     call receive(r4s, 0, 102)
+     call receive(r8s, 0, 103)
+
+     call receive(i4, 0, 104)
+     call receive(r4, 0, 105)
+     call receive(r8, 0, 106)
+
+     call receive(r4_a,0,110)
+     call receive(r4_b,0,111)
+     call receive(r4_c,0,112)
+
+     call receive(r8_a,0,120)
+     call receive(r8_b,0,121)
+     call receive(r8_c,0,122)
+
+     call receive(i4_a,0,130)
+     call receive(i4_b,0,131)
+     call receive(i4_c,0,132)
+
+     call receive(c1,0,140)
+     call receive(c2,0,141)
+     call receive(c3_a,0,142)
+     call receive(c3_b,0,143)
+     call receive(c3_c,0,144)
+
+  end if
+
+  ! check data
+  UNIT_TEST(i4s(1) == 1) 
+  UNIT_TEST(i4s(2) == 2) 
+  UNIT_TEST(i4s(3) == 3) 
+  UNIT_TEST(i4s(4) == 4) 
+
+  UNIT_TEST(r4s(1) == 1.1_REAL4) 
+  UNIT_TEST(r4s(2) == 1.2_REAL4) 
+  UNIT_TEST(r4s(3) == 1.3_REAL4) 
+
+  UNIT_TEST(r8s(1) == 2.1_REAL8) 
+  UNIT_TEST(r8s(2) == 2.2_REAL8) 
+  UNIT_TEST(r8s(3) == 2.3_REAL8) 
+  UNIT_TEST(r8s(4) == 2.4_REAL8) 
+  UNIT_TEST(r8s(5) == 2.5_REAL8) 
+
+  UNIT_TEST(i4 == 5)         
+  UNIT_TEST(r4 == 6.1_REAL4) 
+  UNIT_TEST(r8 == 7.2_REAL8) 
+
+  !> kbb: check data
+
+  UNIT_TEST(r4_a(1) == 1.1_REAL4)
+  UNIT_TEST(r4_a(2) == 2.2_REAL4)
+  UNIT_TEST(r4_a(3) == 3.3_REAL4)
+! ---	
+  UNIT_TEST(r4_b(1,1) == 1.1_REAL4)
+  UNIT_TEST(r4_b(1,2) == 2.2_REAL4)
+  UNIT_TEST(r4_b(1,3) == 3.3_REAL4)
+  UNIT_TEST(r4_b(1,4) == 4.4_REAL4)
+  UNIT_TEST(r4_b(2,1) == 5.5_REAL4)
+  UNIT_TEST(r4_b(2,2) == 6.6_REAL4)
+  UNIT_TEST(r4_b(2,3) == 7.7_REAL4)
+  UNIT_TEST(r4_b(2,4) == 8.8_REAL4)
+  UNIT_TEST(r4_b(3,1) == 9.9_REAL4)
+  UNIT_TEST(r4_b(3,2) == 10.11_REAL4)
+  UNIT_TEST(r4_b(3,3) == 11.01_REAL4)
+  UNIT_TEST(r4_b(3,4) == 12.33_REAL4)
+! ---
+  UNIT_TEST(r4_c(1,1,1) == 1.1_REAL4)
+  UNIT_TEST(r4_c(1,2,1) == 2.2_REAL4)
+  UNIT_TEST(r4_c(1,3,1) == 3.3_REAL4)
+  UNIT_TEST(r4_c(1,4,1) == 4.4_REAL4)
+  UNIT_TEST(r4_c(2,1,1) == 5.5_REAL4)
+  UNIT_TEST(r4_c(2,2,1) == 6.6_REAL4)
+  UNIT_TEST(r4_c(2,3,1) == 7.7_REAL4)
+  UNIT_TEST(r4_c(2,4,1) == 8.8_REAL4)
+  UNIT_TEST(r4_c(3,1,1) == 9.9_REAL4)
+  UNIT_TEST(r4_c(3,2,1) == 10.11_REAL4)
+  UNIT_TEST(r4_c(3,3,1) == 11.01_REAL4)
+  UNIT_TEST(r4_c(3,4,1) == 12.33_REAL4)
+  UNIT_TEST(r4_c(1,1,2) == 11.0_REAL4)
+  UNIT_TEST(r4_c(1,2,2) == 22.0_REAL4)
+  UNIT_TEST(r4_c(1,3,2) == 33.0_REAL4)
+  UNIT_TEST(r4_c(1,4,2) == 44.0_REAL4)
+  UNIT_TEST(r4_c(2,1,2) == 55.0_REAL4)
+  UNIT_TEST(r4_c(2,2,2) == 66.0_REAL4)
+  UNIT_TEST(r4_c(2,3,2) == 77.0_REAL4)
+  UNIT_TEST(r4_c(2,4,2) == 88.0_REAL4)
+  UNIT_TEST(r4_c(3,1,2) == 99.0_REAL4)
+  UNIT_TEST(r4_c(3,2,2) == 101.1_REAL4)
+  UNIT_TEST(r4_c(3,4,2) == 123.3_REAL4)
+
+
+! -------------------
+
+  UNIT_TEST(r8_a(1) == 1.1_REAL8)
+  UNIT_TEST(r8_a(2) == 2.2_REAL8)
+  UNIT_TEST(r8_a(3) == 3.3_REAL8)
+! ---	
+  UNIT_TEST(r8_b(1,1) == 1.1_REAL8)
+  UNIT_TEST(r8_b(1,2) == 2.2_REAL8)
+  UNIT_TEST(r8_b(1,3) == 3.3_REAL8)
+  UNIT_TEST(r8_b(1,4) == 4.4_REAL8)
+  UNIT_TEST(r8_b(2,1) == 5.5_REAL8)
+  UNIT_TEST(r8_b(2,2) == 6.6_REAL8)
+  UNIT_TEST(r8_b(2,3) == 7.7_REAL8)
+  UNIT_TEST(r8_b(2,4) == 8.8_REAL8)
+  UNIT_TEST(r8_b(3,1) == 9.9_REAL8)
+  UNIT_TEST(r8_b(3,2) == 10.11_REAL8)
+  UNIT_TEST(r8_b(3,3) == 11.01_REAL8)
+  UNIT_TEST(r8_b(3,4) == 12.33_REAL8)
+! ---
+  UNIT_TEST(r8_c(1,1,1) == 1.1_REAL8)
+  UNIT_TEST(r8_c(1,2,1) == 2.2_REAL8)
+  UNIT_TEST(r8_c(1,3,1) == 3.3_REAL8)
+  UNIT_TEST(r8_c(1,4,1) == 4.4_REAL8)
+  UNIT_TEST(r8_c(2,1,1) == 5.5_REAL8)
+  UNIT_TEST(r8_c(2,2,1) == 6.6_REAL8)
+  UNIT_TEST(r8_c(2,3,1) == 7.7_REAL8)
+  UNIT_TEST(r8_c(2,4,1) == 8.8_REAL8)
+  UNIT_TEST(r8_c(3,1,1) == 9.9_REAL8)
+  UNIT_TEST(r8_c(3,2,1) == 10.11_REAL8)
+  UNIT_TEST(r8_c(3,3,1) == 11.01_REAL8)
+  UNIT_TEST(r8_c(3,4,1) == 12.33_REAL8)
+  UNIT_TEST(r8_c(1,1,2) == 11.0_REAL8)
+  UNIT_TEST(r8_c(1,2,2) == 22.0_REAL8)
+  UNIT_TEST(r8_c(1,3,2) == 33.0_REAL8)
+  UNIT_TEST(r8_c(1,4,2) == 44.0_REAL8)
+  UNIT_TEST(r8_c(2,1,2) == 55.0_REAL8)
+  UNIT_TEST(r8_c(2,2,2) == 66.0_REAL8)
+  UNIT_TEST(r8_c(2,3,2) == 77.0_REAL8)
+  UNIT_TEST(r8_c(2,4,2) == 88.0_REAL8)
+  UNIT_TEST(r8_c(3,1,2) == 99.0_REAL8)
+  UNIT_TEST(r8_c(3,2,2) == 101.1_REAL8)
+  UNIT_TEST(r8_c(3,3,2) == 110.1_REAL8)
+  UNIT_TEST(r8_c(3,4,2) == 123.3_REAL8)
+! -------------------
+
+  UNIT_TEST(i4_a(1) == 1_INT4)
+  UNIT_TEST(i4_a(2) == 2_INT4)
+  UNIT_TEST(i4_a(3) == 3_INT4)
+! ---	
+  UNIT_TEST(i4_b(1,1) == 1_INT4)
+  UNIT_TEST(i4_b(1,2) == 2_INT4)
+  UNIT_TEST(i4_b(1,3) == 3_INT4)
+  UNIT_TEST(i4_b(1,4) == 4_INT4)
+  UNIT_TEST(i4_b(2,1) == 5_INT4)
+  UNIT_TEST(i4_b(2,2) == 6_INT4)
+  UNIT_TEST(i4_b(2,3) == 7_INT4)
+  UNIT_TEST(i4_b(2,4) == 8_INT4)
+  UNIT_TEST(i4_b(3,1) == 9_INT4)
+  UNIT_TEST(i4_b(3,2) == 10_INT4)
+  UNIT_TEST(i4_b(3,3) == 11_INT4)
+  UNIT_TEST(i4_b(3,4) == 12_INT4)
+! ---
+  UNIT_TEST(i4_c(1,1,1) == 1_INT4)
+  UNIT_TEST(i4_c(1,2,1) == 2_INT4)
+  UNIT_TEST(i4_c(1,3,1) == 3_INT4)
+  UNIT_TEST(i4_c(1,4,1) == 4_INT4)
+  UNIT_TEST(i4_c(2,1,1) == 5_INT4)
+  UNIT_TEST(i4_c(2,2,1) == 6_INT4)
+  UNIT_TEST(i4_c(2,3,1) == 7_INT4)
+  UNIT_TEST(i4_c(2,4,1) == 8_INT4)
+  UNIT_TEST(i4_c(3,1,1) == 9_INT4)
+  UNIT_TEST(i4_c(3,2,1) == 10_INT4)
+  UNIT_TEST(i4_c(3,3,1) == 11_INT4)
+  UNIT_TEST(i4_c(3,4,1) == 12_INT4)
+  UNIT_TEST(i4_c(1,1,2) == 10_INT4)
+  UNIT_TEST(i4_c(1,2,2) == 20_INT4)
+  UNIT_TEST(i4_c(1,3,2) == 30_INT4)
+  UNIT_TEST(i4_c(1,4,2) == 40_INT4)
+  UNIT_TEST(i4_c(2,1,2) == 50_INT4)
+  UNIT_TEST(i4_c(2,2,2) == 60_INT4)
+  UNIT_TEST(i4_c(2,3,2) == 70_INT4)
+  UNIT_TEST(i4_c(2,4,2) == 80_INT4)
+  UNIT_TEST(i4_c(3,1,2) == 90_INT4)
+  UNIT_TEST(i4_c(3,2,2) == 100_INT4)
+  UNIT_TEST(i4_c(3,3,2) == 110_INT4)
+  UNIT_TEST(i4_c(3,4,2) == 120_INT4)
+! -------------------
+! --------------------
+  UNIT_TEST(c1 == "A")	
+  UNIT_TEST(c2 == "kbb")	
+!
+  UNIT_TEST(c3_a(1) == "kbb")
+  UNIT_TEST(c3_a(2) == "bkb")
+  UNIT_TEST(c3_a(3) == "bbk")
+! ---	
+  UNIT_TEST(c3_b(1,1) == "abb")
+  UNIT_TEST(c3_b(1,2) == "akb")
+  UNIT_TEST(c3_b(1,3) == "abk")
+  UNIT_TEST(c3_b(1,4) == "ABB")
+  UNIT_TEST(c3_b(2,1) == "bbb")
+  UNIT_TEST(c3_b(2,2) == "bkb")
+  UNIT_TEST(c3_b(2,3) == "bbk")
+  UNIT_TEST(c3_b(2,4) == "BBB")
+  UNIT_TEST(c3_b(3,1) == "cbb")
+  UNIT_TEST(c3_b(3,2) == "ckb")
+  UNIT_TEST(c3_b(3,3) == "cbk")
+  UNIT_TEST(c3_b(3,4) == "CBB")
+! ---
+  UNIT_TEST(c3_c(1,1,1) == "abb")
+  UNIT_TEST(c3_c(1,2,1) == "akb")
+  UNIT_TEST(c3_c(1,3,1) == "abk")
+  UNIT_TEST(c3_c(1,4,1) == "ABB")
+  UNIT_TEST(c3_c(2,1,1) == "bbb")
+  UNIT_TEST(c3_c(2,2,1) == "bkb")
+  UNIT_TEST(c3_c(2,3,1) == "bbk")
+  UNIT_TEST(c3_c(2,4,1) == "BBB")
+  UNIT_TEST(c3_c(3,1,1) == "cbb")
+  UNIT_TEST(c3_c(3,2,1) == "ckb")
+  UNIT_TEST(c3_c(3,3,1) == "cbk")
+  UNIT_TEST(c3_c(3,4,1) == "CBB")
+! ---
+  UNIT_TEST(c3_c(1,1,2) == "abb")
+  UNIT_TEST(c3_c(1,2,2) == "akb")
+  UNIT_TEST(c3_c(1,3,2) == "abk")
+  UNIT_TEST(c3_c(1,4,2) == "ABB")
+  UNIT_TEST(c3_c(2,1,2) == "bbb")
+  UNIT_TEST(c3_c(2,2,2) == "bkb")
+  UNIT_TEST(c3_c(2,3,2) == "bbk")
+  UNIT_TEST(c3_c(2,4,2) == "BBB")
+  UNIT_TEST(c3_c(3,1,2) == "cbb")
+  UNIT_TEST(c3_c(3,2,2) == "ckb")
+  UNIT_TEST(c3_c(3,3,2) == "cbk")
+  UNIT_TEST(c3_c(3,4,2) == "CBB")
+! ---
+	
+  call global_barrier
+
+end subroutine test_blocking
+
+!-----------------------------------------------------------------------------!
+!                               end of Comm_FC.fm4
+!-----------------------------------------------------------------------------!

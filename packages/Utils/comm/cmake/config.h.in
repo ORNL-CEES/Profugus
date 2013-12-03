@@ -1,0 +1,65 @@
+/*-----------------------------------*-C-*-----------------------------------*/
+/*!
+ * \file   comm/config.h
+ * \author Thomas M. Evans
+ * \date   Wed Jan  2 13:19:39 2008
+ * \brief  comm package configure options
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC
+ */
+/*---------------------------------------------------------------------------*/
+/* $Id: config.h.in,v 1.5 2009/07/14 18:20:43 9te Exp $ */
+/*---------------------------------------------------------------------------*/
+
+#ifndef comm_config_h
+#define comm_config_h
+
+/* COMM Environments */
+
+/* scalar (default) */
+#cmakedefine COMM_SCALAR
+
+/* mpi */
+#cmakedefine COMM_MPI
+
+/* POSIX DEFINES */
+#cmakedefine _POSIX_SOURCE @POSIX_SOURCE@
+#cmakedefine _POSIX_C_SOURCE @_POSIX_C_SOURCE@
+
+/* Turn off C++ bindings */
+#define MPI_NO_CPPBIND
+#define MPICH_IGNORE_CXX_SEEK
+#define OMPI_SKIP_MPICXX
+
+/* COMM DIAGNOSTICS TIMING LEVEL */
+#cmakedefine NEMESIS_TIMING @NEMESIS_TIMING@
+
+/* Parallel output */
+#cmakedefine NEMESIS_POUT
+
+/* TIMING MACROS */
+#ifndef HAVE_UNISTD_H
+#cmakedefine HAVE_UNISTD_H @HAVE_UNISTD_H@
+#endif
+#ifndef HAVE_SYS_TIMES_H
+#cmakedefine HAVE_SYS_TIMES_H @HAVE_SYS_TIMES_H@
+#endif
+#ifndef HAVE_WINDOWS_H
+#cmakedefine HAVE_WINDOWS_H @HAVE_WINDOWS_H@
+#endif
+
+/* MPI IMPLEMENTATION */
+#define MPI_MPICH 0
+#define MPI_OPENMPI 1
+#define MPI_MPT 2
+#define MPI_VENDOR 3
+#cmakedefine MPI_IMP @MPI_IMP@
+
+/* FORTRAN NAME-MANGLING */
+#define FC_FUNC@F77_FUNC@
+#define FC_FUNC_@F77_FUNC_@
+
+#endif /* comm_config_h */
+
+/*---------------------------------------------------------------------------*/
+/*           end of comm/config.h */
+/*---------------------------------------------------------------------------*/

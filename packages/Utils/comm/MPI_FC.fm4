@@ -1,0 +1,845 @@
+!-----------------------------------------------------------------------------!
+! \file   comm/MPI_FC.fm4
+! \author Thomas M. Evans
+! \date   Thu Sep  3 09:26:34 2009
+! \brief  Comm module built on MPI.
+! \note   Copyright (C) 2009 Oak Ridge National Laboratory, UT-Battelle, LLC.
+!-----------------------------------------------------------------------------!
+! $Id: template.f90,v 1.1 2009/09/03 01:59:52 9te Exp $
+!-----------------------------------------------------------------------------!
+
+SINCLUDE([comm/config.m4])
+
+!=============================================================================!
+! \module nemesis_comm
+! \brief  Defines parallel communication routines.
+!=============================================================================!
+
+module nemesis_comm
+
+  use harness_data_types, only : REAL4, REAL8, INT4, INT8, LOGIC, CHAR
+  implicit none
+  public
+
+  ! MPI include variables.
+  IFDEFINED([COMM_MPI], include 'mpif.h')
+
+  ! >>> PRIVATE LOCAL DATA
+
+  ! MPI datatypes.
+  integer, private, save :: COMM_INT4, COMM_REAL4, COMM_REAL8, COMM_LOGIC,     &
+       &                    COMM_CHAR,COMM_INT8
+
+  ! Communicator.
+  integer, private, save :: communicator
+
+  ! Ubiquitous error flag.
+  integer, private :: ierror
+
+  ! >>> INTERFACES
+
+  ! Broadcast.
+  interface broadcast
+     module procedure bcast_INT4_rank4
+     module procedure bcast_INT4_rank3
+     module procedure bcast_INT4_rank2
+     module procedure bcast_INT4_rank
+     module procedure bcast_INT4_scalar
+!
+     module procedure bcast_INT8_rank4
+     module procedure bcast_INT8_rank3
+     module procedure bcast_INT8_rank2
+     module procedure bcast_INT8_rank
+     module procedure bcast_INT8_scalar
+!
+     module procedure bcast_REAL4_rank4
+     module procedure bcast_REAL4_rank3
+     module procedure bcast_REAL4_rank2
+     module procedure bcast_REAL4_rank
+     module procedure bcast_REAL4_scalar
+!
+     module procedure bcast_REAL8_rank4
+     module procedure bcast_REAL8_rank3
+     module procedure bcast_REAL8_rank2
+     module procedure bcast_REAL8_rank
+     module procedure bcast_REAL8_scalar
+!
+     module procedure bcast_LOGIC_rank
+     module procedure bcast_LOGIC_scalar
+     module procedure bcast_CHAR_rank4
+     module procedure bcast_CHAR_rank3
+     module procedure bcast_CHAR_rank2
+     module procedure bcast_CHAR_rank
+     module procedure bcast_CHAR_scalar
+  end interface
+
+  ! Global sum.
+  interface global_sum
+     module procedure global_INT4_rank3_MPI_SUM
+     module procedure global_INT4_rank2_MPI_SUM
+     module procedure global_INT4_rank_MPI_SUM
+     module procedure global_INT4_scalar_MPI_SUM
+!
+     module procedure global_REAL4_rank4_MPI_SUM
+     module procedure global_REAL4_rank3_MPI_SUM
+     module procedure global_REAL4_rank2_MPI_SUM
+     module procedure global_REAL4_rank_MPI_SUM
+     module procedure global_REAL4_scalar_MPI_SUM
+!
+     module procedure global_REAL8_rank3_MPI_SUM
+     module procedure global_REAL8_rank2_MPI_SUM
+     module procedure global_REAL8_rank_MPI_SUM
+     module procedure global_REAL8_scalar_MPI_SUM
+  end interface
+
+  ! Global products.
+  interface global_prod
+     module procedure global_INT4_rank3_MPI_PROD
+     module procedure global_INT4_rank2_MPI_PROD
+     module procedure global_INT4_rank_MPI_PROD
+     module procedure global_INT4_scalar_MPI_PROD
+     module procedure global_REAL4_rank3_MPI_PROD
+     module procedure global_REAL4_rank2_MPI_PROD
+     module procedure global_REAL4_rank_MPI_PROD
+     module procedure global_REAL4_scalar_MPI_PROD
+     module procedure global_REAL8_rank3_MPI_PROD
+     module procedure global_REAL8_rank2_MPI_PROD
+     module procedure global_REAL8_rank_MPI_PROD
+     module procedure global_REAL8_scalar_MPI_PROD
+  end interface
+
+  ! Global minimum.
+  interface global_min
+     module procedure global_INT4_rank3_MPI_MIN
+     module procedure global_INT4_rank2_MPI_MIN
+     module procedure global_INT4_rank_MPI_MIN
+     module procedure global_INT4_scalar_MPI_MIN
+     module procedure global_REAL4_rank3_MPI_MIN
+     module procedure global_REAL4_rank2_MPI_MIN
+     module procedure global_REAL4_rank_MPI_MIN
+     module procedure global_REAL4_scalar_MPI_MIN
+     module procedure global_REAL8_rank3_MPI_MIN
+     module procedure global_REAL8_rank2_MPI_MIN
+     module procedure global_REAL8_rank_MPI_MIN
+     module procedure global_REAL8_scalar_MPI_MIN
+  end interface
+
+  ! Global maximum.
+  interface global_max
+     module procedure global_INT4_rank3_MPI_MAX
+     module procedure global_INT4_rank2_MPI_MAX
+     module procedure global_INT4_rank_MPI_MAX
+     module procedure global_INT4_scalar_MPI_MAX
+     module procedure global_REAL4_rank3_MPI_MAX
+     module procedure global_REAL4_rank2_MPI_MAX
+     module procedure global_REAL4_rank_MPI_MAX
+     module procedure global_REAL4_scalar_MPI_MAX
+     module procedure global_REAL8_rank3_MPI_MAX
+     module procedure global_REAL8_rank2_MPI_MAX
+     module procedure global_REAL8_rank_MPI_MAX
+     module procedure global_REAL8_scalar_MPI_MAX
+  end interface
+
+  ! Blocking send.
+  interface send
+     module procedure send_INT4_rank3
+     module procedure send_INT4_rank2
+     module procedure send_INT4_rank
+     module procedure send_INT4_scalar
+!
+     module procedure send_INT8_rank3
+     module procedure send_INT8_rank2
+     module procedure send_INT8_rank
+     module procedure send_INT8_scalar
+!
+     module procedure send_REAL4_rank3
+     module procedure send_REAL4_rank2
+     module procedure send_REAL4_rank
+     module procedure send_REAL4_scalar
+!
+     module procedure send_REAL8_rank3
+     module procedure send_REAL8_rank2
+     module procedure send_REAL8_rank
+     module procedure send_REAL8_scalar
+!
+     module procedure send_LOGIC_rank
+     module procedure send_LOGIC_scalar
+     module procedure send_CHAR_rank3
+     module procedure send_CHAR_rank2
+     module procedure send_CHAR_rank
+     module procedure send_CHAR_scalar
+  end interface
+
+  ! Blocking receive.
+  interface receive
+     module procedure receive_INT4_rank3
+     module procedure receive_INT4_rank2
+     module procedure receive_INT4_rank
+     module procedure receive_INT4_scalar
+!
+     module procedure receive_INT8_rank3
+     module procedure receive_INT8_rank2
+     module procedure receive_INT8_rank
+     module procedure receive_INT8_scalar
+!
+     module procedure receive_REAL4_rank3
+     module procedure receive_REAL4_rank2
+     module procedure receive_REAL4_rank
+     module procedure receive_REAL4_scalar
+!
+     module procedure receive_REAL8_rank3
+     module procedure receive_REAL8_rank2
+     module procedure receive_REAL8_rank
+     module procedure receive_REAL8_scalar
+!
+     module procedure receive_LOGIC_rank
+     module procedure receive_LOGIC_scalar
+     module procedure receive_CHAR_rank3
+     module procedure receive_CHAR_rank2
+     module procedure receive_CHAR_rank
+     module procedure receive_CHAR_scalar
+  end interface
+
+contains
+
+  !---------------------------------------------------------------------------!
+  ! CONSTRUCTORS/DESTRUCTORS
+  !---------------------------------------------------------------------------!
+  ! Constructor for module data types.
+
+  subroutine build_types
+
+    implicit none
+
+    ! >>> BODY
+
+    ! make definitions when COMM is set to MPI
+    IFDEFINED([COMM_MPI], [
+
+    ! assign the communicator to MPI_COMM_WORLD
+    communicator = MPI_COMM_WORLD
+
+    IFELSE(MPI_IMP, [MPI_MPT], [
+    ! SGI-MPT does not have MPI-2 type calls yet, ugh
+    COMM_INT4  = INT4
+    COMM_INT8  = INT8
+    COMM_REAL4 = REAL4
+    COMM_REAL8 = REAL8],
+    [
+
+    ! make the MPI data types corresponding to REAL4, REAL8, INT4 and LOGIC
+    call MPI_TYPE_CREATE_F90_REAL(6, 37, COMM_REAL4, ierror)
+    call MPI_TYPE_CREATE_F90_REAL(13, 300, COMM_REAL8, ierror)
+    call MPI_TYPE_CREATE_F90_INTEGER(9, COMM_INT4, ierror)
+    call MPI_TYPE_CREATE_F90_INTEGER(18, COMM_INT8, ierror)
+    ])
+
+    ! logical and character types
+    COMM_LOGIC = MPI_LOGICAL
+    COMM_CHAR  = MPI_CHARACTER
+
+    ], [ ! otherwise do default scalar initializations
+
+    communicator = 0
+    COMM_INT4    = INT4
+    COMM_INT8    = INT8
+    COMM_REAL4   = REAL4
+    COMM_REAL8   = REAL8
+    COMM_LOGIC   = LOGIC
+    COMM_CHAR    = CHAR
+
+    ]) ! end of COMM_MPI
+
+  end subroutine build_types
+
+  !---------------------------------------------------------------------------!
+  ! Initialize the MPI environment.
+
+  subroutine initialize()
+
+    implicit none
+
+    ! >>> BODY
+
+    ! initialize error flag and call MPI_INIT when MPI is on
+    IFDEFINED([COMM_MPI], call MPI_INIT(ierror))
+
+  end subroutine initialize
+
+  !---------------------------------------------------------------------------!
+  ! Finalize the MPI environment.
+
+  subroutine finalize()
+
+    implicit none
+
+    ! >>> BODY
+
+    ! initialize error flag and call MPI_INIT when MPI is on
+    IFDEFINED([COMM_MPI], call MPI_FINALIZE(ierror))
+
+  end subroutine finalize
+
+  !---------------------------------------------------------------------------!
+  ! Inherit a communicator from another application.
+
+  subroutine inherit(comm)
+
+    implicit none
+
+    ! >>> IO DATA
+
+    ! Communicator to inherit from.
+    integer, intent(in) :: comm
+
+    ! >>> BODY
+
+    IFDEFINED([COMM_MPI], call MPI_COMM_DUP(comm, communicator, ierror))
+
+  end subroutine inherit
+
+  !---------------------------------------------------------------------------!
+  ! Free an inherited communicator.
+
+  subroutine free_inherited_comm
+
+    implicit none
+
+    ! >>> BODY
+
+    IFDEFINED([COMM_MPI], [
+
+    ! only free a communicator that is not comm world
+    if (communicator .ne. MPI_COMM_WORLD) then
+       call MPI_COMM_FREE(communicator, ierror)
+    end if
+
+    ])
+
+  end subroutine free_inherited_comm
+
+  !---------------------------------------------------------------------------!
+  ! Abort MPI processes.
+
+  subroutine abort(error)
+
+    implicit none
+
+    ! >>> INPUT DATA
+
+    ! MPI error code returned by abort.
+    integer, intent(in) :: error
+
+    ! >>> BODY
+
+    IFDEFINED([COMM_MPI], call MPI_ABORT(communicator, error, ierror))
+
+  end subroutine abort
+
+  !---------------------------------------------------------------------------!
+  ! QUERIES
+  !---------------------------------------------------------------------------!
+  ! Return the node id for this process.
+
+  function node()
+
+    implicit none
+
+    ! Function type.
+    integer :: node
+
+    ! >>> LOCAL DATA
+
+    ! Node.
+    integer :: mynode = 0
+
+    ! >>> BODY
+
+    ! call rank to get the processor id
+    IFDEFINED([COMM_MPI], call MPI_COMM_RANK(communicator, mynode, ierror))
+    node = mynode
+
+  end function node
+
+  !---------------------------------------------------------------------------!
+  ! Return the number of processor nodes in this world.
+
+  function nodes()
+
+    implicit none
+
+    ! Function type.
+    integer :: nodes
+
+    ! >>> LOCAL DATA
+
+    ! Nodes.
+    integer :: mynodes = 1
+
+    ! >>> BODY
+
+    ! call size to get the number of nodes.
+    IFDEFINED([COMM_MPI], call MPI_COMM_SIZE(communicator, mynodes, ierror))
+    nodes = mynodes
+
+  end function nodes
+
+  !---------------------------------------------------------------------------!
+  ! Return the wall-clock time.
+
+  function wall_clock_time()
+
+    implicit none
+
+    ! Function type.
+    real(REAL8) :: wall_clock_time
+
+    ! >>> LOCAL DATA
+
+    real(REAL8) :: time
+
+    ! >>> BODY
+
+    IFDEFINED([COMM_MPI], time = MPI_WTIME())
+    IFDEFINED([COMM_SCALAR], call CPU_TIME(time))
+
+    wall_clock_time = time
+
+  end function wall_clock_time
+
+  !---------------------------------------------------------------------------!
+  ! COLLECTIVE COMMUNICATION AND REDUCTIONS
+  !---------------------------------------------------------------------------!
+  ! Set a global barrier.
+
+  subroutine global_barrier()
+
+    implicit none
+
+    ! >>> BODY
+
+    IFDEFINED([COMM_MPI], call MPI_BARRIER(communicator, ierror))
+
+  end subroutine global_barrier
+
+  !---------------------------------------------------------------------------!
+  ! Broadcast data from one-to-all.
+
+  DEFINE([bcast_def], [dnl broadcast generic definition
+  subroutine bcast_$1_$2(buffer, root)
+    implicit none
+    ! >>> IO DATA
+    IFELSE([$2], [rank4],  [
+    IFELSE([$3], [character], [
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3 (len=*),dimension(:,:,:,:), intent(inout):: buffer ],[
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3($1), dimension(:,:,:,:), intent(inout) :: buffer ])
+    ],[$2], [rank3], [
+    IFELSE([$3], [character], [
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3 (len=*),dimension(:,:,:), intent(inout):: buffer ],[
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3($1), dimension(:,:,:), intent(inout) :: buffer ])
+    ],[$2], [rank2], [
+    IFELSE([$3], [character], [
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3 (len=*),dimension(:,:), intent(inout):: buffer ],[
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3($1), dimension(:,:), intent(inout) :: buffer ])
+    ],[$2], [rank], [
+    IFELSE([$3], [character], [
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3 (len=*),dimension(:), intent(inout):: buffer ],[
+    ! Buffer of data to broadcast; count is number of elements to broadcast.
+    $3($1), dimension(:), intent(inout) :: buffer ])
+    ],[ IFELSE([$3], [character], [
+    ! Single datum to broadcast.
+    $3 (len=*) , intent(inout):: buffer ],[
+    ! Single datum to broadcast.
+    $3($1), intent(inout) :: buffer ])
+    ])
+    ! Broadcasting node; broadcast goes from root -> all.
+    integer, intent(in) :: root
+
+    ! >>> LOCAL DATA
+    ! Size of array.
+    integer :: count
+
+    ! >>> BODY
+    ! broadcast when MPI defined
+    IFDEFINED([COMM_MPI], [ IFELSE([$2], [scalar], [
+    ! there is a single datum
+    count = 1],
+    [
+    ! get size of array
+    count = size(buffer)])
+    IFELSE([$3], [character],
+    [count=count*len(buffer) ])
+
+    ! broadcast the integer array from root to all
+    call MPI_BCAST(buffer, count, COMM_$1, root, communicator, ierror)
+    ]) dnl end of MPI broadcast
+
+  end subroutine bcast_$1_$2
+  ]) dnl end of bcast_def
+
+  dnl Broadcasts
+  bcast_def(INT4,  rank4,  integer)
+  bcast_def(INT4,  rank3,  integer)
+  bcast_def(INT4,  rank2,  integer)
+  bcast_def(INT4,  rank,  integer)
+  bcast_def(INT4,  scalar, integer)
+  bcast_def(INT8,  rank4,  integer)
+  bcast_def(INT8,  rank3,  integer)
+  bcast_def(INT8,  rank2,  integer)
+  bcast_def(INT8,  rank,  integer)
+  bcast_def(INT8,  scalar, integer)
+  bcast_def(REAL4, rank4,  real)
+  bcast_def(REAL4, rank3,  real)
+  bcast_def(REAL4, rank2,  real)
+  bcast_def(REAL4, rank,  real)
+  bcast_def(REAL4, scalar, real)
+  bcast_def(REAL8, rank4,  real)
+  bcast_def(REAL8, rank3,  real)
+  bcast_def(REAL8, rank2,  real)
+  bcast_def(REAL8, rank,  real)
+  bcast_def(REAL8, scalar, real)
+  bcast_def(LOGIC, rank,  logical)
+  bcast_def(LOGIC, scalar, logical)
+  bcast_def(CHAR, scalar, character)
+  bcast_def(CHAR, rank, character)
+  bcast_def(CHAR, rank2, character)
+  bcast_def(CHAR, rank3, character)
+  bcast_def(CHAR, rank4, character)
+
+  !---------------------------------------------------------------------------!
+  ! Global reductions.
+
+  DEFINE([global_reduction_def], [dnl Generic global reduction definition
+  subroutine global_$1_$2_$3(buffer)
+    implicit none
+    ! >>> IO DATA
+    IFELSE([$2], [rank4], [
+    ! Buffer of data to perform global reduction on.
+    $4($1), dimension(:,:,:,:), intent(inout) :: buffer
+    ],[$2], [rank3],[
+    ! Buffer of data to perform global reduction on.
+    $4($1), dimension(:,:,:), intent(inout) :: buffer
+    ],[$2], [rank2], [
+    ! Buffer of data to perform global reduction on.
+    $4($1), dimension(:,:), intent(inout) :: buffer
+    ],[$2], [rank], [
+    ! Buffer of data to perform global reduction on.
+    $4($1), dimension(:), intent(inout) :: buffer
+    ],[
+    ! Single datum to perform global reduction on.
+    $4($1), intent(inout) :: buffer ])
+
+    ! >>> LOCAL DATA
+    ! Local sending buffer.
+    IFELSE([$2], [rank4], [
+    $4($1), dimension(:,:,:,:) ,allocatable :: send_buffer
+    ],[$2], [rank3],[
+    $4($1), dimension(:,:,:) ,allocatable :: send_buffer
+    ],[$2], [rank2], [
+    $4($1), dimension(:,:) ,allocatable :: send_buffer
+    ],[$2], [rank], [
+    $4($1), dimension(:) ,allocatable :: send_buffer
+    ],[
+    $4($1) :: send_buffer ])
+
+    ! Size of array.
+    integer :: count,IM(4)
+
+    ! >>> BODY
+
+    ! broadcast when MPI defined
+    IFDEFINED([COMM_MPI], [
+
+    IFELSE([$2], [rank4],  [
+    ! get size of array
+    count = size(buffer)
+    IM(1:4)=shape(buffer)
+    allocate(send_buffer(IM(1),IM(2),IM(3),IM(4)))
+    ],[$2], [rank3],[
+    ! get size of array
+    count = size(buffer)
+    IM(1:3)=shape(buffer)
+    allocate(send_buffer(IM(1),IM(2),IM(3)))
+    ],[$2], [rank2], [
+    ! get size of array
+    count = size(buffer)
+    IM(1:2)=shape(buffer)
+    allocate(send_buffer(IM(1),IM(2)))
+    ],[$2], [rank], [
+    ! get size of array
+    count = size(buffer)
+    allocate(send_buffer(count))
+    ],[
+    ! there is a single datum
+    count = 1 ])
+
+    ! copy data into the send buffer
+    send_buffer = buffer
+
+    ! do the global reduction
+    call MPI_ALLREDUCE(send_buffer, buffer, count, COMM_$1, $3, communicator,  &
+         &             ierror)
+
+    IFELSE(.not. [$2], [scalar], [
+    ! clean up memory
+    deallocate(send_buffer)
+    ])
+
+    ]) dnl end of MPI reduction
+
+  end subroutine global_$1_$2_$3
+  ]) dnl end of global_reduction_def
+
+  dnl SUM
+  global_reduction_def(INT4,  rank3,  MPI_SUM, integer)
+  global_reduction_def(INT4,  rank2,  MPI_SUM, integer)
+  global_reduction_def(INT4,  rank,  MPI_SUM, integer)
+  global_reduction_def(INT4,  scalar, MPI_SUM, integer)
+  global_reduction_def(REAL4, rank4,  MPI_SUM, real)
+  global_reduction_def(REAL4, rank3,  MPI_SUM, real)
+  global_reduction_def(REAL4, rank2,  MPI_SUM, real)
+  global_reduction_def(REAL4, rank,  MPI_SUM, real)
+  global_reduction_def(REAL4, scalar, MPI_SUM, real)
+  global_reduction_def(REAL8, rank3,  MPI_SUM, real)
+  global_reduction_def(REAL8, rank2,  MPI_SUM, real)
+  global_reduction_def(REAL8, rank,  MPI_SUM, real)
+  global_reduction_def(REAL8, scalar, MPI_SUM, real)
+
+  dnl PROD
+  global_reduction_def(INT4,  rank3,  MPI_PROD, integer)
+  global_reduction_def(INT4,  rank2,  MPI_PROD, integer)
+  global_reduction_def(INT4,  rank,  MPI_PROD, integer)
+  global_reduction_def(INT4,  scalar, MPI_PROD, integer)
+  global_reduction_def(REAL4, rank3,  MPI_PROD, real)
+  global_reduction_def(REAL4, rank2,  MPI_PROD, real)
+  global_reduction_def(REAL4, rank,  MPI_PROD, real)
+  global_reduction_def(REAL4, scalar, MPI_PROD, real)
+  global_reduction_def(REAL8, rank3,  MPI_PROD, real)
+  global_reduction_def(REAL8, rank2,  MPI_PROD, real)
+  global_reduction_def(REAL8, rank,  MPI_PROD, real)
+  global_reduction_def(REAL8, scalar, MPI_PROD, real)
+
+  dnl MIN
+  global_reduction_def(INT4,  rank3,  MPI_MIN, integer)
+  global_reduction_def(INT4,  rank2,  MPI_MIN, integer)
+  global_reduction_def(INT4,  rank,  MPI_MIN, integer)
+  global_reduction_def(INT4,  scalar, MPI_MIN, integer)
+  global_reduction_def(REAL4, rank3,  MPI_MIN, real)
+  global_reduction_def(REAL4, rank2,  MPI_MIN, real)
+  global_reduction_def(REAL4, rank,  MPI_MIN, real)
+  global_reduction_def(REAL4, scalar, MPI_MIN, real)
+  global_reduction_def(REAL8, rank3,  MPI_MIN, real)
+  global_reduction_def(REAL8, rank2,  MPI_MIN, real)
+  global_reduction_def(REAL8, rank,  MPI_MIN, real)
+  global_reduction_def(REAL8, scalar, MPI_MIN, real)
+
+  dnl MAX
+  global_reduction_def(INT4,  rank3,  MPI_MAX, integer)
+  global_reduction_def(INT4,  rank2,  MPI_MAX, integer)
+  global_reduction_def(INT4,  rank,  MPI_MAX, integer)
+  global_reduction_def(INT4,  scalar, MPI_MAX, integer)
+  global_reduction_def(REAL4, rank3,  MPI_MAX, real)
+  global_reduction_def(REAL4, rank2,  MPI_MAX, real)
+  global_reduction_def(REAL4, rank,  MPI_MAX, real)
+  global_reduction_def(REAL4, scalar, MPI_MAX, real)
+  global_reduction_def(REAL8, rank3,  MPI_MAX, real)
+  global_reduction_def(REAL8, rank2,  MPI_MAX, real)
+  global_reduction_def(REAL8, rank,  MPI_MAX, real)
+  global_reduction_def(REAL8, scalar, MPI_MAX, real)
+
+  !---------------------------------------------------------------------------!
+  ! POINT-TO-POINT COMMUNICATION
+  !---------------------------------------------------------------------------!
+  ! Blocking send.
+
+  DEFINE([send_def], [dnl Generic blocking send
+  subroutine send_$1_$2(buffer, dest, tag)
+    implicit none
+    ! >>> IO DATA
+    IFELSE([$2], [rank3], [
+    IFELSE([$3], [character], [
+    ! Buffer of data to send point-to-point
+    $3 (len=*),dimension(:,:,:), intent(in):: buffer ],[
+    ! Buffer of data to send point-to-point
+    $3($1), dimension(:,:,:), intent(in) :: buffer ])
+    ],[$2], [rank2], [
+    IFELSE([$3], [character], [
+    ! Buffer of data to send point-to-point
+    $3 (len=*),dimension(:,:), intent(in) :: buffer ],[
+    ! Buffer of data to send point-to-point
+    $3($1), dimension(:,:), intent(in) :: buffer ])
+    ],[$2], [rank], [
+    IFELSE([$3], [character], [
+    ! Buffer of data to send point-to-point
+    $3 (len=*),dimension(:),intent(in):: buffer ],[
+    ! Buffer of data to send point-to-point
+    $3($1), dimension(:), intent(in) :: buffer ])
+    ],[ IFELSE([$3], [character], [
+    $3 (len=*),intent(in) :: buffer ],[
+    $3($1), intent(in) :: buffer ])
+    ])
+
+    ! Destination processor.
+    integer, intent(in) :: dest
+
+    ! Message tag.
+    integer, intent(in) :: tag
+
+    ! >>> LOCAL DATA
+
+    ! Number of elements in buffer.
+    integer :: count
+
+    ! >>> BODY
+
+    ! send when MPI defined
+    IFDEFINED([COMM_MPI], [
+
+    IFELSE([$2], [scalar], [
+    ! there is a single datum
+    count = 1
+    ],[
+    ! get size of array
+    count = size(buffer)
+    ])
+    IFELSE([$3], [character],
+   [count=count*len(buffer) ])
+
+    ! send the data to the destination node
+    call MPI_SEND(buffer, count, COMM_$1, dest, tag, communicator, ierror)
+
+    ]) dnl end of MPI send
+
+  end subroutine send_$1_$2
+  ]) dnl end of send_def
+
+  dnl Sends
+  send_def(INT4,  rank3,  integer)
+  send_def(INT4,  rank2,  integer)
+  send_def(INT4,  rank,  integer)
+  send_def(INT4,  scalar, integer)
+  send_def(INT8,  rank3,  integer)
+  send_def(INT8,  rank2,  integer)
+  send_def(INT8,  rank,  integer)
+  send_def(INT8,  scalar, integer)
+  send_def(REAL4, rank3,  real)
+  send_def(REAL4, rank2,  real)
+  send_def(REAL4, rank,  real)
+  send_def(REAL4, scalar, real)
+  send_def(REAL8, rank3,  real)
+  send_def(REAL8, rank2,  real)
+  send_def(REAL8, rank,  real)
+  send_def(REAL8, scalar, real)
+  send_def(LOGIC, rank,  logical)
+  send_def(LOGIC, scalar, logical)
+  send_def(CHAR, scalar, character)
+  send_def(CHAR, rank, character)
+  send_def(CHAR, rank2, character)
+  send_def(CHAR, rank3, character)
+  !---------------------------------------------------------------------------!
+  ! Blocking receive.
+
+  DEFINE([receive_def], [dnl Generic blocking receive
+  subroutine receive_$1_$2(buffer, source, tag)
+    implicit none
+    ! >>> IO DATA
+    IFELSE([$2], [rank3], [
+    IFELSE([$3], [character], [
+    ! Buffer of data receive point-to-point
+    $3 (len=*),dimension(:,:,:):: buffer ],[
+    ! Buffer of data receive point-to-point
+    $3($1), dimension(:,:,:) :: buffer ])
+    ],[$2], [rank2], [
+    IFELSE([$3], [character], [
+    ! Buffer of data receive point-to-point
+    $3 (len=*),dimension(:,:):: buffer ],[
+    ! Buffer of data receive point-to-point
+    $3($1), dimension(:,:) :: buffer ])
+    ],[$2], [rank], [
+    IFELSE([$3], [character], [
+    ! Buffer of data receive point-to-point
+    $3 (len=*),dimension(:):: buffer ],[
+    ! Buffer of data receive point-to-point
+    $3($1), dimension(:) :: buffer ])
+    ],[ IFELSE([$3], [character], [
+    $3 (len=*) :: buffer ],[
+    $3($1) :: buffer ])
+    ])
+
+
+
+    ! Source processor.
+    integer, intent(in) :: source
+
+    ! Message tag.
+    integer, intent(in) :: tag
+
+    ! >>> LOCAL DATA
+
+    ! Number of elements in buffer.
+    integer :: count
+
+    ! Status.
+    IFDEFINED([COMM_MPI], [
+    integer, dimension(MPI_STATUS_SIZE) :: status
+    ])
+
+    ! >>> BODY
+
+    ! receive when MPI defined
+    IFDEFINED([COMM_MPI], [
+
+    IFELSE([$2], [scalar], [
+    ! there is a single datum
+    count = 1
+    ],[
+    ! get size of array
+    count = size(buffer)
+    ])
+    IFELSE([$3], [character],
+   [count=count*len(buffer) ])
+
+    ! receive data from the source processor
+    call MPI_RECV(buffer, count, COMM_$1, source, tag, communicator, status,   &
+         &        ierror)
+
+    ]) dnl end of MPI receive
+
+  end subroutine receive_$1_$2
+  ]) dnl end of receive_def
+
+  dnl Receives
+  receive_def(INT4,  rank3,  integer)
+  receive_def(INT4,  rank2,  integer)
+  receive_def(INT4,  rank,  integer)
+  receive_def(INT4,  scalar, integer)
+  receive_def(INT8,  rank3,  integer)
+  receive_def(INT8,  rank2,  integer)
+  receive_def(INT8,  rank,  integer)
+  receive_def(INT8,  scalar, integer)
+  receive_def(REAL4, rank3,  real)
+  receive_def(REAL4, rank2,  real)
+  receive_def(REAL4, rank,  real)
+  receive_def(REAL4, scalar, real)
+  receive_def(REAL8, rank3,  real)
+  receive_def(REAL8, rank2,  real)
+  receive_def(REAL8, rank,  real)
+  receive_def(REAL8, scalar, real)
+  receive_def(LOGIC, rank,  logical)
+  receive_def(LOGIC, scalar, logical)
+  receive_def(CHAR, scalar, character)
+  receive_def(CHAR, rank, character)
+  receive_def(CHAR, rank2, character)
+  receive_def(CHAR, rank3, character)
+end module nemesis_comm
+
+!-----------------------------------------------------------------------------!
+!                               end of MPI_FC.fm4
+!-----------------------------------------------------------------------------!

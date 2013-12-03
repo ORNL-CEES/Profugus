@@ -1,0 +1,221 @@
+//----------------------------------*-C++-*----------------------------------//
+/*!
+ * \file   comm/Timing.hh
+ * \author Thomas M. Evans
+ * \date   Fri Nov  9 09:41:55 2007
+ * \brief  Timing class definition.
+ * \note   Copyright (C) 2007 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ */
+//---------------------------------------------------------------------------//
+
+#ifndef comm_Timing_hh
+#define comm_Timing_hh
+
+#include <comm/config.h>
+#include "Timing_Diagnostics.hh"
+
+//---------------------------------------------------------------------------//
+/*!
+ * \page comm_timing Macros for timing
+ *
+ * Four macros are defined here; these macros insert timer calls into code if
+ * a global definition, NEMESIS_TIMING, is greater then 0.  The default value
+ * is to set NEMESIS_TIMING == 1. They use the nemesis::Timer and
+ * nemesis::Timing_Diagnostics classes.
+ *
+ * The build system sets NEMESIS_TIMING through the configure option \c
+ * --with-timing-diagnostics.  The following settings apply:
+ * - 0 turns off all TIMER macros
+ * - 1 turns on TIMER, TIMER_START, TIMER_STOP
+ * - 2 turns on TIMER_2, TIMER_START_2, TIMER_STOP_2 in addition to level 1
+ * - 3 turns on TIMER_3, TIMER_START_3, TIMER_STOP_3 in addition to levels 1,2
+ * .
+ * The default is 1.
+ *
+ * In code,
+ * \code
+ * #include "comm/Timing.hh"
+ *
+ * TIMER( foo);
+ * TIMER_START( foo);
+ * // ...
+ * // code interval to time
+ * // ...
+ * TIMER_STOP( foo);
+ * TIMER_RECORD( "Snippet", foo);
+ * \endcode
+ * The key "Snippet" can be used to access the stored time through the
+ * Timer_Diagnostics class:
+ * \code
+ * #ifdef NEMESIS_TIMING_ON
+ *   vector<string> keys = Timing_Diagnostics::timer_keys();
+ *   for (int i = 0; i < keys.size(); i++)
+ *   {
+ *       cout << keys[i] << "\t" << Timing_Diagnostics::timer_value(keys[i])
+ *            << endl;
+ *   }
+     Timing_Diagnostics::reset_timers();
+ * #endif
+ * \endcode
+ */
+
+/*!
+ * \def TIMER( timer_name)
+ *
+ * If NEMESIS_TIMING_ON is defined, TIMER( timer_name) expands to:
+ * \code
+ *     nemesis::Timer timer_name
+ * \endcode
+ * Otherwise it is empty.
+ */
+
+/*!
+ * \def TIMER_START( timer_name)
+ *
+ * If NEMESIS_TIMING > 0 TIMER_START( timer_name) expands to:
+ * \code
+ *     timer_name.start()
+ * \endcode
+ * Otherwise it is empty.
+ */
+
+/*!
+ * \def TIMER_STOP( timer_name)
+ *
+ * If NEMESIS_TIMING_ON > 0, TIMER_STOP( timer_name) expands to:
+ * \code
+ *     timer_name.stop()
+ * \endcode
+ * Otherwise it is empty.
+ */
+
+/*!
+ * \def TIMER_RECORD( name, timer)
+ *
+ * If NEMESIS_TIMING_ON > 0, TIMER_RECORD( name, timer) expands to:
+ * \code
+ *     nemesis::Timing_Diagnostics::update_timer(name, timer.wall_clock())
+ * \endcode
+ * Otherwise it is empty.
+ */
+//---------------------------------------------------------------------------//
+
+#if !defined(NEMESIS_TIMING)
+#define NEMESIS_TIMING 1
+#endif
+
+//---------------------------------------------------------------------------//
+/*
+ * All timing operations are inactive.
+ */
+#if NEMESIS_TIMING == 0
+
+#define TIMER( timer)
+
+#define TIMER_START( timer)
+
+#define TIMER_STOP( timer)
+
+#define TIMER_RECORD( name, timer)
+
+#define SCOPED_TIMER(name)
+
+#endif
+
+//---------------------------------------------------------------------------//
+/*
+ * Turn on basic timing operations depending on level.
+ *
+ * TIMER_CLOCK (defined in Timer.hh) selects "wall_clock" when MPI is on, or
+ * "user_cpu" when MPI is off.
+ */
+
+// LEVEL 1
+#if NEMESIS_TIMING > 0
+
+#include "Timer.hh"
+#include "Scoped_Timer.hh"
+
+#define NEMESIS_TIMING_ON
+
+#define TIMER( timer) nemesis::Timer timer
+
+#define TIMER_START( timer) timer.start()
+
+#define TIMER_STOP( timer) timer.stop()
+
+#define TIMER_RECORD( name, timer)                                      \
+    nemesis::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
+
+#define SCOPED_TIMER(name) \
+    nemesis::Scoped_Timer scoped_timer_(name)
+
+#endif
+
+// LEVEL 2
+#if NEMESIS_TIMING > 1
+
+#define NEMESIS_TIMING_2_ON
+
+#define TIMER_2( timer) nemesis::Timer timer
+
+#define TIMER_START_2( timer) timer.start()
+
+#define TIMER_STOP_2( timer) timer.stop()
+
+#define TIMER_RECORD_2( name, timer)                                      \
+    nemesis::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
+
+#define SCOPED_TIMER_2(name) \
+    nemesis::Scoped_Timer scoped_timer_(name)
+
+#else
+
+#define TIMER_2( timer)
+
+#define TIMER_START_2( timer)
+
+#define TIMER_STOP_2( timer)
+
+#define TIMER_RECORD_2( name, timer)
+
+#define SCOPED_TIMER_2(name)
+
+#endif
+
+// LEVEL 3
+#if NEMESIS_TIMING > 2
+
+#define NEMESIS_TIMING_3_ON
+
+#define TIMER_3( timer) nemesis::Timer timer
+
+#define TIMER_START_3( timer) timer.start()
+
+#define TIMER_STOP_3( timer) timer.stop()
+
+#define TIMER_RECORD_3( name, timer)                                      \
+    nemesis::Timing_Diagnostics::update_timer(name, timer.TIMER_CLOCK())
+
+#define SCOPED_TIMER_3(name) \
+    nemesis::Scoped_Timer scoped_timer_(name)
+
+#else
+
+#define TIMER_3( timer)
+
+#define TIMER_START_3( timer)
+
+#define TIMER_STOP_3( timer)
+
+#define TIMER_RECORD_3( name, timer)
+
+#define SCOPED_TIMER_3(name)
+
+#endif
+
+#endif // comm_Timing_hh
+
+//---------------------------------------------------------------------------//
+//              end of comm/Timing.hh
+//---------------------------------------------------------------------------//

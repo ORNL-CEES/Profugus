@@ -1,0 +1,96 @@
+/*-----------------------------------*-C-*-----------------------------------*/
+/*!
+ * \file   harness/config.h
+ * \author Thomas M. Evans
+ * \date   Wed Jan  2 11:50:34 2008
+ * \brief  harness configure options
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC
+ */
+/*---------------------------------------------------------------------------*/
+/* $Id: config.h.in,v 1.3 2009/02/03 19:56:50 9te Exp $ */
+/*---------------------------------------------------------------------------*/
+
+#ifndef harness_config_h
+#define harness_config_h
+
+/* DBC ENVIRONMENTS */
+#define NEMESIS_DBC @NEMESIS_DBC@
+
+/* DIAGNOSTICS */
+#define NEMESIS_DIAGNOSTICS @NEMESIS_DIAGNOSTICS@
+
+/* WARNINGS */
+#cmakedefine NEMESIS_WARNINGS_ENABLED
+
+/* WARNINGS */
+#cmakedefine NEMESIS_WARNINGS_IMMEDIATE
+
+/* SIZE OF PODs */
+#cmakedefine SIZEOF_SHORT @SIZEOF_SHORT@
+#cmakedefine SIZEOF_UNSIGNED @SIZEOF_UNSIGNED@
+#cmakedefine SIZEOF_UNSIGNED_SHORT @SIZEOF_UNSIGNED_SHORT@
+#cmakedefine SIZEOF_INT @SIZEOF_INT@
+#cmakedefine SIZEOF_LONG @SIZEOF_LONG@
+#cmakedefine SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
+
+#cmakedefine SIZEOF_FLOAT @SIZEOF_FLOAT@
+#cmakedefine SIZEOF_DOUBLE @SIZEOF_DOUBLE@
+
+/* C++ CORRESPONDING TYPES */
+
+/* 2-Byte integers; short */
+#if SIZEOF_UNSIGNED_SHORT == 2
+#define NEMESIS_UNSIGNED_INT2 unsigned short
+#endif
+
+/* 4-Byte integers; int, short, long */
+#if SIZEOF_INT == 4
+#define NEMESIS_INT4 int
+#endif
+
+/* 8-Byte integers; long, long long */
+#if SIZEOF_LONG == 8
+#define NEMESIS_INT8 long
+#elif SIZEOF_LONG_LONG == 8
+#define NEMESIS_INT8 long long
+#endif
+
+/* 4-Byte reals; float */
+#if SIZEOF_FLOAT == 4
+#define NEMESIS_REAL4 float
+#endif
+
+/* 8-Byte reals; double */
+#if SIZEOF_DOUBLE == 8
+#define NEMESIS_REAL8 double
+#endif
+
+#if defined(NEMESIS_UNSIGNED_INT2)
+#define NEMESIS_UNSIGNED_INT2_SET
+#endif
+
+#if defined(NEMESIS_INT4)
+#define NEMESIS_INT4_SET
+#endif
+
+#if defined(NEMESIS_INT8)
+#define NEMESIS_INT8_SET
+#endif
+
+#if defined(NEMESIS_REAL4)
+#define NEMESIS_REAL4_SET
+#endif
+
+#if defined(NEMESIS_REAL8)
+#define NEMESIS_REAL8_SET
+#endif
+
+/* FORTRAN WRAPPERS */
+#define FC_FUNC@F77_FUNC@
+#define FC_FUNC_@F77_FUNC_@
+
+#endif /* harness_config_h */
+
+/*---------------------------------------------------------------------------*/
+/*           end of harness/config.h */
+/*---------------------------------------------------------------------------*/

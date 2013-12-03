@@ -1,0 +1,126 @@
+!-----------------------------------------------------------------------------!
+! \file   harness/Soft_Equivalence.fm4
+! \author Thomas M. Evans
+! \date   Tue Nov 10 17:06:12 2009
+! \brief  Soft_Equivalence checks.
+! \note   Copyright (C) 2009 Oak Ridge National Laboratory, UT-Battelle, LLC.
+!-----------------------------------------------------------------------------!
+! $Id: template.f90,v 1.2 2009/09/09 14:59:15 9te Exp $
+!-----------------------------------------------------------------------------!
+
+!=============================================================================!
+! \module harness_soft_equivalence
+! \brief  Soft equivalence for floating-point types.
+!=============================================================================!
+
+module harness_soft_equivalence
+
+  use harness_data_types, only : REAL4, REAL8
+  implicit none
+  public
+
+  ! Tolerances.
+  real(REAL4), parameter, private :: precision_4 = 1.0e-12_REAL4
+  real(REAL8), parameter, private :: precision_8 = 1.0e-12_REAL8
+
+  ! >>> INTERFACES
+  interface soft_equiv
+     module procedure soft_equiv_4
+     module procedure soft_equiv_8
+     module procedure soft_equiv_eps_4
+     module procedure soft_equiv_eps_8
+  end interface
+  
+contains
+  
+  !---------------------------------------------------------------------------!
+  ! SOFT_EQUIVALENCE FUNCTION
+  !---------------------------------------------------------------------------!
+  
+  DEFINE([soft_equiv_def], [dnl soft-equiv with default precision definition
+  function soft_equiv_$1(value, reference) result(passed)
+
+    implicit none
+
+    ! Function type.
+    logical :: passed
+
+    ! Input types.
+
+    ! Value to be compared.
+    real(REAL$1), intent(in) :: value
+
+    ! Reference that value is compared against.
+    real(REAL$1), intent(in) :: reference
+
+    ! >>> BODY
+
+    ! initialize pass condition
+    passed = .false.
+
+    ! first test
+    if (abs(value - reference) < precision_$1 * abs(reference)) then
+       passed = .true.
+    end if
+
+    ! second chance for passing if reference is within machine error of zero
+    if (.not. passed .and. (abs(reference) < 1.0e-14_REAL$1)) then
+       if (abs(value) < precision_$1) passed = .true.
+    end if
+
+  end function soft_equiv_$1
+  ]) dnl end of soft_equiv_def
+
+  dnl soft_equiv
+  soft_equiv_def(4)
+  soft_equiv_def(8)
+
+  !---------------------------------------------------------------------------!
+  
+  DEFINE([soft_equiv_eps_def], [dnl soft-equiv with precision definition
+  function soft_equiv_eps_$1(value, reference, precision) result(passed)
+
+    implicit none
+
+    ! Function type.
+    logical :: passed
+
+    ! Input types.
+
+    ! Value to be compared.
+    real(REAL$1), intent(in) :: value
+
+    ! Reference that value is compared against.
+    real(REAL$1), intent(in) :: reference
+
+    ! Precision of result.
+    real(REAL$1), intent(in) :: precision
+
+    ! >>> BODY
+
+    ! initialize pass condition
+    passed = .false.
+
+    ! first test
+    if (abs(value - reference) < precision * abs(reference)) then
+       passed = .true.
+    end if
+
+    ! second chance for passing if reference is within machine error of zero
+    if (.not. passed .and. (abs(reference) < 1.0e-14_REAL$1)) then
+       if (abs(value) < precision) passed = .true.
+    end if
+
+  end function soft_equiv_eps_$1
+  ]) dnl end of soft_equiv_eps_def
+
+  dnl soft_equiv_eps
+  soft_equiv_eps_def(4)
+  soft_equiv_eps_def(8)
+  
+end module harness_soft_equivalence
+
+!-----------------------------------------------------------------------------!
+!                               end of Soft_Equivalence.fm4
+!-----------------------------------------------------------------------------!
+

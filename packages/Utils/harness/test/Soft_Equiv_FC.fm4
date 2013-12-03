@@ -1,0 +1,63 @@
+!-----------------------------------------------------------------------------!
+! \file   harness/Soft_Equiv_FC.fm4
+! \author Thomas M. Evans
+! \date   Tue Nov 10 17:53:23 2009
+! \brief  Test of FORTRAN soft-equivalence.
+! \note   Copyright (C) 2009 Oak Ridge National Laboratory, UT-Battelle, LLC.
+!-----------------------------------------------------------------------------!
+! $Id: template.fm4,v 1.2 2009/09/09 14:59:15 9te Exp $
+!-----------------------------------------------------------------------------!
+
+DEFINE([UNIT_TEST], [dnl testing function
+if (.not. ($1)) then
+   fails = fails + 1
+   print*, "Test failed in __FILE__ on line __LINE__"
+end if
+])
+
+!-----------------------------------------------------------------------------!
+
+subroutine test_soft_equiv(fails)
+
+  use harness_data_types,       only : REAL8
+  use harness_constants,        only : zero
+  use harness_soft_equivalence, only : soft_equiv
+  implicit none
+
+  REAL(REAL8) :: x, y, z, a
+
+  integer, intent(inout) :: fails
+
+  ! >>> BODY
+
+  ! REAL8 tests
+  x = 0.9876543212345678_REAL8
+  y = 0.9876543212345678_REAL8
+
+  UNIT_TEST(soft_equiv(x, y, 1.e-16_REAL8))
+  UNIT_TEST(soft_equiv(x, y))
+        
+  z = 0.9876543212345679_REAL8
+        
+  UNIT_TEST(.not. soft_equiv(x, z, 1.e-16_REAL8))
+        
+  a = 0.987654321234_REAL8
+  
+  UNIT_TEST(soft_equiv(x, a))
+        
+  a = 0.987654321233_REAL8
+        
+  UNIT_TEST(.not. soft_equiv(x, a))    
+
+  ! checks for the new "reference=zero" coding 4aug00
+  UNIT_TEST(.not. soft_equiv( 1.0e-10_REAL8, zero))    
+  UNIT_TEST(.not. soft_equiv(-1.0e-10_REAL8, zero))       
+  UNIT_TEST(soft_equiv(-1.0e-35_REAL8, zero)) 
+  UNIT_TEST(soft_equiv( 1.0e-35_REAL8, zero)) 
+
+end subroutine test_soft_equiv
+
+!-----------------------------------------------------------------------------!
+!                               end of Soft_Equiv_FC.fm4
+!-----------------------------------------------------------------------------!
+
