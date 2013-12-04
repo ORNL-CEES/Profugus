@@ -14,7 +14,7 @@
 #ifndef gtest_utils_gtest_hh
 #define gtest_utils_gtest_hh
 
-#include <gtest/config.h>
+#include <Utils/config.h>
 #include "gtest.h"
 #include "Gtest_Functions.hh"
 

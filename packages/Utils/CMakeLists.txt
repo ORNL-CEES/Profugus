@@ -143,7 +143,9 @@ ENDIF()
 CHECK_INCLUDE_FILE(sys/times.h HAVE_SYS_TIMES_H)
 CHECK_INCLUDE_FILE(unistd.h    HAVE_UNISTD_H)
 CHECK_INCLUDE_FILE(windows.h   HAVE_WINDOWS_H)
+
 ##---------------------------------------------------------------------------##
+## GTEST options
 
 # for now always turn off pthreads
 SET (GTEST_HAS_PTHREAD OFF CACHE BOOL "Set GTEST pthreads")
@@ -226,8 +228,6 @@ FILE(GLOB GTEST_HEADERS gtest/*.hh)
 SET(GTEST_SOURCES
   gtest/Gtest_Functions.cc
   gtest/gtest-all.cc)
-LIST(APPEND HEADERS ${GTEST_HEADERS})
-LIST(APPEND SOURCES ${GTEST_SOURCES})
 
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
@@ -238,6 +238,11 @@ TRIBITS_ADD_LIBRARY(
   Utils
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
+
+TRIBITS_ADD_LIBRARY(
+  Utils_gtest
+  TESTONLY
+  SOURCES ${GTEST_SOURCES})
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package
