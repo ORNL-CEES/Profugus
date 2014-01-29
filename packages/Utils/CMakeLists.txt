@@ -242,7 +242,9 @@ TRIBITS_ADD_LIBRARY(
 TRIBITS_ADD_LIBRARY(
   Utils_gtest
   TESTONLY
-  SOURCES ${GTEST_SOURCES})
+  SOURCES ${GTEST_SOURCES}
+  DEPLIBS Utils
+  )
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package

@@ -17,6 +17,15 @@ PROJECT(${PROJECT_NAME} NONE)
 # Add support for extra repositories; everything handled by native above
 SET(${PROJECT_NAME}_SUPPORT_EXTRA_REPOS FALSE)
 
+# Disable Tribits generating HTML dependencies webpage and xml files
+SET(${PROJECT_NAME}_DEPS_XML_OUTPUT_FILE OFF CACHE BOOL "" )
+
+# Disable Tribits export system to save time configuring
+SET(${PROJECT_NAME}_ENABLE_INSTALL_CMAKE_CONFIG_FILES OFF CACHE BOOL "")
+
+# Disable Tribits export makefiles system to save time configuring
+SET(${PROJECT_NAME}_ENABLE_EXPORT_MAKEFILES OFF CACHE BOOL "")
+
 ##---------------------------------------------------------------------------##
 # B) Pull in the TriBITS system and execute
 ##---------------------------------------------------------------------------##
@@ -30,20 +39,27 @@ INCLUDE(${${PROJECT_NAME}_TRIBITS_DIR}/package_arch/TribitsProject.cmake)
 # CMake requires this be in the top file and not in an include file :-(
 CMAKE_MINIMUM_REQUIRED(VERSION ${TRIBITS_CMAKE_MINIMUM_REQUIRED})
 
-# Add install RPATH when building shared
-IF(BUILD_SHARED_LIBS)
-    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-    print_var(CMAKE_INSTALL_RPATH)
-    IF (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-      SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
-        CACHE STRING "On MacOSX the location of installed shared libs.")
-      print_var(CMAKE_INSTALL_NAME_DIR)
-    ENDIF()
+# Default to building shared libraries if user hasn't specified.
+#
+# Note that if you define BUILD_SHARED_LIBS using a configure option file
+# with -D PROFUGUS_PROJECT_CONFIGURE_FILE:PATH=config.cmake,
+# then you'll have to use the FORCE keyword in that file because it gets read
+# during TRIBITS_PROJECT().
+#
+#   SET(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+#
+# (Alternatively, use 'cmake -C config.cmake' to read in BUILD_SHARED_LIBS
+# *before* this point.)
+IF(NOT DEFINED BUILD_SHARED_LIBS)
+  SET(BUILD_SHARED_LIBS_DEFAULT ON)
+  IF(DEFINED BUILD_SHARED)
+    SET(BUILD_SHARED_LIBS_DEFAULT ${BUILD_SHARED})
+  ENDIF()
+  SET(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_DEFAULT}
+    CACHE BOOL
+    "Build shared libraries.")
+  UNSET(BUILD_SHARED_LIBS_DEFAULT)
 ENDIF()
-
-# Disable EpetraExt HDF5 if we are loading HDF5
-SET(EpetraExt_ENABLE_HDF5 OFF CACHE BOOL "Turn off HDF5 in Trilinos.")
 
 # Do all of the processing for this Tribits project
 TRIBITS_PROJECT()

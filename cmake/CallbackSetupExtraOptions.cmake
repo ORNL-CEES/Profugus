@@ -18,6 +18,21 @@ MACRO(TRIBITS_REPOSITORY_SETUP_EXTRA_OPTIONS)
   #enable Profugus documentation
   INCLUDE(ProfugusDoc)
 
+  # Add install RPATH when building shared
+  IF(BUILD_SHARED_LIBS)
+    SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    print_var(CMAKE_INSTALL_RPATH)
+    IF (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+      SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+        CACHE STRING "On MacOSX the location of installed shared libs.")
+      print_var(CMAKE_INSTALL_NAME_DIR)
+    ENDIF()
+  ENDIF()
+
+  # Disable EpetraExt HDF5 if we are loading HDF5
+  SET(EpetraExt_ENABLE_HDF5 OFF CACHE BOOL "Turn off HDF5 in Trilinos.")
+
 ENDMACRO()
 
 ##---------------------------------------------------------------------------##
