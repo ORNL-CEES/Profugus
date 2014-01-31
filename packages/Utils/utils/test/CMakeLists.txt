@@ -1,26 +1,22 @@
 ##---------------------------------------------------------------------------##
-## Profugus/PackagesList.cmake
+## utils/test/CMakeLists.txt
 ## Thomas M. Evans
-## Monday December 2 21:24:6 2013
+## Thursday July 12 10:52:17 2012
+##---------------------------------------------------------------------------##
+## Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+##---------------------------------------------------------------------------##
+## CMAKE for utils//test
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsListHelpers)
+INCLUDE(UtilsTest)
 
 ##---------------------------------------------------------------------------##
-## PACKAGES PROVIDED
+## TESTS
 ##---------------------------------------------------------------------------##
 
-SET(Profugus_PACKAGES_AND_DIRS_AND_CLASSIFICATIONS
-  Utils     packages/Utils     SS
-  Matprop   packages/Matprop   SS
-  )
+ADD_UTILS_TEST(tstStatic_Map.cc  NP 1)
+ADD_UTILS_TEST(tstVector_Lite.cc NP 1)
 
 ##---------------------------------------------------------------------------##
-## PLATFORM SUPPORT
-##---------------------------------------------------------------------------##
-
-PACKAGE_DISABLE_ON_PLATFORMS(Profugus Windows)
-
-##---------------------------------------------------------------------------##
-## end of PackagesList.cmake
+##                      end of utils/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##

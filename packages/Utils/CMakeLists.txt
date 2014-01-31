@@ -11,12 +11,20 @@
 INCLUDE(TribitsPackageMacros)
 INCLUDE(TribitsLibraryMacros)
 INCLUDE(CheckTypeSize)
+INCLUDE(ProfugusAddCFlags)
+
+# Add Utils cmake services
+APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 ##---------------------------------------------------------------------------##
 ## A) Define the package
 ##---------------------------------------------------------------------------##
 
 TRIBITS_PACKAGE(Utils)
+
+##---------------------------------------------------------------------------##
+## B) Set up package-specific options
+##---------------------------------------------------------------------------##
 
 # determine the MPI implementation if it hasn't been given by the user
 IF ((NOT DEFINED Utils_MPI_IMP) AND (TPL_ENABLE_MPI))
@@ -38,16 +46,16 @@ IF( CMAKE_SYSTEM_NAME MATCHES "Windows" )
    ADD_DEFINITIONS(-DNOMINMAX)
 ENDIF( CMAKE_SYSTEM_NAME MATCHES "Windows" )
 
+IF(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
+  PROFUGUS_ADD_CXX_FLAGS(
+    -Wno-sign-compare
+    -Wno-unused-but-set-variable
+    -Wno-unused-variable)
+ENDIF()
+
 IF (DEFINED Utils_MPI_IMP)
   MESSAGE(STATUS "Found MPI implementation ${Utils_MPI_IMP}")
 ENDIF()
-
-##---------------------------------------------------------------------------##
-## B) Set up package-specific options
-##---------------------------------------------------------------------------##
-
-# Setup M4 for FORTRAN processing
-APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # Setup debug option
 TRIBITS_ADD_DEBUG_OPTION()
@@ -222,6 +230,14 @@ SET(COMM_SOURCES
 LIST(APPEND HEADERS ${COMM_HEADERS})
 LIST(APPEND SOURCES ${COMM_SOURCES})
 
+# utils sources
+
+FILE(GLOB UTILS_HEADERS utils/*.hh)
+SET(UTILS_SOURCES
+  utils/Hash_Functions.cc)
+LIST(APPEND HEADERS ${UTILS_HEADERS})
+LIST(APPEND SOURCES ${UTILS_SOURCES})
+
 # gtest sources
 
 FILE(GLOB GTEST_HEADERS gtest/*.hh)
@@ -249,7 +265,10 @@ TRIBITS_ADD_LIBRARY(
 ##---------------------------------------------------------------------------##
 # Add tests to this package
 
-TRIBITS_ADD_TEST_DIRECTORIES(harness/test)
+TRIBITS_ADD_TEST_DIRECTORIES(
+  harness/test
+  utils/test
+  )
 
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP
