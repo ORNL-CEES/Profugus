@@ -41,6 +41,18 @@ class XS_Test : public testing::Test
         nusigf.resize(Ng);
         chi.resize(Ng);
 
+        m1_sigs0.resizeRows(Ng);
+        m1_sigs0.resizeCols(Ng);
+
+        m1_sigs1.resizeRows(Ng);
+        m1_sigs1.resizeCols(Ng);
+
+        m5_sigs0.resizeRows(Ng);
+        m5_sigs0.resizeCols(Ng);
+
+        m5_sigs1.resizeRows(Ng);
+        m5_sigs1.resizeCols(Ng);
+
         m1_sig[0] = 2.0;
         m1_sig[1] = 3.0;
         m1_sig[2] = 4.0;
@@ -66,6 +78,37 @@ class XS_Test : public testing::Test
         chi[1] = 0.3;
         chi[2] = 0.1;
 
+        // scattering m1
+        double m1s0[][4] = {{1.1, 0.0, 0.0, 0.0},
+                            {0.4, 1.4, 0.0, 0.0},
+                            {0.2, 0.9, 3.2, 0.2},
+                            {0.1, 0.2, 0.4, 4.8}};
+        double m1s1[][4] = {{0.11, 0.00, 0.00, 0.00},
+                            {0.04, 0.14, 0.00, 0.00},
+                            {0.02, 0.09, 0.32, 0.02},
+                            {0.01, 0.02, 0.04, 0.48}};
+
+        // scattering m5
+        double m5s0[][4] = {{2.1, 0.0, 0.0, 0.0},
+                            {1.4, 2.4, 0.0, 0.0},
+                            {1.2, 1.9, 5.2, 1.2},
+                            {1.1, 1.2, 2.4, 9.8}};
+        double m5s1[][4] = {{0.21, 0.00, 0.00, 0.00},
+                            {0.14, 0.24, 0.00, 0.00},
+                            {0.12, 0.19, 0.52, 0.12},
+                            {0.11, 0.12, 0.24, 0.98}};
+
+        for (int g = 0; g < 4; ++g)
+        {
+            for (int gp = 0; gp < 4; ++gp)
+            {
+                m1_sigs0(g, gp) = m1s0[g][gp];
+                m1_sigs1(g, gp) = m1s1[g][gp];
+                m5_sigs0(g, gp) = m5s0[g][gp];
+                m5_sigs1(g, gp) = m5s1[g][gp];
+            }
+        }
+
         xs.set(1, Ng);
     }
 
@@ -75,6 +118,8 @@ class XS_Test : public testing::Test
 
     OneDArray m1_sig;
     OneDArray m5_sig, sigf, nusigf, chi;
+
+    TwoDArray m1_sigs0, m1_sigs1, m5_sigs0, m5_sigs1;
 
     XS xs;
 
@@ -184,6 +229,132 @@ TEST_F(XS_Test, totals_assignment)
                 {
                     EXPECT_EQ(0.0, sigs(g, gp));
                 }
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(XS_Test, scat_assignment)
+{
+    xs.add(1, XS::TOTAL, m1_sig);
+    xs.add(1, 0, m1_sigs0);
+    xs.add(1, 1, m1_sigs1);
+    xs.add(5, XS::TOTAL, m5_sig);
+    xs.add(5, 0, m5_sigs0);
+    xs.add(5, 1, m5_sigs1);
+
+    xs.complete();
+
+    EXPECT_EQ(2, xs.num_mat());
+    EXPECT_EQ(1, xs.pn_order());
+    EXPECT_EQ(4, xs.num_groups());
+
+    // material 1
+    {
+        const Vector &sigt = xs.vector(1, XS::TOTAL);
+        EXPECT_EQ(4, sigt.length());
+
+        EXPECT_EQ(2.0, sigt(0));
+        EXPECT_EQ(3.0, sigt(1));
+        EXPECT_EQ(4.0, sigt(2));
+        EXPECT_EQ(5.0, sigt(3));
+
+        const Matrix &p0 = xs.matrix(1, 0);
+        const Matrix &p1 = xs.matrix(1, 1);
+        EXPECT_EQ(4, p0.numRows());
+        EXPECT_EQ(4, p0.numCols());
+        EXPECT_EQ(4, p1.numRows());
+        EXPECT_EQ(4, p1.numCols());
+
+        EXPECT_EQ(1.1, p0(0, 0));
+        EXPECT_EQ(0.0, p0(0, 1));
+        EXPECT_EQ(0.0, p0(0, 2));
+        EXPECT_EQ(0.0, p0(0, 3));
+
+        EXPECT_EQ(0.4, p0(1, 0));
+        EXPECT_EQ(1.4, p0(1, 1));
+        EXPECT_EQ(0.0, p0(1, 2));
+        EXPECT_EQ(0.0, p0(1, 3));
+
+        EXPECT_EQ(0.2, p0(2, 0));
+        EXPECT_EQ(0.9, p0(2, 1));
+        EXPECT_EQ(3.2, p0(2, 2));
+        EXPECT_EQ(0.2, p0(2, 3));
+
+        EXPECT_EQ(0.1, p0(3, 0));
+        EXPECT_EQ(0.2, p0(3, 1));
+        EXPECT_EQ(0.4, p0(3, 2));
+        EXPECT_EQ(4.8, p0(3, 3));
+
+        for (int g = 0; g < 4; ++g)
+        {
+            for (int gp = 0; gp < 4; ++gp)
+            {
+                EXPECT_SOFTEQ(p0(g,gp)*0.1, p1(g,gp), 1.0e-12);
+            }
+        }
+    }
+
+    // material 5
+    {
+        const Vector &sigt = xs.vector(5, XS::TOTAL);
+        EXPECT_EQ(4, sigt.length());
+
+        EXPECT_EQ(20.0, sigt(0));
+        EXPECT_EQ(30.0, sigt(1));
+        EXPECT_EQ(40.0, sigt(2));
+        EXPECT_EQ(50.0, sigt(3));
+
+        const Matrix &p0 = xs.matrix(5, 0);
+        const Matrix &p1 = xs.matrix(5, 1);
+        EXPECT_EQ(4, p0.numRows());
+        EXPECT_EQ(4, p0.numCols());
+        EXPECT_EQ(4, p1.numRows());
+        EXPECT_EQ(4, p1.numCols());
+
+        EXPECT_EQ(2.1, p0(0, 0));
+        EXPECT_EQ(0.0, p0(0, 1));
+        EXPECT_EQ(0.0, p0(0, 2));
+        EXPECT_EQ(0.0, p0(0, 3));
+
+        EXPECT_EQ(1.4, p0(1, 0));
+        EXPECT_EQ(2.4, p0(1, 1));
+        EXPECT_EQ(0.0, p0(1, 2));
+        EXPECT_EQ(0.0, p0(1, 3));
+
+        EXPECT_EQ(1.2, p0(2, 0));
+        EXPECT_EQ(1.9, p0(2, 1));
+        EXPECT_EQ(5.2, p0(2, 2));
+        EXPECT_EQ(1.2, p0(2, 3));
+
+        EXPECT_EQ(1.1, p0(3, 0));
+        EXPECT_EQ(1.2, p0(3, 1));
+        EXPECT_EQ(2.4, p0(3, 2));
+        EXPECT_EQ(9.8, p0(3, 3));
+
+        for (int g = 0; g < 4; ++g)
+        {
+            for (int gp = 0; gp < 4; ++gp)
+            {
+                EXPECT_SOFTEQ(p0(g,gp)*0.1, p1(g,gp), 1.0e-12);
+            }
+        }
+    }
+
+    Vec_Int mids;
+    xs.get_matids(mids);
+
+    for (int m = 0; m < 2; ++m)
+    {
+        for (int t = 1; t < XS::END_XS_TYPES; ++t)
+        {
+            const Vector &sig = xs.vector(mids[m], t);
+            EXPECT_EQ(4, sig.length());
+            for (int g = 0; g < 4; ++g)
+            {
+                EXPECT_EQ(0.0, sig(g));
             }
         }
     }
