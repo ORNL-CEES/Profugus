@@ -42,6 +42,7 @@ class XS
   public:
     //@{
     // Typedefs.
+    typedef std::vector<int>                        Vec_Int;
     typedef Teuchos::SerialDenseVector<int, double> Vector;
     typedef Teuchos::SerialDenseMatrix<int, double> Matrix;
     typedef Teuchos::RCP<Vector>                    RCP_Vector;
@@ -108,12 +109,25 @@ class XS
     //! Number of materials in database (invalid until complete() called).
     int num_mat() const { return d_Nm; }
 
+    // Get the material ids in the database.
+    void get_matids(Vec_Int &matids) const;
+
+    // Check to see if a given matid exists.
+    inline bool has(int matid) const;
+
+    // Return the 1-D data vector for a given matid and type.
+    inline const Vector& vector(int matid, int type) const;
+
+    // Return the 2-D data matrix for a given matid and Pn order.
+    inline const Matrix& matrix(int matid, int pn) const;
+
   private:
     // >>> IMPLEMENTATION
 
-    typedef std::set<int>           Set_Int;
-    typedef std::vector<Set_Int>    Vec_Set;
-    typedef Set_Int::const_iterator set_iter;
+    typedef std::set<int>               Set_Int;
+    typedef std::vector<Set_Int>        Vec_Set;
+    typedef Set_Int::const_iterator     set_iter;
+    typedef Hash_Vector::const_iterator hash_iter;
 
     Vec_Set d_inst_totals;
     Vec_Set d_inst_scat;

@@ -100,13 +100,11 @@ void XS::add(int              matid,
              int              pn,
              const TwoDArray &data)
 {
-#if 0
     Require (data.getNumRows() == data.getNumCols());
     Require (data.getNumRows() == d_Ng);
     Require (pn <= d_pn);
     Require (d_scatter.size() == d_pn + 1);
-    Require (!d_scatter[pn].completed());
-    Require (!d_scatter[pn].count(matid));
+    Require (!d_inst_scat[d_pn].count(matid));
 
     // make a new matrix to hold data
     RCP_Matrix m = Teuchos::rcp(new Matrix(d_Ng, d_Ng, true));
@@ -125,8 +123,10 @@ void XS::add(int              matid,
     // insert into the hash table
     d_scatter[pn].insert(Hash_Matrix::value_type(matid, m));
 
-    Ensure (d_scatter[pn].count(matid));
-#endif
+    // indicate that this data has been inserted
+    d_inst_scat[pn].insert(matid);
+
+    Ensure (d_inst_scat[pn].count(matid));
 }
 
 //---------------------------------------------------------------------------//
@@ -154,6 +154,15 @@ void XS::complete()
                 d_totals[type].insert(Hash_Vector::value_type(matid, vnull));
             }
         }
+
+        // add null data to scattering that haven't been assigned
+        for (int n = 0; n < d_pn + 1; ++n)
+        {
+            if (!d_inst_scat[n].count(matid))
+            {
+                d_scatter[n].insert(Hash_Matrix::value_type(matid, mnull));
+            }
+        }
     }
 
     // store the size
@@ -165,9 +174,37 @@ void XS::complete()
         d_totals[type].complete();
         Ensure (d_totals[type].size() == d_Nm);
     }
+    for (int n = 0; n < d_pn + 1; ++n)
+    {
+        d_scatter[n].complete();
+        Ensure (d_scatter[n].size() == d_Nm);
+    }
 
     // clear work sets
     d_inst_totals.clear();
+    d_inst_scat.clear();
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get the material ids in the database.
+ *
+ * \param matids input/output vector that is resized to accomodate the stored
+ * matids
+ */
+void XS::get_matids(Vec_Int &matids) const
+{
+    Require (d_totals[TOTAL].size() == d_Nm);
+
+    // size the input vector
+    matids.resize(d_Nm);
+
+    Vec_Int::iterator id_itr = matids.begin();
+    for (hash_iter mitr = d_totals[TOTAL].begin();
+         mitr != d_totals[TOTAL].end(); ++mitr, ++id_itr)
+    {
+        *id_itr = mitr->first;
+    }
 }
 
 } // end namespace profugus

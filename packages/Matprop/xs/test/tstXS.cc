@@ -25,6 +25,7 @@ class XS_Test : public testing::Test
     typedef XS::Matrix    Matrix;
     typedef XS::OneDArray OneDArray;
     typedef XS::TwoDArray TwoDArray;
+    typedef XS::Vec_Int   Vec_Int;
 
   protected:
     // Initialization that are performed for each test
@@ -99,6 +100,93 @@ TEST_F(XS_Test, totals_assignment)
     EXPECT_EQ(0, xs.num_mat());
 
     xs.complete();
+
+    EXPECT_EQ(2, xs.num_mat());
+    EXPECT_EQ(1, xs.pn_order());
+    EXPECT_EQ(4, xs.num_groups());
+
+    EXPECT_TRUE(xs.has(1));
+    EXPECT_TRUE(xs.has(5));
+
+    Vec_Int mids;
+    xs.get_matids(mids);
+    EXPECT_EQ(2, mids.size());
+    EXPECT_EQ(1, mids[0]);
+    EXPECT_EQ(5, mids[1]);
+
+    // material 1
+    {
+        const Vector &sigt = xs.vector(1, XS::TOTAL);
+        EXPECT_EQ(4, sigt.length());
+
+        EXPECT_EQ(2.0, sigt(0));
+        EXPECT_EQ(3.0, sigt(1));
+        EXPECT_EQ(4.0, sigt(2));
+        EXPECT_EQ(5.0, sigt(3));
+
+        for (int t = 1; t < XS::END_XS_TYPES; ++t)
+        {
+            const Vector &sig = xs.vector(1, t);
+            EXPECT_EQ(4, sig.length());
+            for (int g = 0; g < 4; ++g)
+            {
+                EXPECT_EQ(0.0, sig(g));
+            }
+        }
+    }
+
+    // material 5
+    {
+        const Vector &sigt = xs.vector(5, XS::TOTAL);
+        EXPECT_EQ(4, sigt.length());
+
+        EXPECT_EQ(20.0, sigt(0));
+        EXPECT_EQ(30.0, sigt(1));
+        EXPECT_EQ(40.0, sigt(2));
+        EXPECT_EQ(50.0, sigt(3));
+
+        const Vector &sigf = xs.vector(5, XS::SIG_F);
+        EXPECT_EQ(4, sigf.length());
+
+        EXPECT_EQ(11.0, sigf(0));
+        EXPECT_EQ(12.0, sigf(1));
+        EXPECT_EQ(13.0, sigf(2));
+        EXPECT_EQ(14.0, sigf(3));
+
+        const Vector &nusigf = xs.vector(5, XS::NU_SIG_F);
+        EXPECT_EQ(4, nusigf.length());
+
+        EXPECT_EQ(2.4*11.0, nusigf(0));
+        EXPECT_EQ(2.4*12.0, nusigf(1));
+        EXPECT_EQ(2.4*13.0, nusigf(2));
+        EXPECT_EQ(2.4*14.0, nusigf(3));
+
+        const Vector &chi = xs.vector(5, XS::CHI);
+        EXPECT_EQ(4, chi.length());
+
+        EXPECT_EQ(0.6, chi(0));
+        EXPECT_EQ(0.3, chi(1));
+        EXPECT_EQ(0.1, chi(2));
+        EXPECT_EQ(0.0, chi(3));
+    }
+
+    for (int m = 0; m < 2; ++m)
+    {
+        int matid = mids[m];
+        for (int n = 0; n < 1; ++n)
+        {
+            const Matrix &sigs = xs.matrix(matid, n);
+            EXPECT_EQ(4, sigs.numRows());
+            EXPECT_EQ(4, sigs.numCols());
+            for (int g = 0; g < 4; ++g)
+            {
+                for (int gp = 0; gp < 4; ++gp)
+                {
+                    EXPECT_EQ(0.0, sigs(g, gp));
+                }
+            }
+        }
+    }
 }
 
 //---------------------------------------------------------------------------//
