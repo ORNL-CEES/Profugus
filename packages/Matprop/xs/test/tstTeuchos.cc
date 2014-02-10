@@ -138,9 +138,9 @@ TEST_F(Teuchos_Test, pl_read)
 {
     RCP_ParameterList p = Teuchos::rcp(new ParameterList("cross sections"));
     Teuchos::updateParametersFromXmlFileAndBroadcast(
-        "three_group_xs.xml", p.ptr(), *comm);
+        "xs3GP0.xml", p.ptr(), *comm);
 
-    EXPECT_EQ(3, p->numParams());
+    EXPECT_EQ(4, p->numParams());
     EXPECT_TRUE(p->isParameter("num groups"));
     EXPECT_EQ(3, p->get<int>("num groups"));
 
@@ -159,7 +159,7 @@ TEST_F(Teuchos_Test, pl_read)
     {
         const ParameterList &m = p->sublist(*itr);
         EXPECT_TRUE(m.isParameter("sigma_t"));
-        EXPECT_TRUE(m.isParameter("sigma_s"));
+        EXPECT_TRUE(m.isParameter("sigma_s0"));
 
         const Array_Dbl &sigma_t = m.get<Array_Dbl>("sigma_t");
 
