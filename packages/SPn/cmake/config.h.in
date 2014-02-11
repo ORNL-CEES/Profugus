@@ -1,0 +1,24 @@
+/*-----------------------------------*-C-*-----------------------------------*/
+/*!
+ * \file   SPn/config.h
+ * \author Thomas M. Evans
+ * \date   Wed Jan  2 11:50:34 2008
+ * \brief  SPn configure options
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC
+ */
+/*---------------------------------------------------------------------------*/
+/* $Id: config.h.in,v 1.3 2009/02/03 19:56:50 9te Exp $ */
+/*---------------------------------------------------------------------------*/
+
+#ifndef SPn_config_h
+#define SPn_config_h
+
+/* FORTRAN WRAPPERS */
+#define FC_FUNC@F77_FUNC@
+#define FC_FUNC_@F77_FUNC_@
+
+#endif /* SPn_config_h */
+
+/*---------------------------------------------------------------------------*/
+/*           end of SPn/config.h */
+/*---------------------------------------------------------------------------*/

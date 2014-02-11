@@ -1,27 +1,33 @@
 ##---------------------------------------------------------------------------##
-## Profugus/PackagesList.cmake
+## spn/test/CMakeLists.txt
 ## Thomas M. Evans
-## Monday December 2 21:24:6 2013
+## Wednesday July 11 14:35:42 2012
+##---------------------------------------------------------------------------##
+## Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+##---------------------------------------------------------------------------##
+## CMAKE for spn
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsListHelpers)
+INCLUDE(TribitsAddExecutableAndTest)
+INCLUDE(UtilsTest)
 
 ##---------------------------------------------------------------------------##
-## PACKAGES PROVIDED
+## FILES
 ##---------------------------------------------------------------------------##
 
-SET(Profugus_PACKAGES_AND_DIRS_AND_CLASSIFICATIONS
-  Utils     packages/Utils     SS
-  Matprop   packages/Matprop   SS
-  SPn       packages/SPn       SS
-  )
+# Make testing library
+TRIBITS_ADD_LIBRARY(spn_test_lib
+  SOURCES Test_XS.cc
+  TESTONLY
+  DEPLIBS SPn)
 
 ##---------------------------------------------------------------------------##
-## PLATFORM SUPPORT
+## TESTING
 ##---------------------------------------------------------------------------##
 
-PACKAGE_DISABLE_ON_PLATFORMS(Profugus Windows)
+ADD_UTILS_TEST(tstDimensions.cc          NP 1)
+ADD_UTILS_TEST(tstMoment_Coefficients.cc NP 1 DEPLIBS spn_test_lib)
 
 ##---------------------------------------------------------------------------##
-## end of PackagesList.cmake
+##                    end of spn/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##
