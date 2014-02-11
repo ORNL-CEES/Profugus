@@ -69,8 +69,10 @@ SET(HEADERS "")
 
 FILE(GLOB XS_HEADERS xs/*.hh)
 SET(XS_SOURCES
+  xs/Mat_DB.cc
   xs/XS.cc
-  xs/XS_Builder.cc)
+  xs/XS_Builder.cc
+  )
 LIST(APPEND HEADERS ${XS_HEADERS})
 LIST(APPEND SOURCES ${XS_SOURCES})
 

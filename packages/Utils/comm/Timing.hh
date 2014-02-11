@@ -11,7 +11,7 @@
 #ifndef comm_Timing_hh
 #define comm_Timing_hh
 
-#include <comm/config.h>
+#include <Utils/config.h>
 #include "Timing_Diagnostics.hh"
 
 //---------------------------------------------------------------------------//
