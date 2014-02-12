@@ -70,7 +70,9 @@ SET(HEADERS "")
 FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
+  spn/Mesh.cc
   spn/Moment_Coefficients.cc
+  spn/SDM_Face_Field.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})

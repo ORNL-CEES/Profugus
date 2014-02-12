@@ -27,6 +27,7 @@ TRIBITS_ADD_LIBRARY(spn_test_lib
 
 ADD_UTILS_TEST(tstDimensions.cc          NP 1)
 ADD_UTILS_TEST(tstMoment_Coefficients.cc NP 1 DEPLIBS spn_test_lib)
+ADD_UTILS_TEST(tstMesh.cc                NP 1 2 4)
 
 ##---------------------------------------------------------------------------##
 ##                    end of spn/test/CMakeLists.txt
