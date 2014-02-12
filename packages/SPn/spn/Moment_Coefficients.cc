@@ -235,7 +235,7 @@ void Moment_Coefficients::make_Sigma(int            n,
     const XS_t &xs = d_mat->xs();
 
     // get the total cross sections for this mat
-    const XS_t::Vector &total = xs.vector(matid, XS_t::TOTAL);
+    const Vector &total = xs.vector(matid, XS_t::TOTAL);
     Check (total.length() == d_Ng);
 
     // put the group totals on the diagonal
@@ -249,7 +249,7 @@ void Moment_Coefficients::make_Sigma(int            n,
     if (n < d_min_moments)
     {
         // get the cross section matrix
-        const XS_t::Matrix &scat = xs.matrix(matid, n);
+        const Matrix &scat = xs.matrix(matid, n);
 
         // loop over groups
         for (int g = 0; g < d_Ng; ++g)
@@ -258,6 +258,343 @@ void Moment_Coefficients::make_Sigma(int            n,
             {
                 S(g, gp) -= scat(g, gp);
             }
+        }
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Make the diffusion matrix.
+ *
+ * The diffusion matrix is defined
+ * \f[
+   \mathbf{D}_n = \alpha_n(\boldsymbol{\Sigma}_{d(n)})^{-1}
+ * \f]
+ * where
+ * \f[
+   d(0) = 1\:,\quad d(1) = 3\:,\quad d(2) = 5\:, \quad d(3) = 7
+ * \f]
+ * and
+ * \f[
+   \alpha_0 = 1/3\:,\quad
+   \alpha_1 = 1/7\:,\quad
+   \alpha_2 = 1/11\:,\quad
+   \alpha_3 = 1/15
+ * \f]
+ *
+ * \param n equation-order in range [0,4)
+ * \param cell problem cell
+ * \param D pre-allocated \f$N_g\times N_g\f$ matrix
+ *
+ * \pre n < (N + 1)/2 for a given \f$SP_N\f$ approximation
+ */
+void Moment_Coefficients::make_D(int            n,
+                                 int            cell,
+                                 Serial_Matrix &D)
+{
+    Require (!d_mat.is_null());
+    Require (n >= 0 && n < d_dim->num_equations());
+    Require (cell < d_mat->num_cells());
+    Require (D.numRows() == D.numCols());
+    Require (D.numRows() == d_Ng);
+    Require (d_mat->xs().num_groups() == d_Ng);
+
+    // first get sigma for this diffusion coefficient
+    int matid = d_mat->matid(cell);
+    Check( d_Sigma->exists(to_size_type(d_d[n],matid)) );
+    Teuchos::RCP<Serial_Matrix> S = d_Sigma->at(to_size_type(d_d[n],matid));
+    Check( !S.is_null() );
+    D.assign(*S);
+
+    if( !d_outscatter_correction )
+    {
+        // LU decomposition
+        d_lapack.GETRF(d_Ng, d_Ng, D.values(), D.stride(), &d_ipiv[0],
+                       &d_info);
+        Check (d_info == 0);
+
+        // inverse
+        d_lapack.GETRI(d_Ng, D.values(), D.stride(), &d_ipiv[0], &d_work[0],
+                       d_Ng, &d_info);
+        Check (d_info == 0);
+    }
+    else
+    {
+        Serial_Matrix sig(D);
+        D.putScalar(0.0);
+
+        // Apply outscatter correction
+        for( int ig=0; ig<d_Ng; ++ig )
+        {
+            for( int jg=0; jg<d_Ng; ++jg )
+            {
+                D(ig,ig) += sig(jg,ig);
+            }
+        }
+
+        // Invert diagonal entries
+        for( int ig=0; ig<d_Ng; ++ig )
+        {
+            D(ig,ig) = 1.0/D(ig,ig);
+        }
+    }
+
+    // multiply by the scalar coefficient to complete the diffusion matrix
+    // definition
+    D *= d_alpha[n];
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief Make A-matrix entries.
+ *
+ * The A matrix is a \f$4\times 4\f$ block matrix where each block is
+ * \f$N_g\times N_g\f$.  The A-matrix is defined
+ * \f[
+   \ve{A} = \begin{pmatrix}
+    (\boldsymbol{\Sigma}_0) &
+    (-\frac{2}{3}\boldsymbol{\Sigma}_0) &
+    (\frac{8}{15}\boldsymbol{\Sigma}_0) &
+    (-\frac{16}{35}\boldsymbol{\Sigma}_0) \\
+    %%
+    &&&\\
+    %%
+    (-\frac{2}{3}\boldsymbol{\Sigma}_0) &
+    (\frac{4}{15}\boldsymbol{\Sigma}_0 + \frac{1}{3}\boldsymbol{\Sigma}_2) &
+    (-\frac{16}{45}\boldsymbol{\Sigma}_0 - \frac{4}{9}\boldsymbol{\Sigma}_2) &
+    (\frac{32}{105}\boldsymbol{\Sigma}_0 + \frac{8}{21}\boldsymbol{\Sigma}_2) \ \
+    %%
+    &&&\\
+    %%
+    (\frac{8}{15}\boldsymbol{\Sigma}_0) &
+    (-\frac{16}{45}\boldsymbol{\Sigma}_0 - \frac{4}{9}\boldsymbol{\Sigma}_2) &
+    (\frac{64}{225}\boldsymbol{\Sigma}_0 + \frac{16}{45}\boldsymbol{\Sigma}_2
+    + \frac{9}{25}\boldsymbol{\Sigma}_4) &
+    (-\frac{128}{525}\boldsymbol{\Sigma}_0 -
+    \frac{32}{105}\boldsymbol{\Sigma}_2 - \frac{54}{175}\boldsymbol{\Sigma}_4)
+    \\
+    %%
+    &&&\\
+    %%
+    (-\frac{16}{35}\boldsymbol{\Sigma}_0) &
+    (\frac{32}{105}\boldsymbol{\Sigma}_0 +
+    \frac{8}{21}\boldsymbol{\Sigma}_2) &
+    (-\frac{128}{525}\boldsymbol{\Sigma}_0 -
+    \frac{32}{105}\boldsymbol{\Sigma}_2 -
+    \frac{54}{175}\boldsymbol{\Sigma}_4) &
+    (\frac{256}{1225}\boldsymbol{\Sigma}_0 +
+    \frac{64}{245}\boldsymbol{\Sigma}_2 +
+    \frac{324}{1225}\boldsymbol{\Sigma}_4 +
+    \frac{13}{49}\boldsymbol{\Sigma}_6)
+  \end{pmatrix}
+ * \f]
+ *
+ * \param n row of A-matrix in range [0,4)
+ * \param m column of A-matrix in range [0,4)
+ * \param cell problem cell
+ * \param A pre-allocated \f$N_g\times N_g\f$ matrix
+ *
+ * \pre n,m < (N + 1)/2 for a given \f$SP_N\f$ approximation
+ */
+void Moment_Coefficients::make_A(int            n,
+                                 int            m,
+                                 int            cell,
+                                 Serial_Matrix &A)
+{
+    Require (!d_mat.is_null());
+    Require (n >= 0 && n < d_dim->num_equations());
+    Require (m >= 0 && m < d_dim->num_equations());
+    Require (cell < d_mat->num_cells());
+    Require (A.numRows() == A.numCols());
+    Require (A.numRows() == d_Ng);
+    Require (d_mat->xs().num_groups() == d_Ng);
+
+    // initialize A to the first term in each series entry (Sigma_0)
+    int matid = d_mat->matid(cell);
+
+    Check( d_Sigma->exists(to_size_type(0,matid)) );
+    Teuchos::RCP<Serial_Matrix> S = d_Sigma->at(to_size_type(0,matid));
+    Check( !S.is_null() );
+    A.assign(*S);
+
+    A *= d_c[n][m][0];
+
+    // loop over all possible linear combinations for each element in the
+    // matrix
+    for (int k = 1; k < 4; ++k)
+    {
+        // only go to the effort for non-zero entries
+        if (std::fabs(d_c[n][m][k]) > 0.0)
+        {
+            // make sigma for this iterate in a work matrix
+            Check( d_Sigma->exists(to_size_type(d_a[k],matid)) );
+            S = d_Sigma->at(to_size_type(d_a[k],matid));
+            Check( !S.is_null() );
+            d_W = *S;
+
+            // multiply by the scalar coefficient
+            d_W *= d_c[n][m][k];
+
+            // add it to the running total
+            A += d_W;
+        }
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief Make B-matrix entries.
+ *
+ * The B matrix is a \f$4\times 4\f$ block matrix where each block is
+ * \f$N_g\times N_g\f$ with non-zero entries only on the diagonal.  The
+ * B-matrix is defined:
+ * \f[
+   \ve{B} = \begin{pmatrix}
+    \frac{1}{2} &
+    -\frac{1}{8} &
+    \frac{1}{16} &
+    -\frac{5}{128} \\
+    %%
+    &&&\\
+    %%
+    -\frac{1}{8} &
+    \frac{7}{24} &
+    -\frac{41}{384} &
+    \frac{1}{16} \\
+    %%
+    &&&\\
+    %%
+    \frac{1}{16} &
+    -\frac{41}{384} &
+    \frac{407}{1920} &
+    -\frac{233}{2560} \\
+    %%
+    &&&\\
+    %%
+    -\frac{5}{128} &
+    \frac{1}{16} &
+    -\frac{233}{2560} &
+    \frac{3023}{17920}
+  \end{pmatrix}
+ * \f]
+ * Thus, each block in the B-matrix is a diagonal matrix with a constant value
+ * on the diagonal.  Furthermore, there is no spatial dependence on the
+ * B-matrix.
+ *
+ * \param n row of B-matrix in range [0,4)
+ * \param m column of B-matrix in range [0,4)
+ * \param B pre-allocated \f$N_g\times N_g\f$ matrix
+ *
+ * \pre n,m < (N + 1)/2 for a given \f$SP_N\f$ approximation
+ */
+void Moment_Coefficients::make_B(int            n,
+                                 int            m,
+                                 Serial_Matrix &B)
+{
+    Require (n >= 0 && n < d_dim->num_equations());
+    Require (m >= 0 && m < d_dim->num_equations());
+    Require (B.numRows() == B.numCols());
+    Require (B.numRows() == d_Ng);
+
+    // add the appropriate cofficient to the diagonal
+    B.putScalar(0.0);
+    for (int g = 0; g < d_Ng; ++g)
+    {
+        B(g, g) = d_b[n][m];
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get F fission matrix block entries.
+ * \brief Make the \f$\boldsymbol{\Sigma}_n\f$ cross section matrix.
+ *
+ * The F matrix is a \f$4\times 4\f$ block matrix where each block is
+ * \f$N_g\times N_g\f$.  The F-matrix is defined
+ * \f[
+  \mathbf{F} = \begin{pmatrix}
+    \boldsymbol{\Sigma}_{\mathrm{f}} &
+    -\frac{2}{3}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    \frac{8}{15}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    -\frac{16}{35}\boldsymbol{\Sigma}_{\mathrm{f}} \\
+    &&&\\
+    -\frac{2}{3}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    \frac{4}{9}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    -\frac{16}{45}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    \frac{32}{105}\boldsymbol{\Sigma}_{\mathrm{f}} \\
+    &&&\\
+    \frac{8}{15}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    -\frac{16}{45}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    \frac{64}{225}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    -\frac{128}{525}\boldsymbol{\Sigma}_{\mathrm{f}} \\
+    &&&\\
+    -\frac{16}{35}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    \frac{32}{105}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    -\frac{128}{525}\boldsymbol{\Sigma}_{\mathrm{f}} &
+    \frac{256}{1225}\boldsymbol{\Sigma}_{\mathrm{f}}
+  \end{pmatrix}
+ * \f]
+ * Where the block fission matrices are
+ * \f[
+  \boldsymbol{\Sigma}_{\mathrm{f}} = \begin{pmatrix}
+    \chi^0\nu\sigma_f^0 & \chi^0\nu\sigma_f^1  & \dots & \chi^0\nu\sigma_f^G \\
+    &&&\\
+    \chi^1\nu\sigma_f^0 & \chi^1\nu\sigma_f^1  & \dots & \chi^1\nu\sigma_f^G \\
+    &&&\\
+    \vdots & \vdots & \ddots & \vdots \\
+    &&&\\
+    \chi^G\nu\sigma_f^0 & \chi^G\nu\sigma_f^1  & \dots & \chi^G\nu\sigma_f^G
+  \end{pmatrix}
+ * \f]
+ *
+ * \param n row of B-matrix in range [0,4)
+ * \param m column of B-matrix in range [0,4)
+ * \param cell problem cell
+ * \param F pre-allocated \f$N_g\times N_g\f$ matrix
+ */
+void Moment_Coefficients::make_F(int            n,
+                                 int            m,
+                                 int            cell,
+                                 Serial_Matrix &F)
+{
+    Require (!d_mat.is_null());
+    Require (n >= 0 && n < d_dim->num_equations());
+    Require (m >= 0 && m < d_dim->num_equations());
+    Require (cell < d_mat->num_cells());
+    Require (F.numRows() == F.numCols());
+    Require (F.numRows() == d_Ng);
+    Require (d_mat->xs().num_groups() == d_Ng);
+
+    // initialize F
+    F.putScalar(0.0);
+
+    // f*chi for each group
+    double fchi = 0.0;
+
+    // matid
+    int matid = d_mat->matid(cell);
+
+    // cross sections
+    const XS_t &xs = d_mat->xs();
+
+    // get the fission data (these will be full of zeros if there is no
+    // fission in this material)
+    const Vector &nusigf = xs.vector(matid, XS_t::NU_SIG_F);
+    const Vector &chi    = xs.vector(matid, XS_t::CHI);
+    Check (nusigf.length() == d_Ng);
+    Check (chi.length() == d_Ng);
+
+    // loop over the rows of F
+    for (int g = 0; g < d_Ng; ++g)
+    {
+        // calculate chi for this row (group)
+        fchi = d_f[n][m] * chi[g];
+
+        // loop through the columns in this row
+        for (int gp = 0; gp < d_Ng; ++gp)
+        {
+            // add the matrix entry
+            F(g, gp) = fchi * nusigf(gp);
         }
     }
 }

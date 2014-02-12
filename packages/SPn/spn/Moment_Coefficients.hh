@@ -75,6 +75,18 @@ class Moment_Coefficients
     // Make cross section (Sigma_n) matrix.
     void make_Sigma(int n, int matid, Serial_Matrix &S);
 
+    // Make diffusion matrices.
+    void make_D(int n, int cell, Serial_Matrix &D);
+
+    // Make A-matrix block entries.
+    void make_A(int n, int m, int cell, Serial_Matrix &A);
+
+    // Get B-matrix diagonal block entries.
+    void make_B(int n, int m, Serial_Matrix &B);
+
+    // Get F fission matrix block entries.
+    void make_F(int n, int m, int cell, Serial_Matrix &F);
+
     // >>> ACCESSORS
 
     //! Number of groups.
@@ -101,6 +113,8 @@ class Moment_Coefficients
     typedef def::Vec_Int           Vec_Int;
     typedef def::Vec_Dbl           Vec_Dbl;
     typedef Vector_Lite<double, 4> Coefficients;
+    typedef XS_t::Vector           Vector;
+    typedef XS_t::Matrix           Matrix;
 
     // >>> DATA
 

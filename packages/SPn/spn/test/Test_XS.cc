@@ -232,12 +232,9 @@ Teuchos::RCP<profugus::Mat_DB> make_mat(int Pn,
 
 } // end namespace twelve_grp
 
-#if 0
 //---------------------------------------------------------------------------//
 // 3 Group Cross Sections
 // ---------------------------------------------------------------------------//
-// See scripts/3gp.py for generating script.  This is the 3-group LANCR cross
-// sections for a single-pin 2x2 homogenized mesh (UO2 + moderator).
 
 namespace three_grp
 {
@@ -271,126 +268,103 @@ double S3[3][3] = {
 
 //---------------------------------------------------------------------------//
 
-Teuchos::RCP<profugus::XS> make_mat(int Pn,
-                                    int Nc)
+Teuchos::RCP<profugus::Mat_DB> make_mat(int Pn,
+                                        int Nc)
 {
-    using profugus::XS;
+    using profugus::Mat_DB;
 
     // material db
-    Teuchos::RCP<profugus::XS> mat;
+    Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
 
-    // database
-    Teuchos::RCP<database::Std_DB> db(new database::Std_DB("test"));
-    db->new_key("downscatter", false);
-    db->new_key("Pn_order", Pn);
-    db->new_key("num_groups", 3);
+    // make the cross sections
+    Mat_DB::RCP_XS xs = Teuchos::rcp(new Mat_DB::XS_t);
+    xs->set(Pn, 3);
 
-    mat = new Mat_DB(Nc);
-    mat->set_num(1, 3);
+    // totals
+    Mat_DB::XS_t::OneDArray tot(&T[0], &T[0] + 3);
+    xs->add(0, Mat_DB::XS_t::TOTAL, tot);
 
-    // cross sections
-    Mat_DB::Vec_XS xs(3);
-    for (int g = 0; g < 3; ++g)
+    double *sctxs[] = {&S0[0][0], &S1[0][0], &S2[0][0], &S3[0][0]};
+
+    // scattering
+    for (int n = 0; n <= Pn; ++n)
     {
-        xs[g] = new Mat_DB::XS(db, g);
-
-        // total
-        xs[g]->sigma() = T[g];
-
-        // scattering
-        for (int gp = 0; gp < 3; ++gp)
+        Mat_DB::XS_t::TwoDArray scat(3, 3, 0.0);
+        const double *data = sctxs[n];
+        for (int g = 0; g < 3; ++g)
         {
-            xs[g]->sigma_s(gp, 0) = S0[g][gp];
-
-            if (Pn >= 1)
+            for (int gp = 0; gp < 3; ++gp)
             {
-                xs[g]->sigma_s(gp, 1) = S1[g][gp];
-            }
-
-            if (Pn >= 2)
-            {
-                xs[g]->sigma_s(gp, 2) = S2[g][gp];
-            }
-
-            if (Pn == 3)
-            {
-                xs[g]->sigma_s(gp, 3) = S3[g][gp];
+                scat(g, gp) = data[gp + g * 3];
             }
         }
 
-        xs[g]->complete();
-        mat->assign(xs[g], 0);
+        xs->add(0, n, scat);
     }
 
-    // assign material 0 to all cells
-    mat->assign(0);
+    xs->complete();
+
+    // set the mat
+    mat->set(xs, Nc);
+    for (int n = 0; n < Nc; ++n)
+    {
+        mat->matid(n) = 0;
+    }
 
     return mat;
 }
 
 //---------------------------------------------------------------------------//
 
-Teuchos::RCP<profugus::XS> make_mat(int                        Pn,
-                                    const std::vector<int>    &matids,
-                                    const std::vector<double> &f,
-                                    const std::vector<int>    &cell2mid)
+Teuchos::RCP<profugus::Mat_DB> make_mat(int                        Pn,
+                                        const std::vector<int>    &matids,
+                                        const std::vector<double> &f,
+                                        const std::vector<int>    &cell2mid)
 {
-    using profugus::XS;
+    using profugus::Mat_DB;
 
     Require (f.size() == matids.size());
 
     // material db
-    Teuchos::RCP<profugus::XS> mat;
+    Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
 
-    // database
-    Teuchos::RCP<database::Std_DB> db(new database::Std_DB("test"));
-    db->new_key("downscatter", false);
-    db->new_key("Pn_order", Pn);
-    db->new_key("num_groups", 3);
+    // make the cross sections
+    Mat_DB::RCP_XS xs = Teuchos::rcp(new Mat_DB::XS_t);
+    xs->set(Pn, 3);
 
-    mat = new Mat_DB(cell2mid.size());
-    mat->set_num(matids.size(), 3);
-
-    // cross sections
     for (int m = 0; m < matids.size(); ++m)
     {
-        Mat_DB::Vec_XS xs(3);
+        // make totals
+        Mat_DB::XS_t::OneDArray tot(&T[0], &T[0] + 3);
         for (int g = 0; g < 3; ++g)
         {
-            xs[g] = new Mat_DB::XS(db, g);
+            tot[g] *= f[m];
+        }
+        xs->add(matids[m], Mat_DB::XS_t::TOTAL, tot);
 
-            // total
-            xs[g]->sigma() = T[g] * f[m];
+        double *sctxs[] = {&S0[0][0], &S1[0][0], &S2[0][0], &S3[0][0]};
 
-            // scattering
-            for (int gp = 0; gp < 3; ++gp)
+        // scattering
+        for (int n = 0; n <= Pn; ++n)
+        {
+            Mat_DB::XS_t::TwoDArray scat(3, 3, 0.0);
+            const double *data = sctxs[n];
+            for (int g = 0; g < 3; ++g)
             {
+                for (int gp = 0; gp < 3; ++gp)
                 {
-                    xs[g]->sigma_s(gp, 0) = S0[g][gp] * f[m];
-                }
-
-                if (Pn >= 1)
-                {
-                    xs[g]->sigma_s(gp, 1) = S1[g][gp] * f[m];
-                }
-
-                if (Pn >= 2)
-                {
-                    xs[g]->sigma_s(gp, 2) = S2[g][gp] * f[m];
-                }
-
-                if (Pn == 3)
-                {
-                    xs[g]->sigma_s(gp, 3) = S3[g][gp] * f[m];
+                    scat(g, gp) = data[gp + g * 3] * f[m];
                 }
             }
 
-            xs[g]->complete();
-            mat->assign(xs[g], matids[m]);
+            xs->add(matids[m], n, scat);
         }
     }
 
-    // assign materials
+    xs->complete();
+
+    // set the mat
+    mat->set(xs);
     mat->assign(cell2mid);
 
     return mat;
@@ -422,111 +396,103 @@ double S3[1][1] = {{0.03}};
 
 //---------------------------------------------------------------------------//
 
-Teuchos::RCP<profugus::XS> make_mat(int Pn,
-                                    int Nc)
+Teuchos::RCP<profugus::Mat_DB> make_mat(int Pn,
+                                        int Nc)
 {
-    using profugus::XS;
+    using profugus::Mat_DB;
 
     // material db
-    Teuchos::RCP<profugus::XS> mat;
+    Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
 
-    // database
-    Teuchos::RCP<database::Std_DB> db(new database::Std_DB("test"));
-    db->new_key("downscatter", false);
-    db->new_key("Pn_order", Pn);
-    db->new_key("num_groups", 1);
+    // make the cross sections
+    Mat_DB::RCP_XS xs = Teuchos::rcp(new Mat_DB::XS_t);
+    xs->set(Pn, 1);
 
-    mat = new Mat_DB(Nc);
-    mat->set_num(1, 1);
+    // totals
+    Mat_DB::XS_t::OneDArray tot(&T[0], &T[0] + 1);
+    xs->add(0, Mat_DB::XS_t::TOTAL, tot);
 
-    // cross sections
-    Mat_DB::SP_XS xs(new Mat_DB::XS(db, 0));
-
-    // total
-    xs->sigma() = T[0];
+    double *sctxs[] = {&S0[0][0], &S1[0][0], &S2[0][0], &S3[0][0]};
 
     // scattering
-    xs->sigma_s(0, 0) = S0[0][0];
-
-    if (Pn >= 1)
+    for (int n = 0; n <= Pn; ++n)
     {
-        xs->sigma_s(0, 1) = S1[0][0];
-    }
+        Mat_DB::XS_t::TwoDArray scat(1, 1, 0.0);
+        const double *data = sctxs[n];
+        for (int g = 0; g < 1; ++g)
+        {
+            for (int gp = 0; gp < 1; ++gp)
+            {
+                scat(g, gp) = data[gp + g * 1];
+            }
+        }
 
-    if (Pn >= 2)
-    {
-        xs->sigma_s(0, 2) = S2[0][0];
-    }
-
-    if (Pn == 3)
-    {
-        xs->sigma_s(0, 3) = S3[0][0];
+        xs->add(0, n, scat);
     }
 
     xs->complete();
-    mat->assign(xs, 0);
 
-    // assign material 0 to all cells
-    mat->assign(0);
+    // set the mat
+    mat->set(xs, Nc);
+    for (int n = 0; n < Nc; ++n)
+    {
+        mat->matid(n) = 0;
+    }
 
     return mat;
 }
 
 //---------------------------------------------------------------------------//
 
-Teuchos::RCP<profugus::XS> make_mat(int                        Pn,
-                                    const std::vector<int>    &matids,
-                                    const std::vector<double> &f,
-                                    const std::vector<int>    &cell2mid)
+Teuchos::RCP<profugus::Mat_DB> make_mat(int                        Pn,
+                                        const std::vector<int>    &matids,
+                                        const std::vector<double> &f,
+                                        const std::vector<int>    &cell2mid)
 {
-    using profugus::XS;
+    using profugus::Mat_DB;
 
     Require (f.size() == matids.size());
 
     // material db
-    Teuchos::RCP<profugus::XS> mat;
+    Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
 
-    // database
-    Teuchos::RCP<database::Std_DB> db(new database::Std_DB("test"));
-    db->new_key("downscatter", false);
-    db->new_key("Pn_order", Pn);
-    db->new_key("num_groups", 1);
+    // make the cross sections
+    Mat_DB::RCP_XS xs = Teuchos::rcp(new Mat_DB::XS_t);
+    xs->set(Pn, 1);
 
-    mat = new Mat_DB(cell2mid.size());
-    mat->set_num(matids.size(), 1);
-
-    // cross sections
     for (int m = 0; m < matids.size(); ++m)
     {
-        Mat_DB::SP_XS xs(new Mat_DB::XS(db, 0));
+        // make totals
+        Mat_DB::XS_t::OneDArray tot(&T[0], &T[0] + 1);
+        for (int g = 0; g < 1; ++g)
+        {
+            tot[g] *= f[m];
+        }
+        xs->add(matids[m], Mat_DB::XS_t::TOTAL, tot);
 
-        // total
-        xs->sigma() = T[0] * f[m];
+        double *sctxs[] = {&S0[0][0], &S1[0][0], &S2[0][0], &S3[0][0]};
 
         // scattering
-        xs->sigma_s(0, 0) = S0[0][0] * f[m];
-
-        if (Pn >= 1)
+        for (int n = 0; n <= Pn; ++n)
         {
-            xs->sigma_s(0, 1) = S1[0][0] * f[m];
+            Mat_DB::XS_t::TwoDArray scat(1, 1, 0.0);
+            const double *data = sctxs[n];
+            for (int g = 0; g < 1; ++g)
+            {
+                for (int gp = 0; gp < 1; ++gp)
+                {
+                    scat(g, gp) = data[gp + g * 1] * f[m];
+                }
+            }
+
+            xs->add(matids[m], n, scat);
         }
-
-        if (Pn >= 2)
-        {
-            xs->sigma_s(0, 2) = S2[0][0] * f[m];
-        }
-
-        if (Pn == 3)
-        {
-            xs->sigma_s(0, 3) = S3[0][0] * f[m];
-        }
-
-
-        xs->complete();
-        mat->assign(xs, matids[m]);
     }
 
-    // assign materials
+    xs->complete();
+
+    // set the mat
+    mat->set(xs);
     mat->assign(cell2mid);
 
     return mat;
@@ -562,126 +528,103 @@ double S3[2][2] = {{ 0.03, 0.0},
 
 //---------------------------------------------------------------------------//
 
-Teuchos::RCP<profugus::XS> make_mat(int Pn,
-                                    int Nc)
+Teuchos::RCP<profugus::Mat_DB> make_mat(int Pn,
+                                        int Nc)
 {
-    using profugus::XS;
+    using profugus::Mat_DB;
 
     // material db
-    Teuchos::RCP<profugus::XS> mat;
+    Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
 
-    // database
-    Teuchos::RCP<database::Std_DB> db(new database::Std_DB("test"));
-    db->new_key("downscatter", false);
-    db->new_key("Pn_order", Pn);
-    db->new_key("num_groups", 2);
+    // make the cross sections
+    Mat_DB::RCP_XS xs = Teuchos::rcp(new Mat_DB::XS_t);
+    xs->set(Pn, 2);
 
-    mat = new Mat_DB(Nc);
-    mat->set_num(1, 2);
+    // totals
+    Mat_DB::XS_t::OneDArray tot(&T[0], &T[0] + 2);
+    xs->add(0, Mat_DB::XS_t::TOTAL, tot);
 
-    // cross sections
-    Mat_DB::Vec_XS xs(2);
-    for (int g = 0; g < 2; ++g)
+    double *sctxs[] = {&S0[0][0], &S1[0][0], &S2[0][0], &S3[0][0]};
+
+    // scattering
+    for (int n = 0; n <= Pn; ++n)
     {
-        xs[g] = new Mat_DB::XS(db, g);
-
-        // total
-        xs[g]->sigma() = T[g];
-
-        // scattering
-        for (int gp = 0; gp < 2; ++gp)
+        Mat_DB::XS_t::TwoDArray scat(2, 2, 0.0);
+        const double *data = sctxs[n];
+        for (int g = 0; g < 2; ++g)
         {
-            xs[g]->sigma_s(gp, 0) = S0[g][gp];
-
-            if (Pn >= 1)
+            for (int gp = 0; gp < 2; ++gp)
             {
-                xs[g]->sigma_s(gp, 1) = S1[g][gp];
-            }
-
-            if (Pn >= 2)
-            {
-                xs[g]->sigma_s(gp, 2) = S2[g][gp];
-            }
-
-            if (Pn == 3)
-            {
-                xs[g]->sigma_s(gp, 3) = S3[g][gp];
+                scat(g, gp) = data[gp + g * 2];
             }
         }
 
-        xs[g]->complete();
-        mat->assign(xs[g], 0);
+        xs->add(0, n, scat);
     }
 
-    // assign material 0 to all cells
-    mat->assign(0);
+    xs->complete();
+
+    // set the mat
+    mat->set(xs, Nc);
+    for (int n = 0; n < Nc; ++n)
+    {
+        mat->matid(n) = 0;
+    }
 
     return mat;
 }
 
 //---------------------------------------------------------------------------//
 
-Teuchos::RCP<profugus::XS> make_mat(int                        Pn,
-                                    const std::vector<int>    &matids,
-                                    const std::vector<double> &f,
-                                    const std::vector<int>    &cell2mid)
+Teuchos::RCP<profugus::Mat_DB> make_mat(int                        Pn,
+                                        const std::vector<int>    &matids,
+                                        const std::vector<double> &f,
+                                        const std::vector<int>    &cell2mid)
 {
-    using profugus::XS;
+    using profugus::Mat_DB;
 
     Require (f.size() == matids.size());
 
     // material db
-    Teuchos::RCP<profugus::XS> mat;
+    Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
 
-    // database
-    Teuchos::RCP<database::Std_DB> db(new database::Std_DB("test"));
-    db->new_key("downscatter", false);
-    db->new_key("Pn_order", Pn);
-    db->new_key("num_groups", 2);
+    // make the cross sections
+    Mat_DB::RCP_XS xs = Teuchos::rcp(new Mat_DB::XS_t);
+    xs->set(Pn, 2);
 
-    mat = new Mat_DB(cell2mid.size());
-    mat->set_num(matids.size(), 2);
-
-    // cross sections
     for (int m = 0; m < matids.size(); ++m)
     {
-        Mat_DB::Vec_XS xs(3);
+        // make totals
+        Mat_DB::XS_t::OneDArray tot(&T[0], &T[0] + 2);
         for (int g = 0; g < 2; ++g)
         {
-            xs[g] = new Mat_DB::XS(db, g);
+            tot[g] *= f[m];
+        }
+        xs->add(matids[m], Mat_DB::XS_t::TOTAL, tot);
 
-            // total
-            xs[g]->sigma() = T[g] * f[m];
+        double *sctxs[] = {&S0[0][0], &S1[0][0], &S2[0][0], &S3[0][0]};
 
-            // scattering
-            for (int gp = 0; gp < 2; ++gp)
+        // scattering
+        for (int n = 0; n <= Pn; ++n)
+        {
+            Mat_DB::XS_t::TwoDArray scat(2, 2, 0.0);
+            const double *data = sctxs[n];
+            for (int g = 0; g < 2; ++g)
             {
+                for (int gp = 0; gp < 2; ++gp)
                 {
-                    xs[g]->sigma_s(gp, 0) = S0[g][gp] * f[m];
-                }
-
-                if (Pn >= 1)
-                {
-                    xs[g]->sigma_s(gp, 1) = S1[g][gp] * f[m];
-                }
-
-                if (Pn >= 2)
-                {
-                    xs[g]->sigma_s(gp, 2) = S2[g][gp] * f[m];
-                }
-
-                if (Pn == 3)
-                {
-                    xs[g]->sigma_s(gp, 3) = S3[g][gp] * f[m];
+                    scat(g, gp) = data[gp + g * 2] * f[m];
                 }
             }
 
-            xs[g]->complete();
-            mat->assign(xs[g], matids[m]);
+            xs->add(matids[m], n, scat);
         }
     }
 
-    // assign materials
+    xs->complete();
+
+    // set the mat
+    mat->set(xs);
     mat->assign(cell2mid);
 
     return mat;
@@ -689,7 +632,6 @@ Teuchos::RCP<profugus::XS> make_mat(int                        Pn,
 
 } // end namespace two_grp
 
-#endif
 //---------------------------------------------------------------------------//
 //                 end of Test_XS.cc
 //---------------------------------------------------------------------------//

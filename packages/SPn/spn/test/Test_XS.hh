@@ -34,7 +34,6 @@ Teuchos::RCP<profugus::Mat_DB> make_mat(int Pn, int Nc);
 
 }
 
-#if 0
 //---------------------------------------------------------------------------//
 // 3 Group Cross Sections
 //---------------------------------------------------------------------------//
@@ -95,7 +94,6 @@ Teuchos::RCP<profugus::Mat_DB> make_mat(int Pn, const std::vector<int> &matids,
                                         const std::vector<int> &cell2mid);
 }
 
-#endif
 #endif // spn_test_Test_XS_hh
 
 //---------------------------------------------------------------------------//
