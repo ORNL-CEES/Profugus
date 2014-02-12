@@ -61,6 +61,54 @@ class Mesh_2D : public Mesh_Test
 // TESTS
 //---------------------------------------------------------------------------//
 
+TEST_F(Mesh_2D, 1PE)
+{
+    if (nodes > 1)
+        return;
+
+    RCP_Mesh mesh;
+
+    // make a 4x3 mesh
+    {
+        def::Vec_Dbl x(5, 0.0);
+        def::Vec_Dbl y(4, 0.0);
+
+        x[1] = 1.0;
+        x[2] = 2.0;
+        x[3] = 3.0;
+        x[4] = 4.0;
+
+        y[1] = 2.0;
+        y[2] = 3.0;
+        y[3] = 3.5;
+
+        mesh = Teuchos::rcp(new Mesh(x, y, 0, 0));
+    }
+
+    const Mesh &m = *mesh;
+
+    // check
+    EXPECT_EQ(2, m.dimension());
+    EXPECT_EQ(4, m.num_cells_dim(I));
+    EXPECT_EQ(3, m.num_cells_dim(J));
+    EXPECT_EQ(12, m.num_cells());
+    EXPECT_EQ(20, m.num_vertices());
+    EXPECT_EQ(4, m.num_cells_block_dim(I));
+    EXPECT_EQ(3, m.num_cells_block_dim(J));
+
+    unsigned long cell = 7;
+    EXPECT_EQ(cell, m.convert(3,1));
+
+    Mesh::Dim_Vector ij = m.cardinal(cell);
+    EXPECT_EQ(3, ijk[I]);
+    EXPECT_EQ(1, ijk[J]);
+    EXPECT_TRUE(soft_equiv(m.volume(cell), 1.5));
+
+    EXPECT_EQ("xy_2d",  mesh->label());
+}
+
+//---------------------------------------------------------------------------//
+
 TEST_F(Mesh_3D, 1PE)
 {
     if (nodes > 1)
