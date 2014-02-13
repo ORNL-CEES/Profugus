@@ -14,8 +14,11 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstStatic_Map.cc  NP 1)
-ADD_UTILS_TEST(tstVector_Lite.cc NP 1)
+ADD_UTILS_TEST(tstStatic_Map.cc          NP 1)
+ADD_UTILS_TEST(tstVector_Lite.cc         NP 1)
+ADD_UTILS_TEST(tstContainer_Functions.cc NP 1)
+ADD_UTILS_TEST(tstContainer_Props.cc     NP 1)
+ADD_UTILS_TEST(tstSoft_Comparators.cc    NP 1)
 
 ##---------------------------------------------------------------------------##
 ##                      end of utils/test/CMakeLists.txt
