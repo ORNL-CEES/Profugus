@@ -18,7 +18,7 @@
 #include "Teuchos_BLAS.hpp"
 
 #include "harness/DBC.hh"
-#include "Mesh.hh"
+#include "mesh/Mesh.hh"
 
 namespace profugus
 {

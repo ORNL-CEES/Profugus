@@ -79,8 +79,8 @@ TEST_F(Mesh_2D, 1PE)
         x[4] = 4.0;
 
         y[1] = 2.0;
-        y[2] = 3.0;
-        y[3] = 3.5;
+        y[2] = 3.5;
+        y[3] = 5.0;
 
         mesh = Teuchos::rcp(new Mesh(x, y, 0, 0));
     }
@@ -100,9 +100,9 @@ TEST_F(Mesh_2D, 1PE)
     EXPECT_EQ(cell, m.convert(3,1));
 
     Mesh::Dim_Vector ij = m.cardinal(cell);
-    EXPECT_EQ(3, ijk[I]);
-    EXPECT_EQ(1, ijk[J]);
-    EXPECT_TRUE(soft_equiv(m.volume(cell), 1.5));
+    EXPECT_EQ(3, ij[I]);
+    EXPECT_EQ(1, ij[J]);
+    EXPECT_SOFTEQ(1.5, m.volume(cell), 1.0e-12);
 
     EXPECT_EQ("xy_2d",  mesh->label());
 }

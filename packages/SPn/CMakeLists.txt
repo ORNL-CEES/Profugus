@@ -65,12 +65,22 @@ TRIBITS_CONFIGURE_FILE(config.h)
 SET(SOURCES "")
 SET(HEADERS "")
 
+# mesh sources
+
+FILE(GLOB MESH_HEADERS mesh/*.hh)
+SET(MESH_SOURCES
+  mesh/LG_Indexer.cc
+  mesh/Mesh.cc
+  mesh/Partitioner.cc
+  )
+LIST(APPEND HEADERS ${MESH_HEADERS})
+LIST(APPEND SOURCES ${MESH_SOURCES})
+
 # spn sources
 
 FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
-  spn/Mesh.cc
   spn/Moment_Coefficients.cc
   spn/SDM_Face_Field.cc
   )
@@ -90,7 +100,9 @@ TRIBITS_ADD_LIBRARY(
 ##---------------------------------------------------------------------------##
 # Add tests to this package
 
-TRIBITS_ADD_TEST_DIRECTORIES(spn/test)
+TRIBITS_ADD_TEST_DIRECTORIES(
+  mesh/test
+  spn/test)
 
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP
