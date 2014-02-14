@@ -8,7 +8,11 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <algorithm>
+
+#include "harness/Warnings.hh"
 #include "harness/Soft_Equivalence.hh"
+#include "comm/global.hh"
 #include "utils/Container_Functions.hh"
 #include "Partitioner.hh"
 
@@ -24,6 +28,8 @@ namespace profugus
  * \param pl
  */
 Partitioner::Partitioner(RCP_ParameterList pl)
+    : d_domain(profugus::node())
+    , d_nodes(profugus::nodes())
 {
     using def::I; using def::J; using def::K;
 
@@ -36,11 +42,13 @@ Partitioner::Partitioner(RCP_ParameterList pl)
     d_dimension = pl->get<int>("dimension");
     Insist(d_dimension == 2 || d_dimension == 3, "Dimension must be 2 or 3");
 
-    // initialize blocks
+    // initialize blocks and sets
     d_Nb[I]      = pl->get<int>("num_blocks_i");
     d_Nb[J]      = pl->get<int>("num_blocks_j");
     d_k_blocks   = pl->get<int>("num_z_blocks");
+    d_num_sets   = pl->get<int>("num_sets");
     d_num_blocks = d_Nb[I] * d_Nb[J];
+    Check (d_num_blocks * d_num_sets == d_nodes);
 
     // build global edges of mesh
     Check (d_edges[I].empty() && d_edges[J].empty() && d_edges[K].empty());
@@ -63,7 +71,8 @@ Partitioner::Partitioner(RCP_ParameterList pl)
     }
     else
     {
-        d_edges[I] = pl->get<def::Vec_Dbl>("x_edges");
+        const Array_Dbl &a = pl->get<Array_Dbl>("x_edges");
+        d_edges[I].insert(d_edges[I].end(), a.begin(), a.end());
         Validate(profugus::is_sorted(d_edges[I].begin(), d_edges[I].end()),
                  "Mesh edges along X axis are not monotonically increasing.");
     }
@@ -79,7 +88,8 @@ Partitioner::Partitioner(RCP_ParameterList pl)
     }
     else
     {
-        d_edges[J] = pl->get<def::Vec_Dbl>("y_edges");
+        const Array_Dbl &a = pl->get<Array_Dbl>("y_edges");
+        d_edges[J].insert(d_edges[J].end(), a.begin(), a.end());
         Validate(profugus::is_sorted(d_edges[J].begin(), d_edges[J].end()),
                  "Mesh edges along Y axis are not monotonically increasing.");
     }
@@ -94,24 +104,133 @@ Partitioner::Partitioner(RCP_ParameterList pl)
             Insist(num_cells > 0, "num_cells_k must be postitive");
             Insist(delta > 0., "delta_z must be postitive");
 
-            // this->build_uniform_edges(num_cells, delta, d_edges[K]);
+            build_uniform_edges(num_cells, delta, d_edges[K]);
         }
         else
         {
-            d_edges[K] = pl->get<def::Vec_Dbl>("z_edges");
+            const Array_Dbl &a = pl->get<Array_Dbl>("z_edges");
+            d_edges[K].insert(d_edges[K].end(), a.begin(), a.end());
             Validate(profugus::is_sorted(d_edges[K].begin(), d_edges[K].end()),
                      "Mesh edges along Z axis are not monotonically "
                      "increasing.");
         }
     }
 
-
     Ensure (d_Nb[I] > 0);
     Ensure (d_Nb[J] > 0);
     Ensure (d_dimension > 0);
-    Ensure(d_edges[I].size() > 1);
-    Ensure(d_edges[J].size() > 1);
-    Ensure(dimension() == 3 ? d_edges[K].size() > 1 : d_edges[K].empty());
+    Ensure (d_edges[I].size() > 1);
+    Ensure (d_edges[J].size() > 1);
+    Ensure (dimension() == 3 ? d_edges[K].size() > 1 : d_edges[K].empty());
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build and partition the mesh and indexer on each processor.
+ *
+ * The build function:
+ *  - initializes d_block, d_k_blocks
+ *  - creates d_mesh, d_indexer, d_data
+ */
+void Partitioner::build()
+{
+    using def::I; using def::J; using def::K;
+
+    Require (d_num_sets > 0);
+    Require (d_num_blocks > 0);
+    Require (d_num_blocks * d_num_sets == d_nodes);
+    Require (d_edges[I].size() > 1);
+    Require (d_edges[J].size() > 1);
+    Require (d_dimension == 3 ? d_edges[K].size() > 1 : d_edges[K].empty());
+
+    // >>> SET LOCAL PARTITION DATA
+    // determine block and set ids.
+    d_set   = d_domain / d_num_blocks;
+    d_block = d_domain - d_set * d_num_blocks;
+    Check (d_set < d_num_sets);
+    Check (d_block < d_num_blocks);
+
+    // determine the I/J indices of this block/plane
+    Dim_Vector index;
+    index[J] = d_block / d_Nb[I];
+    index[I] = d_block - index[J] * d_Nb[I];
+    Check (index[J] < d_Nb[J]);
+    Check (index[I] < d_Nb[I]);
+    Check (index[I] + index[J] * d_Nb[I] == d_block);
+
+    // >>> SET GLOBAL PARTITION DATA
+    // the coordinates in each direction on this processor
+    IJK_Vec_Dbl local_edges;
+
+    // the number of cells per block in each direction
+    IJ_Vec_Int global_num;
+
+    set_spatial_partition(index, local_edges, global_num);
+
+    Check (!local_edges[I].empty());
+    Check (!local_edges[J].empty());
+    Check (!local_edges[K].empty() || d_dimension == 2);
+    Check (global_num[I].size() == d_Nb[I]);
+    Check (global_num[J].size() == d_Nb[J]);
+
+    // Set the number of z blocks
+    if (d_dimension == 3)
+    {
+        // update number of z blocks if mesh does not divide evenly
+        bool change_blocks = false;
+        const size_type num_cells_k = d_edges[K].size() - 1;
+        while (num_cells_k % d_k_blocks != 0)
+        {
+            change_blocks = true;
+            --d_k_blocks;
+        }
+
+        if (change_blocks && d_domain == 0)
+        {
+            ADD_WARNING("Number of Z blocks is being reduced to "
+                    << d_k_blocks);
+        }
+        Check (d_k_blocks > 0);
+    }
+
+    // >>> BUILD THE MESH
+    if (d_dimension == 3)
+    {
+        d_mesh = Teuchos::rcp(
+            new Mesh_t(local_edges[I], local_edges[J], local_edges[K], index[I],
+                       index[J], d_k_blocks));
+        Check (!d_mesh.is_null());
+        Check (d_mesh->num_cells() == (local_edges[I].size() - 1)
+               * (local_edges[J].size() - 1) * (local_edges[K].size() - 1));
+    }
+    else
+    {
+        d_mesh = Teuchos::rcp(
+            new Mesh_t(local_edges[I], local_edges[J], index[I], index[J]));
+        Check (!d_mesh.is_null());
+        Check (d_mesh->num_cells() == (local_edges[I].size() - 1)
+               * (local_edges[J].size() - 1));
+    }
+
+    // >>> BUILD GLOBAL MESH DATA
+    if (d_dimension == 3)
+    {
+        d_data = Teuchos::rcp(
+            new Global_Mesh_Data(d_edges[I], d_edges[J], d_edges[K]));
+    }
+    else
+    {
+        d_data = Teuchos::rcp(
+            new Global_Mesh_Data(d_edges[I], d_edges[J]));
+    }
+
+    // >>> BUILD INDEXER
+    d_indexer = Teuchos::rcp(
+        new LG_Indexer(global_num[I], global_num[J], d_num_sets));
+
+    Ensure (!d_mesh.is_null());
+    Ensure (!d_data.is_null());
+    Ensure (!d_indexer.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -129,6 +248,9 @@ void Partitioner::init_pl(RCP_ParameterList pl)
     defaults.set("num_blocks_i", 1);
     defaults.set("num_blocks_j", 1);
     defaults.set("num_z_blocks", 1);
+
+    // number of sets
+    defaults.set("num_sets", 1);
 
     // dimension
     defaults.set("dimension", 3);
@@ -164,6 +286,150 @@ void Partitioner::build_uniform_edges(int      num_cells,
     Ensure (edges.size() == num_cells + 1);
     Ensure (profugus::soft_equiv(edges.front(), 0.));
     Ensure (profugus::soft_equiv(edges.back(), delta * num_cells));
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set spatial partitioning data
+ *
+ * The default partitioning scheme
+ */
+void Partitioner::set_spatial_partition(const Dim_Vector& index,
+                                        IJK_Vec_Dbl&      local_edges,
+                                        IJ_Vec_Int&       global_num) const
+{
+    using def::I; using def::J; using def::K;
+
+    Require (index[I] < d_Nb[I]);
+    Require (index[J] < d_Nb[J]);
+
+    // global number of cells in each direction
+    Dim_Vector global_num_cells;
+    global_num_cells[I] = d_edges[I].size() - 1;
+    global_num_cells[J] = d_edges[J].size() - 1;
+    global_num_cells[K] = (d_dimension == 3 ? d_edges[K].size() - 1 : 1);
+
+    // the number of cells on the I/J directions on this processor
+    Dim_Vector local_num_cells;
+
+    // loop through I/J directions and determine base cells per proc
+    for (int dir = 0; dir < K; ++dir)
+    {
+        Check (d_Nb[dir] > 0);
+
+        // estimate the base cells per pe in this direction
+        local_num_cells[dir] = global_num_cells[dir] / d_Nb[dir];
+        Check (local_num_cells[dir] > 0);
+
+        // get the number of cells that need to be appended in this direction
+        size_type append_cells = global_num_cells[dir] % d_Nb[dir];
+        Check (append_cells < d_Nb[dir]);
+
+        // if Ip/Jp is less than the number of append cells then add 1 cell
+        // (row/column) to this block
+        if (index[dir] < append_cells)
+            local_num_cells[dir]++;
+    }
+    // size the z coordinates
+    local_num_cells[K] = global_num_cells[K];
+
+    // Set global number of cells per block
+    set_global_num(local_num_cells, global_num);
+
+    // Set local edge coordinates
+    set_local_edges(index[I], global_num[I], d_edges[I], local_edges[I]);
+    set_local_edges(index[J], global_num[J], d_edges[J], local_edges[J]);
+
+    // K edges are global, so just copy them
+    local_edges[K].assign(d_edges[K].begin(), d_edges[K].end());
+
+    Ensure (local_edges[I].size() == local_num_cells[I] + 1);
+    Ensure (local_edges[J].size() == local_num_cells[J] + 1);
+    Ensure (local_edges[K].size() == local_num_cells[K] + 1 ||
+            dimension() == 2);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Communicate the number of cells in each block along I/J
+ */
+void Partitioner::set_global_num(const Dim_Vector& local_num_cells,
+                                 IJ_Vec_Int&       global_num) const
+{
+    using def::I; using def::J; using def::K;
+
+    Require (local_num_cells[I] > 0);
+    Require (local_num_cells[J] > 0);
+
+    // global number of cells on each domain
+    IJ_Vec_Int global_cells;
+    global_cells[I].assign(d_num_blocks, 0);
+    global_cells[J].assign(d_num_blocks, 0);
+
+    for (int dir = 0; dir < K; ++dir)
+    {
+        // assign this processors cells in I/J to the global list
+        global_cells[dir][d_block] = local_num_cells[dir];
+
+        // fill up the global cell list for this direction
+        profugus::global_max(&(global_cells[dir][0]), d_num_blocks);
+    }
+
+    // loop through the first row of I (J = 0) and calculate the numbers from
+    // the global cell processor list as we did above to calculate the spatial
+    // offset for the block
+    global_num[I].assign(global_cells[I].begin(),
+                         global_cells[I].begin() + d_Nb[I]);
+
+    // loop through first column of J (I = 0) and calculate the numbers from
+    // the global cell processor list as we did above to calculate the spatial
+    // offset for the block
+    global_num[J].resize(d_Nb[J]);
+    for (int j = 0, n = 0; j < d_Nb[J]; ++j)
+    {
+        // calculate index into global cell processor list
+        n = j * d_Nb[I];
+        Check (n >= 0 && n < d_nodes);
+
+        global_num[J][j] = global_cells[J][n];
+    }
+
+    Ensure (global_num[I].size() == d_Nb[I]);
+    Ensure (global_num[J].size() == d_Nb[J]);
+    Ensure (global_num[I].front() > 0);
+    Ensure (global_num[J].front() > 0);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build non-uniform cell edges for a processor.
+ *
+ * \param index Index of this block along the direction
+ * \param global_num_cells Global number of cells in the direction
+ * \param global_edges Global edges in this direction
+ * \param local_edges Resulting local edges
+ */
+void Partitioner::set_local_edges(const unsigned int index,
+                                  const Vec_Int&     global_num_cells,
+                                  const Vec_Dbl&     global_edges,
+                                  Vec_Dbl&           local_edges) const
+{
+    using def::I; using def::J; using def::K;
+
+    Require (!global_num_cells.empty());
+    Require (!global_edges.empty());
+    Require (index < global_num_cells.size());
+
+    int start = std::accumulate(
+        global_num_cells.begin(), global_num_cells.begin() + index, 0);
+
+    // loop over directions and calculate the coordinates of this mesh block
+    // partition
+    local_edges.assign(
+        global_edges.begin() + start,
+        global_edges.begin() + start + global_num_cells[index] + 1);
+
+    Ensure (!local_edges.empty());
 }
 
 } // end namespace profugus
