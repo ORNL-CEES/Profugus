@@ -1302,5 +1302,206 @@ TEST_F(Partitioner_Test, 4Domain)
 }
 
 //---------------------------------------------------------------------------//
+
+TEST_F(Partitioner_Test, 4PE_2D)
+{
+    if (nodes != 4)
+        return;
+
+    // set data
+    {
+        pl->set("num_blocks_i", 2);
+        pl->set("num_blocks_j", 2);
+        pl->set("num_cells_i", 4);
+        pl->set("num_cells_j", 3);
+        pl->set("delta_x", 0.1);
+        pl->set("delta_y", 0.2);
+    }
+
+    // make the partitioner
+    {
+        // simple partitioner specialization
+        p = Teuchos::rcp(new Partitioner(pl));
+        EXPECT_FALSE(p.is_null());
+    }
+
+    // build the mesh
+    p->build();
+
+    // get the mesh
+    mesh = p->get_mesh();
+    EXPECT_FALSE(mesh.is_null());
+
+    const Mesh &m = *mesh;
+
+    // checks
+    if (node == 0)
+    {
+        EXPECT_EQ(4, mesh->num_cells());
+        EXPECT_EQ(2, mesh->num_cells_dim(I));
+        EXPECT_EQ(2, mesh->num_cells_dim(J));
+
+        EXPECT_EQ(0, mesh->block(def::I));
+        EXPECT_EQ(0, mesh->block(def::J));
+
+        EXPECT_EQ(2, mesh->num_cells_block_dim(I));
+        EXPECT_EQ(2, mesh->num_cells_block_dim(J));
+
+        for (int j = 0; j < mesh->num_cells_block_dim(J); ++j)
+        {
+            for (int i = 0; i < mesh->num_cells_block_dim(I); ++i)
+            {
+                EXPECT_TRUE(soft_equiv(mesh->width(i, I), 0.1));
+                EXPECT_TRUE(soft_equiv(mesh->width(j, J), 0.2));
+            }
+        }
+
+        // check the block size
+        Space_Vector bsize = m.block_widths();
+
+        EXPECT_TRUE(soft_equiv(bsize[I], 0.2));
+        EXPECT_TRUE(soft_equiv(bsize[J], 0.4));
+
+        // centers
+        EXPECT_TRUE(soft_equiv(m.center(0, I), 0.05));
+        EXPECT_TRUE(soft_equiv(m.center(1, I), 0.15));
+        EXPECT_TRUE(soft_equiv(m.center(0, J), 0.1));
+        EXPECT_TRUE(soft_equiv(m.center(1, J), 0.3));
+    }
+    else if (node == 1)
+    {
+        EXPECT_EQ(4, mesh->num_cells());
+        EXPECT_EQ(2, mesh->num_cells_dim(I));
+        EXPECT_EQ(2, mesh->num_cells_dim(J));
+
+        EXPECT_EQ(1, mesh->block(def::I));
+        EXPECT_EQ(0, mesh->block(def::J));
+
+        EXPECT_EQ(2, mesh->num_cells_block_dim(I));
+        EXPECT_EQ(2, mesh->num_cells_block_dim(J));
+
+        for (int j = 0; j < mesh->num_cells_block_dim(J); ++j)
+        {
+            for (int i = 0; i < mesh->num_cells_block_dim(I); ++i)
+            {
+                EXPECT_TRUE(soft_equiv(mesh->width(i, I), 0.1));
+                EXPECT_TRUE(soft_equiv(mesh->width(j, J), 0.2));
+            }
+        }
+
+        // check the block size
+        Space_Vector bsize = m.block_widths();
+
+        EXPECT_TRUE(soft_equiv(bsize[I], 0.2));
+        EXPECT_TRUE(soft_equiv(bsize[J], 0.4));
+
+        // centers
+        EXPECT_TRUE(soft_equiv(m.center(0, I), 0.25));
+        EXPECT_TRUE(soft_equiv(m.center(1, I), 0.35));
+        EXPECT_TRUE(soft_equiv(m.center(0, J), 0.1));
+        EXPECT_TRUE(soft_equiv(m.center(1, J), 0.3));
+    }
+    else if (node == 2)
+    {
+        EXPECT_EQ(2, mesh->num_cells());
+        EXPECT_EQ(2, mesh->num_cells_dim(I));
+        EXPECT_EQ(1, mesh->num_cells_dim(J));
+
+        EXPECT_EQ(0, mesh->block(def::I));
+        EXPECT_EQ(1, mesh->block(def::J));
+
+        EXPECT_EQ(2, mesh->num_cells_block_dim(I));
+        EXPECT_EQ(1, mesh->num_cells_block_dim(J));
+
+        for (int j = 0; j < mesh->num_cells_block_dim(J); ++j)
+        {
+            for (int i = 0; i < mesh->num_cells_block_dim(I); ++i)
+            {
+                EXPECT_TRUE(soft_equiv(mesh->width(i, I), 0.1));
+                EXPECT_TRUE(soft_equiv(mesh->width(j, J), 0.2));
+            }
+        }
+
+        // check the block size
+        Space_Vector bsize = m.block_widths();
+
+        EXPECT_TRUE(soft_equiv(bsize[I], 0.2));
+        EXPECT_TRUE(soft_equiv(bsize[J], 0.2));
+
+        // centers
+        EXPECT_TRUE(soft_equiv(m.center(0, I), 0.05));
+        EXPECT_TRUE(soft_equiv(m.center(1, I), 0.15));
+        EXPECT_TRUE(soft_equiv(m.center(0, J), 0.5));
+    }
+    else if (node == 3)
+    {
+        EXPECT_EQ(2, mesh->num_cells());
+        EXPECT_EQ(2, mesh->num_cells_dim(I));
+        EXPECT_EQ(1, mesh->num_cells_dim(J));
+
+        EXPECT_EQ(1, mesh->block(def::I));
+        EXPECT_EQ(1, mesh->block(def::J));
+
+        EXPECT_EQ(2, mesh->num_cells_block_dim(I));
+        EXPECT_EQ(1, mesh->num_cells_block_dim(J));
+
+        for (int j = 0; j < mesh->num_cells_block_dim(J); ++j)
+        {
+            for (int i = 0; i < mesh->num_cells_block_dim(I); ++i)
+            {
+                EXPECT_TRUE(soft_equiv(mesh->width(i, I), 0.1));
+                EXPECT_TRUE(soft_equiv(mesh->width(j, J), 0.2));
+            }
+        }
+
+        // check the block size
+        Space_Vector bsize = m.block_widths();
+
+        EXPECT_TRUE(soft_equiv(bsize[I], 0.2));
+        EXPECT_TRUE(soft_equiv(bsize[J], 0.2));
+
+        // centers
+        EXPECT_TRUE(soft_equiv(m.center(0, I), 0.25));
+        EXPECT_TRUE(soft_equiv(m.center(1, I), 0.35));
+        EXPECT_TRUE(soft_equiv(m.center(0, J), 0.5));
+    }
+    else
+    {
+        ADD_FAILURE();
+    }
+
+    // test the indexer
+    indexer = p->get_indexer();
+    EXPECT_FALSE(indexer.is_null());
+
+    const LG_Indexer &i = *indexer;
+
+    if (node == 0)
+    {
+        EXPECT_EQ(0, i.l2g(0, 0, 0));
+        EXPECT_EQ(1, i.l2g(1, 0, 0));
+        EXPECT_EQ(4, i.l2g(0, 1, 0));
+        EXPECT_EQ(5, i.l2g(1, 1, 0));
+    }
+    else if (node == 1)
+    {
+        EXPECT_EQ(2, i.l2g(0, 0, 0));
+        EXPECT_EQ(3, i.l2g(1, 0, 0));
+        EXPECT_EQ(6, i.l2g(0, 1, 0));
+        EXPECT_EQ(7, i.l2g(1, 1, 0));
+    }
+    else if (node == 2)
+    {
+        EXPECT_EQ(8, i.l2g(0, 0, 0));
+        EXPECT_EQ(9, i.l2g(1, 0, 0));
+    }
+    else if (node == 3)
+    {
+        EXPECT_EQ(10, i.l2g(0, 0, 0));
+        EXPECT_EQ(11, i.l2g(1, 0, 0));
+    }
+}
+
+//---------------------------------------------------------------------------//
 //                 end of tstPartitioner.cc
 //---------------------------------------------------------------------------//
