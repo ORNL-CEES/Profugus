@@ -46,6 +46,11 @@ enum Direction_Cosines {MU                    = 0,
                         XI                    = 2,
                         END_DIRECTION_COSINES = 3};
 
+//! Block/Cell categories.
+enum Entity_Categories { PROBLEM_BOUNDARY   = -1,
+                         INTERNAL           = 0,
+                         PROCESSOR_BOUNDARY = 1 };
+
 //! Three-dimensional space vector.
 typedef profugus::Vector_Lite<double, 3> Space_Vector;
 

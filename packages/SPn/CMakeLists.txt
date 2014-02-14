@@ -88,6 +88,8 @@ LIST(APPEND SOURCES ${MESH_SOURCES})
 FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
+  spn/FV_Bnd_Indexer.cc
+  spn/FV_Gather.cc
   spn/Moment_Coefficients.cc
   spn/SDM_Face_Field.cc
   )
