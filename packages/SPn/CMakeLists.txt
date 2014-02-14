@@ -27,6 +27,13 @@ TRIBITS_PACKAGE(SPn)
 ## B) Set up package-specific options
 ##---------------------------------------------------------------------------##
 
+## ML OPTIONS
+
+## Turn on ML if that package is enabled
+IF (${PROJECT_NAME}_ENABLE_ML)
+  SET(USE_ML 1)
+ENDIF()
+
 # Setup M4 for FORTRAN processing
 APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 

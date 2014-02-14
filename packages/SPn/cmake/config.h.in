@@ -13,6 +13,23 @@
 #ifndef SPn_config_h
 #define SPn_config_h
 
+/* TRILINOS BUILD REQUIREMENTS */
+#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#endif
+
+/* PARALLEL MPI ENVIRONMENT VARIABLES */
+#include <Utils/config.h>
+
+// Turn on ML
+#cmakedefine USE_ML
+
+#ifdef COMM_MPI
+#include "Epetra_MpiComm.h"
+#else
+#include "Epetra_SerialComm.h"
+#endif
+
 /* FORTRAN WRAPPERS */
 #define FC_FUNC@F77_FUNC@
 #define FC_FUNC_@F77_FUNC_@

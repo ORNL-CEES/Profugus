@@ -13,17 +13,14 @@
 #include <algorithm>
 #include <vector>
 
-#include <spn/config.h>
+#include <SPn/config.h>
 #include "Teuchos_LAPACK.hpp"
+#include "Teuchos_RCP.hpp"
 
 #include "harness/DBC.hh"
-#include "utils/SP.hh"
-#include "database/Std_DB.hh"
-#include "kba_mesh/Simple_Partitioner.hh"
-#include "kba_mesh/Definitions.hh"
+#include "utils/Definitions.hh"
+#include "mesh/Partitioner.hh"
 #include "../SDM_Face_Field.hh"
-
-using spn::SDM_Face_Field;
 
 using def::X;
 using def::Y;
@@ -38,40 +35,42 @@ using namespace std;
 class SDM_Face_Field_Test : public testing::Test
 {
   protected:
-    typedef kba::Simple_Partitioner       Partitioner;
-    typedef Partitioner::SP_Std_DB        SP_Std_DB;
-    typedef Partitioner::SP_Mesh          SP_Mesh;
-    typedef SDM_Face_Field::Serial_Matrix Serial_Matrix;
-    typedef denovo::SP<SDM_Face_Field>    SP_Face_Field;
+    typedef profugus::SDM_Face_Field       SDM_Face_Field;
+    typedef profugus::Partitioner          Partitioner;
+    typedef Partitioner::ParameterList     ParameterList;
+    typedef Partitioner::RCP_ParameterList RCP_ParameterList;
+    typedef Partitioner::RCP_Mesh          RCP_Mesh;
+    typedef SDM_Face_Field::Serial_Matrix  Serial_Matrix;
+    typedef Teuchos::RCP<SDM_Face_Field>   RCP_Face_Field;
 
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
-        node  = nemesis::node();
-        nodes = nemesis::nodes();
+        node  = profugus::node();
+        nodes = profugus::nodes();
 
         // build 4x4x4 mesh
-        SP_Std_DB db(new database::Std_DB("test"));
+        RCP_ParameterList db = Teuchos::rcp(new ParameterList("test"));
 
-        db->new_key("delta_x", 1.0);
-        db->new_key("delta_y", 1.0);
-        db->new_key("delta_z", 1.0);
+        db->set("delta_x", 1.0);
+        db->set("delta_y", 1.0);
+        db->set("delta_z", 1.0);
 
-        db->new_key("num_cells_i", 6);
-        db->new_key("num_cells_j", 4);
-        db->new_key("num_cells_k", 2);
+        db->set("num_cells_i", 6);
+        db->set("num_cells_j", 4);
+        db->set("num_cells_k", 2);
 
-        db->new_key("num_groups", 3);
+        db->set("num_groups", 3);
 
         if (nodes == 2)
         {
-            db->new_key("num_blocks_i", 2);
+            db->set("num_blocks_i", 2);
         }
         if (nodes == 4)
         {
-            db->new_key("num_blocks_i", 2);
-            db->new_key("num_blocks_j", 2);
+            db->set("num_blocks_i", 2);
+            db->set("num_blocks_j", 2);
         }
 
         Partitioner p(db);
@@ -79,9 +78,9 @@ class SDM_Face_Field_Test : public testing::Test
 
         mesh = p.get_mesh();
 
-        x = new SDM_Face_Field(*mesh, X, 3);
-        y = new SDM_Face_Field(*mesh, Y, 3);
-        z = new SDM_Face_Field(*mesh, Z, 3);
+        x = Teuchos::rcp(new SDM_Face_Field(*mesh, X, 3));
+        y = Teuchos::rcp(new SDM_Face_Field(*mesh, Y, 3));
+        z = Teuchos::rcp(new SDM_Face_Field(*mesh, Z, 3));
 
         EXPECT_EQ(0, x->face());
         EXPECT_EQ(1, y->face());
@@ -110,9 +109,9 @@ class SDM_Face_Field_Test : public testing::Test
 
   protected:
 
-    SP_Mesh mesh;
+    RCP_Mesh mesh;
 
-    SP_Face_Field x, y, z;
+    RCP_Face_Field x, y, z;
 
     int node, nodes;
 
