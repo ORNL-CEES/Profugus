@@ -26,6 +26,7 @@ TRIBITS_ADD_LIBRARY(spn_test_lib
 ##---------------------------------------------------------------------------##
 
 ADD_UTILS_TEST(tstDimensions.cc          NP 1)
+ADD_UTILS_TEST(tstIsotropic_Source.cc    NP 1)
 ADD_UTILS_TEST(tstSDM_Face_Field.cc      NP 1 2 4)
 ADD_UTILS_TEST(tstFV_Bnd_Indexer.cc      NP 1 2 4)
 ADD_UTILS_TEST(tstFV_Gather.cc           NP 1 2 4 DEPLIBS spn_test_lib)
