@@ -94,6 +94,7 @@ SET(SPN_SOURCES
   spn/SDM_Face_Field.cc
   spn/Isotropic_Source.cc
   spn/Linear_System.cc
+  spn/Linear_System_FV.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})
