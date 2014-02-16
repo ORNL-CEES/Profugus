@@ -17,7 +17,7 @@
 // Trilinos Includes
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
-#include "Epetra_BlockMap.h"
+#include "Epetra_Map.h"
 #include "Epetra_RowMatrix.h"
 #include "Epetra_Vector.h"
 
@@ -61,10 +61,10 @@ class Linear_System
     typedef Moment_Coefficients::RCP_Dimensions    RCP_Dimensions;
     typedef Moment_Coefficients::RCP_ParameterList RCP_ParameterList;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
-    typedef Epetra_BlockMap                        Map_t;
+    typedef Epetra_Map                             Map_t;
     typedef Epetra_RowMatrix                       Matrix_t;
     typedef Epetra_Vector                          Vector_t;
-    typedef Teuchos::RCP<Epetra_BlockMap>          RCP_Map;
+    typedef Teuchos::RCP<Epetra_Map>               RCP_Map;
     typedef Teuchos::RCP<Epetra_RowMatrix>         RCP_Matrix;
     typedef Teuchos::RCP<Epetra_Operator>          RCP_Operator;
     typedef Teuchos::RCP<Epetra_Vector>            RCP_Vector;
