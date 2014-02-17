@@ -395,6 +395,66 @@ void Linear_System_FV::build_Matrix()
  */
 void Linear_System_FV::build_fission_matrix()
 {
+    using def::I; using def::J; using def::K;
+
+    Require (!d_mesh.is_null());
+    Require (!b_mat.is_null());
+
+    // as for the A matrix, here we build the matrix/graph at the same time
+    // (since the coupling is much easier->no spatial coupling)
+    d_fission = Teuchos::rcp(new Epetra_CrsMatrix(Copy, *b_map, d_Ng));
+    b_fission = d_fission;
+
+    // material id and (local/global) cell index
+    int matid  = 0;
+    int local  = 0;
+    int global = 0;
+
+    // outer loop over cells -> we can loop directly over cells because there
+    // is no neighbor coupling in the fission matrix
+    for (int k = 0; k < d_N[K]; ++k)
+    {
+        for (int j = 0; j < d_N[J]; ++j)
+        {
+            for (int i = 0; i < d_N[I]; ++i)
+            {
+                // get the cell indices
+                global = d_indexer->l2g(i, j, k);
+                local  = d_indexer->l2l(i, j, k);
+
+                // inner loop over equations (elements in the row)
+                for (int eqn = 0; eqn < d_Ne; ++eqn)
+                {
+                    // insert coupling with other moment equations
+                    for (int m = 0; m < d_Ne; ++m)
+                    {
+                        // make Fnm
+                        b_mom_coeff->make_F(eqn, m, local, d_W);
+
+                        // add it to the matrix
+                        insert_block_matrix(eqn, global, 0, m, global, 0,
+                                            d_W, *d_fission);
+                    }
+                }
+            }
+        }
+    }
+
+    // finish matrix
+    d_fission->FillComplete();
+
+    Ensure (d_fission->IndicesAreLocal());
+    Ensure (d_fission->StorageOptimized());
+
+    // Epetra returns the global number of nonzeros as a 32 bit signed int
+    //  which is prone to overflow (this is only used for output and doesn't
+    //  represent any fundamental limitation).  We can get around this by
+    //  global-summing the local number of nonzeros into a 64 bit int.
+    UTILS_INT8 num_rhs_nonzeros = d_fission->NumMyNonzeros();
+    profugus::global_sum( num_rhs_nonzeros );
+
+    profugus::pcout << ">>> Built SPN FV Element RHS Matrix with " <<
+        num_rhs_nonzeros << " nonzero entries." << profugus::endl;
 }
 
 //---------------------------------------------------------------------------//

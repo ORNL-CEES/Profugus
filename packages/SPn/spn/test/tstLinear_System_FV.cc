@@ -54,6 +54,8 @@ class MatrixTest : public testing::Test
     typedef Epetra_CrsMatrix                 Element_Matrix_t;
     typedef Partitioner::Array_Dbl           Array_Dbl;
     typedef Linear_System::External_Source   External_Source;
+    typedef Mat_DB_t::XS_t                   XS;
+    typedef Mat_DB_t::RCP_XS                 RCP_XS;
 
   protected:
 
@@ -1658,7 +1660,7 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
         }
     }
 }
-#if 0
+
 //---------------------------------------------------------------------------//
 
 TEST_F(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
@@ -1784,22 +1786,66 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
     make_data(ids, f, matids);
     EXPECT_EQ(4, dim->num_equations());
 
-    // add fission to mat
+    // add fission to mat (we don't need to make the scattering matrices as
+    // they don't intrude on the Fission matrix)
+    RCP_Mat_DB matf = Teuchos::rcp(new Mat_DB_t);
     {
-        Mat_DB_t::SP_FIS_XS fission(new Mat_DB_t::FIS_XS(3));
-        fission->data(0, Mat_DB_t::FIS_XS::CHI) = 0.2;
-        fission->data(1, Mat_DB_t::FIS_XS::CHI) = 0.8;
-        fission->data(2, Mat_DB_t::FIS_XS::CHI) = 0.0;
+        const XS &old = mat->xs();
+        RCP_XS xs     = Teuchos::rcp(new XS);
 
-        fission->data(0, Mat_DB_t::FIS_XS::NU_SIGMA_F) = 1.3;
-        fission->data(1, Mat_DB_t::FIS_XS::NU_SIGMA_F) = 4.2;
-        fission->data(2, Mat_DB_t::FIS_XS::NU_SIGMA_F) = 0.0;
+        xs->set(old.pn_order(), old.num_groups());
 
-        EXPECT_TRUE(mat->assigned(9));
-        EXPECT_TRUE(mat->assigned(11));
-        mat->assign(fission, 9);
-        EXPECT_TRUE(mat->assigned_fission(9));
-        EXPECT_TRUE(!mat->assigned_fission(11));
+        XS::OneDArray tot(3), nusigf(3), chi(3);
+        XS::TwoDArray P0(3, 3), P1(3, 3), P2(3, 3), P3(3, 3);
+
+        // material 9
+        {
+            const XS::Vector &sig = old.vector(9, XS::TOTAL);
+            for (int g = 0; g < 3; ++g)
+            {
+                tot[g] = sig[g];
+            }
+            nusigf[0] = 1.3;
+            nusigf[1] = 4.2;
+            nusigf[2] = 0.0;
+
+            chi[0] = 0.2;
+            chi[1] = 0.8;
+            chi[2] = 0.0;
+
+            xs->add(9, XS::TOTAL, tot);
+            xs->add(9, XS::NU_SIG_F, nusigf);
+            xs->add(9, XS::CHI, chi);
+        }
+
+        // material 11
+        {
+            const XS::Vector &sig = old.vector(11, XS::TOTAL);
+            for (int g = 0; g < 3; ++g)
+            {
+                tot[g] = sig[g];
+            }
+
+            xs->add(11, XS::TOTAL, tot);
+        }
+
+        xs->complete();
+        matf->set(xs, mesh->num_cells());
+
+        for (int k = 0; k < mesh->num_cells_dim(K); ++k)
+        {
+            for (int j = 0; j < mesh->num_cells_dim(J); ++j)
+            {
+                for (int i = 0; i < mesh->num_cells_dim(I); ++i)
+                {
+                    matf->matid(indexer->l2l(i ,j, k)) =
+                        gids[indexer->l2g(i, j, k)];
+                }
+            }
+        }
+
+        system = Teuchos::rcp(new Linear_System(
+                                  db, dim, matf, mesh, indexer, data));
     }
 
     // make the matrix
@@ -2092,7 +2138,7 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
         }
     }
 }
-#endif
+
 //---------------------------------------------------------------------------//
 //                 end of tstLinear_System_FV.cc
 //---------------------------------------------------------------------------//
