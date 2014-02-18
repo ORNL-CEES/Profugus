@@ -33,6 +33,7 @@ ADD_UTILS_TEST(tstFV_Bnd_Indexer.cc                                )
 ADD_UTILS_TEST(tstState.cc               NP 1 4                    )
 ADD_UTILS_TEST(tstFV_Gather.cc                 DEPLIBS spn_test_lib)
 ADD_UTILS_TEST(tstLinear_System_FV.cc          DEPLIBS spn_test_lib)
+ADD_UTILS_TEST(tstFixed_Source_Solver.cc       DEPLIBS spn_test_lib)
 
 ##---------------------------------------------------------------------------##
 ##                    end of spn/test/CMakeLists.txt
