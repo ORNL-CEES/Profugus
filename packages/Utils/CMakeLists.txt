@@ -234,7 +234,8 @@ LIST(APPEND SOURCES ${COMM_SOURCES})
 
 FILE(GLOB UTILS_HEADERS utils/*.hh)
 SET(UTILS_SOURCES
-  utils/Hash_Functions.cc)
+  utils/Hash_Functions.cc
+  utils/String_Functions.cc)
 LIST(APPEND HEADERS ${UTILS_HEADERS})
 LIST(APPEND SOURCES ${UTILS_SOURCES})
 
