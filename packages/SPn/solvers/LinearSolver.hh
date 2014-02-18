@@ -55,7 +55,7 @@ class LinearSolver
         b_tolerance = db->get<double>("tolerance", 1.0e-6);
 
         // Get max iterations off of db or set a default.
-        db->get<int>("max_itr", 100);
+        b_max_iters = db->get<int>("max_itr", 100);
 
         // Get verbosity or set default
         b_verbosity = LOW;

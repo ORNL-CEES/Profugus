@@ -1,0 +1,4 @@
+<!-- Modify these files to experiment with solver parameters in stratimikos/aztecoo -->
+<ParameterList>
+  <Parameter name="Linear Solver Type" type="string" value="AztecOO"/>
+</ParameterList>
