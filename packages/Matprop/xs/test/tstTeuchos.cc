@@ -180,6 +180,39 @@ TEST_F(Teuchos_Test, pl_read)
 
 //---------------------------------------------------------------------------//
 
+TEST_F(Teuchos_Test, sublists)
+{
+    RCP_ParameterList p = Teuchos::rcp(new ParameterList("stuff"));
+    p->set("A", 1);
+    p->set("B", 2.5);
+
+    EXPECT_EQ(2, p->numParams());
+
+    {
+        RCP_ParameterList sub = Teuchos::sublist(p, "MySubList");
+        sub->set("subA", 10);
+        sub->set("subB", 4.1);
+    }
+
+    EXPECT_EQ(3, p->numParams());
+    EXPECT_TRUE(p->isSublist("MySubList"));
+
+    const ParameterList &s = p->sublist("MySubList");
+    EXPECT_EQ(2, s.numParams());
+
+    {
+        ParameterList &s2 = p->sublist("MySubList2");
+        EXPECT_EQ(4, p->numParams());
+        s2.set("C", 12);
+    }
+
+    RCP_ParameterList sub2 = Teuchos::sublist(p, "MySubList2");
+    EXPECT_EQ(4, p->numParams());
+    EXPECT_EQ(1, sub2->numParams());
+}
+
+//---------------------------------------------------------------------------//
+
 TEST_F(Teuchos_Test, vector)
 {
     Array_Dbl x(4, 0.0);
