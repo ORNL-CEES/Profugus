@@ -106,6 +106,7 @@ SET(SPN_SOURCES
   spn/Linear_System.cc
   spn/Linear_System_FV.cc
   spn/Solver_Base.cc
+  spn/Fixed_Source_Solver.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})
