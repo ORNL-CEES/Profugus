@@ -83,6 +83,16 @@ SET(MESH_SOURCES
 LIST(APPEND HEADERS ${MESH_HEADERS})
 LIST(APPEND SOURCES ${MESH_SOURCES})
 
+# solvers sources
+
+FILE(GLOB SOLVERS_HEADERS solvers/*.hh)
+SET(SOLVERS_SOURCES
+  solvers/Decomposition.cc
+  solvers/StratimikosSolver.cc
+  )
+LIST(APPEND HEADERS ${SOLVERS_HEADERS})
+LIST(APPEND SOURCES ${SOLVERS_SOURCES})
+
 # spn sources
 
 FILE(GLOB SPN_HEADERS spn/*.hh)
@@ -95,6 +105,7 @@ SET(SPN_SOURCES
   spn/Isotropic_Source.cc
   spn/Linear_System.cc
   spn/Linear_System_FV.cc
+  spn/Solver_Base.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})
@@ -114,6 +125,7 @@ TRIBITS_ADD_LIBRARY(
 
 TRIBITS_ADD_TEST_DIRECTORIES(
   mesh/test
+  solvers/test
   spn/test)
 
 ##---------------------------------------------------------------------------##
