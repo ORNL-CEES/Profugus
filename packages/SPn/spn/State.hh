@@ -79,6 +79,9 @@ class State
     //! Number of (local) cells on the current domain.
     int num_cells() const { return d_mesh->num_cells(); }
 
+    //! Reference to the mesh.
+    const Mesh& mesh() const { return *d_mesh; }
+
     //! Get const-view to all fluxes.
     const_View_Field flux() const
     {
