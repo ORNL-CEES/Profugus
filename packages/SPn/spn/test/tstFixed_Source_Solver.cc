@@ -47,6 +47,11 @@ class Inf_Med_Solver_FVTest : public testing::Test
     typedef Fixed_Source_Solver::State_t           State;
     typedef Teuchos::RCP<State>                    RCP_State;
     typedef Linear_System_t::Array_Dbl             Array_Dbl;
+    typedef Fixed_Source_Solver::External_Source   External_Source;
+    typedef External_Source::Source_Shapes         Source_Shapes;
+    typedef External_Source::Shape                 Shape;
+    typedef External_Source::Source_Field          Source_Field;
+    typedef External_Source::ID_Field              ID_Field;
 
   protected:
 
@@ -154,22 +159,19 @@ class Inf_Med_Solver_FVTest : public testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-#if 0
 TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP1)
 {
     build(1, 1);
     EXPECT_EQ(1, dim->num_equations());
 
     // make the source
-    denovo::General_Source_DB q(mesh->num_cells());
+    External_Source q(mesh->num_cells());
     {
-        q.set_num(1, 1);
+        Source_Shapes shapes(1, Shape(1, 1.2));
+        ID_Field srcids(mesh->num_cells(), 0);
+        Source_Field source(mesh->num_cells(), 1.0);
 
-        denovo::General_Source_DB::Vec_Qe q0(3);
-        q0[0] = new denovo::Isotropic(1.2);
-
-        q.assign(q0[0], 0, 0);
-        q.assign(0);
+        q.set(srcids, shapes, source);
     }
 
     solver->solve(q);
@@ -189,15 +191,13 @@ TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP3)
     EXPECT_EQ(2, dim->num_equations());
 
     // make the source
-    denovo::General_Source_DB q(mesh->num_cells());
+    External_Source q(mesh->num_cells());
     {
-        q.set_num(1, 1);
+        Source_Shapes shapes(1, Shape(1, 1.2));
+        ID_Field srcids(mesh->num_cells(), 0);
+        Source_Field source(mesh->num_cells(), 1.0);
 
-        denovo::General_Source_DB::Vec_Qe q0(3);
-        q0[0] = new denovo::Isotropic(1.2);
-
-        q.assign(q0[0], 0, 0);
-        q.assign(0);
+        q.set(srcids, shapes, source);
     }
 
     solver->solve(q);
@@ -218,19 +218,17 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP1)
     EXPECT_EQ(1, dim->num_equations());
 
     // make the source
-    denovo::General_Source_DB q(mesh->num_cells());
+    External_Source q(mesh->num_cells());
     {
-        q.set_num(1, 3);
+        Source_Shapes shapes(1, Shape(3, 0.0));
+        shapes[0][0] = 1.2;
+        shapes[0][1] = 1.3;
+        shapes[0][2] = 1.4;
 
-        denovo::General_Source_DB::Vec_Qe q0(3);
-        q0[0] = new denovo::Isotropic(1.2);
-        q0[1] = new denovo::Isotropic(1.3);
-        q0[2] = new denovo::Isotropic(1.4);
+        ID_Field srcids(mesh->num_cells(), 0);
+        Source_Field source(mesh->num_cells(), 1.0);
 
-        q.assign(q0[0], 0, 0);
-        q.assign(q0[1], 1, 0);
-        q.assign(q0[2], 2, 0);
-        q.assign(0);
+        q.set(srcids, shapes, source);
     }
 
     solver->solve(q);
@@ -264,19 +262,17 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP5)
     EXPECT_EQ(3, dim->num_equations());
 
     // make the source
-    denovo::General_Source_DB q(mesh->num_cells());
+    External_Source q(mesh->num_cells());
     {
-        q.set_num(1, 3);
+        Source_Shapes shapes(1, Shape(3, 0.0));
+        shapes[0][0] = 1.2;
+        shapes[0][1] = 1.3;
+        shapes[0][2] = 1.4;
 
-        denovo::General_Source_DB::Vec_Qe q0(3);
-        q0[0] = new denovo::Isotropic(1.2);
-        q0[1] = new denovo::Isotropic(1.3);
-        q0[2] = new denovo::Isotropic(1.4);
+        ID_Field srcids(mesh->num_cells(), 0);
+        Source_Field source(mesh->num_cells(), 1.0);
 
-        q.assign(q0[0], 0, 0);
-        q.assign(q0[1], 1, 0);
-        q.assign(q0[2], 2, 0);
-        q.assign(0);
+        q.set(srcids, shapes, source);
     }
 
     solver->solve(q);
@@ -318,33 +314,21 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP5)
 
     // fill the state
     solver->write_state(*state);
-    State::View_Field phi = state->moments();
-    EXPECT_EQ(mesh->num_cells() * 3 * 4, phi.size()); // the state is set for
-                                                      // Pn = 1; 4 moments -
-                                                      // SPN only writes into
-                                                      // the scalar flux
-                                                      // moment of the state
+    State::View_Field phi = state->flux();
+    EXPECT_EQ(mesh->num_cells() * 3, phi.size());
 
     for (int cell = 0; cell < mesh->num_cells(); ++cell)
     {
-        int g0 = 0 + cell * 4 + 0 * mesh->num_cells() * 4;
-        int g1 = 0 + cell * 4 + 1 * mesh->num_cells() * 4;
-        int g2 = 0 + cell * 4 + 2 * mesh->num_cells() * 4;
+        int g0 = cell + 0 * mesh->num_cells();
+        int g1 = cell + 1 * mesh->num_cells();
+        int g2 = cell + 2 * mesh->num_cells();
 
         EXPECT_SOFTEQ(23.376775173864782, phi[g0], eps);
         EXPECT_SOFTEQ(26.285032257831212, phi[g1], eps);
         EXPECT_SOFTEQ(21.044148232485092, phi[g2], eps);
     }
-
-    // check the equation traits
-    State::const_View_Field phi_0 = state->moments(0);
-    for (int cell = 0; cell < mesh->num_cells(); ++cell)
-    {
-        EXPECT_SOFTEQ(23.376775173864782,
-                      Eqn_Traits::scalar_flux(cell, phi_0), eps);
-    }
 }
-#endif
+
 //---------------------------------------------------------------------------//
 //                        end of tstFixed_Source_Solver.cc
 //---------------------------------------------------------------------------//
