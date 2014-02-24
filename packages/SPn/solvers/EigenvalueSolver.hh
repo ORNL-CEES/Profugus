@@ -1,15 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinearSolver.hh
- * \author Steven Hamilton
- * \date   Mon Jul 01 11:48:09 2013
- * \brief  LinearSolver class definition.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \file   solvers/EigenvalueSolver.hh
+ * \author Thomas M. Evans, Steven P. Hamilton
+ * \date   Fri Feb 21 14:33:00 2014
+ * \brief  EigenvalueSolver class definition.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_LinearSolver_hh
-#define solvers_LinearSolver_hh
+#ifndef solvers_EigenvalueSolver_hh
+#define solvers_EigenvalueSolver_hh
 
 #include <string>
 
@@ -17,8 +17,6 @@
 #include "Teuchos_ParameterList.hpp"
 
 #include "harness/DBC.hh"
-#include "harness/Warnings.hh"
-#include "comm/P_Stream.hh"
 #include "utils/String_Functions.hh"
 
 namespace profugus
@@ -26,14 +24,14 @@ namespace profugus
 
 //===========================================================================//
 /*!
- * \class LinearSolver
+ * \class EigenvalueSolver
  * \brief Base class for solving linear system with templated
  *  vector/operator interface.
  */
 //===========================================================================//
 
 template <class MV, class OP>
-class LinearSolver
+class EigenvalueSolver
 {
   public:
     //@{
@@ -49,7 +47,7 @@ class LinearSolver
   public:
 
     // Constructor
-    LinearSolver(RCP_ParameterList db)
+    EigenvalueSolver(RCP_ParameterList db)
         : b_db(db)
     {
         // Get stopping tolerance off of DB or set a default.
@@ -88,7 +86,7 @@ class LinearSolver
     }
 
     // Virtual destructor
-    virtual ~LinearSolver(){};
+    virtual ~EigenvalueSolver(){};
 
     // Set operator
     virtual void set_operator( Teuchos::RCP<OP> A )
@@ -97,15 +95,9 @@ class LinearSolver
         b_A = A;
     }
 
-    // Set preconditioner
-    virtual void set_preconditioner( Teuchos::RCP<OP> P )
-    {
-        ADD_WARNING("Preconditioning not supported by " << b_label);
-    }
-
     // Solve
-    virtual void solve( Teuchos::RCP<MV>       x,
-                        Teuchos::RCP<const MV> b ) = 0;
+    virtual void solve( double           &lambda,
+                        Teuchos::RCP<MV>  x ) = 0;
 
     // Set tolerance
     virtual void set_tolerance(double tol)
@@ -130,16 +122,6 @@ class LinearSolver
     // Return solver label
     virtual const std::string & solver_label() const { return b_label; }
 
-    // Print status to screen
-    virtual void print_status( Verbosity level, int iter, double res )
-    {
-        if( b_verbosity >= level )
-        {
-            profugus::pout << b_label << " at iteration " << iter
-                << " has residual norm " << res << profugus::endl;
-        }
-    }
-
   protected:
 
     RCP_ParameterList b_db;
@@ -150,13 +132,12 @@ class LinearSolver
     bool              b_converged;
     std::string       b_label;
     Verbosity         b_verbosity;
-
 };
 
 } // end namespace profugus
 
-#endif // solvers_LinearSolver_hh
+#endif // solvers_EigenvalueSolver_hh
 
 //---------------------------------------------------------------------------//
-//              end of solvers/LinearSolver.hh
+//                 end of EigenvalueSolver.hh
 //---------------------------------------------------------------------------//

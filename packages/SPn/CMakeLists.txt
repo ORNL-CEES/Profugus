@@ -87,7 +87,15 @@ LIST(APPEND SOURCES ${MESH_SOURCES})
 
 FILE(GLOB SOLVERS_HEADERS solvers/*.hh)
 SET(SOLVERS_SOURCES
+  solvers/Arnoldi.cc
+  solvers/Davidson_Eigensolver.cc
   solvers/Decomposition.cc
+  solvers/InverseOperator.cc
+  solvers/LinearSolverBuilder.cc
+  solvers/PowerIteration.pt.cc
+  solvers/Richardson.pt.cc
+  solvers/ShiftedInverseOperator.cc
+  solvers/ShiftedOperator.cc
   solvers/StratimikosSolver.cc
   )
 LIST(APPEND HEADERS ${SOLVERS_HEADERS})
