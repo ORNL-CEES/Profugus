@@ -16,9 +16,10 @@ INCLUDE(UtilsTest)
 ## TESTING
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstDecomposition.cc              )
-ADD_UTILS_TEST(tstShiftedOperator.cc            )
-ADD_UTILS_TEST(tstShiftedInverseOperator.cc     )
+ADD_UTILS_TEST(tstDecomposition.cc                  )
+ADD_UTILS_TEST(tstShiftedOperator.cc                )
+ADD_UTILS_TEST(tstShiftedInverseOperator.cc         )
+ADD_UTILS_TEST(tstRichardson.cc                     )
 ADD_UTILS_TEST(tstStratimikosSolver.cc      NP 1   4)
 ADD_UTILS_TEST(tstArnoldi.cc                NP 1 2  )
 ADD_UTILS_TEST(tstInverseOperator.cc        NP 1   4)
@@ -30,7 +31,6 @@ ADD_UTILS_TEST(tstInverseOperator.cc        NP 1   4)
 #ADD_NEMESIS_TEST(tstPowerIteration.cc               )
 #ADD_NEMESIS_TEST(tstPreconditionerBuilder.cc        )
 #ADD_NEMESIS_TEST(tstRayleighQuotient.cc             )
-#ADD_NEMESIS_TEST(tstRichardson.cc                   )
 
 ##---------------------------------------------------------------------------##
 ## FILES
