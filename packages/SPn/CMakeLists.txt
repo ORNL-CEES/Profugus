@@ -94,6 +94,7 @@ SET(SOLVERS_SOURCES
   solvers/InverseOperator.cc
   solvers/LinearSolverBuilder.cc
   solvers/PowerIteration.pt.cc
+  solvers/PreconditionerBuilder.cc
   solvers/RayleighQuotient.cc
   solvers/Richardson.pt.cc
   solvers/ShiftedInverseOperator.cc
