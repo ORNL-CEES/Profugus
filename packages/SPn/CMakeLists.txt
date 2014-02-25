@@ -90,9 +90,11 @@ SET(SOLVERS_SOURCES
   solvers/Arnoldi.cc
   solvers/Davidson_Eigensolver.cc
   solvers/Decomposition.cc
+  solvers/EigenvalueSolverBuilder.cc
   solvers/InverseOperator.cc
   solvers/LinearSolverBuilder.cc
   solvers/PowerIteration.pt.cc
+  solvers/RayleighQuotient.cc
   solvers/Richardson.pt.cc
   solvers/ShiftedInverseOperator.cc
   solvers/ShiftedOperator.cc
