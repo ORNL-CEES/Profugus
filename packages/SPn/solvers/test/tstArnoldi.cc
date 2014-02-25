@@ -66,13 +66,14 @@ class Arnoldi_Test : public testing::Test
 #else
         comm = Teuchos::rcp(new Comm);
 #endif
-        db = Teuchos::rcp(new ParameterList("test"));
+        db  = Teuchos::rcp(new ParameterList("test"));
+        db2 = Teuchos::rcp(new ParameterList("test"));
     }
 
   protected:
     int node, nodes;
     Teuchos::RCP<Comm> comm;
-    RCP_ParameterList  db;
+    RCP_ParameterList  db, db2;
 };
 
 //---------------------------------------------------------------------------//
@@ -228,7 +229,7 @@ TEST_F(Arnoldi_Test, Eigensolver)
     eref[7] =  -0.161229841765317;
 
     // Test against Matlab computed values
-    double tol = 1.0e-8;
+    double tol = 1.0e-6;
     EXPECT_SOFTEQ(e_val, 3.879385241571816, tol);
 
     // Get sign of computed eigenvector
@@ -243,14 +244,18 @@ TEST_F(Arnoldi_Test, Eigensolver)
         EXPECT_SOFTEQ(sign*e_vec[0][i], eref[i+offset], tol);
 
     // Create operator for A^{-1}B
-    db->set("max_itr",50);
-    db->set("tolerance",1e-12);
-    RCP<InverseOperator> AinvB(Teuchos::rcp(new InverseOperator(db)));
+    {
+        db2->set("max_itr", 50);
+        db2->set("tolerance", 1e-12);           
+        db2->set("solver_type", std::string("stratimikos"));
+    }
+
+    RCP<InverseOperator> AinvB(Teuchos::rcp(new InverseOperator(db2)));
     AinvB->set_operator(A);
     AinvB->set_rhs_operator(B);
 
     // Now an eigensolver for A^{-1}B
-    Arnoldi gensolver( db );
+    Arnoldi gensolver( db2 );
     gensolver.set_operator( AinvB );
 
     // Solve
