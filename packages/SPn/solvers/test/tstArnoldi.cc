@@ -246,7 +246,7 @@ TEST_F(Arnoldi_Test, Eigensolver)
     // Create operator for A^{-1}B
     {
         db2->set("max_itr", 50);
-        db2->set("tolerance", 1e-12);           
+        db2->set("tolerance", 1e-12);
         db2->set("solver_type", std::string("stratimikos"));
     }
 
