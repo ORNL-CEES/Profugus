@@ -46,21 +46,21 @@ class Arnoldi : public EigenvalueSolver<Epetra_MultiVector,Epetra_Operator>
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector                             MV;
-    typedef Epetra_Operator                                OP;
-    typedef Anasazi::BasicEigenproblem<double,MV,OP>       Eigenproblem;
-    typedef Anasazi::BlockKrylovSchurSolMgr<double,MV,OP>  KrylovSchur;
-    typedef Anasazi::Eigensolution<double,MV>              Eigensolution;
+    typedef Epetra_MultiVector                            MV;
+    typedef Epetra_Operator                               OP;
+    typedef Anasazi::BasicEigenproblem<double,MV,OP>      Eigenproblem;
+    typedef Anasazi::BlockKrylovSchurSolMgr<double,MV,OP> KrylovSchur;
+    typedef Anasazi::Eigensolution<double,MV>             Eigensolution;
 
-    typedef Teuchos::RCP<MV>              RCP_MV;
-    typedef Teuchos::RCP<OP>              RCP_Op;
-    typedef Teuchos::RCP<Eigenproblem>    RCP_Eigenproblem;
+    typedef Teuchos::RCP<MV>           RCP_MV;
+    typedef Teuchos::RCP<OP>           RCP_OP;
+    typedef Teuchos::RCP<Eigenproblem> RCP_Eigenproblem;
     //@}
 
   private:
 
     // CMFD Operator
-    RCP_Op d_A;
+    RCP_OP d_A;
 
     // Teuchos Parameter List
     RCP_ParameterList d_pl;
@@ -71,7 +71,7 @@ class Arnoldi : public EigenvalueSolver<Epetra_MultiVector,Epetra_Operator>
     Arnoldi( RCP_ParameterList db );
 
     // Set operator for Arnoldi
-    void set_operator( RCP_Op op );
+    void set_operator( RCP_OP op );
 
     // Set tolerance
     void set_tolerance(double tol)

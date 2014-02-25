@@ -55,7 +55,7 @@ Arnoldi::Arnoldi(RCP_ParameterList db)
 /*!
  *\brief Set operator for eigensolver.
  */
-void Arnoldi::set_operator(RCP_Op A)
+void Arnoldi::set_operator(RCP_OP A)
 {
     Require(!A.is_null());
     d_A = A;
@@ -79,7 +79,8 @@ void Arnoldi::set_operator(RCP_Op A)
  * dominant eigenvalue will be placed in the input argument eval and the
  * corresponding eigenvector in evec.
  */
-void Arnoldi::solve(double &eval, RCP_MV evec)
+void Arnoldi::solve(double &eval,
+                    RCP_MV  evec)
 {
     Require (!evec.is_null());
     Require (!d_A.is_null());
