@@ -69,6 +69,7 @@ SET(HEADERS "")
 
 FILE(GLOB XS_HEADERS xs/*.hh)
 SET(XS_SOURCES
+  xs/Energy_Collapse.cc
   xs/Mat_DB.cc
   xs/XS.cc
   xs/XS_Builder.cc
