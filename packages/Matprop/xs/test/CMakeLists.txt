@@ -11,10 +11,11 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstTeuchos.cc    NP 1)
-ADD_UTILS_TEST(tstXS.cc         NP 1)
-ADD_UTILS_TEST(tstMat_DB.cc     NP 1)
-ADD_UTILS_TEST(tstXS_Builder.cc NP 1 2 4)
+ADD_UTILS_TEST(tstTeuchos.cc         NP 1    )
+ADD_UTILS_TEST(tstXS.cc              NP 1    )
+ADD_UTILS_TEST(tstMat_DB.cc          NP 1    )
+ADD_UTILS_TEST(tstEnergy_Collapse.cc NP 1    )
+ADD_UTILS_TEST(tstXS_Builder.cc      NP 1 2 4)
 
 ##---------------------------------------------------------------------------##
 ## COPY FILES
