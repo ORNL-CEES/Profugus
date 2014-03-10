@@ -109,15 +109,18 @@ LIST(APPEND SOURCES ${SOLVERS_SOURCES})
 FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
+  spn/Energy_Multigrid.cc
+  spn/Energy_Prolongation.cc
+  spn/Energy_Restriction.cc
   spn/FV_Bnd_Indexer.cc
   spn/FV_Gather.cc
-  spn/Moment_Coefficients.cc
-  spn/SDM_Face_Field.cc
+  spn/Fixed_Source_Solver.cc
   spn/Isotropic_Source.cc
   spn/Linear_System.cc
   spn/Linear_System_FV.cc
+  spn/Moment_Coefficients.cc
+  spn/SDM_Face_Field.cc
   spn/Solver_Base.cc
-  spn/Fixed_Source_Solver.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})

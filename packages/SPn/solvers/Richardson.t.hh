@@ -30,7 +30,7 @@ Richardson<MV,OP>::Richardson( RCP_ParameterList db )
     : LinearSolver<MV,OP>(db)
 {
     d_damping = b_db->get("Damping Factor", 1.0);
-    b_label   = "Exnihilo Richardson";
+    b_label   = "Profugus Richardson";
 }
 
 //---------------------------------------------------------------------------//
