@@ -109,6 +109,7 @@ LIST(APPEND SOURCES ${SOLVERS_SOURCES})
 FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
+  spn/Eigenvalue_Solver.cc
   spn/Energy_Multigrid.cc
   spn/Energy_Prolongation.cc
   spn/Energy_Restriction.cc

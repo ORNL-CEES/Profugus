@@ -13,7 +13,6 @@
 
 #include "Teuchos_RCP.hpp"
 
-#include "harness/DBC.hh"
 #include "State.hh"
 #include "Linear_System.hh"
 

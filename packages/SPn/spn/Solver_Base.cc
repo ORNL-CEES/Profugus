@@ -8,6 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "harness/DBC.hh"
 #include "Moment_Coefficients.hh"
 #include "Solver_Base.hh"
 

@@ -53,8 +53,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
     Require (!data.is_null());
 
     // build the linear system (we only provide finite volume for now)
-    std::string &eqn_type = b_db->get<std::string>(
-        "eqn_type", std::string("fv"));
+    std::string &eqn_type = b_db->get("eqn_type", std::string("fv"));
 
     if (profugus::to_lower(eqn_type) == "fv")
     {
@@ -110,7 +109,7 @@ void Fixed_Source_Solver::write_state(State_t &state)
              b_system->get_dims()->num_equations() * state.num_groups()
              <= d_lhs->MyLength());
 
-    write_u_into_state(*d_lhs, state);
+    Base::write_u_into_state(*d_lhs, state);
 }
 
 } // end namespace profugus

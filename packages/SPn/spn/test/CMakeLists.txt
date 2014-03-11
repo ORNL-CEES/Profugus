@@ -37,6 +37,7 @@ ADD_UTILS_TEST(tstEnergy_Multigrid.cc           DEPLIBS spn_test_lib)
 ADD_UTILS_TEST(tstFV_Gather.cc                  DEPLIBS spn_test_lib)
 ADD_UTILS_TEST(tstLinear_System_FV.cc           DEPLIBS spn_test_lib)
 ADD_UTILS_TEST(tstFixed_Source_Solver.cc        DEPLIBS spn_test_lib)
+ADD_UTILS_TEST(tstEigenvalue_Solver.cc          DEPLIBS spn_test_lib)
 
 ##---------------------------------------------------------------------------##
 ##                    end of spn/test/CMakeLists.txt
