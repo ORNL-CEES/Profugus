@@ -67,7 +67,7 @@ class Preconditioner : public Epetra_Operator
     }
 
     double NormInf() const { return d_raw_prec->NormInf(); }
-    const char *  Label() const { return "Exnihilo Preconditioner"; }
+    const char *  Label() const { return "Profugus Preconditioner"; }
     bool UseTranspose() const { return d_raw_prec->UseTranspose(); }
     bool HasNormInf() const { return d_raw_prec->HasNormInf(); }
     const Epetra_Comm & Comm() const

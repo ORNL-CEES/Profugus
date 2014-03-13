@@ -60,25 +60,25 @@ TEST_F(SolverBuilderTest, basic)
 
     // Default solver is Richardson
     build_solver(db);
-    EXPECT_EQ("Exnihilo Richardson", d_solver->solver_label());
+    EXPECT_EQ("Profugus Richardson", d_solver->solver_label());
 
     //
-    // Exnihilo solver by specifying exnihilo_solver
-    //
-
-    db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
-    db->set("exnihilo_solver", std::string("Richardson"));
-    build_solver(db);
-    EXPECT_EQ("Exnihilo Richardson", d_solver->solver_label());
-
-    //
-    // Exnihilo solver by specifying solver_type
+    // Profugus solver by specifying profugus_solver
     //
 
     db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
-    db->set("solver_type", std::string("Exnihilo"));
+    db->set("profugus_solver", std::string("Richardson"));
     build_solver(db);
-    EXPECT_EQ("Exnihilo Richardson", d_solver->solver_label());
+    EXPECT_EQ("Profugus Richardson", d_solver->solver_label());
+
+    //
+    // Profugus solver by specifying solver_type
+    //
+
+    db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
+    db->set("solver_type", std::string("Profugus"));
+    build_solver(db);
+    EXPECT_EQ("Profugus Richardson", d_solver->solver_label());
 
     //
     // Stratimikos solver (default is AztecOO)

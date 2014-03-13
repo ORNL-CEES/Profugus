@@ -26,10 +26,10 @@ namespace profugus
  * This function creates a LinearSolver object from a given database.  The
  * logic of selecting a particular solver is designed to maintain backwards
  * compatibility with previous functionality.  First we look for a database
- * entry "solver_type", which can be "exnihilo" or "stratimikos".  If that
+ * entry "solver_type", which can be "profugus" or "stratimikos".  If that
  * entry exists, the corresponding solver type will be built.  If not, we look
- * for database entries "exnihilo_solver" and build the appropriate class.
- * Current valid "exnihilo_solver" options are "Richardson".
+ * for database entries "profugus_solver" and build the appropriate class.
+ * Current valid "profugus_solver" options are "Richardson".
  *
  */
 //---------------------------------------------------------------------------//
@@ -41,24 +41,24 @@ LinearSolverBuilder::build_solver( RCP_ParameterList db )
 
     RCP_LinearSolver solver;
 
-    // Determine type of solver to be constructed (defaults to exnihilo)
+    // Determine type of solver to be constructed (defaults to profugus)
     string solver_type = to_lower(
-        db->get<string>("solver_type", string("exnihilo")));
+        db->get<string>("solver_type", string("profugus")));
 
     // Check for native solvers
-    if (solver_type == "exnihilo")
+    if (solver_type == "profugus")
     {
-        // get exnihilo solver type
+        // get profugus solver type
         string type = to_lower(
-            db->get<string>("exnihilo_solver", string("richardson")));
+            db->get<string>("profugus_solver", string("richardson")));
 
-        if (type=="richardson")
+        if (type == "richardson")
         {
             solver = Teuchos::rcp( new Richardson<MV,OP>(db));
         }
         else
         {
-            Validate (false, "Invalid 'exnihilo_solver' type of "
+            Validate (false, "Invalid 'profugus_solver' type of "
                       << type << " entered.  Valid entries are 'richardson'");
         }
     }
@@ -72,8 +72,8 @@ LinearSolverBuilder::build_solver( RCP_ParameterList db )
         Validate(false, "Error: Invalid LinearSolver option "
                  "'" << solver_type << "'\n"
                  "Specify linear solver by setting solver_type="
-                 "'exnihilo' or 'stratimikos' or by setting the "
-                 "exnihilo_solver database entry.\n");
+                 "'profugus' or 'stratimikos' or by setting the "
+                 "profugus_solver database entry.\n");
     }
 
     return solver;
