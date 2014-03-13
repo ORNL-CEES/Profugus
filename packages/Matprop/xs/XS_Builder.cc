@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "Teuchos_XMLParameterListHelpers.hpp"
+
 #include "harness/DBC.hh"
 #include "XS_Builder.hh"
 
