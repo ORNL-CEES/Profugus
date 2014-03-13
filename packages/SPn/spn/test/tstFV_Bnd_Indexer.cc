@@ -53,8 +53,6 @@ class FV_Bnd_IndexerTest : public testing::Test
         db->set("num_cells_j", 3);
         db->set("num_cells_k", 2);
 
-        db->set("num_groups", 3);
-
         if (nodes == 2)
         {
             db->set("num_blocks_i", 2);

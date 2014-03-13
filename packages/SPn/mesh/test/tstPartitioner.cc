@@ -199,7 +199,6 @@ TEST_F(Partitioner_Test, 2PE)
         pl->set("delta_y", 0.2);
         pl->set("delta_z", 0.1);
         pl->set("num_z_blocks", 1);
-        pl->set("num_groups", 3);
     }
 
     // make the simple partitioner
@@ -343,7 +342,6 @@ TEST_F(Partitioner_Test, 4PE)
         pl->set("delta_y", 0.2);
         pl->set("delta_z", 0.1);
         pl->set("num_z_blocks", 1);
-        pl->set("num_groups", 10);
     }
 
     // make the partitioner
@@ -1180,7 +1178,6 @@ TEST_F(Partitioner_Test, 4Domain)
         pl->set("num_z_blocks", 2);
 
         pl->set("num_sets", 2);
-        pl->set("num_groups", 5);
     }
 
     // make the partitioner

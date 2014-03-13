@@ -75,8 +75,6 @@ class Inf_Med_Eigenvalue_SolverTest : public testing::Test
         db->set("num_cells_j", 3);
         db->set("num_cells_k", 3);
 
-        db->set("num_groups", Ng);
-
         if (nodes == 2)
         {
             db->set("num_blocks_i", 2);

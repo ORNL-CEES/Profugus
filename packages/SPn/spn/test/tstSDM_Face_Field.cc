@@ -61,8 +61,6 @@ class SDM_Face_Field_Test : public testing::Test
         db->set("num_cells_j", 4);
         db->set("num_cells_k", 2);
 
-        db->set("num_groups", 3);
-
         if (nodes == 2)
         {
             db->set("num_blocks_i", 2);

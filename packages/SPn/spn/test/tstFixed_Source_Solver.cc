@@ -87,8 +87,6 @@ class Inf_Med_Solver_FVTest : public testing::Test
             db->set("z_edges", cz);
         }
 
-        db->set("num_groups", Ng);
-
         if (nodes == 2)
         {
             db->set("num_blocks_i", 2);

@@ -91,8 +91,6 @@ class MatrixTest : public testing::Test
             db->set("z_edges", cz);
         }
 
-        db->set("num_groups", Ng);
-
         if (nodes == 2)
         {
             db->set("num_blocks_i", 2);
