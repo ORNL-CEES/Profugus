@@ -233,6 +233,28 @@ TEST_F(Teuchos_Test, vector)
 
 //---------------------------------------------------------------------------//
 
+TEST_F(Teuchos_Test, validation)
+{
+    RCP_ParameterList vA = Teuchos::rcp(new ParameterList("valid"));
+    RCP_ParameterList A  = Teuchos::rcp(new ParameterList("A"));
+
+    // valid parameters
+    vA->set("a", 0);
+    vA->set("b", 0);
+    vA->set("c", 0);
+    vA->set("d", 0);
+
+    // actual list
+    A->get("a", 10);
+    A->get("b", 11);
+    A->get("c", 12);
+    A->get("d", 13);
+
+    A->validateParameters(*vA);
+}
+
+//---------------------------------------------------------------------------//
+
 TEST_F(Teuchos_Test, matrix)
 {
     TwoDArray x(3, 3, 0.0);
