@@ -11,6 +11,7 @@
 INCLUDE(TribitsPackageMacros)
 INCLUDE(TribitsLibraryMacros)
 INCLUDE(TribitsAddOptionAndDefine)
+INCLUDE(TribitsAddExecutable)
 INCLUDE(AppendSet)
 INCLUDE(ProfugusAddCFlags)
 
@@ -126,6 +127,17 @@ SET(SPN_SOURCES
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})
 
+# driver sources
+
+FILE(GLOB DRIVER_HEADERS driver/*.hh)
+SET(DRIVER_SOURCES
+  driver/Manager.cc
+  driver/Problem_Builder.cc
+  driver/spn.cc
+  )
+LIST(APPEND HEADERS ${DRIVER_HEADERS})
+LIST(APPEND SOURCES ${DRIVER_SOURCES})
+
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 ##---------------------------------------------------------------------------##
@@ -135,6 +147,15 @@ TRIBITS_ADD_LIBRARY(
   SPn
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
+
+TRIBITS_ADD_EXECUTABLE(
+  xspn
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES driver/spn.cc
+  DEPLIBS SPn
+  INSTALLABLE
+  )
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package
