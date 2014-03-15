@@ -269,6 +269,7 @@ TRIBITS_ADD_LIBRARY(
 TRIBITS_ADD_TEST_DIRECTORIES(
   harness/test
   utils/test
+  cxx11
   )
 
 ##---------------------------------------------------------------------------##
