@@ -80,8 +80,6 @@ class Mesh
 
     // >>> PUBLIC INTERFACE
 
-    // >>> VIRTUAL FUNCTIONS
-
     // Convert cardinal index to (i,j) or (i,j,k).
     inline Dim_Vector cardinal(size_type cell) const;
 

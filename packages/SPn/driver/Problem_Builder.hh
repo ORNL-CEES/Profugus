@@ -12,6 +12,7 @@
 #define driver_Problem_Builder_hh
 
 #include <string>
+#include <vector>
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -78,7 +79,6 @@ class Problem_Builder
     RCP_Global_Data global_data() const { return d_gdata; }
     //@}
 
-
     //! Get the material database.
     RCP_Mat_DB mat_db() const { return d_mat; }
 
@@ -95,7 +95,16 @@ class Problem_Builder
 
     // Build implementation.
     void build_mesh();
+    void build_matids();
+    void calc_axial_matids(int level, TwoDArray_int &matids);
     void build_matdb();
+
+    // Number of assemblies and pins per assembly.
+    int d_Na[2];
+    int d_Np[2];
+
+    // Local material ids.
+    std::vector<int> d_matids;
 
     // Teuchos communicator.
     RCP_Comm d_comm;
