@@ -109,14 +109,10 @@ class Problem_Builder
     // Teuchos communicator.
     RCP_Comm d_comm;
 
-    // Validating Parameterlist.
-    RCP_ParameterList d_validator;
-
     // Problem-setup parameterlists.
     RCP_ParameterList d_coredb;
     RCP_ParameterList d_assblydb;
     RCP_ParameterList d_matdb;
-    RCP_ParameterList d_meshdb;
 };
 
 } // end namespace profugus

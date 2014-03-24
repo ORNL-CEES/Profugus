@@ -121,6 +121,15 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     // get the eigenvalue solver settings
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
 
+    // The default energy multigrid preconditioner for the Davidson solver
+    // fails on one group.  We could switch to a different preconditioner but
+    // we would have to set up parameters for it.  Instead, we'll just switch
+    // to Arnoldi for that case.
+    if ( mat->xs().num_groups() == 1 )
+    {
+        edb->set("Preconditioner", std::string("Ifpack"));
+    }
+
     // Build a preconditioenr
     RCP_Epetra_Op prec = build_preconditioner(dim, mat, mesh, indexer, data);
 
@@ -303,15 +312,6 @@ void Eigenvalue_Solver::set_default_parameters()
     // propagate stopping criteria for operators
     eig_db->sublist("operator_db").get("tolerance", 0.1 * tol);
     eig_db->sublist("operator_db").get("max_itr", max_itr);
-
-    // The default energy multigrid preconditioner for the Davidson solver
-    // fails on one group.  We could switch to a different preconditioner but
-    // we would have to set up parameters for it.  Instead, we'll just switch
-    // to Arnoldi for that case.
-    if ( b_db->get<int>("num_groups") == 1 )
-    {
-        eig_db->set("Preconditioner", std::string("Ifpack"));
-    }
 }
 
 //---------------------------------------------------------------------------//

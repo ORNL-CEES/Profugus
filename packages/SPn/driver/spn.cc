@@ -13,7 +13,10 @@
 #include <algorithm>
 
 #include "harness/DBC.hh"
+#include "comm/Timer.hh"
 #include "comm/global.hh"
+#include "comm/Timing_Diagnostics.hh"
+#include "comm/P_Stream.hh"
 #include "utils/Definitions.hh"
 #include "Manager.hh"
 
@@ -81,9 +84,20 @@ int main(int argc, char *argv[])
 {
     profugus::initialize(argc, argv);
 
+    // start timing
+    profugus::global_barrier();
+    profugus::Timer timer;
+    timer.start();
+
     // nodes
     node  = profugus::node();
     nodes = profugus::nodes();
+
+    profugus::pcout << "=======================================\n"
+                    << "    Profugus SPN Mini-APP              \n"
+                    << "    (C) ORNL, Battelle, 2014           \n"
+                    << "=======================================\n"
+                    << profugus::endl;
 
     // process input arguments
     def::Vec_String arguments(argc - 1);
@@ -101,6 +115,12 @@ int main(int argc, char *argv[])
 
         // setup the problem
         manager.setup(xml_file);
+
+        // solve the problem
+        // manager.solve();
+
+        // output
+        manager.output();
     }
     catch (const profugus::assertion &a)
     {
@@ -117,6 +137,18 @@ int main(int argc, char *argv[])
         std::cout << "Caught assertion of unknown origin." << std::endl;
         exit(1);
     }
+
+    // process and output timing diagnostics
+    profugus::global_barrier();
+    timer.stop();
+    double total = timer.TIMER_CLOCK();
+    profugus::Timing_Diagnostics::report(std::cout, total);
+
+    // output final timing
+    profugus::pcout << "\n" << "Total execution time : "
+                    << profugus::scientific
+                    << profugus::setprecision(4)
+                    << total << " seconds." << profugus::endl;
 
     profugus::finalize();
     return 0;

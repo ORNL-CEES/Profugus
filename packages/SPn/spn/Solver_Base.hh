@@ -67,6 +67,10 @@ class Solver_Base
     // Virtual destructor.
     virtual ~Solver_Base() = 0;
 
+    // Set up the solver.
+    virtual void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,
+                       RCP_Indexer indexer, RCP_Global_Data data) = 0;
+
     //! Write results of solve into state.
     virtual void write_state(State_t &state) = 0;
 

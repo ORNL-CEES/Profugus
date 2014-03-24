@@ -31,17 +31,6 @@ namespace profugus
 Problem_Builder::Problem_Builder()
     : d_comm(Teuchos::DefaultComm<int>::getComm())
 {
-    // build validator
-    d_validator = Teuchos::rcp(new ParameterList("validator"));
-
-    // build sublists
-    ParameterList core, assbly, mat, mesh, problem;
-
-    d_validator->set("CORE", core);
-    d_validator->set("ASSEMBLIES", core);
-    d_validator->set("MATERIAL", core);
-    d_validator->set("MESH", core);
-    d_validator->set("PROBLEM", core);
 }
 
 //---------------------------------------------------------------------------//
@@ -53,7 +42,7 @@ Problem_Builder::Problem_Builder()
 void Problem_Builder::setup(const std::string &xml_file)
 {
     // make the master parameterlist
-    auto master = Teuchos::rcp(new ParameterList);
+    auto master = Teuchos::rcp(new ParameterList(""));
 
     // read the data on every domain
     Teuchos::updateParametersFromXmlFileAndBroadcast(
@@ -66,8 +55,6 @@ void Problem_Builder::setup(const std::string &xml_file)
             "ASSEMBLIES block not defined in input.");
     Insist (master->isSublist("MATERIAL"),
             "MATERIAL block not defined in input.");
-    Insist (master->isSublist("MESH"),
-            "MESH block not defined in input.");
     Insist (master->isSublist("PROBLEM"),
             "PROBLEM block not defined in input.");
 
@@ -75,7 +62,6 @@ void Problem_Builder::setup(const std::string &xml_file)
     d_coredb   = Teuchos::sublist(master, "CORE");
     d_assblydb = Teuchos::sublist(master, "ASSEMBLIES");
     d_matdb    = Teuchos::sublist(master, "MATERIAL");
-    d_meshdb   = Teuchos::sublist(master, "MESH");
     d_db       = Teuchos::sublist(master, "PROBLEM");
 
     Check (!d_db.is_null());
@@ -104,9 +90,9 @@ void Problem_Builder::build_mesh()
     Require (d_coredb->isParameter("axial height"));
     Require (d_assblydb->isParameter("assembly list"));
     Require (d_assblydb->isParameter("pin pitch"));
-    Require (d_meshdb->isParameter("radial mesh"));
-    Require (d_meshdb->isParameter("axial mesh"));
-    Require (d_meshdb->isParameter("symmetry"));
+    Require (d_db->isParameter("radial mesh"));
+    Require (d_db->isParameter("axial mesh"));
+    Require (d_db->isParameter("symmetry"));
 
     // get the axial core map and heights
     const auto &axial_list   = d_coredb->get<OneDArray_str>("axial list");
@@ -144,8 +130,8 @@ void Problem_Builder::build_mesh()
     double dz = std::accumulate(axial_height.begin(), axial_height.end(), 0.0);
 
     // get the mesh dimensions
-    int radial_mesh        = d_meshdb->get<int>("radial mesh");
-    const auto &axial_mesh = d_meshdb->get<OneDArray_int>("axial mesh");
+    int radial_mesh        = d_db->get<int>("radial mesh");
+    const auto &axial_mesh = d_db->get<OneDArray_int>("axial mesh");
     Check (axial_mesh.size() == axial_height.size());
 
     // set the mesh radial mesh dimensions
@@ -214,7 +200,7 @@ void Problem_Builder::build_matids()
     TwoDArray_int axial_matids(d_gdata->num_cells(J), d_gdata->num_cells(I), 0);
 
     // get number of cells per axial level
-    const auto &axial_mesh = d_meshdb->get<OneDArray_int>("axial mesh");
+    const auto &axial_mesh = d_db->get<OneDArray_int>("axial mesh");
 
     // process the axial levels one at a time
     for (int level = 0; level < axial_mesh.size(); ++level)
@@ -271,7 +257,7 @@ void Problem_Builder::calc_axial_matids(int            level,
     Check (core_map.getNumRows() == d_Na[J]);
 
     // mesh cells per pin
-    int radial_mesh = d_meshdb->get<int>("radial mesh");
+    int radial_mesh = d_db->get<int>("radial mesh");
     Check (matids.getNumCols() == d_Na[I] * d_Np[I] * radial_mesh);
     Check (matids.getNumRows() == d_Na[J] * d_Np[J] * radial_mesh);
 
