@@ -98,7 +98,7 @@ namespace denovo
    // explicitly add it (setting d.order = ROW_MAJOR changes the default)
    d.order = Parallel_HDF5_Writer::COLUMN_MAJOR;
 
-   // the data has size (20*25*50) and is ordered ROW_MAJOR
+   // the data has size (20*25*50) and is ordered COLUMN_MAJOR
    //   [i + Ni * (j + Nj * (k))
 
    // open the file for writing (clobbering an existing file)
