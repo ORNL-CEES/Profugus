@@ -63,12 +63,18 @@ void Manager::setup(const std::string &xml_file)
     // get the material database from the problem builder
     d_mat = builder.mat_db();
 
+    // get the source (it will be null for eigenvalue problems)
+    d_external_source = builder.source();
+
     // build the problem dimensions
     d_dim = Teuchos::rcp(new Dimensions(d_db->get("SPn_order", 1)));
 
     // problem type
-    const auto &prob_type = to_lower(
-        d_db->get("problem_type", std::string("eigenvalue")));
+    std::string prob_type = d_external_source.is_null() ? "eigenvalue" :
+                            "fixed";
+
+    // set the problem type in the final db
+    d_db->set("problem_type", prob_type);
 
     SCREEN_MSG("Building " << prob_type << " solver");
 

@@ -22,6 +22,7 @@
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
+#include "SPn/Isotropic_Source.hh"
 
 namespace profugus
 {
@@ -38,12 +39,13 @@ class Problem_Builder
   public:
     //@{
     //! Typedefs.
-    typedef Teuchos::ParameterList       ParameterList;
-    typedef Teuchos::RCP<ParameterList>  RCP_ParameterList;
-    typedef Teuchos::RCP<Mat_DB>         RCP_Mat_DB;
-    typedef Partitioner::RCP_Mesh        RCP_Mesh;
-    typedef Partitioner::RCP_Indexer     RCP_Indexer;
-    typedef Partitioner::RCP_Global_Data RCP_Global_Data;
+    typedef Teuchos::ParameterList         ParameterList;
+    typedef Teuchos::RCP<ParameterList>    RCP_ParameterList;
+    typedef Teuchos::RCP<Mat_DB>           RCP_Mat_DB;
+    typedef Partitioner::RCP_Mesh          RCP_Mesh;
+    typedef Partitioner::RCP_Indexer       RCP_Indexer;
+    typedef Partitioner::RCP_Global_Data   RCP_Global_Data;
+    typedef Teuchos::RCP<Isotropic_Source> RCP_Source;
     //@}
 
   private:
@@ -59,6 +61,9 @@ class Problem_Builder
 
     // Material database.
     RCP_Mat_DB d_mat;
+
+    // External source.
+    RCP_Source d_source;
 
   public:
     // Constructor.
@@ -82,6 +87,9 @@ class Problem_Builder
     //! Get the material database.
     RCP_Mat_DB mat_db() const { return d_mat; }
 
+    //! Get the external source (could be null).
+    RCP_Source source() const { return d_source; }
+
   private:
     // >>> IMPLEMENTATION
 
@@ -92,12 +100,14 @@ class Problem_Builder
     typedef Teuchos::Array<double>      OneDArray_dbl;
     typedef Teuchos::Array<std::string> OneDArray_str;
     typedef Teuchos::TwoDArray<int>     TwoDArray_int;
+    typedef Teuchos::TwoDArray<double>  TwoDArray_dbl;
 
     // Build implementation.
     void build_mesh();
     void build_matids();
     void calc_axial_matids(int level, TwoDArray_int &matids);
     void build_matdb();
+    void build_source(const ParameterList &source_db);
 
     // Number of assemblies and pins per assembly.
     int d_Na[2];
