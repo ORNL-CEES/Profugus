@@ -144,6 +144,9 @@
 /* C++11 settings */
 #cmakedefine01 GTEST_LANG_CXX11
 
+/* USE HDF5 OUTPUT FUNCTIONS */
+#cmakedefine USE_HDF5
+
 #endif /* Utils_config_h */
 
 /*---------------------------------------------------------------------------*/

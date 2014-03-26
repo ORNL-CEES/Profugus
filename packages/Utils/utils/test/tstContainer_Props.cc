@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstContainer_Functions.cc
+ * \file   utils/test/tstContainer_Props.cc
  * \author Seth R Johnson
  * \date   Sat Sep 15 16:12:23 2012
  * \brief  Tests the functions in the Container_Functions file.
@@ -271,5 +271,5 @@ TEST(IsNonNegative, all)
 }
 
 //---------------------------------------------------------------------------//
-//                        end of tstContainer_Functions.cc
+//                 end of tstContainer_Props.cc
 //---------------------------------------------------------------------------//

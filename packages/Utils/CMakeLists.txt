@@ -190,6 +190,14 @@ IF (DEFINED _POSIX_C_SOURCE)
 ENDIF()
 
 ##---------------------------------------------------------------------------##
+## Optional TPLs
+
+IF (TPL_ENABLE_HDF5)
+  MESSAGE(STATUS "Building Utils with HDF5 support")
+  SET(USE_HDF5 ON)
+ENDIF()
+
+##---------------------------------------------------------------------------##
 # C) Process the subpackages
 ##---------------------------------------------------------------------------##
 
@@ -236,6 +244,15 @@ FILE(GLOB UTILS_HEADERS utils/*.hh)
 SET(UTILS_SOURCES
   utils/Hash_Functions.cc
   utils/String_Functions.cc)
+
+IF(TPL_ENABLE_HDF5)
+  APPEND_SET(UTILS_SOURCES
+    utils/HDF5_IO.cc
+    utils/HDF5_Reader.cc
+    utils/Parallel_HDF5_Writer.cc
+    utils/Serial_HDF5_Writer.cc)
+ENDIF()
+
 LIST(APPEND HEADERS ${UTILS_HEADERS})
 LIST(APPEND SOURCES ${UTILS_SOURCES})
 
