@@ -16,7 +16,7 @@
 #include "harness/Warnings.hh"
 #include "comm/global.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -273,7 +273,7 @@ HDF5_IO_Node::std_string HDF5_IO_Node::abspath() const
     return Base::abspath();
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of HDF5_IO.cc

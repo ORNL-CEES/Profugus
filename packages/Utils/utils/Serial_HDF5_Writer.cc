@@ -10,7 +10,7 @@
 
 #include "Serial_HDF5_Writer.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -231,7 +231,7 @@ void Serial_HDF5_Writer::write(const std_string &name,
     H5LTmake_dataset_char(current_loc(), name.c_str(), 1, dims, value);
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of Serial_HDF5_Writer.cc

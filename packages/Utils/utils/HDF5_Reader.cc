@@ -12,7 +12,7 @@
 #include <algorithm>
 #include "HDF5_Reader.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -417,7 +417,7 @@ void HDF5_Reader::read(const std_string &name,
     H5LTread_dataset_char(current_loc(), name.c_str(), &value[0]);
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of HDF5_Reader.cc

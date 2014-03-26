@@ -3,7 +3,7 @@
  * \file   utils/Definitions.hh
  * \author Thomas M. Evans
  * \date   Tue Sep  4 16:23:33 2007
- * \brief  Definitions that are used by classes in denovo.
+ * \brief  Definitions that are used by classes in profugus.
  * \note   Copyright (C) 2007 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//

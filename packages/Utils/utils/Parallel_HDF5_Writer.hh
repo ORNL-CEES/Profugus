@@ -15,7 +15,7 @@
 
 #ifdef H5_HAVE_PARALLEL
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -57,7 +57,7 @@ class Parallel_HDF5_Writer : public HDF5_IO
                     hid_t type);
 };
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // H5_HAVE_PARALLEL
 #endif // utils_Parallel_HDF5_Writer_hh

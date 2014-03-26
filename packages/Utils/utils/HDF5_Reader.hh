@@ -15,7 +15,7 @@
 
 #ifdef USE_HDF5
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -83,7 +83,7 @@ class HDF5_Reader : public HDF5_IO_Node
                    hid_t type);
 };
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // USE_HDF5
 #endif // utils_HDF5_Reader_hh

@@ -17,11 +17,11 @@
 class HDF5_IO_Test : public testing::Test
 {
   protected:
-    typedef denovo::Serial_HDF5_Writer IO_t;
-    typedef IO_t::Vec_Int              Vec_Int;
-    typedef IO_t::Vec_Dbl              Vec_Dbl;
-    typedef IO_t::Vec_Char             Vec_Char;
-    typedef IO_t::std_string           std_string;
+    typedef profugus::Serial_HDF5_Writer IO_t;
+    typedef IO_t::Vec_Int                Vec_Int;
+    typedef IO_t::Vec_Dbl                Vec_Dbl;
+    typedef IO_t::Vec_Char               Vec_Char;
+    typedef IO_t::std_string             std_string;
 
     void SetUp()
     {

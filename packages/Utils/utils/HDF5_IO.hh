@@ -22,7 +22,7 @@
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -44,8 +44,8 @@ namespace denovo
  * - writing datasets to multiple files concurrently
  * - writing datasets on a subset of processes non-concurrently
  * .
- * The HDF5 classes that write data are denovo::Parallel_HDF5_Writer and
- * denovo::Serial_HDF5_Writer.  Parallel_HDF5_Writer is designed for
+ * The HDF5 classes that write data are profugus::Parallel_HDF5_Writer and
+ * profugus::Serial_HDF5_Writer.  Parallel_HDF5_Writer is designed for
  * collective write operations in which distributed data is written to a
  * single dataset from multiple processes.  Serial_HDF5_Writer is designed for
  * any type of independent writing; although the most common use-cases are
@@ -302,7 +302,7 @@ class HDF5_IO_Node : public HDF5_IO
     std_string abspath() const;
 };
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // USE_HDF5
 #endif // utils_HDF5_IO_hh

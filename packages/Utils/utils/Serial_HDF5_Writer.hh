@@ -15,7 +15,7 @@
 
 #ifdef USE_HDF5
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -81,7 +81,7 @@ class Serial_HDF5_Writer : public HDF5_IO_Node
                std::size_t size);
 };
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // USE_HDF5
 #endif // utils_Serial_HDF5_Writer_hh

@@ -22,12 +22,12 @@
 class HDF_IO_Test : public testing::Test
 {
   protected:
-    typedef denovo::Parallel_HDF5_Writer IO_t;
-    typedef IO_t::Vec_Int                Vec_Int;
-    typedef IO_t::Vec_Dbl                Vec_Dbl;
-    typedef IO_t::std_string             std_string;
-    typedef IO_t::Decomp                 Decomp;
-    typedef IO_t::Vec_Hsize              Vec_Hsize;
+    typedef profugus::Parallel_HDF5_Writer IO_t;
+    typedef IO_t::Vec_Int                  Vec_Int;
+    typedef IO_t::Vec_Dbl                  Vec_Dbl;
+    typedef IO_t::std_string               std_string;
+    typedef IO_t::Decomp                   Decomp;
+    typedef IO_t::Vec_Hsize                Vec_Hsize;
 
   protected:
     // Initialization that are performed for each test

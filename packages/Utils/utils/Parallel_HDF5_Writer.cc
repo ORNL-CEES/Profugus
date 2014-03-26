@@ -15,7 +15,7 @@
 
 #ifdef H5_HAVE_PARALLEL
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -197,7 +197,7 @@ void Parallel_HDF5_Writer::write(const std_string &name,
     write_impl(name, d, field, H5T_NATIVE_DOUBLE);
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // H5_HAVE_PARALLEL
 
