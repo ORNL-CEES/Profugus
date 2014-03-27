@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
         manager.setup(xml_file);
 
         // solve the problem
-        // manager.solve();
+        manager.solve();
 
         // output
         manager.output();

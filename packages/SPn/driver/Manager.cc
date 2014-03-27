@@ -14,6 +14,8 @@
 #include "comm/Timing.hh"
 #include "comm/global.hh"
 #include "utils/String_Functions.hh"
+#include "utils/Parallel_HDF5_Writer.hh"
+#include "utils/Definitions.hh"
 #include "spn/Dimensions.hh"
 #include "Manager.hh"
 
@@ -100,6 +102,16 @@ void Manager::setup(const std::string &xml_file)
 
     // setup the solver
     d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
+
+    // make the state
+    d_state = Teuchos::rcp(new State_t(d_mesh, d_mat->xs().num_groups()));
+
+    Ensure (!d_mesh.is_null());
+    Ensure (!d_indexer.is_null());
+    Ensure (!d_gdata.is_null());
+    Ensure (!d_mat.is_null());
+    Ensure (!d_dim.is_null());
+    Ensure (!d_state.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -136,6 +148,11 @@ void Manager::solve()
  */
 void Manager::output()
 {
+    using def::I; using def::J; using def::K;
+
+    Require (!d_state.is_null());
+    Require (!d_db.is_null());
+
     SCOPED_TIMER("Manager.output");
 
     SCREEN_MSG("Outputting data");
@@ -147,6 +164,67 @@ void Manager::output()
         m << d_problem_name << "_db.xml";
         Teuchos::writeParameterListToXmlFile(*d_db, m.str());
     }
+
+    // Output filename
+    std::ostringstream m;
+    m << d_problem_name << "_output.h5";
+    std::string outfile = m.str();
+
+    profugus::global_barrier();
+
+    // get a constant reference to the state
+    const State_t &state = *d_state;
+
+    // group offset (if doing a truncated range)
+    auto g_first = d_db->get<int>("g_first");
+    Check (1 + d_db->get<int>("g_last") - g_first == state.num_groups());
+
+    // output the fluxes if Parallel HDF5 is available
+#ifdef H5_HAVE_PARALLEL
+    {
+        // make the parallel hdf5 writer
+        Parallel_HDF5_Writer writer;
+        writer.open(outfile);
+
+        // make the decomposition for parallel output (state is ordered
+        // i->j->k)
+        HDF5_IO::Decomp d(3, HDF5_IO::COLUMN_MAJOR);;
+        d.ndims     = 3;
+        d.global[I] = d_gdata->num_cells(I);
+        d.global[J] = d_gdata->num_cells(J);
+        d.global[K] = d_gdata->num_cells(K);
+        d.local[I]  = d_mesh->num_cells_dim(I);
+        d.local[J]  = d_mesh->num_cells_dim(J);
+        d.local[K]  = d_mesh->num_cells_dim(K);
+        d.offset[I] = d_indexer->offset(I);
+        d.offset[J] = d_indexer->offset(J);
+        d.offset[K] = 0; // currently do not partition in K
+
+        // make a group for the fluxes
+        writer.begin_group("fluxes");
+
+        // loop over groups and write the fluxes
+        for (int g = 0, Ng = d_mat->xs().num_groups(); g < Ng; ++g)
+        {
+            // dataset name
+            std::ostringstream f;
+            f << "group_" << g + g_first;
+
+            // get the group fluxes
+            State_t::const_View_Field flux = state.flux(g, g);
+            Check (!flux.is_null());
+            Check (flux.size() == d_mesh->num_cells());
+
+            // write that data in parallel
+            writer.write(f.str(), d, flux.getRawPtr());
+
+            profugus::global_barrier();
+        }
+
+        writer.end_group();
+        writer.close();
+    }
+#endif
 }
 
 } // end namespace profugus

@@ -249,6 +249,102 @@ TEST_F(HDF_IO_Test, Decomposition)
  * scalar flux.  The field is ordered COLUMN-MAJOR, ie.
  *    n = i + Nx * (j + Ny * (k))
  */
+TEST_F(Parallel_Field_IO, OneUnknown_1Block)
+{
+    if (nodes != 1)
+        return;
+
+    // decompose a 6x4x2 mesh into 1 blocks
+    decompose(6, 4, 2, 1, 1, 1);
+
+    IO_t writer;
+    writer.open("one_48B_1.h5");
+
+    // make a global reference field
+    Vec_Dbl ref(48, 0.0);
+    for (int n = 0; n < 48; ++n)
+        ref[n] = n + 1;
+
+    // make the decomposition (the decomposition is over (i,j,k))
+    Decomp d(3);
+    std::copy(local,  local + 3,  d.local.begin());
+    std::copy(global, global + 3, d.global.begin());
+    std::copy(offset, offset + 3, d.offset.begin());
+
+    // write using default COLUMN-MAJOR ORDER
+    {
+        // write local data
+        Vec_Dbl data(num_local, 0);
+        for (int k = 0; k < local[2]; ++k)
+        {
+            for (int j = 0; j < local[1]; ++j)
+            {
+                for (int i = 0; i < local[0]; ++i)
+                {
+                    data[l2l(i,j,k)] = ref[l2g(i,j,k)];
+                }
+            }
+        }
+
+        writer.write("mesh_data_CM", d, &data[0]);
+    }
+
+    // write using ROW-MAJOR ORDER (we reorder the data to be ROW-MAJOR)
+    {
+        d.order = IO_t::ROW_MAJOR;
+
+        // write local data
+        Vec_Dbl data(num_local, 0);
+        for (int k = 0; k < local[2]; ++k)
+        {
+            for (int j = 0; j < local[1]; ++j)
+            {
+                for (int i = 0; i < local[0]; ++i)
+                {
+                    int l = k + local[2] * (j + local[1] * (i));
+                    int g = (k+offset[2]) + global[2] * (
+                        (j+offset[1]) + global[1] * (i+offset[0]));
+                    data[l] = ref[g] + 100.0;
+                }
+            }
+        }
+
+        writer.write("mesh_data_RM", d, &data[0]);
+    }
+
+    writer.close();
+
+    profugus::global_barrier();
+
+    // read data
+    if (node == 0)
+    {
+        open("one_48B_1.h5");
+
+        Vec_Dbl d1, d2;
+        read("mesh_data_RM", d2);
+        read("mesh_data_CM", d1);
+
+        EXPECT_EQ(48, d1.size());
+        EXPECT_EQ(48, d2.size());
+
+        EXPECT_VEC_EQ(ref, d1);
+
+        for (int n = 0; n < 48; ++n)
+        {
+            EXPECT_EQ(ref[n] + 100.0, d2[n]);
+        }
+
+        close();
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * This test assumes one unknown per mesh cell.  For example, integrated
+ * scalar flux.  The field is ordered COLUMN-MAJOR, ie.
+ *    n = i + Nx * (j + Ny * (k))
+ */
 TEST_F(Parallel_Field_IO, OneUnknown_4Blocks)
 {
     if (nodes != 4)
