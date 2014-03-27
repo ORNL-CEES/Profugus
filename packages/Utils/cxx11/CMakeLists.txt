@@ -10,7 +10,8 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstAuto.cc NP 1)
+ADD_UTILS_TEST(tstAuto.cc     NP 1)
+ADD_UTILS_TEST(tstPointers.cc NP 1)
 
 ##---------------------------------------------------------------------------##
 ## end of cx11/CMakeLists.txt
