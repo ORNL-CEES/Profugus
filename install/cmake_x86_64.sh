@@ -21,7 +21,6 @@ cmake \
 -DCMAKE_BUILD_TYPE:STRING="$BUILD" \
 -DTPL_ENABLE_MPI:BOOL=$MPI \
 -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL \
--DProfugus_CONFIGURE_OPTIONS_FILE:FILEPATH="${SOURCE}/install/base.cmake" \
 \
 -DMPI_BASE_DIR:PATH=$MPI_PATH \
 \
@@ -33,6 +32,8 @@ cmake \
 -DLAPACK_LIBRARY_DIRS:PATH=/vendors/gcc/atlas/lib \
 -DBLAS_LIBRARY_NAMES:STRING="f77blas;cblas;atlas" \
 -DLAPACK_LIBRARY_NAMES:STRING="lapack" \
+\
+-DProfugus_CONFIGURE_OPTIONS_FILE:FILEPATH="${SOURCE}/install/base.cmake" \
 \
 ${SOURCE}
 

@@ -47,16 +47,20 @@ base. The core Exnihilo_ development team consists of the following scientists
 Profugus Packages
 =================
 
-|Profugus| constains the following code packages:
+|Profugus| constains the following code mini-apps:
+
+**SPn**
+  Mini-app of Simplified Spherical Harmonics (SPn) computational kernel.
+
+Documentation on the mini-apps (methods and execution) are given in
+:ref:`running_mini_app`. There are several support packages that are used by
+the mini-apps.  These are:
 
 **Utils**
   Utilities and testing framework used by other packages.
 
 **Matprop**
   Data structures for storing material properties (cross-sections).
-
-**SPn**
-  Simplified Spherical Harmonics (SPn) computational kernel.
 
 |Profugus| is designed to build and run with a minimum of dependencies.
 However, there are some requirements.  The third-party software (TPLs)
@@ -65,29 +69,25 @@ TPLs for |Profugus| are listed in the following table:
 
 .. table:: Profugus TPLs
 
-+-------------+--------+----------------------------+
-|     TPL     |Required|         Comments           |
-+=============+========+============================+
-|Trilinos_    |Yes     |Trilinos_ is an open-source |
-|             |        |solvers library.            |
-+-------------+--------+----------------------------+
-|BLAS/LAPACK  |Yes     |Use vendor-specific         |
-|             |        |implementation when         |
-|             |        |possible.  The default      |
-|             |        |implementations can be found|
-|             |        |at netlib_.                 |
-+-------------+--------+----------------------------+
-|MPI_         |No      |OpenMPI_ and MPICH_ are     |
-|             |        |suggested                   |
-|             |        |options. Vendor-provided    |
-|             |        |options will also work.     |
-+-------------+--------+----------------------------+
-|HDF5         |No      |Parallel HDF5_ will allow   |
-|             |        |output of solution fiilds.  |
-|             |        |It is not needed for general|
-|             |        |problem execution.          |
-+-------------+--------+----------------------------+
-
++---------------------+-------------+-------------------------------------+
+|         TPL         |  Required   |         Comments                    |
++=====================+=============+=====================================+
+|Trilinos_            |Yes          |Trilinos_ is an open-source solvers  |
+|                     |             |library.                             |
++---------------------+-------------+-------------------------------------+
+|BLAS/LAPACK          |Yes          |Use vendor-specific implementation   |
+|                     |             |when possible.  The default          |
+|                     |             |implementations can be found at      |
+|                     |             |netlib_.                             |
++---------------------+-------------+-------------------------------------+
+|MPI_                 |No           |OpenMPI_ and MPICH_ are suggested    |
+|                     |             |options. Vendor-provided options will|
+|                     |             |also work.                           |
++---------------------+-------------+-------------------------------------+
+|HDF5                 |No           |Parallel HDF5_ will allow output of  |
+|                     |             |solution fiilds.  It is not needed   |
+|                     |             |for general problem execution.       |
++---------------------+-------------+-------------------------------------+
 
 .. _Exnihilo: denovo@email.ornl.gov
 .. _Trilinos: http://trilinos.sandia.gov

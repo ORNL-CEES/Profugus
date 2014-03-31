@@ -7,8 +7,6 @@
 Profugus Development Manual
 ===========================
 
-Contents:
-
 .. toctree::
    :maxdepth: 3
 
