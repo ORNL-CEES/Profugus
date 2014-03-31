@@ -3,14 +3,17 @@
 ## CMAKE FOR MACOSX
 ##---------------------------------------------------------------------------##
 
-# >>>>> EDIT PATHS HERE <<<<<
-
+# SOURCE AND INSTALL
 SOURCE=<SET_SOURCE_DIR>
 INSTALL=<SET_INSTALL_DIR>
+
+# BUILD OPTIONS
 BUILD="DEBUG"
 MPI="ON"
 
+# TPL PATHS
 HDF5_PATH="/vendors/parallel/hdf5"
+MPI_PATH="/opt/mpi/current"
 
 ##---------------------------------------------------------------------------##
 
@@ -20,11 +23,12 @@ cmake \
 -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL \
 -DProfugus_CONFIGURE_OPTIONS_FILE:FILEPATH="${SOURCE}/install/base.cmake" \
 \
--DMPI_BASE_DIR:PATH=/opt/mpi/current \
+-DMPI_BASE_DIR:PATH=$MPI_PATH \
 \
 -DTPL_ENABLE_HDF5:BOOL=ON \
 -DHDF5_INCLUDE_DIRS:PATH=$HDF5_PATH/include \
 -DHDF5_LIBRARY_DIRS:PATH=$HDF5_PATH/lib \
+\
 ${SOURCE}
 
 ##---------------------------------------------------------------------------##
