@@ -17,6 +17,7 @@ autom4te.cache
 *.pdftex_t
 *.out
 *.pyc
+/doc/build
 /doc/pykba/build/
 /doc/infobook/INSTALL
 /doc/methods/coordinates.pdf
