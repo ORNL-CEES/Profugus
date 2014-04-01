@@ -3,3 +3,5 @@
 *****************************
 Running The Mini-Applications
 *****************************
+
+.. include:: spn_doc/spn.rst

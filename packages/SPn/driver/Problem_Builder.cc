@@ -527,7 +527,8 @@ void Problem_Builder::build_source(const ParameterList &source_db)
         for (int g = g_first; g <= g_last; ++g)
         {
             Check (g < shape.size());
-            shapes[ctr][g] = shape[g];
+            Check (g-g_first < shapes[ctr].size());
+            shapes[ctr][g-g_first] = shape[g];
         }
     }
     Check (ctr == source_list.size());

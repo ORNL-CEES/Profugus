@@ -50,7 +50,7 @@ Profugus Packages
 |Profugus| constains the following code mini-apps:
 
 **SPn**
-  Mini-app of Simplified Spherical Harmonics (SPn) computational kernel.
+  Mini-app of Simplified Spherical Harmonics (``SPn``) computational kernel.
 
 Documentation on the mini-apps (methods and execution) are given in
 :ref:`running_mini_app`. There are several support packages that are used by
