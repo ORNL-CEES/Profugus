@@ -1,0 +1,128 @@
+<ParameterList name="inf_med-PROBLEM">
+  <Parameter docString="" id="0" isDefault="false" isUsed="true" name="radial mesh" type="int" value="10"/>
+  <Parameter docString="" id="1" isDefault="false" isUsed="true" name="axial mesh" type="Array(int)" value="{10}"/>
+  <Parameter docString="" id="2" isDefault="false" isUsed="true" name="symmetry" type="string" value="full"/>
+  <Parameter docString="" id="3" isDefault="false" isUsed="true" name="Pn_order" type="int" value="0"/>
+  <Parameter docString="" id="4" isDefault="false" isUsed="true" name="SPn_order" type="int" value="1"/>
+  <Parameter docString="" id="5" isDefault="false" isUsed="true" name="problem_name" type="string" value="inf_med"/>
+  <Parameter docString="" id="6" isDefault="false" isUsed="true" name="num_cells_i" type="int" value="10"/>
+  <Parameter docString="" id="7" isDefault="false" isUsed="true" name="delta_x" type="double" value="1.00000000000000000e+01"/>
+  <Parameter docString="" id="8" isDefault="false" isUsed="true" name="num_cells_j" type="int" value="10"/>
+  <Parameter docString="" id="9" isDefault="false" isUsed="true" name="delta_y" type="double" value="1.00000000000000000e+01"/>
+  <Parameter docString="" id="10" isDefault="false" isUsed="true" name="z_edges" type="Array(double)" value="{0.00000000000000000e+00, 1.00000000000000000e+00, 2.00000000000000000e+00, 3.00000000000000000e+00, 4.00000000000000000e+00, 5.00000000000000000e+00, 6.00000000000000000e+00, 7.00000000000000000e+00, 8.00000000000000000e+00, 9.00000000000000000e+00, 1.00000000000000000e+01}"/>
+  <Parameter docString="" id="11" isDefault="false" isUsed="true" name="num_blocks_i" type="int" value="1"/>
+  <Parameter docString="" id="12" isDefault="false" isUsed="true" name="num_blocks_j" type="int" value="1"/>
+  <Parameter docString="" id="13" isDefault="false" isUsed="true" name="num_z_blocks" type="int" value="1"/>
+  <Parameter docString="" id="14" isDefault="false" isUsed="true" name="num_sets" type="int" value="1"/>
+  <Parameter docString="" id="15" isDefault="false" isUsed="true" name="dimension" type="int" value="3"/>
+  <Parameter docString="" id="16" isDefault="true" isUsed="true" name="g_first" type="int" value="0"/>
+  <Parameter docString="" id="17" isDefault="true" isUsed="true" name="g_last" type="int" value="0"/>
+  <Parameter docString="" id="18" isDefault="false" isUsed="true" name="problem_type" type="string" value="fixed"/>
+  <Parameter docString="" id="19" isDefault="true" isUsed="true" name="solver_type" type="string" value="stratimikos"/>
+  <Parameter docString="" id="20" isDefault="true" isUsed="true" name="tolerance" type="double" value="9.99999999999999955e-07"/>
+  <Parameter docString="" id="21" isDefault="true" isUsed="true" name="max_itr" type="int" value="100"/>
+  <ParameterList id="67" name="Stratimikos">
+    <Parameter docString="" id="22" isDefault="false" isUsed="true" name="Preconditioner Type" type="string" value="None"/>
+    <Parameter docString="" id="23" isDefault="false" isUsed="true" name="Linear Solver Type" type="string" value="AztecOO"/>
+    <Parameter docString="" id="24" isDefault="true" isUsed="true" name="Enable Delayed Solver Construction" type="bool" value="false"/>
+    <ParameterList id="66" name="Linear Solver Types">
+      <ParameterList id="65" name="AztecOO">
+        <Parameter docString="" id="25" isDefault="true" isUsed="true" name="Output Every RHS" type="bool" value="false"/>
+        <ParameterList id="43" name="Forward Solve">
+          <Parameter docString="" id="26" isDefault="true" isUsed="true" name="Max Iterations" type="int" value="400"/>
+          <Parameter docString="" id="27" isDefault="true" isUsed="true" name="Tolerance" type="double" value="9.99999999999999955e-07"/>
+          <ParameterList id="42" name="AztecOO Settings">
+            <Parameter docString="" id="28" isDefault="true" isUsed="true" name="Aztec Preconditioner" type="string" validatorId="0" value="none"/>
+            <Parameter docString="" id="29" isDefault="true" isUsed="true" name="Aztec Solver" type="string" validatorId="1" value="GMRES"/>
+            <Parameter docString="" id="30" isDefault="true" isUsed="true" name="Overlap" type="int" validatorId="2" value="0"/>
+            <Parameter docString="" id="31" isDefault="true" isUsed="true" name="Graph Fill" type="int" validatorId="3" value="0"/>
+            <Parameter docString="" id="32" isDefault="true" isUsed="true" name="Drop Tolerance" type="double" validatorId="4" value="0.00000000000000000e+00"/>
+            <Parameter docString="" id="33" isDefault="true" isUsed="true" name="Fill Factor" type="double" validatorId="5" value="1.00000000000000000e+00"/>
+            <Parameter docString="" id="34" isDefault="true" isUsed="true" name="Steps" type="int" validatorId="6" value="3"/>
+            <Parameter docString="" id="35" isDefault="true" isUsed="true" name="Polynomial Order" type="int" validatorId="7" value="3"/>
+            <Parameter docString="" id="36" isDefault="true" isUsed="true" name="RCM Reordering" type="string" validatorId="8" value="Disabled"/>
+            <Parameter docString="" id="37" isDefault="true" isUsed="true" name="Orthogonalization" type="string" validatorId="9" value="Classical"/>
+            <Parameter docString="" id="38" isDefault="true" isUsed="true" name="Size of Krylov Subspace" type="int" validatorId="10" value="300"/>
+            <Parameter docString="" id="39" isDefault="true" isUsed="true" name="Convergence Test" type="string" validatorId="11" value="r0"/>
+            <Parameter docString="" id="40" isDefault="true" isUsed="true" name="Ill-Conditioning Threshold" type="double" validatorId="12" value="1.00000000000000000e+11"/>
+            <Parameter docString="" id="41" isDefault="true" isUsed="true" name="Output Frequency" type="int" validatorId="13" value="0"/>
+          </ParameterList>
+        </ParameterList>
+        <ParameterList id="61" name="Adjoint Solve">
+          <Parameter docString="" id="44" isDefault="true" isUsed="true" name="Max Iterations" type="int" value="400"/>
+          <Parameter docString="" id="45" isDefault="true" isUsed="true" name="Tolerance" type="double" value="9.99999999999999955e-07"/>
+          <ParameterList id="60" name="AztecOO Settings">
+            <Parameter docString="" id="46" isDefault="true" isUsed="true" name="Aztec Solver" type="string" validatorId="1" value="GMRES"/>
+            <Parameter docString="" id="47" isDefault="true" isUsed="true" name="Aztec Preconditioner" type="string" validatorId="0" value="ilu"/>
+            <Parameter docString="" id="48" isDefault="true" isUsed="true" name="Overlap" type="int" validatorId="2" value="0"/>
+            <Parameter docString="" id="49" isDefault="true" isUsed="true" name="Graph Fill" type="int" validatorId="3" value="0"/>
+            <Parameter docString="" id="50" isDefault="true" isUsed="true" name="Drop Tolerance" type="double" validatorId="4" value="0.00000000000000000e+00"/>
+            <Parameter docString="" id="51" isDefault="true" isUsed="true" name="Fill Factor" type="double" validatorId="5" value="1.00000000000000000e+00"/>
+            <Parameter docString="" id="52" isDefault="true" isUsed="true" name="Steps" type="int" validatorId="6" value="3"/>
+            <Parameter docString="" id="53" isDefault="true" isUsed="true" name="Polynomial Order" type="int" validatorId="7" value="3"/>
+            <Parameter docString="" id="54" isDefault="true" isUsed="true" name="RCM Reordering" type="string" validatorId="8" value="Disabled"/>
+            <Parameter docString="" id="55" isDefault="true" isUsed="true" name="Orthogonalization" type="string" validatorId="9" value="Classical"/>
+            <Parameter docString="" id="56" isDefault="true" isUsed="true" name="Size of Krylov Subspace" type="int" validatorId="10" value="300"/>
+            <Parameter docString="" id="57" isDefault="true" isUsed="true" name="Convergence Test" type="string" validatorId="11" value="r0"/>
+            <Parameter docString="" id="58" isDefault="true" isUsed="true" name="Ill-Conditioning Threshold" type="double" validatorId="12" value="1.00000000000000000e+11"/>
+            <Parameter docString="" id="59" isDefault="true" isUsed="true" name="Output Frequency" type="int" validatorId="13" value="0"/>
+          </ParameterList>
+        </ParameterList>
+        <ParameterList id="64" name="VerboseObject">
+          <Parameter docString="" id="62" isDefault="true" isUsed="true" name="Output File" type="string" value="none"/>
+          <Parameter docString="" id="63" isDefault="true" isUsed="true" name="Verbosity Level" type="string" value="default"/>
+        </ParameterList>
+      </ParameterList>
+    </ParameterList>
+  </ParameterList>
+  <Parameter docString="" id="68" isDefault="true" isUsed="true" name="eqn_type" type="string" value="fv"/>
+  <Parameter docString="" id="69" isDefault="false" isUsed="true" name="boundary" type="string" value="reflect"/>
+  <ParameterList id="71" name="boundary_db">
+    <Parameter docString="" id="70" isDefault="false" isUsed="true" name="reflect" type="Array(int)" value="{1, 1, 1, 1, 1, 1}"/>
+  </ParameterList>
+  <Validators>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="int" type="anynumberValidator" validatorId="3"/>
+    <Validator caseSensitive="true" defaultParameterName="Aztec Solver" integralValue="int" type="StringIntegralValidator(int)" validatorId="1">
+      <String integralValue="0" stringValue="CG"/>
+      <String integralValue="1" stringValue="GMRES"/>
+      <String integralValue="2" stringValue="CGS"/>
+      <String integralValue="3" stringValue="TFQMR"/>
+      <String integralValue="4" stringValue="BiCGStab"/>
+      <String integralValue="10" stringValue="LU"/>
+      <String integralValue="7" stringValue="GMRESR"/>
+      <String integralValue="8" stringValue="FixedPoint"/>
+    </Validator>
+    <Validator caseSensitive="true" defaultParameterName="Aztec Preconditioner" integralValue="(anonymous namespace)::EAztecPreconditioner" type="StringIntegralValidator((anonymous namespace)::EAztecPreconditioner)" validatorId="0">
+      <String integralValue="0" stringValue="none"/>
+      <String integralValue="1" stringValue="ilu"/>
+      <String integralValue="2" stringValue="ilut"/>
+      <String integralValue="3" stringValue="Jacobi"/>
+      <String integralValue="4" stringValue="Symmetric Gauss-Seidel"/>
+      <String integralValue="5" stringValue="Polynomial"/>
+      <String integralValue="6" stringValue="Least-squares Polynomial"/>
+    </Validator>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="double" type="anynumberValidator" validatorId="4"/>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="int" type="anynumberValidator" validatorId="2"/>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="double" type="anynumberValidator" validatorId="5"/>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="int" type="anynumberValidator" validatorId="6"/>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="int" type="anynumberValidator" validatorId="7"/>
+    <Validator caseSensitive="true" defaultParameterName="RCM Reordering" integralValue="int" type="StringIntegralValidator(int)" validatorId="8">
+      <String integralValue="1" stringValue="Enabled"/>
+      <String integralValue="0" stringValue="Disabled"/>
+    </Validator>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="double" type="anynumberValidator" validatorId="12"/>
+    <Validator caseSensitive="true" defaultParameterName="Orthogonalization" integralValue="int" type="StringIntegralValidator(int)" validatorId="9">
+      <String integralValue="0" stringValue="Classical"/>
+      <String integralValue="1" stringValue="Modified"/>
+    </Validator>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="int" type="anynumberValidator" validatorId="10"/>
+    <Validator allowDouble="true" allowInt="true" allowString="true" prefferedType="int" type="anynumberValidator" validatorId="13"/>
+    <Validator caseSensitive="true" defaultParameterName="Convergence Test" integralValue="int" type="StringIntegralValidator(int)" validatorId="11">
+      <String integralValue="0" stringValue="r0"/>
+      <String integralValue="1" stringValue="rhs"/>
+      <String integralValue="2" stringValue="Anorm"/>
+      <String integralValue="6" stringValue="no scaling"/>
+      <String integralValue="3" stringValue="sol"/>
+    </Validator>
+  </Validators>
+</ParameterList>

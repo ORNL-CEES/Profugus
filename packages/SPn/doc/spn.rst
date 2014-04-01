@@ -18,7 +18,10 @@ technical note <spn_doc/spn.pdf>`.
 
 Inputs are xml-driven.  To run the application do the following::
 
- > mpirun -np 4 ./xspn -i inf_med.xml
+ > mpirun -np 1 ./xspn -i inf_med.xml
+
+Infinite-Medium Problem Example
+-------------------------------
 
 In this case :file:`inf_med.xml` is the xml input file.  We can walk through
 this case; it is one of the example inputs in :file:`packages/SPn/examples`:
@@ -182,5 +185,206 @@ group source is given by the product of the shape and strength:
 
 And, as described above, the ``strength`` map is COLUMN-MAJOR ordered in the
 xml file.
+
+Finally, the **PROBLEM** database provides entries that control the problem
+setup and solver.  Many of these entries will be set by default, although all
+can be overrided.  In this example, we only set a few parameters::
+
+ <Parameter name="radial mesh" type="int" value="10"/>
+ <Parameter name="axial mesh" type="Array(int)" value="{10}"/>
+ <Parameter name="symmetry" type="string" value="full"/>
+ <Parameter name="Pn_order" type="int" value="0"/>
+ <Parameter name="SPn_order" type="int" value="1"/>
+ <Parameter name="problem_name" type="string" value="inf_med"/>
+
+Here the ``radial mesh`` indicates that each pin-cell is meshed
+:math:`10\times 10`.  The ``axial mesh`` value is an array giving the number
+of computational mesh cells in each axial level.  The ``symmetry`` parameter
+tells that mesh generator to use the full problem description and not apply
+any symmetry conditions.  The ``Pn_order`` parameter gives the scattering
+order for the solver; it must be less than or equal to the ``pn order``
+specified in the cross section library file.  The ``SPn_order`` gives the
+order of the :math:`SP_N` approximation.  Finally, the ``problem_name`` gives
+the base name that will be used for all output files. We have not specified
+any specific solver options, so the defaults will be used.
+
+The final specification of this problem is :math:`10\times 10\times 10` cm box
+with computational mesh cells with dimension :math:`1\times 1\times 1` cm
+resulting in 1000 total cells (:math:`10\times 10\times 10`).  There is a
+uniform 1 particle/cc source throughout the box.  The box has a uniform
+material of ``scatterer`` as defined in the :file:`xs_1G.xml` file.  The
+solver will run a ``SP1`` calculation with ``P0`` scattering.
+
+.. note::
+
+   The only symmetry option currently supported is ``full`; however, ``qtr``
+   symmetry will be added for 1/4 symmetry.
+
+The outputs for this problem are contained in the :file:`examples` directory.
+Automatically, the code will output a final problem xml file so that the user
+can see what defaults were added.  In this case, the output xml file is stored
+in :file:`inf_med_db.xml`:
+
+.. literalinclude:: spn_examples/inf_med_db.xml
+   :language: xml
+
+Perusing this database, we see the default solver options that were set. These
+can be overriden by adding a ``Stratimikos`` parameterlist to the
+input xml. Other items of note are::
+
+ <Parameter  name="num_blocks_i" type="int" value="1"/>
+ <Parameter  name="num_blocks_j" type="int" value="1"/>
+ <Parameter  name="g_first" type="int" value="0"/>
+ <Parameter  name="g_last" type="int" value="0"/>
+
+The ``num_blocks`` parameters allow the user to specify a parallel
+decomposition.  The total number of processes is:
+
+.. math::
+
+   N_p = N_i \times N_j
+
+.. note::
+
+   The ``SPn`` mini-app currenly only supports *xy* decompositions. This is an
+   historical requirement so that the ``SPn`` matches a similar decomposition
+   in the |Exnihilo| production code for another physics model.  It is not a
+   *true* restriction.
+
+The ``g_first`` and ``g_last`` parameters allow the user to specify a range of
+groups to run over.  For example, if a 23-group cross section set is loaded,
+but the user is only interested in the solution in groups 0 and 1 set::
+
+ <Parameter  name="g_first" type="int" value="0"/>
+ <Parameter  name="g_last" type="int" value="1"/>
+
+If HDF5 is available, the group-wise fluxes are output in the file
+:file:`inf_med_output.h5`.  From :eq:`inf_med_sol` the solution to this
+problem should be :math:`\phi = 10.0` everywhere.  Using :program:`h5dump` on
+the output file yields:
+
+.. code-block:: sh
+
+ HDF5 "SPn_output.h5" {
+ GROUP "/" {
+    GROUP "fluxes" {
+       DATASET "group_0" {
+          DATATYPE  H5T_IEEE_F64LE
+          DATASPACE  SIMPLE { ( 10, 10, 10 ) / ( 10, 10, 10 ) }
+          DATA {
+          (0,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (0,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (1,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (2,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (3,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (4,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (5,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (6,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (7,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (8,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,0,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,1,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,2,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,3,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,4,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,5,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,6,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,7,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,8,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+          (9,9,0): 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
+          }
+          ATTRIBUTE "data_order" {
+             DATATYPE  H5T_STD_I32LE
+             DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+             DATA {
+             (0): 0
+             }
+          }
+       }
+    }
+ }
+ }
+
+Thus, the correct solution is attained for this problem.
 
 .. _Trilinos: http://trilinos.sandia.gov

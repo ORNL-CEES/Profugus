@@ -29,5 +29,6 @@
     <Parameter name="symmetry" type="string" value="full"/>
     <Parameter name="Pn_order" type="int" value="0"/>
     <Parameter name="SPn_order" type="int" value="1"/>
+    <Parameter name="problem_name" type="string" value="inf_med"/>
   </ParameterList>
 </ParameterList>
