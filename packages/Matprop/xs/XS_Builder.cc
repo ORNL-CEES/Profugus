@@ -78,6 +78,13 @@ void XS_Builder::open_and_broadcast(const std_string &xml_file)
     d_pn_order   = d_plxs->get<int>("pn order");
     d_num_groups = d_plxs->get<int>("num groups");
 
+    // get the group velocities if they are on the file
+    if (d_plxs->isParameter("group v"))
+    {
+        d_velocity = d_plxs->get<OneDArray>("group v");
+        Check (d_velocity.size() == d_num_groups);
+    }
+
     // get the materials in the file
     d_matids.clear();
     for (ParameterList::ConstIterator itr = d_plxs->begin();
@@ -155,6 +162,16 @@ void XS_Builder::build(const Matid_Map &map,
     // make a new xs database
     d_xs = Teuchos::rcp(new XS);
     d_xs->set(pn_order, num_groups);
+
+    // truncate and add the velocities
+    if (!d_velocity.empty())
+    {
+        OneDArray v(d_velocity.begin() + g_first,
+                    d_velocity.begin() + g_end);
+
+        // add the velocities
+        d_xs->set(v);
+    }
 
     // iterate through the map and assign the cross sections
     for (Matid_Map::const_iterator itr = map.begin();

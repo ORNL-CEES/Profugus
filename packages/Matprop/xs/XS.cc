@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <algorithm>
+
 #include "XS.hh"
 
 namespace profugus
@@ -62,6 +64,25 @@ void XS::set(int Pn_order,
     // resize scattering order vector
     d_scatter.resize(d_pn + 1);
     d_inst_scat.resize(d_pn + 1);
+
+    // resize velocities
+    d_v.size(d_Ng);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set the group velocities.
+ */
+void XS::set(const OneDArray &velocities)
+{
+    Require (velocities.size() == d_Ng);
+    Require (velocities.size() == d_v.length());
+
+    for (int g = 0; g < d_Ng; ++g)
+    {
+        Check (velocities[g] >= 0.0);
+        d_v[g] = velocities[g];
+    }
 }
 
 //---------------------------------------------------------------------------//

@@ -81,6 +81,9 @@ class XS
     // Hash table of scattering (vector dimensioned over number of moments).
     std::vector<Hash_Matrix> d_scatter;
 
+    // Group velocities in cm/s.
+    Vector d_v;
+
   public:
     XS();
 
@@ -88,6 +91,9 @@ class XS
 
     // Set number of groups and Pn order that is stored.
     void set(int Pn_order, int num_groups);
+
+    // Set group velocities.
+    void set(const OneDArray &velocities);
 
     // Add 1-D cross sections to the database.
     void add(int matid, int type, const OneDArray &data);
@@ -114,6 +120,9 @@ class XS
 
     // Check to see if a given matid exists.
     inline bool has(int matid) const;
+
+    // Get group velocities (zero if unset).
+    const Vector& velocities() const { return d_v; }
 
     // Return the 1-D data vector for a given matid and type.
     inline const Vector& vector(int matid, int type) const;

@@ -101,6 +101,9 @@ class XS_Builder
     // Pn order and number of groups in the cross section file.
     int d_pn_order, d_num_groups;
 
+    // Group velocites (may not be present; not needed for static problems).
+    OneDArray d_velocity;
+
     // Materials in the file.
     Vec_Str d_matids;
 };

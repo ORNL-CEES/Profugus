@@ -146,6 +146,13 @@ TEST_F(XS_Test, totals_assignment)
 
     xs.complete();
 
+    EXPECT_EQ(4, xs.velocities().length());
+    const auto &v = xs.velocities();
+    for (int g = 0; g < 4; ++g)
+    {
+        EXPECT_EQ(0.0, v[g]);
+    }
+
     EXPECT_EQ(2, xs.num_mat());
     EXPECT_EQ(1, xs.pn_order());
     EXPECT_EQ(4, xs.num_groups());
