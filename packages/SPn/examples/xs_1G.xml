@@ -2,6 +2,7 @@
 <ParameterList name="cross sections">
   <Parameter name="num groups" type="int" value="1"/>
   <Parameter name="pn order" type="int" value="0"/>
+  <Parameter name="group v" type="Array(double)" value="{ 4.373937e+09}"/>
   <ParameterList name="void">
     <Parameter name="sigma_t" type="Array(double)" value="{ 0.00000e+00}"/>
     <Parameter name="sigma_s0" type="TwoDArray(double)" value="1x1:{ 0.00000e+00}"/>

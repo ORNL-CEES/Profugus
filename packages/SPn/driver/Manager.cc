@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "EpetraExt_RowMatrixOut.h"
+#include "Epetra_RowMatrix.h"
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
 #include "harness/DBC.hh"
@@ -133,35 +135,38 @@ void Manager::setup(const std::string &xml_file)
  */
 void Manager::solve()
 {
-    SCOPED_TIMER("Manager.solve");
-
-    SCREEN_MSG("Executing solver");
-
-    // run the appropriate solver
-    if (!d_eigen_solver.is_null())
+    if (d_db->get<bool>("do_transport", true))
     {
-        Check (d_fixed_solver.is_null());
-        Check (d_time_dep_solver.is_null());
-        d_eigen_solver->solve();
-    }
-    else if (!d_fixed_solver.is_null())
-    {
-        Check (d_eigen_solver.is_null());
-        Check (d_time_dep_solver.is_null());
-        Check (!d_external_source.is_null());
-        d_fixed_solver->solve(*d_external_source);
-    }
-    else
-    {
-        Check (d_fixed_solver.is_null());
-        Check (d_eigen_solver.is_null());
-        Check (!d_time_dep_solver.is_null());
-        Check (!d_external_source.is_null());
-        d_time_dep_solver->solve(*d_external_source);
-    }
+        SCOPED_TIMER("Manager.solve");
 
-    // write the solution vector into the state
-    d_solver_base->write_state(*d_state);
+        SCREEN_MSG("Executing solver");
+
+        // run the appropriate solver
+        if (!d_eigen_solver.is_null())
+        {
+            Check (d_fixed_solver.is_null());
+            Check (d_time_dep_solver.is_null());
+            d_eigen_solver->solve();
+        }
+        else if (!d_fixed_solver.is_null())
+        {
+            Check (d_eigen_solver.is_null());
+            Check (d_time_dep_solver.is_null());
+            Check (!d_external_source.is_null());
+            d_fixed_solver->solve(*d_external_source);
+        }
+        else
+        {
+            Check (d_fixed_solver.is_null());
+            Check (d_eigen_solver.is_null());
+            Check (!d_time_dep_solver.is_null());
+            Check (!d_external_source.is_null());
+            d_time_dep_solver->solve(*d_external_source);
+        }
+
+        // write the solution vector into the state
+        d_solver_base->write_state(*d_state);
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -179,6 +184,8 @@ void Manager::output()
 
     SCREEN_MSG("Outputting data");
 
+    // >>> OUTPUT FINAL DATABASE
+
     // output the final database
     if (d_node == 0)
     {
@@ -187,12 +194,14 @@ void Manager::output()
         Teuchos::writeParameterListToXmlFile(*d_db, m.str());
     }
 
+    profugus::global_barrier();
+
+    // >>> OUTPUT SOLUTION
+
     // Output filename
     std::ostringstream m;
     m << d_problem_name << "_output.h5";
     std::string outfile = m.str();
-
-    profugus::global_barrier();
 
     // get a constant reference to the state
     const State_t &state = *d_state;
@@ -247,6 +256,34 @@ void Manager::output()
         writer.close();
     }
 #endif
+
+    profugus::global_barrier();
+
+    // >>> OUTPUT MATRICES
+    if (d_db->get<bool>("output_matrices", false))
+    {
+        std::string A("A.mtx"), B("B.mtx");
+
+        // linear system
+        const auto &linear_system = d_solver_base->get_linear_system();
+
+        // write A operator
+        EpetraExt::RowMatrixToMatrixMarketFile(
+            A.c_str(), *(linear_system.get_Matrix()));
+
+        if (!d_eigen_solver.is_null())
+        {
+            // write F (fission) operator
+
+            // first cast to a row mat (which the fission matrix is)
+            Teuchos::RCP<Epetra_RowMatrix> rowmat =
+                Teuchos::rcp_dynamic_cast<Epetra_RowMatrix>(
+                    linear_system.get_fission_matrix());
+            Check (!rowmat.is_null());
+
+            EpetraExt::RowMatrixToMatrixMarketFile(B.c_str(), *rowmat);
+        }
+    }
 }
 
 } // end namespace profugus
