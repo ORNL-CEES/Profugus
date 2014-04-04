@@ -19,6 +19,7 @@
 #include "comm/P_Stream.hh"
 #include "spn/Eigenvalue_Solver.hh"
 #include "spn/Fixed_Source_Solver.hh"
+#include "spn/Time_Dependent_Solver.hh"
 #include "Problem_Builder.hh"
 
 namespace profugus
@@ -46,6 +47,7 @@ class Manager
     typedef Teuchos::RCP<Solver_Base>            RCP_Solver_Base;
     typedef Teuchos::RCP<Fixed_Source_Solver>    RCP_Fixed_Source_Solver;
     typedef Teuchos::RCP<Eigenvalue_Solver>      RCP_Eigenvalue_Solver;
+    typedef Teuchos::RCP<Time_Dependent_Solver>  RCP_Time_Dependent_Solver;
     typedef Fixed_Source_Solver::External_Source External_Source_t;
     typedef Teuchos::RCP<External_Source_t>      RCP_External_Source;
 
@@ -69,9 +71,10 @@ class Manager
     RCP_Dimensions d_dim;
 
     // Solvers
-    RCP_Solver_Base         d_solver_base;
-    RCP_Fixed_Source_Solver d_fixed_solver;
-    RCP_Eigenvalue_Solver   d_eigen_solver;
+    RCP_Solver_Base           d_solver_base;
+    RCP_Fixed_Source_Solver   d_fixed_solver;
+    RCP_Eigenvalue_Solver     d_eigen_solver;
+    RCP_Time_Dependent_Solver d_time_dep_solver;
 
     // External source for fixed source problems.
     RCP_External_Source d_external_source;

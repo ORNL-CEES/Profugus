@@ -1,19 +1,23 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Fixed_Source_Solver.cc
+ * \file   spn/Time_Dependent_Solver.cc
  * \author Thomas M. Evans
- * \date   Mon Feb 17 21:00:33 2014
- * \brief  Fixed_Source_Solver member definitions.
+ * \date   Fri Apr 04 00:09:50 2014
+ * \brief  Time_Dependent_Solver member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
 #include <string>
 
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_ParameterList.hpp"
+
 #include "harness/DBC.hh"
 #include "utils/String_Functions.hh"
 #include "Linear_System_FV.hh"
-#include "Fixed_Source_Solver.hh"
+#include "Timestep.hh"
+#include "Time_Dependent_Solver.hh"
 
 namespace profugus
 {
@@ -24,11 +28,26 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Fixed_Source_Solver::Fixed_Source_Solver(RCP_ParameterList db)
+Time_Dependent_Solver::Time_Dependent_Solver(RCP_ParameterList db)
     : Base(db)
     , d_solver(b_db)
 {
+    Require (db->isSublist("timestep control"));
+
+    // get the timestep control database
+    const auto &tdb = db->get<Teuchos::ParameterList>("timestep control");
+    Check (tdb.isParameter("dt"));
+
+    // build the timestep object
+    d_dt = Teuchos::rcp(new Timestep);
+
+    // set the first timestep
+    d_dt->set(tdb.get<double>("dt"));
+
     Ensure (!b_db.is_null());
+    Ensure (!d_dt.is_null());
+    Ensure (d_dt->dt() > 0.0);
+    Ensure (d_dt->cycle() == 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -39,11 +58,11 @@ Fixed_Source_Solver::Fixed_Source_Solver(RCP_ParameterList db)
  *
  * Calls to this function builds the linear SPN system.
  */
-void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
-                                RCP_Mat_DB      mat,
-                                RCP_Mesh        mesh,
-                                RCP_Indexer     indexer,
-                                RCP_Global_Data data)
+void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
+                                  RCP_Mat_DB      mat,
+                                  RCP_Mesh        mesh,
+                                  RCP_Indexer     indexer,
+                                  RCP_Global_Data data)
 {
     Require (!b_db.is_null());
     Require (!dim.is_null());
@@ -51,6 +70,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
     Require (!mesh.is_null());
     Require (!indexer.is_null());
     Require (!data.is_null());
+    Require (!d_dt.is_null());
 
     // build the linear system (we only provide finite volume for now)
     std::string &eqn_type = b_db->get("eqn_type", std::string("fv"));
@@ -58,7 +78,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
     if (profugus::to_lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
-            new Linear_System_FV(b_db, dim, mat, mesh, indexer, data));
+            new Linear_System_FV(b_db, dim, mat, mesh, indexer, data, d_dt));
     }
     else
     {
@@ -83,7 +103,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
 /*!
  * \brief Solve the SPN equations for a given external source.
  */
-void Fixed_Source_Solver::solve(const External_Source &q)
+void Time_Dependent_Solver::solve(const External_Source &q)
 {
     Require (!b_system.is_null());
     Require (!d_lhs.is_null());
@@ -103,7 +123,7 @@ void Fixed_Source_Solver::solve(const External_Source &q)
 /*!
  * \brief Write scalar flux into the state.
  */
-void Fixed_Source_Solver::write_state(State_t &state)
+void Time_Dependent_Solver::write_state(State_t &state)
 {
     Require (state.mesh().num_cells() *
              b_system->get_dims()->num_equations() * state.num_groups()
@@ -115,5 +135,5 @@ void Fixed_Source_Solver::write_state(State_t &state)
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//
-//                 end of Fixed_Source_Solver.cc
+//                 end of Time_Dependent_Solver.cc
 //---------------------------------------------------------------------------//

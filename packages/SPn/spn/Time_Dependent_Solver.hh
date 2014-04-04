@@ -1,15 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Fixed_Source_Solver.hh
+ * \file   spn/Time_Dependent_Solver.hh
  * \author Thomas M. Evans
- * \date   Mon Feb 17 21:00:33 2014
- * \brief  Fixed_Source_Solver class definition.
+ * \date   Fri Apr 04 00:09:50 2014
+ * \brief  Time_Dependent_Solver class definition.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Fixed_Source_Solver_hh
-#define spn_Fixed_Source_Solver_hh
+#ifndef spn_Time_Dependent_Solver_hh
+#define spn_Time_Dependent_Solver_hh
 
 #include "comm/Timer.hh"
 #include "solvers/StratimikosSolver.hh"
@@ -20,28 +20,19 @@ namespace profugus
 
 //===========================================================================//
 /*!
- * \class Fixed_Source_Solver
- * \brief Solve the SPN equations for a fixed source problem.
+ * \class Time_Dependent_Solver
+ * \brief Solve a time-dependent SPN problem.
  *
- * This class solves the SPN equations for the following fixed-source problem:
- * \f[
-   \mathbf{A}\mathbf{u} = \mathbf{Q}\:,
- * \f]
- * where \b A is the SPN operator, \f$\mathbf{u}=\{u_1,u_2,u_3,u_4\}\f$ are
- * the transformed moments of the flux, and \b Q is the source.  The system is
- * solved for an input external source.  In order to write the scalar flux
- * (0\e th SPN moment) into the state use write_state().
- *
- * \sa spn::Linear_System,  profugus::Isotropic_Source
+ * This is just a stub for future time-dependent development.
  */
 /*!
- * \example spn/test/tstFixed_Source_Solver.cc
+ * \example spn/test/tstTime_Dependent_Solver.cc
  *
- * Test of Fixed_Source_Solver.
+ * Test of Time_Dependent_Solver.
  */
 //===========================================================================//
 
-class Fixed_Source_Solver : public Solver_Base
+class Time_Dependent_Solver : public Solver_Base
 {
   public:
     //@{
@@ -61,9 +52,12 @@ class Fixed_Source_Solver : public Solver_Base
     // Solution vector.
     RCP_Vector d_lhs;
 
+    // Timestep controller.
+    RCP_Timestep d_dt;
+
   public:
     // Constructor.
-    explicit Fixed_Source_Solver(RCP_ParameterList db);
+    explicit Time_Dependent_Solver(RCP_ParameterList db);
 
     // Set up the solver.
     void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,
@@ -89,8 +83,8 @@ class Fixed_Source_Solver : public Solver_Base
 
 } // end namespace profugus
 
-#endif // spn_Fixed_Source_Solver_hh
+#endif // spn_Time_Dependent_Solver_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Fixed_Source_Solver.hh
+//                 end of Time_Dependent_Solver.hh
 //---------------------------------------------------------------------------//

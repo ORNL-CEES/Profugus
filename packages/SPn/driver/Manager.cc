@@ -75,6 +75,14 @@ void Manager::setup(const std::string &xml_file)
     std::string prob_type = d_external_source.is_null() ? "eigenvalue" :
                             "fixed";
 
+    // if a timestep control is defined then this is a time-dependent problem
+    if (d_db->isSublist("timestep control"))
+    {
+        Insist (prob_type == "fixed",
+                "Cannot do time-dependent eigenproblems.");
+        prob_type = "fixed_tdep";
+    }
+
     // set the problem type in the final db
     d_db->set("problem_type", prob_type);
 
@@ -93,6 +101,11 @@ void Manager::setup(const std::string &xml_file)
     {
         d_fixed_solver = Teuchos::rcp(new Fixed_Source_Solver(d_db));
         d_solver_base  = d_fixed_solver;
+    }
+    else if (prob_type == "fixed_tdep")
+    {
+        d_time_dep_solver = Teuchos::rcp(new Time_Dependent_Solver(d_db));
+        d_solver_base  = d_time_dep_solver;
     }
     else
     {
@@ -128,14 +141,23 @@ void Manager::solve()
     if (!d_eigen_solver.is_null())
     {
         Check (d_fixed_solver.is_null());
+        Check (d_time_dep_solver.is_null());
         d_eigen_solver->solve();
+    }
+    else if (!d_fixed_solver.is_null())
+    {
+        Check (d_eigen_solver.is_null());
+        Check (d_time_dep_solver.is_null());
+        Check (!d_external_source.is_null());
+        d_fixed_solver->solve(*d_external_source);
     }
     else
     {
-        Check (!d_fixed_solver.is_null());
+        Check (d_fixed_solver.is_null());
         Check (d_eigen_solver.is_null());
+        Check (!d_time_dep_solver.is_null());
         Check (!d_external_source.is_null());
-        d_fixed_solver->solve(*d_external_source);
+        d_time_dep_solver->solve(*d_external_source);
     }
 
     // write the solution vector into the state
