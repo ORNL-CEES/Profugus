@@ -29,11 +29,13 @@ namespace profugus
  */
 Linear_System::Linear_System(RCP_ParameterList db,
                              RCP_Dimensions    dim,
-                             RCP_Mat_DB        mat)
+                             RCP_Mat_DB        mat,
+                             RCP_Timestep      dt)
     : b_db(db)
     , b_dim(dim)
     , b_mat(mat)
-    , b_mom_coeff(Teuchos::rcp(new Moment_Coefficients(db, dim, mat)))
+    , b_dt(dt)
+    , b_mom_coeff(Teuchos::rcp(new Moment_Coefficients(db, dim, mat, dt)))
     , b_node(profugus::node())
     , b_nodes(profugus::nodes())
 {

@@ -74,7 +74,8 @@ class Linear_System_FV : public Linear_System
   public:
     // Constructor.
     Linear_System_FV(RCP_ParameterList db, RCP_Dimensions dim, RCP_Mat_DB mat,
-                     RCP_Mesh mesh, RCP_Indexer indexer, RCP_Global_Data data);
+                     RCP_Mesh mesh, RCP_Indexer indexer, RCP_Global_Data data,
+                     RCP_Timestep dt = Teuchos::null);
 
     // Make the matrix.
     void build_Matrix();

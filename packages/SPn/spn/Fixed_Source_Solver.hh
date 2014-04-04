@@ -48,6 +48,7 @@ class Fixed_Source_Solver : public Solver_Base
     //! Typedefs.
     typedef Solver_Base                      Base;
     typedef Linear_System_t::External_Source External_Source;
+    typedef Linear_System_t::RCP_Timestep    RCP_Timestep;
     typedef StratimikosSolver                Linear_Solver_t;
     //@}
 
@@ -60,9 +61,13 @@ class Fixed_Source_Solver : public Solver_Base
     // Solution vector.
     RCP_Vector d_lhs;
 
+    // Timestep controller.
+    RCP_Timestep d_dt;
+
   public:
     // Constructor.
-    explicit Fixed_Source_Solver(RCP_ParameterList db);
+    explicit Fixed_Source_Solver(RCP_ParameterList db,
+                                 RCP_Timestep dt = Teuchos::null);
 
     // Set up the solver.
     void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,

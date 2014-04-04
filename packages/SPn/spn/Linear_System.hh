@@ -60,6 +60,7 @@ class Linear_System
     typedef Moment_Coefficients::RCP_Mat_DB        RCP_Mat_DB;
     typedef Moment_Coefficients::RCP_Dimensions    RCP_Dimensions;
     typedef Moment_Coefficients::RCP_ParameterList RCP_ParameterList;
+    typedef Moment_Coefficients::RCP_Timestep      RCP_Timestep;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
     typedef Epetra_Map                             Map_t;
     typedef Epetra_RowMatrix                       Matrix_t;
@@ -97,6 +98,9 @@ class Linear_System
     // Material database.
     RCP_Mat_DB b_mat;
 
+    // Timestep.
+    RCP_Timestep b_dt;
+
     // Moment-coefficient generator.
     RCP_Moment_Coefficients b_mom_coeff;
 
@@ -117,7 +121,8 @@ class Linear_System
 
   public:
     // Constructor.
-    Linear_System(RCP_ParameterList db, RCP_Dimensions dim, RCP_Mat_DB mat);
+    Linear_System(RCP_ParameterList db, RCP_Dimensions dim, RCP_Mat_DB mat,
+                  RCP_Timestep dt);
 
     // Destructor.
     virtual ~Linear_System() = 0;

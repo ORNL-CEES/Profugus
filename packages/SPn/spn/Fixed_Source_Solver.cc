@@ -24,9 +24,11 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Fixed_Source_Solver::Fixed_Source_Solver(RCP_ParameterList db)
+Fixed_Source_Solver::Fixed_Source_Solver(RCP_ParameterList db,
+                                         RCP_Timestep      dt)
     : Base(db)
     , d_solver(b_db)
+    , d_dt(dt)
 {
     Ensure (!b_db.is_null());
 }
@@ -58,7 +60,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
     if (profugus::to_lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
-            new Linear_System_FV(b_db, dim, mat, mesh, indexer, data));
+            new Linear_System_FV(b_db, dim, mat, mesh, indexer, data, d_dt));
     }
     else
     {

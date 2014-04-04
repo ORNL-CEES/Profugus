@@ -38,11 +38,13 @@ namespace profugus
  */
 Moment_Coefficients::Moment_Coefficients(RCP_ParameterList db,
                                          RCP_Dimensions    dim,
-                                         RCP_Mat_DB        mat)
+                                         RCP_Mat_DB        mat,
+                                         RCP_Timestep      dt)
 
 
     : d_dim(dim)
     , d_mat(mat)
+    , d_dt(dt)
     , d_Ng(mat->xs().num_groups())
     , d_W(d_Ng, d_Ng)
     , d_c(4, std::vector<Coefficients>(4))
@@ -243,6 +245,24 @@ void Moment_Coefficients::make_Sigma(int            n,
     {
         S(g, g) = total(g);
         Check (S(g, g) >= 0.0);
+    }
+
+    // add 1/vdT to diagonal for time-dependent problems
+    if (!d_dt.is_null())
+    {
+        // get group velocities
+        const auto &v = d_mat->xs().velocities();
+        Check (v.length() == d_Ng);
+
+        double inv_dt = 1.0 / d_dt->dt();
+
+        // put the group totals on the diagonal
+        for (int g = 0; g < d_Ng; ++g)
+        {
+            Check (v(g) > 0.0);
+            S(g, g) += 1.0 / v(g) * inv_dt;
+            Check (S(g, g) >= 0.0);
+        }
     }
 
     // add the scattering cross sections if the moments exist in the data

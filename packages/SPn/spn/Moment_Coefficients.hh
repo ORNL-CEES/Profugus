@@ -25,6 +25,7 @@
 #include "xs/Mat_DB.hh"
 #include "SPN_Constants.hh"
 #include "Dimensions.hh"
+#include "Timestep.hh"
 
 namespace profugus
 {
@@ -52,6 +53,7 @@ class Moment_Coefficients
     typedef Mat_DB_t::RCP_XS                              RCP_XS;
     typedef Teuchos::RCP<Teuchos::ParameterList>          RCP_ParameterList;
     typedef Teuchos::RCP<Dimensions>                      RCP_Dimensions;
+    typedef Teuchos::RCP<Timestep>                        RCP_Timestep;
     typedef Teuchos::SerialDenseMatrix<int, double>       Serial_Matrix;
     typedef Teuchos::RCP<Serial_Matrix>                   RCP_Serial_Matrix;
     typedef Static_Map<def::size_type, RCP_Serial_Matrix> Hash_Table;
@@ -67,10 +69,13 @@ class Moment_Coefficients
     // Material database.
     RCP_Mat_DB d_mat;
 
+    // Timestep.
+    RCP_Timestep d_dt;
+
   public:
     // Constructor.
     Moment_Coefficients(RCP_ParameterList db, RCP_Dimensions dim,
-                        RCP_Mat_DB mat);
+                        RCP_Mat_DB mat, RCP_Timestep dt = Teuchos::null);
 
     // Make cross section (Sigma_n) matrix.
     void make_Sigma(int n, int matid, Serial_Matrix &S);

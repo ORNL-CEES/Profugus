@@ -31,8 +31,9 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
                                    RCP_Mat_DB        mat,
                                    RCP_Mesh          mesh,
                                    RCP_Indexer       indexer,
-                                   RCP_Global_Data   data)
-    : Base(db, dim, mat)
+                                   RCP_Global_Data   data,
+                                   RCP_Timestep      dt)
+    : Base(db, dim, mat, dt)
     , d_mesh(mesh)
     , d_indexer(indexer)
     , d_gather(mesh, b_mom_coeff, *indexer)
