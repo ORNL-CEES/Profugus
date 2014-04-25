@@ -147,6 +147,15 @@
 /* USE HDF5 OUTPUT FUNCTIONS */
 #cmakedefine USE_HDF5
 
+/* >>> RNG VARIABLES */
+
+/* USE STANDARD C INTERFACE FOR SPRNG */
+#ifndef __STDC__
+#define __STDC__ 1
+#endif
+
+#cmakedefine SPRNG_LittleEndian
+
 #endif /* Utils_config_h */
 
 /*---------------------------------------------------------------------------*/

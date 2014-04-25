@@ -12,6 +12,7 @@ INCLUDE(TribitsPackageMacros)
 INCLUDE(TribitsLibraryMacros)
 INCLUDE(CheckTypeSize)
 INCLUDE(ProfugusAddCFlags)
+INCLUDE(TestBigEndian)
 
 # Add Utils cmake services
 APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -190,6 +191,20 @@ IF (DEFINED _POSIX_C_SOURCE)
 ENDIF()
 
 ##---------------------------------------------------------------------------##
+## RNG options
+
+# NOTE: Currently, the lagged-fibonaci generator does not require any
+# LittleEndian flag declarators; however, the congruential generator (lcg)
+# does thus we may need to check for LittleEndian in any SPRNG implementation
+# we bring over later.
+SET(SPRNG_BigEndian OFF)
+SET(SPRNG_LittleEndian ON)
+TEST_BIG_ENDIAN(SPRNG_BigEndian)
+IF(SPRNG_BigEndian)
+  SET(SPRNG_LittleEndian OFF)
+ENDIF()
+
+##---------------------------------------------------------------------------##
 ## Optional TPLs
 
 IF (TPL_ENABLE_HDF5)
@@ -256,6 +271,23 @@ ENDIF()
 LIST(APPEND HEADERS ${UTILS_HEADERS})
 LIST(APPEND SOURCES ${UTILS_SOURCES})
 
+# rng sources
+
+FILE(GLOB RNG_HEADERS rng/*.hh)
+SET(RNG_SOURCES
+  rng/RNG.cc
+  rng/RNG_Control.cc
+  rng/sprng/checkid.c
+  rng/sprng/communicate.c
+  rng/sprng/lfg.c
+  rng/sprng/makeseed.c
+  rng/sprng/memory.c
+  rng/sprng/simple_mpi.c
+)
+
+LIST(APPEND HEADERS ${RNG_HEADERS})
+LIST(APPEND SOURCES ${RNG_SOURCES})
+
 # gtest sources
 
 FILE(GLOB GTEST_HEADERS gtest/*.hh)
@@ -286,6 +318,7 @@ TRIBITS_ADD_LIBRARY(
 TRIBITS_ADD_TEST_DIRECTORIES(
   harness/test
   utils/test
+  rng/test
   cxx11
   )
 
