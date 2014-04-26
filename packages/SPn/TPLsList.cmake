@@ -1,5 +1,5 @@
 ##---------------------------------------------------------------------------##
-## Matprop/TPLsList.cmake
+## SPn/TPLsList.cmake
 ## Thomas M. Evans
 ## Wednesday August 8 10:57:51 2012
 ##---------------------------------------------------------------------------##
@@ -10,11 +10,11 @@
 #
 #   Trilinos/cmake/TrilinosTPLs.cmake
 
-SET(Matprop_TPLS_FINDMODS_CLASSIFICATIONS)
+SET(SPn_TPLS_FINDMODS_CLASSIFICATIONS)
 
 # NOTE: Above, the paths to the FindTPL<TPLNAME> modules (with an implicit
 # *.cmake extension) are relative to the Trilinos/cmake/TPLs directory.
 
 ##---------------------------------------------------------------------------##
-##                       end of Matprop/TPLsList.cmake
+##                       end of SPn/TPLsList.cmake
 ##---------------------------------------------------------------------------##
