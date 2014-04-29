@@ -8,20 +8,19 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "gtest/nemesis_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include <vector>
 #include <cmath>
 #include <sstream>
 #include <iomanip>
 
-#include "release/Release.hh"
 #include "utils/Constants.hh"
 #include "../RTK_Cell.hh"
 
 using namespace std;
 
-using denovo::RTK_Cell;
+using profugus::RTK_Cell;
 
 typedef RTK_Cell::Space_Vector Vector;
 typedef RTK_Cell::Geo_State_t  Geo_State;
@@ -163,7 +162,7 @@ TEST(Single, Shell)
     {
         EXPECT_TRUE(pin4.region(.6301, 0.0));
     }
-    catch(const nemesis::assertion &ass)
+    catch(const profugus::assertion &ass)
     {
         caught = true;
     }
@@ -849,7 +848,7 @@ TEST(Multi, SegPin)
 
         costheta = 1.0 - 2.0 * static_cast<double>(rand()) / RAND_MAX;
         sintheta = sqrt(1.0 - costheta * costheta);
-        phi      = 2.0 * nemesis::constants::pi *
+        phi      = 2.0 * profugus::constants::pi *
                    static_cast<double>(rand()) / RAND_MAX;
 
         omega[0] = sintheta * cos(phi);
@@ -931,7 +930,7 @@ TEST(Gap, LoX_LoY)
     {
         pin.region(.6301, 0.0);
     }
-    catch(const nemesis::assertion &ass)
+    catch(const profugus::assertion &ass)
     {
         caught = true;
     }
@@ -1068,7 +1067,7 @@ TEST(Gap, LoX_HiY)
     {
         pin.region(0.0, -0.6301);
     }
-    catch(const nemesis::assertion &ass)
+    catch(const profugus::assertion &ass)
     {
         caught = true;
     }
@@ -1131,7 +1130,7 @@ TEST(Gap, HiX_HiY)
     {
         pin.region(-0.6301, -0.6301);
     }
-    catch(const nemesis::assertion &ass)
+    catch(const profugus::assertion &ass)
     {
         caught = true;
     }
@@ -1181,7 +1180,7 @@ TEST(GapHomCell, HiX_HiY)
     {
         pin.region(-0.6301, -0.6301);
     }
-    catch(const nemesis::assertion &ass)
+    catch(const profugus::assertion &ass)
     {
         caught = true;
     }
@@ -1212,7 +1211,7 @@ TEST(Vessel, Add)
         y_off = 30.0 * 2.0;
         RTK_Cell vessel(10, 21.62, 30.0, 14.28, 1.0, 2.0, x_off, y_off, 101);
     }
-    catch(const nemesis::assertion &a)
+    catch(const profugus::assertion &a)
     {
         caught = true;
     }
@@ -1225,7 +1224,7 @@ TEST(Vessel, Add)
         y_off = 30.0 * 2.0;
         RTK_Cell vessel(10, 21.62, 30.0, 14.28, 35.0, 36.0, x_off, y_off, 101);
     }
-    catch(const nemesis::assertion &a)
+    catch(const profugus::assertion &a)
     {
         caught = true;
     }
@@ -1238,7 +1237,7 @@ TEST(Vessel, Add)
         y_off = -30.0 * 3.0;
         RTK_Cell vessel(10, 21.62, 30.0, 14.28, 3.0, 35.0, x_off, y_off, 101);
     }
-    catch(const nemesis::assertion &a)
+    catch(const profugus::assertion &a)
     {
         caught = true;
     }

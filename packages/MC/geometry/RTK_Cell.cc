@@ -480,13 +480,13 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
     Require (!d_vessel ? state.region >= 0 && state.region < d_num_regions
              : state.region == Geo_State_t::MODERATOR ||
              state.region == Geo_State_t::VESSEL);
-    Require (nemesis::soft_equiv(vector_magnitude(omega), 1., 1.e-6));
+    Require (soft_equiv(vector_magnitude(omega), 1., 1.e-6));
     Require (omega[X]<0.0 ? r[X] >= d_extent[X][LO] : r[X] <= d_extent[X][HI]);
     Require (omega[Y]<0.0 ? r[Y] >= d_extent[Y][LO] : r[Y] <= d_extent[Y][HI]);
     Require (omega[Z]<0.0 ? r[Z] >= 0.0             : r[Z] <= d_z);
 
     // initialize running dist-to-boundary
-    d_db                      = nemesis::constants::huge;
+    d_db                      = constants::huge;
     state.dist_to_next_region = d_db;
     state.next_segment        = state.segment;
 
@@ -514,7 +514,7 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
     if (d_segments > 1)
     {
         // initialize distance to boundary
-        d_db = nemesis::constants::huge;
+        d_db = constants::huge;
 
         // check for intersection with x segment planes
         if (state.face != d_num_shells)
@@ -619,10 +619,10 @@ int RTK_Cell::region(double x,
     using def::X; using def::Y;
 
     Require (d_num_regions > 0);
-    Require (x > d_extent[0][LO] || nemesis::soft_equiv(x, d_extent[0][LO]));
-    Require (x < d_extent[0][HI] || nemesis::soft_equiv(x, d_extent[0][HI]));
-    Require (y > d_extent[1][LO] || nemesis::soft_equiv(y, d_extent[1][LO]));
-    Require (y < d_extent[1][HI] || nemesis::soft_equiv(y, d_extent[1][HI]));
+    Require (x > d_extent[0][LO] || soft_equiv(x, d_extent[0][LO]));
+    Require (x < d_extent[0][HI] || soft_equiv(x, d_extent[0][HI]));
+    Require (y > d_extent[1][LO] || soft_equiv(y, d_extent[1][LO]));
+    Require (y < d_extent[1][HI] || soft_equiv(y, d_extent[1][HI]));
 
     // if this is an empty box, return the moderator
     if (!d_num_shells)
