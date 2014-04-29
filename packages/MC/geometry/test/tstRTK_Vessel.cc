@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   rtk/test/tstRTK_Vessel.cc
+ * \file   geometry/test/tstRTK_Vessel.cc
  * \author Thomas M. Evans
  * \date   Fri Dec 06 19:47:39 2013
  * \brief  RTK_Array tests with a vessel.

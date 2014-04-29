@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/test/tstRTK_Lattice.cc
+ * \file   geometry/test/tstRTK_Lattice.cc
  * \author Thomas M. Evans
  * \date   Wed Dec 22 13:32:47 2010
  * \brief  RTK_Lattice unit test.

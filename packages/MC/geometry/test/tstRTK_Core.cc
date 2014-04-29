@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/test/tstRTK_Core.cc
+ * \file   geometry/test/tstRTK_Core.cc
  * \author Thomas M. Evans
  * \date   Mon Jan 24 09:48:47 2011
  * \brief  RTK_Core unit test.
