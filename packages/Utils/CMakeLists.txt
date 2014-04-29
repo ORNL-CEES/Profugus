@@ -264,8 +264,11 @@ IF(TPL_ENABLE_HDF5)
   APPEND_SET(UTILS_SOURCES
     utils/HDF5_IO.cc
     utils/HDF5_Reader.cc
+    utils/Hash_Functions.cc
     utils/Parallel_HDF5_Writer.cc
-    utils/Serial_HDF5_Writer.cc)
+    utils/Serial_HDF5_Writer.cc
+    utils/String_Functions.cc
+    utils/Vector_Functions.cc)
 ENDIF()
 
 LIST(APPEND HEADERS ${UTILS_HEADERS})
