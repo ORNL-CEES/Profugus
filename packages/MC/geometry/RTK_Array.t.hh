@@ -332,9 +332,9 @@ void RTK_Array<T>::complete(double low_x,
                 id = d_layout[index(i, j, k)];
 
                 // check the lengths
-                Ensure (nemesis::soft_equiv(d_objects[id]->pitch(X), dx(i)));
-                Ensure (nemesis::soft_equiv(d_objects[id]->pitch(Y), dy(j)));
-                Ensure (nemesis::soft_equiv(d_objects[id]->height(), dz(k)));
+                Ensure (soft_equiv(d_objects[id]->pitch(X), dx(i)));
+                Ensure (soft_equiv(d_objects[id]->pitch(Y), dy(j)));
+                Ensure (soft_equiv(d_objects[id]->height(), dz(k)));
             }
         }
     }
@@ -969,9 +969,9 @@ void RTK_Array<T>::add_vessel(double R0,
             // the "=" on the check is for -x to +x on centerlines where x ==
             // x
             Check (std::fabs(near[X]) < std::fabs(far[X]) ||
-                   nemesis::soft_equiv(std::fabs(near[X]), std::fabs(far[X])));
+                   soft_equiv(std::fabs(near[X]), std::fabs(far[X])));
             Check (std::fabs(near[Y]) < std::fabs(far[Y]) ||
-                   nemesis::soft_equiv(std::fabs(near[Y]), std::fabs(far[Y])));
+                   soft_equiv(std::fabs(near[Y]), std::fabs(far[Y])));
 
             // near and far radii bounding the cell object
             nearR2 = near[X]*near[X] + near[Y]*near[Y];
@@ -994,16 +994,15 @@ void RTK_Array<T>::add_vessel(double R0,
             // update the running xoffset
             rox += dx(i);
 
-            Check (rox - xoff < pitch(X) ||
-                   nemesis::soft_equiv(rox - xoff, pitch(X)));
+            Check (rox - xoff < pitch(X) || soft_equiv(rox - xoff, pitch(X)));
         }
 
         // update the running y-offset
         roy += dy(j);
     }
 
-    Ensure (nemesis::soft_equiv(rox - xoff, pitch(X)));
-    Ensure (nemesis::soft_equiv(roy - yoff, pitch(Y)));
+    Ensure (soft_equiv(rox - xoff, pitch(X)));
+    Ensure (soft_equiv(roy - yoff, pitch(Y)));
 }
 
 //---------------------------------------------------------------------------//

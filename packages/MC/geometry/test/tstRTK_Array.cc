@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "gtest/nemesis_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include <vector>
 #include <cmath>
@@ -21,7 +21,7 @@
 #include "geometry/Definitions.hh"
 #include "../RTK_Cell.hh"
 #include "../RTK_Array.hh"
-#include "../RTK_Geometry.hh"
+#include "../Geometry.hh"
 
 using namespace std;
 
@@ -1723,23 +1723,6 @@ TEST(Symmetric, all)
     EXPECT_TRUE(soft_equiv(lat->height(), 14.28));
 
     EXPECT_EQ(9 * 2, lat->num_cells());
-
-    // set Geometry
-    denovo::RTK_Geometry<Lattice> geom(lat, true);
-
-    geom.set_mapped_cells();
-
-    def::Vec_Int map_cells = geom.mapped_cells();
-    def::Vec_Int ref(18);
-    ref[0] = 16; ref[1] = 17; ref[2] = 10; ref[3] = 11;
-    ref[4] = 4 ; ref[5] = 5 ; ref[6] = 14; ref[7] = 15;
-    ref[8] = 8 ; ref[9] = 9 ; ref[10]= 2 ; ref[11]= 3 ;
-    ref[12]= 12; ref[13]= 13; ref[14]= 6 ; ref[15]= 7 ;
-    ref[16]= 0 ; ref[17]= 1 ;
-    for (int i = 0; i < lat->num_cells(); ++i)
-    {
-        EXPECT_EQ(ref[i], map_cells[i]);
-    }
 }
 
 //---------------------------------------------------------------------------//

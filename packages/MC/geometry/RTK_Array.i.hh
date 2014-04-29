@@ -109,17 +109,17 @@ RTK_Array<T>::transform(const Space_Vector &r,
 
     Require (d_completed);
 
-    Require (r[X] > d_corner[X] || nemesis::soft_equiv(r[X], d_corner[X]));
+    Require (r[X] > d_corner[X] || soft_equiv(r[X], d_corner[X]));
     Require (r[X] < d_corner[X] + d_length[X] ||
-             nemesis::soft_equiv(r[X], d_corner[X] + d_length[X]));
+             soft_equiv(r[X], d_corner[X] + d_length[X]));
 
-    Require (r[Y] > d_corner[Y] || nemesis::soft_equiv(r[Y], d_corner[Y]));
+    Require (r[Y] > d_corner[Y] || soft_equiv(r[Y], d_corner[Y]));
     Require (r[Y] < d_corner[Y] + d_length[Y] ||
-            nemesis::soft_equiv(r[Y], d_corner[Y] + d_length[Y]));
+            soft_equiv(r[Y], d_corner[Y] + d_length[Y]));
 
-    Require (r[Z] > d_corner[Z] || nemesis::soft_equiv(r[Z], d_corner[Z]));
+    Require (r[Z] > d_corner[Z] || soft_equiv(r[Z], d_corner[Z]));
     Require (r[Z] < d_corner[Z] + d_length[Z] ||
-             nemesis::soft_equiv(r[Z], d_corner[Z] + d_length[Z]));
+             soft_equiv(r[Z], d_corner[Z] + d_length[Z]));
 
 #ifdef REQUIRE_ON
     // nested arrays must be initialized with lower-corners of 0.0; we only
@@ -340,11 +340,11 @@ RTK_Array<RTK_Cell>::transform(const Space_Vector &r,
     tr[Z] = (r[Z] - d_z[state.level_coord[0][Z]]);
 
     Ensure ((tr[X] > lower[X] && tr[X] < upper[X]) ||
-            (nemesis::soft_equiv(tr[X], lower[X], 1.0e-6 * fabs(lower[X])) ||
-             nemesis::soft_equiv(tr[X], upper[X], 1.0e-6 * upper[X])));
+            (soft_equiv(tr[X], lower[X], 1.0e-6 * fabs(lower[X])) ||
+             soft_equiv(tr[X], upper[X], 1.0e-6 * upper[X])));
     Ensure ((tr[Y] > lower[Y] && tr[Y] < upper[Y]) ||
-            (nemesis::soft_equiv(tr[Y], lower[Y], 1.0e-6 * fabs(lower[Y])) ||
-             nemesis::soft_equiv(tr[Y], upper[Y], 1.0e-6 * upper[Y])));
+            (soft_equiv(tr[Y], lower[Y], 1.0e-6 * fabs(lower[Y])) ||
+             soft_equiv(tr[Y], upper[Y], 1.0e-6 * upper[Y])));
     return tr;
 }
 

@@ -22,8 +22,8 @@ INCLUDE(UtilsTest)
 ##---------------------------------------------------------------------------##
 
 ADD_UTILS_TEST(tstRTK_Functions.cc NP 1)
-#ADD_UTILS_TEST(tstRTK_Array.cc     NP 1)
 ADD_UTILS_TEST(tstRTK_Cell.cc      NP 1)
+#ADD_UTILS_TEST(tstRTK_Array.cc     NP 1)
 #ADD_UTILS_TEST(tstRTK_Vessel.cc    NP 1)
 #ADD_UTILS_TEST(tstRTK_Core.cc      NP 1)
 #ADD_UTILS_TEST(tstRTK_Lattice.cc   NP 1)

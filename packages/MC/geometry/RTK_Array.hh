@@ -16,12 +16,12 @@
 #include <cmath>
 #include <ostream>
 #include <utility>
+#include <memory>
 
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
 #include "utils/Definitions.hh"
 #include "utils/Vector_Lite.hh"
-#include "utils/SP.hh"
 #include "RTK_State.hh"
 
 // Include Pin_Cell for specializations.
@@ -52,20 +52,20 @@ class RTK_Array
   public:
     //@{
     //! Typedefs.
-    typedef T                      Object_t;
-    typedef nemesis::SP<Object_t>  SP_Object;
-    typedef std::vector<SP_Object> Object_Array;
-    typedef def::Vec_Int           Vec_Int;
-    typedef def::Vec_Dbl           Vec_Dbl;
-    typedef RTK_State              Geo_State_t;
-    typedef def::Space_Vector      Space_Vector;
+    typedef T                         Object_t;
+    typedef std::shared_ptr<Object_t> SP_Object;
+    typedef std::vector<SP_Object>    Object_Array;
+    typedef def::Vec_Int              Vec_Int;
+    typedef def::Vec_Dbl              Vec_Dbl;
+    typedef RTK_State                 Geo_State_t;
+    typedef def::Space_Vector         Space_Vector;
     //@}
 
   private:
     // >>> DATA
 
     // Array sizes
-    nemesis::Vector_Lite<int, 3> d_N;
+    Vector_Lite<int, 3> d_N;
 
     // Layout of objects in array.
     Vec_Int d_layout;
@@ -91,8 +91,8 @@ class RTK_Array
     int     d_total_cells;
 
     // Outer vessel.
-    nemesis::Vector_Lite<double, 2> d_r;
-    nemesis::Vector_Lite<double, 2> d_origin;    // origin of vessel
+    Vector_Lite<double, 2> d_r;
+    Vector_Lite<double, 2> d_origin;    // origin of vessel
     bool                   d_vessel;    // true if outer vessel defined
     int                    d_vessel_id; // material id for outer vessel
 
@@ -212,7 +212,7 @@ class RTK_Array
     template<class X> friend class RTK_Array;
 
     // Logical array coordinates.
-    typedef nemesis::Vector_Lite<int, 3> Logical_Array;
+    typedef Vector_Lite<int, 3> Logical_Array;
 
     // Vector of integer pairs.
     typedef std::vector< std::pair<int, int> > Vec_Int_Pair;
