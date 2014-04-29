@@ -1,0 +1,874 @@
+//----------------------------------*-C++-*----------------------------------//
+/*!
+ * \file   geometry/rtk/test/tstRTK_Core.cc
+ * \author Thomas M. Evans
+ * \date   Mon Jan 24 09:48:47 2011
+ * \brief  RTK_Core unit test.
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ */
+//---------------------------------------------------------------------------//
+
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <sstream>
+#include <iomanip>
+#include <fstream>
+
+#include <geometry/config.h>
+
+#include "harness/DBC.hh"
+#include "harness/Soft_Equivalence.hh"
+#include "comm/global.hh"
+#include "comm/Parallel_Unit_Test.hh"
+#include "release/Release.hh"
+#include "utils/Definitions.hh"
+#include "utils/Constants.hh"
+#include "utils/Vector_Functions.hh"
+#include "geometry/Definitions.hh"
+#include "../RTK_Geometry.hh"
+
+#ifdef USE_MC
+#include "mc/RNG_Control.hh"
+#endif
+
+using namespace std;
+using nemesis::Parallel_Unit_Test;
+using nemesis::soft_equiv;
+
+using def::X;
+using def::Y;
+using def::Z;
+
+typedef denovo::RTK_Core        Core_Geometry;
+typedef Core_Geometry           Geometry;
+typedef Core_Geometry::Array_t  Core_t;
+typedef Core_t::Object_t        Lattice_t;
+typedef Lattice_t::Object_t     Pin_Cell_t;
+typedef Core_Geometry::SP_Array SP_Core;
+typedef Core_t::SP_Object       SP_Lattice;
+typedef Lattice_t::SP_Object    SP_Pin_Cell;
+
+typedef Geometry::Space_Vector Vector;
+typedef Geometry::Geo_State_t  State;
+
+using denovo::geometry::OUTSIDE;
+using denovo::geometry::INSIDE;
+using denovo::geometry::REFLECT;
+
+int node  = 0;
+int nodes = 0;
+
+int seed = 4305834;
+
+#define ITFAILS ut.failure(__LINE__);
+#define UNIT_TEST(a) if (!(a)) ut.failure(__LINE__);
+
+bool do_output = false;
+
+//---------------------------------------------------------------------------//
+// TESTS
+//---------------------------------------------------------------------------//
+/*
+ Core Model
+
+ Fuel region         = 1
+ Fuel region         = 2
+ Moderator/Reflector = 3
+
+ =============================
+ ||       ||       ||       ||
+ ||       ||       ||       ||
+ ||   3   ||   3   ||   3   ||
+ ||       ||       ||       ||
+ ||       ||       ||       ||
+ =============================
+ || 2 | 2 || 1 | 1 ||       ||
+ ||   |   ||   |   ||       ||
+ ||-------||-------||   3   ||
+ || 2 | 2 || 1 | 1 ||       ||
+ ||   |   ||   |   ||       ||
+ =============================
+ || 1 | 1 || 2 | 2 ||       ||
+ ||   |   ||   |   ||       ||
+ ||-------||-------||   3   ||
+ || 1 | 1 || 2 | 2 ||       ||
+ ||   |   ||   |   ||       ||
+ =============================
+
+ */
+
+void core_heuristic(Parallel_Unit_Test &ut)
+{
+#ifdef USE_MC
+    // 2 fuel pin types
+    SP_Pin_Cell pin1(new Pin_Cell_t(1, 0.54, 3, 1.26, 14.28));
+    SP_Pin_Cell pin2(new Pin_Cell_t(2, 0.54, 3, 1.26, 14.28));
+
+    // water pin
+    SP_Pin_Cell box(new Pin_Cell_t(3, 2.52, 14.28));
+
+    // 3 lattices (fuel 1, 2, and water)
+    SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
+    SP_Lattice lat2(new Lattice_t(2, 2, 1, 1));
+    SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+
+    // lattice assignments
+    lat1->assign_object(pin1, 0);
+    lat2->assign_object(pin2, 0);
+    lat3->assign_object(box, 0);
+
+    // complete the lattices
+    lat1->complete(0.0, 0.0, 0.0);
+    lat2->complete(0.0, 0.0, 0.0);
+    lat3->complete(0.0, 0.0, 0.0);
+
+    // make core (3x3x2 with 4 objects, object 0 unassigned)
+    SP_Core core(new Core_t(3, 3, 2, 4));
+    UNIT_TEST(core->level() == 1);
+
+    // assign lattices
+    core->assign_object(lat1, 1);
+    core->assign_object(lat2, 2);
+    core->assign_object(lat3, 3);
+
+    // assign ids
+    core->id(0, 0, 0) = 1; // lattice 1
+    core->id(1, 0, 0) = 2; // lattice 2
+    core->id(2, 0, 0) = 3; // lattice 3 (reflector)
+    core->id(0, 1, 0) = 2; // lattice 2
+    core->id(1, 1, 0) = 1; // lattice 1
+    core->id(2, 1, 0) = 3; // lattice 3 (reflector)
+    core->id(0, 2, 0) = 3; // lattice 3 (reflector)
+    core->id(1, 2, 0) = 3; // lattice 3 (reflector)
+    core->id(2, 2, 0) = 3; // lattice 3 (reflector)
+    core->id(0, 0, 1) = 3; // lattice 3 (reflector)
+    core->id(1, 0, 1) = 3; // lattice 3 (reflector)
+    core->id(2, 0, 1) = 3; // lattice 3 (reflector)
+    core->id(0, 1, 1) = 3; // lattice 3 (reflector)
+    core->id(1, 1, 1) = 3; // lattice 3 (reflector)
+    core->id(2, 1, 1) = 3; // lattice 3 (reflector)
+    core->id(0, 2, 1) = 3; // lattice 3 (reflector)
+    core->id(1, 2, 1) = 3; // lattice 3 (reflector)
+    core->id(2, 2, 1) = 3; // lattice 3 (reflector)
+
+    // complete the core
+    core->complete(0.0, 0.0, 0.0);
+
+    // check lattice
+    UNIT_TEST(soft_equiv(core->pitch(X), 7.56));
+    UNIT_TEST(soft_equiv(core->pitch(Y), 7.56));
+    UNIT_TEST(soft_equiv(core->height(), 28.56));
+
+    // output the core array
+    core->output(cout);
+    cout << endl;
+
+    // build the RTK Core
+    Core_Geometry rtk_core(core);
+    Geometry &geometry = rtk_core;
+
+    // make a random number generator
+    mc::RNG_Control control(seed);
+    mc::RNG_Control::RNG rng = control.rng();
+
+    // plot collision sites
+    ofstream csites("csites.dat");
+
+    // geometry variables
+    double costheta, sintheta, phi;
+    Vector r, omega;
+    State  state;
+    double d;
+    int    Np = 10000;
+
+    int face_bin[6] = {0};
+
+    // sample Np tracks
+    for (int n = 0; n < Np; ++n)
+    {
+        // sample x,y,z randomly
+        r[0] = rng.ran() * 7.56;
+        r[1] = rng.ran() * 7.56;
+        r[2] = rng.ran() * 28.56;
+
+        // sample omega
+        costheta = 1.0 - 2.0 * rng.ran();
+        phi      = nemesis::constants::two_pi * rng.ran();
+        sintheta = sqrt(1.0 - costheta * costheta);
+
+        omega[0] = sintheta * cos(phi);
+        omega[1] = sintheta * sin(phi);
+        omega[2] = costheta;
+
+        // initialize track
+        geometry.initialize(r, omega, state);
+        UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+
+        while (geometry.boundary_state(state) == INSIDE)
+        {
+            // get distance-to-boundary
+            d = geometry.distance_to_boundary(state);
+
+            // update position of particle and cross the surface
+            geometry.move_to_surface(state);
+
+            if (do_output)
+                if (state.d_r[2] < 14.2799 &&
+                    state.escaping_face != State::MINUS_Z)
+                    csites << state.d_r[0] << "\t" << state.d_r[1] << endl;
+        }
+
+        if (state.escaping_face == State::MINUS_X)
+            face_bin[0]++;
+        else if (state.escaping_face == State::PLUS_X)
+            face_bin[1]++;
+        else if (state.escaping_face == State::MINUS_Y)
+            face_bin[2]++;
+        else if (state.escaping_face == State::PLUS_Y)
+            face_bin[3]++;
+        else if (state.escaping_face == State::MINUS_Z)
+            face_bin[4]++;
+        else if (state.escaping_face == State::PLUS_Z)
+            face_bin[5]++;
+    }
+
+    UNIT_TEST(face_bin[0] + face_bin[1] + face_bin[2] +
+              face_bin[3] + face_bin[4] + face_bin[5] == Np);
+
+    double xyf  = 28.56 * 7.56;
+    double zf   = 7.56 * 7.56;
+    double area = 4 * xyf + 2 * zf;
+    double Npx  = static_cast<double>(Np);
+    double lox  = face_bin[0] / Npx;
+    double hix  = face_bin[1] / Npx;
+    double loy  = face_bin[2] / Npx;
+    double hiy  = face_bin[3] / Npx;
+    double loz  = face_bin[4] / Npx;
+    double hiz  = face_bin[5] / Npx;
+
+    UNIT_TEST(soft_equiv(lox, xyf / area, 0.01));
+    UNIT_TEST(soft_equiv(hix, xyf / area, 0.03));
+    UNIT_TEST(soft_equiv(loy, xyf / area, 0.03));
+    UNIT_TEST(soft_equiv(hiy, xyf / area, 0.02));
+    UNIT_TEST(soft_equiv(loz, zf / area, 0.04));
+    UNIT_TEST(soft_equiv(hiz, zf / area, 0.02));
+
+    cout.precision(5);
+    cout << endl;
+    cout << "Low  X leakage = "
+         << setw(8) << lox << " ("
+         << setw(8) << xyf / area << ")" << endl;
+    cout << "High X leakage = "
+         << setw(8) << hix << " ("
+         << setw(8) << xyf / area << ")" << endl;
+    cout << "Low  Y leakage = "
+         << setw(8) << loy << " ("
+         << setw(8) << xyf / area << ")" << endl;
+    cout << "High Y leakage = "
+         << setw(8) << hiy << " ("
+         << setw(8) << xyf / area << ")" << endl;
+    cout << "Low  Z leakage = "
+         << setw(8) << loz << " ("
+         << setw(8) << zf / area << ")" << endl;
+    cout << "High Z leakage = "
+         << setw(8) << hiz << " ("
+         << setw(8) << zf / area << ")" << endl;
+    cout << endl;
+
+    csites.close();
+
+    if (ut.numFails == 0)
+    {
+        ut.passes("Finished heuristic tracking through core.");
+    }
+#else
+    if (ut.numFails == 0)
+    {
+        ut.passes("Heuristic tests need mc package for RNG.");
+    }
+#endif
+}
+
+//---------------------------------------------------------------------------//
+
+void core_reflecting(Parallel_Unit_Test &ut)
+{
+#ifdef USE_MC
+    // 2 fuel pin types
+    SP_Pin_Cell pin1(new Pin_Cell_t(1, 0.54, 3, 1.26, 14.28));
+    SP_Pin_Cell pin2(new Pin_Cell_t(2, 0.54, 3, 1.26, 14.28));
+
+    // water pin
+    SP_Pin_Cell box(new Pin_Cell_t(3, 2.52, 14.28));
+
+    // 3 lattices (fuel 1, 2, and water)
+    SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
+    SP_Lattice lat2(new Lattice_t(2, 2, 1, 1));
+    SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+
+    // lattice assignments
+    lat1->assign_object(pin1, 0);
+    lat2->assign_object(pin2, 0);
+    lat3->assign_object(box, 0);
+
+    // complete the lattices
+    lat1->complete(0.0, 0.0, 0.0);
+    lat2->complete(0.0, 0.0, 0.0);
+    lat3->complete(0.0, 0.0, 0.0);
+
+    // make core (3x3x2 with 4 objects, object 0 unassigned)
+    SP_Core core(new Core_t(3, 3, 2, 4));
+    UNIT_TEST(core->level() == 1);
+
+    // assign lattices
+    core->assign_object(lat1, 1);
+    core->assign_object(lat2, 2);
+    core->assign_object(lat3, 3);
+
+    // assign ids
+    core->id(0, 0, 0) = 1; // lattice 1
+    core->id(1, 0, 0) = 2; // lattice 2
+    core->id(2, 0, 0) = 3; // lattice 3 (reflector)
+    core->id(0, 1, 0) = 2; // lattice 2
+    core->id(1, 1, 0) = 1; // lattice 1
+    core->id(2, 1, 0) = 3; // lattice 3 (reflector)
+    core->id(0, 2, 0) = 3; // lattice 3 (reflector)
+    core->id(1, 2, 0) = 3; // lattice 3 (reflector)
+    core->id(2, 2, 0) = 3; // lattice 3 (reflector)
+    core->id(0, 0, 1) = 3; // lattice 3 (reflector)
+    core->id(1, 0, 1) = 3; // lattice 3 (reflector)
+    core->id(2, 0, 1) = 3; // lattice 3 (reflector)
+    core->id(0, 1, 1) = 3; // lattice 3 (reflector)
+    core->id(1, 1, 1) = 3; // lattice 3 (reflector)
+    core->id(2, 1, 1) = 3; // lattice 3 (reflector)
+    core->id(0, 2, 1) = 3; // lattice 3 (reflector)
+    core->id(1, 2, 1) = 3; // lattice 3 (reflector)
+    core->id(2, 2, 1) = 3; // lattice 3 (reflector)
+
+    // set reflected faces
+    vector<int> refl(6, 0);
+    refl[0] = 1; refl[2] = 1; refl[4] = 1;
+    core->set_reflecting(refl);
+
+    // complete the core
+    core->complete(0.0, 0.0, 0.0);
+
+    // check lattice
+    UNIT_TEST(soft_equiv(core->pitch(X), 7.56));
+    UNIT_TEST(soft_equiv(core->pitch(Y), 7.56));
+    UNIT_TEST(soft_equiv(core->height(), 28.56));
+
+    // build the RTK Core
+    Core_Geometry rtk_core(core);
+    Geometry &geometry = rtk_core;
+
+    // make a random number generator
+    mc::RNG_Control control(seed);
+    mc::RNG_Control::RNG rng = control.rng();
+
+    // geometry variables
+    double costheta, sintheta, phi;
+    Vector r, omega;
+    State  state;
+    double d;
+    int    Np = 10000;
+
+    int face_bin[6] = {0};
+    int refl_bin[6] = {0};
+
+    // sample Np tracks
+    for (int n = 0; n < Np; ++n)
+    {
+        // sample x,y,z randomly
+        r[0] = rng.ran() * 7.56;
+        r[1] = rng.ran() * 7.56;
+        r[2] = rng.ran() * 28.56;
+
+        // sample omega
+        costheta = 1.0 - 2.0 * rng.ran();
+        phi      = nemesis::constants::two_pi * rng.ran();
+        sintheta = sqrt(1.0 - costheta * costheta);
+
+        omega[0] = sintheta * cos(phi);
+        omega[1] = sintheta * sin(phi);
+        omega[2] = costheta;
+
+        // initialize track
+        geometry.initialize(r, omega, state);
+        UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+
+        // continue flag
+        bool done = false;
+
+        while (!done)
+        {
+            // get distance-to-boundary
+            d = geometry.distance_to_boundary(state);
+            UNIT_TEST(geometry.boundary_state(state) != REFLECT);
+
+            // update position of particle to the surface and process it through
+            geometry.move_to_surface(state);
+
+            // if the particle is reflected then do the reflection
+            if (geometry.boundary_state(state) == REFLECT)
+            {
+                if (state.exiting_face == State::MINUS_X)
+                    refl_bin[0]++;
+                else if (state.exiting_face == State::PLUS_X)
+                    refl_bin[1]++;
+                else if (state.exiting_face == State::MINUS_Y)
+                    refl_bin[2]++;
+                else if (state.exiting_face == State::PLUS_Y)
+                    refl_bin[3]++;
+                else if (state.exiting_face == State::MINUS_Z)
+                    refl_bin[4]++;
+                else if (state.exiting_face == State::PLUS_Z)
+                    refl_bin[5]++;
+
+                // reflect the particle
+                UNIT_TEST(geometry.reflect(state));
+            }
+
+            // terminate on escape
+            if (geometry.boundary_state(state) == OUTSIDE)
+            {
+                done = true;
+            }
+        }
+
+        if (state.escaping_face == State::MINUS_X)
+            face_bin[0]++;
+        else if (state.escaping_face == State::PLUS_X)
+            face_bin[1]++;
+        else if (state.escaping_face == State::MINUS_Y)
+            face_bin[2]++;
+        else if (state.escaping_face == State::PLUS_Y)
+            face_bin[3]++;
+        else if (state.escaping_face == State::MINUS_Z)
+            face_bin[4]++;
+        else if (state.escaping_face == State::PLUS_Z)
+            face_bin[5]++;
+    }
+
+    UNIT_TEST(face_bin[0] + face_bin[1] + face_bin[2] +
+              face_bin[3] + face_bin[4] + face_bin[5] == Np);
+
+    UNIT_TEST(face_bin[0] == 0);
+    UNIT_TEST(refl_bin[1] == 0);
+    UNIT_TEST(face_bin[2] == 0);
+    UNIT_TEST(refl_bin[3] == 0);
+    UNIT_TEST(face_bin[4] == 0);
+    UNIT_TEST(refl_bin[5] == 0);
+
+    // heuristicly stored data
+    UNIT_TEST(refl_bin[0] == 2992);
+    UNIT_TEST(face_bin[1] == 4563);
+    UNIT_TEST(refl_bin[2] == 2989);
+    UNIT_TEST(face_bin[3] == 4281);
+    UNIT_TEST(refl_bin[4] == 1096);
+    UNIT_TEST(face_bin[5] == 1156);
+
+    cout.precision(5);
+    cout << endl;
+    cout << "Low  X leakage    = " << setw(8) << face_bin[0] << endl;
+    cout << "High X leakage    = " << setw(8) << face_bin[1] << endl;
+    cout << "Low  Y leakage    = " << setw(8) << face_bin[2] << endl;
+    cout << "High Y leakage    = " << setw(8) << face_bin[3] << endl;
+    cout << "Low  Z leakage    = " << setw(8) << face_bin[4] << endl;
+    cout << "High Z leakage    = " << setw(8) << face_bin[5] << endl;
+    cout << endl;
+
+    cout << "Low  X reflection = " << setw(8) << refl_bin[0] << endl;
+    cout << "High X reflection = " << setw(8) << refl_bin[1] << endl;
+    cout << "Low  Y reflection = " << setw(8) << refl_bin[2] << endl;
+    cout << "High Y reflection = " << setw(8) << refl_bin[3] << endl;
+    cout << "Low  Z reflection = " << setw(8) << refl_bin[4] << endl;
+    cout << "High Z reflection = " << setw(8) << refl_bin[5] << endl;
+    cout << endl;
+
+    if (ut.numFails == 0)
+    {
+        ostringstream m;
+        m << "Finished heuristic tracking through core with reflecting "
+          << "boundaries";
+        ut.passes(m.str());
+    }
+#else
+    if (ut.numFails == 0)
+    {
+        ut.passes("Heuristic tests need mc package for RNG.");
+    }
+#endif
+}
+
+//---------------------------------------------------------------------------//
+// See autodoc/bwr.png for core figure showing particle path.
+
+void bwr_lattice_test(Parallel_Unit_Test &ut)
+{
+    // make bwr lattice
+    SP_Core bwr;
+    {
+        // pin shells
+        vector<double> r(2, 0.0);
+        vector<int>    rid(2, 1);
+        r[0] = 0.125;
+        r[1] = 0.25;
+
+        // cells
+        SP_Pin_Cell pin(new Pin_Cell_t(rid, r, 5, 0.75, 14.00, 4));
+        SP_Pin_Cell plug(new Pin_Cell_t(2, 0.6, 5, 1.5, 14.00, 4));
+
+        // gaps
+        SP_Pin_Cell g0(new Pin_Cell_t(5, 0.25, 14.00));      // corner
+        SP_Pin_Cell g1(new Pin_Cell_t(5, 0.25, 1.5, 14.00)); // x-edge
+        SP_Pin_Cell g2(new Pin_Cell_t(5, 1.5, 0.25, 14.00)); // y-edge
+
+        // 2x2 pin lattice
+        SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
+        lat1->assign_object(pin, 0);
+        lat1->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat1->num_cells() == 48);
+
+        // plug lattice
+        SP_Lattice lat2(new Lattice_t(1, 1, 1, 1));
+        lat2->assign_object(plug, 0);
+        lat2->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat2->num_cells() == 8);
+
+        // corner gap lattice
+        SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+        lat3->assign_object(g0, 0);
+        lat3->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat3->num_cells() == 1);
+
+        // x-edge gap lattice
+        SP_Lattice lat4(new Lattice_t(1, 1, 1, 1));
+        lat4->assign_object(g1, 0);
+        lat4->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat4->num_cells() == 1);
+
+        // y-edge gap lattice
+        SP_Lattice lat5(new Lattice_t(1, 1, 1, 1));
+        lat5->assign_object(g2, 0);
+        lat5->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat5->num_cells() == 1);
+
+        bwr = new Core_t(4, 4, 1, 5);
+
+        bwr->assign_object(lat1, 0); // 2x2 pin lattice
+        bwr->assign_object(lat2, 1); // water plug
+        bwr->assign_object(lat3, 2); // corner gap
+        bwr->assign_object(lat4, 3); // x-edge gap
+        bwr->assign_object(lat5, 4); // y_edge gap
+
+        bwr->id(0, 0, 0) = 2;
+        bwr->id(1, 0, 0) = 4;
+        bwr->id(2, 0, 0) = 4;
+        bwr->id(3, 0, 0) = 2;
+
+        bwr->id(0, 1, 0) = 3;
+        bwr->id(1, 1, 0) = 1;
+        bwr->id(2, 1, 0) = 0;
+        bwr->id(3, 1, 0) = 3;
+
+        bwr->id(0, 2, 0) = 3;
+        bwr->id(1, 2, 0) = 0;
+        bwr->id(2, 2, 0) = 1;
+        bwr->id(3, 2, 0) = 3;
+
+        bwr->id(0, 3, 0) = 2;
+        bwr->id(1, 3, 0) = 4;
+        bwr->id(2, 3, 0) = 4;
+        bwr->id(3, 3, 0) = 2;
+
+        // complete the bwr lattice
+        bwr->complete(0.0, 0.0, 0.0);
+
+        UNIT_TEST(soft_equiv(bwr->pitch(X), 3.5));
+        UNIT_TEST(soft_equiv(bwr->pitch(Y), 3.5));
+    }
+
+    // build the RTK Bwr
+    Core_Geometry bg(bwr);
+    Geometry &geometry = bg;
+
+    cout << endl;
+
+    Vector r, omega;
+    State  state;
+    double eps = 1.0e-6, d;
+
+    // initial point
+    r[0] = 1.3;
+    r[1] = 3.5;
+    r[2] = 0.0;
+
+    // direction
+    omega[0] = 2.2;
+    omega[1] = -3.2;
+    omega[2] = 0.1;
+    nemesis::vector_normalize(omega);
+
+    // initialize the geoemtry
+    bg.initialize(r, omega, state);
+
+    int ref[] = {121, 101, 107, 114, 113, 117, 118, 116,
+                 54, 53, 52, 58, 59, 56, 57, 27, 61};
+    int k = 0;
+
+    cout.precision(5);
+    while (bg.boundary_state(state) != OUTSIDE)
+    {
+        d = bg.distance_to_boundary(state);
+
+        int cell = bg.cell(state);
+        int mat  = bg.matid(state);
+
+        UNIT_TEST(cell == ref[k]);
+        k++;
+
+        bg.move_to_surface(state);
+
+        cout << "Transporting " << fixed << setw(10) << d
+             << " in cell " << setw(4) << cell
+             << " through material " << mat
+             << " to " << setw(10) << bg.position(state)[0]
+             << setw(10) << bg.position(state)[1]
+             << setw(10) << bg.position(state)[2] << endl;
+    }
+
+    cout << endl;
+
+    if (ut.numFails == 0)
+    {
+        ostringstream m;
+        m << "Correctly tracked through multilevel BWR-type core and "
+          << "accessed global cells";
+        ut.passes(m.str());
+    }
+}
+
+//---------------------------------------------------------------------------//
+// See autodoc/bwr.png for core figure showing particle path.
+
+void bwr_symmetry_test(Parallel_Unit_Test &ut)
+{
+    // make bwr lattice
+    SP_Core bwr;
+    {
+        // pin shells
+        vector<double> r(2, 0.0);
+        vector<int>    rid(2, 1);
+        r[0] = 0.125;
+        r[1] = 0.25;
+
+        // cells
+        SP_Pin_Cell pin(new Pin_Cell_t(rid, r, 5, 0.75, 14.00, 4));
+        SP_Pin_Cell plug(new Pin_Cell_t(2, 0.6, 5, 1.5, 14.00, 4));
+
+        // gaps
+        SP_Pin_Cell g0(new Pin_Cell_t(5, 0.25, 14.00));      // corner
+        SP_Pin_Cell g1(new Pin_Cell_t(5, 0.25, 1.5, 14.00)); // x-edge
+        SP_Pin_Cell g2(new Pin_Cell_t(5, 1.5, 0.25, 14.00)); // y-edge
+
+        // 2x2 pin lattice
+        SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
+        lat1->assign_object(pin, 0);
+        lat1->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat1->num_cells() == 48);
+
+        // plug lattice
+        SP_Lattice lat2(new Lattice_t(1, 1, 1, 1));
+        lat2->assign_object(plug, 0);
+        lat2->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat2->num_cells() == 8);
+
+        // corner gap lattice
+        SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+        lat3->assign_object(g0, 0);
+        lat3->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat3->num_cells() == 1);
+
+        // x-edge gap lattice
+        SP_Lattice lat4(new Lattice_t(1, 1, 1, 1));
+        lat4->assign_object(g1, 0);
+        lat4->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat4->num_cells() == 1);
+
+        // y-edge gap lattice
+        SP_Lattice lat5(new Lattice_t(1, 1, 1, 1));
+        lat5->assign_object(g2, 0);
+        lat5->complete(0.0, 0.0, 0.0);
+        UNIT_TEST(lat5->num_cells() == 1);
+
+        bwr = new Core_t(4, 4, 1, 5);
+
+        bwr->assign_object(lat1, 0); // 2x2 pin lattice
+        bwr->assign_object(lat2, 1); // water plug
+        bwr->assign_object(lat3, 2); // corner gap
+        bwr->assign_object(lat4, 3); // x-edge gap
+        bwr->assign_object(lat5, 4); // y_edge gap
+
+        bwr->id(0, 0, 0) = 2;
+        bwr->id(1, 0, 0) = 4;
+        bwr->id(2, 0, 0) = 4;
+        bwr->id(3, 0, 0) = 2;
+
+        bwr->id(0, 1, 0) = 3;
+        bwr->id(1, 1, 0) = 1;
+        bwr->id(2, 1, 0) = 0;
+        bwr->id(3, 1, 0) = 3;
+
+        bwr->id(0, 2, 0) = 3;
+        bwr->id(1, 2, 0) = 0;
+        bwr->id(2, 2, 0) = 1;
+        bwr->id(3, 2, 0) = 3;
+
+        bwr->id(0, 3, 0) = 2;
+        bwr->id(1, 3, 0) = 4;
+        bwr->id(2, 3, 0) = 4;
+        bwr->id(3, 3, 0) = 2;
+
+        // complete the bwr lattice
+        bwr->complete(0.0, 0.0, 0.0);
+
+        UNIT_TEST(soft_equiv(bwr->pitch(X), 3.5));
+        UNIT_TEST(soft_equiv(bwr->pitch(Y), 3.5));
+    }
+
+    // Create Geometry
+    denovo::RTK_Geometry< Core_t > geom(bwr, true);
+
+    // Set Mapped Cells
+    geom.set_mapped_cells();
+
+    def::Vec_Int map_cells = geom.mapped_cells();
+
+    UNIT_TEST( map_cells.size() == 124);
+
+    def::Vec_Int ref(124);
+    ref[0  ] = 123; ref[1  ] = 119; ref[2  ] = 61 ; ref[3  ] = 3  ;
+    ref[4  ] = 122; ref[5  ] = 117; ref[6  ] = 118; ref[7  ] = 113;
+    ref[8  ] = 114; ref[9  ] = 115; ref[10 ] = 116; ref[11 ] = 111;
+
+    ref[12 ] = 112; ref[13 ] = 58 ; ref[14 ] = 59 ; ref[15 ] = 60 ;
+    ref[16 ] = 52 ; ref[17 ] = 53 ; ref[18 ] = 54 ; ref[19 ] = 55 ;
+    ref[20 ] = 56 ; ref[21 ] = 57 ; ref[22 ] = 49 ; ref[23 ] = 50 ;
+
+    ref[24 ] = 51 ; ref[25 ] = 34 ; ref[26 ] = 35 ; ref[27 ] = 36 ;
+    ref[28 ] = 28 ; ref[29 ] = 29 ; ref[30 ] = 30 ; ref[31 ] = 31 ;
+    ref[32 ] = 32 ; ref[33 ] = 33 ; ref[34 ] = 25 ; ref[35 ] = 26 ;
+
+    ref[36 ] = 27 ; ref[37 ] = 46 ; ref[38 ] = 47 ; ref[39 ] = 48 ;
+    ref[40 ] = 40 ; ref[41 ] = 41 ; ref[42 ] = 42 ; ref[43 ] = 43 ;
+    ref[44 ] = 44 ; ref[45 ] = 45 ; ref[46 ] = 37 ; ref[47 ] = 38 ;
+
+    ref[48 ] = 39 ; ref[49 ] = 22 ; ref[50 ] = 23 ; ref[51 ] = 24 ;
+    ref[52 ] = 16 ; ref[53 ] = 17 ; ref[54 ] = 18 ; ref[55 ] = 19 ;
+    ref[56 ] = 20 ; ref[57 ] = 21 ; ref[58 ] = 13 ; ref[59 ] = 14 ;
+
+    ref[60 ] = 15 ; ref[61 ] = 2  ; ref[62 ] = 121; ref[63 ] = 108;
+    ref[64 ] = 109; ref[65 ] = 110; ref[66 ] = 102; ref[67 ] = 103;
+    ref[68 ] = 104; ref[69 ] = 105; ref[70 ] = 106; ref[71 ] = 107;
+
+    ref[72 ] = 99 ; ref[73 ] = 100; ref[74 ] = 101; ref[75 ] = 84 ;
+    ref[76 ] = 85 ; ref[77 ] = 86 ; ref[78 ] = 78 ; ref[79 ] = 79 ;
+    ref[80 ] = 80 ; ref[81 ] = 81 ; ref[82 ] = 82 ; ref[83 ] = 83 ;
+
+    ref[84 ] = 75 ; ref[85 ] = 76 ; ref[86 ] = 77 ; ref[87 ] = 96 ;
+    ref[88 ] = 97 ; ref[89 ] = 98 ; ref[90 ] = 90 ; ref[91 ] = 91 ;
+    ref[92 ] = 92 ; ref[93 ] = 93 ; ref[94 ] = 94 ; ref[95 ] = 95 ;
+
+    ref[96 ] = 87 ; ref[97 ] = 88 ; ref[98 ] = 89 ; ref[99 ] = 72 ;
+    ref[100] = 73 ; ref[101] = 74 ; ref[102] = 66 ; ref[103] = 67 ;
+    ref[104] = 68 ; ref[105] = 69 ; ref[106] = 70 ; ref[107] = 71 ;
+
+    ref[108] = 63 ; ref[109] = 64 ; ref[110] = 65 ; ref[111] = 11 ;
+    ref[112] = 12 ; ref[113] = 7  ; ref[114] = 8  ; ref[115] = 9  ;
+    ref[116] = 10 ; ref[117] = 5  ; ref[118] = 6  ; ref[119] = 1  ;
+
+    ref[120] = 120; ref[121] = 62 ; ref[122] = 4  ; ref[123] = 0  ;
+
+    for (int i = 0; i < 124; ++i )
+    {
+        UNIT_TEST(map_cells[i] == ref[i] );
+    }
+
+    if (ut.numFails == 0)
+    {
+        ostringstream m;
+        m << "Correctly assigned symmetric cells to BWR core";
+        ut.passes(m.str());
+    }
+}
+
+//---------------------------------------------------------------------------//
+
+int main(int argc, char *argv[])
+{
+    Parallel_Unit_Test ut(argc, argv, denovo::release);
+
+    node  = nemesis::node();
+    nodes = nemesis::nodes();
+
+    try
+    {
+        // >>> UNIT TESTS
+        int gpass = 0;
+        int gfail = 0;
+
+        if (nodes == 1)
+        {
+            core_heuristic(ut);
+            gpass += ut.numPasses;
+            gfail += ut.numFails;
+            ut.reset();
+
+            core_reflecting(ut);
+            gpass += ut.numPasses;
+            gfail += ut.numFails;
+            ut.reset();
+
+            bwr_lattice_test(ut);
+            gpass += ut.numPasses;
+            gfail += ut.numFails;
+            ut.reset();
+
+            bwr_symmetry_test(ut);
+            gpass += ut.numPasses;
+            gfail += ut.numFails;
+            ut.reset();
+        }
+        else
+        {
+            gpass++;
+        }
+
+        // add up global passes and fails
+        nemesis::global_sum(gpass);
+        nemesis::global_sum(gfail);
+        ut.numPasses = gpass;
+        ut.numFails  = gfail;
+    }
+    catch (std::exception &err)
+    {
+        std::cout << "ERROR: While testing tstRTK_Core, "
+                  << err.what()
+                  << endl;
+        ut.numFails++;
+    }
+    catch( ... )
+    {
+        std::cout << "ERROR: While testing tstRTK_Core, "
+                  << "An unknown exception was thrown."
+                  << endl;
+        ut.numFails++;
+    }
+    return ut.numFails;
+}
+
+//---------------------------------------------------------------------------//
+//                        end of tstRTK_Core.cc
+//---------------------------------------------------------------------------//
