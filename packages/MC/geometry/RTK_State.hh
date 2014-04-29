@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_State.hh
+ * \file   geometry/RTK_State.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:46:52 2010
  * \brief  RTK_State struct definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_rtk_RTK_State_hh
-#define geometry_rtk_RTK_State_hh
+#ifndef geometry_RTK_State_hh
+#define geometry_RTK_State_hh
 
 #include <harness/config.h>
 #include "utils/Vector_Lite.hh"
@@ -95,7 +95,7 @@ struct RTK_State
 
 } // end namespace denovo
 
-#endif // geometry_rtk_RTK_State_hh
+#endif // geometry_RTK_State_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_State.hh

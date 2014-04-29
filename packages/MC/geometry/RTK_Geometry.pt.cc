@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_Geometry.pt.cc
+ * \file   geometry/RTK_Geometry.pt.cc
  * \author Thomas M. Evans
  * \date   Tue Jan 25 10:02:33 2011
  * \brief  Explicit instantiations of RTK_Geometry types.

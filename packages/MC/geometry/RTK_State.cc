@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_State.cc
+ * \file   geometry/RTK_State.cc
  * \author Thomas M. Evans
  * \date   Tue Jan 25 14:38:37 2011
  * \brief  RTK_State member definitions.

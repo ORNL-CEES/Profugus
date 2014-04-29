@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_Geometry.hh
+ * \file   geometry/RTK_Geometry.hh
  * \author Thomas M. Evans
  * \date   Tue Jan 25 10:02:33 2011
  * \brief  RTK_Geometry class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_rtk_RTK_Geometry_hh
-#define geometry_rtk_RTK_Geometry_hh
+#ifndef geometry_RTK_Geometry_hh
+#define geometry_RTK_Geometry_hh
 
 #include <cmath>
 
@@ -438,7 +438,7 @@ typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > RTK_Core;
 
 } // end namespace denovo
 
-#endif // geometry_rtk_RTK_Geometry_hh
+#endif // geometry_RTK_Geometry_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_Geometry.hh

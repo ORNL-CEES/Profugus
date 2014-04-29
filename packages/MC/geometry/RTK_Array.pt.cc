@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_Array.pt.cc
+ * \file   geometry/RTK_Array.pt.cc
  * \author Thomas M. Evans
  * \date   Tue Dec 14 12:38:39 2010
  * \brief  RTK_Array explicit instantiations.

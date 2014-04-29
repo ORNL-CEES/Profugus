@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_Array.hh
+ * \file   geometry/RTK_Array.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:46:26 2010
  * \brief  RTK_Array class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_rtk_RTK_Array_hh
-#define geometry_rtk_RTK_Array_hh
+#ifndef geometry_RTK_Array_hh
+#define geometry_RTK_Array_hh
 
 #include <vector>
 #include <algorithm>
@@ -271,7 +271,7 @@ class RTK_Array
 
 #include "RTK_Array.i.hh"
 
-#endif // geometry_rtk_RTK_Array_hh
+#endif // geometry_RTK_Array_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_Array.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_Cell.hh
+ * \file   geometry/RTK_Cell.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:47:16 2010
  * \brief  RTK_Cell class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_rtk_RTK_Cell_hh
-#define geometry_rtk_RTK_Cell_hh
+#ifndef geometry_RTK_Cell_hh
+#define geometry_RTK_Cell_hh
 
 #include <ostream>
 #include <vector>
@@ -266,7 +266,7 @@ class RTK_Cell
 
 #include "RTK_Cell.i.hh"
 
-#endif // geometry_rtk_RTK_Cell_hh
+#endif // geometry_RTK_Cell_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_Cell.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_Cell.cc
+ * \file   geometry/RTK_Cell.cc
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:47:16 2010
  * \brief  RTK_Cell member definitions.

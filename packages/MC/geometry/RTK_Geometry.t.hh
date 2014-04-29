@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/rtk/RTK_Geometry.t.hh
+ * \file   geometry/RTK_Geometry.t.hh
  * \author Thomas M. Evans
  * \date   Tue Jan 25 10:02:33 2011
  * \brief  RTK_Geometry template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_rtk_RTK_Geometry_t_hh
-#define geometry_rtk_RTK_Geometry_t_hh
+#ifndef geometry_RTK_Geometry_t_hh
+#define geometry_RTK_Geometry_t_hh
 
 #include "RTK_Geometry.hh"
 #include "RTK_Functions.hh"
@@ -205,7 +205,7 @@ void RTK_Geometry<Array>::set_mapped_cells()
 
 } // end namespace denovo
 
-#endif // geometry_rtk_RTK_Geometry_t_hh
+#endif // geometry_RTK_Geometry_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of geometry/RTK_Geometry.t.hh
