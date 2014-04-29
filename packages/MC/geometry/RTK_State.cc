@@ -37,7 +37,7 @@ void RTK_State::pack(char *buffer) const
     Require (escaping_face == NONE);
 
     // make a packer
-    nemesis::Packer p;
+    Packer p;
     p.set_buffer(packed_bytes(), buffer);
     Check (sizeof(level_coord) == max_levels * 3 * SIZEOF_INT);
 
@@ -60,7 +60,7 @@ void RTK_State::unpack(const char *buffer)
     Require (buffer);
 
     // make an unpacker
-    nemesis::Unpacker u;
+    Unpacker u;
     u.set_buffer(packed_bytes(), buffer);
 
     // unpack the data

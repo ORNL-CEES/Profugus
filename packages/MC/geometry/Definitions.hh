@@ -2,7 +2,7 @@
 /*!
  * \file   geometry/Definitions.hh
  * \author Thomas M. Evans
- * \date   Mon Aug 22 11:21:08 2011
+ * \date   Tuesday April 29 14:52:17 2014
  * \brief  General geometry functions and types.
  * \note   Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
@@ -11,12 +11,9 @@
 #ifndef geometry_Definitions_hh
 #define geometry_Definitions_hh
 
-#include <cmath>
-#include "harness/DBC.hh"
-#include "harness/Soft_Equivalence.hh"
 #include "utils/Definitions.hh"
 
-namespace denovo
+namespace profugus
 {
 
 namespace geometry
@@ -41,7 +38,7 @@ enum Boundary_State {
 
 } // end namespace geometry
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_Definitions_hh
 

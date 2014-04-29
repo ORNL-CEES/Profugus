@@ -2,7 +2,7 @@
 /*!
  * \file   geometry/RTK_Cell.cc
  * \author Thomas M. Evans
- * \date   Tue Dec 21 12:47:16 2010
+ * \date   Tuesday April 29 15:41:12 2014
  * \brief  RTK_Cell member definitions.
  * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
@@ -16,7 +16,7 @@
 #include "harness/Warnings.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
-#include "geometry/Definitions.hh"
+#include "Definitions.hh"
 #include "RTK_Cell.hh"
 
 namespace denovo

@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <iostream>
+#include "gtest/nemesis_gtest.hh"
 #include <vector>
 #include <cmath>
 #include <sstream>
@@ -17,11 +17,6 @@
 
 #include <geometry/config.h>
 
-#include "harness/DBC.hh"
-#include "harness/Soft_Equivalence.hh"
-#include "comm/global.hh"
-#include "comm/Parallel_Unit_Test.hh"
-#include "release/Release.hh"
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
@@ -33,8 +28,6 @@
 #endif
 
 using namespace std;
-using nemesis::Parallel_Unit_Test;
-using nemesis::soft_equiv;
 
 using def::X;
 using def::Y;
@@ -56,13 +49,9 @@ using denovo::geometry::OUTSIDE;
 using denovo::geometry::INSIDE;
 using denovo::geometry::REFLECT;
 
-int node  = 0;
-int nodes = 0;
 
 int seed = 4305834;
 
-#define ITFAILS ut.failure(__LINE__);
-#define UNIT_TEST(a) if (!(a)) ut.failure(__LINE__);
 
 bool do_output = false;
 
@@ -98,7 +87,7 @@ bool do_output = false;
 
  */
 
-void core_heuristic(Parallel_Unit_Test &ut)
+TEST(Core, Heuristic)
 {
 #ifdef USE_MC
     // 2 fuel pin types
@@ -125,7 +114,7 @@ void core_heuristic(Parallel_Unit_Test &ut)
 
     // make core (3x3x2 with 4 objects, object 0 unassigned)
     SP_Core core(new Core_t(3, 3, 2, 4));
-    UNIT_TEST(core->level() == 1);
+    EXPECT_EQ(1, core->level());
 
     // assign lattices
     core->assign_object(lat1, 1);
@@ -156,9 +145,9 @@ void core_heuristic(Parallel_Unit_Test &ut)
     core->complete(0.0, 0.0, 0.0);
 
     // check lattice
-    UNIT_TEST(soft_equiv(core->pitch(X), 7.56));
-    UNIT_TEST(soft_equiv(core->pitch(Y), 7.56));
-    UNIT_TEST(soft_equiv(core->height(), 28.56));
+    EXPECT_TRUE(soft_equiv(core->pitch(X), 7.56));
+    EXPECT_TRUE(soft_equiv(core->pitch(Y), 7.56));
+    EXPECT_TRUE(soft_equiv(core->height(), 28.56));
 
     // output the core array
     core->output(cout);
@@ -203,7 +192,7 @@ void core_heuristic(Parallel_Unit_Test &ut)
 
         // initialize track
         geometry.initialize(r, omega, state);
-        UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+        EXPECT_EQ(INSIDE, geometry.boundary_state(state));
 
         while (geometry.boundary_state(state) == INSIDE)
         {
@@ -233,7 +222,7 @@ void core_heuristic(Parallel_Unit_Test &ut)
             face_bin[5]++;
     }
 
-    UNIT_TEST(face_bin[0] + face_bin[1] + face_bin[2] +
+    EXPECT_TRUE(face_bin[0] + face_bin[1] + face_bin[2] +
               face_bin[3] + face_bin[4] + face_bin[5] == Np);
 
     double xyf  = 28.56 * 7.56;
@@ -247,12 +236,12 @@ void core_heuristic(Parallel_Unit_Test &ut)
     double loz  = face_bin[4] / Npx;
     double hiz  = face_bin[5] / Npx;
 
-    UNIT_TEST(soft_equiv(lox, xyf / area, 0.01));
-    UNIT_TEST(soft_equiv(hix, xyf / area, 0.03));
-    UNIT_TEST(soft_equiv(loy, xyf / area, 0.03));
-    UNIT_TEST(soft_equiv(hiy, xyf / area, 0.02));
-    UNIT_TEST(soft_equiv(loz, zf / area, 0.04));
-    UNIT_TEST(soft_equiv(hiz, zf / area, 0.02));
+    EXPECT_SOFTEQ(lox, xyf / area, 0.01);
+    EXPECT_SOFTEQ(hix, xyf / area, 0.03);
+    EXPECT_SOFTEQ(loy, xyf / area, 0.03);
+    EXPECT_SOFTEQ(hiy, xyf / area, 0.02);
+    EXPECT_SOFTEQ(loz, zf / area, 0.04);
+    EXPECT_SOFTEQ(hiz, zf / area, 0.02);
 
     cout.precision(5);
     cout << endl;
@@ -278,21 +267,15 @@ void core_heuristic(Parallel_Unit_Test &ut)
 
     csites.close();
 
-    if (ut.numFails == 0)
-    {
-        ut.passes("Finished heuristic tracking through core.");
-    }
+    // ut.passes("Finished heuristic tracking through core.");
 #else
-    if (ut.numFails == 0)
-    {
-        ut.passes("Heuristic tests need mc package for RNG.");
-    }
+    // ut.passes("Heuristic tests need mc package for RNG.");
 #endif
 }
 
 //---------------------------------------------------------------------------//
 
-void core_reflecting(Parallel_Unit_Test &ut)
+TEST(Core, Reflecting)
 {
 #ifdef USE_MC
     // 2 fuel pin types
@@ -319,7 +302,7 @@ void core_reflecting(Parallel_Unit_Test &ut)
 
     // make core (3x3x2 with 4 objects, object 0 unassigned)
     SP_Core core(new Core_t(3, 3, 2, 4));
-    UNIT_TEST(core->level() == 1);
+    EXPECT_EQ(1, core->level());
 
     // assign lattices
     core->assign_object(lat1, 1);
@@ -355,9 +338,9 @@ void core_reflecting(Parallel_Unit_Test &ut)
     core->complete(0.0, 0.0, 0.0);
 
     // check lattice
-    UNIT_TEST(soft_equiv(core->pitch(X), 7.56));
-    UNIT_TEST(soft_equiv(core->pitch(Y), 7.56));
-    UNIT_TEST(soft_equiv(core->height(), 28.56));
+    EXPECT_TRUE(soft_equiv(core->pitch(X), 7.56));
+    EXPECT_TRUE(soft_equiv(core->pitch(Y), 7.56));
+    EXPECT_TRUE(soft_equiv(core->height(), 28.56));
 
     // build the RTK Core
     Core_Geometry rtk_core(core);
@@ -396,7 +379,7 @@ void core_reflecting(Parallel_Unit_Test &ut)
 
         // initialize track
         geometry.initialize(r, omega, state);
-        UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+        EXPECT_EQ(INSIDE, geometry.boundary_state(state));
 
         // continue flag
         bool done = false;
@@ -405,7 +388,7 @@ void core_reflecting(Parallel_Unit_Test &ut)
         {
             // get distance-to-boundary
             d = geometry.distance_to_boundary(state);
-            UNIT_TEST(geometry.boundary_state(state) != REFLECT);
+            EXPECT_TRUE(geometry.boundary_state(state) != REFLECT);
 
             // update position of particle to the surface and process it through
             geometry.move_to_surface(state);
@@ -427,7 +410,7 @@ void core_reflecting(Parallel_Unit_Test &ut)
                     refl_bin[5]++;
 
                 // reflect the particle
-                UNIT_TEST(geometry.reflect(state));
+                EXPECT_TRUE(geometry.reflect(state));
             }
 
             // terminate on escape
@@ -451,23 +434,23 @@ void core_reflecting(Parallel_Unit_Test &ut)
             face_bin[5]++;
     }
 
-    UNIT_TEST(face_bin[0] + face_bin[1] + face_bin[2] +
+    EXPECT_TRUE(face_bin[0] + face_bin[1] + face_bin[2] +
               face_bin[3] + face_bin[4] + face_bin[5] == Np);
 
-    UNIT_TEST(face_bin[0] == 0);
-    UNIT_TEST(refl_bin[1] == 0);
-    UNIT_TEST(face_bin[2] == 0);
-    UNIT_TEST(refl_bin[3] == 0);
-    UNIT_TEST(face_bin[4] == 0);
-    UNIT_TEST(refl_bin[5] == 0);
+    EXPECT_EQ(0, face_bin[0]);
+    EXPECT_EQ(0, refl_bin[1]);
+    EXPECT_EQ(0, face_bin[2]);
+    EXPECT_EQ(0, refl_bin[3]);
+    EXPECT_EQ(0, face_bin[4]);
+    EXPECT_EQ(0, refl_bin[5]);
 
     // heuristicly stored data
-    UNIT_TEST(refl_bin[0] == 2992);
-    UNIT_TEST(face_bin[1] == 4563);
-    UNIT_TEST(refl_bin[2] == 2989);
-    UNIT_TEST(face_bin[3] == 4281);
-    UNIT_TEST(refl_bin[4] == 1096);
-    UNIT_TEST(face_bin[5] == 1156);
+    EXPECT_EQ(2992, refl_bin[0]);
+    EXPECT_EQ(4563, face_bin[1]);
+    EXPECT_EQ(2989, refl_bin[2]);
+    EXPECT_EQ(4281, face_bin[3]);
+    EXPECT_EQ(1096, refl_bin[4]);
+    EXPECT_EQ(1156, face_bin[5]);
 
     cout.precision(5);
     cout << endl;
@@ -487,25 +470,19 @@ void core_reflecting(Parallel_Unit_Test &ut)
     cout << "High Z reflection = " << setw(8) << refl_bin[5] << endl;
     cout << endl;
 
-    if (ut.numFails == 0)
-    {
-        ostringstream m;
-        m << "Finished heuristic tracking through core with reflecting "
-          << "boundaries";
-        ut.passes(m.str());
-    }
+    // ostringstream m;
+    // m << "Finished heuristic tracking through core with reflecting "
+    // << "boundaries";
+    // ut.passes(m.str());
 #else
-    if (ut.numFails == 0)
-    {
-        ut.passes("Heuristic tests need mc package for RNG.");
-    }
+    // ut.passes("Heuristic tests need mc package for RNG.");
 #endif
 }
 
 //---------------------------------------------------------------------------//
 // See autodoc/bwr.png for core figure showing particle path.
 
-void bwr_lattice_test(Parallel_Unit_Test &ut)
+TEST(Bwr, Lattice)
 {
     // make bwr lattice
     SP_Core bwr;
@@ -529,31 +506,31 @@ void bwr_lattice_test(Parallel_Unit_Test &ut)
         SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
         lat1->assign_object(pin, 0);
         lat1->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat1->num_cells() == 48);
+        EXPECT_EQ(48, lat1->num_cells());
 
         // plug lattice
         SP_Lattice lat2(new Lattice_t(1, 1, 1, 1));
         lat2->assign_object(plug, 0);
         lat2->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat2->num_cells() == 8);
+        EXPECT_EQ(8, lat2->num_cells());
 
         // corner gap lattice
         SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
         lat3->assign_object(g0, 0);
         lat3->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat3->num_cells() == 1);
+        EXPECT_EQ(1, lat3->num_cells());
 
         // x-edge gap lattice
         SP_Lattice lat4(new Lattice_t(1, 1, 1, 1));
         lat4->assign_object(g1, 0);
         lat4->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat4->num_cells() == 1);
+        EXPECT_EQ(1, lat4->num_cells());
 
         // y-edge gap lattice
         SP_Lattice lat5(new Lattice_t(1, 1, 1, 1));
         lat5->assign_object(g2, 0);
         lat5->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat5->num_cells() == 1);
+        EXPECT_EQ(1, lat5->num_cells());
 
         bwr = new Core_t(4, 4, 1, 5);
 
@@ -586,8 +563,8 @@ void bwr_lattice_test(Parallel_Unit_Test &ut)
         // complete the bwr lattice
         bwr->complete(0.0, 0.0, 0.0);
 
-        UNIT_TEST(soft_equiv(bwr->pitch(X), 3.5));
-        UNIT_TEST(soft_equiv(bwr->pitch(Y), 3.5));
+        EXPECT_TRUE(soft_equiv(bwr->pitch(X), 3.5));
+        EXPECT_TRUE(soft_equiv(bwr->pitch(Y), 3.5));
     }
 
     // build the RTK Bwr
@@ -626,7 +603,7 @@ void bwr_lattice_test(Parallel_Unit_Test &ut)
         int cell = bg.cell(state);
         int mat  = bg.matid(state);
 
-        UNIT_TEST(cell == ref[k]);
+        EXPECT_EQ(ref[k], cell);
         k++;
 
         bg.move_to_surface(state);
@@ -641,19 +618,16 @@ void bwr_lattice_test(Parallel_Unit_Test &ut)
 
     cout << endl;
 
-    if (ut.numFails == 0)
-    {
-        ostringstream m;
-        m << "Correctly tracked through multilevel BWR-type core and "
-          << "accessed global cells";
-        ut.passes(m.str());
-    }
+    // ostringstream m;
+    // m << "Correctly tracked through multilevel BWR-type core and "
+    // << "accessed global cells";
+    // ut.passes(m.str());
 }
 
 //---------------------------------------------------------------------------//
 // See autodoc/bwr.png for core figure showing particle path.
 
-void bwr_symmetry_test(Parallel_Unit_Test &ut)
+TEST(Bwr, Symmetry)
 {
     // make bwr lattice
     SP_Core bwr;
@@ -677,31 +651,31 @@ void bwr_symmetry_test(Parallel_Unit_Test &ut)
         SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
         lat1->assign_object(pin, 0);
         lat1->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat1->num_cells() == 48);
+        EXPECT_EQ(48, lat1->num_cells());
 
         // plug lattice
         SP_Lattice lat2(new Lattice_t(1, 1, 1, 1));
         lat2->assign_object(plug, 0);
         lat2->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat2->num_cells() == 8);
+        EXPECT_EQ(8, lat2->num_cells());
 
         // corner gap lattice
         SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
         lat3->assign_object(g0, 0);
         lat3->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat3->num_cells() == 1);
+        EXPECT_EQ(1, lat3->num_cells());
 
         // x-edge gap lattice
         SP_Lattice lat4(new Lattice_t(1, 1, 1, 1));
         lat4->assign_object(g1, 0);
         lat4->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat4->num_cells() == 1);
+        EXPECT_EQ(1, lat4->num_cells());
 
         // y-edge gap lattice
         SP_Lattice lat5(new Lattice_t(1, 1, 1, 1));
         lat5->assign_object(g2, 0);
         lat5->complete(0.0, 0.0, 0.0);
-        UNIT_TEST(lat5->num_cells() == 1);
+        EXPECT_EQ(1, lat5->num_cells());
 
         bwr = new Core_t(4, 4, 1, 5);
 
@@ -734,8 +708,8 @@ void bwr_symmetry_test(Parallel_Unit_Test &ut)
         // complete the bwr lattice
         bwr->complete(0.0, 0.0, 0.0);
 
-        UNIT_TEST(soft_equiv(bwr->pitch(X), 3.5));
-        UNIT_TEST(soft_equiv(bwr->pitch(Y), 3.5));
+        EXPECT_TRUE(soft_equiv(bwr->pitch(X), 3.5));
+        EXPECT_TRUE(soft_equiv(bwr->pitch(Y), 3.5));
     }
 
     // Create Geometry
@@ -746,7 +720,7 @@ void bwr_symmetry_test(Parallel_Unit_Test &ut)
 
     def::Vec_Int map_cells = geom.mapped_cells();
 
-    UNIT_TEST( map_cells.size() == 124);
+    EXPECT_EQ(124, map_cells.size());
 
     def::Vec_Int ref(124);
     ref[0  ] = 123; ref[1  ] = 119; ref[2  ] = 61 ; ref[3  ] = 3  ;
@@ -793,81 +767,16 @@ void bwr_symmetry_test(Parallel_Unit_Test &ut)
 
     for (int i = 0; i < 124; ++i )
     {
-        UNIT_TEST(map_cells[i] == ref[i] );
+        EXPECT_EQ(ref[i], map_cells[i]);
     }
 
-    if (ut.numFails == 0)
-    {
-        ostringstream m;
-        m << "Correctly assigned symmetric cells to BWR core";
-        ut.passes(m.str());
-    }
+    // ostringstream m;
+    // m << "Correctly assigned symmetric cells to BWR core";
+    // ut.passes(m.str());
 }
 
 //---------------------------------------------------------------------------//
 
-int main(int argc, char *argv[])
-{
-    Parallel_Unit_Test ut(argc, argv, denovo::release);
-
-    node  = nemesis::node();
-    nodes = nemesis::nodes();
-
-    try
-    {
-        // >>> UNIT TESTS
-        int gpass = 0;
-        int gfail = 0;
-
-        if (nodes == 1)
-        {
-            core_heuristic(ut);
-            gpass += ut.numPasses;
-            gfail += ut.numFails;
-            ut.reset();
-
-            core_reflecting(ut);
-            gpass += ut.numPasses;
-            gfail += ut.numFails;
-            ut.reset();
-
-            bwr_lattice_test(ut);
-            gpass += ut.numPasses;
-            gfail += ut.numFails;
-            ut.reset();
-
-            bwr_symmetry_test(ut);
-            gpass += ut.numPasses;
-            gfail += ut.numFails;
-            ut.reset();
-        }
-        else
-        {
-            gpass++;
-        }
-
-        // add up global passes and fails
-        nemesis::global_sum(gpass);
-        nemesis::global_sum(gfail);
-        ut.numPasses = gpass;
-        ut.numFails  = gfail;
-    }
-    catch (std::exception &err)
-    {
-        std::cout << "ERROR: While testing tstRTK_Core, "
-                  << err.what()
-                  << endl;
-        ut.numFails++;
-    }
-    catch( ... )
-    {
-        std::cout << "ERROR: While testing tstRTK_Core, "
-                  << "An unknown exception was thrown."
-                  << endl;
-        ut.numFails++;
-    }
-    return ut.numFails;
-}
 
 //---------------------------------------------------------------------------//
 //                        end of tstRTK_Core.cc

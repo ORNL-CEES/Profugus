@@ -11,8 +11,7 @@
 #include "RTK_Functions.hh"
 
 #include "harness/Soft_Equivalence.hh"
-#include "utils/Vector_Functions.hh"
-#include "geometry/Definitions.hh"
+#include "Definitions.hh"
 
 using def::Space_Vector;
 

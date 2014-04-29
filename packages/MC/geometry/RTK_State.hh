@@ -2,7 +2,7 @@
 /*!
  * \file   geometry/RTK_State.hh
  * \author Thomas M. Evans
- * \date   Tue Dec 21 12:46:52 2010
+ * \date   Tuesday April 29 16:9:53 2014
  * \brief  RTK_State struct definition.
  * \note   Copyright (C) 2010 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
@@ -11,11 +11,11 @@
 #ifndef geometry_RTK_State_hh
 #define geometry_RTK_State_hh
 
-#include <harness/config.h>
+#include <Utils/config.h>
 #include "utils/Vector_Lite.hh"
 #include "utils/Definitions.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -81,10 +81,10 @@ struct RTK_State
     static const int max_levels = 3;
 
     //! Coordinates in array at each level.
-    nemesis::Vector_Lite<nemesis::Vector_Lite<int, 3>, max_levels> level_coord;
+    Vector_Lite<Vector_Lite<int, 3>, max_levels> level_coord;
 
     //! Crossing boundary indicator by level.
-    nemesis::Vector_Lite<int, max_levels> exiting_level;
+    Vector_Lite<int, max_levels> exiting_level;
 
     //! Escaping face in geometry.
     int escaping_face;
@@ -93,7 +93,7 @@ struct RTK_State
     int reflecting_face;
 };
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_RTK_State_hh
 

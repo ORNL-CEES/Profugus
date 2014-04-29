@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <iostream>
+#include "gtest/nemesis_gtest.hh"
 #include <vector>
 #include <cmath>
 #include <sstream>
@@ -18,11 +18,6 @@
 
 #include <geometry/config.h>
 
-#include "harness/DBC.hh"
-#include "harness/Soft_Equivalence.hh"
-#include "comm/global.hh"
-#include "comm/Parallel_Unit_Test.hh"
-#include "release/Release.hh"
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
@@ -34,8 +29,6 @@
 #endif
 
 using namespace std;
-using nemesis::Parallel_Unit_Test;
-using nemesis::soft_equiv;
 
 using def::X;
 using def::Y;
@@ -55,13 +48,9 @@ typedef Geometry::Geo_State_t  State;
 using denovo::geometry::OUTSIDE;
 using denovo::geometry::INSIDE;
 
-int node  = 0;
-int nodes = 0;
 
 int seed = 4305834;
 
-#define ITFAILS ut.failure(__LINE__);
-#define UNIT_TEST(a) if (!(a)) ut.failure(__LINE__);
 
 bool do_output = false;
 
@@ -69,7 +58,7 @@ bool do_output = false;
 // TESTS
 //---------------------------------------------------------------------------//
 
-void single_shell_lattice_test(Parallel_Unit_Test &ut)
+TEST(Single, ShellLattice)
 {
     // Fuel region = 1
     // Fuel region = 2
@@ -121,8 +110,8 @@ void single_shell_lattice_test(Parallel_Unit_Test &ut)
         pos = Vector(  1.36,   0.60,   3.80);
         dir = Vector( -0.986877895121,   0.039161821235,   0.156647284940);
         geometry.initialize(pos, dir, state);
-        UNIT_TEST(geometry.matid(state) == 1);
-        UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+        EXPECT_EQ(1, geometry.matid(state));
+        EXPECT_EQ(INSIDE, geometry.boundary_state(state));
 
         cout << setw(3) << step << ": starting at (" << fixed
              << setw(6) << state.d_r[0] << ","
@@ -139,7 +128,7 @@ void single_shell_lattice_test(Parallel_Unit_Test &ut)
             d = geometry.distance_to_boundary(state);
             m = geometry.matid(state);
 
-            UNIT_TEST(soft_equiv(d, dref[step], 1.0e-6));
+            EXPECT_SOFTEQ(d, dref[step], 1.0e-6);
 
             // move to the next surface
             geometry.move_to_surface(state);
@@ -153,7 +142,7 @@ void single_shell_lattice_test(Parallel_Unit_Test &ut)
                  << setw(8) << state.d_r[2] << ")" << endl;
         }
         cout << endl;
-        UNIT_TEST(state.escaping_face == State::MINUS_X);
+        EXPECT_EQ(State::MINUS_X, state.escaping_face);
     }
 
     step = 0;
@@ -166,12 +155,12 @@ void single_shell_lattice_test(Parallel_Unit_Test &ut)
         pos = Vector(  0.25,   0.80,   3.10);
         dir = Vector(  0.740931065010,   0.641403011501,   0.199056107018);
         geometry.initialize(pos, dir, state);
-        UNIT_TEST(geometry.matid(state) == 1);
-        UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+        EXPECT_EQ(1, geometry.matid(state));
+        EXPECT_EQ(INSIDE, geometry.boundary_state(state));
 
-        UNIT_TEST(geometry.position(state)[0] == 0.25);
-        UNIT_TEST(geometry.position(state)[1] == 0.80);
-        UNIT_TEST(geometry.position(state)[2] == 3.10);
+        EXPECT_EQ(0.25, geometry.position(state)[0]);
+        EXPECT_EQ(0.80, geometry.position(state)[1]);
+        EXPECT_EQ(3.10, geometry.position(state)[2]);
 
         cout << setw(3) << step << ": starting at (" << fixed
              << setw(6) << state.d_r[0] << ","
@@ -188,7 +177,7 @@ void single_shell_lattice_test(Parallel_Unit_Test &ut)
             d = geometry.distance_to_boundary(state);
             m = geometry.matid(state);
 
-            UNIT_TEST(soft_equiv(d, dref[step], 1.0e-6));
+            EXPECT_SOFTEQ(d, dref[step], 1.0e-6);
 
             // move to next surface
             geometry.move_to_surface(state);
@@ -202,74 +191,71 @@ void single_shell_lattice_test(Parallel_Unit_Test &ut)
                  << setw(8) << state.d_r[2] << ")" << endl;
         }
         cout << endl;
-        UNIT_TEST(state.escaping_face == State::PLUS_Y);
+        EXPECT_EQ(State::PLUS_Y, state.escaping_face);
     }
 
     // change direction
     double v = 0.57735026918962584;
     geometry.change_direction(Vector(v, v, v), state);
-    UNIT_TEST(soft_equiv(state.d_dir[0], v));
-    UNIT_TEST(soft_equiv(state.d_dir[1], v));
-    UNIT_TEST(soft_equiv(state.d_dir[2], v));
+    EXPECT_SOFTEQ(state.d_dir[0], v, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[1], v, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[2], v, 1.e-12);
 
     // reflect off of various faces (we aren't moving explicitly to the faces,
     // but it doesn't check position so we get away with it for the purposes
     // of this test)
     geometry.change_direction(Vector(1.0, 0.0, 0.0), state);
     state.exiting_face = State::PLUS_X;
-    UNIT_TEST(geometry.reflect(state));
-    UNIT_TEST(soft_equiv(state.d_dir[0], -1.0));
-    UNIT_TEST(soft_equiv(state.d_dir[1], 0.0));
-    UNIT_TEST(soft_equiv(state.d_dir[2], 0.0));
+    EXPECT_TRUE(geometry.reflect(state));
+    EXPECT_SOFTEQ(state.d_dir[0], -1.0, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[1], 0.0, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[2], 0.0, 1.e-12);
 
     geometry.change_direction(Vector(-1.0, 1.0, -2.0), state);
     double a = state.d_dir[X], b = state.d_dir[Y], c = state.d_dir[Z];
     state.exiting_face = State::MINUS_X;
     geometry.reflect(state);
-    UNIT_TEST(soft_equiv(state.d_dir[0], -a));
-    UNIT_TEST(soft_equiv(state.d_dir[1], b));
-    UNIT_TEST(soft_equiv(state.d_dir[2], c));
+    EXPECT_SOFTEQ(state.d_dir[0], -a, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[1], b, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[2], c, 1.e-12);
 
     double n   = 1.0/sqrt(3.0);
     double dot = n * (-a + b + c);
-    UNIT_TEST(soft_equiv(state.d_dir[0], -a - 2.0 * n * dot));
-    UNIT_TEST(soft_equiv(state.d_dir[1], b - 2.0 * n * dot));
-    UNIT_TEST(soft_equiv(state.d_dir[2], c - 2.0 * n * dot));
+    EXPECT_SOFTEQ(state.d_dir[0], -a - 2.0 * n * dot, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[1], b - 2.0 * n * dot, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[2], c - 2.0 * n * dot, 1.e-12);
 
     state.exiting_face = State::INTERNAL;
-    UNIT_TEST(!geometry.reflect(state));
-    UNIT_TEST(soft_equiv(state.d_dir[0], -a - 2.0 * n * dot));
-    UNIT_TEST(soft_equiv(state.d_dir[1], b - 2.0 * n * dot));
-    UNIT_TEST(soft_equiv(state.d_dir[2], c - 2.0 * n * dot));
+    EXPECT_TRUE(!geometry.reflect(state));
+    EXPECT_SOFTEQ(state.d_dir[0], -a - 2.0 * n * dot, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[1], b - 2.0 * n * dot, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[2], c - 2.0 * n * dot, 1.e-12);
 
     // test change-direction through (theta, phi)
     double costheta = cos(2.0/3.0);
     double phi      = 4.0 * pi / 3.0;
     geometry.change_direction(Vector(1.0, 1.0, 1.0), state);
     geometry.change_direction(costheta, phi, state);
-    UNIT_TEST(soft_equiv(state.d_dir[0], 0.70618063654));
-    UNIT_TEST(soft_equiv(state.d_dir[1], -0.0511646083931));
-    UNIT_TEST(soft_equiv(state.d_dir[2], 0.70618063654));
+    EXPECT_SOFTEQ(state.d_dir[0], 0.70618063654, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[1], -0.0511646083931, 1.e-12);
+    EXPECT_SOFTEQ(state.d_dir[2], 0.70618063654, 1.e-12);
 
     costheta = cos(-1.0/3.0);
     phi      = 4.5 * pi / 3.0;
     geometry.change_direction(costheta, phi, state);
     {
         Vector omega = geometry.direction(state);
-        UNIT_TEST(soft_equiv(omega[0], 0.643666175435, 1.0e-11));
-        UNIT_TEST(soft_equiv(omega[1], -0.374687631211, 1.0e-11));
-        UNIT_TEST(soft_equiv(omega[2], 0.667310297851, 1.0e-11));
+        EXPECT_SOFTEQ(omega[0], 0.643666175435, 1.0e-11);
+        EXPECT_SOFTEQ(omega[1], -0.374687631211, 1.0e-11);
+        EXPECT_SOFTEQ(omega[2], 0.667310297851, 1.0e-11);
     }
 
-    if (ut.numFails == 0)
-    {
-        ut.passes("Lattice of single-shell pins correctly represented.");
-    }
+    // ut.passes("Lattice of single-shell pins correctly represented.");
 }
 
 //---------------------------------------------------------------------------//
 
-void lattice_heuristic(Parallel_Unit_Test &ut)
+TEST(Lattice, Heuristic)
 {
 #ifdef USE_MC
     // Fuel region = 1
@@ -341,13 +327,13 @@ void lattice_heuristic(Parallel_Unit_Test &ut)
 
         // initialize track
         geometry.initialize(r, omega, state);
-        UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+        EXPECT_EQ(INSIDE, geometry.boundary_state(state));
 
         while (geometry.boundary_state(state) == INSIDE)
         {
             // get distance-to-boundary
             d = geometry.distance_to_boundary(state);
-            UNIT_TEST(soft_equiv(d, state.dist_to_next_region));
+            EXPECT_SOFTEQ(d, state.dist_to_next_region, 1.e-12);
 
             // update position of particle and cross surface
             geometry.move_to_surface(state);
@@ -372,7 +358,7 @@ void lattice_heuristic(Parallel_Unit_Test &ut)
             face_bin[5]++;
     }
 
-    UNIT_TEST(face_bin[0] + face_bin[1] + face_bin[2] +
+    EXPECT_TRUE(face_bin[0] + face_bin[1] + face_bin[2] +
               face_bin[3] + face_bin[4] + face_bin[5] == Np);
 
     double xyf  = 14.28 * 3.78;
@@ -386,12 +372,12 @@ void lattice_heuristic(Parallel_Unit_Test &ut)
     double loz  = face_bin[4] / Npx;
     double hiz  = face_bin[5] / Npx;
 
-    UNIT_TEST(soft_equiv(lox, xyf / area, 0.01));
-    UNIT_TEST(soft_equiv(hix, xyf / area, 0.05));
-    UNIT_TEST(soft_equiv(loy, xyf / area, 0.05));
-    UNIT_TEST(soft_equiv(hiy, xyf / area, 0.05));
-    UNIT_TEST(soft_equiv(loz, zf / area, 0.05));
-    UNIT_TEST(soft_equiv(hiz, zf / area, 0.05));
+    EXPECT_SOFTEQ(lox, xyf / area, 0.01);
+    EXPECT_SOFTEQ(hix, xyf / area, 0.05);
+    EXPECT_SOFTEQ(loy, xyf / area, 0.05);
+    EXPECT_SOFTEQ(hiy, xyf / area, 0.05);
+    EXPECT_SOFTEQ(loz, zf / area, 0.05);
+    EXPECT_SOFTEQ(hiz, zf / area, 0.05);
 
     cout.precision(5);
     cout << fixed;
@@ -418,21 +404,15 @@ void lattice_heuristic(Parallel_Unit_Test &ut)
 
     csites.close();
 
-    if (ut.numFails == 0)
-    {
-        ut.passes("Finished heuristic tracking through lattice.");
-    }
+    // ut.passes("Finished heuristic tracking through lattice.");
 #else
-    if (ut.numFails == 0)
-    {
-        ut.passes("Heuristic tests need mc package for RNG.");
-    }
+    // ut.passes("Heuristic tests need mc package for RNG.");
 #endif
 }
 
 //---------------------------------------------------------------------------//
 
-void multisegment_pin_test(Parallel_Unit_Test &ut)
+TEST(Multisegment, Pin)
 {
 #ifdef USE_MC
 
@@ -501,22 +481,22 @@ void multisegment_pin_test(Parallel_Unit_Test &ut)
 
             // initialize track
             geometry.initialize(r, omega, state);
-            UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+            EXPECT_EQ(INSIDE, geometry.boundary_state(state));
 
             while (geometry.boundary_state(state) == INSIDE)
             {
                 // get distance-to-boundary
                 dbnd = geometry.distance_to_boundary(state);
-                UNIT_TEST(soft_equiv(dbnd, state.dist_to_next_region));
+                EXPECT_SOFTEQ(dbnd, state.dist_to_next_region, 1.e-12);
 
                 // get distance to collision
                 mid  = geometry.matid(state);
                 dcol = -log(rng.ran()) / xs[mid];
-                UNIT_TEST(xs[mid] != 0.0);
+                EXPECT_TRUE(xs[mid] != 0.0);
 
-                UNIT_TEST(geometry.cell(state) ==
+                EXPECT_TRUE(geometry.cell(state) ==
                           state.region + state.segment * 4);
-                UNIT_TEST(geometry.cell(state) < 16);
+                EXPECT_TRUE(geometry.cell(state) < 16);
 
                 if (dcol < dbnd)
                 {
@@ -556,7 +536,7 @@ void multisegment_pin_test(Parallel_Unit_Test &ut)
                 face_bin[5]++;
         }
 
-        UNIT_TEST(face_bin[0] + face_bin[1] + face_bin[2] +
+        EXPECT_TRUE(face_bin[0] + face_bin[1] + face_bin[2] +
                   face_bin[3] + face_bin[4] + face_bin[5] == Np);
 
         double xyf  = 14.28 * 1.26;
@@ -570,12 +550,12 @@ void multisegment_pin_test(Parallel_Unit_Test &ut)
         double loz  = face_bin[4] / Npx;
         double hiz  = face_bin[5] / Npx;
 
-        UNIT_TEST(soft_equiv(hix, 1.0));
-        UNIT_TEST(lox == 0.0);
-        UNIT_TEST(loy == 0.0);
-        UNIT_TEST(loz == 0.0);
-        UNIT_TEST(hiy == 0.0);
-        UNIT_TEST(hiz == 0.0);
+        EXPECT_SOFTEQ(hix, 1.0, 1.e-12);
+        EXPECT_EQ(0.0, lox);
+        EXPECT_EQ(0.0, loy);
+        EXPECT_EQ(0.0, loz);
+        EXPECT_EQ(0.0, hiy);
+        EXPECT_EQ(0.0, hiz);
 
         cout.precision(5);
         cout << fixed;
@@ -612,12 +592,12 @@ void multisegment_pin_test(Parallel_Unit_Test &ut)
                      << fixed << setw(10) << Vr[r]
                      << scientific << setw(16) << err << endl;
 
-                UNIT_TEST(err < 3.0e-2);
+                EXPECT_TRUE(err < 3.0e-2);
             }
         }
         cout << endl;
 
-        UNIT_TEST(soft_equiv(sum, Vtot));
+        EXPECT_SOFTEQ(sum, Vtot, 1.e-12);
     }
 
     // check non-orthogonal angle
@@ -650,22 +630,22 @@ void multisegment_pin_test(Parallel_Unit_Test &ut)
 
             // initialize track
             geometry.initialize(r, omega, state);
-            UNIT_TEST(geometry.boundary_state(state) == INSIDE);
+            EXPECT_EQ(INSIDE, geometry.boundary_state(state));
 
             while (geometry.boundary_state(state) == INSIDE)
             {
                 // get distance-to-boundary
                 dbnd = geometry.distance_to_boundary(state);
-                UNIT_TEST(soft_equiv(dbnd, state.dist_to_next_region));
+                EXPECT_SOFTEQ(dbnd, state.dist_to_next_region, 1.e-12);
 
                 // get distance to collision
                 mid  = geometry.matid(state);
                 dcol = -log(rng.ran()) / xs[mid];
-                UNIT_TEST(xs[mid] != 0.0);
+                EXPECT_TRUE(xs[mid] != 0.0);
 
-                UNIT_TEST(geometry.cell(state) ==
+                EXPECT_TRUE(geometry.cell(state) ==
                           state.region + state.segment * 4);
-                UNIT_TEST(geometry.cell(state) < 16);
+                EXPECT_TRUE(geometry.cell(state) < 16);
 
                 if (dcol < dbnd)
                 {
@@ -715,85 +695,22 @@ void multisegment_pin_test(Parallel_Unit_Test &ut)
                      << fixed << setw(10) << Vr[r]
                      << scientific << setw(16) << err << endl;
 
-                UNIT_TEST(err < 3.0e-2);
+                EXPECT_TRUE(err < 3.0e-2);
             }
         }
         cout << endl;
 
-        UNIT_TEST(soft_equiv(sum, Vtot));
+        EXPECT_SOFTEQ(sum, Vtot, 1.e-12);
     }
 
-    if (ut.numFails == 0)
-    {
-        ut.passes("Finished heuristic tracking through multi-segment pin-cell.");
-    }
+    // ut.passes("Finished heuristic tracking through multi-segment pin-cell.");
 #else
-    if (ut.numFails == 0)
-    {
-        ut.passes("Heuristic tests need mc package for RNG.");
-    }
+    // ut.passes("Heuristic tests need mc package for RNG.");
 #endif
 }
 
 //---------------------------------------------------------------------------//
 
-int main(int argc, char *argv[])
-{
-    Parallel_Unit_Test ut(argc, argv, denovo::release);
-
-    node  = nemesis::node();
-    nodes = nemesis::nodes();
-
-    try
-    {
-        // >>> UNIT TESTS
-        int gpass = 0;
-        int gfail = 0;
-
-        if (nodes == 1)
-        {
-            single_shell_lattice_test(ut);
-            gpass += ut.numPasses;
-            gfail += ut.numFails;
-            ut.reset();
-
-            multisegment_pin_test(ut);
-            gpass += ut.numPasses;
-            gfail += ut.numFails;
-            ut.reset();
-
-            lattice_heuristic(ut);
-            gpass += ut.numPasses;
-            gfail += ut.numFails;
-            ut.reset();
-        }
-        else
-        {
-            gpass++;
-        }
-
-        // add up global passes and fails
-        nemesis::global_sum(gpass);
-        nemesis::global_sum(gfail);
-        ut.numPasses = gpass;
-        ut.numFails  = gfail;
-    }
-    catch (std::exception &err)
-    {
-        std::cout << "ERROR: While testing tstRTK_Lattice, "
-                  << err.what()
-                  << endl;
-        ut.numFails++;
-    }
-    catch( ... )
-    {
-        std::cout << "ERROR: While testing tstRTK_Lattice, "
-                  << "An unknown exception was thrown."
-                  << endl;
-        ut.numFails++;
-    }
-    return ut.numFails;
-}
 
 //---------------------------------------------------------------------------//
 //                        end of tstRTK_Lattice.cc

@@ -2,7 +2,7 @@
 /*!
  * \file   geometry/RTK_Cell.hh
  * \author Thomas M. Evans
- * \date   Tue Dec 21 12:47:16 2010
+ * \date   Tuesday April 29 15:40:59 2014
  * \brief  RTK_Cell class definition.
  * \note   Copyright (C) 2010 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
@@ -19,7 +19,7 @@
 #include "utils/Vector_Lite.hh"
 #include "RTK_State.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -75,7 +75,7 @@ namespace denovo
  * \image html core_vessel.png "Homogeneous and vessel pins."
  */
 /*!
- * \example geometry/rtk/test/tstRTK_Cell.cc
+ * \example geometry/test/tstRTK_Cell.cc
  *
  * Test of RTK_Cell.
  */
@@ -88,9 +88,9 @@ class RTK_Cell
     //! Useful typedefs.
     typedef def::Vec_Int                    Vec_Int;
     typedef def::Vec_Dbl                    Vec_Dbl;
-    typedef RTK_State                       Geo_State_t;
     typedef def::Space_Vector               Space_Vector;
     typedef nemesis::Vector_Lite<double, 4> Gap_Vector;
+    typedef RTK_State                       Geo_State_t;
     //@}
 
   private:
@@ -104,7 +104,7 @@ class RTK_Cell
     Vec_Int d_ids;
 
     // Radial dimensions (pitch).
-    nemesis::Vector_Lite<double, 2> d_xy;
+    Vector_Lite<double, 2> d_xy;
 
     // Z-extent.
     double d_z;
@@ -258,7 +258,7 @@ class RTK_Cell
     int d_vessel_id;       // vessel mat id
 };
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 // INLINE FUNCTIONS

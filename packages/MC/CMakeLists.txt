@@ -73,6 +73,19 @@ TRIBITS_CONFIGURE_FILE(config.h)
 SET(SOURCES "")
 SET(HEADERS "")
 
+# geometry sources
+
+FILE(GLOB GEOMETRY_HEADERS mesh/*.hh)
+SET(GEOMETRY_SOURCES
+#  geometry/RTK_Array.cc
+#  geometry/RTK_Array.pt.cc
+  geometry/RTK_Cell.cc
+#  geometry/RTK_Functions.cc
+#  geometry/RTK_Geometry.pt.cc
+)
+LIST(APPEND HEADERS ${GEOMETRY_HEADERS})
+LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
+
 # mc sources
 
 FILE(GLOB MC_HEADERS mesh/*.hh)
@@ -93,6 +106,7 @@ TRIBITS_ADD_LIBRARY(
 # Add tests to this package
 
 TRIBITS_ADD_TEST_DIRECTORIES(
+  geometry/test
   mc/test)
 
 ##---------------------------------------------------------------------------##
