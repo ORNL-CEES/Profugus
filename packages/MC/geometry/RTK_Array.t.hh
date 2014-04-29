@@ -17,7 +17,7 @@
 #include "utils/Definitions.hh"
 #include "RTK_Array.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -1057,7 +1057,7 @@ void RTK_Array<T>::output(std::ostream &out,
         << "----------------------------------------" << endl;
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_RTK_Array_t_hh
 

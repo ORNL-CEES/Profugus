@@ -10,13 +10,13 @@
 
 #include "RTK_Geometry.t.hh"
 
-namespace denovo
+namespace profugus
 {
 
 template class RTK_Geometry< RTK_Array<RTK_Cell> >;
 template class RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > >;
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of RTK_Geometry.pt.cc

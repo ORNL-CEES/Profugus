@@ -11,7 +11,7 @@
 #ifndef geometry_RTK_Cell_i_hh
 #define geometry_RTK_Cell_i_hh
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -170,7 +170,7 @@ void RTK_Cell::get_extents(Space_Vector &lower,
 
 //---------------------------------------------------------------------------//
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_RTK_Cell_i_hh
 

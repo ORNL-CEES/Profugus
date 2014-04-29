@@ -11,14 +11,14 @@
 #include "RTK_Cell.hh"
 #include "RTK_Array.t.hh"
 
-namespace denovo
+namespace profugus
 {
 
 template class RTK_Array<RTK_Cell>;
 template class RTK_Array< RTK_Array<RTK_Cell> >;
 template class RTK_Array< RTK_Array< RTK_Array<RTK_Cell> > >;
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of RTK_Array.pt.cc

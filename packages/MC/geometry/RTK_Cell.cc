@@ -19,7 +19,7 @@
 #include "Definitions.hh"
 #include "RTK_Cell.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -1015,7 +1015,7 @@ void RTK_Cell::dist_to_shell(double x,
     }
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of RTK_Cell.cc

@@ -14,7 +14,7 @@
 #include "harness/Soft_Equivalence.hh"
 #include "RTK_Array.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -267,7 +267,7 @@ void RTK_Array<RTK_Cell>::output(std::ostream &out,
         << "----------------------------------------" << endl;
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of RTK_Array.cc

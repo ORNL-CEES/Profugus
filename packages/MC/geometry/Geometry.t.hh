@@ -14,7 +14,7 @@
 #include "RTK_Geometry.hh"
 #include "RTK_Functions.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -203,7 +203,7 @@ void RTK_Geometry<Array>::set_mapped_cells()
 
 } // end set_mapped_cells
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_RTK_Geometry_t_hh
 

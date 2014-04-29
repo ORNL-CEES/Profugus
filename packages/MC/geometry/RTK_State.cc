@@ -12,7 +12,7 @@
 #include "utils/Packing_Utils.hh"
 #include "RTK_State.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -74,7 +74,7 @@ void RTK_State::unpack(const char *buffer)
     Ensure (u.get_ptr() == u.end());
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of RTK_State.cc

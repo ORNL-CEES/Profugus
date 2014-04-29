@@ -27,7 +27,7 @@
 // Include Pin_Cell for specializations.
 #include "RTK_Cell.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -263,7 +263,7 @@ class RTK_Array
     bool d_completed;
 };
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 // INLINE FUNCTIONS

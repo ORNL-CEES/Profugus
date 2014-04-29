@@ -15,7 +15,7 @@
 
 using def::Space_Vector;
 
-namespace denovo
+namespace profugus
 {
 
 /*!
@@ -139,7 +139,7 @@ void move_from_outside(
     Ensure((state.d_r[Z] >= lower[Z]) && (state.d_r[Z] <= upper[Z]));
 }
 
-} // end namespace denovo
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 //                 end of RTK_Functions.cc

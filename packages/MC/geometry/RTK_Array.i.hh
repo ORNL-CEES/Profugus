@@ -11,7 +11,7 @@
 #ifndef geometry_RTK_Array_i_hh
 #define geometry_RTK_Array_i_hh
 
-namespace denovo
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -382,7 +382,7 @@ template<>
 void RTK_Array<RTK_Cell>::output(std::ostream &out, int level,
                                  int obj_id) const;
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_RTK_Array_i_hh
 

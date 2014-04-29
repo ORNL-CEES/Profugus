@@ -14,7 +14,7 @@
 #include "utils/Definitions.hh"
 #include "RTK_State.hh"
 
-namespace denovo
+namespace profugus
 {
 
 // Transport to the array boundaries from a point outside the geometry.
@@ -23,7 +23,7 @@ void move_from_outside(
         const def::Space_Vector& upper,
         RTK_State&               state);
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_RTK_Functions_hh
 

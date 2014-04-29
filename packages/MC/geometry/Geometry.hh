@@ -25,7 +25,7 @@
 #include "RTK_Array.hh"
 #include "geometry/MOC_Geometry.hh"
 
-namespace denovo
+namespace profugus
 {
 
 //===========================================================================//
@@ -33,12 +33,12 @@ namespace denovo
  * \class RTK_Geometry
  * \brief Defines geometry implementations for the RTK MC geometry.
  *
- * The denovo::RTK_Array and denovo::RTK_Cell classes allow clients to build
+ * The profugus::RTK_Array and profugus::RTK_Cell classes allow clients to build
  * hierarchical arrays of pin-cells, arrays of arrays of pin-cells, etc.  In
  * this way, simple LWR reactor geometries can be constructed quickly.
- * However, in order to use these classes in the denovo MC framework, they
- * must be defined as a denovo::Geometry.  The RTK_Geometry class provides the
- * correct publicly derived interface to denovo::Geometry so that the denovo
+ * However, in order to use these classes in the profugus MC framework, they
+ * must be defined as a profugus::Geometry.  The RTK_Geometry class provides the
+ * correct publicly derived interface to profugus::Geometry so that the profugus
  * MC classes can use this as a geometry implementation.  This class is
  * parameterized on Array so that different types of geometries can be
  * constructed from the same code, ie.
@@ -47,7 +47,7 @@ namespace denovo
  typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > RTK_Core;
 
  // make an RTK_Core core reactor geometry
- typedef denovo::RTK_Core        Core_Geometry;
+ typedef profugus::RTK_Core        Core_Geometry;
  typedef Core_Geometry::Base     Geometry;
  typedef Core_Geometry::Array_t  Core_t;
  typedef Core_t::Object_t        Lattice_t;
@@ -63,7 +63,7 @@ namespace denovo
  * \endcode
  * See the tests for more examples.
  *
- * \sa denovo::RTK_Array, denovo::RTK_Cell, denovo::Geometry
+ * \sa profugus::RTK_Array, profugus::RTK_Cell, profugus::Geometry
  */
 /*!
  * \example geometry/rtk/test/tstRTK_Lattice.cc
@@ -436,7 +436,7 @@ typedef RTK_Geometry< RTK_Array<RTK_Cell> >              RTK_Lattice;
 typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > RTK_Core;
 //@}
 
-} // end namespace denovo
+} // end namespace profugus
 
 #endif // geometry_RTK_Geometry_hh
 

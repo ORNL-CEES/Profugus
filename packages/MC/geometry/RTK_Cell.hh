@@ -86,11 +86,11 @@ class RTK_Cell
   public:
     //@{
     //! Useful typedefs.
-    typedef def::Vec_Int                    Vec_Int;
-    typedef def::Vec_Dbl                    Vec_Dbl;
-    typedef def::Space_Vector               Space_Vector;
-    typedef nemesis::Vector_Lite<double, 4> Gap_Vector;
-    typedef RTK_State                       Geo_State_t;
+    typedef def::Vec_Int           Vec_Int;
+    typedef def::Vec_Dbl           Vec_Dbl;
+    typedef def::Space_Vector      Space_Vector;
+    typedef Vector_Lite<double, 4> Gap_Vector;
+    typedef RTK_State              Geo_State_t;
     //@}
 
   private:
