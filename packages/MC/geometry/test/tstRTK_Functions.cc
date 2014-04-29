@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "gtest/nemesis_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include "utils/Definitions.hh"
 
@@ -16,7 +16,7 @@
 #include "../RTK_State.hh"
 
 using def::Space_Vector;
-using denovo::RTK_State;
+using profugus::RTK_State;
 using def::X; using def::Y; using def::Z;
 
 //---------------------------------------------------------------------------//

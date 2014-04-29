@@ -16,11 +16,13 @@
 #include <iomanip>
 
 #include "utils/Constants.hh"
+#include "rng/RNG_Control.hh"
 #include "../RTK_Cell.hh"
 
 using namespace std;
 
 using profugus::RTK_Cell;
+using profugus::RNG_Control;
 
 typedef RTK_Cell::Space_Vector Vector;
 typedef RTK_Cell::Geo_State_t  Geo_State;
@@ -833,7 +835,8 @@ TEST(Multi, SegPin)
         EXPECT_EQ(Geo_State::MINUS_Y, state.exiting_face);
     }
 
-    srand(seed);
+    RNG_Control control(seed);
+    auto rng = control.rng();
 
     // sample some points in the pin
     int N           = 1000;
@@ -842,14 +845,13 @@ TEST(Multi, SegPin)
     double phi      = 0.0;
     for (int n = 0; n < N; ++n)
     {
-        r[0] = 1.26 * static_cast<double>(rand()) / RAND_MAX - 0.63;
-        r[1] = 1.26 * static_cast<double>(rand()) / RAND_MAX - 0.63;
-        r[2] = 14.28 * static_cast<double>(rand()) / RAND_MAX;
+        r[0] = 1.26 * rng.ran() - 0.63;
+        r[1] = 1.26 * rng.ran() - 0.63;
+        r[2] = 14.28 * rng.ran();
 
-        costheta = 1.0 - 2.0 * static_cast<double>(rand()) / RAND_MAX;
+        costheta = 1.0 - 2.0 * rng.ran();
         sintheta = sqrt(1.0 - costheta * costheta);
-        phi      = 2.0 * profugus::constants::pi *
-                   static_cast<double>(rand()) / RAND_MAX;
+        phi      = 2.0 * profugus::constants::pi * rng.ran();
 
         omega[0] = sintheta * cos(phi);
         omega[1] = sintheta * sin(phi);
