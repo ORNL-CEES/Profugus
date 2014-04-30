@@ -459,7 +459,7 @@ TEST(Core, Reflecting)
 }
 
 //---------------------------------------------------------------------------//
-// See autodoc/bwr.png for core figure showing particle path.
+// See support/bwr.png for core figure showing particle path.
 
 TEST(Bwr, Lattice)
 {
@@ -599,7 +599,7 @@ TEST(Bwr, Lattice)
 }
 
 //---------------------------------------------------------------------------//
-// See autodoc/bwr.png for core figure showing particle path.
+// See support/bwr.png for core figure showing particle path.
 
 TEST(Bwr, Symmetry)
 {

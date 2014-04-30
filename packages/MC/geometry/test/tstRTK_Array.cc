@@ -1062,7 +1062,7 @@ TEST(Reflecting, all)
 }
 
 //---------------------------------------------------------------------------//
-// See autodoc/lattice.fig for diagram of lattice
+// See support/lattice.png for diagram of lattice
 
 TEST(Ml, Lattice)
 {
@@ -1489,7 +1489,7 @@ TEST(Ml, Lattice)
 }
 
 //---------------------------------------------------------------------------//
-// See autodoc/lattice_cells.png for core figure showing particle path.
+// See support/lattice_cells.png for core figure showing particle path.
 
 TEST(Core, Cells)
 {

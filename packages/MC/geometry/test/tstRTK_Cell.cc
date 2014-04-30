@@ -571,7 +571,7 @@ TEST(Empty, Cell)
 }
 
 //---------------------------------------------------------------------------//
-// See autodoc/pin_cell_test.png for pin-cell face/cell mapping
+// See support/pin_cell_test.png for pin-cell face/cell mapping
 
 TEST(Multi, SegPin)
 {
@@ -1313,7 +1313,7 @@ TEST(Vessel, Initialize)
 }
 
 //---------------------------------------------------------------------------//
-// See geometry/test/scripts/tstPin_Cell_Vessel.py for reference solutions.
+// See support/tstPin_Cell_Vessel.py for reference solutions.
 
 TEST(Vessel, Track_LoR)
 {
@@ -1369,7 +1369,7 @@ TEST(Vessel, Track_LoR)
 }
 
 //---------------------------------------------------------------------------//
-// See geometry/test/scripts/tstPin_Cell_Vessel.py for reference solutions.
+// See support/tstPin_Cell_Vessel.py for reference solutions.
 
 TEST(Vessel, Track_HiR)
 {
@@ -1425,7 +1425,7 @@ TEST(Vessel, Track_HiR)
 }
 
 //---------------------------------------------------------------------------//
-// See geometry/test/scripts/tstPin_Cell_Vessel.py for reference solutions.
+// See support/tstPin_Cell_Vessel.py for reference solutions.
 
 TEST(Vessel, Track_LoHiR)
 {
@@ -1483,7 +1483,7 @@ TEST(Vessel, Track_LoHiR)
 }
 
 //---------------------------------------------------------------------------//
-// See geometry/test/scripts/tstPin_Cell_Vessel.py for reference solutions.
+// See support/tstPin_Cell_Vessel.py for reference solutions.
 
 TEST(Vessel, Track_Hi2Lo)
 {
@@ -1563,7 +1563,7 @@ TEST(Vessel, Track_Hi2Lo)
 }
 
 //---------------------------------------------------------------------------//
-// See geometry/test/scripts/tstPin_Cell_Vessel.py for reference solutions.
+// See support/tstPin_Cell_Vessel.py for reference solutions.
 
 TEST(Vessel, Track_Lo2Hi)
 {
