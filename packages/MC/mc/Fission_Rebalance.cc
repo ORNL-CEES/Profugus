@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Feb 28 13:05:02 2013
  * \brief  Continuous_Fission_Rebalance template member definitions.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

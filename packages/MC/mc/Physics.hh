@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Jan 04 12:50:33 2011
  * \brief  MG_Physics class definition.
- * \note   Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

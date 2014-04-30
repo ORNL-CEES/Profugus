@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Jan 04 13:22:55 2011
  * \brief  MG_Physics unit test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
