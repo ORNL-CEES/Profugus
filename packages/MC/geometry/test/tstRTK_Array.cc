@@ -15,6 +15,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <memory>
 
 #include "utils/Definitions.hh"
 #include "utils/Vector_Functions.hh"
@@ -25,8 +26,8 @@
 
 using namespace std;
 
-typedef denovo::RTK_Cell::Space_Vector Vector;
-typedef denovo::RTK_Cell::Geo_State_t  State;
+typedef profugus::RTK_Cell::Space_Vector Vector;
+typedef profugus::RTK_Cell::Geo_State_t  State;
 
 using def::X;
 using def::Y;
@@ -38,9 +39,9 @@ using def::Z;
 
 TEST(RTKLevels, Levels)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Sub_Lattice;
-    typedef denovo::RTK_Array<Sub_Lattice>      Lattice;
-    typedef denovo::RTK_Array<Lattice>          Core;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Sub_Lattice;
+    typedef profugus::RTK_Array<Sub_Lattice>        Lattice;
+    typedef profugus::RTK_Array<Lattice>            Core;
 
     EXPECT_EQ(0, Sub_Lattice::calc_level());
     EXPECT_EQ(1, Lattice::calc_level());
@@ -135,22 +136,23 @@ TEST(Bounds, all)
 class LatticeTest : public ::testing::Test
 {
   protected:
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice   ;
-    typedef Lattice::SP_Object                  SP_Object ;
-    typedef Lattice::Object_t                   Object_t  ;
-    typedef nemesis::SP<Lattice>                SP_Lattice;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice   ;
+    typedef Lattice::SP_Object                      SP_Object ;
+    typedef Lattice::Object_t                       Object_t  ;
+    typedef shared_ptr<Lattice>                     SP_Lattice;
+
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
         // make a 3x2x1 lattice with 10 pin-types (only 3 defined)
-        d_lat = new Lattice(3, 2, 1, 10);
+        d_lat = make_shared<Lattice>(3, 2, 1, 10);
         Lattice& lat = *d_lat;
 
         // pins 0, 3 and 5
-        SP_Object pin0(new Object_t(0, 0.62, 10, 1.26, 14.28));
-        SP_Object pin3(new Object_t(3, 0.45, 10, 1.26, 14.28));
-        SP_Object pin5(new Object_t(5, 0.54, 10, 1.26, 14.28));
+        SP_Object pin0(make_shared<Object_t>(0, 0.62, 10, 1.26, 14.28));
+        SP_Object pin3(make_shared<Object_t>(3, 0.45, 10, 1.26, 14.28));
+        SP_Object pin5(make_shared<Object_t>(5, 0.54, 10, 1.26, 14.28));
 
         Check(2 == pin0->num_cells());
         Check(2 == pin3->num_cells());
@@ -351,8 +353,8 @@ TEST_F(LatticeTest, moderator)
 
 TEST(Core, all)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice;
-    typedef denovo::RTK_Array<Lattice>          Core;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice;
+    typedef profugus::RTK_Array<Lattice>            Core;
 
     // 3x3 core with 3 objects (2 lattice types, one reflector) + water on top
     Core core(3, 3, 2, 3);
@@ -360,23 +362,24 @@ TEST(Core, all)
         // 2 pin types
 
         // local id = 0
-        Lattice::SP_Object black(new Lattice::Object_t(
+        Lattice::SP_Object black(make_shared<Lattice::Object_t>(
                                      1, 0.54, 5, 1.26, 14.28));
         EXPECT_EQ(2, black->num_cells());
 
         // local id = 0
-        Lattice::SP_Object purple(new Lattice::Object_t(
+        Lattice::SP_Object purple(make_shared<Lattice::Object_t>(
                                       2, 0.54, 5, 1.26, 14.28));
         EXPECT_EQ(2, purple->num_cells());
 
         // local id = 0
-        Lattice::SP_Object water(new Lattice::Object_t(5, 2.52, 14.28));
+        Lattice::SP_Object water(make_shared<Lattice::Object_t>(
+                                     5, 2.52, 14.28));
         EXPECT_EQ(1, water->num_cells());
 
         // 3 lattices
-        Core::SP_Object lat1(new Lattice(2, 2, 1, 1));
-        Core::SP_Object lat2(new Lattice(2, 2, 1, 1));
-        Core::SP_Object lat0(new Lattice(1, 1, 1, 1));
+        Core::SP_Object lat1(make_shared<Lattice>(2, 2, 1, 1));
+        Core::SP_Object lat2(make_shared<Lattice>(2, 2, 1, 1));
+        Core::SP_Object lat0(make_shared<Lattice>(1, 1, 1, 1));
 
         // assign pins to ids
         lat1->assign_object(black,  0);
@@ -714,17 +717,18 @@ TEST(Core, all)
 
 TEST(Core, Offset)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice;
-    typedef denovo::RTK_Array<Lattice>          Core;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice;
+    typedef profugus::RTK_Array<Lattice>            Core;
 
     Core core(3, 3, 4, 1);
     {
         // 1 pin
-        Lattice::SP_Object pin(new Lattice::Object_t(1, 0.5, 5, 1.5, 4.0));
+        Lattice::SP_Object pin(make_shared<Lattice::Object_t>(
+                                   1, 0.5, 5, 1.5, 4.0));
         EXPECT_EQ(2, pin->num_cells());
 
         // 1 lattice
-        Core::SP_Object lat(new Lattice(2, 2, 1, 1));
+        Core::SP_Object lat(make_shared<Lattice>(2, 2, 1, 1));
         lat->assign_object(pin,  0);
         lat->id(0, 0, 0) = 0;
         lat->id(1, 0, 0) = 0;
@@ -774,8 +778,8 @@ TEST(Core, Offset)
 
 TEST(Reflecting, all)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice;
-    typedef denovo::RTK_Array<Lattice>          Core;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice;
+    typedef profugus::RTK_Array<Lattice>            Core;
 
     // 3x3 core with 3 objects (2 lattice types, one reflector) + water on
     // top; low x,y,z reflecting conditions
@@ -784,20 +788,21 @@ TEST(Reflecting, all)
         // 2 pin types
 
         // local id = 0
-        Lattice::SP_Object black(new Lattice::Object_t(
+        Lattice::SP_Object black(make_shared<Lattice::Object_t>(
                                      1, 0.54, 5, 1.26, 14.28));
 
         // local id = 0
-        Lattice::SP_Object purple(new Lattice::Object_t(
+        Lattice::SP_Object purple(make_shared<Lattice::Object_t>(
                                       2, 0.54, 5, 1.26, 14.28));
 
         // local id = 0
-        Lattice::SP_Object water(new Lattice::Object_t(5, 2.52, 14.28));
+        Lattice::SP_Object water(make_shared<Lattice::Object_t>(
+                                     5, 2.52, 14.28));
 
         // 3 lattices
-        Core::SP_Object lat1(new Lattice(2, 2, 1, 1));
-        Core::SP_Object lat2(new Lattice(2, 2, 1, 1));
-        Core::SP_Object lat0(new Lattice(1, 1, 1, 1));
+        Core::SP_Object lat1(make_shared<Lattice>(2, 2, 1, 1));
+        Core::SP_Object lat2(make_shared<Lattice>(2, 2, 1, 1));
+        Core::SP_Object lat0(make_shared<Lattice>(1, 1, 1, 1));
 
         // assign pins to ids
         lat1->assign_object(black,  0);
@@ -1061,8 +1066,8 @@ TEST(Reflecting, all)
 
 TEST(Ml, Lattice)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Sub_Lattice;
-    typedef denovo::RTK_Array<Sub_Lattice>      Lattice;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Sub_Lattice;
+    typedef profugus::RTK_Array<Sub_Lattice>        Lattice;
 
     // 1 lattice
     Lattice lat(2, 2, 1, 2);
@@ -1071,18 +1076,18 @@ TEST(Ml, Lattice)
         // 3 pin types
 
         // local id = 0
-        Sub_Lattice::SP_Object black(new Sub_Lattice::Object_t(
+        Sub_Lattice::SP_Object black(make_shared<Sub_Lattice::Object_t>(
                                          1, 0.54, 5, 1.26, 14.28));
         // local id = 1
-        Sub_Lattice::SP_Object purple(new Sub_Lattice::Object_t(
+        Sub_Lattice::SP_Object purple(make_shared<Sub_Lattice::Object_t>(
                                           2, 0.54, 5, 1.26, 14.28 ));
         // local id = 0
-        Sub_Lattice::SP_Object green(new Sub_Lattice::Object_t(
+        Sub_Lattice::SP_Object green(make_shared<Sub_Lattice::Object_t>(
                                          4, 1.20, 6, 2.52, 14.28 ));
 
         // 2 sub-lattices
-        Lattice::SP_Object lat0(new Sub_Lattice(2, 2, 1, 2));
-        Lattice::SP_Object lat1(new Sub_Lattice(1, 1, 1, 1));
+        Lattice::SP_Object lat0(make_shared<Sub_Lattice>(2, 2, 1, 2));
+        Lattice::SP_Object lat1(make_shared<Sub_Lattice>(1, 1, 1, 1));
 
         // assign pins to ids
         lat0->assign_object(black,  0);
@@ -1488,8 +1493,8 @@ TEST(Ml, Lattice)
 
 TEST(Core, Cells)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice;
-    typedef denovo::RTK_Array<Lattice>          Core;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice;
+    typedef profugus::RTK_Array<Lattice>            Core;
 
     // make the core; 3 object types (lattices and reflector)
     Core core(2, 2, 1, 3);
@@ -1501,7 +1506,7 @@ TEST(Core, Cells)
         vector<double> r1(2, 0.0);
         ids1[0] = 0; r1[0] = 0.5;  // fuel
         ids1[1] = 5; r1[1] = 0.54; // clad
-        Lattice::SP_Object pin1(new Lattice::Object_t(
+        Lattice::SP_Object pin1(make_shared<Lattice::Object_t>(
                                     ids1, r1, 10, 1.26, 14.28, 4));
         EXPECT_EQ(12, pin1->num_cells());
 
@@ -1511,22 +1516,24 @@ TEST(Core, Cells)
         ids2[0] = 0; r2[0] = 0.27; // fuel region 1
         ids2[1] = 0; r2[1] = 0.5;  // fuel region 2
         ids2[2] = 5; r2[2] = 0.54; // clad
-        Lattice::SP_Object pin2(new Lattice::Object_t(
+        Lattice::SP_Object pin2(make_shared<Lattice::Object_t>(
                                     ids2, r2, 10, 1.26, 14.28, 4));
         EXPECT_EQ(16, pin2->num_cells());
 
         // local id = 2
-        Lattice::SP_Object box(new Lattice::Object_t(10, 0.126, 1.26, 14.28));
+        Lattice::SP_Object box(make_shared<Lattice::Object_t>(
+                                   10, 0.126, 1.26, 14.28));
         EXPECT_EQ(1, box->num_cells());
 
         // local id = 0
-        Lattice::SP_Object mod(new Lattice::Object_t(10, 1.2317, 2.52, 14.28));
+        Lattice::SP_Object mod(make_shared<Lattice::Object_t>(
+                                   10, 1.2317, 2.52, 14.28));
         EXPECT_EQ(1, box->num_cells());
 
         // 3 lattices
-        Core::SP_Object lat2(new Lattice(4, 2, 1, 3));
-        Core::SP_Object lat1(new Lattice(4, 2, 1, 3));
-        Core::SP_Object lat0(new Lattice(1, 1, 1, 1));
+        Core::SP_Object lat2(make_shared<Lattice>(4, 2, 1, 3));
+        Core::SP_Object lat1(make_shared<Lattice>(4, 2, 1, 3));
+        Core::SP_Object lat0(make_shared<Lattice>(1, 1, 1, 1));
 
         // assign pins to ids
         lat0->assign_object(mod, 0);
@@ -1610,7 +1617,7 @@ TEST(Core, Cells)
     omega[0] = 3.2331;
     omega[1] = -4.8737;
     omega[2] = 0.1;
-    nemesis::vector_normalize(omega);
+    profugus::vector_normalize(omega);
 
     // initialize geometry
     core.initialize(r, state);
@@ -1676,17 +1683,20 @@ TEST(Core, Cells)
 
 TEST(Symmetric, all)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice;
-    typedef nemesis::SP< Lattice >              SP_Lattice;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice;
+    typedef shared_ptr< Lattice >                   SP_Lattice;
 
     // make a 3x3x1 lattice with 3 pin-types
-    SP_Lattice lat( new Lattice(3, 3, 1, 3));
+    SP_Lattice lat( make_shared<Lattice>(3, 3, 1, 3));
     EXPECT_EQ(0, lat->level());
 
     // pins 0, 1 and 2
-    Lattice::SP_Object pin0(new Lattice::Object_t(0, 0.6, 10, 1.26, 14.28));
-    Lattice::SP_Object pin1(new Lattice::Object_t(1, 0.6, 10, 1.26, 14.28));
-    Lattice::SP_Object pin2(new Lattice::Object_t(2, 0.6, 10, 1.26, 14.28));
+    Lattice::SP_Object pin0(make_shared<Lattice::Object_t>(
+                                0, 0.6, 10, 1.26, 14.28));
+    Lattice::SP_Object pin1(make_shared<Lattice::Object_t>(
+                                1, 0.6, 10, 1.26, 14.28));
+    Lattice::SP_Object pin2(make_shared<Lattice::Object_t>(
+                                2, 0.6, 10, 1.26, 14.28));
 
     EXPECT_EQ(2, pin0->num_cells());
     EXPECT_EQ(2, pin1->num_cells());
@@ -1732,22 +1742,22 @@ TEST(Symmetric, all)
 class LatticeInitTest : public ::testing::Test
 {
   protected:
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice ;
-    typedef Lattice::Object_t                   Object_t;
-    typedef denovo::RTK_Geometry<Lattice>       Geometry_t;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice ;
+    typedef Lattice::Object_t                       Object_t;
+    typedef profugus::Geometry<Lattice>             Geometry_t;
 
     typedef Lattice::SP_Object     SP_Object  ;
-    typedef nemesis::SP<Lattice>   SP_Lattice ;
-    typedef nemesis::SP<Geometry_t> SP_Geometry;
+    typedef shared_ptr<Lattice>    SP_Lattice ;
+    typedef shared_ptr<Geometry_t> SP_Geometry;
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
         // make a 1x1x1 lattice with 10 pin-types (only 3 defined)
-        d_lat = new Lattice(1, 1, 1, 1);
+        d_lat = make_shared<Lattice>(1, 1, 1, 1);
         Lattice& lat = *d_lat;
 
-        SP_Object pin(new Object_t(0, 2., 3., 5., 1));
+        SP_Object pin(make_shared<Object_t>(0, 2., 3., 5., 1));
 
         // assign pins to the lattice
         lat.id(0, 0, 0) = 0;
@@ -1756,7 +1766,7 @@ class LatticeInitTest : public ::testing::Test
         lat.assign_object(pin, 0);
         lat.complete(-1.0, -2.0, -3.0);
 
-        d_geom = new Geometry_t(d_lat);
+        d_geom = make_shared<Geometry_t>(d_lat);
     }
 
   protected:
@@ -1872,8 +1882,8 @@ TEST_F(LatticeInitTest, right)
 
 TEST(Core, Gap)
 {
-    typedef denovo::RTK_Array<denovo::RTK_Cell> Lattice;
-    typedef denovo::RTK_Array<Lattice>          Core;
+    typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice;
+    typedef profugus::RTK_Array<Lattice>          Core;
 
     // 1x1 core with 1 objects (1 lattice with a gap)
     Core core(1, 1, 1, 1);
@@ -1884,7 +1894,8 @@ TEST(Core, Gap)
         // 9 pin types -> 8 pins with gap regions, 1 center pin
 
         // center pin
-        Lattice::SP_Object p11(new Lattice::Object_t(1, 0.54, 5, 1.26, 14.28));
+        Lattice::SP_Object p11(make_shared<Lattice::Object_t>(
+                                   1, 0.54, 5, 1.26, 14.28));
 
         // Gap vectors
         Lattice::Object_t::Gap_Vector g00(0.1, 0.0, 0.1, 0.0);
@@ -1901,25 +1912,25 @@ TEST(Core, Gap)
         Lattice::Object_t::Vec_Dbl r(1, 0.54);
 
         // edge pins
-        Lattice::SP_Object p00(new Lattice::Object_t(
+        Lattice::SP_Object p00(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g00));
-        Lattice::SP_Object p10(new Lattice::Object_t(
+        Lattice::SP_Object p10(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g10));
-        Lattice::SP_Object p20(new Lattice::Object_t(
+        Lattice::SP_Object p20(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g20));
-        Lattice::SP_Object p01(new Lattice::Object_t(
+        Lattice::SP_Object p01(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g01));
-        Lattice::SP_Object p21(new Lattice::Object_t(
+        Lattice::SP_Object p21(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g21));
-        Lattice::SP_Object p02(new Lattice::Object_t(
+        Lattice::SP_Object p02(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g02));
-        Lattice::SP_Object p12(new Lattice::Object_t(
+        Lattice::SP_Object p12(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g12));
-        Lattice::SP_Object p22(new Lattice::Object_t(
+        Lattice::SP_Object p22(make_shared<Lattice::Object_t>(
                                    ids, r, 5, 1.26, 14.28, g22));
 
         // 1 lattices
-        Core::SP_Object lat(new Lattice(3, 3, 1, 9));
+        Core::SP_Object lat(make_shared<Lattice>(3, 3, 1, 9));
 
         // assign pins to ids in the lattice
         lat->assign_object(p00, 0);

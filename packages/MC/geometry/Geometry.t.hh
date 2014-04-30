@@ -1,17 +1,17 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Geometry.t.hh
+ * \file   geometry/Geometry.t.hh
  * \author Thomas M. Evans
- * \date   Tue Jan 25 10:02:33 2011
- * \brief  RTK_Geometry template member definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \date   Tuesday April 29 16:43:42 2014
+ * \brief  Geometry template member definitions.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_Geometry_t_hh
-#define geometry_RTK_Geometry_t_hh
+#ifndef geometry_Geometry_t_hh
+#define geometry_Geometry_t_hh
 
-#include "RTK_Geometry.hh"
+#include "Geometry.hh"
 #include "RTK_Functions.hh"
 
 namespace profugus
@@ -24,7 +24,7 @@ namespace profugus
  * \brief Constructor.
  */
 template<class Array>
-RTK_Geometry<Array>::RTK_Geometry(SP_Array array)
+Geometry<Array>::Geometry(SP_Array array)
     : d_array(array)
     , d_volumes(d_array->num_cells(), 0.0)
     , d_level(d_array->level())
@@ -40,7 +40,8 @@ RTK_Geometry<Array>::RTK_Geometry(SP_Array array)
  * \brief Constructor.
  */
 template<class Array>
-RTK_Geometry<Array>::RTK_Geometry(SP_Array array, bool symmetric)
+Geometry<Array>::Geometry(SP_Array array,
+                          bool     symmetric)
     : d_array(array)
     , d_volumes(d_array->num_cells(), 0.0)
     , d_mapped_cells(d_array->num_cells(), -1)
@@ -61,9 +62,9 @@ RTK_Geometry<Array>::RTK_Geometry(SP_Array array, bool symmetric)
  * (possible for sources and especially meshing).
  */
 template<class Array>
-void RTK_Geometry<Array>::initialize(const Space_Vector &r,
-                                     const Space_Vector &direction,
-                                     Geo_State_t        &state)
+void Geometry<Array>::initialize(const Space_Vector &r,
+                                 const Space_Vector &direction,
+                                 Geo_State_t        &state)
 {
     Require (d_array);
 
@@ -124,18 +125,18 @@ void RTK_Geometry<Array>::initialize(const Space_Vector &r,
  * surface
  */
 template<class Array>
-bool RTK_Geometry<Array>::reflect(Geo_State_t &state)
+bool Geometry<Array>::reflect(Geo_State_t &state)
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (nemesis::soft_equiv(
-                 vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+    Require (soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
     // get the outward normal
     Space_Vector n = normal(state);
 
     // calculate the dot-product of the incoming angle and outward normal
-    double dot = state.d_dir[X]*n[X] + state.d_dir[Y]*n[Y] + state.d_dir[Z]*n[Z];
+    double dot = state.d_dir[X]*n[X] + state.d_dir[Y]*n[Y] +
+                 state.d_dir[Z]*n[Z];
 
     // if the dot-product != 0 then calculate the reflected angle
     if (dot != 0.0)
@@ -144,8 +145,7 @@ bool RTK_Geometry<Array>::reflect(Geo_State_t &state)
         state.d_dir[Y] -= 2.0 * n[Y] * dot;
         state.d_dir[Z] -= 2.0 * n[Z] * dot;
 
-        Ensure (nemesis::soft_equiv(
-                    vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+        Ensure (soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
         return true;
     }
 
@@ -158,8 +158,8 @@ bool RTK_Geometry<Array>::reflect(Geo_State_t &state)
  * \brief Return the outward normal for points on a face.
  */
 template<class Array>
-typename RTK_Geometry<Array>::Space_Vector
-RTK_Geometry<Array>::normal(const Geo_State_t &state) const
+typename Geometry<Array>::Space_Vector
+Geometry<Array>::normal(const Geo_State_t &state) const
 {
     // query is based on position of particle on a face; otherwise we return a
     // zero vector
@@ -191,22 +191,10 @@ RTK_Geometry<Array>::normal(const Geo_State_t &state) const
     return Space_Vector(0.0, 0.0, 0.0);
 }
 
-//---------------------------------------------------------------------------//
-/*!
- * \brief Sets mapped cells
- */
-template<class Array>
-void RTK_Geometry<Array>::set_mapped_cells()
-{
-    d_array->set_mapped_cells(
-        0, 0, d_mapped_cells.begin(), d_mapped_cells.begin());
-
-} // end set_mapped_cells
-
 } // end namespace profugus
 
-#endif // geometry_RTK_Geometry_t_hh
+#endif // geometry_Geometry_t_hh
 
 //---------------------------------------------------------------------------//
-//                   end of geometry/RTK_Geometry.t.hh
+//                   end of geometry/Geometry.t.hh
 //---------------------------------------------------------------------------//

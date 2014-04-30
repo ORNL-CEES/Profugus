@@ -1,54 +1,52 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Geometry.hh
+ * \file   geometry/Geometry.hh
  * \author Thomas M. Evans
- * \date   Tue Jan 25 10:02:33 2011
- * \brief  RTK_Geometry class definition.
- * \note   Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \date   Tuesday April 29 16:43:25 2014
+ * \brief  Geometry class definition.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_Geometry_hh
-#define geometry_RTK_Geometry_hh
+#ifndef geometry_Geometry_hh
+#define geometry_Geometry_hh
 
 #include <cmath>
+#include <memory>
 
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
 #include "utils/Constants.hh"
-#include "utils/SP.hh"
 #include "utils/Definitions.hh"
 #include "utils/Vector_Functions.hh"
-#include "geometry/Definitions.hh"
+#include "Definitions.hh"
 #include "RTK_State.hh"
 #include "RTK_Cell.hh"
 #include "RTK_Array.hh"
-#include "geometry/MOC_Geometry.hh"
 
 namespace profugus
 {
 
 //===========================================================================//
 /*!
- * \class RTK_Geometry
+ * \class Geometry
  * \brief Defines geometry implementations for the RTK MC geometry.
  *
- * The profugus::RTK_Array and profugus::RTK_Cell classes allow clients to build
- * hierarchical arrays of pin-cells, arrays of arrays of pin-cells, etc.  In
- * this way, simple LWR reactor geometries can be constructed quickly.
+ * The profugus::RTK_Array and profugus::RTK_Cell classes allow clients to
+ * build hierarchical arrays of pin-cells, arrays of arrays of pin-cells, etc.
+ * In this way, simple LWR reactor geometries can be constructed quickly.
  * However, in order to use these classes in the profugus MC framework, they
- * must be defined as a profugus::Geometry.  The RTK_Geometry class provides the
- * correct publicly derived interface to profugus::Geometry so that the profugus
- * MC classes can use this as a geometry implementation.  This class is
- * parameterized on Array so that different types of geometries can be
+ * must be defined as a profugus::Geometry.  The Geometry class provides the
+ * correct publicly derived interface to profugus::Geometry so that the
+ * profugus MC classes can use this as a geometry implementation.  This class
+ * is parameterized on Array so that different types of geometries can be
  * constructed from the same code, ie.
  * \code
- typedef RTK_Geometry< RTK_Array<RTK_Cell> >              RTK_Lattice;
- typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > RTK_Core;
+ typedef Geometry< RTK_Array<RTK_Cell> >              Lattice;
+ typedef Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
 
  // make an RTK_Core core reactor geometry
- typedef profugus::RTK_Core        Core_Geometry;
- typedef Core_Geometry::Base     Geometry;
+ typedef profugus::Core          Core_Geometry;
  typedef Core_Geometry::Array_t  Core_t;
  typedef Core_t::Object_t        Lattice_t;
  typedef Lattice_t::Object_t     Pin_Cell_t;
@@ -63,31 +61,28 @@ namespace profugus
  * \endcode
  * See the tests for more examples.
  *
- * \sa profugus::RTK_Array, profugus::RTK_Cell, profugus::Geometry
+ * \sa profugus::RTK_Array, profugus::RTK_Cell
  */
 /*!
- * \example geometry/rtk/test/tstRTK_Lattice.cc
- * \example geometry/rtk/test/tstRTK_Core.cc
+ * \example geometry/rtk/test/tstLattice.cc
+ * \example geometry/rtk/test/tstCore.cc
  *
- * Test of RTK_Geometry implementations.
+ * Test of Geometry implementations.
  */
 //===========================================================================//
 
 template<class Array>
-class RTK_Geometry : public MOC_Geometry<RTK_State>
+class Geometry
 {
-    typedef MOC_Geometry<RTK_State>     Base;
   public:
     //@{
     //! Typedefs.
-    typedef Array                       Array_t;
-    typedef nemesis::SP<Array_t>        SP_Array;
-    typedef RTK_State                   Geo_State_t;
-    typedef typename Base::Space_Vector Space_Vector;
-    typedef typename Base::RCF_Vec_Int  RCF_Vec_Int;
-    typedef typename Base::RCF_Vec_Dbl  RCF_Vec_Dbl;
-    typedef def::Vec_Dbl                Vec_Dbl;
-    typedef def::Vec_Int                Vec_Int;
+    typedef Array                    Array_t;
+    typedef std::shared_ptr<Array_t> SP_Array;
+    typedef RTK_State                Geo_State_t;
+    typedef def::Space_Vector        Space_Vector;
+    typedef def::Vec_Dbl             Vec_Dbl;
+    typedef def::Vec_Int             Vec_Int;
     //@}
 
   private:
@@ -110,10 +105,10 @@ class RTK_Geometry : public MOC_Geometry<RTK_State>
 
   public:
     // Constructor.
-    explicit RTK_Geometry(SP_Array array);
+    explicit Geometry(SP_Array array);
 
     // Constructor with symmetry
-    RTK_Geometry(SP_Array array, bool sym);
+    Geometry(SP_Array array, bool sym);
 
     // >>> DERIVED INTERFACE from Geometry
 
@@ -157,7 +152,7 @@ class RTK_Geometry : public MOC_Geometry<RTK_State>
     }
 
     //! Return the current cell ID
-    cell_type cell(const Geo_State_t &state) const
+    geometry::cell_type cell(const Geo_State_t &state) const
     {
         // Note: large arrays may overflow signed int
         Ensure(d_array->cellid(state) >= 0);
@@ -165,14 +160,14 @@ class RTK_Geometry : public MOC_Geometry<RTK_State>
     }
 
     //! Return the current material ID
-    matid_type matid(const Geo_State_t &state) const
+    geometry::matid_type matid(const Geo_State_t &state) const
     {
         // we need a better mechanism later on....TME
         return d_array->matid(state);
     }
 
     //! Return the state with respect to outer geometry boundary
-    Boundary_State boundary_state(const Geo_State_t &state) const
+    geometry::Boundary_State boundary_state(const Geo_State_t &state) const
     {
         if (state.escaping_face != Geo_State_t::NONE)
         {
@@ -215,180 +210,13 @@ class RTK_Geometry : public MOC_Geometry<RTK_State>
     // Reflect the direction at a reflecting surface.
     bool reflect(Geo_State_t &state);
 
-    // Set volumes by global id
-    void set_volume(int global_cell_id, double volume)
-    {
-        Check (global_cell_id < d_volumes.size() );
-        d_volumes[global_cell_id] = volume;
-    }
-
-    // >>> DERIVED INTERFACE from MOC_Geometry
-
-    //! Return Block/Plane id.  If non-modular will return 0.
-    size_type block(const Geo_State_t &state) const
-    {
-        if (!d_modular)
-            return 0;
-        else
-            return block_cmfd( state );
-    }
-
-    //! Return modular block/plane id
-    size_type block_cmfd(const Geo_State_t &state) const
-    {
-        return d_array->index(
-            state.level_coord[ d_array->level() ][def::X],
-            state.level_coord[ d_array->level() ][def::Y], 0 );
-    }
-
-    //! Number of cells
-    long_type num_cells() const
-    {
-        return d_array->num_cells();
-    }
-
-    //! Get user-supplied cell "labels" (unavailable, unassigned RCF)
-    RCF_Vec_Int get_cell_labels() const
-    {
-        return RCF_Vec_Int();
-    }
-
-    //! Get cell volumes (unavailable, unassigned RCF)
-    RCF_Vec_Dbl get_cell_volumes() const
-    {
-        return RCF_Vec_Dbl();
-    }
-
-    //! Number of cells in a block
-    long_type num_cells_block(size_type block_id) const
-    {
-        if ( !d_modular )
-            return d_array->num_cells();
-        else
-            return num_cells_block_cmfd( block_id );
-    }
-
-    //! Number of cells in a modular block
-    long_type num_cells_block_cmfd(size_type block_id) const
-    {
-        int Nx = d_array->size( def::X);
-        int i = block_id % Nx;
-        return d_array->object( i, (block_id - i) / Nx, 0).num_cells();
-    }
-
-    //! Number of blocks
-    long_type num_blocks() const
-    {
-        if ( !d_modular)
-            return 1;
-        else
-            return num_blocks_cmfd();
-    }
-
-    //! Number of modular blocks
-    long_type num_blocks_cmfd() const
-    {
-        return d_array->size();
-    }
-
-    //! Number of blocks in a given direction
-    long_type num_blocks(size_type xyz) const
-    {
-        if ( !d_modular)
-            return 1;
-        else
-            return num_blocks_cmfd( xyz );
-    }
-
-    //! Number of modular blocks in a given direction
-    long_type num_blocks_cmfd(size_type xyz) const
-    {
-        return d_array->size( xyz );
-    }
-
-    //! Volume of global cell  // NEED TO UPDATE
-    // THIS IS 2D VOLUME( AREA)
-    double volume(size_type global_cell_id) const
-    {
-        Check (global_cell_id < d_volumes.size());
-        return d_volumes[global_cell_id];
-    }
-
-    // Return all volumes
-    const Vec_Dbl & volumes() const
-    {
-        return d_volumes;
-    }
-
-    //! Dimensions of block (x or y)
-    double block_delta(size_type xyz, size_type block_id) const
-    {
-        if ( !d_modular)
-        {
-            Check( block_id == 0 );
-            return d_array->pitch(xyz);
-        }
-        else
-            return block_delta_cmfd( xyz, block_id );
-    }
-
-    //! Dimension of modular block (x or y)
-    double block_delta_cmfd(size_type xyz, size_type block_id) const
-    {
-        int Nx = d_array->size(def::X);
-        int i = block_id % Nx;
-        return d_array->object( i, (block_id - i) / Nx, 0).pitch(xyz);
-    }
-
-    //! True if the particle/ray will change units
-    bool change_planes(const Geo_State_t &state) const
-    {
-        // Plane boundaries begin at id 1000 (internal boundaries are < 1000)
-        return state.exiting_face >= 1000;
-    }
-
-    //! Return bottom corner of a given block
-    Space_Vector corner() const
-    {
-        return d_array->corner();
-    }
-
     // Return the outward normal.
     Space_Vector normal(const Geo_State_t &state) const;
-
-    //! Pickle the state.
-    /// The RTK state is always persistent, so this is a null-op.
-    void pickle(Geo_State_t &state) { /*...*/ }
-
-    //! Restore the geometry from a persistent state.
-    /// All of the geometric state is stored in the state, so this is a
-    /// null-op for this geometry.
-    void restore(Geo_State_t &pickled_state) { /*...*/ }
-
-    //! Set modular interface
-    void set_modular(bool mod) { d_modular = mod; }
-
-    // Sets symmetric/mapped cells for eighth core symmetry
-    void set_mapped_cells();
 
     // >>> ACCESSORS
 
     //! Return the underlying array representation of objects.
     const Array_t& array() const { Require (d_array); return *d_array; }
-
-    //! Returns mapped cells
-    int mapped_cell( int index )
-    {
-        Require( index < d_mapped_cells.size() );
-        return d_mapped_cells[index];
-    }
-
-    //! Return mapped cell vector
-    const Vec_Int& mapped_cells()
-    {
-        Require( !d_mapped_cells.empty() );
-        return d_mapped_cells;
-    }
 
   private:
     // >>> IMPLEMENTATION
@@ -411,8 +239,7 @@ class RTK_Geometry : public MOC_Geometry<RTK_State>
     void move(double d, Geo_State_t &state)
     {
         Require (d >= 0.0);
-        Require (nemesis::soft_equiv(
-                     vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+        Require (soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
         state.d_r[def::X] += d * state.d_dir[def::X];
@@ -432,14 +259,14 @@ class RTK_Geometry : public MOC_Geometry<RTK_State>
 
 //@{
 //! Single-level lattice/core geometries.
-typedef RTK_Geometry< RTK_Array<RTK_Cell> >              RTK_Lattice;
-typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > RTK_Core;
+typedef Geometry< RTK_Array<RTK_Cell> >              Lattice;
+typedef Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
 //@}
 
 } // end namespace profugus
 
-#endif // geometry_RTK_Geometry_hh
+#endif // geometry_Geometry_hh
 
 //---------------------------------------------------------------------------//
-//              end of geometry/RTK_Geometry.hh
+//              end of geometry/Geometry.hh
 //---------------------------------------------------------------------------//
