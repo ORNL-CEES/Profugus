@@ -1105,7 +1105,6 @@ TEST_F(Lattice_Test, detailed_track)
 }
 
 //---------------------------------------------------------------------------//
-#ifdef USE_MC
 
 TEST_F(Lattice_Test, check_volumes)
 {
@@ -1115,8 +1114,8 @@ TEST_F(Lattice_Test, check_volumes)
     lattice->complete(0.0, 0.0, 0.0);
 
     // make a random number generator
-    mc::RNG_Control control(seed);
-    mc::RNG_Control::RNG rng = control.rng();
+    profugus::RNG_Control control(seed);
+    auto rng = control.rng();
 
     Vector    r, omega;
     Geo_State state;
@@ -1197,7 +1196,6 @@ TEST_F(Lattice_Test, check_volumes)
     }
 }
 
-#endif
 //---------------------------------------------------------------------------//
 
 TEST_F(Core_Test, set_vessel)

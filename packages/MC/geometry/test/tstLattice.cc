@@ -4,11 +4,12 @@
  * \author Thomas M. Evans
  * \date   Wed Dec 22 13:32:47 2010
  * \brief  RTK_Lattice unit test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "gtest/nemesis_gtest.hh"
+#include "gtest/utils_gtest.hh"
+
 #include <vector>
 #include <cmath>
 #include <sstream>
@@ -16,41 +17,34 @@
 #include <fstream>
 #include <algorithm>
 
-#include <geometry/config.h>
-
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
-#include "geometry/Definitions.hh"
-#include "../RTK_Geometry.hh"
-
-#ifdef USE_MC
-#include "mc/RNG_Control.hh"
-#endif
+#include "rng/RNG_Control.hh"
+#include "../Definitions.hh"
+#include "../Geometry.hh"
 
 using namespace std;
 
 using def::X;
 using def::Y;
 using def::Z;
-using nemesis::constants::pi;
+using profugus::constants::pi;
 
-typedef denovo::RTK_Lattice         Lattice_Geometry;
-typedef Lattice_Geometry            Geometry;
-typedef Lattice_Geometry::Array_t   Lattice_t;
-typedef Lattice_t::Object_t         Pin_Cell_t;
-typedef Lattice_Geometry::SP_Array  SP_Lattice;
-typedef Lattice_t::SP_Object        SP_Pin_Cell;
+typedef profugus::Lattice          Lattice_Geometry;
+typedef Lattice_Geometry           Geometry;
+typedef Lattice_Geometry::Array_t  Lattice_t;
+typedef Lattice_t::Object_t        Pin_Cell_t;
+typedef Lattice_Geometry::SP_Array SP_Lattice;
+typedef Lattice_t::SP_Object       SP_Pin_Cell;
 
 typedef Geometry::Space_Vector Vector;
 typedef Geometry::Geo_State_t  State;
 
-using denovo::geometry::OUTSIDE;
-using denovo::geometry::INSIDE;
-
+using profugus::geometry::OUTSIDE;
+using profugus::geometry::INSIDE;
 
 int seed = 4305834;
-
 
 bool do_output = false;
 
@@ -65,11 +59,11 @@ TEST(Single, ShellLattice)
     // Moderator   = 5
 
     // 3x3x1 lattice, 2 fuel pin types, 1 box
-    SP_Pin_Cell pin1(new Pin_Cell_t(1, 0.54, 5, 1.26, 14.28));
-    SP_Pin_Cell pin2(new Pin_Cell_t(2, 0.54, 5, 1.26, 14.28));
-    SP_Pin_Cell box(new Pin_Cell_t(5, 1.26, 14.28));
+    SP_Pin_Cell pin1(make_shared<Pin_Cell_t>(1, 0.54, 5, 1.26, 14.28));
+    SP_Pin_Cell pin2(make_shared<Pin_Cell_t>(2, 0.54, 5, 1.26, 14.28));
+    SP_Pin_Cell box(make_shared<Pin_Cell_t>(5, 1.26, 14.28));
 
-    SP_Lattice lat(new Lattice_t(3, 3, 1, 3));
+    SP_Lattice lat(make_shared<Lattice_t>(3, 3, 1, 3));
 
     // assign pins
     lat->assign_object(pin1, 0);
@@ -249,25 +243,22 @@ TEST(Single, ShellLattice)
         EXPECT_SOFTEQ(omega[1], -0.374687631211, 1.0e-11);
         EXPECT_SOFTEQ(omega[2], 0.667310297851, 1.0e-11);
     }
-
-    // ut.passes("Lattice of single-shell pins correctly represented.");
 }
 
 //---------------------------------------------------------------------------//
 
 TEST(Lattice, Heuristic)
 {
-#ifdef USE_MC
     // Fuel region = 1
     // Fuel region = 2
     // Moderator   = 5
 
     // 3x3x1 lattice, 2 fuel pin types, 1 box
-    SP_Pin_Cell pin1(new Pin_Cell_t(1, 0.54, 5, 1.26, 14.28));
-    SP_Pin_Cell pin2(new Pin_Cell_t(2, 0.54, 5, 1.26, 14.28));
-    SP_Pin_Cell box(new Pin_Cell_t(5, 1.26, 14.28));
+    SP_Pin_Cell pin1(make_shared<Pin_Cell_t>(1, 0.54, 5, 1.26, 14.28));
+    SP_Pin_Cell pin2(make_shared<Pin_Cell_t>(2, 0.54, 5, 1.26, 14.28));
+    SP_Pin_Cell box(make_shared<Pin_Cell_t>(5, 1.26, 14.28));
 
-    SP_Lattice lat(new Lattice_t(3, 3, 1, 3));
+    SP_Lattice lat(make_shared<Lattice_t>(3, 3, 1, 3));
 
     // assign pins
     lat->assign_object(pin1, 0);
@@ -293,8 +284,8 @@ TEST(Lattice, Heuristic)
     Geometry &geometry = lattice;
 
     // make a random number generator
-    mc::RNG_Control control(seed);
-    mc::RNG_Control::RNG rng = control.rng();
+    profugus::RNG_Control control(seed);
+    auto rng = control.rng();
 
     // plot collision sites
     ofstream csites("csites.dat");
@@ -318,7 +309,7 @@ TEST(Lattice, Heuristic)
 
         // sample omega
         costheta = 1.0 - 2.0 * rng.ran();
-        phi      = nemesis::constants::two_pi * rng.ran();
+        phi      = profugus::constants::two_pi * rng.ran();
         sintheta = sqrt(1.0 - costheta * costheta);
 
         omega[0] = sintheta * cos(phi);
@@ -403,19 +394,12 @@ TEST(Lattice, Heuristic)
     cout << endl;
 
     csites.close();
-
-    // ut.passes("Finished heuristic tracking through lattice.");
-#else
-    // ut.passes("Heuristic tests need mc package for RNG.");
-#endif
 }
 
 //---------------------------------------------------------------------------//
 
 TEST(Multisegment, Pin)
 {
-#ifdef USE_MC
-
     // make pin with clad and 4 segments
     vector<int>    ids(3, 0);
     vector<double> rad(3, 0);
@@ -427,9 +411,9 @@ TEST(Multisegment, Pin)
     rad[2] = 0.54;
 
     // 1x1x1 lattice, 1 fuel pin with 3 shells, 4 regions, 4 segments
-    SP_Pin_Cell pin(new Pin_Cell_t(ids, rad, 10, 1.26, 14.28, 4));
+    SP_Pin_Cell pin(make_shared<Pin_Cell_t>(ids, rad, 10, 1.26, 14.28, 4));
 
-    SP_Lattice lat(new Lattice_t(1, 1, 1, 1));
+    SP_Lattice lat(make_shared<Lattice_t>(1, 1, 1, 1));
 
     // assign pins
     lat->assign_object(pin, 0);
@@ -442,8 +426,8 @@ TEST(Multisegment, Pin)
     Geometry &geometry = lattice;
 
     // make a random number generator
-    mc::RNG_Control control(seed);
-    mc::RNG_Control::RNG rng = control.rng();
+    profugus::RNG_Control control(seed);
+    auto rng = control.rng();
 
     // geometry variables
     double costheta, sintheta, phi;
@@ -626,7 +610,7 @@ TEST(Multisegment, Pin)
             omega[0] = 1.0;
             omega[1] = 1.0;
             omega[2] = 0.0;
-            nemesis::vector_normalize(omega);
+            profugus::vector_normalize(omega);
 
             // initialize track
             geometry.initialize(r, omega, state);
@@ -702,11 +686,6 @@ TEST(Multisegment, Pin)
 
         EXPECT_SOFTEQ(sum, Vtot, 1.e-12);
     }
-
-    // ut.passes("Finished heuristic tracking through multi-segment pin-cell.");
-#else
-    // ut.passes("Heuristic tests need mc package for RNG.");
-#endif
 }
 
 //---------------------------------------------------------------------------//

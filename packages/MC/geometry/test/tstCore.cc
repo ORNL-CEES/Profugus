@@ -8,24 +8,20 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "gtest/nemesis_gtest.hh"
+#include "gtest/utils_gtest.hh"
 #include <vector>
 #include <cmath>
 #include <sstream>
 #include <iomanip>
 #include <fstream>
-
-#include <geometry/config.h>
+#include <memory>
 
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
-#include "geometry/Definitions.hh"
-#include "../RTK_Geometry.hh"
-
-#ifdef USE_MC
-#include "mc/RNG_Control.hh"
-#endif
+#include "rng/RNG_Control.hh"
+#include "../Definitions.hh"
+#include "../Geometry.hh"
 
 using namespace std;
 
@@ -33,7 +29,7 @@ using def::X;
 using def::Y;
 using def::Z;
 
-typedef denovo::RTK_Core        Core_Geometry;
+typedef profugus::Core          Core_Geometry;
 typedef Core_Geometry           Geometry;
 typedef Core_Geometry::Array_t  Core_t;
 typedef Core_t::Object_t        Lattice_t;
@@ -45,13 +41,11 @@ typedef Lattice_t::SP_Object    SP_Pin_Cell;
 typedef Geometry::Space_Vector Vector;
 typedef Geometry::Geo_State_t  State;
 
-using denovo::geometry::OUTSIDE;
-using denovo::geometry::INSIDE;
-using denovo::geometry::REFLECT;
-
+using profugus::geometry::OUTSIDE;
+using profugus::geometry::INSIDE;
+using profugus::geometry::REFLECT;
 
 int seed = 4305834;
-
 
 bool do_output = false;
 
@@ -89,18 +83,17 @@ bool do_output = false;
 
 TEST(Core, Heuristic)
 {
-#ifdef USE_MC
     // 2 fuel pin types
-    SP_Pin_Cell pin1(new Pin_Cell_t(1, 0.54, 3, 1.26, 14.28));
-    SP_Pin_Cell pin2(new Pin_Cell_t(2, 0.54, 3, 1.26, 14.28));
+    SP_Pin_Cell pin1(make_shared<Pin_Cell_t>(1, 0.54, 3, 1.26, 14.28));
+    SP_Pin_Cell pin2(make_shared<Pin_Cell_t>(2, 0.54, 3, 1.26, 14.28));
 
     // water pin
-    SP_Pin_Cell box(new Pin_Cell_t(3, 2.52, 14.28));
+    SP_Pin_Cell box(make_shared<Pin_Cell_t>(3, 2.52, 14.28));
 
     // 3 lattices (fuel 1, 2, and water)
-    SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
-    SP_Lattice lat2(new Lattice_t(2, 2, 1, 1));
-    SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+    SP_Lattice lat1(make_shared<Lattice_t>(2, 2, 1, 1));
+    SP_Lattice lat2(make_shared<Lattice_t>(2, 2, 1, 1));
+    SP_Lattice lat3(make_shared<Lattice_t>(1, 1, 1, 1));
 
     // lattice assignments
     lat1->assign_object(pin1, 0);
@@ -113,7 +106,7 @@ TEST(Core, Heuristic)
     lat3->complete(0.0, 0.0, 0.0);
 
     // make core (3x3x2 with 4 objects, object 0 unassigned)
-    SP_Core core(new Core_t(3, 3, 2, 4));
+    SP_Core core(make_shared<Core_t>(3, 3, 2, 4));
     EXPECT_EQ(1, core->level());
 
     // assign lattices
@@ -158,8 +151,8 @@ TEST(Core, Heuristic)
     Geometry &geometry = rtk_core;
 
     // make a random number generator
-    mc::RNG_Control control(seed);
-    mc::RNG_Control::RNG rng = control.rng();
+    profugus::RNG_Control control(seed);
+    auto rng = control.rng();
 
     // plot collision sites
     ofstream csites("csites.dat");
@@ -183,7 +176,7 @@ TEST(Core, Heuristic)
 
         // sample omega
         costheta = 1.0 - 2.0 * rng.ran();
-        phi      = nemesis::constants::two_pi * rng.ran();
+        phi      = profugus::constants::two_pi * rng.ran();
         sintheta = sqrt(1.0 - costheta * costheta);
 
         omega[0] = sintheta * cos(phi);
@@ -266,29 +259,23 @@ TEST(Core, Heuristic)
     cout << endl;
 
     csites.close();
-
-    // ut.passes("Finished heuristic tracking through core.");
-#else
-    // ut.passes("Heuristic tests need mc package for RNG.");
-#endif
 }
 
 //---------------------------------------------------------------------------//
 
 TEST(Core, Reflecting)
 {
-#ifdef USE_MC
     // 2 fuel pin types
-    SP_Pin_Cell pin1(new Pin_Cell_t(1, 0.54, 3, 1.26, 14.28));
-    SP_Pin_Cell pin2(new Pin_Cell_t(2, 0.54, 3, 1.26, 14.28));
+    SP_Pin_Cell pin1(make_shared<Pin_Cell_t>(1, 0.54, 3, 1.26, 14.28));
+    SP_Pin_Cell pin2(make_shared<Pin_Cell_t>(2, 0.54, 3, 1.26, 14.28));
 
     // water pin
-    SP_Pin_Cell box(new Pin_Cell_t(3, 2.52, 14.28));
+    SP_Pin_Cell box(make_shared<Pin_Cell_t>(3, 2.52, 14.28));
 
     // 3 lattices (fuel 1, 2, and water)
-    SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
-    SP_Lattice lat2(new Lattice_t(2, 2, 1, 1));
-    SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+    SP_Lattice lat1(make_shared<Lattice_t>(2, 2, 1, 1));
+    SP_Lattice lat2(make_shared<Lattice_t>(2, 2, 1, 1));
+    SP_Lattice lat3(make_shared<Lattice_t>(1, 1, 1, 1));
 
     // lattice assignments
     lat1->assign_object(pin1, 0);
@@ -301,7 +288,7 @@ TEST(Core, Reflecting)
     lat3->complete(0.0, 0.0, 0.0);
 
     // make core (3x3x2 with 4 objects, object 0 unassigned)
-    SP_Core core(new Core_t(3, 3, 2, 4));
+    SP_Core core(make_shared<Core_t>(3, 3, 2, 4));
     EXPECT_EQ(1, core->level());
 
     // assign lattices
@@ -347,8 +334,8 @@ TEST(Core, Reflecting)
     Geometry &geometry = rtk_core;
 
     // make a random number generator
-    mc::RNG_Control control(seed);
-    mc::RNG_Control::RNG rng = control.rng();
+    profugus::RNG_Control control(seed);
+    auto rng = control.rng();
 
     // geometry variables
     double costheta, sintheta, phi;
@@ -370,7 +357,7 @@ TEST(Core, Reflecting)
 
         // sample omega
         costheta = 1.0 - 2.0 * rng.ran();
-        phi      = nemesis::constants::two_pi * rng.ran();
+        phi      = profugus::constants::two_pi * rng.ran();
         sintheta = sqrt(1.0 - costheta * costheta);
 
         omega[0] = sintheta * cos(phi);
@@ -469,14 +456,6 @@ TEST(Core, Reflecting)
     cout << "Low  Z reflection = " << setw(8) << refl_bin[4] << endl;
     cout << "High Z reflection = " << setw(8) << refl_bin[5] << endl;
     cout << endl;
-
-    // ostringstream m;
-    // m << "Finished heuristic tracking through core with reflecting "
-    // << "boundaries";
-    // ut.passes(m.str());
-#else
-    // ut.passes("Heuristic tests need mc package for RNG.");
-#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -494,45 +473,45 @@ TEST(Bwr, Lattice)
         r[1] = 0.25;
 
         // cells
-        SP_Pin_Cell pin(new Pin_Cell_t(rid, r, 5, 0.75, 14.00, 4));
-        SP_Pin_Cell plug(new Pin_Cell_t(2, 0.6, 5, 1.5, 14.00, 4));
+        SP_Pin_Cell pin(make_shared<Pin_Cell_t>(rid, r, 5, 0.75, 14.00, 4));
+        SP_Pin_Cell plug(make_shared<Pin_Cell_t>(2, 0.6, 5, 1.5, 14.00, 4));
 
         // gaps
-        SP_Pin_Cell g0(new Pin_Cell_t(5, 0.25, 14.00));      // corner
-        SP_Pin_Cell g1(new Pin_Cell_t(5, 0.25, 1.5, 14.00)); // x-edge
-        SP_Pin_Cell g2(new Pin_Cell_t(5, 1.5, 0.25, 14.00)); // y-edge
+        SP_Pin_Cell g0(make_shared<Pin_Cell_t>(5, 0.25, 14.00));      // corner
+        SP_Pin_Cell g1(make_shared<Pin_Cell_t>(5, 0.25, 1.5, 14.00)); // x-edge
+        SP_Pin_Cell g2(make_shared<Pin_Cell_t>(5, 1.5, 0.25, 14.00)); // y-edge
 
         // 2x2 pin lattice
-        SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
+        SP_Lattice lat1(make_shared<Lattice_t>(2, 2, 1, 1));
         lat1->assign_object(pin, 0);
         lat1->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(48, lat1->num_cells());
 
         // plug lattice
-        SP_Lattice lat2(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat2(make_shared<Lattice_t>(1, 1, 1, 1));
         lat2->assign_object(plug, 0);
         lat2->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(8, lat2->num_cells());
 
         // corner gap lattice
-        SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat3(make_shared<Lattice_t>(1, 1, 1, 1));
         lat3->assign_object(g0, 0);
         lat3->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(1, lat3->num_cells());
 
         // x-edge gap lattice
-        SP_Lattice lat4(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat4(make_shared<Lattice_t>(1, 1, 1, 1));
         lat4->assign_object(g1, 0);
         lat4->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(1, lat4->num_cells());
 
         // y-edge gap lattice
-        SP_Lattice lat5(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat5(make_shared<Lattice_t>(1, 1, 1, 1));
         lat5->assign_object(g2, 0);
         lat5->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(1, lat5->num_cells());
 
-        bwr = new Core_t(4, 4, 1, 5);
+        bwr = make_shared<Core_t>(4, 4, 1, 5);
 
         bwr->assign_object(lat1, 0); // 2x2 pin lattice
         bwr->assign_object(lat2, 1); // water plug
@@ -586,7 +565,7 @@ TEST(Bwr, Lattice)
     omega[0] = 2.2;
     omega[1] = -3.2;
     omega[2] = 0.1;
-    nemesis::vector_normalize(omega);
+    profugus::vector_normalize(omega);
 
     // initialize the geoemtry
     bg.initialize(r, omega, state);
@@ -617,11 +596,6 @@ TEST(Bwr, Lattice)
     }
 
     cout << endl;
-
-    // ostringstream m;
-    // m << "Correctly tracked through multilevel BWR-type core and "
-    // << "accessed global cells";
-    // ut.passes(m.str());
 }
 
 //---------------------------------------------------------------------------//
@@ -639,45 +613,45 @@ TEST(Bwr, Symmetry)
         r[1] = 0.25;
 
         // cells
-        SP_Pin_Cell pin(new Pin_Cell_t(rid, r, 5, 0.75, 14.00, 4));
-        SP_Pin_Cell plug(new Pin_Cell_t(2, 0.6, 5, 1.5, 14.00, 4));
+        SP_Pin_Cell pin(make_shared<Pin_Cell_t>(rid, r, 5, 0.75, 14.00, 4));
+        SP_Pin_Cell plug(make_shared<Pin_Cell_t>(2, 0.6, 5, 1.5, 14.00, 4));
 
         // gaps
-        SP_Pin_Cell g0(new Pin_Cell_t(5, 0.25, 14.00));      // corner
-        SP_Pin_Cell g1(new Pin_Cell_t(5, 0.25, 1.5, 14.00)); // x-edge
-        SP_Pin_Cell g2(new Pin_Cell_t(5, 1.5, 0.25, 14.00)); // y-edge
+        SP_Pin_Cell g0(make_shared<Pin_Cell_t>(5, 0.25, 14.00));      // corner
+        SP_Pin_Cell g1(make_shared<Pin_Cell_t>(5, 0.25, 1.5, 14.00)); // x-edge
+        SP_Pin_Cell g2(make_shared<Pin_Cell_t>(5, 1.5, 0.25, 14.00)); // y-edge
 
         // 2x2 pin lattice
-        SP_Lattice lat1(new Lattice_t(2, 2, 1, 1));
+        SP_Lattice lat1(make_shared<Lattice_t>(2, 2, 1, 1));
         lat1->assign_object(pin, 0);
         lat1->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(48, lat1->num_cells());
 
         // plug lattice
-        SP_Lattice lat2(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat2(make_shared<Lattice_t>(1, 1, 1, 1));
         lat2->assign_object(plug, 0);
         lat2->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(8, lat2->num_cells());
 
         // corner gap lattice
-        SP_Lattice lat3(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat3(make_shared<Lattice_t>(1, 1, 1, 1));
         lat3->assign_object(g0, 0);
         lat3->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(1, lat3->num_cells());
 
         // x-edge gap lattice
-        SP_Lattice lat4(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat4(make_shared<Lattice_t>(1, 1, 1, 1));
         lat4->assign_object(g1, 0);
         lat4->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(1, lat4->num_cells());
 
         // y-edge gap lattice
-        SP_Lattice lat5(new Lattice_t(1, 1, 1, 1));
+        SP_Lattice lat5(make_shared<Lattice_t>(1, 1, 1, 1));
         lat5->assign_object(g2, 0);
         lat5->complete(0.0, 0.0, 0.0);
         EXPECT_EQ(1, lat5->num_cells());
 
-        bwr = new Core_t(4, 4, 1, 5);
+        bwr = make_shared<Core_t>(4, 4, 1, 5);
 
         bwr->assign_object(lat1, 0); // 2x2 pin lattice
         bwr->assign_object(lat2, 1); // water plug
@@ -711,72 +685,7 @@ TEST(Bwr, Symmetry)
         EXPECT_TRUE(soft_equiv(bwr->pitch(X), 3.5));
         EXPECT_TRUE(soft_equiv(bwr->pitch(Y), 3.5));
     }
-
-    // Create Geometry
-    denovo::RTK_Geometry< Core_t > geom(bwr, true);
-
-    // Set Mapped Cells
-    geom.set_mapped_cells();
-
-    def::Vec_Int map_cells = geom.mapped_cells();
-
-    EXPECT_EQ(124, map_cells.size());
-
-    def::Vec_Int ref(124);
-    ref[0  ] = 123; ref[1  ] = 119; ref[2  ] = 61 ; ref[3  ] = 3  ;
-    ref[4  ] = 122; ref[5  ] = 117; ref[6  ] = 118; ref[7  ] = 113;
-    ref[8  ] = 114; ref[9  ] = 115; ref[10 ] = 116; ref[11 ] = 111;
-
-    ref[12 ] = 112; ref[13 ] = 58 ; ref[14 ] = 59 ; ref[15 ] = 60 ;
-    ref[16 ] = 52 ; ref[17 ] = 53 ; ref[18 ] = 54 ; ref[19 ] = 55 ;
-    ref[20 ] = 56 ; ref[21 ] = 57 ; ref[22 ] = 49 ; ref[23 ] = 50 ;
-
-    ref[24 ] = 51 ; ref[25 ] = 34 ; ref[26 ] = 35 ; ref[27 ] = 36 ;
-    ref[28 ] = 28 ; ref[29 ] = 29 ; ref[30 ] = 30 ; ref[31 ] = 31 ;
-    ref[32 ] = 32 ; ref[33 ] = 33 ; ref[34 ] = 25 ; ref[35 ] = 26 ;
-
-    ref[36 ] = 27 ; ref[37 ] = 46 ; ref[38 ] = 47 ; ref[39 ] = 48 ;
-    ref[40 ] = 40 ; ref[41 ] = 41 ; ref[42 ] = 42 ; ref[43 ] = 43 ;
-    ref[44 ] = 44 ; ref[45 ] = 45 ; ref[46 ] = 37 ; ref[47 ] = 38 ;
-
-    ref[48 ] = 39 ; ref[49 ] = 22 ; ref[50 ] = 23 ; ref[51 ] = 24 ;
-    ref[52 ] = 16 ; ref[53 ] = 17 ; ref[54 ] = 18 ; ref[55 ] = 19 ;
-    ref[56 ] = 20 ; ref[57 ] = 21 ; ref[58 ] = 13 ; ref[59 ] = 14 ;
-
-    ref[60 ] = 15 ; ref[61 ] = 2  ; ref[62 ] = 121; ref[63 ] = 108;
-    ref[64 ] = 109; ref[65 ] = 110; ref[66 ] = 102; ref[67 ] = 103;
-    ref[68 ] = 104; ref[69 ] = 105; ref[70 ] = 106; ref[71 ] = 107;
-
-    ref[72 ] = 99 ; ref[73 ] = 100; ref[74 ] = 101; ref[75 ] = 84 ;
-    ref[76 ] = 85 ; ref[77 ] = 86 ; ref[78 ] = 78 ; ref[79 ] = 79 ;
-    ref[80 ] = 80 ; ref[81 ] = 81 ; ref[82 ] = 82 ; ref[83 ] = 83 ;
-
-    ref[84 ] = 75 ; ref[85 ] = 76 ; ref[86 ] = 77 ; ref[87 ] = 96 ;
-    ref[88 ] = 97 ; ref[89 ] = 98 ; ref[90 ] = 90 ; ref[91 ] = 91 ;
-    ref[92 ] = 92 ; ref[93 ] = 93 ; ref[94 ] = 94 ; ref[95 ] = 95 ;
-
-    ref[96 ] = 87 ; ref[97 ] = 88 ; ref[98 ] = 89 ; ref[99 ] = 72 ;
-    ref[100] = 73 ; ref[101] = 74 ; ref[102] = 66 ; ref[103] = 67 ;
-    ref[104] = 68 ; ref[105] = 69 ; ref[106] = 70 ; ref[107] = 71 ;
-
-    ref[108] = 63 ; ref[109] = 64 ; ref[110] = 65 ; ref[111] = 11 ;
-    ref[112] = 12 ; ref[113] = 7  ; ref[114] = 8  ; ref[115] = 9  ;
-    ref[116] = 10 ; ref[117] = 5  ; ref[118] = 6  ; ref[119] = 1  ;
-
-    ref[120] = 120; ref[121] = 62 ; ref[122] = 4  ; ref[123] = 0  ;
-
-    for (int i = 0; i < 124; ++i )
-    {
-        EXPECT_EQ(ref[i], map_cells[i]);
-    }
-
-    // ostringstream m;
-    // m << "Correctly assigned symmetric cells to BWR core";
-    // ut.passes(m.str());
 }
-
-//---------------------------------------------------------------------------//
-
 
 //---------------------------------------------------------------------------//
 //                        end of tstRTK_Core.cc
