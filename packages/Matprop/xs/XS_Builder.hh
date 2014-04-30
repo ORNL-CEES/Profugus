@@ -104,6 +104,9 @@ class XS_Builder
     // Group velocites (may not be present; not needed for static problems).
     OneDArray d_velocity;
 
+    // Group bounds (may not be present).
+    OneDArray d_bounds;
+
     // Materials in the file.
     Vec_Str d_matids;
 };

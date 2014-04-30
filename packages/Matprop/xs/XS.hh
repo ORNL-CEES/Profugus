@@ -84,6 +84,9 @@ class XS
     // Group velocities in cm/s.
     Vector d_v;
 
+    // Group bounds (high-to-low).
+    Vector d_bnds;
+
   public:
     XS();
 
@@ -93,7 +96,10 @@ class XS
     void set(int Pn_order, int num_groups);
 
     // Set group velocities.
-    void set(const OneDArray &velocities);
+    void set_velocities(const OneDArray &velocities);
+
+    // Set group bounds
+    void set_bounds(const OneDArray &bounds);
 
     // Add 1-D cross sections to the database.
     void add(int matid, int type, const OneDArray &data);
@@ -123,6 +129,9 @@ class XS
 
     // Get group velocities (zero if unset).
     const Vector& velocities() const { return d_v; }
+
+    // Get group bounds (zero if unset).
+    const Vector& bounds() const { return d_bnds; }
 
     // Return the 1-D data vector for a given matid and type.
     inline const Vector& vector(int matid, int type) const;

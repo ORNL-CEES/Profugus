@@ -67,13 +67,14 @@ void XS::set(int Pn_order,
 
     // resize velocities
     d_v.size(d_Ng);
+    d_bnds.size(d_Ng + 1);
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Set the group velocities.
  */
-void XS::set(const OneDArray &velocities)
+void XS::set_velocities(const OneDArray &velocities)
 {
     Require (velocities.size() == d_Ng);
     Require (velocities.size() == d_v.length());
@@ -82,6 +83,23 @@ void XS::set(const OneDArray &velocities)
     {
         Check (velocities[g] >= 0.0);
         d_v[g] = velocities[g];
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set the group bounds.
+ */
+void XS::set_bounds(const OneDArray &bounds)
+{
+    Require (bounds.size() == d_Ng + 1);
+    Require (bounds.size() == d_bnds.length());
+
+    d_bnds[0] = bounds[0];
+    for (int g = 1; g < d_Ng + 1; ++g)
+    {
+        Check (bounds[g] < bounds[g-1]);
+        d_bnds[g] = bounds[g];
     }
 }
 

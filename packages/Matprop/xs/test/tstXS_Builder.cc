@@ -82,6 +82,21 @@ TEST_F(XS_Builder_Test, load_3GP0)
     EXPECT_EQ(1, matids[0]);
     EXPECT_EQ(2, matids[1]);
 
+    // test bounds
+    const auto &bounds = xs->bounds();
+    EXPECT_EQ(4, bounds.length());
+    EXPECT_EQ(0.0, bounds(0));
+    EXPECT_EQ(0.0, bounds(1));
+    EXPECT_EQ(0.0, bounds(2));
+    EXPECT_EQ(0.0, bounds(3));
+
+    // test velocities
+    const auto &vel = xs->velocities();
+    EXPECT_EQ(3, vel.length());
+    EXPECT_EQ(0.0, vel(0));
+    EXPECT_EQ(0.0, vel(1));
+    EXPECT_EQ(0.0, vel(2));
+
     // material 1
     {
         const Vector &sigt = xs->vector(1, XS_t::TOTAL);
@@ -198,6 +213,16 @@ TEST_F(XS_Builder_Test, load_5GP1)
 
     EXPECT_TRUE(xs->has(1));
     EXPECT_TRUE(xs->has(2));
+
+    // test bounds
+    const auto &bounds = xs->bounds();
+    EXPECT_EQ(6, bounds.length());
+    EXPECT_EQ(2.0e7,  bounds(0));
+    EXPECT_EQ(1.0e6,  bounds(1));
+    EXPECT_EQ(1.0e5,  bounds(2));
+    EXPECT_EQ(1.0e4,  bounds(3));
+    EXPECT_EQ(1.0e3,  bounds(4));
+    EXPECT_EQ(1.0e-5, bounds(5));
 
     // material 2
     {
@@ -423,6 +448,14 @@ TEST_F(XS_Builder_Test, load_5GP1_P0_G13)
 
     EXPECT_TRUE(xs->has(1));
     EXPECT_TRUE(xs->has(2));
+
+    // test bounds
+    const auto &bounds = xs->bounds();
+    EXPECT_EQ(4, bounds.length());
+    EXPECT_EQ(1.0e6,  bounds(0));
+    EXPECT_EQ(1.0e5,  bounds(1));
+    EXPECT_EQ(1.0e4,  bounds(2));
+    EXPECT_EQ(1.0e3,  bounds(3));
 
     // material 2
     {

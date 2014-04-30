@@ -85,6 +85,13 @@ void XS_Builder::open_and_broadcast(const std_string &xml_file)
         Check (d_velocity.size() == d_num_groups);
     }
 
+    // get the group bounds if they are on the file
+    if (d_plxs->isParameter("bounds"))
+    {
+        d_bounds = d_plxs->get<OneDArray>("bounds");
+        Check (d_bounds.size() == d_num_groups + 1);
+    }
+
     // get the materials in the file
     d_matids.clear();
     for (ParameterList::ConstIterator itr = d_plxs->begin();
@@ -170,7 +177,17 @@ void XS_Builder::build(const Matid_Map &map,
                     d_velocity.begin() + g_end);
 
         // add the velocities
-        d_xs->set(v);
+        d_xs->set_velocities(v);
+    }
+
+    // truncate and add the bounds
+    if (!d_bounds.empty())
+    {
+        OneDArray b(d_bounds.begin() + g_first,
+                    d_bounds.begin() + g_end + 1);
+
+        // add the velocities
+        d_xs->set_bounds(b);
     }
 
     // iterate through the map and assign the cross sections
