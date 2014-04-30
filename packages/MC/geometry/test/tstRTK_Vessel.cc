@@ -2,28 +2,23 @@
 /*!
  * \file   geometry/test/tstRTK_Vessel.cc
  * \author Thomas M. Evans
- * \date   Fri Dec 06 19:47:39 2013
+ * \date   Wednesday April 30 10:26:51 2014
  * \brief  RTK_Array tests with a vessel.
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "gtest/nemesis_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include <map>
 #include <iomanip>
+#include <memory>
 
-#include <geometry/config.h>
-
-#include "utils/SP.hh"
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
+#include "rng/RNG_Control.hh"
 #include "../RTK_Cell.hh"
 #include "../RTK_Array.hh"
-
-#ifdef USE_MC
-#include "mc/RNG_Control.hh"
-#endif
 
 using namespace std;
 
@@ -34,13 +29,13 @@ using namespace std;
 class Base : public testing::Test
 {
   protected:
-    typedef denovo::RTK_Cell             Cell_t;
-    typedef denovo::RTK_Array<Cell_t>    Lattice_t;
-    typedef denovo::RTK_Array<Lattice_t> Core_t;
-    typedef Cell_t::Geo_State_t          Geo_State;
-    typedef Cell_t::Space_Vector         Vector;
-    typedef def::Vec_Dbl                 Vec_Dbl;
-    typedef def::Vec_Int                 Vec_Int;
+    typedef profugus::RTK_Cell             Cell_t;
+    typedef profugus::RTK_Array<Cell_t>    Lattice_t;
+    typedef profugus::RTK_Array<Lattice_t> Core_t;
+    typedef Cell_t::Geo_State_t            Geo_State;
+    typedef Cell_t::Space_Vector           Vector;
+    typedef def::Vec_Dbl                   Vec_Dbl;
+    typedef def::Vec_Int                   Vec_Int;
 
   protected:
     ~Base() {/*...*/}
@@ -79,24 +74,24 @@ class Lattice_Test : public Base
     typedef Base::Lattice_t     Lattice;
     typedef Lattice::SP_Object  SP_Cell;
     typedef Lattice::Object_t   Cell;
-    typedef nemesis::SP<Lattice> SP_Lattice;
+    typedef shared_ptr<Lattice> SP_Lattice;
 
   protected:
     void SetUp()
     {
-        nodes = nemesis::nodes();
-        node  = nemesis::node();
+        nodes = profugus::nodes();
+        node  = profugus::node();
         seed  = 1213212 + node;
 
         // make cells
         SP_Cell side, bottom, fuel, corner;
 
-        fuel   = new Cell(1, 0.6, 10, 1.5, 2.5);
-        side   = new Cell(10, 4.5, 1.5, 2.5);
-        bottom = new Cell(10, 1.5, 4.5, 2.5);
-        corner = new Cell(10, 4.5, 2.5);
+        fuel   = make_shared<Cell>(1, 0.6, 10, 1.5, 2.5);
+        side   = make_shared<Cell>(10, 4.5, 1.5, 2.5);
+        bottom = make_shared<Cell>(10, 1.5, 4.5, 2.5);
+        corner = make_shared<Cell>(10, 4.5, 2.5);
 
-        lattice = new Lattice(5, 5, 4, 5);
+        lattice = make_shared<Lattice>(5, 5, 4, 5);
 
         lattice->assign_object(fuel,   1);
         lattice->assign_object(side,   2);
@@ -184,22 +179,22 @@ class Core_Test : public Base
     typedef Core::SP_Object    SP_Lattice;
     typedef Lattice::Object_t  Cell;
     typedef Lattice::SP_Object SP_Cell;
-    typedef nemesis::SP<Core>  SP_Core;
+    typedef shared_ptr<Core>   SP_Core;
     typedef Cell::Gap_Vector   Gap_Vector;
 
   protected:
     void SetUp()
     {
-        nodes = nemesis::nodes();
-        node  = nemesis::node();
+        nodes = profugus::nodes();
+        node  = profugus::node();
         seed  = 1213212 + node;
 
         // make cells
         SP_Cell side, bottom, f00, f10, f01, f11, corner;
 
-        side   = new Cell(10, 5.0, 3.2, 2.5);
-        bottom = new Cell(10, 3.2, 5.0, 2.5);
-        corner = new Cell(10, 5.0, 2.5);
+        side   = make_shared<Cell>(10, 5.0, 3.2, 2.5);
+        bottom = make_shared<Cell>(10, 3.2, 5.0, 2.5);
+        corner = make_shared<Cell>(10, 5.0, 2.5);
 
         // fuel cells
         Gap_Vector g00(0.1, 0.0, 0.1, 0.0), g10(0.0, 0.1, 0.1, 0.0),
@@ -207,15 +202,15 @@ class Core_Test : public Base
         Vec_Dbl r(1, 0.6);
         Vec_Int fid(1, 1);
 
-        f00 = new Cell(fid, r, 10, 1.5, 2.5, g00);
-        f10 = new Cell(fid, r, 10, 1.5, 2.5, g10);
-        f01 = new Cell(fid, r, 10, 1.5, 2.5, g01);
-        f11 = new Cell(fid, r, 10, 1.5, 2.5, g11);
+        f00 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g00);
+        f10 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g10);
+        f01 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g01);
+        f11 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g11);
 
         // lattices
         SP_Lattice lat_f, lat_s, lat_b, lat_c;
 
-        lat_f = new Lattice(2, 2, 1, 4);
+        lat_f = make_shared<Lattice>(2, 2, 1, 4);
         lat_f->assign_object(f00, 0);
         lat_f->assign_object(f10, 1);
         lat_f->assign_object(f01, 2);
@@ -226,13 +221,13 @@ class Core_Test : public Base
         lat_f->id(0, 1, 0) = 2;
         lat_f->id(1, 1, 0) = 3;
 
-        lat_s = new Lattice(1, 1, 1, 1);
+        lat_s = make_shared<Lattice>(1, 1, 1, 1);
         lat_s->assign_object(side, 0);
 
-        lat_b = new Lattice(1, 1, 1, 1);
+        lat_b = make_shared<Lattice>(1, 1, 1, 1);
         lat_b->assign_object(bottom, 0);
 
-        lat_c = new Lattice(1, 1, 1, 1);
+        lat_c = make_shared<Lattice>(1, 1, 1, 1);
         lat_c->assign_object(corner, 0);
 
         lat_f->complete(0.0, 0.0, 0.0);
@@ -241,7 +236,7 @@ class Core_Test : public Base
         lat_c->complete(0.0, 0.0, 0.0);
 
         // core
-        core = new Core(4, 4, 3, 4);
+        core = make_shared<Core>(4, 4, 3, 4);
         core->assign_object(lat_f, 0);
         core->assign_object(lat_c, 1);
         core->assign_object(lat_s, 2);
@@ -318,14 +313,14 @@ class Core_Baffle_Test : public Base
     typedef Core::SP_Object    SP_Lattice;
     typedef Lattice::Object_t  Cell;
     typedef Lattice::SP_Object SP_Cell;
-    typedef nemesis::SP<Core>  SP_Core;
+    typedef shared_ptr<Core>   SP_Core;
     typedef Cell::Gap_Vector   Gap_Vector;
 
   protected:
     void SetUp()
     {
-        nodes = nemesis::nodes();
-        node  = nemesis::node();
+        nodes = profugus::nodes();
+        node  = profugus::node();
         seed  = 1213212 + node;
 
         // make fuel cells
@@ -337,15 +332,15 @@ class Core_Baffle_Test : public Base
         Vec_Dbl r(1, 0.6);
         Vec_Int fid(1, 1);
 
-        f00 = new Cell(fid, r, 10, 1.5, 2.5, g00);
-        f10 = new Cell(fid, r, 10, 1.5, 2.5, g10);
-        f01 = new Cell(fid, r, 10, 1.5, 2.5, g01);
-        f11 = new Cell(fid, r, 10, 1.5, 2.5, g11);
+        f00 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g00);
+        f10 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g10);
+        f01 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g01);
+        f11 = make_shared<Cell>(fid, r, 10, 1.5, 2.5, g11);
 
         // lattices
         SP_Lattice lat_f, lat_s, lat_b, lat_c;
 
-        lat_f = new Lattice(2, 2, 1, 4);
+        lat_f = make_shared<Lattice>(2, 2, 1, 4);
         lat_f->assign_object(f00, 0);
         lat_f->assign_object(f10, 1);
         lat_f->assign_object(f01, 2);
@@ -359,10 +354,10 @@ class Core_Baffle_Test : public Base
         // side lattice
         {
             SP_Cell c0, c1, c2;
-            c0 = new Cell(10, 0.1, 1.6, 2.5);
-            c1 = new Cell(10, 2.0, 1.6, 2.5);
-            c2 = new Cell(10, 2.9, 1.6, 2.5);
-            lat_s = new Lattice(3, 2, 1, 3);
+            c0 = make_shared<Cell>(10, 0.1, 1.6, 2.5);
+            c1 = make_shared<Cell>(10, 2.0, 1.6, 2.5);
+            c2 = make_shared<Cell>(10, 2.9, 1.6, 2.5);
+            lat_s = make_shared<Lattice>(3, 2, 1, 3);
             lat_s->assign_object(c0, 0);
             lat_s->assign_object(c1, 1);
             lat_s->assign_object(c2, 2);
@@ -377,10 +372,10 @@ class Core_Baffle_Test : public Base
         // bottom/top lattice
         {
             SP_Cell c0, c1, c2;
-            c0 = new Cell(10, 1.6, 0.1, 2.5);
-            c1 = new Cell(10, 1.6, 2.0, 2.5);
-            c2 = new Cell(10, 1.6, 2.9, 2.5);
-            lat_b = new Lattice(2, 3, 1, 3);
+            c0 = make_shared<Cell>(10, 1.6, 0.1, 2.5);
+            c1 = make_shared<Cell>(10, 1.6, 2.0, 2.5);
+            c2 = make_shared<Cell>(10, 1.6, 2.9, 2.5);
+            lat_b = make_shared<Lattice>(2, 3, 1, 3);
             lat_b->assign_object(c0, 0);
             lat_b->assign_object(c1, 1);
             lat_b->assign_object(c2, 2);
@@ -395,8 +390,8 @@ class Core_Baffle_Test : public Base
         // corner lattices
         {
             SP_Cell c;
-            c = new Cell(10, 5.0, 5.0, 2.5);
-            lat_c = new Lattice(1, 1, 1, 1);
+            c = make_shared<Cell>(10, 5.0, 5.0, 2.5);
+            lat_c = make_shared<Lattice>(1, 1, 1, 1);
             lat_c->assign_object(c, 0);
         }
 
@@ -406,7 +401,7 @@ class Core_Baffle_Test : public Base
         lat_c->complete(0.0, 0.0, 0.0);
 
         // core
-        core = new Core(4, 4, 3, 4);
+        core = make_shared<Core>(4, 4, 3, 4);
         core->assign_object(lat_f, 0);
         core->assign_object(lat_c, 1);
         core->assign_object(lat_s, 2);
@@ -1114,7 +1109,7 @@ TEST_F(Lattice_Test, detailed_track)
 
 TEST_F(Lattice_Test, check_volumes)
 {
-    using nemesis::constants::pi;
+    using profugus::constants::pi;
 
     lattice->set_vessel(6.0, 6.5, 12);
     lattice->complete(0.0, 0.0, 0.0);
@@ -1171,8 +1166,8 @@ TEST_F(Lattice_Test, check_volumes)
         }
     }
 
-    nemesis::global_sum(&tally[0], 20);
-    nemesis::global_sum(&tot_path, 1);
+    profugus::global_sum(&tally[0], 20);
+    profugus::global_sum(&tot_path, 1);
 
     map<int, double> Vref;
 
@@ -1393,18 +1388,17 @@ TEST_F(Core_Baffle_Test, set_vessel)
 }
 
 //---------------------------------------------------------------------------//
-#ifdef USE_MC
 
 TEST_F(Core_Baffle_Test, check_volumes)
 {
-    using nemesis::constants::pi;
+    using profugus::constants::pi;
 
     core->set_vessel(7.0, 8.0, 12);
     core->complete(0.0, 0.0, 0.0);
 
     // make a random number generator
-    mc::RNG_Control control(seed);
-    mc::RNG_Control::RNG rng = control.rng();
+    profugus::RNG_Control control(seed);
+    auto rng = control.rng();
 
     Vector    r, omega;
     Geo_State state;
@@ -1453,8 +1447,8 @@ TEST_F(Core_Baffle_Test, check_volumes)
         }
     }
 
-    nemesis::global_sum(&tally[0], 20);
-    nemesis::global_sum(&tot_path, 1);
+    profugus::global_sum(&tally[0], 20);
+    profugus::global_sum(&tot_path, 1);
 
     map<int, double> Vref;
     map<int, double> err;
@@ -1486,8 +1480,6 @@ TEST_F(Core_Baffle_Test, check_volumes)
 
     EXPECT_LT(err[12], 6.0e-4);
 }
-
-#endif
 
 //---------------------------------------------------------------------------//
 //                 end of tstRTK_Vessel.cc
