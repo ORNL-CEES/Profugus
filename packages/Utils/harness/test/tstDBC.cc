@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Dec 03 20:30:12 2013
  * \brief  DBC unit teset.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

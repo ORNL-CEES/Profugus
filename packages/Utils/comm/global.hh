@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Wed Jan  2 15:39:55 2008
  * \brief  Include file for comm package.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  *
  * This file allows the client to include the message passing services
  * provided by comm.  The function declarations and class definitions are

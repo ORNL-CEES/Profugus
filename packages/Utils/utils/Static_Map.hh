@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Tue Dec 17 21:11:12 2013
  * \brief  Static_Map class definition.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

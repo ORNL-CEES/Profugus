@@ -4,7 +4,7 @@
  * \author Steven Hamilton
  * \date   Thu Mar 28 13:26:47 2013
  * \brief  Energy_Collapse unit test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Wed Jan  2 16:27:02 2008
  * \brief  Timer class definition.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Steven Hamilton
  * \date   Mon Aug 22 12:22:41 2011
  * \brief  Test Arnoldi class.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

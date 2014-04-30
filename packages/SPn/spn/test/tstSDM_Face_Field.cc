@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Oct 30 23:04:27 2012
  * \brief  Unit-Test for SDM_Face_Field
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

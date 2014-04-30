@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:46:26 2010
  * \brief  RTK_Array template member definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

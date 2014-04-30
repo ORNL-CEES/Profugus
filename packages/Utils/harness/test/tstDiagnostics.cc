@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Dec 03 21:47:18 2013
  * \brief  Diagnostics unit-test.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

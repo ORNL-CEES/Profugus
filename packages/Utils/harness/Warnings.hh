@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Sun Feb 26 20:54:46 2012
  * \brief  Warnings class definition.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

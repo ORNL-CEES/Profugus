@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tuesday April 29 15:41:12 2014
  * \brief  RTK_Cell member definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

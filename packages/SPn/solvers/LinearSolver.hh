@@ -4,7 +4,7 @@
  * \author Steven Hamilton
  * \date   Mon Jul 01 11:48:09 2013
  * \brief  LinearSolver class definition.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

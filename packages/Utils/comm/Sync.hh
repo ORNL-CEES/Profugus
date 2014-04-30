@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Wed Jan  2 16:08:10 2008
  * \brief  Sync class definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

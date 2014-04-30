@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Mon Oct 14 11:55:57 2013
  * \brief  Definitions used for MPI
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

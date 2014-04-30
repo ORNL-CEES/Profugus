@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   2012/01/31
  * \brief  String-related functions.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

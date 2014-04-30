@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tuesday April 29 14:52:17 2014
  * \brief  General geometry functions and types.
- * \note   Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

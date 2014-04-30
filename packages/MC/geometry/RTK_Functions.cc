@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Fri Jan 18 19:18:14 2013
  * \brief  RTK_Functions implementation
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

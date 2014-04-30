@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Friday April 25 16:46:37 2014
  * \brief  Monte Carlo Definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

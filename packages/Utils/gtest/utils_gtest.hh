@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Thu Aug 09 10:14:06 2012
  * \brief  Load google test macros
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  *
  * \warning This file should *only* be included from a unit test .cc file! It
  * provides the implementation of main().

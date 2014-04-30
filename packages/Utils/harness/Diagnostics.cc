@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Mon Feb  2 20:06:38 2009
  * \brief  Diagnostics namespace members.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

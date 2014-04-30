@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tuesday April 29 14:18:9 2014
  * \brief  General vector functions.
- * \note   Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

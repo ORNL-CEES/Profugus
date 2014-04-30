@@ -3,7 +3,7 @@
 ## Thomas M. Evans
 ## Wednesday July 11 14:35:42 2012
 ##---------------------------------------------------------------------------##
-## Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
+## Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
 ##---------------------------------------------------------------------------##
 ## Setup Utils test expressions and services
 ##---------------------------------------------------------------------------##

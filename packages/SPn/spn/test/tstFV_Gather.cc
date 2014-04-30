@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Oct 30 11:05:03 2012
  * \brief  FV_Gather test.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Sun Oct 28 18:37:01 2012
  * \brief  Linear_System class definition.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

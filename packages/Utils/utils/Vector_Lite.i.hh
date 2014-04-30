@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Jan  3 11:39:29 2008
  * \brief  Member definitions of class Vector_Lite.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Dec 14 12:38:39 2010
  * \brief  RTK_Array explicit instantiations.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

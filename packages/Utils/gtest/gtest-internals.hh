@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Tue Apr 02 11:43:51 2013
  * \brief  Expose some google test internals that we want to use.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

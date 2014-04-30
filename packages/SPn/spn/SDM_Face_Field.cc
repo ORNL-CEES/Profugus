@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Oct 30 17:05:49 2012
  * \brief  SDM_Face_Field member definitions.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Seth R. Johnson
  * \date   Sat Sep 03 18:55:17 2011
  * \brief  Member definitions of String_Functions classes.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

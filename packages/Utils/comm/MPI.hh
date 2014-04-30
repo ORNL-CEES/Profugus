@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Wed Jan  2 13:42:57 2008
  * \brief  MPI function declarations (defined in Functions.hh).
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

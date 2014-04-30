@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Wed Jul 11 14:17:38 2007
  * \brief  Global constants.
- * \note   Copyright (C) 2007 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

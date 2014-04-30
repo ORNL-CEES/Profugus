@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Nov 07 21:53:44 2013
  * \brief  HDF5_IO member definitions.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

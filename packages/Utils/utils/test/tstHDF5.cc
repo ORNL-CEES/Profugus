@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Dec 12 16:37:32 2013
  * \brief  HDF5 Functionality test.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

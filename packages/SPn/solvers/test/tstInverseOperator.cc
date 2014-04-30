@@ -4,7 +4,7 @@
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Jan 27 11:56:51 2009
  * \brief  InverseOperator class test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

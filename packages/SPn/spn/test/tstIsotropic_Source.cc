@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Oct 22 14:07:39 2009
  * \brief  Isotropic_Source test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

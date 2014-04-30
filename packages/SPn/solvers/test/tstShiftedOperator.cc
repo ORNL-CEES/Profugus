@@ -3,7 +3,7 @@
  * \file   solvers/test/tstShiftedOperator.cc
  * \author Steven Hamilton
  * \brief  ShiftedOperator unit test.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

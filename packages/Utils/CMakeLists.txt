@@ -3,7 +3,7 @@
 ## Thomas M. Evans
 ## Monday June 20 15:40:52 2011
 ##---------------------------------------------------------------------------##
-## Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
+## Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
 ##---------------------------------------------------------------------------##
 ## TriBITS package file for Utils package
 ##---------------------------------------------------------------------------##

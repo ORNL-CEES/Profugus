@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:9:53 2014
  * \brief  RTK_State struct definition.
- * \note   Copyright (C) 2010 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

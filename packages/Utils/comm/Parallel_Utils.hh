@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Fri Jul 13 15:19:06 2007
  * \brief  Parallel utility functions.
- * \note   Copyright (C) 2007 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

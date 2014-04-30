@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Fri Dec 06 10:06:08 2013
  * \brief  Default_Hash class definition.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

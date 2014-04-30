@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Aug 28 14:43:58 2007
  * \brief  LG_Indexer member definitions.
- * \note   Copyright (C) 2007 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

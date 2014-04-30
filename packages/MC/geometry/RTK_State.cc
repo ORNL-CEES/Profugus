@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Jan 25 14:38:37 2011
  * \brief  RTK_State member definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Nov 07 22:29:22 2013
  * \brief  Unit test of HDF5_IO.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

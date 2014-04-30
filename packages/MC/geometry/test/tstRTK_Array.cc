@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Dec 21 13:16:21 2010
  * \brief  Unit-Test of RTK_Array class.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

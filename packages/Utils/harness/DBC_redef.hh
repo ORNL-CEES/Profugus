@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Tue Mar 05 09:32:46 2013
  * \brief  DBC Macro definitions
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  *
  * Redefine DBC macros after undefining them.
  *

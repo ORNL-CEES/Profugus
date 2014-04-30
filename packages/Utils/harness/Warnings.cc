@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Sun Feb 26 20:54:46 2012
  * \brief  Warnings member definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Mon Aug 22 12:33:36 2011
  * \brief  Test for general geometry functions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

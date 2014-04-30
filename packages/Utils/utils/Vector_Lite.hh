@@ -4,7 +4,7 @@
  * \author Derived from Rob Lowrie's Vector_Lite (LANL)
  * \date   Thu Jan  3 11:39:29 2008
  * \brief  Vector_Lite class definition.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

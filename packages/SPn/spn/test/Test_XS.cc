@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Fri Oct 19 12:41:28 2012
  * \brief  Cross-sections for testing.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

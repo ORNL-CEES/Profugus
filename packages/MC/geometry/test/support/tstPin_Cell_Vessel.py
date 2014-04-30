@@ -4,7 +4,7 @@
 ## Mon Dec 13 11:30:07 2010
 ## $Id: template.py,v 1.3 2008/01/02 17:18:47 9te Exp $
 ###############################################################################
-## Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+## Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
 ###############################################################################
 
 import os

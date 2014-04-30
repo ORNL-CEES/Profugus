@@ -3,7 +3,7 @@
 ! \author Thomas M. Evans
 ! \date   Thu Sep  3 16:34:02 2009
 ! \brief  HARNESS_DATA_TYPES module definition.
-! \note   Copyright (C) 2009 Oak Ridge National Laboratory, UT-Battelle, LLC.
+! \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
 !-----------------------------------------------------------------------------!
 ! $Id: template.f90,v 1.1 2009/09/03 01:59:52 9te Exp $
 !-----------------------------------------------------------------------------!

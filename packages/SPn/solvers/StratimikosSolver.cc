@@ -4,7 +4,7 @@
  * \author Chris Baker
  * \date   Thu May 17 14:18:09 2012
  * \brief  StratimikosSolver definitions
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

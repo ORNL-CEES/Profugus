@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Oct 23 22:38:34 2012
  * \brief  SPN Dimensions test.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

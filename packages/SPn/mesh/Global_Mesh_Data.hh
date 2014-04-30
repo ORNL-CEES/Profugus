@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Feb 12 09:00:23 2014
  * \brief  Global_Mesh_Data class definition.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

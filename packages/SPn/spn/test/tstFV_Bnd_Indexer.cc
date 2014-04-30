@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Sat Nov 24 14:30:59 2012
  * \brief  FV_Bnd_Indexer unit test.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

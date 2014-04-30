@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Tue Dec 17 21:04:10 2013
  * \brief  Static_Map test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

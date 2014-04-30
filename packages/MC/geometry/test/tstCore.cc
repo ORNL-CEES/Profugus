@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Mon Jan 24 09:48:47 2011
  * \brief  RTK_Core unit test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

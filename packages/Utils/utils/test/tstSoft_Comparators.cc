@@ -4,7 +4,7 @@
  * \author Gregory G. Davidson
  * \date   Wed Sep 11 21:33:15 2013
  * \brief  Tests the Soft_Comparators
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

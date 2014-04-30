@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Sun Nov 18 19:05:06 2012
  * \brief  Test of Fixed_Source_Solver class.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

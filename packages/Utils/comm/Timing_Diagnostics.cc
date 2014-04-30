@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Fri Nov  9 09:41:55 2007
  * \brief  Timing_Diagnostics member definitions.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Wednesday February 12 0:20:19 2014
  * \brief  Mesh member definitions.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

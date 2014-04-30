@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Sat Sep 15 16:12:23 2012
  * \brief  Tests the functions in the Container_Functions file.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

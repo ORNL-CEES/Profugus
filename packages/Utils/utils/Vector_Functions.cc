@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Mon Aug 22 11:21:49 2011
  * \brief  Vector function definitions.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

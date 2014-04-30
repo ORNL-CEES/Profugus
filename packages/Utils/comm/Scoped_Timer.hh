@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Fri Oct 11 07:50:08 2013
  * \brief  Scoped_Timer class definition.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

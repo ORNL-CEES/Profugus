@@ -4,7 +4,7 @@
  * \author Gregory G. Davidson
  * \date   Wed Sep 11 21:27:43 2013
  * \brief  Defines a series of "soft" comparator functions.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

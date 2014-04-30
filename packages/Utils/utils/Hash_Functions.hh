@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Sat Sep 03 18:52:06 2011
  * \brief  Hash_Functions class definition.
- * \note   Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

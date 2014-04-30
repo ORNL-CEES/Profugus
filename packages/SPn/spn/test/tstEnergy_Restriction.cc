@@ -4,7 +4,7 @@
  * \author Steven Hamilton
  * \date   Mon Apr 01 12:49:01 2013
  * \brief  Energy Grid Transfer test.
- * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

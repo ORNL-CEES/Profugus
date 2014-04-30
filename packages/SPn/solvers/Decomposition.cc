@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Aug 28 08:28:00 2007
  * \brief  Decomposition member definitions.
- * \note   Copyright (C) 2007 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

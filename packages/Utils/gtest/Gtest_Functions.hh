@@ -4,7 +4,7 @@
  * \author Seth R Johnson
  * \date   Tue Apr 02 11:41:41 2013
  * \brief  Gtest_Functions class definition.
- * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

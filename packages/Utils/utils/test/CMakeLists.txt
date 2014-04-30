@@ -3,7 +3,7 @@
 ## Thomas M. Evans
 ## Thursday July 12 10:52:17 2012
 ##---------------------------------------------------------------------------##
-## Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+## Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
 ##---------------------------------------------------------------------------##
 ## CMAKE for utils//test
 ##---------------------------------------------------------------------------##

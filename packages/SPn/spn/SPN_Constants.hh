@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Nov 22 11:43:24 2012
  * \brief  Rational coefficients used in SPN equations.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

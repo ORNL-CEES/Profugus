@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Tue Oct 23 21:17:05 2012
  * \brief  Dimensions class definition.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

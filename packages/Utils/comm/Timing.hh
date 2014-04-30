@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Fri Nov  9 09:41:55 2007
  * \brief  Timing class definition.
- * \note   Copyright (C) 2007 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 

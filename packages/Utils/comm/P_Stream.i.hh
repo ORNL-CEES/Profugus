@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Mon Oct 08 10:31:04 2012
  * \brief  Member definitions of class P_Stream.
- * \note   Copyright (C) 2012 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
