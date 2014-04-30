@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_physics/MG_Physics.t.hh
+ * \file   mc/Physics.cc
  * \author Thomas M. Evans
  * \date   Tue Jan 04 12:50:33 2011
  * \brief  MG_Physics member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_physics_MG_Physics_t_hh
-#define mc_physics_MG_Physics_t_hh
+#ifndef mc_Physics_cc
+#define mc_Physics_cc
 
 #include <sstream>
 #include <algorithm>
@@ -609,8 +609,8 @@ int MG_Physics<Geometry>::sample_fission_group(int    matid,
 
 } // end namespace shift
 
-#endif // mc_physics_MG_Physics_t_hh
+#endif // mc_Physics_cc
 
 //---------------------------------------------------------------------------//
-//                   end of mc_physics/MG_Physics.t.hh
+//                 end of Physics.cc
 //---------------------------------------------------------------------------//

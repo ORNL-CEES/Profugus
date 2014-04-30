@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_physics/MG_Physics.hh
+ * \file   mc/Physics.hh
  * \author Thomas M. Evans
  * \date   Tue Jan 04 12:50:33 2011
  * \brief  MG_Physics class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_physics_MG_Physics_hh
-#define mc_physics_MG_Physics_hh
+#ifndef mc_Physics_hh
+#define mc_Physics_hh
 
 #include "Physics.hh"
 
@@ -287,7 +287,7 @@ class MG_Physics : public Physics<Geometry, MG_State>
 
 } // end namespace shift
 
-#endif // mc_physics_MG_Physics_hh
+#endif // mc_Physics_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc_physics/MG_Physics.hh

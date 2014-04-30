@@ -90,7 +90,10 @@ LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
 
 FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
-  mc/Particle.cc)
+  mc/Fission_Rebalance.cc
+  mc/Particle.cc
+#  mc/Physics.cc
+  )
 LIST(APPEND HEADERS ${MC_HEADERS})
 LIST(APPEND SOURCES ${MC_SOURCES})
 

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_physics/Continuous_Fission_Rebalance.t.hh
+ * \file   mc/Fission_Rebalance.cc
  * \author Thomas M. Evans
  * \date   Thu Feb 28 13:05:02 2013
  * \brief  Continuous_Fission_Rebalance template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_physics_Continuous_Fission_Rebalance_t_hh
-#define mc_physics_Continuous_Fission_Rebalance_t_hh
+#ifndef mc_Fission_Rebalance_cc
+#define mc_Fission_Rebalance_cc
 
 #include "Continuous_Fission_Rebalance.hh"
 
@@ -690,8 +690,8 @@ void Continuous_Fission_Rebalance<Physics>::receive(
 
 } // end namespace shift
 
-#endif // mc_physics_Continuous_Fission_Rebalance_t_hh
+#endif // mc_Fission_Rebalance_cc
 
 //---------------------------------------------------------------------------//
-//                   end of mc_physics/Continuous_Fission_Rebalance.t.hh
+//                 end of Fission_Rebalance.cc
 //---------------------------------------------------------------------------//
