@@ -37,6 +37,7 @@ class Particle
     //! Typedefs.
     typedef def::Space_Vector Space_Vector;
     typedef events::Event     Event_Type;
+    typedef RNG               RNG_t;
     //@}
 
   private:
@@ -44,6 +45,9 @@ class Particle
 
     // Material id in current region.
     int d_matid;
+
+    // Particle group index.
+    int d_group;
 
     // Particle weight.
     double d_wt;
@@ -65,6 +69,9 @@ class Particle
 
     //! Set a new weight.
     void set_wt(double wt) { d_wt = wt; }
+
+    //! Set particle group.
+    void set_group(int g) { d_group = g; }
 
     //! Multiply weight.
     void multiply_wt(double wt) { d_wt *= wt; }
@@ -91,6 +98,7 @@ class Particle
     const RNG& rng() const { return d_rng; }
     Event_Type event() const { return d_event; }
     int matid() const { return d_matid; }
+    int group() const { return d_group; }
     //@}
 };
 

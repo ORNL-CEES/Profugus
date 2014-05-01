@@ -2,7 +2,7 @@
 /*!
  * \file   mc/Physics.cc
  * \author Thomas M. Evans
- * \date   Tue Jan 04 12:50:33 2011
+ * \date   Thursday May 1 11:14:55 2014
  * \brief  MG_Physics member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
@@ -18,13 +18,10 @@
 #include "harness/Soft_Equivalence.hh"
 #include "harness/Warnings.hh"
 #include "utils/Constants.hh"
-#include "mc/Definitions.hh"
-#include "xslib/AMPX_MT.hh"
 #include "utils/Vector_Functions.hh"
-#include "geometry/Definitions.hh"
-#include "MG_Physics.hh"
+#include "Physics.hh"
 
-namespace shift
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -33,144 +30,107 @@ namespace shift
 /*!
  * \brief Constructor that implicitly creates Group_Bounds
  */
-template<class Geometry>
-MG_Physics<Geometry>::MG_Physics(SP_Std_DB db,
-                                 SP_XS_DB  mat)
+Physics::Physics(RCP_Std_DB db,
+                 RCP_XS     mat)
+    : d_gb(Vec_Dbl(mat->bounds().values(),
+                   mat->bounds().values() + mat->bounds().length()))
 {
-    Require (db);
-    Require (mat);
-
-    SP_Group_Bounds gb = mc::Group_Bounds::from_db(db);
-    Check(gb);
-
-    construct(db, mat, gb);
-
-    Ensure (d_Nm > 0);
-    Ensure (d_Ng > 0);
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Constructor that implicitly creates Group_Bounds
- */
-template<class Geometry>
-MG_Physics<Geometry>::MG_Physics(SP_Std_DB       db,
-                                 SP_XS_DB        mat,
-                                 SP_Group_Bounds gb)
-{
-    Require (db);
-    Require (mat);
-    Require (gb);
-
-    construct(db, mat, gb);
-
-    Ensure (d_Nm > 0);
-    Ensure (d_Ng > 0);
-}
-
-//---------------------------------------------------------------------------//
-
-template<class Geometry>
-void MG_Physics<Geometry>::construct(SP_Std_DB       db,
-                                     SP_XS_DB        mat,
-                                     SP_Group_Bounds gb)
-{
-    Require (db);
-    Require (mat);
-    Require (gb);
+    Require (!db.is_null());
+    Require (!mat.is_null());
     Require (mat->num_groups() > 0);
     Require (mat->num_mat() > 0);
 
     // Assign groups, materials, material numbers
     d_mat = mat;
-    d_gb  = gb;
     d_Ng  = d_mat->num_groups();
     d_Nm  = d_mat->num_mat();
 
-    Insist (gb->num_groups() == mat->num_groups(),
+    Insist (d_gb.num_groups() == mat->num_groups(),
             "Number of groups in material is inconsistent with Group_Bounds.");
 
     // implicit capture flag
-    db->default_key("implicit_capture", true);
-    d_implicit_capture = db->template get<bool>("implicit_capture");
+    d_implicit_capture = db->get("implicit_capture", true);
 
     // check for balanced scattering tables
-    db->default_key("check_balance", false);
-    d_check_balance = db->template get<bool>("check_balance");
+    d_check_balance = db->get("check_balance", false);
 
     // turn check balance on if we are not doing implicit capture
     if (!d_implicit_capture) d_check_balance = true;
+
+    // get the material ids in the database
+    def::Vec_Int matids;
+    d_mat->get_matids(matids);
+    Check (matids.size() == d_Nm);
+
+    // make the matid-to-local has map
+    for (unsigned int l = 0; l < d_Nm; ++l)
+    {
+        d_mid2l.insert(Static_Map<unsigned int, unsigned int>::value_type(
+                           static_cast<unsigned int>(matids[l]), l));
+    }
+    d_mid2l.complete();
+    Check (d_mid2l.size() == d_Nm);
 
     // resize the total group scattering table
     d_scatter.resize(d_Nm);
 
     // calculate total scattering over all groups for each material
-    for (int m = 0; m < d_Nm; ++m)
+    for (auto matid : matids)
     {
-        // only calculate for materials that are assigned
-        if (d_mat->assigned(m))
-        {
-            // size the group vector for this material
-            d_scatter[m].resize(d_Ng, 0.0);
+        // get the local index in the range [0, N)
+        int m = d_mid2l[static_cast<unsigned int>(matid)];
+        Check (m < d_Nm);
 
-            // loop over all groups and calculate the in-scatter from other
-            // groups and add them to the group OUT-SCATTER; remember, we
-            // store data as inscatter for the deterministic code
+        // size the group vector for this material
+        d_scatter[m].resize(d_Ng, 0.0);
+
+        // get the P0 scattering matrix for this material
+        const auto &sig_s = d_mat->matrix(matid, 0);
+        Check (sig_s.numRows() == d_Ng);
+        Check (sig_s.numCols() == d_Ng);
+
+        // loop over all groups and calculate the in-scatter from other
+        // groups and add them to the group OUT-SCATTER; remember, we
+        // store data as inscatter for the deterministic code
+        for (int g = 0; g < d_Ng; g++)
+        {
+            // get the g column (g->g' scatter stored as g'g in the matrix)
+            const auto *column = sig_s[g];
+
+            // add up the scattering
+            for (int gp = 0; gp < d_Ng; ++gp)
+            {
+                d_scatter[m][g] += column[gp];
+            }
+        }
+
+        // check scattering correctness if needed
+        if (d_check_balance)
+        {
             for (int g = 0; g < d_Ng; g++)
             {
-                // downscattering inscatter cross sections for this group
-                const typename XS_DB_t::XS &xs = d_mat->get(m, g);
-
-                // process the down-scattering cross sections
-                for (int gp = 0; gp < g+1; gp++)
+                if (d_scatter[m][g] > d_mat->vector(matid, XS_t::TOTAL)[g])
                 {
-                    // get the inscatter (and within-group) scatter cross
-                    // section and add it to the groups outscatter
-                    d_scatter[m][gp] += xs.sigma_s(gp, 0);
-                }
+                    std::ostringstream mm;
+                    mm << "Scattering greater than total "
+                       << "for material" << m << " in group " << g
+                       << ". Total xs is "
+                       << d_mat->vector(matid, XS_t::TOTAL)[g]
+                       << " and scatter is " << d_scatter[m][g];
 
-                // process the upscatter cross sections
-                const Vec_Int &columns = xs.upscatter_columns();
-                Check (columns.size() == xs.num_upscatter());
-                for (int n = 0, N = columns.size(); n < N; n++)
-                {
-                    // gp -> columns[n] for upscatter we only loop over the
-                    // columns that actually have upscatter groups
-                    d_scatter[m][columns[n]] += xs.sigma_s(columns[n], 0);
-                }
-            }
-
-            // check scattering correctness if needed
-            if (d_check_balance)
-            {
-                for (int g = 0; g < d_Ng; g++)
-                {
-                    if (d_scatter[m][g] > d_mat->get(m, g).sigma())
-                    {
-                        std::ostringstream mm;
-                        mm << "Scattering greater than total "
-                           << "for material" << m << " in group " << g
-                           << ". Total xs is " << d_mat->get(m,g).sigma()
-                           << " and scatter is " << d_scatter[m][g];
-
-                        // terminate if we are running analog
-                        if (!d_implicit_capture)
-                            Validate(false, mm.str());
-                        // else add to warnings
-                        else
-                            ADD_WARNING(mm.str());
-                    }
+                    // terminate if we are running analog
+                    if (!d_implicit_capture)
+                        Validate(false, mm.str());
+                    // else add to warnings
+                    else
+                        ADD_WARNING(mm.str());
                 }
             }
         }
     }
 
-    // make an transpose graph so that the cross sections are for out-scatter
-    // instead of in-scatter
-    d_graph.construct(*d_mat);
-    d_graph.transpose();
-
-    Ensure (d_graph.adjoint());
+    Ensure (d_Nm > 0);
+    Ensure (d_Ng > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -181,33 +141,33 @@ void MG_Physics<Geometry>::construct(SP_Std_DB       db,
  *
  * The correct group corresponding to E is determined for a particle.
  *
- * \param type particle type (eg. mc::NEUTRON)
  * \param energy energy in eV
- * \param state physics state (MG_State)
+ * \param p particle
  */
-template<class Geometry>
-void MG_Physics<Geometry>::initialize(mc::Particle_Type type,
-                                      double            energy,
-                                      Physics_State_t&  state)
+void Physics::initialize(double      energy,
+                         Particle_t &p)
 {
-    Require (type < mc::END_PARTICLE_TYPE);
+    // check to make sure the energy is in the group structure and get the
+    // group index
+    int  group_index = 0;
+    bool success     = d_gb.find(energy, group_index);
 
-    // set the particle type in the state
-    state.type  = type;
-    bool success = d_gb->find(type, energy, state.group);
+    Validate(success, "Particle with energy " << energy
+             << " is outside the multigroup boundaries.");
 
-    Validate(success, "Particle " << type << " with energy " << energy
-            << " is outside the multigroup boundaries.");
+    // set the group index in the particle
+    Ensure (group_index < d_Ng);
+    p.set_group(group_index);
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Process a particle through a physical collision.
  */
-template<class Geometry>
-void MG_Physics<Geometry>::collide(Particle_t &particle,
-                                   Bank_t     &bank)
+void Physics::collide(Particle_t &particle,
+                      Bank_t     &bank)
 {
+#if 0
     Require (b_geometry);
     Require (particle.event() == mc::events::COLLISION);
     Require (d_mat);
@@ -271,22 +231,22 @@ void MG_Physics<Geometry>::collide(Particle_t &particle,
 
         // sample isotropic scattering event
         double costheta = 1.0 - 2.0 * particle.rng().ran();
-        double phi      = 2.0 * nemesis::constants::pi * particle.rng().ran();
+        double phi      = 2.0 * constants::pi * particle.rng().ran();
 
         // update the direction of the particle in the geometry-tracker state
         b_geometry->change_direction(costheta, phi, particle.geo_state());
     }
+#endif
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Get a total cross section from the physics library.
  */
-template<class Geometry>
-double MG_Physics<Geometry>::total(mc::physics::Reaction_Type  type,
-                                   int                         matid,
-                                   const Physics_State_t       &state)
+double Physics::total(int               matid,
+                      const Particle_t &state)
 {
+#if 0
     Require (d_mat->num_mat() == d_Nm);
     Require (d_mat->num_groups() == d_Ng);
     Require (matid < d_Nm);
@@ -331,7 +291,7 @@ double MG_Physics<Geometry>::total(mc::physics::Reaction_Type  type,
         default:
             return 0.;
     }
-
+#endif
     // undefined or unassigned type, return 0
     return 0.0;
 }
@@ -348,16 +308,14 @@ double MG_Physics<Geometry>::total(mc::physics::Reaction_Type  type,
  * \return true if fissionable material and spectrum sampled; false if no
  * fissionable material present
  */
-template<class Geometry>
-bool MG_Physics<Geometry>::initialize_fission(int              matid,
-                                              RNG              rng,
-                                              Physics_State_t &state)
+bool Physics::initialize_fission(int         matid,
+                                 Particle_t &p)
 {
     Require (matid < d_mat->num_mat());
 
     // sampled flag
     bool sampled = false;
-
+#if 0
     // only do sampling if this is a fissionable material
     if (d_mat->assigned_fission(matid))
     {
@@ -366,7 +324,7 @@ bool MG_Physics<Geometry>::initialize_fission(int              matid,
         state.type  = mc::NEUTRON;
         sampled     = true;
     }
-
+#endif
     // return the sampled flag
     return sampled;
 }
@@ -395,11 +353,11 @@ bool MG_Physics<Geometry>::initialize_fission(int              matid,
  *
  * \return the number of fission events added at the site
  */
-template<class Geometry>
-int MG_Physics<Geometry>::sample_fission_site(const Particle_t       &particle,
-                                              Fission_Site_Container &fsc,
-                                              double                  keff)
+int Physics::sample_fission_site(const Particle_t       &particle,
+                                 Fission_Site_Container &fsc,
+                                 double                  keff)
 {
+#if 0
     Require (b_geometry);
     Require (particle.matid() < d_mat->num_mat());
 
@@ -434,6 +392,8 @@ int MG_Physics<Geometry>::sample_fission_site(const Particle_t       &particle,
     }
 
     return n;
+#endif
+    return 0;
 }
 
 //---------------------------------------------------------------------------//
@@ -449,11 +409,10 @@ int MG_Physics<Geometry>::sample_fission_site(const Particle_t       &particle,
  * \return true if physics state initialized; false if no particles are left
  * at the site
  */
-template<class Geometry>
-bool MG_Physics<Geometry>::initialize_fission(Fission_Site    &fs,
-                                              RNG              rng,
-                                              Physics_State_t &state)
+bool Physics::initialize_fission(Fission_Site &fs,
+                                 Particle_t   &state)
 {
+#if 0
     Require (fs.m < d_mat->num_mat());
     Require (d_mat->assigned_fission(fs.m));
 
@@ -462,48 +421,9 @@ bool MG_Physics<Geometry>::initialize_fission(Fission_Site    &fs,
 
     // set the particle type
     state.type = mc::NEUTRON;
-
+#endif
     // we successfully initialized the state
     return true;
-}
-//---------------------------------------------------------------------------//
-/*!
- * brief Get minimum energy for given particle type
- *
- * \param type Particle type
- */
-template<class Geometry>
-double MG_Physics<Geometry>::min_energy(mc::Particle_Type type) const
-{
-    double energy = 0.0;
-    bool success = d_gb->has_particle(type);
-    if (success) {
-        double num_groups = d_gb->num_groups(type);
-        energy = d_gb->group_bounds(type)[num_groups];
-    }
-    else
-        Validate(success, "Particle type not in Group Bounds: " << type);
-
-    return energy;
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * brief Get maximum energy for given particle type
- *
- * \param type Particle type
- */
-template<class Geometry>
-double MG_Physics<Geometry>::max_energy(mc::Particle_Type type) const
-{
-    double energy = 0.0;
-    bool success = d_gb->has_particle(type);
-    if (success)
-        energy = d_gb->group_bounds(type)[0];
-    else
-        Validate(success, "Particle type not in Group Bounds: " << type);
-
-    return energy;
 }
 
 //---------------------------------------------------------------------------//
@@ -512,11 +432,11 @@ double MG_Physics<Geometry>::max_energy(mc::Particle_Type type) const
 /*!
  * \brief Sample a group after a scattering event.
  */
-template<class Geometry>
-int MG_Physics<Geometry>::sample_group(int    matid,
-                                       int    g,
-                                       double rnd) const
+int Physics::sample_group(int    matid,
+                          int    g,
+                          double rnd) const
 {
+#if 0
     Require (d_mat);
     Require (d_mat->num_groups() == d_Ng);
     Require (g >= 0 && g < d_Ng);
@@ -563,8 +483,9 @@ int MG_Physics<Geometry>::sample_group(int    matid,
         if (rnd <= cdf)
             return gp;
     }
-    Check (nemesis::soft_equiv(cdf, 1.0));
+    Check (soft_equiv(cdf, 1.0));
 
+#endif
     // we failed to sample
     Validate(false, "Failed to sample group.");
     return -1;
@@ -577,10 +498,10 @@ int MG_Physics<Geometry>::sample_group(int    matid,
  * This function is optimized based on the assumption that nearly all of the
  * fission emission is in the first couple of groups.
  */
-template<class Geometry>
-int MG_Physics<Geometry>::sample_fission_group(int    matid,
-                                               double rnd) const
+int Physics::sample_fission_group(int    matid,
+                                  double rnd) const
 {
+#if 0
     Require (d_mat->assigned_fission(matid));
 
     // running cdf; we make the cdf on the fly because nearly all of the
@@ -601,13 +522,13 @@ int MG_Physics<Geometry>::sample_fission_group(int    matid,
             return g;
         }
     }
-
+#endif
     // we failed to sample
     Validate(false, "Failed to sample fission group.");
     return -1;
 }
 
-} // end namespace shift
+} // end namespace profugus
 
 #endif // mc_Physics_cc
 

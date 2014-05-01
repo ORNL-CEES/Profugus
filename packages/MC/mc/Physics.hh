@@ -2,7 +2,7 @@
 /*!
  * \file   mc/Physics.hh
  * \author Thomas M. Evans
- * \date   Tue Jan 04 12:50:33 2011
+ * \date   Thursday May 1 11:15:7 2014
  * \brief  MG_Physics class definition.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
@@ -11,65 +11,28 @@
 #ifndef mc_Physics_hh
 #define mc_Physics_hh
 
-#include "Physics.hh"
-
 #include <vector>
+#include <memory>
 
-#include "utils/SP.hh"
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_ParameterList.hpp"
+
 #include "utils/Definitions.hh"
-#include "material/XS_DB.hh"
-#include "material/S_Graph.hh"
-#include "database/Std_DB.hh"
-#include "mc/Definitions.hh"
-#include "mc/Group_Bounds.hh"
-
+#include "utils/Static_Map.hh"
+#include "xs/XS.hh"
+#include "geometry/Geometry.hh"
+#include "Definitions.hh"
+#include "Group_Bounds.hh"
 #include "Particle.hh"
-#include "Shift_Bank.hh"
-#include "Continuous_Fission_Comm.hh"
-#include "Continuous_Fission_Rebalance.hh"
-#include "MG_State.hh"
+#include "Bank.hh"
 
-namespace shift
+namespace profugus
 {
 
 //===========================================================================//
 /*!
- * \class MG_Physics
+ * \class Physics
  * \brief Multigroup physics implementation for Monte Carlo transport.
- *
- * The derived physics class, MG_Physics, must define all of the functions
- * declared in shift::Physics.  The following additional types are required:
- * \code
-   typedef MG_Physics<Geo_State>                      Physics_t;
-   typedef typename Physics_t::Fission_Site           Fission_Site;
-   typedef typename Physics_t::Fission_Site_Container Fission_Site_Container;
-   typedef typename Physics_t::Fission_Comm_t         Fission_Comm_t;
-   typedef typename Physics_t::SP_Fission_Comm        SP_Fission_Comm;
-   typedef typename Physics_t::Fission_Rebalance_t    Fission_Rebalance_t;
-   typedef typename Physics_t::SP_Fission_Rebalance   SP_Fission_Rebalance;
- * \endcode
- * The following functions are required as part of the Physics-type concept:
- * \code
-
-   void Physics_t::sample_fission_site(const Particle_t       &p,
-                                       Fission_Site_Container &fsc,
-                                       double                  keff);
-
-   bool Physics_t::initialize_fission(int matid, RNG rng,
-                                      Physics_State_t &state);
-
-   void Physics_t::initialize(const Fission_Site &fs,
-                              Physics_State_t    &state);
-
-   int num_fission_particles(const Fission_Site &fs) const;
-
-   void subtract_fission_particle(Fission_Site &fs) const;
-
-   Space_Vector fission_site(const Fission_Site &fs) const;
- * \endcode
- *
- * The requirements on the fission site container are defined by
- * Continuous_Fission_Comm and Continuous_Fission_Rebalance.
  *
  * \section db_mg_physics Standard DB Entries for MG_Physics
  *
@@ -87,39 +50,31 @@ namespace shift
  * Either the neutron boundaries, photon boundaries, or both \b must be defined.
  */
 /*!
- * \example mc_physics/test/tstMG_Physics.cc
+ * \example mc_physics/test/tstPhysics.cc
  *
- * Test of MG_Physics.
+ * Test of Physics.
  */
 //===========================================================================//
 
-template<class Geometry>
-class MG_Physics : public Physics<Geometry, MG_State>
+class Physics
 {
-    typedef Physics<Geometry, MG_State> Base;
-    typedef MG_Physics<Geometry>        Physics_t;
-
   public:
     //@{
     //! Useful typedefs.
-    typedef Geometry                               Geometry_t;
-    typedef MG_State                               Physics_State_t;
-    typedef typename Base::Geo_State_t             Geo_State_t;
-    typedef Particle<Geo_State_t, Physics_State_t> Particle_t;
-    typedef shift::Bank<Geometry_t, Physics_t>     Bank_t;
-    typedef nemesis::SP<Geometry_t>                SP_Geometry;
-    typedef nemesis::SP<Particle_t>                SP_Particle;
+    typedef Core                        Geometry_t;
+    typedef Geometry_t::Geo_State_t     Geo_State_t;
+    typedef Particle                    Particle_t;
+    typedef Bank                        Bank_t;
+    typedef std::shared_ptr<Geometry_t> SP_Geometry;
+    typedef std::shared_ptr<Particle_t> SP_Particle;
 
-    typedef typename Particle_t::RNG               RNG;
-    typedef denovo::XS_DB                          XS_DB_t;
-    typedef nemesis::SP<XS_DB_t>                   SP_XS_DB;
-    typedef nemesis::SP<database::Std_DB>          SP_Std_DB;
-    typedef nemesis::SP<mc::Group_Bounds>          SP_Group_Bounds;
-    typedef typename Geometry_t::Space_Vector      Space_Vector;
+    typedef Particle_t::RNG_t             RNG;
+    typedef XS                            XS_t;
+    typedef Teuchos::RCP<XS_t>            RCP_XS;
+    typedef Teuchos::ParameterList        ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;
+    typedef Geometry_t::Space_Vector      Space_Vector;
     //@}
-
-    //! Flag for being multigroup in energy
-    typedef mc::physics::MG Energy_Treatment_t;
 
     //! Fission site structure for storing fission sites in k-code.
     struct Fission_Site
@@ -131,64 +86,40 @@ class MG_Physics : public Physics<Geometry, MG_State>
     //! Fission_Site container.
     typedef std::vector<Fission_Site> Fission_Site_Container;
 
-    //@{
-    //! Fission site communicator.
-    typedef Continuous_Fission_Comm< MG_Physics<Geometry> > Fission_Comm_t;
-    typedef nemesis::SP<Fission_Comm_t>                     SP_Fission_Comm;
-    //@}
-
-    //@{
-    //! Fission site rebalance.
-    typedef Continuous_Fission_Rebalance<Physics_t> Fission_Rebalance_t;
-    typedef nemesis::SP<Fission_Rebalance_t>        SP_Fission_Rebalance;
-    //@}
-
   private:
     // >>> DATA
 
     // Cross section database.
-    SP_XS_DB d_mat;
-
-    // Make protected geometry available.
-    using Base::b_geometry;
+    RCP_XS d_mat;
 
   public:
-    // Constructor that auto-creates group bounds
-    explicit MG_Physics(SP_Std_DB db, SP_XS_DB mat);
+    // Constructor that auto-creates group bounds.
+    explicit Physics(RCP_Std_DB db, RCP_XS mat);
 
-    // Constructor.
-    explicit MG_Physics(SP_Std_DB db, SP_XS_DB mat, SP_Group_Bounds gb);
-
-    // >>> DERIVED PUBLIC INTERFACE
+    // >>> PUBLIC TRANSPORT INTERFACE
 
     // No need to retain RNG outside of particle
     void set_rng(const RNG& rng) { /* * */ }
 
     // Initialize the physics state.
-    void initialize(mc::Particle_Type type, double E, Physics_State_t &state);
+    void initialize(double E, Particle_t &p);
 
     // Get a total cross section from the physics library.
-    double total(mc::physics::Reaction_Type type, int matid,
-                 const Physics_State_t &state);
+    double total(int matid, const Particle_t &p);
 
     //! Get the energy from a particle via its physics state
-    double energy(const Physics_State_t& state) const
+    double energy(const Particle_t &p) const
     {
-        Require(state.group < d_Ng);
-        return d_gb->get_lower_energy(state.group);
+        double low = 0.0, up = 0.0;
+        d_gb.get_energy(p.group(), low, up);
+        return low;
     }
 
-    //! Get the minimum energy allowed for a particle based on type
-    double min_energy(mc::Particle_Type type) const;
+    //! Get the minimum energy allowed for a particle
+    double min_energy() const { return d_gb.group_bounds()[d_Ng]; }
 
-    //! Get the maximum energy allowed for a particle based on type
-    double max_energy(mc::Particle_Type type) const;
-
-    //! Get the particle's type (photon, neutron) via its physics state
-    mc::Particle_Type particle_type(const Physics_State_t &state) const
-    {
-        return state.type;
-    }
+    //! Get the maximum energy allowed for a particle
+    double max_energy() const { return d_gb.group_bounds()[0]; }
 
     // >>> TYPE-CONCEPT INTERFACE
 
@@ -200,31 +131,17 @@ class MG_Physics : public Physics<Geometry, MG_State>
                             Fission_Site_Container &fsc, double keff);
 
     // Sample fission spectrum and initialize the physics state.
-    bool initialize_fission(int matid, RNG rng, Physics_State_t &state);
+    bool initialize_fission(int matid, Particle_t &p);
 
     // Initialize a physics state at a fission site.
-    bool initialize_fission(Fission_Site &fs, RNG rng, Physics_State_t &state);
+    bool initialize_fission(Fission_Site &fs, Particle_t &p);
 
     // Return whether a given material is fissionable
     bool is_fissionable(int matid) const
     {
-        return d_mat->assigned_fission(matid) > 0 ? true : false;
+        return (d_mat->vector(matid, XS_t::CHI).normOne() > 0.0 ?
+                true : false);
     }
-
-    //! Return false because MG physics does not inherently split particles
-    bool uses_splitting() const { return false; }
-
-    //! Pickle the physics state.
-    void pickle(Physics_State_t &state) { /* * */ }
-
-    //! Restore the physics from a persistent state.
-    void restore(Physics_State_t &pickled_state) { /* * */}
-
-    //! Called after transport solve; save diagnostics and clear
-    void finalize() { /* * */ }
-
-    //! Rebuild internal data before a new depletion step
-    void reset() { /* * */ }
 
     // >>> FISSION SITE CONTAINER OPERATIONS
 
@@ -237,13 +154,13 @@ class MG_Physics : public Physics<Geometry, MG_State>
     // >>> CLASS FUNCTIONS
 
     //! Get cross section database.
-    const XS_DB_t& xsdb() const { return *d_mat; }
+    const XS_t& xs() const { return *d_mat; }
 
     //! Number of discrete energy groups
     int num_groups() const { return d_Ng; }
 
     //! Group boundaries
-    SP_Group_Bounds group_bounds() const { return d_gb; }
+    const Group_Bounds& group_bounds() const { return d_gb; }
 
   private:
     // >>> IMPLEMENTATION
@@ -252,7 +169,6 @@ class MG_Physics : public Physics<Geometry, MG_State>
     typedef def::Vec_Dbl         Vec_Dbl;
     typedef def::Vec_Int         Vec_Int;
     typedef std::vector<Vec_Dbl> Vec_Vec_Dbl;
-    typedef denovo::S_Graph      S_Graph;
 
     // Boolean for implicit capture.
     bool d_implicit_capture;
@@ -264,19 +180,16 @@ class MG_Physics : public Physics<Geometry, MG_State>
     int d_Ng, d_Nm;
 
     // Group boundaries.
-    SP_Group_Bounds d_gb;
+    Group_Bounds d_gb;
+
+    // Matid-to-local hash such that d_mid2l[matid] = [0,N).
+    Static_Map<unsigned int, unsigned int> d_mid2l;
 
     // Total scattering for each group and material.
     Vec_Vec_Dbl d_scatter;
 
-    // Graph of scattering matrix.
-    S_Graph d_graph;
-
     // Material id of current region.
     int d_matid;
-
-    // Construct private data
-    void construct(SP_Std_DB db, SP_XS_DB mat, SP_Group_Bounds gb);
 
     // Sample a group.
     int sample_group(int matid, int g, double rnd) const;
@@ -290,5 +203,5 @@ class MG_Physics : public Physics<Geometry, MG_State>
 #endif // mc_Physics_hh
 
 //---------------------------------------------------------------------------//
-//              end of mc_physics/MG_Physics.hh
+//              end of mc/Physics.hh
 //---------------------------------------------------------------------------//

@@ -69,6 +69,13 @@ Group_Bounds::SP_Group_Bounds Group_Bounds::build_logarithmic(double lower,
 Group_Bounds::Group_Bounds(const Vec_Dbl &bounds)
     : d_bounds(bounds)
 {
+    // check monotonicity
+    for (int g = 0; g < num_groups(); ++g)
+    {
+        Validate (d_bounds[g] > d_bounds[g+1],
+                  "Energy bounds for group " << g << " <= bounds at "
+                  << g+1);
+    }
 }
 
 //---------------------------------------------------------------------------//

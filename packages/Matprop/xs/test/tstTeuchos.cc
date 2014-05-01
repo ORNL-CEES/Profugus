@@ -229,6 +229,8 @@ TEST_F(Teuchos_Test, vector)
     EXPECT_EQ(x[2], v[2]);
     EXPECT_EQ(5.0, v[3]);
     EXPECT_EQ(4.0, x[3]);
+
+    EXPECT_DOUBLE_EQ(11.0, v.normOne());
 }
 
 //---------------------------------------------------------------------------//
