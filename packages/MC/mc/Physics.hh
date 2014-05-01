@@ -17,6 +17,7 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
+#include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "utils/Static_Map.hh"
 #include "xs/XS.hh"
@@ -92,20 +93,27 @@ class Physics
     // Cross section database.
     RCP_XS d_mat;
 
+    // Geometry.
+    SP_Geometry d_geometry;
+
   public:
     // Constructor that auto-creates group bounds.
     explicit Physics(RCP_Std_DB db, RCP_XS mat);
 
     // >>> PUBLIC TRANSPORT INTERFACE
 
-    // No need to retain RNG outside of particle
-    void set_rng(const RNG& rng) { /* * */ }
+    //! Set the geometry.
+    void set_geometry(SP_Geometry g) { Require(g); d_geometry = g; }
+
+    //! Get the geometry.
+    SP_Geometry get_geometry() const { return d_geometry; }
 
     // Initialize the physics state.
     void initialize(double E, Particle_t &p);
 
     // Get a total cross section from the physics library.
-    double total(int matid, const Particle_t &p);
+    double total(physics::Reaction_Type type, unsigned int matid,
+                 const Particle_t &p);
 
     //! Get the energy from a particle via its physics state
     double energy(const Particle_t &p) const
@@ -127,20 +135,19 @@ class Physics
     void collide(Particle_t &particle, Bank_t &bank);
 
     // Sample fission site.
-    int sample_fission_site(const Particle_t &particle,
-                            Fission_Site_Container &fsc, double keff);
+    int sample_fission_site(const Particle_t &p, Fission_Site_Container &fsc,
+                            double keff);
 
     // Sample fission spectrum and initialize the physics state.
-    bool initialize_fission(int matid, Particle_t &p);
+    bool initialize_fission(unsigned int matid, Particle_t &p);
 
     // Initialize a physics state at a fission site.
     bool initialize_fission(Fission_Site &fs, Particle_t &p);
 
     // Return whether a given material is fissionable
-    bool is_fissionable(int matid) const
+    bool is_fissionable(unsigned int matid) const
     {
-        return (d_mat->vector(matid, XS_t::CHI).normOne() > 0.0 ?
-                true : false);
+        return d_fissionable[d_mid2l[matid]];
     }
 
     // >>> FISSION SITE CONTAINER OPERATIONS
@@ -188,6 +195,9 @@ class Physics
     // Total scattering for each group and material.
     Vec_Vec_Dbl d_scatter;
 
+    // Fissionable bool by local matid.
+    std::vector<bool> d_fissionable;
+
     // Material id of current region.
     int d_matid;
 
@@ -195,7 +205,7 @@ class Physics
     int sample_group(int matid, int g, double rnd) const;
 
     // Sample a fission group.
-    int sample_fission_group(int matid, double rnd) const;
+    int sample_fission_group(unsigned int matid, double rnd) const;
 };
 
 } // end namespace shift

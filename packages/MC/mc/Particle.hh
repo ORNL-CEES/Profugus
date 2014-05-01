@@ -13,6 +13,7 @@
 
 #include "utils/Definitions.hh"
 #include "rng/RNG.hh"
+#include "geometry/RTK_State.hh"
 #include "Definitions.hh"
 
 namespace profugus
@@ -38,6 +39,7 @@ class Particle
     typedef def::Space_Vector Space_Vector;
     typedef events::Event     Event_Type;
     typedef RNG               RNG_t;
+    typedef RTK_State         Geo_State_t;
     //@}
 
   private:
@@ -60,6 +62,9 @@ class Particle
 
     // Latest particle event.
     Event_Type d_event;
+
+    // Particle geometric state.
+    Geo_State_t d_geo_state;
 
   public:
     // Constructor
@@ -90,6 +95,12 @@ class Particle
 
     //! Set particle status to alive.
     void live() { d_alive = true; }
+
+    //@{
+    //! Get a handle to the geometric state of the particle.
+    Geo_State_t& geo_state() { return d_geo_state; }
+    const Geo_State_t& geo_state() const { return d_geo_state; }
+    //@}
 
     //@{
     //! Access particle data.
