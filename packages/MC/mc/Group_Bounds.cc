@@ -8,6 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <cmath>
 #include <algorithm>
 
 #include "Group_Bounds.hh"
@@ -26,13 +27,34 @@ namespace profugus
  * \param lower lower energy bound (eV).
  * \param higher higher energy bound (eV).
  * \param num_bins number of logarithmic energy bins.
- * \param p particle type (see mc::Particle_Type).
  */
 Group_Bounds::SP_Group_Bounds Group_Bounds::build_logarithmic(double lower,
                                                               double higher,
                                                               int    num_bins)
 {
-    return std::make_shared<Group_Bounds>(Vec_Dbl());
+    Insist (lower > 0.0, "Lower energy bound must be > ZERO");
+    Insist (higher > lower,
+            "Upper energy bound must be greater than the lower energy bound");
+    Insist (num_bins > 0, "Must have a least one energy bin");
+
+    // allocate the energy bounds
+    Vec_Dbl energy_mesh(num_bins + 1, 0.0);
+
+    // calculate the width of each energy bin
+    double de = std::log(higher / lower) / num_bins;
+
+    // assign the energy bounds
+    energy_mesh[0]        = higher;
+    energy_mesh[num_bins] = lower;
+    for (int g = 1; g < num_bins; ++g)
+        energy_mesh[g] = higher / std::exp(g * de);
+
+    // make the group bounds
+    SP_Group_Bounds gb(std::make_shared<Group_Bounds>(energy_mesh));
+
+    Ensure(gb);
+    Ensure(gb->num_groups() == num_bins);
+    return gb;
 }
 
 //---------------------------------------------------------------------------//
