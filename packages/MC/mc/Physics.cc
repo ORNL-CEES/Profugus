@@ -289,7 +289,7 @@ double Physics::total(physics::Reaction_Type  type,
 bool Physics::initialize_fission(unsigned int  matid,
                                  Particle_t   &p)
 {
-    Require (matid < d_mat->has(matid));
+    Require (d_mat->has(matid));
 
     // sampled flag
     bool sampled = false;
