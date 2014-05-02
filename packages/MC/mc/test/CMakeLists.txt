@@ -20,11 +20,12 @@ INCLUDE(UtilsTest)
 ##---------------------------------------------------------------------------##
 
 ADD_UTILS_TEST(tstBank.cc              NP 1              )
+ADD_UTILS_TEST(tstSampler.cc           NP 1              )
 ADD_UTILS_TEST(tstParticle.cc          NP 1              )
 ADD_UTILS_TEST(tstGroup_Bounds.cc      NP 1              )
+ADD_UTILS_TEST(tstPhysics.cc           NP 1              )
 #ADD_UTILS_TEST(tstFission_Comm.cc      NP 4        LEGACY)
 #ADD_UTILS_TEST(tstFission_Rebalance.cc NP 1 2 4 12       )
-#ADD_UTILS_TEST(tstMG_Physics.cc        NP 1              )
 
 ##---------------------------------------------------------------------------##
 ##                    end of mc/test/CMakeLists.txt
