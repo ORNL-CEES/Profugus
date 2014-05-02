@@ -241,13 +241,15 @@ void Physics::collide(Particle_t &particle,
  * \brief Get a total cross section from the physics library.
  */
 double Physics::total(physics::Reaction_Type  type,
-                      unsigned int            matid,
                       const Particle_t       &p)
 {
     Require (d_mat->num_mat() == d_Nm);
     Require (d_mat->num_groups() == d_Ng);
-    Require (d_mat->has(matid));
     Require (p.group() < d_Ng);
+
+    // get the matid from the particle
+    unsigned int matid = p.matid();
+    Check (d_mat->has(matid));
 
     // return the approprate reaction type
     switch (type)
@@ -259,17 +261,9 @@ double Physics::total(physics::Reaction_Type  type,
             return d_scatter[d_mid2l[matid]][p.group()];
 
         case physics::FISSION:
-            // zero if non-fission material
-            if (!is_fissionable(matid))
-                return 0.0;
-
             return d_mat->vector(matid, XS_t::SIG_F)[p.group()];
 
         case physics::NU_FISSION:
-            // zero if non-fission material
-            if (!is_fissionable(matid))
-                return 0.0;
-
             return d_mat->vector(matid, XS_t::NU_SIG_F)[p.group()];
 
         default:

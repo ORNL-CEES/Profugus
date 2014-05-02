@@ -112,8 +112,7 @@ class Physics
     void initialize(double E, Particle_t &p);
 
     // Get a total cross section from the physics library.
-    double total(physics::Reaction_Type type, unsigned int matid,
-                 const Particle_t &p);
+    double total(physics::Reaction_Type type, const Particle_t &p);
 
     //! Get the energy from a particle via its physics state
     double energy(const Particle_t &p) const
