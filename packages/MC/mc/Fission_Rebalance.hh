@@ -2,8 +2,8 @@
 /*!
  * \file   mc/Fission_Rebalance.hh
  * \author Thomas M. Evans
- * \date   Thu Feb 28 13:05:02 2013
- * \brief  Continuous_Fission_Rebalance class definition.
+ * \date   Monday May 5 11:13:55 2014
+ * \brief  Fission_Rebalance class definition.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
@@ -11,20 +11,18 @@
 #ifndef mc_Fission_Rebalance_hh
 #define mc_Fission_Rebalance_hh
 
-#include <algorithm>
 #include <utility>
 
 #include "comm/global.hh"
-#include "comm/Request.hh"
-#include "utils/SP.hh"
-#include "mc/Boundary_Mesh.hh"
+#include "utils/Definitions.hh"
+#include "Physics.hh"
 
-namespace shift
+namespace profugus
 {
 
 //===========================================================================//
 /*!
- * \class Continuous_Fission_Rebalance
+ * \class Fission_Rebalance
  * \brief Rebalance the fission bank across sets for continuous fission site
  * containers.
  *
@@ -34,10 +32,13 @@ namespace shift
  * to rebalance the fission bank.  Because each set has the complete problem
  * geometry, it does not matter which fission sites get moved between sets.
  *
- * The algorithm we have developed is a modification of Romano and Forgets
- * fission bank algorithm (Romano, P K, and B Forget. “Parallel Fission Bank
- * Algorithms in Monte Carlo Criticality Calculations.” \e Nuclear \e Science
- * \e and \e Engineering \b 170 125–135.).
+ * This version of the fission rebalance algorithm \b assumes only 1-block per
+ * set (ie. full domain replication).  The generalized Fission Bank algorithm
+ * in Shift can handle multiple blocks per set. The algorithm we have
+ * developed is a modification of Romano and Forgets fission bank algorithm
+ * (Romano, P K, and B Forget. “Parallel Fission Bank Algorithms in Monte
+ * Carlo Criticality Calculations.” \e Nuclear \e Science \e and \e
+ * Engineering \b 170 125–135.).
  *
  * Consider a fission bank with 1003 sampled sites on 4 processors. The
  * distribution on each processor is given by \c n_i.  If we consider the
@@ -112,75 +113,29 @@ namespace shift
  *
  * To summarize, in each iteration a set has at most 2 communications with its
  * nearest set neighbor.
- *
- * The physics class must provide the Physics interface documented in
- * Physics.  The Fission_Site_Container must provide the following
- * types/methods:
- * - \c size()
- * - \c begin()
- * - \c end()
- * - \c operator[]
- * - \c push_back()
- * - \c pop_back()
- * - \c resize()
- * - \c clear()
- * - \c Fission_Site_Container::const_iterator
- * .
- * All random-access stl-type containers can provide this interface
- * (ie. vector, deque).  Naturally, this class is a specialization for
- * continuous fission site containers.  Thus, the total size of the fission
- * container in bytes should be recoverable using:
- * \code
-    Fission_Site_Container_t container;
-    // ...
-
-    size_t num_bytes = sizeof(Fission_Site_t) * container.size();
-    void *buffer     = &container[0];
-    nemesis::send(reinterpret_cast<const char *>(buffer),
-                  num_bytes, node);
-   \endcode
- *
- * Both \c Fission_Site_t and \c Fission_Site_Container_t are defined in the
- * Physics class. Since the Fission_Site_Container_t is a continuous container
- * with \c operator[] defined, dereferenceing the first item in the container
- * points to the beginning of the memory.
- *
- * Finally, each fission site entry in the fission site container must be \b
- * one fission site.  If there are multiple emissions from a fission site,
- * that site must be repeated \e n times; the rebalance algorithm assumes that
- * size() returns the total number of fission sites.
  */
 /*!
- * \example mc_physics/test/tstFission_Rebalance.cc
+ * \example mc/test/tstFission_Rebalance.cc
  *
- * Test of Continuous_Fission_Rebalance.
+ * Test of Fission_Rebalance.
  */
 //===========================================================================//
 
-template<class Physics>
-class Continuous_Fission_Rebalance
+class Fission_Rebalance
 {
   public:
     //@{
     //! Typedefs.
-    typedef typename Physics::Fission_Site           Fission_Site_t;
-    typedef typename Physics::Fission_Site_Container Fission_Site_Container_t;
-    typedef typename Physics::Space_Vector           Space_Vector;
-    typedef mc::Boundary_Mesh                        Boundary_Mesh_t;
-    typedef nemesis::SP<Boundary_Mesh_t>             SP_Boundary_Mesh;
-    typedef typename Boundary_Mesh_t::Vec_Int        Vec_Int;
-    typedef std::pair<int, int>                      Array_Bnds;
+    typedef Physics::Fission_Site           Fission_Site_t;
+    typedef Physics::Fission_Site_Container Fission_Site_Container_t;
+    typedef Physics::Space_Vector           Space_Vector;
+    typedef def::Vec_Int                    Vec_Int;
+    typedef std::pair<int, int>             Array_Bnds;
     //@}
-
-  private:
-    // >>> DATA
-
-    // Boundary mesh.
-    SP_Boundary_Mesh d_bnd_mesh;
 
   public:
     // Constructor.
-    Continuous_Fission_Rebalance(SP_Boundary_Mesh bnd_mesh);
+    Fission_Rebalance();
 
     // Rebalance the fission bank across all sets.
     void rebalance(Fission_Site_Container_t &fission_bank);
@@ -188,10 +143,7 @@ class Continuous_Fission_Rebalance
     // >>> ACCESSORS
 
     //! Number of fissions on this domain after a rebalance.
-    int num_fissions() const { return d_target; }
-
-    //! Number of fissions on the set after a rebalance.
-    int num_fissions_on_set() const { return d_target_set; }
+    int num_fissions() const { return d_target_set; }
 
     //! Total, global number of fissions (same before/after rebalance).
     int num_global_fissions() const { return d_num_global; }
@@ -211,9 +163,6 @@ class Continuous_Fission_Rebalance
   private:
     // >>> IMPLEMENTATION
 
-    //! Iterators for fission site container.
-    typedef typename Fission_Site_Container_t::const_iterator fs_iterator;
-
     // Calculate global/local fission bank parameters.
     void fission_bank_parameters(const Fission_Site_Container_t &fission_bank);
 
@@ -223,17 +172,9 @@ class Continuous_Fission_Rebalance
     // Calculate the number of fission sites across all sets.
     void calc_num_sites(const Fission_Site_Container_t &fission_bank);
 
-    // Rebalance across blocks in a set.
-    void block_rebalance(int &num_send);
-
-    // Determine the number of sites to receive on this block.
-    void determine_block_rcvs(int num_send_left, int num_send_right,
-                              int num_send_left_set, int num_send_right_set,
-                              int &num_recv_left, int &num_recv_right);
-
     // Post receives.
     void post_receives(int num_recv, Fission_Site_Container_t &recv_bank,
-                       int destination, nemesis::Request &handle, int tag);
+                       int destination, profugus::Request &handle, int tag);
 
     // Send.
     void send(int num_send, Fission_Site_Container_t &bank, int destination,
@@ -242,19 +183,10 @@ class Continuous_Fission_Rebalance
     // Receive.
     void receive(int num_recv, Fission_Site_Container_t &bank,
                  Fission_Site_Container_t &recv_bank, int destination,
-                 nemesis::Request &handle, int tag);
-
-    // Block-constant communicator for set-to-set communication.
-    nemesis::Communicator_t d_block_const_comm;
-
-    // Set-constant communicator for block-to-block communication.
-    nemesis::Communicator_t d_set_const_comm;
+                 profugus::Request &handle, int tag);
 
     // Number of sets and this set.
     int d_num_sets, d_set;
-
-    // Number of blocks and this block.
-    int d_num_blocks, d_block;
 
     // Left/right neighbors and the number of neighbors (at most 2) in set
     // space.
@@ -265,16 +197,10 @@ class Continuous_Fission_Rebalance
 
     // The target number of fission sites on this process and set after
     // rebalance.
-    int d_target, d_target_set;
+    int d_target_set;
 
     // Number of fission sites on each set.
     Vec_Int d_sites_set;
-
-    // Number of fission sites on each block within a set.
-    Vec_Int d_sites_block;
-
-    // Surplus sites per block.
-    Vec_Int d_block_surplus;
 
     // Current global fission bank array bounds on this set.
     Array_Bnds d_bnds;
@@ -293,16 +219,16 @@ class Continuous_Fission_Rebalance
     int d_num_recv, d_num_send, d_num_iter;
 
     // Receive handles.
-    nemesis::Request d_handle_left, d_handle_right;
+    profugus::Request d_handle_left, d_handle_right;
 
     // Size of a fission site in bytes.
     int d_size_fs;
 };
 
-} // end namespace shift
+} // end namespace profugus
 
 #endif // mc_Fission_Rebalance_hh
 
 //---------------------------------------------------------------------------//
-//              end of mc_physics/Continuous_Fission_Rebalance.hh
+//              end of mc/Fission_Rebalance.hh
 //---------------------------------------------------------------------------//
