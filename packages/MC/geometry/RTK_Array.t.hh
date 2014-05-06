@@ -854,62 +854,6 @@ int RTK_Array<T>::count_cells()
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Set symmetric/mapped cell ids
- *
- * \param this_offset this object's cell offset
- * \param map_offset map object's cell offset
- * \param t_it Iterator into d_mapped_cells for this object
- * \param m_it Iterator into d_mapped_cells for mapped object
- *
- */
-template<class T>
-void RTK_Array<T>::set_mapped_cells(
-    int               this_offset,
-    int               map_offset,
-    Vec_Int::iterator t_it,
-    Vec_Int::iterator m_it)
-{
-    Check( d_level != 0 );
-    Check( d_N[def::Z] == 1);
-
-    int n_blocks = d_N[def::X] * d_N[def::Y];
-    Check( n_blocks !=  1 );
-
-    // Array mapping info
-    Vec_Int mapped_array( n_blocks );
-
-    int index = 0;
-    int mapped_index;
-    for (int j = 0; j < d_N[def::Y]; ++j)
-    {
-        mapped_index = d_N[def::X] * d_N[def::Y] - 1 - j;
-        for (int i = 0; i < d_N[def::X]; ++i, ++index)
-        {
-            // setting mapped array
-            mapped_array[index] = mapped_index;
-
-            // Checking mapped_index and index have same number of cells
-            Check( d_objects[ d_layout[index       ]]->num_cells() ==
-                   d_objects[ d_layout[mapped_index]]->num_cells() );
-
-            // decrementing mapped_index
-            mapped_index -= d_N[def::X];
-        }
-    }
-
-    for (int i = 0; i < n_blocks; ++i)
-    {
-        // call recursively
-        d_objects[ d_layout[i] ]->set_mapped_cells(
-            this_offset + d_Nc_offset[ i ],
-            map_offset + d_Nc_offset[ mapped_array[i] ],
-            t_it + d_Nc_offset[i],
-            m_it + d_Nc_offset[ mapped_array[i] ] );
-    }
-}
-
-//---------------------------------------------------------------------------//
-/*!
  * \brief Add vessel to objects in the array.
  *
  * \param xoff distance from the origin of the vessel to the \b left side of

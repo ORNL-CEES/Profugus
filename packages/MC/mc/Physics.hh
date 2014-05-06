@@ -41,10 +41,6 @@ namespace profugus
  *
  * \arg \c implicit_capture (bool) does implicit capture (default: true)
  *
- * \arg \c neutron_bnd (vector<double>) neutron group boundaries
- *
- * \arg \c photon_bnd (vector<double>) photon group boundaries
- *
  * \arg \c check_balance (bool) check for balanced scattering tables (default:
  * false)
  *

@@ -192,12 +192,7 @@ class RTK_Array
     int num_regions() const;
 
     //! Bottom corner of array
-    const Space_Vector& corner(){ return d_corner; }
-
-    // set mapped cells for symmetry
-    void set_mapped_cells(
-        int this_offset, int map_offset,
-        Vec_Int::iterator t_it, Vec_Int::iterator m_it);
+    const Space_Vector& corner() const { return d_corner; }
 
     // Diagnostic output.
     void output(std::ostream &out) const;

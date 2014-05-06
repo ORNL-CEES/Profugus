@@ -375,10 +375,6 @@ void RTK_Array<RTK_Cell>::update_coordinates(const Space_Vector &r,
                                              Geo_State_t &state);
 
 template<>
-void RTK_Array<RTK_Cell>::set_mapped_cells(
-    int t_off, int m_off, Vec_Int::iterator t_it, Vec_Int::iterator m_it);
-
-template<>
 void RTK_Array<RTK_Cell>::output(std::ostream &out, int level,
                                  int obj_id) const;
 

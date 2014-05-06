@@ -74,7 +74,7 @@ Fission_Rebalance::Fission_Rebalance()
  */
 void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
 {
-    SCOPED_TIMER("mc::Fission_Rebalance.rebalance");
+    SCOPED_TIMER("MC::Fission_Rebalance.rebalance");
 
     // return if only 1 set
     if (d_num_sets == 1)
