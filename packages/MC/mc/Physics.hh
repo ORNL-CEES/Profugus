@@ -35,16 +35,14 @@ namespace profugus
  * \class Physics
  * \brief Multigroup physics implementation for Monte Carlo transport.
  *
- * \section db_mg_physics Standard DB Entries for MG_Physics
+ * \section db_physics Standard DB Entries for Physics
  *
- * The following standard data entries control the MG physics:
+ * The following standard data entries control the physics:
  *
  * \arg \c implicit_capture (bool) does implicit capture (default: true)
  *
  * \arg \c check_balance (bool) check for balanced scattering tables (default:
  * false)
- *
- * Either the neutron boundaries, photon boundaries, or both \b must be defined.
  */
 /*!
  * \example mc_physics/test/tstPhysics.cc
