@@ -53,9 +53,6 @@ namespace profugus
  *
  * \arg \c Np (int) number of particles to use in each cycle (default:
  * 1000)
- *
- * \arg \c dd_test_samples (int) number of test samples to determine the
- * initial fission source by domain in DD decompositions (default: 1000)
  */
 /*!
  * \example mc/test/tstFission_Source.cc
@@ -74,7 +71,6 @@ class Fission_Source : public Source
     typedef Physics_t::Fission_Site_Container       Fission_Site_Container;
     typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
     typedef std::shared_ptr<Fission_Rebalance>      SP_Fission_Rebalance;
-    typedef def::size_type                          size_type;
     typedef def::Vec_Dbl                            Vec_Dbl;
     //@}
 
@@ -129,9 +125,6 @@ class Fission_Source : public Source
     //! Number left to transport on this domain.
     size_type num_left() const { return d_num_left; }
 
-    //! Number of random number streams generated so far (inclusive).
-    int num_streams() const { return d_rng_stream; }
-
     //! Get fission source lower coords for testing purposes
     const Space_Vector& lower_coords() const { return d_lower; }
 
@@ -143,17 +136,8 @@ class Fission_Source : public Source
 
     typedef Source Base;
 
-    // Node ids.
-    int d_node, d_nodes;
-
     // Build the domain replicated fission source.
     void build_DR();
-
-    // Make the RNG for this cycle.
-    void make_RNG();
-
-    // Offsets used for random number generator selection.
-    int d_rng_stream;
 
     // Initial fission source lower coords and width.
     Space_Vector d_lower;
@@ -182,10 +166,6 @@ class Fission_Source : public Source
 
     // Number of particles run on the current domain.
     size_type d_num_run;
-
-    // Number of test samples to run to determine the particles per domain for
-    // DR decompositions.
-    size_type d_test_samples;
 };
 
 } // end namespace profugus

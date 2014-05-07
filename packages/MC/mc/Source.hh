@@ -75,6 +75,12 @@ class Source
         omega[Y] = sintheta * std::sin(phi);
     }
 
+    // Calculate random number offsets.
+    void make_RNG();
+
+    // Node ids.
+    int b_node, b_nodes;
+
   public:
     // Constructor.
     Source(SP_Geometry    geometry,
@@ -108,6 +114,15 @@ class Source
 
     //! Get the RNG controller.
     const RNG_Control_t& rng_control() const { return *b_rng_control; }
+
+    //! Number of random number streams generated so far (inclusive).
+    int num_streams() const { return d_rng_stream; }
+
+  private:
+    // >>> DATA
+
+    // Offsets used for random number generator selection.
+    int d_rng_stream;
 };
 
 } // end namespace profugus

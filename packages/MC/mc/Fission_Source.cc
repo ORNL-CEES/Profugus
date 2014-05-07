@@ -35,11 +35,8 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
                                SP_Geometry    geometry,
                                SP_Physics     physics,
                                SP_RNG_Control rng_control)
-    : Source(geometry, physics, rng_control)
+    : Base(geometry, physics, rng_control)
     , d_fission_rebalance(std::make_shared<Fission_Rebalance>())
-    , d_node(profugus::node())
-    , d_nodes(profugus::nodes())
-    , d_rng_stream(0)
     , d_np_requested(0)
     , d_np_total(0)
     , d_np_domain(0)
@@ -100,10 +97,6 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
 
     // initialize the total for the first cycle
     d_np_total = d_np_requested;
-
-    // number of test samples per domain to generate the initial fission
-    // source
-    d_test_samples = static_cast<size_type>(db->get("dd_test_samples", 1000));
 }
 
 //---------------------------------------------------------------------------//
@@ -247,8 +240,7 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
     int matid = 0;
 
     // particle position and isotropic direction
-    Space_Vector r;
-    Space_Vector omega;
+    Space_Vector r, omega;
 
     // sample the angle isotropically
     Base::sample_angle(omega, rng);
@@ -340,33 +332,12 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
 void Fission_Source::build_DR()
 {
     // calculate the number of particles per domain and set (equivalent)
-    d_np_domain = d_np_total / d_nodes;
+    d_np_domain = d_np_total / b_nodes;
 
     // recalculate the total number of particles (we want the same number of
     // particles in each domain, so the total may change slightly from the
     // requested value)
-    d_np_total = d_np_domain * d_nodes;
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Calculate offsets for random numbers.
- */
-void Fission_Source::make_RNG()
-{
-    // calculate offsets for generating random numbers on each processor (so
-    // we don't use the same rng streams)
-
-    // we use the same RNG for every particle in the cycle, each cycle a new
-    // RNG is generated on each domain
-
-    // make the random number generator on this domain for this cycle
-    profugus::Global_RNG::d_rng = b_rng_control->rng(d_rng_stream + d_node);
-
-    // advance to the next set of streams
-    d_rng_stream += d_nodes;
-
-    Ensure (profugus::Global_RNG::d_rng.assigned());
+    d_np_total = d_np_domain * b_nodes;
 }
 
 } // end namespace profugus
