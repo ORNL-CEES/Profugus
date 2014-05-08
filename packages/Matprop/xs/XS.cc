@@ -32,7 +32,7 @@ XS::XS()
 // SET FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
- * \brief Set number of groups and Pn order that is stored.
+ * \brief Set number of groups and Pn order that are stored.
  *
  * \param Pn_order anistropic scattering order (number of moments = Pn_order +
  * 1)
