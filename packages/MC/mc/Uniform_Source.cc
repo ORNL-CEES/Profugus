@@ -60,6 +60,7 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     // get the spectral shape
     const auto &shape = db->get(
         "spectral_shape", Teuchos::Array<double>(b_physics->num_groups(), 1.0));
+    Check (shape.size() == d_erg_cdf.size());
 
     // calculate the normalization
     double norm = std::accumulate(shape.begin(), shape.end(), 0.0);
@@ -67,11 +68,13 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
 
     // assign to the shape cdf
     Remember (double sum = 0.0);
-    norm = 1.0 / norm;
-    for (double c : d_erg_cdf)
+    norm  = 1.0 / norm;
+    int n = 0;
+    for (double &c : d_erg_cdf)
     {
-        c *= norm;
+        c = shape[n] * norm;
         Remember (sum += c);
+        ++n;
     }
     Ensure (soft_equiv(sum, 1.0));
 

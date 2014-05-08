@@ -32,6 +32,7 @@ ADD_UTILS_TEST(tstGroup_Bounds.cc      NP 1  )
 ADD_UTILS_TEST(tstPhysics.cc           NP 1  )
 ADD_UTILS_TEST(tstFission_Rebalance.cc NP 1 4)
 ADD_UTILS_TEST(tstFission_Source.cc    NP 1 2 4 DEPLIBS mc_sources_test_lib)
+ADD_UTILS_TEST(tstUniform_Source.cc    NP 1 2 4 DEPLIBS mc_sources_test_lib)
 
 ##---------------------------------------------------------------------------##
 ##                    end of mc/test/CMakeLists.txt

@@ -40,9 +40,9 @@ class Box_Shape : public Shape
   public:
     //@{
     //! Base-class typedefs.
-    typedef Shape               Base;
-    typedef Base::Buffer        Buffer;
-    typedef Base::Space_Vector  Space_Vector;
+    typedef Shape              Base;
+    typedef Base::Buffer       Buffer;
+    typedef Base::Space_Vector Space_Vector;
     //@}
 
   private:
