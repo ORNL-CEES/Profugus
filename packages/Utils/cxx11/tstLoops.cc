@@ -101,5 +101,36 @@ TEST(Loops, mutable_range)
 }
 
 //---------------------------------------------------------------------------//
+
+TEST(Loops, vector_bool)
+{
+    // vector<bool>'s are special because they are packed, thus they return a
+    // *proxy* iterator
+
+    bool v[] = {true, false, false, true};
+
+    std::vector<bool> vb(std::begin(v), std::end(v));
+    EXPECT_TRUE(vb[0]);
+    EXPECT_FALSE(vb[1]);
+    EXPECT_FALSE(vb[2]);
+    EXPECT_TRUE(vb[3]);
+
+    vb[1] = true;
+    vb[2] = true;
+
+    // only changes local value
+    for (auto &&b : vb)
+    {
+        EXPECT_TRUE(b);
+        b = false;
+    }
+
+    EXPECT_FALSE(vb[0]);
+    EXPECT_FALSE(vb[1]);
+    EXPECT_FALSE(vb[2]);
+    EXPECT_FALSE(vb[3]);
+}
+
+//---------------------------------------------------------------------------//
 //                 end of tstLoops.cc
 //---------------------------------------------------------------------------//
