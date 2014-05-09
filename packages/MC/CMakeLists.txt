@@ -100,6 +100,7 @@ SET(MC_SOURCES
   mc/Sampler.cc
   mc/Source.cc
   mc/Uniform_Source.cc
+  mc/VR_Roulette.cc
   )
 LIST(APPEND HEADERS ${MC_HEADERS})
 LIST(APPEND SOURCES ${MC_SOURCES})
