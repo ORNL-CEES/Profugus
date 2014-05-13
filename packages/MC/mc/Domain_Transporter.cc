@@ -186,7 +186,7 @@ void Domain_Transporter::transport(Particle_t &particle,
 
             // path-length tallies (the actual movement of the particle will
             // take place when we process the various events)
-            // d_tallier->path_length(d_step.step(), particle);
+            d_tallier->path_length(d_step.step(), particle);
 
             // update the mfp distance travelled
             d_dist_mfp -= d_step.step() * d_xs_tot;

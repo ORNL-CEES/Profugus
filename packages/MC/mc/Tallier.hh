@@ -11,6 +11,10 @@
 #ifndef mc_Tallier_hh
 #define mc_Tallier_hh
 
+#include <memory>
+
+#include "Physics.hh"
+
 namespace profugus
 {
 
@@ -28,7 +32,32 @@ namespace profugus
 
 class Tallier
 {
+  public:
+    //@{
+    //! Typedefs.
+    typedef Physics                     Physics_t;
+    typedef Physics_t::Geometry_t       Geometry_t;
+    typedef Physics_t::Particle_t       Particle_t;
+    typedef std::shared_ptr<Geometry_t> SP_Geometry;
+    typedef std::shared_ptr<Physics_t>  SP_Physics;
+    //@}
 
+  private:
+    // >>> DATA
+
+    // Geometry and physics.
+    SP_Geometry d_geometry;
+    SP_Physics  d_physics;
+
+  public:
+    // Constructor.
+    Tallier();
+
+    // Set the geometry and physics classes.
+    void set(SP_Geometry geometry, SP_Physics physics);
+
+    // Process path-length tally events.
+    void path_length(double step, const Particle_t &p);
 };
 
 } // end namespace profugus

@@ -8,10 +8,52 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "harness/DBC.hh"
 #include "Tallier.hh"
 
 namespace profugus
 {
+
+//---------------------------------------------------------------------------//
+// CONSTRUCTOR
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Constructor.
+ */
+Tallier::Tallier()
+{
+}
+
+//---------------------------------------------------------------------------//
+// PUBLIC FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set the geometry and physics.
+ *
+ * \param geometry
+ * \param physics
+ */
+void Tallier::set(SP_Geometry geometry,
+                  SP_Physics  physics)
+{
+    Require (geometry);
+    Require (physics);
+
+    d_geometry = geometry;
+    d_physics  = physics;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Process path-length tally events.
+ *
+ * \param step
+ * \param p
+ */
+void Tallier::path_length(double            step,
+                          const Particle_t &p)
+{
+}
 
 } // end namespace profugus
 

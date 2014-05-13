@@ -50,8 +50,8 @@ void TransporterTestBase::SetUp()
 
     // Create tallier
     tallier = std::make_shared<Tallier_t>();
-    // tallier->set(geometry, physics);
-    // this->init_tallies();
+    tallier->set(geometry, physics);
+    this->init_tallies();
 
     Ensure(rcon);
     Ensure(!db.is_null());
