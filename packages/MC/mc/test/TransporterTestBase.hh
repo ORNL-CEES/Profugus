@@ -41,6 +41,7 @@ class TransporterTestBase : public testing::Test
     typedef Physics_t::Geometry_t               Geometry_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
+    typedef Physics_t::SP_Particle              SP_Particle;
     typedef Physics_t::Bank_t                   Bank_t;
 
     typedef Physics_t::XS_t   XS_t;

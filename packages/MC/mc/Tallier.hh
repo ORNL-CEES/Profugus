@@ -56,6 +56,9 @@ class Tallier
     // Set the geometry and physics classes.
     void set(SP_Geometry geometry, SP_Physics physics);
 
+    // Initialize internal data structures after adding tallies.
+    void build();
+
     // Process path-length tally events.
     void path_length(double step, const Particle_t &p);
 

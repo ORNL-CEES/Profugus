@@ -45,6 +45,14 @@ void Tallier::set(SP_Geometry geometry,
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Initialize internal data structures after adding tallies.
+ */
+void Tallier::build()
+{
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Process path-length tally events.
  *
  * \param step

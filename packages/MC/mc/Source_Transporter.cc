@@ -121,23 +121,23 @@ void Source_Transporter::solve()
             d_transporter.transport(*bank_particle, bank);
             Check (!bank_particle->alive());
         }
-    }
 
-    // update the counter
-    ++counter;
+        // update the counter
+        ++counter;
 
-    // indicate completion of particle history
-    d_tallier->end_history();
+        // indicate completion of particle history
+        d_tallier->end_history();
 
-    // print message if needed
-    if (counter % d_print_count == 0)
-    {
-        double percent_complete
-            = (100. * counter) / source.num_to_transport();
-        cout << ">>> Finished " << counter << "("
-             << std::setw(6) << std::fixed << std::setprecision(2)
-             << percent_complete << "%) particles on domain "
-             << d_node << endl;
+        // print message if needed
+        if (counter % d_print_count == 0)
+        {
+            double percent_complete
+                = (100. * counter) / source.num_to_transport();
+            cout << ">>> Finished " << counter << "("
+                 << std::setw(6) << std::fixed << std::setprecision(2)
+                 << percent_complete << "%) particles on domain "
+                 << d_node << endl;
+        }
     }
 
     // barrier at the end
