@@ -163,6 +163,14 @@ void TransporterTestBase::init_physics()
     xs->add(2, 0, sct2);
     xs->add(3, 0, sct3);
 
+    XS_t::OneDArray fis(ng, 4.0);
+    XS_t::OneDArray chi(ng, 1.0);
+    XS_t::OneDArray nuf(ng, 2.4*4.0);
+
+    xs->add(1, XS_t::SIG_F, fis);
+    xs->add(1, XS_t::NU_SIG_F, nuf);
+    xs->add(1, XS_t::CHI, chi);
+
     xs->complete();
 
     physics = std::make_shared<Physics_t>(db, xs);
