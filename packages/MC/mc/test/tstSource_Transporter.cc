@@ -32,6 +32,12 @@ class DRSourceTransporterTest : public TransporterTestBase
   public:
 
     typedef profugus::Source_Transporter Transporter_t;
+
+    void init_tallies()
+    {
+        // no tallies have been added
+        tallier->build();
+    }
 };
 
 //---------------------------------------------------------------------------//
@@ -162,7 +168,6 @@ TEST_F(DRSourceTransporterTest, Heuristic)
 
     // set the tally
     solver.set(tallier);
-    tallier->build();
 
     // make the source
     std::shared_ptr<DR_Source> source(std::make_shared<DR_Source>(

@@ -38,6 +38,12 @@ class Domain_TransporterTest : public TransporterTestBase
         db->set("weight_cutoff", 0.001);
         var_red = std::make_shared<profugus::VR_Roulette>(db);
     }
+
+    void init_tallies()
+    {
+        // no tallies have been added
+        tallier->build();
+    }
 };
 
 //---------------------------------------------------------------------------//
@@ -53,6 +59,12 @@ class Reflecting_Domain_TransporterTest : public TransporterTestBase
     {
         db->set("weight_cutoff", 0.001);
         var_red = std::make_shared<profugus::VR_Roulette>(db);
+    }
+
+    void init_tallies()
+    {
+        // no tallies have been added
+        tallier->build();
     }
 
     void init_geometry()

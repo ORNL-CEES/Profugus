@@ -67,6 +67,35 @@ class Tallier
 
     // Perform all end-history tally tasks.
     void end_history();
+
+    // Finalize tallies.
+    void finalize(int Np);
+
+    // Reset tallies.
+    void reset();
+
+    // >>> ACCESSORS
+
+    //! Whether we've called "build" with the current number of tallies
+    bool is_built() const { return d_build_phase == BUILT; }
+
+    //! Whether we've called "finalize" with the given tallies
+    bool is_finalized() const { return d_build_phase == FINALIZED; }
+
+  private:
+    // IMPLEMENTATION
+
+    //! Phases of construction, for error checking
+    enum Build_Phase
+    {
+        CONSTRUCTED = 0,//!< after construction is complete
+        ASSIGNED,       //!< after assigning geometry and physics
+        BUILT,          //!< after the call to build()
+        FINALIZED       //!< after the call to finalize()
+    };
+
+    // Build phase.
+    Build_Phase d_build_phase;
 };
 
 } // end namespace profugus

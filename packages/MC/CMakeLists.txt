@@ -94,11 +94,13 @@ SET(MC_SOURCES
   mc/Domain_Transporter.cc
   mc/Fission_Rebalance.cc
   mc/Fission_Source.cc
+  mc/Fixed_Source_Solver.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
   mc/Particle.cc
   mc/Physics.cc
   mc/Sampler.cc
+  mc/Solver.cc
   mc/Source.cc
   mc/Source_Transporter.cc
   mc/Tallier.cc
