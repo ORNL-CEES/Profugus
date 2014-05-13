@@ -146,6 +146,8 @@ void SourceTestBase::init_physics()
     xs->add(3, XS_t::TOTAL, total);
     xs->add(3, 0, scat);
 
+    xs->complete();
+
     b_physics = std::make_shared<Physics_t>(b_db, xs);
 }
 

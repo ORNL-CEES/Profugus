@@ -174,14 +174,14 @@ void Physics::collide(Particle_t &particle,
 
     // get the material id of the current region
     d_matid = particle.matid();
-    Check (d_matid < d_Nm);
+    Check (d_mid2l[static_cast<unsigned int>(d_matid)] < d_Nm);
     Check (d_geometry->matid(particle.geo_state()) == d_matid);
 
     // get the group index
     int group = particle.group();
 
     // calculate the scattering cross section ratio
-    register double c = d_scatter[d_matid][group] /
+    register double c = d_scatter[d_mid2l[d_matid]][group] /
                         d_mat->vector(d_matid, XS_t::TOTAL)[group];
     Check (!d_implicit_capture ? c <= 1.0 : c >= 0.0);
 

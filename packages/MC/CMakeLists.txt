@@ -91,6 +91,7 @@ LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
 FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
   mc/Box_Shape.cc
+  mc/Domain_Transporter.cc
   mc/Fission_Rebalance.cc
   mc/Fission_Source.cc
   mc/Global_RNG.cc
@@ -99,6 +100,7 @@ SET(MC_SOURCES
   mc/Physics.cc
   mc/Sampler.cc
   mc/Source.cc
+  mc/Tallier.cc
   mc/Uniform_Source.cc
   mc/VR_Roulette.cc
   )

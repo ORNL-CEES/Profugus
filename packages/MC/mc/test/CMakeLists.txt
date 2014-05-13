@@ -15,9 +15,10 @@ INCLUDE(UtilsTest)
 ## FILES
 ##---------------------------------------------------------------------------##
 
-TRIBITS_ADD_LIBRARY(mc_sources_test_lib
+TRIBITS_ADD_LIBRARY(mc_test_lib
   SOURCES
   SourceTestBase.cc
+  TransporterTestBase.cc
   TESTONLY
   DEPLIBS MC Utils_gtest)
 
@@ -25,15 +26,16 @@ TRIBITS_ADD_LIBRARY(mc_sources_test_lib
 ## TESTING
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstBank.cc              NP 1  )
-ADD_UTILS_TEST(tstSampler.cc           NP 1  )
-ADD_UTILS_TEST(tstParticle.cc          NP 1  )
-ADD_UTILS_TEST(tstGroup_Bounds.cc      NP 1  )
-ADD_UTILS_TEST(tstPhysics.cc           NP 1  )
-ADD_UTILS_TEST(tstVR_Roulette.cc       NP 1  )
-ADD_UTILS_TEST(tstFission_Rebalance.cc NP 1 4)
-ADD_UTILS_TEST(tstFission_Source.cc    NP 1 2 4 DEPLIBS mc_sources_test_lib)
-ADD_UTILS_TEST(tstUniform_Source.cc    NP 1 2 4 DEPLIBS mc_sources_test_lib)
+ADD_UTILS_TEST(tstBank.cc               NP 1  )
+ADD_UTILS_TEST(tstSampler.cc            NP 1  )
+ADD_UTILS_TEST(tstParticle.cc           NP 1  )
+ADD_UTILS_TEST(tstGroup_Bounds.cc       NP 1  )
+ADD_UTILS_TEST(tstPhysics.cc            NP 1  )
+ADD_UTILS_TEST(tstVR_Roulette.cc        NP 1  )
+ADD_UTILS_TEST(tstFission_Rebalance.cc  NP 1 4)
+ADD_UTILS_TEST(tstDomain_Transporter.cc NP 1     DEPLIBS mc_test_lib)
+ADD_UTILS_TEST(tstFission_Source.cc     NP 1 2 4 DEPLIBS mc_test_lib)
+ADD_UTILS_TEST(tstUniform_Source.cc     NP 1 2 4 DEPLIBS mc_test_lib)
 
 ##---------------------------------------------------------------------------##
 ##                    end of mc/test/CMakeLists.txt
