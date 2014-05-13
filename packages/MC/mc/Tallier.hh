@@ -58,6 +58,12 @@ class Tallier
 
     // Process path-length tally events.
     void path_length(double step, const Particle_t &p);
+
+    // Tally any source events.
+    void source(const Particle_t &p);
+
+    // Perform all end-history tally tasks.
+    void end_history();
 };
 
 } // end namespace profugus

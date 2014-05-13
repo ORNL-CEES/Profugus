@@ -55,6 +55,22 @@ void Tallier::path_length(double            step,
 {
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Tally any source events.
+ */
+void Tallier::source(const Particle_t &p)
+{
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Perform all end-history tally tasks.
+ */
+void Tallier::end_history()
+{
+}
+
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//

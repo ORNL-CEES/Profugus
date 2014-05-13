@@ -100,6 +100,7 @@ SET(MC_SOURCES
   mc/Physics.cc
   mc/Sampler.cc
   mc/Source.cc
+  mc/Source_Transporter.cc
   mc/Tallier.cc
   mc/Uniform_Source.cc
   mc/VR_Roulette.cc
