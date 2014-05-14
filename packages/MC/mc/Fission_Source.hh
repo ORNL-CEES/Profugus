@@ -45,7 +45,7 @@ namespace profugus
  *
  * \section fission_source_db Standard DB Entries for Fission_Source
  *
- * The database entries that control the shift::Fission_Source are:
+ * The database entries that control the profugus::Fission_Source are:
  *
  * \arg \c init_fission_src (vector<double>) box defined as (lox, hix, loy,
  * hiy, loz, hiz) in which the initial fission source is sampled (default: the

@@ -201,7 +201,7 @@ class Physics
     int sample_fission_group(unsigned int matid, double rnd) const;
 };
 
-} // end namespace shift
+} // end namespace profugus
 
 #endif // mc_Physics_hh
 

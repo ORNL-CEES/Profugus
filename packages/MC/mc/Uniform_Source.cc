@@ -80,9 +80,9 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
 
     // initialize timers in this class, which may be necessary because domains
     // with no source will not make this timer otherwise
-#if NEMESIS_TIMING > 0
+#if UTILS_TIMING > 0
     profugus::Timing_Diagnostics::update_timer(
-            "shift::Uniform_Source.get_particle", 0.0);
+        "profugus::Uniform_Source.get_particle", 0.0);
 #endif
 }
 
@@ -97,7 +97,7 @@ void Uniform_Source::build_source(SP_Shape geometric_shape)
 {
     Require (geometric_shape);
 
-    SCOPED_TIMER("shift::Uniform_Source.build_source");
+    SCOPED_TIMER("profugus::Uniform_Source.build_source");
 
     // store the spatial shape
     d_geo_shape = geometric_shape;

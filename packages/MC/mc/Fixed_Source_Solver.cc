@@ -78,7 +78,7 @@ void Fixed_Source_Solver::solve()
     b_tallier->build();
     Check(b_tallier->is_built());
 
-    SCOPED_TIMER("shift::Fixed_Source_Solver.solve");
+    SCOPED_TIMER("MC::Fixed_Source_Solver.solve");
 
     // store the number of source particles
     DIAGNOSTICS_TWO(vec_integers["local_np"].push_back(

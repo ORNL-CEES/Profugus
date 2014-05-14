@@ -237,7 +237,7 @@ inline Unpacker& operator>>(Unpacker &u, T &value)
 /*!
  * \brief Packing function.
  *
- * This function uses the nemesis::Packer to pack a given field into a
+ * This function uses the profugus::Packer to pack a given field into a
  * vector<char>.  The field type is represented by the template argument FT.
  * The field type must have the following members defined:
  *
@@ -262,7 +262,7 @@ inline Unpacker& operator>>(Unpacker &u, T &value)
  * complement of this function is unpack_data(), which takes a packed
  * vector<char> and writes data into the field.
  *
- * \sa nemesis::Packer, tstPacking_Utils.cc, and nemesis::unpack_data
+ * \sa profugus::Packer, tstPacking_Utils.cc, and profugus::unpack_data
  *
  * \param field  container or string
  * \param packed vector<char> that is empty; data will be packed into it
@@ -300,7 +300,7 @@ void pack_data(const FT &field, std::vector<char> &packed)
 /*!
  * \brief Unpacking function.
  *
- * This function uses the nemesis::Unpacker to unpack a given field from a
+ * This function uses the profugus::Unpacker to unpack a given field from a
  * vector<char>.  The field type is represented by the template argument FT.
  * The field type must have the following members defined:
  *
@@ -324,7 +324,7 @@ void pack_data(const FT &field, std::vector<char> &packed)
  * complement of this function is pack_data(), which packs fields into a
  * vector<char>
  *
- * \sa nemesis::Unpacker, tstPacking_Utils.cc, and nemesis::pack_data
+ * \sa profugus::Unpacker, tstPacking_Utils.cc, and profugus::pack_data
  *
  * \param field  container or string that is empty; data will be unpacked into
  *               it
