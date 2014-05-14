@@ -10,7 +10,7 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstAuto.cc     NP 1)
+ADD_UTILS_TEST(tstTypes.cc    NP 1)
 ADD_UTILS_TEST(tstPointers.cc NP 1)
 ADD_UTILS_TEST(tstLoops.cc    NP 1)
 ADD_UTILS_TEST(tstClass.cc    NP 1)

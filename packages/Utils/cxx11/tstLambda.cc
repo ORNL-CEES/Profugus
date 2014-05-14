@@ -21,7 +21,7 @@
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST(Lambda, function)
+TEST(Lambda, function1)
 {
     std::vector<int> x = {10, 22, 31, 44, 56};
 
@@ -36,7 +36,13 @@ TEST(Lambda, function)
                      [](int n){ return n % 2 == 0; });
 
     EXPECT_EQ(10, *i);
+}
 
+//---------------------------------------------------------------------------//
+
+TEST(Lambda, function2)
+{
+    std::vector<int> x = {10, 22, 31, 44, 56};
     auto y = x;
 
     // add 1 to data

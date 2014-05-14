@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <vector>
+#include <type_traits>
 
 //---------------------------------------------------------------------------//
 // Test helpers
@@ -56,6 +57,17 @@ auto change_data(const T &f) -> decltype(f.state())
         i += 1;
     }
     return t;
+}
+
+//---------------------------------------------------------------------------//
+
+template<class T1, class T2>
+auto add(T1 t1, T2 t2) -> decltype(t1 + t2)
+{
+   static_assert(std::is_integral<T1>::value, "Type T1 must be integral");
+   static_assert(std::is_integral<T2>::value, "Type T2 must be integral");
+
+   return t1 + t2;
 }
 
 //---------------------------------------------------------------------------//
@@ -137,6 +149,25 @@ TEST(DecltypeTest, decltype)
     {
         EXPECT_EQ(16, i);
     }
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(Types, static_assert)
+{
+    long         x = 1, y = 2;
+    unsigned int p = 4, q = 5;
+    int          s = 3, t = 7;
+
+    auto a = add(x, y);
+    auto b = add(p, q);
+    auto c = add(s, t);
+    auto d = add(s, y);
+
+    EXPECT_EQ(3,  a);
+    EXPECT_EQ(9,  b);
+    EXPECT_EQ(10, c);
+    EXPECT_EQ(5,  d);
 }
 
 //---------------------------------------------------------------------------//
