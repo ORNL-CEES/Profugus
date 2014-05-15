@@ -97,6 +97,7 @@ SET(MC_SOURCES
   mc/Fixed_Source_Solver.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
+  mc/Keff_Tally.cc
   mc/Particle.cc
   mc/Physics.cc
   mc/Sampler.cc
@@ -104,6 +105,7 @@ SET(MC_SOURCES
   mc/Source.cc
   mc/Source_Transporter.cc
   mc/Tallier.cc
+  mc/Tally.cc
   mc/Uniform_Source.cc
   mc/VR_Roulette.cc
   )
