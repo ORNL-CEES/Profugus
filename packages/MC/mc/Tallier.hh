@@ -11,8 +11,10 @@
 #ifndef mc_Tallier_hh
 #define mc_Tallier_hh
 
+#include <vector>
 #include <memory>
 
+#include "Tally.hh"
 #include "Physics.hh"
 
 namespace profugus
@@ -38,8 +40,11 @@ class Tallier
     typedef Physics                     Physics_t;
     typedef Physics_t::Geometry_t       Geometry_t;
     typedef Physics_t::Particle_t       Particle_t;
+    typedef Tally                       Tally_t;
+    typedef std::shared_ptr<Tally_t>    SP_Tally;
     typedef std::shared_ptr<Geometry_t> SP_Geometry;
     typedef std::shared_ptr<Physics_t>  SP_Physics;
+    typedef std::vector<SP_Tally>       Vec_Tallies;
     //@}
 
   private:
@@ -49,12 +54,38 @@ class Tallier
     SP_Geometry d_geometry;
     SP_Physics  d_physics;
 
+    // Vector of all tallies (assembled during build).
+    Vec_Tallies d_tallies;
+
+    // Persistent source and pathlength tallies.
+    Vec_Tallies d_pl, d_src;
+
   public:
     // Constructor.
     Tallier();
 
     // Set the geometry and physics classes.
     void set(SP_Geometry geometry, SP_Physics physics);
+
+    // Add tallies.
+    void add_pathlength_tally(SP_Tally tally);
+    void add_source_tally(SP_Tally tally);
+
+    //@{
+    //! Number of tallies.
+    auto num_tallies() const -> decltype(d_tallies.size())
+    {
+        return d_tallies.size();
+    }
+    auto num_pathlength_tallies() const -> decltype(d_pl.size())
+    {
+        return d_pl.size();
+    }
+    auto num_source_tallies() const -> decltype(d_src.size())
+    {
+        return d_src.size();
+    }
+    //@}
 
     // Initialize internal data structures after adding tallies.
     void build();
@@ -65,14 +96,26 @@ class Tallier
     // Tally any source events.
     void source(const Particle_t &p);
 
+    // Tell the tallies to begin active kcode cycles
+    void begin_active_cycles();
+
+    // Tell the tallies to begin a new cycle in a kcode calculation
+    void begin_cycle();
+
+    // Tell the tallies to end a cycle in a kcode calculation
+    void end_cycle(double num_particles);
+
     // Perform all end-history tally tasks.
     void end_history();
 
     // Finalize tallies.
-    void finalize(int Np);
+    void finalize(double num_particles);
 
     // Reset tallies.
     void reset();
+
+    // Swap two talliers.
+    void swap(Tallier &rhs);
 
     // >>> ACCESSORS
 

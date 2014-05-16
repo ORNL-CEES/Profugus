@@ -87,8 +87,8 @@ double Keff_Tally::variance() const
  * \f]
  * where \f$l\f$ is the step-length.
  */
-void Keff_Tally::accumulate(double          step,
-                            const Particle &p)
+void Keff_Tally::accumulate(double            step,
+                            const Particle_t &p)
 {
     Require (b_physics);
 

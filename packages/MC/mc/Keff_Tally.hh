@@ -90,8 +90,11 @@ class Keff_Tally : public Tally
 
     // >>> DERIVED INTERFACE
 
+    //! Nothing to do at particle birth.
+    virtual void birth(const Particle_t &p) final { /* * */ }
+
     // Track particle and do tallying.
-    virtual void accumulate(double step, const Particle &p) override final;
+    virtual void accumulate(double step, const Particle_t &p) override final;
 
     //! Accumulate first and second moments
     virtual void end_history() final { /* * */ }

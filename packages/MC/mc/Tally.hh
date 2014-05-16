@@ -32,6 +32,7 @@ class Tally
     //@{
     //! Typedefs.
     typedef Physics                    Physics_t;
+    typedef Physics_t::Particle_t      Particle_t;
     typedef std::shared_ptr<Physics_t> SP_Physics;
     //@}
 
@@ -54,14 +55,17 @@ class Tally
 
     // >>> PUBLIC INTERFACE
 
+    //! Tally events at particle birth.
+    virtual void birth(const Particle_t &p) = 0;
+
     //! Track particle, using pre-calculated physics information (multipliers)
-    virtual void accumulate(double step, const Particle &p) = 0;
+    virtual void accumulate(double step, const Particle_t &p) = 0;
 
     //! Accumulate first and second moments
     virtual void end_history() = 0;
 
     //! Do post-processing on first and second moments
-    virtual void finalize(double num_histories) = 0;
+    virtual void finalize(double num_particles) = 0;
 
     //! Begin active cycles in a kcode calculation (default no-op)
     virtual void begin_active_cycles() { /* * */ }
