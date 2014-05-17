@@ -293,7 +293,7 @@ void Tallier::swap(Tallier &rhs)
     // swap vector internals
     d_pl.swap(rhs.d_pl);
     d_src.swap(rhs.d_src);
-    d_tallies(rhs.d_tallies);
+    d_tallies.swap(rhs.d_tallies);
 
     // swap geometry and physics
     std::swap(d_geometry, rhs.d_geometry);

@@ -141,6 +141,22 @@ class Tallier
     Build_Phase d_build_phase;
 };
 
+//---------------------------------------------------------------------------//
+// NON-MEMBER FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Swap two talliers.
+ *
+ * This is useful for deactivating tallying (like in a KCODE problem).
+ *
+ * This provides a std-like swap solution using Koenig namespace lookup.
+ */
+inline void swap(Tallier &a,
+                 Tallier &b)
+{
+    a.swap(b);
+}
+
 } // end namespace profugus
 
 #endif // mc_Tallier_hh
