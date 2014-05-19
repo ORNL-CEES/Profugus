@@ -180,6 +180,17 @@ TEST_F(Teuchos_Test, pl_read)
 
 //---------------------------------------------------------------------------//
 
+TEST_F(Teuchos_Test, get)
+{
+    ParameterList p;
+    EXPECT_FALSE(p.isParameter("A"));
+    p.get("A", 1);
+    EXPECT_TRUE(p.isParameter("A"));
+    EXPECT_EQ(1, p.get<int>("A"));
+}
+
+//---------------------------------------------------------------------------//
+
 TEST_F(Teuchos_Test, sublists)
 {
     RCP_ParameterList p = Teuchos::rcp(new ParameterList("stuff"));
