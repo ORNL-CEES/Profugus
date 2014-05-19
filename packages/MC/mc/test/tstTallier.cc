@@ -427,6 +427,79 @@ TEST_F(TallierTest, keff_tally)
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
     EXPECT_SOFTEQ(ref_kavg, keff->mean(), 1.0e-6);
     EXPECT_SOFTEQ(ref_kvar, keff->variance(), 1.0e-6);
+
+    tallier.reset();
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(1, tallier.num_pathlength_tallies());
+    EXPECT_EQ(0, tallier.num_source_tallies());
+    EXPECT_FALSE(tallier.is_built());
+    EXPECT_FALSE(tallier.is_finalized());
+
+    EXPECT_EQ(0., keff->keff_sum());
+    EXPECT_EQ(0., keff->keff_sum_sq());
+    EXPECT_EQ(0, keff->cycle_count());
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(TallierTest, swap)
+{
+    Tallier_t tallier, inactive_tallier;
+    tallier.set(geometry, physics);
+    inactive_tallier.set(geometry, physics);
+
+    // make a keff tally
+    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
+
+    // add tallies
+    tallier.add_pathlength_tally(keff);
+
+    // build the talliers
+    tallier.build();
+    inactive_tallier.build();
+
+    EXPECT_EQ(1, tallier.num_tallies());
+    EXPECT_EQ(1, tallier.num_pathlength_tallies());
+    EXPECT_EQ(0, tallier.num_source_tallies());
+    EXPECT_TRUE(tallier.is_built());
+    EXPECT_FALSE(tallier.is_finalized());
+
+    EXPECT_EQ(0, inactive_tallier.num_tallies());
+    EXPECT_EQ(0, inactive_tallier.num_pathlength_tallies());
+    EXPECT_EQ(0, inactive_tallier.num_source_tallies());
+    EXPECT_TRUE(inactive_tallier.is_built());
+    EXPECT_FALSE(inactive_tallier.is_finalized());
+
+    // swap the talliers
+    swap(tallier, inactive_tallier);
+
+    EXPECT_EQ(1, inactive_tallier.num_tallies());
+    EXPECT_EQ(1, inactive_tallier.num_pathlength_tallies());
+    EXPECT_EQ(0, inactive_tallier.num_source_tallies());
+    EXPECT_TRUE(inactive_tallier.is_built());
+    EXPECT_FALSE(inactive_tallier.is_finalized());
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(0, tallier.num_pathlength_tallies());
+    EXPECT_EQ(0, tallier.num_source_tallies());
+    EXPECT_TRUE(tallier.is_built());
+    EXPECT_FALSE(tallier.is_finalized());
+
+    // swap the talliers
+    swap(tallier, inactive_tallier);
+
+    EXPECT_EQ(1, tallier.num_tallies());
+    EXPECT_EQ(1, tallier.num_pathlength_tallies());
+    EXPECT_EQ(0, tallier.num_source_tallies());
+    EXPECT_TRUE(tallier.is_built());
+    EXPECT_FALSE(tallier.is_finalized());
+
+    EXPECT_EQ(0, inactive_tallier.num_tallies());
+    EXPECT_EQ(0, inactive_tallier.num_pathlength_tallies());
+    EXPECT_EQ(0, inactive_tallier.num_source_tallies());
+    EXPECT_TRUE(inactive_tallier.is_built());
+    EXPECT_FALSE(inactive_tallier.is_finalized());
 }
 
 //---------------------------------------------------------------------------//
