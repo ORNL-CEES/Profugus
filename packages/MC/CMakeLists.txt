@@ -97,6 +97,7 @@ SET(MC_SOURCES
   mc/Fixed_Source_Solver.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
+  mc/KCode_Solver.cc
   mc/Keff_Tally.cc
   mc/Particle.cc
   mc/Physics.cc

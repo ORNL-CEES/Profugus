@@ -67,6 +67,12 @@ class Tallier
     // Set the geometry and physics classes.
     void set(SP_Geometry geometry, SP_Physics physics);
 
+    //! Get the geometry we use.
+    SP_Geometry geometry() const { return d_geometry; }
+
+    //! Get the physics we use.
+    SP_Physics physics() const { return d_physics; }
+
     // Add tallies.
     void add_pathlength_tally(SP_Tally tally);
     void add_source_tally(SP_Tally tally);
