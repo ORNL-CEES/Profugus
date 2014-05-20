@@ -8,6 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <algorithm>
 #include <utility>
 
 #include "harness/DBC.hh"
@@ -88,6 +89,10 @@ void Tallier::build()
 {
     Require (d_build_phase == ASSIGNED);
     Require (d_tallies.empty());
+
+    // prune the tallies for duplicates
+    prune(d_pl);
+    prune(d_src);
 
     // add pathlength and source tallies to the "totals"
     d_tallies.insert(d_tallies.end(), d_pl.begin(), d_pl.end());
@@ -301,6 +306,50 @@ void Tallier::swap(Tallier &rhs)
 
     // swap build phase
     std::swap(d_build_phase, rhs.d_build_phase);
+}
+
+//---------------------------------------------------------------------------//
+// IMPLEMENTATION
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Prune added tallies for doubles.
+ */
+void Tallier::prune(Vec_Tallies &tallies)
+{
+    // sort the tally container based on the tally name
+    auto sort_f = [](const SP_Tally &a, const SP_Tally &b)
+                  { return a->name() < b->name(); };
+    std::sort(tallies.begin(), tallies.end(), sort_f);
+
+    // make a new tally container
+    Vec_Tallies new_tallies;
+
+    // define a place-holder for the "previous tally" to use to check for
+    // duplicates
+    SP_Tally prev_tally;
+    Check (!prev_tally);
+
+    // iterate through tallies and remove duplicates
+    for (const auto &t : tallies)
+    {
+        Check (t);
+
+        // if this is a dublicate, continue
+        if (t == prev_tally)
+            continue;
+
+        // add the tally
+        new_tallies.push_back(t);
+
+        // update the previous tally
+        prev_tally = t;
+    }
+    Check (new_tallies.size() <= tallies.size());
+    Remember (int size = new_tallies.size());
+
+    // swap the new_tallies with the tallies
+    tallies.swap(new_tallies);
+    Ensure (tallies.size() == size);
 }
 
 } // end namespace profugus

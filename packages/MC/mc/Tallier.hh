@@ -134,6 +134,9 @@ class Tallier
   private:
     // IMPLEMENTATION
 
+    // Prune tallies for doubles.
+    void prune(Vec_Tallies &tallies);
+
     //! Phases of construction, for error checking
     enum Build_Phase
     {

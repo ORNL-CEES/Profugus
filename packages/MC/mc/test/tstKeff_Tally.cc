@@ -120,6 +120,7 @@ TEST_F(Keff_TallyTest, test_keff)
 {
     // Make a keff tally
     Tally_t keff(1.0, physics);
+    EXPECT_EQ("keff", keff.name());
 
     // make a particle
     Particle_t p;

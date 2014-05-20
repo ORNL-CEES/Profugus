@@ -28,6 +28,9 @@ Keff_Tally::Keff_Tally(double     keff_init,
     : Base(physics)
     , d_keff_cycle(keff_init)
 {
+    // set the tally name
+    b_name = std::string("keff");
+
     // reset tally
     reset();
 }

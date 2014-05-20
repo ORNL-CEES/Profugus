@@ -18,6 +18,80 @@
 #include "gtest/utils_gtest.hh"
 
 //---------------------------------------------------------------------------//
+// Tally Types
+//---------------------------------------------------------------------------//
+
+class A_Tally : public profugus::Tally
+{
+  public:
+    A_Tally(SP_Physics physics)
+        : profugus::Tally(physics)
+    {
+        set_name("a_pl_tally");
+    }
+
+    void birth(const Particle_t &p) { /* * */ }
+    void accumulate(double step, const Particle_t &p) { /* * */ }
+    void end_history() { /* * */ }
+    void finalize(double num_particles) { /* * */ }
+    void reset() { /* * */ }
+};
+
+//---------------------------------------------------------------------------//
+
+class P_Tally : public profugus::Tally
+{
+  public:
+    P_Tally(SP_Physics physics)
+        : profugus::Tally(physics)
+    {
+        set_name("p_pl_tally");
+    }
+
+    void birth(const Particle_t &p) { /* * */ }
+    void accumulate(double step, const Particle_t &p) { /* * */ }
+    void end_history() { /* * */ }
+    void finalize(double num_particles) { /* * */ }
+    void reset() { /* * */ }
+};
+
+//---------------------------------------------------------------------------//
+
+class Q_Tally : public profugus::Tally
+{
+  public:
+    Q_Tally(SP_Physics physics)
+        : profugus::Tally(physics)
+    {
+        set_name("q_src_tally");
+    }
+
+    void birth(const Particle_t &p) { /* * */ }
+    void accumulate(double step, const Particle_t &p) { /* * */ }
+    void end_history() { /* * */ }
+    void finalize(double num_particles) { /* * */ }
+    void reset() { /* * */ }
+};
+
+//---------------------------------------------------------------------------//
+
+class S_Tally : public profugus::Tally
+{
+  public:
+    S_Tally(SP_Physics physics)
+        : profugus::Tally(physics)
+    {
+        set_name("s_src_tally");
+    }
+
+    void birth(const Particle_t &p) { /* * */ }
+    void accumulate(double step, const Particle_t &p) { /* * */ }
+    void end_history() { /* * */ }
+    void finalize(double num_particles) { /* * */ }
+    void reset() { /* * */ }
+};
+
+//---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
@@ -500,6 +574,60 @@ TEST_F(TallierTest, swap)
     EXPECT_EQ(0, inactive_tallier.num_source_tallies());
     EXPECT_TRUE(inactive_tallier.is_built());
     EXPECT_FALSE(inactive_tallier.is_finalized());
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(TallierTest, add)
+{
+    Tallier_t tallier;
+    tallier.set(geometry, physics);
+
+    // make tallies
+    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
+    auto a(std::make_shared<A_Tally>(physics));
+    auto p(std::make_shared<P_Tally>(physics));
+    auto q(std::make_shared<Q_Tally>(physics));
+    auto s(std::make_shared<S_Tally>(physics));
+
+    // add the tallies
+    tallier.add_pathlength_tally(keff);
+    tallier.add_pathlength_tally(a);
+    tallier.add_pathlength_tally(p);
+    tallier.add_source_tally(q);
+    tallier.add_source_tally(s);
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_source_tallies());
+
+    tallier.build();
+
+    EXPECT_EQ(5, tallier.num_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_source_tallies());
+
+    tallier.finalize(1);
+    tallier.reset();
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_source_tallies());
+
+    // add duplicates
+    tallier.add_pathlength_tally(keff);
+    tallier.add_pathlength_tally(a);
+    tallier.add_source_tally(q);
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(5, tallier.num_pathlength_tallies());
+    EXPECT_EQ(3, tallier.num_source_tallies());
+
+    tallier.build();
+
+    EXPECT_EQ(5, tallier.num_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_source_tallies());
 }
 
 //---------------------------------------------------------------------------//

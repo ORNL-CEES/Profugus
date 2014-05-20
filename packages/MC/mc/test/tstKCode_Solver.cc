@@ -47,6 +47,7 @@ class Dummy_Tally : public profugus::Tally
         , d_pl_counter(1)
         , d_finalized_np(-1.)
     {
+        Base::set_name("dumb_tally");
         Ensure (d_pl_counter == 1);
     }
 
@@ -62,6 +63,9 @@ class Dummy_Tally : public profugus::Tally
     int finalized_np() const { return d_finalized_np; }
 
     // >>> DERIVED INTERFACE
+
+    //! Nothing at birth.
+    void birth(const Particle_t &p) { /* * */ }
 
     //! Track particle, using pre-calculated physics information (multipliers)
     inline void accumulate(double step, const Particle_t& p)
@@ -251,7 +255,7 @@ TEST_F(KCode_SolverTest, pin_cell)
 
     // make the tallier
     tallier = std::make_shared<Tallier_t>();
-    tallier->set(geometry, physics);;
+    tallier->set(geometry, physics);
 
     // add objects to the source transporter
     transporter->set(tallier);
@@ -288,6 +292,85 @@ TEST_F(KCode_SolverTest, pin_cell)
     EXPECT_SOFTEQ(1.3, keff, 0.10);
     if (node == 0)
         EXPECT_SOFTEQ(1.3, keff_tally.mean(), 0.05);
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(KCode_SolverTest, active_cycle_test)
+{
+    // Exit if more than one processor
+    if (nodes > 1)
+        SKIP_TEST(" This test only works on 1 proc.");
+
+    db->set("Np", 100);
+    db->set("num_cycles", 12);
+    db->set("num_inactive_cycles", 2);
+
+    // make the source transporter
+    transporter = std::make_shared<Transporter_t>(db, geometry, physics);
+
+    // make the variance reduction
+    var_reduction = std::make_shared<Var_Reduction_t>(db);
+
+    // Make the dummy tally
+    auto dummytally = std::make_shared<Dummy_Tally>(physics);
+
+    // make the tallier
+    tallier = std::make_shared<Tallier_t>();
+    tallier->set(geometry, physics);;
+    tallier->add_pathlength_tally(dummytally);
+
+    // add objects to the source transporter
+    transporter->set(tallier);
+    transporter->set(var_reduction);
+
+    // make Kcode-solver
+    Solver_t solver(db);
+
+    // make fission source
+    SP_Fission_Source fsrc(std::make_shared<profugus::Fission_Source>(
+                               db, geometry, physics, rcon));
+
+    // set it
+    solver.set(transporter, fsrc);
+
+    // solve
+    solver.solve();
+
+    EXPECT_EQ(1, solver.inactive_tallier()->num_tallies());
+    EXPECT_EQ(2, tallier->num_tallies());
+
+    // Get output from dummy tally
+    EXPECT_SOFTEQ(155506, dummytally->pl_counter(), 0.05);
+    EXPECT_EQ(100 * 10, dummytally->finalized_np());
+
+    // Reset the solver, which should reset tallies
+    solver.reset();
+    EXPECT_EQ(0, dummytally->pl_counter());
+
+    // Re-solve using iteration with one active cycle
+    const auto &keff_tally = *solver.keff_tally();
+
+    profugus::pcout << "Manually solving eigenvalue problem" << profugus::endl;
+    solver.initialize();
+    EXPECT_EQ(1, tallier->num_tallies()); // this is the inactive tallier!
+    EXPECT_EQ(2, solver.inactive_tallier()->num_tallies()); // this is the
+                                                            // active tallier!
+    solver.iterate();
+    profugus::pcout << "New keff: " << keff_tally.latest() << profugus::endl;
+    solver.begin_active_cycles();
+    EXPECT_EQ(2, tallier->num_tallies()); // this is the active tallier!
+    EXPECT_EQ(1, solver.inactive_tallier()->num_tallies()); // this is the
+                                                            // inactive tallier!
+    EXPECT_EQ(0, solver.num_cycles());
+    solver.iterate();
+    profugus::pcout << "New keff: " << keff_tally.latest() << profugus::endl;
+
+    solver.finalize();
+    EXPECT_EQ(100 * 1, dummytally->finalized_np());
+
+    // Allow a very wide tolerance.
+    EXPECT_SOFTEQ(17790, dummytally->pl_counter(), 0.25);
 }
 
 //---------------------------------------------------------------------------//

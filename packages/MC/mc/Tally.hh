@@ -12,6 +12,7 @@
 #define mc_Tally_hh
 
 #include <memory>
+#include <string>
 
 #include "Physics.hh"
 #include "harness/DBC.hh"
@@ -42,16 +43,25 @@ class Tally
     // Physics.
     SP_Physics b_physics;
 
+    // Tally name.
+    std::string b_name;
+
   public:
     //! Constructor.
     Tally(SP_Physics physics)
-        : b_physics(physics)
+        : b_physics(physics), b_name("tally")
     {
         Ensure (b_physics);
     }
 
     // Destructor.
     virtual ~Tally() = 0;
+
+    //! Set the tally name.
+    void set_name(const std::string &name) { b_name = name; }
+
+    //! Get the tally name.
+    const std::string& name() const { return b_name; }
 
     // >>> PUBLIC INTERFACE
 
