@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <string>
 
 #include "gtest/utils_gtest.hh"
 
@@ -55,6 +56,27 @@ TEST(Lambda, function2)
         EXPECT_EQ(x[n] + 1, m);
         ++n;
     }
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(Lambda, sort)
+{
+    using std::string;
+
+    std::vector<string> x = {"Hello", "Goodbye", "You", "Mined", "Whoa"};
+
+    // sort on first letter
+    auto s = [](const string &a, const string &b)
+             { return a.back() < b.back(); };
+
+    std::sort(x.begin(), x.end(), s);
+
+    EXPECT_EQ("Whoa",    x[0]);
+    EXPECT_EQ("Mined",   x[1]);
+    EXPECT_EQ("Goodbye", x[2]);
+    EXPECT_EQ("Hello",   x[3]);
+    EXPECT_EQ("You",     x[4]);
 }
 
 //---------------------------------------------------------------------------//

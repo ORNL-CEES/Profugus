@@ -70,7 +70,7 @@ int nbars = 0;
 
 class Foo
 {
-  private:
+  protected:
     int v;
 
   public:
@@ -126,6 +126,8 @@ class Bar : public Foo
     virtual int vf() { return Foo::f() + 1; }
 
     int f() { return Foo::f() + 2; }
+
+    void set(int j) { v = j; }
 };
 
 //---------------------------------------------------------------------------//
@@ -312,6 +314,35 @@ TEST_F(Test_shared_ptr, assignment)
         EXPECT_EQ(21, spfoo->f());
         EXPECT_EQ(22, spfoo->vf());
     }
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(Test_shared_ptr, equivalence)
+{
+    SP_Foo a(std::make_shared<Foo>());
+    SP_Foo b = a;
+
+    EXPECT_EQ(a, b);
+
+    SP_Bar c(std::make_shared<Bar>(12));
+    SP_Bar d(c);
+
+    d->set(11);
+
+    EXPECT_EQ(c, d);
+
+    SP_Foo e = d;
+
+    EXPECT_EQ(c, e);
+
+    EXPECT_EQ(12, e->f());
+    EXPECT_EQ(13, e->vf());
+    EXPECT_EQ(12, e->cf());
+
+    EXPECT_EQ(14, d->f());
+    EXPECT_EQ(13, d->vf());
+    EXPECT_EQ(12, d->cf());
 }
 
 //---------------------------------------------------------------------------//
