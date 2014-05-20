@@ -24,7 +24,7 @@
 #include "mesh/Partitioner.hh"
 #include "SPn/Isotropic_Source.hh"
 
-namespace profugus
+namespace spn
 {
 
 //===========================================================================//
@@ -39,13 +39,13 @@ class Problem_Builder
   public:
     //@{
     //! Typedefs.
-    typedef Teuchos::ParameterList         ParameterList;
-    typedef Teuchos::RCP<ParameterList>    RCP_ParameterList;
-    typedef Teuchos::RCP<Mat_DB>           RCP_Mat_DB;
-    typedef Partitioner::RCP_Mesh          RCP_Mesh;
-    typedef Partitioner::RCP_Indexer       RCP_Indexer;
-    typedef Partitioner::RCP_Global_Data   RCP_Global_Data;
-    typedef Teuchos::RCP<Isotropic_Source> RCP_Source;
+    typedef Teuchos::ParameterList                   ParameterList;
+    typedef Teuchos::RCP<ParameterList>              RCP_ParameterList;
+    typedef Teuchos::RCP<profugus::Mat_DB>           RCP_Mat_DB;
+    typedef profugus::Partitioner::RCP_Mesh          RCP_Mesh;
+    typedef profugus::Partitioner::RCP_Indexer       RCP_Indexer;
+    typedef profugus::Partitioner::RCP_Global_Data   RCP_Global_Data;
+    typedef Teuchos::RCP<profugus::Isotropic_Source> RCP_Source;
     //@}
 
   private:
@@ -125,7 +125,7 @@ class Problem_Builder
     RCP_ParameterList d_matdb;
 };
 
-} // end namespace profugus
+} // end namespace spn
 
 #endif // driver_Problem_Builder_hh
 

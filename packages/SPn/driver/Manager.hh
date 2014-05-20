@@ -22,7 +22,7 @@
 #include "spn/Time_Dependent_Solver.hh"
 #include "Problem_Builder.hh"
 
-namespace profugus
+namespace spn
 {
 
 //===========================================================================//
@@ -36,20 +36,24 @@ class Manager
 {
   private:
     // Typedefs.
-    typedef Problem_Builder::RCP_ParameterList   RCP_ParameterList;
-    typedef Problem_Builder::RCP_Mesh            RCP_Mesh;
-    typedef Problem_Builder::RCP_Indexer         RCP_Indexer;
-    typedef Problem_Builder::RCP_Global_Data     RCP_Global_Data;
-    typedef Problem_Builder::RCP_Mat_DB          RCP_Mat_DB;
-    typedef Solver_Base::RCP_Dimensions          RCP_Dimensions;
-    typedef Solver_Base::State_t                 State_t;
-    typedef Teuchos::RCP<State_t>                RCP_State;
-    typedef Teuchos::RCP<Solver_Base>            RCP_Solver_Base;
-    typedef Teuchos::RCP<Fixed_Source_Solver>    RCP_Fixed_Source_Solver;
-    typedef Teuchos::RCP<Eigenvalue_Solver>      RCP_Eigenvalue_Solver;
-    typedef Teuchos::RCP<Time_Dependent_Solver>  RCP_Time_Dependent_Solver;
-    typedef Fixed_Source_Solver::External_Source External_Source_t;
-    typedef Teuchos::RCP<External_Source_t>      RCP_External_Source;
+    typedef Problem_Builder::RCP_ParameterList     RCP_ParameterList;
+    typedef Problem_Builder::RCP_Mesh              RCP_Mesh;
+    typedef Problem_Builder::RCP_Indexer           RCP_Indexer;
+    typedef Problem_Builder::RCP_Global_Data       RCP_Global_Data;
+    typedef Problem_Builder::RCP_Mat_DB            RCP_Mat_DB;
+    typedef profugus::Solver_Base                  Solver_Base_t;
+    typedef Solver_Base_t::RCP_Dimensions          RCP_Dimensions;
+    typedef Solver_Base_t::State_t                 State_t;
+    typedef Teuchos::RCP<State_t>                  RCP_State;
+    typedef Teuchos::RCP<Solver_Base_t>            RCP_Solver_Base;
+    typedef profugus::Fixed_Source_Solver          Fixed_Source_Solver_t;
+    typedef profugus::Eigenvalue_Solver            Eigenvalue_Solver_t;
+    typedef profugus::Time_Dependent_Solver        Time_Dependent_Solver_t;
+    typedef Teuchos::RCP<Fixed_Source_Solver_t>    RCP_Fixed_Source_Solver;
+    typedef Teuchos::RCP<Eigenvalue_Solver_t>      RCP_Eigenvalue_Solver;
+    typedef Teuchos::RCP<Time_Dependent_Solver_t>  RCP_Time_Dependent_Solver;
+    typedef Fixed_Source_Solver_t::External_Source External_Source_t;
+    typedef Teuchos::RCP<External_Source_t>        RCP_External_Source;
 
     // >>> DATA
 
@@ -110,7 +114,7 @@ class Manager
     }
 };
 
-} // end namespace profugus
+} // end namespace spn
 
 #endif // driver_Manager_hh
 

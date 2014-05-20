@@ -21,7 +21,7 @@
 #include "spn/Dimensions.hh"
 #include "Manager.hh"
 
-namespace profugus
+namespace spn
 {
 
 //---------------------------------------------------------------------------//
@@ -71,7 +71,7 @@ void Manager::setup(const std::string &xml_file)
     d_external_source = builder.source();
 
     // build the problem dimensions
-    d_dim = Teuchos::rcp(new Dimensions(d_db->get("SPn_order", 1)));
+    d_dim = Teuchos::rcp(new profugus::Dimensions(d_db->get("SPn_order", 1)));
 
     // problem type
     std::string prob_type = d_external_source.is_null() ? "eigenvalue" :
@@ -96,17 +96,17 @@ void Manager::setup(const std::string &xml_file)
     // build the appropriate solver (default is eigenvalue)
     if (prob_type == "eigenvalue")
     {
-        d_eigen_solver = Teuchos::rcp(new Eigenvalue_Solver(d_db));
+        d_eigen_solver = Teuchos::rcp(new Eigenvalue_Solver_t(d_db));
         d_solver_base  = d_eigen_solver;
     }
     else if (prob_type == "fixed")
     {
-        d_fixed_solver = Teuchos::rcp(new Fixed_Source_Solver(d_db));
+        d_fixed_solver = Teuchos::rcp(new Fixed_Source_Solver_t(d_db));
         d_solver_base  = d_fixed_solver;
     }
     else if (prob_type == "fixed_tdep")
     {
-        d_time_dep_solver = Teuchos::rcp(new Time_Dependent_Solver(d_db));
+        d_time_dep_solver = Teuchos::rcp(new Time_Dependent_Solver_t(d_db));
         d_solver_base  = d_time_dep_solver;
     }
     else
@@ -214,12 +214,12 @@ void Manager::output()
 #ifdef H5_HAVE_PARALLEL
     {
         // make the parallel hdf5 writer
-        Parallel_HDF5_Writer writer;
+        profugus::Parallel_HDF5_Writer writer;
         writer.open(outfile);
 
         // make the decomposition for parallel output (state is ordered
         // i->j->k)
-        HDF5_IO::Decomp d(3, HDF5_IO::COLUMN_MAJOR);;
+        profugus::HDF5_IO::Decomp d(3, profugus::HDF5_IO::COLUMN_MAJOR);
         d.ndims     = 3;
         d.global[I] = d_gdata->num_cells(I);
         d.global[J] = d_gdata->num_cells(J);
@@ -286,7 +286,7 @@ void Manager::output()
     }
 }
 
-} // end namespace profugus
+} // end namespace spn
 
 //---------------------------------------------------------------------------//
 //                 end of Manager.cc

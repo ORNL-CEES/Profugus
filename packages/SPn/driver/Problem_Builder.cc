@@ -20,7 +20,7 @@
 #include "mesh/Partitioner.hh"
 #include "Problem_Builder.hh"
 
-namespace profugus
+namespace spn
 {
 
 //---------------------------------------------------------------------------//
@@ -181,7 +181,7 @@ void Problem_Builder::build_mesh()
     d_db->set("z_edges", z_edges);
 
     // partition the mesh
-    Partitioner p(d_db);
+    profugus::Partitioner p(d_db);
     p.build();
 
     // assign mesh objects
@@ -342,8 +342,8 @@ void Problem_Builder::calc_axial_matids(int            level,
  */
 void Problem_Builder::build_matdb()
 {
-    typedef XS_Builder::Matid_Map Matid_Map;
-    typedef XS_Builder::RCP_XS    RCP_XS;
+    typedef profugus::XS_Builder::Matid_Map Matid_Map;
+    typedef profugus::XS_Builder::RCP_XS    RCP_XS;
 
     Require (d_matdb->isParameter("mat list"));
     Validate (d_matdb->isParameter("xs library"),
@@ -362,7 +362,7 @@ void Problem_Builder::build_matdb()
     Check (matids.size() == mat_list.size());
 
     // make a cross section builder
-    XS_Builder builder;
+    profugus::XS_Builder builder;
 
     // broadcast the raw cross section data
     builder.open_and_broadcast(d_matdb->get<std::string>("xs library"));
@@ -391,7 +391,7 @@ void Problem_Builder::build_matdb()
     Check (xs->num_groups() == 1 + (g_last - g_first));
 
     // build the material database
-    d_mat = Teuchos::rcp(new Mat_DB);
+    d_mat = Teuchos::rcp(new profugus::Mat_DB);
 
     // set the cross sections
     d_mat->set(xs, d_mesh->num_cells());
@@ -503,8 +503,8 @@ void Problem_Builder::build_source(const ParameterList &source_db)
     } // assembly-J
 
     // build the source shapes
-    Isotropic_Source::Source_Shapes shapes(
-        source_list.size(), Isotropic_Source::Shape(
+    profugus::Isotropic_Source::Source_Shapes shapes(
+        source_list.size(), profugus::Isotropic_Source::Shape(
             d_mat->xs().num_groups(), 0.0));
 
     // get the first and last groups for the run
@@ -534,13 +534,15 @@ void Problem_Builder::build_source(const ParameterList &source_db)
     Check (ctr == source_list.size());
 
     // build the source
-    d_source = Teuchos::rcp(new Isotropic_Source(d_mesh->num_cells()));
+    d_source = Teuchos::rcp(new profugus::Isotropic_Source(
+                                d_mesh->num_cells()));
 
     // make the field of source strengths
-    Isotropic_Source::Source_Field strengths(d_mesh->num_cells(), 0.0);
+    profugus::Isotropic_Source::Source_Field strengths(
+        d_mesh->num_cells(), 0.0);
 
     // make the source ids field
-    Isotropic_Source::ID_Field srcids(d_mesh->num_cells(), 0);
+    profugus::Isotropic_Source::ID_Field srcids(d_mesh->num_cells(), 0);
 
     // get the axial source strength and axial mesh
     const auto &axial_mesh = d_db->get<OneDArray_int>("axial mesh");
@@ -586,7 +588,7 @@ void Problem_Builder::build_source(const ParameterList &source_db)
     d_source->set(srcids, shapes, strengths);
 }
 
-} // end namespace profugus
+} // end namespace spn
 
 //---------------------------------------------------------------------------//
 //                 end of Problem_Builder.cc

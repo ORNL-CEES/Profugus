@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     try
     {
         // make the manager
-        profugus::Manager manager;
+        spn::Manager manager;
 
         // setup the problem
         manager.setup(xml_file);
