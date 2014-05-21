@@ -113,6 +113,18 @@ SET(MC_SOURCES
 LIST(APPEND HEADERS ${MC_HEADERS})
 LIST(APPEND SOURCES ${MC_SOURCES})
 
+# driver sources
+
+FILE(GLOB DRIVER_HEADERS driver/*.hh)
+SET(DRIVER_SOURCES
+  driver/Problem_Builder.cc
+  driver/mc.cc
+  )
+LIST(APPEND HEADERS ${DRIVER_HEADERS})
+LIST(APPEND SOURCES ${DRIVER_SOURCES})
+
+LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
 ##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
 
@@ -120,6 +132,15 @@ TRIBITS_ADD_LIBRARY(
   MC
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
+
+TRIBITS_ADD_EXECUTABLE(
+  xmc
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES driver/mc.cc
+  DEPLIBS MC
+  INSTALLABLE
+  )
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package
