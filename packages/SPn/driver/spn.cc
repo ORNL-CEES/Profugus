@@ -31,8 +31,8 @@ void print_usage()
 {
     if (node == 0)
     {
-        std::cout << "Usage: neutronics -i XMLFILE" << std::endl;
-        std::cout << "Executes the neutronics executable using XMLFILE "
+        std::cout << "Usage: xspn -i XMLFILE" << std::endl;
+        std::cout << "Executes the xspn executable using XMLFILE "
                   << "as the input file." << std::endl;
         exit(1);
     }
