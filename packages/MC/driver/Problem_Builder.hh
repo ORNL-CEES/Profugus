@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -77,7 +78,7 @@ class Problem_Builder
   private:
     // >>> IMPLEMENTATION
 
-    // Typedefs.
+    // Teuchos typedefs.
     typedef Teuchos::Comm<int>          Comm;
     typedef Teuchos::RCP<const Comm>    RCP_Comm;
     typedef Teuchos::Array<int>         OneDArray_int;
@@ -86,8 +87,21 @@ class Problem_Builder
     typedef Teuchos::TwoDArray<int>     TwoDArray_int;
     typedef Teuchos::TwoDArray<double>  TwoDArray_dbl;
 
+    // Geometry typedefs.
+    typedef Geometry_t::SP_Array SP_Core;
+    typedef Geometry_t::Array_t  Core_t;
+    typedef Core_t::SP_Object    SP_Lattice;
+    typedef Core_t::Object_t     Lattice_t;
+    typedef Lattice_t::SP_Object SP_Pin_Cell;
+    typedef Lattice_t::Object_t  Pin_Cell_t;
+
+    // General typedefs.
+    typedef std::unordered_map<int, SP_Lattice>  Lattice_Hash;
+    typedef std::unordered_map<int, SP_Pin_Cell> Pin_Hash;
+
     // Build implementation.
     void build_geometry();
+    SP_Lattice build_axial_lattice(const TwoDArray_int &map, double height);
     void build_physics();
     void build_source(const ParameterList &source_db);
 
@@ -101,6 +115,7 @@ class Problem_Builder
     // Problem-setup parameterlists.
     RCP_ParameterList d_coredb;
     RCP_ParameterList d_assblydb;
+    RCP_ParameterList d_pindb;
     RCP_ParameterList d_matdb;
 };
 

@@ -117,6 +117,7 @@ LIST(APPEND SOURCES ${MC_SOURCES})
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
+  driver/Manager.cc
   driver/Problem_Builder.cc
   driver/mc.cc
   )

@@ -18,6 +18,7 @@
 #include "comm/Timing_Diagnostics.hh"
 #include "comm/P_Stream.hh"
 #include "utils/Definitions.hh"
+#include "Manager.hh"
 
 // Parallel specs.
 int node  = 0;
@@ -109,7 +110,6 @@ int main(int argc, char *argv[])
 
     try
     {
-#if 0
         // make the manager
         mc::Manager manager;
 
@@ -121,7 +121,6 @@ int main(int argc, char *argv[])
 
         // output
         manager.output();
-#endif
     }
     catch (const profugus::assertion &a)
     {
