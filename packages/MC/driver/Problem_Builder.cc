@@ -10,13 +10,17 @@
 
 #include <utility>
 #include <algorithm>
+#include <sstream>
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
+#include "utils/String_Functions.hh"
 #include "xs/XS_Builder.hh"
 #include "mc/Box_Shape.hh"
+#include "mc/VR_Analog.hh"
+#include "mc/VR_Roulette.hh"
 #include "Problem_Builder.hh"
 
 namespace mc
@@ -94,6 +98,9 @@ void Problem_Builder::setup(const std::string &xml_file)
 
     // build build physics
     build_physics();
+
+    // build the variance reduction
+    build_var_reduction();
 
     // build the external source (there won't be one for k-eigenvalue
     // problems)
@@ -413,6 +420,39 @@ void Problem_Builder::build_physics()
 
     // set the geometry in the physics
     d_physics->set_geometry(d_geometry);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build the variance reduction.
+ */
+void Problem_Builder::build_var_reduction()
+{
+    using profugus::to_lower;
+
+    Require (!d_db.is_null());
+
+    // the default is to do roulette
+    const auto &var = to_lower(
+        d_db->get<std::string>("variance reduction", std::string("roulette")));
+
+    // build the appropriate variance reduction
+    if (to_lower(var) == "roulette")
+    {
+        d_var_reduction = std::make_shared<profugus::VR_Roulette>(d_db);
+    }
+    else if (to_lower(var) == "analog")
+    {
+        d_var_reduction = std::make_shared<profugus::VR_Analog>();
+    }
+    else
+    {
+        std::ostringstream m;
+        m << "Variance reduction type " << var << "unknown.";
+        throw profugus::assertion(m.str());
+    }
+
+    Ensure (d_var_reduction);
 }
 
 //---------------------------------------------------------------------------//

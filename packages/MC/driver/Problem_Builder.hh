@@ -24,6 +24,7 @@
 
 #include "mc/Physics.hh"
 #include "mc/Shape.hh"
+#include "mc/Variance_Reduction.hh"
 
 namespace mc
 {
@@ -40,13 +41,14 @@ class Problem_Builder
   public:
     //@{
     //! Typedefs.
-    typedef Teuchos::ParameterList           ParameterList;
-    typedef Teuchos::RCP<ParameterList>      RCP_ParameterList;
-    typedef profugus::Physics                Physics_t;
-    typedef Physics_t::Geometry_t            Geometry_t;
-    typedef std::shared_ptr<Physics_t>       SP_Physics;
-    typedef std::shared_ptr<Geometry_t>      SP_Geometry;
-    typedef std::shared_ptr<profugus::Shape> SP_Shape;
+    typedef Teuchos::ParameterList                        ParameterList;
+    typedef Teuchos::RCP<ParameterList>                   RCP_ParameterList;
+    typedef profugus::Physics                             Physics_t;
+    typedef Physics_t::Geometry_t                         Geometry_t;
+    typedef std::shared_ptr<Physics_t>                    SP_Physics;
+    typedef std::shared_ptr<Geometry_t>                   SP_Geometry;
+    typedef std::shared_ptr<profugus::Shape>              SP_Shape;
+    typedef std::shared_ptr<profugus::Variance_Reduction> SP_Var_Reduction;
     //@}
 
   private:
@@ -58,6 +60,9 @@ class Problem_Builder
     // Physics and geometry.
     SP_Physics  d_physics;
     SP_Geometry d_geometry;
+
+    // Variance reduction.
+    SP_Var_Reduction d_var_reduction;
 
     // External source shape.
     SP_Shape d_shape;
@@ -82,6 +87,9 @@ class Problem_Builder
 
     //! Get the external source shape (could be null).
     SP_Shape get_source_shape() const { return d_shape; }
+
+    //! Get the variance reduction.
+    SP_Var_Reduction get_var_reduction() const { return d_var_reduction; }
 
   private:
     // >>> IMPLEMENTATION
@@ -111,6 +119,7 @@ class Problem_Builder
     void build_geometry();
     SP_Lattice build_axial_lattice(const TwoDArray_int &map, double height);
     void build_physics();
+    void build_var_reduction();
     void build_source(const ParameterList &source_db);
 
     // Number of assemblies and pins per assembly.
