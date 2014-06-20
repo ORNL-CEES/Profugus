@@ -9,12 +9,14 @@
 //---------------------------------------------------------------------------//
 
 #include <utility>
+#include <algorithm>
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "xs/XS_Builder.hh"
+#include "mc/Box_Shape.hh"
 #include "Problem_Builder.hh"
 
 namespace mc
@@ -66,6 +68,26 @@ void Problem_Builder::setup(const std::string &xml_file)
     d_db       = Teuchos::sublist(master, "PROBLEM");
 
     Check (!d_db.is_null());
+
+    // default the boundary conditions to reflecting
+    if (!d_db->isParameter("boundary"))
+    {
+        d_db->set("boundary", "reflect");
+    }
+
+    // add the default boundary treatment for reflecting
+    if (d_db->get<std::string>("boundary") == "reflect")
+    {
+        if (!d_db->isSublist("boundary_db"))
+        {
+            // set to all reflecting b.c. if undefined
+            Teuchos::ParameterList boundary("boundary");
+            OneDArray_int reflect(6, 1);
+            boundary.set("reflect", reflect);
+
+            d_db->set("boundary_db", boundary);
+        }
+    }
 
     // build the geometry
     build_geometry();
@@ -207,6 +229,18 @@ void Problem_Builder::build_geometry()
         axial_offset += assemblies[k].size();
     }
     Check (axial_offset == num_assemblies);
+
+    // set the boundary conditions
+    def::Vec_Int boundary(6, 0);
+    if (d_db->get<std::string>("boundary") == "reflect")
+    {
+        Check (d_db->isSublist("boundary_db"));
+        Check (d_db->sublist("boundary_db").isParameter("reflect"));
+        const auto &bnd_array =
+            d_db->sublist("boundary_db").get<OneDArray_int>("reflect");
+        std::copy(bnd_array.begin(), bnd_array.end(), boundary.begin());
+    }
+    core->set_reflecting(boundary);
 
     // complete the core
     core->complete(0.0, 0.0, 0.0);
@@ -389,6 +423,25 @@ void Problem_Builder::build_physics()
  */
 void Problem_Builder::build_source(const ParameterList &source_db)
 {
+    Require (source_db.isParameter("box"));
+    Require (source_db.isParameter("spectrum"));
+    Require (d_physics);
+
+    // get the source box coordinates
+    const auto &box = source_db.get<OneDArray_dbl>("box");
+    Check (box.size() == 6);
+
+    // make the box shape
+    d_shape = std::make_shared<profugus::Box_Shape>(
+        box[0], box[1], box[2], box[3], box[4], box[5]);
+
+    // get the source spectrum and add it to the main database
+    const auto &shape = source_db.get<OneDArray_dbl>("spectrum");
+    Check (shape.size() == d_physics->num_groups());
+
+    // add the shape to the main database because the MC source gets the
+    // spectral shape from the main db
+    d_db->set("spectral_shape", shape);
 }
 
 } // end namespace mc

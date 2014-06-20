@@ -23,6 +23,7 @@
 #include "Teuchos_TwoDArray.hpp"
 
 #include "mc/Physics.hh"
+#include "mc/Shape.hh"
 
 namespace mc
 {
@@ -39,12 +40,13 @@ class Problem_Builder
   public:
     //@{
     //! Typedefs.
-    typedef Teuchos::ParameterList      ParameterList;
-    typedef Teuchos::RCP<ParameterList> RCP_ParameterList;
-    typedef profugus::Physics           Physics_t;
-    typedef Physics_t::Geometry_t       Geometry_t;
-    typedef std::shared_ptr<Physics_t>  SP_Physics;
-    typedef std::shared_ptr<Geometry_t> SP_Geometry;
+    typedef Teuchos::ParameterList           ParameterList;
+    typedef Teuchos::RCP<ParameterList>      RCP_ParameterList;
+    typedef profugus::Physics                Physics_t;
+    typedef Physics_t::Geometry_t            Geometry_t;
+    typedef std::shared_ptr<Physics_t>       SP_Physics;
+    typedef std::shared_ptr<Geometry_t>      SP_Geometry;
+    typedef std::shared_ptr<profugus::Shape> SP_Shape;
     //@}
 
   private:
@@ -56,6 +58,9 @@ class Problem_Builder
     // Physics and geometry.
     SP_Physics  d_physics;
     SP_Geometry d_geometry;
+
+    // External source shape.
+    SP_Shape d_shape;
 
   public:
     // Constructor.
@@ -74,6 +79,9 @@ class Problem_Builder
 
     //! Get the physics.
     SP_Physics get_physics() const { return d_physics; }
+
+    //! Get the external source shape (could be null).
+    SP_Shape get_source_shape() const { return d_shape; }
 
   private:
     // >>> IMPLEMENTATION
