@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "Teuchos_XMLParameterListHelpers.hpp"
+
 #include "harness/DBC.hh"
 #include "comm/Timing.hh"
 #include "comm/global.hh"
@@ -172,6 +174,21 @@ void Manager::solve()
  */
 void Manager::output()
 {
+    SCOPED_TIMER("Manager.output");
+
+    SCREEN_MSG("Outputting data");
+
+    // >>> OUTPUT FINAL DATABASE
+
+    // output the final database
+    if (d_node == 0)
+    {
+        std::ostringstream m;
+        m << d_problem_name << "_db.xml";
+        Teuchos::writeParameterListToXmlFile(*d_db, m.str());
+    }
+
+    profugus::global_barrier();
 }
 
 } // end namespace mc
