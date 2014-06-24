@@ -142,6 +142,28 @@ void Manager::setup(const std::string &xml_file)
  */
 void Manager::solve()
 {
+    if (d_db->get<bool>("do_transport", true))
+    {
+        SCOPED_TIMER("Manager.solve");
+
+        SCREEN_MSG("Executing solver");
+
+        // run the appropriate solver
+        if (d_kcode_solver)
+        {
+            Check (!d_fixed_solver);
+            d_kcode_solver->solve();
+        }
+        else if (d_fixed_solver)
+        {
+            Check (!d_kcode_solver);
+            d_fixed_solver->solve();
+        }
+        else
+        {
+            throw profugus::assertion("No legitimate solver built");
+        }
+    }
 }
 
 //---------------------------------------------------------------------------//
