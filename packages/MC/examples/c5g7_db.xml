@@ -1,0 +1,27 @@
+<ParameterList name="c5g7-PROBLEM">
+  <Parameter docString="" id="0" isDefault="false" isUsed="true" name="problem_name" type="string" value="c5g7"/>
+  <Parameter docString="" id="1" isDefault="false" isUsed="true" name="output_geometry" type="bool" value="true"/>
+  <Parameter docString="" id="2" isDefault="false" isUsed="true" name="do_transport" type="bool" value="true"/>
+  <Parameter docString="" id="3" isDefault="false" isUsed="true" name="Np" type="int" value="100000"/>
+  <Parameter docString="" id="4" isDefault="false" isUsed="true" name="num_cycles" type="int" value="300"/>
+  <Parameter docString="" id="5" isDefault="false" isUsed="true" name="num_inactive_cycles" type="int" value="100"/>
+  <Parameter docString="" id="6" isDefault="false" isUsed="true" name="boundary" type="string" value="reflect"/>
+  <ParameterList id="8" name="boundary_db">
+    <Parameter docString="" id="7" isDefault="false" isUsed="true" name="reflect" type="Array(int)" value="{1, 0, 0, 1, 1, 0}"/>
+  </ParameterList>
+  <Parameter docString="" id="9" isDefault="true" isUsed="true" name="g_first" type="int" value="0"/>
+  <Parameter docString="" id="10" isDefault="true" isUsed="true" name="g_last" type="int" value="6"/>
+  <Parameter docString="" id="11" isDefault="true" isUsed="true" name="implicit_capture" type="bool" value="true"/>
+  <Parameter docString="" id="12" isDefault="true" isUsed="true" name="check_balance" type="bool" value="false"/>
+  <Parameter docString="" id="13" isDefault="true" isUsed="true" name="variance reduction" type="string" value="roulette"/>
+  <Parameter docString="" id="14" isDefault="true" isUsed="true" name="weight_cutoff" type="double" value="2.50000000000000000e-01"/>
+  <Parameter docString="" id="15" isDefault="true" isUsed="true" name="weight_survival" type="double" value="5.00000000000000000e-01"/>
+  <Parameter docString="" id="16" isDefault="false" isUsed="true" name="problem_type" type="string" value="eigenvalue"/>
+  <Parameter docString="" id="17" isDefault="true" isUsed="true" name="seed" type="int" value="32442"/>
+  <Parameter docString="" id="18" isDefault="true" isUsed="true" name="mc_diag_frac" type="double" value="1.10000000000000009e+00"/>
+  <Parameter docString="" id="19" isDefault="true" isUsed="true" name="init_fission_src" type="Array(double)" value="{-1.79769313486231571e+308, 1.79769313486231571e+308, -1.79769313486231571e+308, 1.79769313486231571e+308, -1.79769313486231571e+308, 1.79769313486231571e+308}"/>
+  <Parameter docString="" id="20" isDefault="true" isUsed="true" name="quiet" type="bool" value="false"/>
+  <Parameter docString="" id="21" isDefault="true" isUsed="true" name="keff_init" type="double" value="1.00000000000000000e+00"/>
+  <Validators/>
+</ParameterList>
+

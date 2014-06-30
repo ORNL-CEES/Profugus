@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='ASCII'?>
+<ParameterList name="MC C5G7 Unrodded Configuration">
+  <ParameterList name="CORE">
+    <Parameter name="axial list" type="Array(string)" value="{core,upper reflector}"/>
+    <Parameter name="axial height" type="Array(double)" value="{ 4.28400e+01, 2.14200e+01}"/>
+    <Parameter name="core" type="TwoDArray(int)" value="3x3:{3,3,3,1,0,3,0,1,3}"/>
+    <Parameter name="upper reflector" type="TwoDArray(int)" value="3x3:{3,3,3,2,2,3,2,2,3}"/>
+  </ParameterList>
+  <ParameterList name="ASSEMBLIES">
+    <Parameter name="assembly list" type="Array(string)" value="{uo2,mox,upper reflector,outer reflector}"/>
+    <Parameter name="uo2" type="TwoDArray(int)" value="17x17:{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,5,0,0,5,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,5,0,0,5,0,0,5,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,5,0,0,4,0,0,5,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,5,0,0,5,0,0,5,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,5,0,0,5,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}"/>
+    <Parameter name="mox" type="TwoDArray(int)" value="17x17:{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,5,2,2,5,2,2,5,2,2,2,2,1,1,2,2,5,2,3,3,3,3,3,3,3,2,5,2,2,1,1,2,2,2,3,3,3,3,3,3,3,3,3,2,2,2,1,1,2,5,3,3,5,3,3,5,3,3,5,3,3,5,2,1,1,2,2,3,3,3,3,3,3,3,3,3,3,3,2,2,1,1,2,2,3,3,3,3,3,3,3,3,3,3,3,2,2,1,1,2,5,3,3,5,3,3,4,3,3,5,3,3,5,2,1,1,2,2,3,3,3,3,3,3,3,3,3,3,3,2,2,1,1,2,2,3,3,3,3,3,3,3,3,3,3,3,2,2,1,1,2,5,3,3,5,3,3,5,3,3,5,3,3,5,2,1,1,2,2,2,3,3,3,3,3,3,3,3,3,2,2,2,1,1,2,2,5,2,3,3,3,3,3,3,3,2,5,2,2,1,1,2,2,2,2,5,2,2,5,2,2,5,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}"/>
+    <Parameter name="upper reflector" type="TwoDArray(int)" value="17x17:{7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,6,7,7,6,7,7,6,7,7,7,7,7,7,7,7,6,7,7,7,7,7,7,7,7,7,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,6,7,7,6,7,7,6,7,7,6,7,7,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,6,7,7,6,7,7,4,7,7,6,7,7,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,6,7,7,6,7,7,6,7,7,6,7,7,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,6,7,7,7,7,7,7,7,7,7,6,7,7,7,7,7,7,7,7,6,7,7,6,7,7,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7}"/>
+    <Parameter name="outer reflector" type="TwoDArray(int)" value="1x1:{8}"/>
+  </ParameterList>
+  <ParameterList name="PINS">
+    <Parameter name="pin list" type="Array(string)" value="{uo2,mox43,mox70,mox87,fission,guide,rod,mod,ref}"/>
+    <ParameterList name="uo2">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 5.40000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{0}"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="mox43">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 5.40000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{1}"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="mox70">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 5.40000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{2}"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="mox87">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 5.40000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{3}"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="fission">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 5.40000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{4}"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="guide">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 5.40000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{5}"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="rod">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 5.40000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{6}"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="mod">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+    <ParameterList name="ref">
+      <Parameter name="pitch" type="double" value="21.42"/>
+      <Parameter name="matid" type="int" value="7"/>
+    </ParameterList>
+  </ParameterList>
+  <ParameterList name="MATERIAL">
+    <Parameter name="xs library" type="string" value="xs_c5g7.xml"/>
+    <Parameter name="mat list" type="Array(string)" value="{UO2,MOX_43,MOX_70,MOX_87,fission_chamber,guide_tube,control_rod,mod}"/>
+  </ParameterList>
+  <ParameterList name="PROBLEM">
+    <Parameter name="problem_name" type="string" value="c5g7"/>
+    <Parameter name="output_geometry" type="bool" value="true"/>
+    <Parameter name="do_transport" type="bool" value="true"/>
+    <Parameter name="Np" type="int" value="100000"/>
+    <Parameter name="num_cycles" type="int" value="300"/>
+    <Parameter name="num_inactive_cycles" type="int" value="100"/>
+    <Parameter name="boundary" type="string" value="reflect"/>
+    <ParameterList name="boundary_db">
+      <Parameter name="reflect" type="Array(int)" value="{1, 0, 0, 1, 1, 0}"/>
+    </ParameterList>
+  </ParameterList>
+</ParameterList>
