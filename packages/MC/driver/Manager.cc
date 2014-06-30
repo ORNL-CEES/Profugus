@@ -8,6 +8,9 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <fstream>
+#include <iomanip>
+
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
 #include "harness/DBC.hh"
@@ -62,6 +65,22 @@ void Manager::setup(const std::string &xml_file)
     d_physics  = builder.get_physics();
     Check (d_geometry);
     Check (d_physics);
+
+    // output the geometry
+    if (d_db->get<bool>("output_geometry", false))
+    {
+        std::ostringstream g;
+        g << d_db->get<std::string>("problem_name") << "_geo.out";
+
+        if (d_node == 0)
+        {
+            // geo file
+            std::ofstream gfile(g.str().c_str(), std::ofstream::out);
+
+            // output the geometry
+            d_geometry->array().output(gfile);
+        }
+    }
 
     // get the variance reduction
     auto var_reduction = builder.get_var_reduction();

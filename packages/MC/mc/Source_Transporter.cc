@@ -42,7 +42,7 @@ Source_Transporter::Source_Transporter(RCP_Std_DB  db,
     d_transporter.set(d_geometry, d_physics);
 
     // set the output frequency for particle transport diagnostics
-    d_print_fraction = db->get("mc_diag_frac", 1.0);
+    d_print_fraction = db->get("mc_diag_frac", 1.1);
 }
 
 //---------------------------------------------------------------------------//

@@ -159,11 +159,11 @@ RTK_Cell::RTK_Cell(const Vec_Int &ids,
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
 {
-    Require (d_r.front() > 0.0);
+    Require (!d_r.empty() ? d_r.front() > 0.0 : true);
     Require (d_z > 0.0);
     Require (d_segments == 1 || d_segments == 4);
     Require (d_r.size() == d_ids.size());
-    Require (d_mod_region > 1);
+    Require (!d_r.empty() ? d_mod_region > 0 : d_mod_region == 0);
 
     // square cell
     d_xy[0] = pitch;
@@ -174,8 +174,8 @@ RTK_Cell::RTK_Cell(const Vec_Int &ids,
     d_extent[1][LO] = -d_xy[1] * 0.5;
     d_extent[1][HI] =  d_xy[1] * 0.5;
 
-    Ensure (d_r.back() <= d_extent[0][HI]);
-    Ensure (d_r.back() <= d_extent[1][HI]);
+    Ensure (!d_r.empty() ? d_r.back() <= d_extent[0][HI] : true);
+    Ensure (!d_r.empty() ? d_r.back() <= d_extent[1][HI] : true);
 }
 
 //---------------------------------------------------------------------------//

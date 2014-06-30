@@ -324,7 +324,7 @@ auto Problem_Builder::build_axial_lattice(
 
                 // build the pin
                 SP_Pin_Cell pin(std::make_shared<Pin_Cell_t>(
-                                    ids, r, pin_matid, pitch, 1.0));
+                                    ids, r, pin_matid, pitch, height));
 
                 // add it
                 pins.emplace(pid, pin);
