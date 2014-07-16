@@ -16,6 +16,8 @@
 #include "harness/DBC.hh"
 #include "comm/Timing.hh"
 #include "comm/global.hh"
+#include "utils/Serial_HDF5_Writer.hh"
+#include "utils/Parallel_HDF5_Writer.hh"
 #include "mc/Fission_Source.hh"
 #include "mc/Uniform_Source.hh"
 #include "Manager.hh"
@@ -193,6 +195,8 @@ void Manager::solve()
  */
 void Manager::output()
 {
+    using std::string;
+
     SCOPED_TIMER("Manager.output");
 
     SCREEN_MSG("Outputting data");
@@ -208,6 +212,40 @@ void Manager::output()
     }
 
     profugus::global_barrier();
+
+    // >>> OUTPUT SOLUTION (only available if HDF5 is on)
+#ifdef USE_HDF5
+
+    // Output filename
+    std::ostringstream m;
+    m << d_problem_name << "_output.h5";
+    string outfile = m.str();
+
+    // scalar outputn for kcode
+    if (d_kcode_solver)
+    {
+        // get the kcode tally
+        auto keff = d_kcode_solver->keff_tally();
+        Check (keff);
+
+        // make the hdf5 file
+        profugus::Serial_HDF5_Writer writer;
+        writer.open(outfile);
+
+        // output scalar quantities
+        writer.begin_group("keff");
+
+        writer.write(string("mean"), keff->mean());
+        writer.write(string("variance"), keff->variance());
+        writer.write(string("num_active_cycles"),
+                     static_cast<int>(keff->cycle_count()));
+        writer.write(string("cycle_estimates"), keff->all_keff());
+
+        writer.end_group();
+        writer.close();
+    }
+
+#endif // USE_HDF5
 }
 
 } // end namespace mc
