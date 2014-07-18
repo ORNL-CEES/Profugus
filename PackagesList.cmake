@@ -21,7 +21,7 @@ SET(Profugus_PACKAGES_AND_DIRS_AND_CLASSIFICATIONS
 ## PLATFORM SUPPORT
 ##---------------------------------------------------------------------------##
 
-PACKAGE_DISABLE_ON_PLATFORMS(Profugus Windows)
+TRIBITS_DISABLE_PACKAGE_ON_PLATFORMS(Profugus Windows)
 
 ##---------------------------------------------------------------------------##
 ## end of PackagesList.cmake
