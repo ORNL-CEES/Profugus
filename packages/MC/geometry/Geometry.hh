@@ -94,9 +94,6 @@ class Geometry
     // Volumes of each cell
     Vec_Dbl d_volumes;
 
-    // Vector of symmetry cell ids
-    Vec_Int d_mapped_cells;
-
     // Level of array.
     const int d_level;
 
@@ -107,10 +104,7 @@ class Geometry
     // Constructor.
     explicit Geometry(SP_Array array);
 
-    // Constructor with symmetry
-    Geometry(SP_Array array, bool sym);
-
-    // >>> DERIVED INTERFACE from Geometry
+    // >>> DERIVED INTERFACE from Geometry_Base
 
     //! Initialize a track.
     void initialize(const Space_Vector &r, const Space_Vector &direction,
@@ -150,6 +144,9 @@ class Geometry
         // update the array state to clear any surface tags
         d_array->update_state(state);
     }
+
+    //! Number of cells (excluding "outside" cell)
+    geometry::cell_type num_cells() const { return d_array->num_cells(); }
 
     //! Return the current cell ID
     geometry::cell_type cell(const Geo_State_t &state) const
