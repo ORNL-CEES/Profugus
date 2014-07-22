@@ -36,24 +36,6 @@ Geometry<Array>::Geometry(SP_Array array)
 }
 
 //---------------------------------------------------------------------------//
-/*!
- * \brief Constructor.
- */
-template<class Array>
-Geometry<Array>::Geometry(SP_Array array,
-                          bool     symmetric)
-    : d_array(array)
-    , d_volumes(d_array->num_cells(), 0.0)
-    , d_mapped_cells(d_array->num_cells(), -1)
-    , d_level(d_array->level())
-    , d_modular( false )
-{
-    d_array->get_extents(d_lower, d_upper);
-    Ensure (d_array);
-    Ensure (d_lower <= d_upper);
-}
-
-//---------------------------------------------------------------------------//
 // PUBLIC INTERFACE
 //---------------------------------------------------------------------------//
 /*! \brief Initialize a track.

@@ -17,12 +17,11 @@
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
 #include "utils/Constants.hh"
-#include "utils/Definitions.hh"
 #include "utils/Vector_Functions.hh"
-#include "Definitions.hh"
 #include "RTK_State.hh"
 #include "RTK_Cell.hh"
 #include "RTK_Array.hh"
+#include "Tracking_Geometry.hh"
 
 namespace profugus
 {
@@ -72,15 +71,13 @@ namespace profugus
 //===========================================================================//
 
 template<class Array>
-class Geometry
+class Geometry : public Tracking_Geometry<RTK_State>
 {
   public:
     //@{
     //! Typedefs.
     typedef Array                    Array_t;
     typedef std::shared_ptr<Array_t> SP_Array;
-    typedef RTK_State                Geo_State_t;
-    typedef def::Space_Vector        Space_Vector;
     typedef def::Vec_Dbl             Vec_Dbl;
     typedef def::Vec_Int             Vec_Int;
     //@}
@@ -94,9 +91,6 @@ class Geometry
     // Volumes of each cell
     Vec_Dbl d_volumes;
 
-    // Vector of symmetry cell ids
-    Vec_Int d_mapped_cells;
-
     // Level of array.
     const int d_level;
 
@@ -107,10 +101,7 @@ class Geometry
     // Constructor.
     explicit Geometry(SP_Array array);
 
-    // Constructor with symmetry
-    Geometry(SP_Array array, bool sym);
-
-    // >>> DERIVED INTERFACE from Geometry
+    // >>> DERIVED INTERFACE from Geometry_Base
 
     //! Initialize a track.
     void initialize(const Space_Vector &r, const Space_Vector &direction,
@@ -150,6 +141,9 @@ class Geometry
         // update the array state to clear any surface tags
         d_array->update_state(state);
     }
+
+    //! Number of cells (excluding "outside" cell)
+    geometry::cell_type num_cells() const { return d_array->num_cells(); }
 
     //! Return the current cell ID
     geometry::cell_type cell(const Geo_State_t &state) const

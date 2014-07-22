@@ -21,12 +21,14 @@ INCLUDE(UtilsTest)
 ## TESTING
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstRTK_Functions.cc NP 1)
-ADD_UTILS_TEST(tstRTK_Cell.cc      NP 1)
-ADD_UTILS_TEST(tstRTK_Array.cc     NP 1)
-ADD_UTILS_TEST(tstLattice.cc       NP 1)
-ADD_UTILS_TEST(tstCore.cc          NP 1)
-ADD_UTILS_TEST(tstVessel.cc        NP 1)
+ADD_UTILS_TEST(tstRTK_Functions.cc  NP 1)
+ADD_UTILS_TEST(tstRTK_Cell.cc       NP 1)
+ADD_UTILS_TEST(tstRTK_Array.cc      NP 1)
+ADD_UTILS_TEST(tstLattice.cc        NP 1)
+ADD_UTILS_TEST(tstCore.cc           NP 1)
+ADD_UTILS_TEST(tstVessel.cc         NP 1)
+ADD_UTILS_TEST(tstCartesian_Mesh.cc NP 1)
+ADD_UTILS_TEST(tstMesh_Geometry.cc  NP 1)
 
 ##---------------------------------------------------------------------------##
 ##                      end of geometry/test/CMakeLists.txt
