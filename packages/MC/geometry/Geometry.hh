@@ -17,12 +17,11 @@
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
 #include "utils/Constants.hh"
-#include "utils/Definitions.hh"
 #include "utils/Vector_Functions.hh"
-#include "Definitions.hh"
 #include "RTK_State.hh"
 #include "RTK_Cell.hh"
 #include "RTK_Array.hh"
+#include "Tracking_Geometry.hh"
 
 namespace profugus
 {
@@ -72,15 +71,13 @@ namespace profugus
 //===========================================================================//
 
 template<class Array>
-class Geometry
+class Geometry : public Tracking_Geometry<RTK_State>
 {
   public:
     //@{
     //! Typedefs.
     typedef Array                    Array_t;
     typedef std::shared_ptr<Array_t> SP_Array;
-    typedef RTK_State                Geo_State_t;
-    typedef def::Space_Vector        Space_Vector;
     typedef def::Vec_Dbl             Vec_Dbl;
     typedef def::Vec_Int             Vec_Int;
     //@}

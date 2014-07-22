@@ -15,13 +15,11 @@
 #include <memory>
 
 #include "harness/DBC.hh"
-#include "utils/Definitions.hh"
 #include "utils/Vector_Lite.hh"
 #include "utils/Vector_Functions.hh"
-#include "Definitions.hh"
 #include "Cartesian_Mesh.hh"
-
 #include "Mesh_State.hh"
+#include "Tracking_Geometry.hh"
 
 namespace profugus
 {
@@ -41,16 +39,13 @@ namespace profugus
  */
 //===========================================================================//
 
-class Mesh_Geometry
+class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
 {
   public:
     //@{
     //! Typedefs
-    typedef Mesh_State Geo_State_t;
-
     typedef def::Vec_Dbl             Vec_Dbl;
     typedef def::Vec_Int             Vec_Int;
-    typedef def::Space_Vector        Space_Vector;
     typedef std::shared_ptr<Vec_Int> SP_Vec_Int;
     typedef std::shared_ptr<Vec_Dbl> SP_Vec_Dbl;
     //@}
@@ -76,7 +71,7 @@ class Mesh_Geometry
     // Set materials (optional).
     void set_matids(SP_Vec_Int matids);
 
-    // >>> DERIVED INTERFACE from Geometry_Base
+    // >>> DERIVED INTERFACE from Tracking_Geometry
 
     //! Initialize track.
     void initialize(const Space_Vector& r,
