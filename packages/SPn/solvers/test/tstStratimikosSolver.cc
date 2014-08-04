@@ -233,8 +233,8 @@ TEST_F(StratimikosSolver_Test, Belos)
 #ifdef USE_MCLS
 TEST_F(StratimikosSolver_Test, MCLS)
 {
-    one_pe("MCLS", "MCLS.xml");
-    four_pe("MCLS", "MCLS.xml");
+    one_pe("MCLS", "mcls.xml");
+    four_pe("MCLS", "mcls.xml");
 }
 #endif
 
