@@ -11,6 +11,7 @@ INCLUDE(TribitsListHelpers)
 ##---------------------------------------------------------------------------##
 
 SET(Profugus_PACKAGES_AND_DIRS_AND_CLASSIFICATIONS
+  MCLS      MCLS               SS
   Utils     packages/Utils     SS
   Matprop   packages/Matprop   SS
   SPn       packages/SPn       SS

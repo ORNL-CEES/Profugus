@@ -5,6 +5,8 @@ autom4te.cache
 /Trilinos
 /VERAInExt
 /DataTransferKit
+/MCLS
+/ParaSails
 .egdist
 /config
 *~

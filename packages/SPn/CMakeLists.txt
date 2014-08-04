@@ -35,6 +35,12 @@ IF (${PROJECT_NAME}_ENABLE_ML)
   SET(USE_ML 1)
 ENDIF()
 
+## MCLS options
+IF (${PROJECT_NAME}_ENABLE_MCLS)
+   MESSAGE(STATUS "Building Profugus with MCLS support")
+   SET(USE_MCLS 1)
+ENDIF()
+
 # Setup M4 for FORTRAN processing
 APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 

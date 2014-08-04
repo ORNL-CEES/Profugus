@@ -37,6 +37,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(XMLSOLVERINP
   SOURCE_FILES
   aztecoo.xml
   belos.xml
+  mcls.xml
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
   EXEDEPS tstStratimikosSolver tstInverseOperator
