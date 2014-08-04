@@ -92,6 +92,7 @@ FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
   mc/Box_Shape.cc
   mc/Domain_Transporter.cc
+  mc/Fission_Matrix_Tally.cc
   mc/Fission_Rebalance.cc
   mc/Fission_Source.cc
   mc/Fixed_Source_Solver.cc
@@ -100,6 +101,7 @@ SET(MC_SOURCES
   mc/KCode_Solver.cc
   mc/Keff_Tally.cc
   mc/Particle.cc
+  mc/Particle_Metaclass.pt.cc
   mc/Physics.cc
   mc/Sampler.cc
   mc/Solver.cc

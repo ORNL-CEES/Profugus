@@ -75,7 +75,7 @@ void Metaclass<I>::reset()
 template<class I>
 Metaclass<I>::Metaclass()
   : d_data(NULL)
-{
+   {
 #if UTILS_DBC > 0
     // Increment the particle count for error checking
     ++Metaclass::d_num_instances;
