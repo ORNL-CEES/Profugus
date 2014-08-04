@@ -1,6 +1,6 @@
 #!/bin/sh
 ##---------------------------------------------------------------------------##
-## CMAKE FOR X86_64
+## CMAKE FOR MACOSX WITH MCLS LIBRARY
 ##---------------------------------------------------------------------------##
 
 # CLEANUP
@@ -16,8 +16,8 @@ BUILD="DEBUG"
 MPI="ON"
 
 # TPL PATHS
-HDF5_PATH="/vendors/hdf5_parallel"
-MPI_PATH="/opt/openmpi/gcc/current"
+HDF5_PATH="/vendors/parallel/hdf5"
+MPI_PATH="/opt/mpi/current"
 
 ##---------------------------------------------------------------------------##
 
@@ -32,16 +32,24 @@ cmake \
 -DHDF5_INCLUDE_DIRS:PATH=$HDF5_PATH/include \
 -DHDF5_LIBRARY_DIRS:PATH=$HDF5_PATH/lib \
 \
--DBLAS_LIBRARY_DIRS:PATH=/vendors/gcc/atlas/lib \
--DLAPACK_LIBRARY_DIRS:PATH=/vendors/gcc/atlas/lib \
--DBLAS_LIBRARY_NAMES:STRING="f77blas;cblas;atlas" \
--DLAPACK_LIBRARY_NAMES:STRING="lapack" \
-\
 -DProfugus_CONFIGURE_OPTIONS_FILE:FILEPATH="${SOURCE}/install/base.cmake" \
 -DProfugus_ASSERT_MISSING_PACKAGES:BOOL=OFF \
+-DProfugus_EXTRA_REPOSITORIES="ParaSails;MCLS" \
+-DProfugus_ENABLE_MCLS:BOOL=ON \
+-DProfugus_ENABLE_ML:BOOL=ON \
+\
+-DMCLS_ENABLE_DBC:BOOL=ON \
+-DMCLS_ENABLE_TESTS:BOOL=OFF \
+-DMCLS_ENABLE_EXAMPLES:BOOL=OFF \
+-DMCLS_ENABLE_Epetra:BOOL=ON \
+-DMCLS_ENABLE_EpetraExt:BOOL=ON \
+-DMCLS_ENABLE_Ifpack:BOOL=ON \
+-DMCLS_ENABLE_ParaSails:BOOL=ON \
+-DMCLS_ENABLE_Thyra:BOOL=ON \
+-DMCLS_ENABLE_Stratimikos:BOOL=ON \
 \
 ${SOURCE}
 
 ##---------------------------------------------------------------------------##
-## end of cmake_x86_64.sh
+## end of cmake_macosx_with_mcls.sh
 ##---------------------------------------------------------------------------##

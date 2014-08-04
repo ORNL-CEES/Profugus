@@ -3,6 +3,10 @@
 ## CMAKE FOR xk7
 ##---------------------------------------------------------------------------##
 
+# CLEANUP
+rm -rf CMakeCache.txt
+rm -rf CMakeFiles
+
 # SOURCE AND INSTALL
 SOURCE=<SET_SOURCE_DIR>
 INSTALL=<SET_INSTALL_DIR>
@@ -39,6 +43,7 @@ cmake \
 -DTPL_LAPACK_LIBRARIES:STRING="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu.a" \
 \
 -DProfugus_CONFIGURE_OPTIONS_FILE:FILEPATH="${SOURCE}/install/base.cmake" \
+-DProfugus_ASSERT_MISSING_PACKAGES:BOOL=OFF \
 \
 ${SOURCE}
 
