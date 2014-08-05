@@ -447,15 +447,15 @@ void Problem_Builder::build_source(const ParameterList &source_db)
         // loop over assemblies in I
         for (int ai = 0; ai < d_Na[I]; ++ai)
         {
-            Check (src_map(aj, ai) < source_list.size());
-            Check (source_db.isSublist(source_list[src_map(aj, ai)]));
-
             // store the id of this source
             src_id = src_map(aj, ai);
 
             // if the src_id >= 0 then there is a source defined here
             if (src_id >= 0)
             {
+		Check (src_map(aj, ai) < source_list.size());
+		Check (source_db.isSublist(source_list[src_map(aj, ai)]));
+
                 // get the source map for this assembly
                 const auto &a_src_map = source_db.sublist(
                     source_list[src_id]).get<TwoDArray_dbl>("strength");
