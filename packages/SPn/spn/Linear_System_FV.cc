@@ -728,6 +728,14 @@ void Linear_System_FV::add_boundary_sources(int         face_id,
                 }
             }
         }
+
+        // advance the face index if there are no sources on this face
+        // (ie. phi_b = 0.0 on this face), which will be the case for mixed
+        // reflecting boundary conditions
+        else
+        {
+            face += num_face_cells;
+        }
     }
 
     Ensure (face <= d_Nc + d_Nb_local / d_unknowns_per_cell);
