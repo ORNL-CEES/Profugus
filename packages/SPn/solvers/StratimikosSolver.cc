@@ -36,6 +36,7 @@ namespace profugus
  */
 StratimikosSolver::StratimikosSolver(RCP_ParameterList db)
     : LinearSolver<MV,OP>(db)
+    , d_updated_operator( false )
 {
     using Teuchos::sublist;
 
@@ -89,6 +90,9 @@ void StratimikosSolver::set_operator(Teuchos::RCP<Epetra_Operator> A)
     // Create thyra operator
     d_thyraA = Thyra::epetraLinearOp(A);
 
+    // Indicate that the operator has been updated.
+    d_updated_operator = true;
+
     Ensure (d_thyraA != Teuchos::null );
 }
 
@@ -140,11 +144,14 @@ void StratimikosSolver::solve(Teuchos::RCP<Epetra_MultiVector>       ep_x,
         Thyra::initializePreconditionedOp<double>(
             *d_factory, d_thyraA, prec, d_solver.ptr());
     }
-    else
+    // If the operator has changed but we are reusing the preconditioner then
+    // reinitialize the linearOpWithSolve object.
+    else if ( d_updated_operator )
     {
         // Reuse as much information from previous solve as possible
         Thyra::initializeAndReuseOp<double>(
             *d_factory, d_thyraA, d_solver.ptr());
+	d_updated_operator = false;
     }
 
     // make an Epetra view into the solution vector

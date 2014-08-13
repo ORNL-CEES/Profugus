@@ -71,6 +71,7 @@ class StratimikosSolver :
     RCP_LOWS           d_solver;
     RCP_LOp            d_thyraA;
     RCP_LOp            d_prec;
+    bool               d_updated_operator;
 
   public:
     // Constructor.
