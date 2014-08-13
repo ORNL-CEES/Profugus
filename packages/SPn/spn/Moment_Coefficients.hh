@@ -13,7 +13,7 @@
 
 #include <vector>
 
-#include <spn/config.h>
+#include <SPn/config.h>
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_SerialDenseMatrix.hpp"
 #include "Teuchos_LAPACK.hpp"

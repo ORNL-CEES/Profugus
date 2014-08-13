@@ -22,7 +22,7 @@
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
-#include "SPn/Isotropic_Source.hh"
+#include "spn/Isotropic_Source.hh"
 
 namespace spn
 {
