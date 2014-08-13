@@ -16,7 +16,7 @@
 #include <vector>
 #include <string>
 
-#include <utils/config.h>
+#include <Utils/config.h>
 
 // Declare Vector_Lite
 namespace profugus
