@@ -14,7 +14,6 @@
 #include "AnasaziGeneralizedDavidsonSolMgr.hpp"
 #include "Epetra_MultiVector.h"
 #include "Epetra_Operator.h"
-#include "AnasaziEpetraAdapter.hpp"
 
 #include "EigenvalueSolver.hh"
 
@@ -33,21 +32,18 @@ namespace profugus
  */
 //===========================================================================//
 
-class Davidson_Eigensolver :
-        public EigenvalueSolver<Epetra_MultiVector,Epetra_Operator>
+template <class MV, class OP>
+class Davidson_Eigensolver : public EigenvalueSolver<MV,OP>
 {
-    typedef EigenvalueSolver<Epetra_MultiVector,Epetra_Operator> Base;
-
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector                 MV;
-    typedef Epetra_Operator                    OP;
-    typedef Teuchos::RCP<OP>                   RCP_OP;
-    typedef Anasazi::MultiVecTraits<double,MV> MultiVecTraits;
+    typedef Teuchos::RCP<OP>                     RCP_OP;
+    typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
+    typedef Anasazi::MultiVecTraits<double,MV>   MultiVecTraits;
+    typedef EigenvalueSolver<MV,OP>              Base;
     //@}
 
-  public:
     //! Constructor
     Davidson_Eigensolver( RCP_ParameterList db,
                           RCP_OP            LHS,
@@ -68,6 +64,13 @@ class Davidson_Eigensolver :
                 Teuchos::RCP<MV>  x );
 
   private:
+
+    using Base::b_tolerance;
+    using Base::b_verbosity;
+    using Base::LOW;
+    using Base::MEDIUM;
+    using Base::HIGH;
+    using Base::DEBUG;
 
     // Solver database
     RCP_ParameterList d_db;

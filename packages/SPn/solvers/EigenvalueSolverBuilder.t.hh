@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/EigenvalueSolverBuilder.cc
+ * \file   solvers/EigenvalueSolverBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Feb 24 13:49:22 2014
- * \brief  EigenvalueSolverBuilder member definitions.
+ * \brief  EigenvalueSolverBuilder template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef solver_EigenvalueSolverBuilder_t_hh
+#define solver_EigenvalueSolverBuilder_t_hh
 
 #include <iostream>
 
@@ -30,20 +33,20 @@ namespace profugus
  * determined by the database entry "eigensolver", which can be "Power",
  * "Arnoldi".
  */
-EigenvalueSolverBuilder::RCP_EigenvalueSolver
-EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
-                                       Teuchos::RCP<OP>  A)
+template <class MV, class OP>
+Teuchos::RCP<EigenvalueSolver<MV,OP> >
+EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
+                                              Teuchos::RCP<OP>  A)
 {
-    using std::string;
     RCP_EigenvalueSolver solver;
 
     // Determine type of solver to be constructed.
     std::string eigensolver = to_lower(
-        db->get("eigensolver", string("Arnoldi")));
+        db->get("eigensolver", std::string("Arnoldi")));
 
     if( eigensolver=="arnoldi" )
     {
-        solver = Teuchos::rcp(new Arnoldi(db));
+        solver = Teuchos::rcp(new Arnoldi<MV,OP>(db));
         solver->set_operator(A);
     }
     else if( eigensolver=="power" )
@@ -89,11 +92,12 @@ EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
  * should be given if it is desired to use internal preconditioners
  * (i.e. native Aztec/Stratimikos preconditioning).
  */
-EigenvalueSolverBuilder::RCP_EigenvalueSolver
-EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
-                                       Teuchos::RCP<OP>  A,
-                                       Teuchos::RCP<OP>  B,
-                                       Teuchos::RCP<OP>  P )
+template <class MV, class OP>
+Teuchos::RCP<EigenvalueSolver<MV,OP> >
+EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
+                                              Teuchos::RCP<OP>  A,
+                                              Teuchos::RCP<OP>  B,
+                                              Teuchos::RCP<OP>  P )
 {
     using std::string;
     RCP_EigenvalueSolver solver;
@@ -104,11 +108,14 @@ EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
 
     if( eigensolver=="arnoldi" )
     {
+        Not_Implemented("Construction of Arnoldi from EigensolverBuilder.");
+        /*
         // Get nested operator_db
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
         // Build inverse operator for Arnoldi
-        Teuchos::RCP<InverseOperator> AinvB( new InverseOperator(odb) );
+        Teuchos::RCP<InverseOperator<MV,OP> > AinvB(
+            new InverseOperator<MV,OP>(odb) );
         AinvB->set_operator(A);
         if( P != Teuchos::null )
         {
@@ -117,16 +124,21 @@ EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
         AinvB->set_rhs_operator(B);
 
         // Build the solver
-        solver = Teuchos::rcp(new Arnoldi(db));
+        solver = Teuchos::rcp(new Arnoldi<MV,OP>(db));
         solver->set_operator(AinvB);
+        */
     }
     else if( eigensolver=="power" )
     {
+        Not_Implemented("Construction of Arnoldi from EigensolverBuilder.");
+
+        /*
         // Get nested operator_db
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
         // Build inverse operator for Power Iteration
-        Teuchos::RCP<InverseOperator> AinvB( new InverseOperator(odb) );
+        Teuchos::RCP<InverseOperator<MV,OP> > AinvB(
+            new InverseOperator<MV,OP>(odb) );
         AinvB->set_operator(A);
         if( P != Teuchos::null )
         {
@@ -137,11 +149,12 @@ EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
         // Build the solver
         solver = Teuchos::rcp(new PowerIteration<MV,OP>(db));
         solver->set_operator(AinvB);
+        */
     }
     else if( eigensolver=="davidson" )
     {
-        Teuchos::RCP<Davidson_Eigensolver> davidson =
-            Teuchos::rcp( new Davidson_Eigensolver(db, A, B) );
+        Teuchos::RCP<Davidson_Eigensolver<MV,OP> > davidson =
+            Teuchos::rcp( new Davidson_Eigensolver<MV,OP>(db, A, B) );
         if( P != Teuchos::null )
         {
             davidson->set_preconditioner(P);
@@ -152,12 +165,15 @@ EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
     else if( eigensolver=="rqi" || eigensolver=="rayleigh" ||
              eigensolver=="rayleigh_quotient" )
     {
+        Not_Implemented("Construction of Arnoldi from EigensolverBuilder.");
+
+        /*
         // Get nested operator_db
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
         // Build ShiftedInverseOperator
-        Teuchos::RCP<ShiftedInverseOperator> shift_op(
-            new ShiftedInverseOperator(odb) );
+        Teuchos::RCP<ShiftedInverseOperator<MV,OP> > shift_op(
+            new ShiftedInverseOperator<MV,OP> (odb) );
         shift_op->set_operator(A);
         if( P != Teuchos::null )
         {
@@ -167,13 +183,14 @@ EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
 
         // Build RQI solver and set operators
         Teuchos::RCP<RayleighQuotient> rqi_solver =
-            Teuchos::rcp( new RayleighQuotient(db) );
+            Teuchos::rcp( new RayleighQuotient<MV,OP>(db) );
         rqi_solver->set_operator(A);
         rqi_solver->set_rhs_operator(B);
         rqi_solver->set_shifted_operator(shift_op);
 
         // Set base class pointer
         solver = rqi_solver;
+        */
     }
     else
     {
@@ -189,6 +206,8 @@ EigenvalueSolverBuilder::build_solver( RCP_ParameterList db,
 
 } // end namespace profugus
 
+#endif //solver_EigenvalueSolverBuilder_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of EigenvalueSolverBuilder.cc
+//                 end of EigenvalueSolverBuilder.t.hh
 //---------------------------------------------------------------------------//

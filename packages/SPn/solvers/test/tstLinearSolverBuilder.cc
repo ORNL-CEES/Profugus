@@ -11,6 +11,9 @@
 
 #include <string>
 
+#include "Epetra_MultiVector.h"
+#include "Epetra_Operator.h"
+
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
@@ -26,11 +29,11 @@ class SolverBuilderTest : public testing::Test
 {
   protected:
 
-    typedef profugus::LinearSolverBuilder Builder;
-    typedef Builder::RCP_ParameterList    RCP_ParameterList;
-    typedef Builder::RCP_LinearSolver     RCP_LinearSolver;
-    typedef Builder::MV                   MV;
-    typedef Builder::OP                   OP;
+    typedef Epetra_MultiVector                   MV;
+    typedef Epetra_Operator                      OP;
+    typedef profugus::LinearSolverBuilder<MV,OP> Builder;
+    typedef Builder::RCP_ParameterList           RCP_ParameterList;
+    typedef Builder::RCP_LinearSolver            RCP_LinearSolver;
 
   protected:
     // Initialization that are performed for each test

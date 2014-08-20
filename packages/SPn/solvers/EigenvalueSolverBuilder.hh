@@ -13,9 +13,6 @@
 
 #include "EigenvalueSolver.hh"
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_Operator.h"
-
 namespace profugus
 {
 
@@ -25,7 +22,7 @@ namespace profugus
  * \brief Factory class for creating EigenvalueSolver.
  *
  * This class provides a generic interface for creating an eigensolver
- * involving an Epetra operator (or operators)
+ * involving an Epetra/Tpetra operator (or operators)
  *
  * \sa EigenvalueSolverBuilder.cc for detailed descriptions.
  */
@@ -36,16 +33,15 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class MV, class OP>
 class EigenvalueSolverBuilder
 {
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector                    MV;
-    typedef Epetra_Operator                       OP;
     typedef EigenvalueSolver<MV,OP>               EigenvalueSolver_t;
     typedef Teuchos::RCP<EigenvalueSolver_t>      RCP_EigenvalueSolver;
-    typedef EigenvalueSolver_t::RCP_ParameterList RCP_ParameterList;
+    typedef Teuchos::RCP<Teuchos::ParameterList>  RCP_ParameterList;
     //@}
 
     // Build standard eigenvalue solver

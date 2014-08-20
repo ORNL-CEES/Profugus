@@ -15,7 +15,9 @@
 
 #include <SPn/config.h>
 
-#include <Epetra_Map.h>
+#include "Epetra_Map.h"
+#include "Epetra_MultiVector.h"
+#include "Epetra_Operator.h"
 
 #include "harness/DBC.hh"
 #include "LinearSolverBuilder.hh"
@@ -49,16 +51,16 @@ namespace profugus
  */
 //===========================================================================//
 
-class InverseOperator: public LinearSolverBuilder::OP
+class InverseOperator: public Epetra_Operator
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinearSolverBuilder::MV                MV;
-    typedef LinearSolverBuilder::OP                OP;
-    typedef Teuchos::RCP<OP>                       RCP_Operator;
-    typedef LinearSolverBuilder::RCP_ParameterList RCP_ParameterList;
-    typedef LinearSolverBuilder::RCP_LinearSolver  RCP_LinearSolver;
+    typedef Epetra_MultiVector                            MV;
+    typedef Epetra_Operator                               OP;
+    typedef Teuchos::RCP<OP>                              RCP_Operator;
+    typedef LinearSolverBuilder<MV,OP>::RCP_ParameterList RCP_ParameterList;
+    typedef LinearSolverBuilder<MV,OP>::RCP_LinearSolver  RCP_LinearSolver;
     //@}
 
   protected:

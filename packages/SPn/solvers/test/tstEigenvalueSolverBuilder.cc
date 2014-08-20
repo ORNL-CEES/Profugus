@@ -29,11 +29,11 @@ class EigenvalueSolverBuilderTest : public ::testing::Test
 {
   protected:
 
-    typedef profugus::EigenvalueSolverBuilder Builder;
-    typedef Builder::RCP_ParameterList        RCP_ParameterList;
-    typedef Builder::RCP_EigenvalueSolver     RCP_EigenvalueSolver;
-    typedef Builder::MV                       MV;
-    typedef Builder::OP                       OP;
+    typedef Epetra_MultiVector                       MV;
+    typedef Epetra_Operator                          OP;
+    typedef profugus::EigenvalueSolverBuilder<MV,OP> Builder;
+    typedef Builder::RCP_ParameterList               RCP_ParameterList;
+    typedef Builder::RCP_EigenvalueSolver            RCP_EigenvalueSolver;
 
   protected:
     // Initialization that are performed for each test

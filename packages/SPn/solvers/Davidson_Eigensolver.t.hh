@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Davidson_Eigensolver.cc
+ * \file   solvers/Davidson_Eigensolver.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:41 2014
- * \brief  Davidson_Eigensolver member definitions.
+ * \brief  Davidson_Eigensolver template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef solvers_Davidson_Eigensolver_t_hh
+#define solvers_Davidson_Eigensolver_t_hh
 
 #include "AnasaziBasicEigenproblem.hpp"
 
@@ -21,10 +24,11 @@ namespace profugus
 // Constructor
 //---------------------------------------------------------------------------//
 
-Davidson_Eigensolver::Davidson_Eigensolver(RCP_ParameterList db,
-                                           RCP_OP            LHS,
-                                           RCP_OP            RHS)
-    : Base(db)
+template <class MV,class OP>
+Davidson_Eigensolver<MV,OP>::Davidson_Eigensolver(RCP_ParameterList db,
+                                                  RCP_OP            LHS,
+                                                  RCP_OP            RHS)
+    : EigenvalueSolver<MV,OP>(db)
     , d_db(db)
     , d_LHS(LHS)
     , d_RHS(RHS)
@@ -69,7 +73,8 @@ Davidson_Eigensolver::Davidson_Eigensolver(RCP_ParameterList db,
 // SOLVE EIGENPROBLEM
 //---------------------------------------------------------------------------//
 
-void Davidson_Eigensolver::solve( double &keff, Teuchos::RCP<MV> x)
+template <class MV,class OP>
+void Davidson_Eigensolver<MV,OP>::solve( double &keff, Teuchos::RCP<MV> x)
 {
     Require (d_db->isSublist("Anasazi"));
 
@@ -88,7 +93,7 @@ void Davidson_Eigensolver::solve( double &keff, Teuchos::RCP<MV> x)
     Ensure( problem_set );
 
     // Extract Anasazi DB
-    ParameterList &anasazi_list = d_db->sublist("Anasazi");
+    Teuchos::ParameterList &anasazi_list = d_db->sublist("Anasazi");
 
     // Create solver
     Anasazi::GeneralizedDavidsonSolMgr<double,MV,OP> solver(
@@ -108,7 +113,8 @@ void Davidson_Eigensolver::solve( double &keff, Teuchos::RCP<MV> x)
     keff = eval.realpart;
 
     // Get view of dominant eigenvector
-    x->Update(1.0,*(solution.Evecs),0.0);
+    std::vector<int> ind(1,0);
+    MultiVecTraits::SetBlock(*(solution.Evecs),ind,*x);
 
     if( b_verbosity >= LOW )
     {
@@ -121,6 +127,8 @@ void Davidson_Eigensolver::solve( double &keff, Teuchos::RCP<MV> x)
 
 } // end namespace profugus
 
+#endif // solvers_Davidson_Eigensolver_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Davidson_Eigensolver.cc
+//                 end of Davidson_Eigensolver.t.hh
 //---------------------------------------------------------------------------//

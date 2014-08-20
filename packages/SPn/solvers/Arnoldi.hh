@@ -11,12 +11,9 @@
 #ifndef solvers_Arnoldi_hh
 #define solvers_Arnoldi_hh
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_Operator.h"
 #include "AnasaziTypes.hpp"
 #include "AnasaziBlockKrylovSchurSolMgr.hpp"
 #include "AnasaziBasicEigenproblem.hpp"
-#include "AnasaziEpetraAdapter.hpp"
 
 #include "EigenvalueSolver.hh"
 
@@ -28,7 +25,7 @@ namespace profugus
  * \class Arnoldi
  * \brief Compute dominant eigenvalue/eigenvector pair of operator.
  *
- * Given an Epetra operator, this class computes the eigenvalue of largest
+ * Given an operator, this class computes the eigenvalue of largest
  * magnitude and the corresponding eigenvector.  The Anasazi Block Krylov Schur
  * solver is currently used to solve the eigenproblem.
  *
@@ -41,20 +38,23 @@ namespace profugus
  */
 //===========================================================================//
 
-class Arnoldi : public EigenvalueSolver<Epetra_MultiVector,Epetra_Operator>
+template <class MV, class OP>
+class Arnoldi : public EigenvalueSolver<MV,OP>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector                            MV;
-    typedef Epetra_Operator                               OP;
     typedef Anasazi::BasicEigenproblem<double,MV,OP>      Eigenproblem;
     typedef Anasazi::BlockKrylovSchurSolMgr<double,MV,OP> KrylovSchur;
     typedef Anasazi::Eigensolution<double,MV>             Eigensolution;
+    typedef Anasazi::MultiVecTraits<double,MV>            MultiVecTraits;
 
-    typedef Teuchos::RCP<MV>           RCP_MV;
-    typedef Teuchos::RCP<OP>           RCP_OP;
-    typedef Teuchos::RCP<Eigenproblem> RCP_Eigenproblem;
+    typedef Teuchos::RCP<MV>                     RCP_MV;
+    typedef Teuchos::RCP<OP>                     RCP_OP;
+    typedef Teuchos::RCP<Eigenproblem>           RCP_Eigenproblem;
+    typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
+
+    typedef EigenvalueSolver<MV,OP> Base;
     //@}
 
   private:
@@ -64,6 +64,11 @@ class Arnoldi : public EigenvalueSolver<Epetra_MultiVector,Epetra_Operator>
 
     // Teuchos Parameter List
     RCP_ParameterList d_pl;
+
+    using Base::b_tolerance;
+    using Base::b_max_iters;
+    using Base::b_label;
+    using Base::b_converged;
 
   public:
 

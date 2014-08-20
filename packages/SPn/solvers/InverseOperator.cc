@@ -21,7 +21,7 @@ namespace profugus
  */
 InverseOperator::InverseOperator(RCP_ParameterList db)
 {
-    d_solver = LinearSolverBuilder::build_solver(db);
+    d_solver = LinearSolverBuilder<MV,OP>::build_solver(db);
 }
 
 //---------------------------------------------------------------------------//

@@ -100,12 +100,12 @@ LIST(APPEND SOURCES ${MESH_SOURCES})
 
 FILE(GLOB SOLVERS_HEADERS solvers/*.hh)
 SET(SOLVERS_SOURCES
-  solvers/Arnoldi.cc
-  solvers/Davidson_Eigensolver.cc
+  solvers/Arnoldi.pt.cc
+  solvers/Davidson_Eigensolver.pt.cc
   solvers/Decomposition.cc
-  solvers/EigenvalueSolverBuilder.cc
+  solvers/EigenvalueSolverBuilder.pt.cc
   solvers/InverseOperator.cc
-  solvers/LinearSolverBuilder.cc
+  solvers/LinearSolverBuilder.pt.cc
   solvers/PowerIteration.pt.cc
   solvers/PreconditionerBuilder.cc
   solvers/RayleighQuotient.cc
