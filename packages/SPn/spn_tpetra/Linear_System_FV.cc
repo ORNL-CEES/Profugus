@@ -1245,10 +1245,13 @@ void Linear_System_FV::insert_block_matrix(int                  row_n,
             }
         }
 
-        // insert the row into the matrix
-        Teuchos::ArrayView<double> vals(d_values);
-        Teuchos::ArrayView<int> inds(d_indices);
-        matrix.insertGlobalValues(row, inds, vals );
+        if( ctr >0 )
+        {
+            // insert the row into the matrix
+            Teuchos::ArrayView<double> vals(&d_values[0],ctr);
+            Teuchos::ArrayView<int> inds(&d_indices[0],ctr);
+            matrix.insertGlobalValues(row, inds, vals );
+        }
     }
 }
 

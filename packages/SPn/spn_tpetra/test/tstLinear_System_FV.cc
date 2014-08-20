@@ -260,12 +260,14 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
 
     // make the matrix
     system->build_Matrix();
-    const Element_Matrix_t &A =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_Operator()));
+    Teuchos::RCP<const Element_Matrix_t> A =
+        Teuchos::rcp_dynamic_cast<const Element_Matrix_t>(
+            system->get_Operator());
 
-    EXPECT_EQ(2 * mesh->num_cells(), A.getNodeNumRows());
-    EXPECT_EQ(2 * data->num_cells(), A.getGlobalNumRows());
-    EXPECT_EQ(2 * data->num_cells(), A.getGlobalNumCols());
+
+    EXPECT_EQ(2 * mesh->num_cells(), A->getNodeNumRows());
+    EXPECT_EQ(2 * data->num_cells(), A->getGlobalNumRows());
+    EXPECT_EQ(2 * data->num_cells(), A->getGlobalNumCols());
 
     // make a vector
     Vector_t x(system->get_Map());
@@ -299,7 +301,7 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
         Teuchos::ArrayView<const int> indices;
         Teuchos::ArrayView<const double> values;
 
-        A.getLocalRowView(2, indices, values);
+        A->getLocalRowView(2, indices, values);
         EXPECT_EQ(5, indices.size());
         EXPECT_EQ(5, values.size());
 
@@ -319,7 +321,7 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
         }
     }
 
-    A.apply(x,y);
+    A->apply(x,y);
 
     double v[128] = {
         -5.688882,   -5.007769,   -3.884338,   -4.254782,   -4.541968,
@@ -712,11 +714,12 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
 
     // make the matrix
     system->build_Matrix();
-    const Element_Matrix_t &A =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_Operator()));
+    Teuchos::RCP<const Element_Matrix_t> A =
+        Teuchos::rcp_dynamic_cast<const Element_Matrix_t>(
+            system->get_Operator());
 
-    EXPECT_TRUE(A.isLocallyIndexed());
-    EXPECT_TRUE(A.isStorageOptimized());
+    EXPECT_TRUE(A->isLocallyIndexed());
+    EXPECT_TRUE(A->isStorageOptimized());
 
     // number of faces
     int nf = 0;
@@ -741,9 +744,9 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
 
     EXPECT_EQ(nf*2*2, system->bnd_unknowns());
 
-    EXPECT_EQ(2 * 2 * (mesh->num_cells() + nf), A.getNodeNumRows());
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), A.getGlobalNumRows());
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), A.getGlobalNumCols());
+    EXPECT_EQ(2 * 2 * (mesh->num_cells() + nf), A->getNodeNumRows());
+    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), A->getGlobalNumRows());
+    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), A->getGlobalNumCols());
 
     // make a vector
     Vector_t x(system->get_Map());
@@ -783,9 +786,9 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
         Teuchos::ArrayView<const int> indices;
         Teuchos::ArrayView<const double> values;
 
-        A.getLocalRowView(2, indices, values);
-        EXPECT_EQ(5, indices.size());
-        EXPECT_EQ(5, values.size());
+        A->getLocalRowView(2, indices, values);
+        EXPECT_EQ(8, indices.size());
+        EXPECT_EQ(8, values.size());
 
         if (nodes == 1)
         {
@@ -809,7 +812,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
         }
     }
 
-    A.apply(x,y);
+    A->apply(x,y);
 
     double v[640] = {
           -15.0419642197,   -12.3850498086,    -3.4645773537,    -2.9093003135,
@@ -1707,12 +1710,13 @@ TEST_F(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
 
     // make the matrix
     system->build_fission_matrix();
-    const Element_Matrix_t &B =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_fission_matrix()));
+    Teuchos::RCP<const Element_Matrix_t> B =
+        Teuchos::rcp_dynamic_cast<const Element_Matrix_t>(
+            system->get_fission_matrix());
 
-    EXPECT_EQ(12 * mesh->num_cells(), B.getNodeNumRows());
-    EXPECT_EQ(12 * data->num_cells(), B.getGlobalNumRows());
-    EXPECT_EQ(12 * data->num_cells(), B.getGlobalNumCols());
+    EXPECT_EQ(12 * mesh->num_cells(), B->getNodeNumRows());
+    EXPECT_EQ(12 * data->num_cells(), B->getGlobalNumRows());
+    EXPECT_EQ(12 * data->num_cells(), B->getGlobalNumCols());
 
     // it should be all zeros
 
@@ -1747,7 +1751,7 @@ TEST_F(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
         }
     }
 
-    B.apply(x,y);
+    B->apply(x,y);
 
     for (int n = 0; n < y.getLocalLength(); ++n)
     {
@@ -1859,12 +1863,13 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
 
     // make the matrix
     system->build_fission_matrix();
-    const Element_Matrix_t &B =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_fission_matrix()));
+    Teuchos::RCP<const Element_Matrix_t> B =
+        Teuchos::rcp_dynamic_cast<const Element_Matrix_t>(
+            system->get_fission_matrix());
 
-    EXPECT_EQ(12 * mesh->num_cells(), B.getNodeNumRows());
-    EXPECT_EQ(12 * data->num_cells(), B.getGlobalNumRows());
-    EXPECT_EQ(12 * data->num_cells(), B.getGlobalNumCols());
+    EXPECT_EQ(12 * mesh->num_cells(), B->getNodeNumRows());
+    EXPECT_EQ(12 * data->num_cells(), B->getGlobalNumRows());
+    EXPECT_EQ(12 * data->num_cells(), B->getGlobalNumCols());
 
     // extract some blocks
     if (node == 0)
@@ -1876,7 +1881,7 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
         Teuchos::ArrayRCP<double> values(8);
 
         size_t num_entries;
-        B.getGlobalRowCopy(row, indices(), values(), num_entries);
+        B->getGlobalRowCopy(row, indices(), values(), num_entries);
         EXPECT_EQ(8, num_entries);
 
         if (nodes == 1)
@@ -1934,7 +1939,7 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
         }
     }
 
-    B.apply(x,y);
+    B->apply(x,y);
 
     double v[768] = {
         -0.989123810,   -3.956495238,    0.000000000,    0.659415873,
