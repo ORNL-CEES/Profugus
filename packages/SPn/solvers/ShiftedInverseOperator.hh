@@ -35,23 +35,33 @@ namespace profugus
  */
 //===========================================================================//
 
-class ShiftedInverseOperator : public InverseOperator
+template <class MV, class OP>
+class ShiftedInverseOperator
+{
+    ShiftedInverseOperator();
+};
+
+template <>
+class ShiftedInverseOperator<Epetra_MultiVector,Epetra_Operator>
+    : public InverseOperator<Epetra_MultiVector,Epetra_Operator>
 {
   private:
-    typedef InverseOperator Base;
+    typedef Epetra_MultiVector     MV;
+    typedef Epetra_Operator        OP;
+    typedef InverseOperator<MV,OP> Base;
 
     // >>> DATA
-    Teuchos::RCP<ShiftedOperator> d_operator;
+    Teuchos::RCP<ShiftedOperator<MV,OP> > d_operator;
     double d_shift;
 
   public:
 
     // Constructor.
-    // Read Denovo database entries for solver parameters.
-    explicit ShiftedInverseOperator(RCP_ParameterList db);
-
-    void set_operator( RCP_Operator A);
-    void set_rhs_operator( RCP_Operator A);
+    explicit ShiftedInverseOperator(Teuchos::RCP<Teuchos::ParameterList> pl)
+        : Base(pl)
+        , d_operator( Teuchos::rcp( new ShiftedOperator<MV,OP>() ) )
+        , d_shift(0.0)
+    {}
 
     // Set shift
     void set_shift( double shift )
@@ -60,7 +70,64 @@ class ShiftedInverseOperator : public InverseOperator
     }
 
     // Apply (solve linear system)
-    int Apply(const MV &x, MV &y) const;
+    int Apply(const MV &x, MV &y) const
+    {
+        Require( !d_operator.is_null() );
+        Require( x.MyLength() == y.MyLength() );
+        Require( d_operator->OperatorDomainMap().NumMyElements()==x.MyLength() );
+
+        d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
+
+        return 0;
+    }
+};
+
+template <>
+class ShiftedInverseOperator<
+        Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
+        Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
+    : public InverseOperator<
+                Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
+                Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
+{
+  private:
+    typedef Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode> MV;
+    typedef Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>    OP;
+    typedef InverseOperator<MV,OP> Base;
+
+    // >>> DATA
+    Teuchos::RCP<ShiftedOperator<MV,OP> > d_operator;
+    double d_shift;
+
+  public:
+
+    // Constructor.
+    explicit ShiftedInverseOperator(Teuchos::RCP<Teuchos::ParameterList> pl)
+        : Base(pl)
+        , d_operator( Teuchos::rcp( new ShiftedOperator<MV,OP>() ) )
+        , d_shift(0.0)
+    {}
+
+    // Set shift
+    void set_shift( double shift )
+    {
+        d_operator->set_shift(shift);
+    }
+
+    // Apply (solve linear system)
+    void apply(const MV &x, MV &y,
+               Teuchos::ETransp mode=Teuchos::NO_TRANS,
+               double alpha=1.0, double beta=0.0) const
+    {
+        Require( alpha == 1.0 );
+        Require( beta == 0.0 );
+        Require( !d_operator.is_null() );
+        Require( x.getLocalLength() == y.getLocalLength() );
+        Require( d_operator->getDomainMap()->getNodeNumElements() ==
+                 x.getLocalLength() );
+
+        d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
+    }
 };
 
 } // end namespace profugus

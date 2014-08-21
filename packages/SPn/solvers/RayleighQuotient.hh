@@ -68,7 +68,7 @@ class RayleighQuotient :
     }
 
     // Set shifted inverse operator
-    void set_shifted_operator( Teuchos::RCP<ShiftedInverseOperator> Op )
+    void set_shifted_operator( Teuchos::RCP<ShiftedInverseOperator<MV,OP> > Op )
     {
         Require( !Op.is_null() );
         d_Op = Op;
@@ -81,7 +81,7 @@ class RayleighQuotient :
   private:
 
     // Shifted inverse operator
-    Teuchos::RCP<ShiftedInverseOperator> d_Op;
+    Teuchos::RCP<ShiftedInverseOperator<MV,OP> > d_Op;
     Teuchos::RCP<OP>                     d_B;
 
     // Values for fixed (Wielandt) shift

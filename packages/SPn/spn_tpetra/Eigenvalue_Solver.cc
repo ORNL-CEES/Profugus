@@ -363,11 +363,11 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         RCP_ParameterList op_db = Teuchos::sublist(edb, "operator_db");
 
         // Build Stratimikos Operator
-        Teuchos::RCP<InverseOperator> solver_op = Teuchos::rcp(
-                new InverseOperator(op_db));
-        //solver_op->set_operator(b_system->get_Operator());
+        Teuchos::RCP<InverseOperator<MV,OP> > solver_op = Teuchos::rcp(
+                new InverseOperator<MV,OP>(op_db));
+        solver_op->set_operator(b_system->get_Operator());
 
-        //prec = solver_op;
+        prec = solver_op;
 
         Check (prec != Teuchos::null);
     }

@@ -104,14 +104,14 @@ SET(SOLVERS_SOURCES
   solvers/Davidson_Eigensolver.pt.cc
   solvers/Decomposition.cc
   solvers/EigenvalueSolverBuilder.pt.cc
-  solvers/InverseOperator.cc
+  solvers/InverseOperator.pt.cc
   solvers/LinearSolverBuilder.pt.cc
   solvers/PowerIteration.pt.cc
-  solvers/PreconditionerBuilder.cc
-  solvers/RayleighQuotient.cc
+  #solvers/PreconditionerBuilder.cc
+  #solvers/RayleighQuotient.cc
   solvers/Richardson.pt.cc
-  solvers/ShiftedInverseOperator.cc
-  solvers/ShiftedOperator.cc
+  solvers/ShiftedInverseOperator.pt.cc
+  solvers/ShiftedOperator.pt.cc
   solvers/StratimikosSolver.cc
   )
 LIST(APPEND HEADERS ${SOLVERS_HEADERS})

@@ -1,17 +1,24 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ShiftedOperator.cc
+ * \file   solvers/ShiftedOperator.t.hh
  * \author Thomas M. Evans, Steven P. Hamilton
  * \date   Fri Feb 21 13:41:13 2014
- * \brief  ShiftedOperator member definitions.
+ * \brief  ShiftedOperator template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef solvers_ShiftedOperator_t_hh
+#define solvers_ShiftedOperator_t_hh
 
 #include "ShiftedOperator.hh"
 
 namespace profugus
 {
+
+//
+// Implementation of ShiftedOperatorBase
+//
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -19,7 +26,8 @@ namespace profugus
 /*!
  * \brief Constructor
  */
-ShiftedOperator::ShiftedOperator()
+template <class MV, class OP>
+ShiftedOperatorBase<MV,OP>::ShiftedOperatorBase()
     : d_shift(0.0)
 {
 }
@@ -32,7 +40,8 @@ ShiftedOperator::ShiftedOperator()
  *
  * \param A Epetra_Operator
  */
-void ShiftedOperator::set_operator( RCP_Operator A )
+template <class MV, class OP>
+void ShiftedOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
 {
     Require( !A.is_null() );
     d_A = A;
@@ -44,7 +53,8 @@ void ShiftedOperator::set_operator( RCP_Operator A )
  *
  * \param B Epetra_Operator
  */
-void ShiftedOperator::set_rhs_operator( RCP_Operator B )
+template <class MV, class OP>
+void ShiftedOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
     Require( !B.is_null() );
     d_B = B;
@@ -57,31 +67,28 @@ void ShiftedOperator::set_rhs_operator( RCP_Operator B )
  * \param x Input vector
  * \param y Output vector
  */
-int ShiftedOperator::Apply(const MV &x,
-                                 MV &y ) const
+template <class MV, class OP>
+void ShiftedOperatorBase<MV,OP>::ApplyImpl(const MV &x,
+                                                 MV &y ) const
 {
-    Require( x.MyLength() == y.MyLength() );
-    Require( d_A->OperatorDomainMap().NumMyElements()==x.MyLength() );
-
     if( !(d_B.is_null()) )
     {
-        Require( d_B->OperatorDomainMap().NumMyElements()==x.MyLength() );
-        MV z(x);
-        d_A->Apply(x,y);
-        d_B->Apply(x,z);
-        y.Update(-d_shift,z,1.0);
+        Teuchos::RCP<MV> z = MVT::Clone(x,MVT::GetNumberVecs(x));
+        OPT::Apply(*d_A,x,y);
+        OPT::Apply(*d_B,x,*z);
+        MVT::MvAddMv(-d_shift,*z,1.0,y,y);
     }
     else
     {
-        d_A->Apply(x,y);
-        y.Update(-d_shift,x,1.0);
+        OPT::Apply(*d_A,x,y);
+        MVT::MvAddMv(-d_shift,x,1.0,y,y);
     }
-
-    return 0;
 }
 
 } // end namespace profugus
 
+#endif // solvers_ShiftedOperator_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of ShiftedOperator.cc
+//                 end of ShiftedOperator.t.hh
 //---------------------------------------------------------------------------//

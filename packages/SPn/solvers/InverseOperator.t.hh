@@ -1,14 +1,18 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/InverseOperator.cc
+ * \file   solvers/InverseOperator.t.hh
  * \author Thomas Evans, Steven Hamilton
  * \date   Fri Feb 21 13:05:35 2014
- * \brief  InverseOperator member definitions.
+ * \brief  InverseOperator template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
+#ifndef solvers_InverseOperator_t_hh
+#define solvers_InverseOperator_t_hh
+
 #include "InverseOperator.hh"
+#include "LinearSolverBuilder.hh"
 
 namespace profugus
 {
@@ -19,9 +23,11 @@ namespace profugus
 /*!
  * \brief Constructor
  */
-InverseOperator::InverseOperator(RCP_ParameterList db)
+template <class MV, class OP>
+InverseOperatorBase<MV,OP>::InverseOperatorBase(
+    Teuchos::RCP<Teuchos::ParameterList> pl )
 {
-    d_solver = LinearSolverBuilder<MV,OP>::build_solver(db);
+    d_solver = LinearSolverBuilder<MV,OP>::build_solver(pl);
 }
 
 //---------------------------------------------------------------------------//
@@ -32,12 +38,13 @@ InverseOperator::InverseOperator(RCP_ParameterList db)
  *
  * \param A Epetra_Operator
  */
-void InverseOperator::set_operator( RCP_Operator A )
+template <class MV, class OP>
+void InverseOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
 {
     Require( !A.is_null() );
     d_solver->set_operator(A);
 
-    // Store A for some of the Epetra interface functions
+    // Store A for some of the operator interface functions
     d_A = A;
 }
 
@@ -47,7 +54,8 @@ void InverseOperator::set_operator( RCP_Operator A )
  *
  * \param B Epetra_Operator
  */
-void InverseOperator::set_rhs_operator( RCP_Operator B )
+template <class MV, class OP>
+void InverseOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
     Require( !B.is_null() );
     d_B = B;
@@ -59,7 +67,8 @@ void InverseOperator::set_rhs_operator( RCP_Operator B )
  *
  * \param P Epetra_Operator
  */
-void InverseOperator::set_preconditioner( RCP_Operator P )
+template <class MV, class OP>
+void InverseOperatorBase<MV,OP>::set_preconditioner( Teuchos::RCP<OP> P )
 {
     Require( !P.is_null() );
     Require( !d_solver.is_null() );
@@ -73,29 +82,25 @@ void InverseOperator::set_preconditioner( RCP_Operator P )
  * \param x Input vector
  * \param y Output vector
  */
-int InverseOperator::Apply(const MV &x,
-                                 MV &y ) const
+template <class MV, class OP>
+void InverseOperatorBase<MV,OP>::ApplyImpl(const MV &x, MV &y ) const
 {
-    Require( x.MyLength() == x.MyLength() );
-    Require( d_A->OperatorDomainMap().NumMyElements()==x.MyLength() );
-
     if( !(d_B.is_null()) )
     {
-        Require( d_B->OperatorDomainMap().NumMyElements()==x.MyLength() );
-        MV z(x);
-        d_B->Apply(x,z);
-        d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(z));
+        Teuchos::RCP<MV> z = MVT::Clone(x,MVT::GetNumberVecs(x));
+        OPT::Apply(*d_B,x,*z);
+        d_solver->solve(Teuchos::rcpFromRef(y), z);
     }
     else
     {
         d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
     }
-
-    return 0;
 }
 
 } // end namespace profugus
 
+#endif // solvers_InverseOperator_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of InverseOperator.cc
+//                 end of InverseOperator.t.hh
 //---------------------------------------------------------------------------//
