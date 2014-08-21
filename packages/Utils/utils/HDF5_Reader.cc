@@ -148,7 +148,6 @@ void HDF5_Reader::get_decomposition(const std_string &name,
     d.global.clear();
     d.local.clear();
     d.ndims = 0;
-    d.order = COLUMN_MAJOR;
 
     // hdf5 parameters
     int         rank  = 0;
@@ -174,8 +173,6 @@ void HDF5_Reader::get_decomposition(const std_string &name,
     Vec_Hsize dims(d.ndims);
     H5LTget_dataset_info(current_loc(), name.c_str(), &dims[0], &dt_class,
                          &bytes);
-
-    // DETERMINE STORAGE PATTERN !!!!!
 
     // assign the dims to the global size assuming COLUMN-MAJOR ordering
     // (ie. we flip the data dimensions)

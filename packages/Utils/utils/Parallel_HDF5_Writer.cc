@@ -8,6 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <iostream>
 #include <algorithm>
 
 #include "comm/global.hh"
@@ -56,8 +57,44 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
         std::copy(d.offset.rbegin(), d.offset.rend(), offset.begin());
     }
 
-    // create the dataspace for the data
-    //
+    // now, we could have a case where the domains don't divide evenly among
+    // the cores; however, parallel HDF5 requires that the chunk size on each
+    // domain is equal; thus, we get the maximum local domain size and we will
+    // ue that to allocate a global space that is large enough to hold equal
+    // sized chunks on every domain; then we write into the actual hyperslab
+    // on each domain; this means that there will be regions of padded data in
+    // the output file; however the HDF_Reader can be given the correct
+    // hyperslab to read over
+
+    // find minimum and maximum local sizes across all domains - we have to
+    // use a vec-int here because the comm library *may* not have an
+    // instantiation of hsize_t depending on the machine type
+    Vec_Int min_c(local.begin(), local.end());
+    Vec_Int max_c(local.begin(), local.end());
+    profugus::global_max(&max_c[0], max_c.size());
+    profugus::global_min(&min_c[0], min_c.size());
+
+    // assign the local (common-collective : same on all domains) chunk size
+    Vec_Hsize chunk(max_c.begin(), max_c.end());
+    Check (chunk.size() == local.size());
+    Check (local.size() == d.ndims);
+
+    // make the global chunk size - this is the chunk size * number of
+    // domains; first we have to determine the number of domains that can be
+    // calculated by integer-dividing the true global size by the minimum
+    // chunk size
+    for (int n = 0; n < d.ndims; ++n)
+    {
+        // find the decomposition in this dimension
+        int num_domains = global[n] / min_c[n];
+        Check (global[n] <= num_domains * chunk[n]);
+
+        // calculate the new global for equal chunk sizes
+        global[n] = num_domains * chunk[n];
+     }
+
+    // create the dataspace for the Data
+
     // global filespace
     hid_t filespace = H5Screate_simple(d.ndims, &global[0], NULL);
     // local filespace
@@ -65,9 +102,10 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
     // attribute filespace
     hid_t attspace  = H5Screate_simple(1, adims, NULL);
 
-    // create the datasets
+    // create the datasets (this is a collective and each domain gets the same
+    // chunk size)
     hid_t plist_id = H5Pcreate(H5P_DATASET_CREATE);
-    H5Pset_chunk(plist_id, d.ndims, &local[0]);
+    H5Pset_chunk(plist_id, d.ndims, &chunk[0]);
     hid_t dset_id = H5Dcreate(current_loc(), name.c_str(), type,
                               filespace, H5P_DEFAULT, plist_id, H5P_DEFAULT);
 
@@ -81,7 +119,7 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
     H5Sclose(filespace);
     H5Sclose(attspace);
 
-    // select the hyperslab
+    // select the hyperslab (this is in the "true" domain of the data)
     filespace = H5Dget_space(dset_id);
     Validate (H5Sselect_hyperslab(
                   filespace, H5S_SELECT_SET, &offset[0], &stride[0],
