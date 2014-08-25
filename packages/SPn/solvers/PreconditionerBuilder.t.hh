@@ -142,8 +142,12 @@ PreconditionerBuilder<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>
     Teuchos::RCP<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> > op,
     RCP_ParameterList             db )
 {
-    Validate(false,"No Tpetra preconditioners implemented yet");
+    string prec_type = to_lower(db->get("Preconditioner", string("none")));
     Teuchos::RCP<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> > prec;
+    if( prec_type != "none" )
+    {
+        Validate(false,"No Tpetra preconditioners implemented yet");
+    }
     return prec;
 }
 

@@ -89,8 +89,8 @@ TEST(MultigridTest, Heuristic)
         twelve_grp::make_mat(pn_order, mesh->num_cells());
 
     // Build SPN Dimensions
-    int spn_tpetra_order=3;
-    RCP<profugus::Dimensions> dim = rcp( new profugus::Dimensions(spn_tpetra_order) );
+    int spn_order=3;
+    RCP<profugus::Dimensions> dim = rcp( new profugus::Dimensions(spn_order) );
 
     // Set boundary conditions
     db->set("boundary", string("reflect"));
@@ -107,32 +107,34 @@ TEST(MultigridTest, Heuristic)
     RCP<Tpetra_Op> matrix = system->get_Operator();
 
     // Create db for preconditioner
-    RCP_ParameterList aztec_settings_db =
-        rcp(new ParameterList("AztecOO Settings"));
-    aztec_settings_db->set("Aztec Solver", string("GMRES"));
-    aztec_settings_db->set("Aztec Preconditioner", string("Jacobi"));
+    RCP_ParameterList block_gmres_db =
+        rcp(new ParameterList("Block GMRES"));
+    block_gmres_db->set("Convergence Tolerance",1e-4);
+    block_gmres_db->set("Maximum Iterations",5);
 
-    RCP_ParameterList forward_solve_db =
-        rcp(new ParameterList("Forward Solve"));
-    forward_solve_db->set("AztecOO Settings", *aztec_settings_db);
+    RCP_ParameterList belos_solver_types_db =
+        rcp(new ParameterList("Solver Types"));
+    belos_solver_types_db->set("Block GMRES",*block_gmres_db);
 
-    RCP_ParameterList aztecoo_db =
-        rcp(new ParameterList("AztecOO"));
-    aztecoo_db->set("Forward Solve", *forward_solve_db);
+    RCP_ParameterList belos_db =
+        rcp(new ParameterList("Belos"));
+    belos_db->set("Solver Type",string("Block GMRES"));
+    belos_db->set("Solver Types",*belos_solver_types_db);
 
     RCP_ParameterList solver_types_db =
         rcp(new ParameterList("Linear Solver Types"));
-    solver_types_db->set("AztecOO", *aztecoo_db);
+    solver_types_db->set("Belos", *belos_db);
 
     RCP_ParameterList stratimikos_db =
         rcp(new ParameterList("Stratimikos"));
     stratimikos_db->set("Linear Solver Types", *solver_types_db);
-    stratimikos_db->set("Linear Solver Type", string("AztecOO"));
+    stratimikos_db->set("Linear Solver Type", string("Belos"));
+    stratimikos_db->set("Preconditioner Type",string("None"));
 
     RCP_ParameterList smoother_db =
         rcp(new ParameterList("Smoother"));
     smoother_db->set("Stratimikos", *stratimikos_db);
-    smoother_db->set("max_itr", 1);
+    smoother_db->set("max_itr", 5);
     smoother_db->set("solver_type", string("stratimikos"));
 
     RCP_ParameterList prec_db =
@@ -159,17 +161,18 @@ TEST(MultigridTest, Heuristic)
              << setprecision(3) << norm2[0] << endl;
     }
 
+    // Heuristic test of output vector norm
     if (nodes == 1)
     {
-        EXPECT_SOFTEQ(3.292e+02, norm2[0], 1.0e-3);
+        EXPECT_SOFTEQ(2.66046e2, norm2[0], 1.0e-3);
     }
     else if (nodes == 2)
     {
-        EXPECT_SOFTEQ(2.999e+02, norm2[0], 1.0e-3);
+        EXPECT_SOFTEQ(2.899e+02, norm2[0], 1.0e-3);
     }
     else if (nodes == 4)
     {
-        EXPECT_SOFTEQ(2.726e+02, norm2[0], 1.0e-3);
+        EXPECT_SOFTEQ(2.758546e+02, norm2[0], 1.0e-3);
     }
 }
 

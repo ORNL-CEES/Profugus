@@ -54,11 +54,12 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
     // Build level 0 smoother
     RCP_ParameterList smoother_db = sublist(prec_db, "Smoother");
-    /* Need Tpetra interface to solvers
-    d_smoothers.push_back(LinearSolverBuilder::build_solver(smoother_db));
+    d_smoothers.push_back(
+        LinearSolverBuilder<MV,OP>::build_solver(smoother_db));
     d_smoothers.back()->set_operator(d_operators.back());
-    d_preconditioners.push_back(PreconditionerBuilder::build_preconditioner(
-                                    fine_system->get_Matrix(),smoother_db) );
+    d_preconditioners.push_back(
+        PreconditionerBuilder<OP>::build_preconditioner(
+            fine_system->get_Matrix(),smoother_db) );
     if (d_preconditioners.back() != Teuchos::null)
     {
         Check (d_preconditioners.back()->getDomainMap()->getNodeNumElements()
@@ -69,7 +70,6 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
     {
         d_smoothers.back()->set_preconditioner(fine_system->get_Matrix());
     }
-    */
 
     // loop through levels
     int level = 0;
@@ -122,24 +122,25 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
                                         collapse)));
 
         // Build smoother
-        /*
-        d_smoothers.push_back(LinearSolverBuilder::build_solver(smoother_db));
+        d_smoothers.push_back(
+            LinearSolverBuilder<MV,OP>::build_solver(smoother_db));
         d_smoothers.back()->set_operator(d_operators.back());
 
         // Store and set preconditioner
-        d_preconditioners.push_back(PreconditionerBuilder::build_preconditioner(
-                                        system->get_Matrix(),smoother_db) );
+        d_preconditioners.push_back(
+            PreconditionerBuilder<OP>::build_preconditioner(
+                system->get_Matrix(),smoother_db) );
         if( d_preconditioners.back() != Teuchos::null )
         {
             Check (d_preconditioners.back()->getDomainMap()
-                ->getNodeNumElements() == d_solutions.back()->getLocalLength() );
+                ->getNodeNumElements() ==
+                d_solutions.back()->getLocalLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
         else
         {
             d_smoothers.back()->set_preconditioner(system->get_Matrix());
         }
-        */
 
     } while( new_groups!=1 && level!=max_depth );
 
@@ -153,21 +154,20 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         RCP_ParameterList coarse_db = sublist(prec_db, "Coarse Solver");
 
         // Replace last smoother, don't add a new one
-        /*
         d_smoothers.push_back(
-            profugus::LinearSolverBuilder::build_solver(coarse_db));
+            profugus::LinearSolverBuilder<MV,OP>::build_solver(coarse_db));
         d_smoothers.back()->set_operator(d_operators.back());
         if( d_preconditioners.back() != Teuchos::null )
         {
             Require(d_preconditioners.back()->getDomainMap()
-                ->getNodeNumElements() == d_solutions.back()->getLocalLength() );
+                ->getNodeNumElements() ==
+                d_solutions.back()->getLocalLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
         else
         {
             d_smoothers.back()->set_preconditioner(d_operators.back());
         }
-        */
     }
 }
 
