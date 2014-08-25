@@ -108,8 +108,6 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
 
     if( eigensolver=="arnoldi" )
     {
-        Not_Implemented("Construction of Arnoldi from EigensolverBuilder.");
-        /*
         // Get nested operator_db
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
@@ -126,13 +124,9 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         // Build the solver
         solver = Teuchos::rcp(new Arnoldi<MV,OP>(db));
         solver->set_operator(AinvB);
-        */
     }
     else if( eigensolver=="power" )
     {
-        Not_Implemented("Construction of Arnoldi from EigensolverBuilder.");
-
-        /*
         // Get nested operator_db
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
@@ -149,7 +143,6 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         // Build the solver
         solver = Teuchos::rcp(new PowerIteration<MV,OP>(db));
         solver->set_operator(AinvB);
-        */
     }
     else if( eigensolver=="davidson" )
     {
@@ -165,9 +158,6 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
     else if( eigensolver=="rqi" || eigensolver=="rayleigh" ||
              eigensolver=="rayleigh_quotient" )
     {
-        Not_Implemented("Construction of Arnoldi from EigensolverBuilder.");
-
-        /*
         // Get nested operator_db
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
@@ -182,7 +172,7 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         shift_op->set_rhs_operator(B);
 
         // Build RQI solver and set operators
-        Teuchos::RCP<RayleighQuotient> rqi_solver =
+        Teuchos::RCP<RayleighQuotient<MV,OP> > rqi_solver =
             Teuchos::rcp( new RayleighQuotient<MV,OP>(db) );
         rqi_solver->set_operator(A);
         rqi_solver->set_rhs_operator(B);
@@ -190,7 +180,6 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
 
         // Set base class pointer
         solver = rqi_solver;
-        */
     }
     else
     {

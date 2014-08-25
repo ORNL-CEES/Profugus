@@ -52,8 +52,8 @@ class InverseOperatorBase
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
     InverseOperatorBase(Teuchos::RCP<Teuchos::ParameterList> pl);
-    void set_operator( Teuchos::RCP<OP> A );
-    void set_rhs_operator( Teuchos::RCP<OP> B );
+    virtual void set_operator( Teuchos::RCP<OP> A );
+    virtual void set_rhs_operator( Teuchos::RCP<OP> B );
     void set_preconditioner( Teuchos::RCP<OP> P );
 
   protected:
@@ -161,7 +161,6 @@ class InverseOperator<Epetra_MultiVector,Epetra_Operator>
     }
     const Epetra_Map & OperatorDomainMap() const
     {
-        Require(d_A != Teuchos::null);
         if( d_B != Teuchos::null )
         {
             return d_B->OperatorDomainMap();

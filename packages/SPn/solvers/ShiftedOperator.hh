@@ -150,20 +150,12 @@ class ShiftedOperator<Epetra_MultiVector,Epetra_Operator>
     const Epetra_Map & OperatorDomainMap() const
     {
         Require(d_A != Teuchos::null);
-        if( d_B != Teuchos::null )
-        {
-            return d_B->OperatorDomainMap();
-        }
-        else
-        {
-            Require(d_A != Teuchos::null);
-            return d_A->OperatorRangeMap();
-        }
+        return d_A->OperatorDomainMap();
     }
     const Epetra_Map & OperatorRangeMap() const
     {
         Require(d_A != Teuchos::null);
-        return d_A->OperatorDomainMap();
+        return d_A->OperatorRangeMap();
     }
 
 };

@@ -61,12 +61,27 @@ class ShiftedInverseOperator<Epetra_MultiVector,Epetra_Operator>
         : Base(pl)
         , d_operator( Teuchos::rcp( new ShiftedOperator<MV,OP>() ) )
         , d_shift(0.0)
-    {}
+    {
+    }
 
     // Set shift
     void set_shift( double shift )
     {
         d_operator->set_shift(shift);
+    }
+
+    // Set "A" operator
+    void set_operator( Teuchos::RCP<OP> A )
+    {
+        d_operator->set_operator(A);
+        Base::set_operator(d_operator);
+    }
+
+    // Set "B" operator
+    void set_rhs_operator( Teuchos::RCP<OP> B )
+    {
+        d_operator->set_rhs_operator(B);
+        Base::set_rhs_operator(B);
     }
 
     // Apply (solve linear system)
