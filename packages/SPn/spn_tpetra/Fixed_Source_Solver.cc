@@ -73,7 +73,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
     b_system->build_Matrix();
 
     // register the operator with the solver
-    //d_solver.set_operator(b_system->get_Operator());
+    d_solver.set_operator(b_system->get_Operator());
 
     // allocate the left-hand side solution vector
     d_lhs = Teuchos::rcp(new Vector_t(b_system->get_Map()));
@@ -99,7 +99,7 @@ void Fixed_Source_Solver::solve(const External_Source &q)
     Check (b_system->get_RHS()->getLocalLength() == d_lhs->getLocalLength());
 
     // solve the problem
-    //d_solver.solve(d_lhs, b_system->get_RHS());
+    d_solver.solve(d_lhs, b_system->get_RHS());
 }
 
 //---------------------------------------------------------------------------//

@@ -123,20 +123,18 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
 
     // The default energy multigrid preconditioner for the Davidson solver
-    // fails on one group.  We could switch to a different preconditioner but
-    // we would have to set up parameters for it.  Instead, we'll just switch
-    // to Arnoldi for that case.
+    // fails on one group.  Switch to a different preconditioner
     if ( mat->xs().num_groups() == 1 )
     {
-        edb->set("Preconditioner", std::string("Ifpack"));
+        edb->set("Preconditioner", std::string("Ifpack2"));
     }
 
     // Build a preconditioenr
     RCP_Tpetra_Op prec = build_preconditioner(dim, mat, mesh, indexer, data);
 
     // Build the eigensolver
-    //d_eigensolver = EigenvalueSolverBuilder::build_solver(
-    //    edb, b_system->get_Operator(), b_system->get_fission_matrix(), prec);
+    d_eigensolver = EigenvalueSolverBuilder<MV,OP>::build_solver(
+        edb, b_system->get_Operator(), b_system->get_fission_matrix(), prec);
 
     Ensure (!d_eigensolver.is_null());
 }
@@ -152,7 +150,7 @@ void Eigenvalue_Solver::solve()
     Require (!d_eigensolver.is_null());
 
     // solve the problem
-    //d_eigensolver->solve(d_keff, d_u);
+    d_eigensolver->solve(d_keff, d_u);
 
     profugus::pout << profugus::setprecision(10) << profugus::fixed;
     profugus::pout << "k-eff = " << d_keff << profugus::endl;
@@ -326,6 +324,9 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
                                         RCP_Indexer     indexer,
                                         RCP_Global_Data data)
 {
+    ADD_WARNING("No Tpetra preconditioners available yet");
+    return RCP_Tpetra_Op();
+
     Require (b_db->isSublist("eigenvalue_db"));
 
     // preconditioner operator
