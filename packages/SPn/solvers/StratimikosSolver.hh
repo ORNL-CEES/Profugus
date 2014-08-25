@@ -18,11 +18,13 @@
 #include "comm/P_Stream.hh"
 #include "LinearSolver.hh"
 
-#include <Epetra_Operator.h>
-#include <Teuchos_RCP.hpp>
-#include <Teuchos_ParameterList.hpp>
-#include <Thyra_LinearOpWithSolveBase.hpp>
-#include <Thyra_PreconditionerBase.hpp>
+#include "Epetra_Operator.h"
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_ParameterList.hpp"
+#include "Thyra_LinearOpWithSolveBase.hpp"
+#include "Thyra_PreconditionerBase.hpp"
+
+#include "AnasaziMultiVecTraits.hpp"
 
 namespace profugus
 {
@@ -46,16 +48,15 @@ namespace profugus
  */
 //===========================================================================//
 
-class StratimikosSolver :
-    public LinearSolver<Epetra_MultiVector,Epetra_Operator>
+template <class MV, class OP>
+class StratimikosSolver : public LinearSolver<MV,OP>
 {
   public:
     //@{
     //! Useful typedefs.
+    typedef LinearSolver<MV,OP>                         Base;
     typedef Teuchos::ParameterList                      ParameterList;
     typedef Teuchos::RCP<ParameterList>                 RCP_ParameterList;
-    typedef Epetra_MultiVector                          MV;
-    typedef Epetra_Operator                             OP;
     typedef Thyra::LinearOpBase<double>                 LOp;
     typedef Thyra::PreconditionerBase<double>           Prec;
     typedef Thyra::LinearOpWithSolveBase<double>        LOWS;
@@ -64,6 +65,7 @@ class StratimikosSolver :
     typedef Teuchos::RCP<const LOp>                     RCP_LOp;
     typedef Teuchos::RCP<LOWS>                          RCP_LOWS;
     typedef Teuchos::RCP<const Prec>                    RCP_Prec;
+    typedef Anasazi::MultiVecTraits<double,MV>          MVT;
     //@}
 
   private:
@@ -73,20 +75,26 @@ class StratimikosSolver :
     RCP_LOp            d_prec;
     bool               d_updated_operator;
 
+    using Base::b_tolerance;
+    using Base::b_verbosity;
+    using Base::b_max_iters;
+    using Base::b_num_iters;
+    using Base::b_label;
+
   public:
     // Constructor.
     // Read Profugus database entries for solver parameters.
     explicit StratimikosSolver(RCP_ParameterList db);
 
-    // Set Epetra Operator for linear system
-    void set_operator(Teuchos::RCP<Epetra_Operator> A);
+    // Set Operator for linear system
+    void set_operator(Teuchos::RCP<OP> A);
 
-    // Set Epetra Operator for preconditioner
-    void set_preconditioner(Teuchos::RCP<Epetra_Operator> P);
+    // Set Operator for preconditioner
+    void set_preconditioner(Teuchos::RCP<OP> P);
 
     // Solve a linear problem.
-    void solve(Teuchos::RCP<Epetra_MultiVector>       ep_x,
-               Teuchos::RCP<const Epetra_MultiVector> ep_b);
+    void solve(Teuchos::RCP<MV>       x,
+               Teuchos::RCP<const MV> b);
 
     // >>> ACCESSORS
 
@@ -95,6 +103,16 @@ class StratimikosSolver :
 
     //! Maximum number of iterations.
     int max_itr() const { return b_max_iters; }
+
+  private:
+
+    Teuchos::RCP<Thyra::MultiVectorBase<double> > buildThyraMV(
+            Teuchos::RCP<MV> x,
+            Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const;
+
+    Teuchos::RCP<const Thyra::MultiVectorBase<double> > buildThyraConstMV(
+            Teuchos::RCP<const MV> x,
+            Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const;
 };
 
 } // end namespace profugus

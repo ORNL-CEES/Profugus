@@ -41,19 +41,18 @@ namespace profugus
  */
 //===========================================================================//
 
-class RayleighQuotient :
-        public EigenvalueSolver<Epetra_MultiVector,Epetra_Operator>
+template <class MV, class OP>
+class RayleighQuotient : public EigenvalueSolver<MV,OP>
 {
-    typedef EigenvalueSolver<Epetra_MultiVector,Epetra_Operator> Base;
+    typedef EigenvalueSolver<MV,OP> Base;
 
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector                    MV;
-    typedef Epetra_Operator                       OP;
     typedef Teuchos::ScalarTraits<double>         SCT;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
+    typedef Teuchos::RCP<Teuchos::ParameterList>  RCP_ParameterList;
     //@}
 
   public:
@@ -87,6 +86,14 @@ class RayleighQuotient :
     // Values for fixed (Wielandt) shift
     bool   d_use_fixed_shift;
     double d_fixed_shift;
+
+    using Base::b_A;
+    using Base::b_converged;
+    using Base::b_num_iters;
+    using Base::b_verbosity;
+    using Base::b_max_iters;
+    using Base::b_tolerance;
+    using Base::b_label;
 };
 
 } // end namespace profugus

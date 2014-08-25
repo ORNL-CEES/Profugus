@@ -107,12 +107,12 @@ SET(SOLVERS_SOURCES
   solvers/InverseOperator.pt.cc
   solvers/LinearSolverBuilder.pt.cc
   solvers/PowerIteration.pt.cc
-  #solvers/PreconditionerBuilder.cc
-  #solvers/RayleighQuotient.cc
+  solvers/PreconditionerBuilder.pt.cc
+  solvers/RayleighQuotient.pt.cc
   solvers/Richardson.pt.cc
   solvers/ShiftedInverseOperator.pt.cc
   solvers/ShiftedOperator.pt.cc
-  solvers/StratimikosSolver.cc
+  solvers/StratimikosSolver.pt.cc
   )
 LIST(APPEND HEADERS ${SOLVERS_HEADERS})
 LIST(APPEND SOURCES ${SOLVERS_SOURCES})

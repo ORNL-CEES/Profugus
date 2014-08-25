@@ -1,18 +1,22 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/PreconditionerBuilder.cc
+ * \file   solvers/PreconditionerBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 09:28:52 2014
- * \brief  PreconditionerBuilder member definitions.
+ * \brief  PreconditionerBuilder template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef solvers_PreconditionerBuilder_t_hh
+#define solvers_PreconditionerBuilder_t_hh
 
 #include <string>
 
 #include <SPn/config.h>
 
 #include "Epetra_RowMatrix.h"
+#include "Epetra_InvOperator.h"
 #include "Ifpack.h"
 
 // ML has to be optional for Windows compatibility
@@ -22,6 +26,8 @@
 
 #include "utils/String_Functions.hh"
 #include "PreconditionerBuilder.hh"
+
+#include "Tpetra_Operator.hpp"
 
 namespace profugus
 {
@@ -35,8 +41,9 @@ namespace profugus
  * Epetra_RowMatrix.  Currently available preconditioner types (specified
  * via the "Preconditioner" db entry) are "Ifpack", "ML", and "None"
  */
+template <>
 Teuchos::RCP<Epetra_Operator>
-PreconditionerBuilder::build_preconditioner(
+PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
     Teuchos::RCP<Epetra_Operator> op,
     RCP_ParameterList             db )
 {
@@ -78,13 +85,15 @@ PreconditionerBuilder::build_preconditioner(
         err = ifpack_prec->Compute();
         Ensure( err == 0 );
 
-        // Wrap raw preconditioner into a denovo Preconditioner to
-        //  invert the sense of Apply and ApplyInverse
-        // This provides the same functionality as an Epetra_InvOperator
-        //  but uses an RCP rather than a raw pointer so we don't
-        //  have to store a copy of the raw preconditioner separately.
+        // Wrap raw preconditioner into an Epetra_InvOperator
+        // to reverse the sense of Apply and ApplyInverse
+        // Because Epetra_InvOperator stores a raw pointer rather than
+        // an RCP, we need to keep the "raw" preconditioner alive.
+        // We accomplish this by attaching the rcp to the raw
+        // preconditioner as extra data on the inverted operator.
         prec = Teuchos::RCP<Epetra_Operator>(
-            new Preconditioner(ifpack_prec) );
+            new Epetra_InvOperator(ifpack_prec.getRawPtr()) );
+        Teuchos::set_extra_data(ifpack_prec,"ifpack_raw_pointer",Teuchos::inOutArg(prec));
         Ensure( prec != Teuchos::null );
     }
     else if( prec_type == "ml" )
@@ -108,12 +117,15 @@ PreconditionerBuilder::build_preconditioner(
         ml_prec = Teuchos::rcp( new ML_Epetra::MultiLevelPreconditioner(
                                     *rowmat, *ml_db ) );
 
-        // Wrap raw preconditioner into a denovo Preconditioner to
-        //  invert the sense of Apply and ApplyInverse
-        // This provides the same functionality as an Epetra_InvOperator
-        //  but uses an RCP rather than a raw pointer so we don't
-        //  have to store a copy of the raw preconditioner separately.
-        prec = Teuchos::RCP<Epetra_Operator>(new Preconditioner(ml_prec) );
+        // Wrap raw preconditioner into an Epetra_InvOperator
+        // to reverse the sense of Apply and ApplyInverse
+        // Because Epetra_InvOperator stores a raw pointer rather than
+        // an RCP, we need to keep the "raw" preconditioner alive.
+        // We accomplish this by attaching the rcp to the raw
+        // preconditioner as extra data on the inverted operator.
+        prec = Teuchos::RCP<Epetra_Operator>(
+            new Epetra_InvOperator(ml_prec.getRawPtr()) );
+        Teuchos::set_extra_data(ml_prec,"ml_raw_pointer",Teuchos::inOutArg(prec));
 
         Ensure( prec != Teuchos::null );
 #else
@@ -124,8 +136,21 @@ PreconditionerBuilder::build_preconditioner(
     return prec;
 }
 
+template <>
+Teuchos::RCP<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
+PreconditionerBuilder<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >::build_preconditioner(
+    Teuchos::RCP<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> > op,
+    RCP_ParameterList             db )
+{
+    Validate(false,"No Tpetra preconditioners implemented yet");
+    Teuchos::RCP<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> > prec;
+    return prec;
+}
+
 } // end namespace profugus
 
+#endif // solvers_PreconditionerBuilder_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of PreconditionerBuilder.cc
+//                 end of PreconditionerBuilder.t.hh
 //---------------------------------------------------------------------------//

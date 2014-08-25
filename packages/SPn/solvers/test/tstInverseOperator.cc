@@ -184,8 +184,10 @@ class OperatorB : public Epetra_Operator
 class Inverse_Operator_Test : public testing::Test
 {
   protected:
-    typedef profugus::InverseOperator          InverseOperator;
-    typedef InverseOperator::RCP_ParameterList RCP_ParameterList;
+    typedef Epetra_MultiVector                   MV;
+    typedef Epetra_Operator                      OP;
+    typedef profugus::InverseOperator<MV,OP>     InverseOperator;
+    typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
 
   protected:
 

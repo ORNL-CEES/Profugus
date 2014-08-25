@@ -17,6 +17,8 @@
 
 #include "AnasaziMultiVecTraits.hpp"
 #include "AnasaziOperatorTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 #include "Epetra_Operator.h"
 #include "Epetra_MultiVector.h"
 #include "Epetra_Map.h"
@@ -252,9 +254,12 @@ class InverseOperator<
     }
 
 };
+
 } // end namespace profugus
 
 #endif // solvers_InverseOperator_hh
+
+#include "InverseOperator.t.hh"
 
 //---------------------------------------------------------------------------//
 //                 end of InverseOperator.hh

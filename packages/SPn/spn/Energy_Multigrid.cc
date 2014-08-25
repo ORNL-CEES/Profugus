@@ -55,7 +55,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
     d_smoothers.push_back(
         LinearSolverBuilder<MV,OP>::build_solver(smoother_db));
     d_smoothers.back()->set_operator(d_operators.back());
-    d_preconditioners.push_back(PreconditionerBuilder::build_preconditioner(
+    d_preconditioners.push_back(PreconditionerBuilder<OP>::build_preconditioner(
                                     fine_system->get_Matrix(),smoother_db) );
     if (d_preconditioners.back() != Teuchos::null)
     {
@@ -124,7 +124,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         d_smoothers.back()->set_operator(d_operators.back());
 
         // Store and set preconditioner
-        d_preconditioners.push_back(PreconditionerBuilder::build_preconditioner(
+        d_preconditioners.push_back(PreconditionerBuilder<OP>::build_preconditioner(
                                         system->get_Matrix(),smoother_db) );
         if( d_preconditioners.back() != Teuchos::null )
         {

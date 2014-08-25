@@ -17,6 +17,8 @@
 
 #include "AnasaziMultiVecTraits.hpp"
 #include "AnasaziOperatorTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 #include "Epetra_Operator.h"
 #include "Epetra_MultiVector.h"
 #include "Epetra_Map.h"
@@ -112,7 +114,7 @@ class ShiftedOperator<Epetra_MultiVector,Epetra_Operator>
   public:
 
     // Constructor.
-    explicit ShiftedOperator();
+    explicit ShiftedOperator(){};
 
     // Apply (solve linear system)
     int Apply(const MV &x, MV &y) const
@@ -195,7 +197,7 @@ class ShiftedOperator<
   public:
 
     // Constructor.
-    explicit ShiftedOperator();
+    explicit ShiftedOperator(){};
 
     // Apply (solve linear system)
     void apply(const MV &x, MV &y,
@@ -239,9 +241,12 @@ class ShiftedOperator<
     }
 
 };
+
 } // end namespace profugus
 
 #endif // solvers_ShiftedOperator_hh
+
+#include "ShiftedOperator.t.hh"
 
 //---------------------------------------------------------------------------//
 //                 end of ShiftedOperator.hh

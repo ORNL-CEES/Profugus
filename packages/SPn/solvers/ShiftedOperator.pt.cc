@@ -12,7 +12,7 @@
 #include "Epetra_MultiVector.h"
 #include "AnasaziEpetraAdapter.hpp"
 #include "AnasaziTpetraAdapter.hpp"
-#include "ShiftedOperator.t.hh"
+#include "ShiftedOperator.hh"
 
 namespace profugus
 {

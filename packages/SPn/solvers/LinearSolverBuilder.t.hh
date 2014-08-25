@@ -68,11 +68,8 @@ LinearSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db )
     }
     else if (solver_type == "stratimikos")
     {
-        Not_Implemented("solver_type = stratimikos in LinearSolverBuilder");
-        /*
         // Just build the stratimikos solver, let validation be handled there
-        solver = Teuchos::rcp(new StratimikosSolver(db));
-        */
+        solver = Teuchos::rcp(new StratimikosSolver<MV,OP>(db));
     }
     else
     {

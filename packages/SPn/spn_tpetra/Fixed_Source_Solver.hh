@@ -48,10 +48,13 @@ class Fixed_Source_Solver : public Solver_Base
   public:
     //@{
     //! Typedefs.
-    typedef Solver_Base                      Base;
-    typedef Linear_System_t::External_Source External_Source;
-    typedef Linear_System_t::RCP_Timestep    RCP_Timestep;
-    typedef StratimikosSolver                Linear_Solver_t;
+    typedef Solver_Base                              Base;
+    typedef Linear_System_t::External_Source         External_Source;
+    typedef Linear_System_t::RCP_Timestep            RCP_Timestep;
+    typedef KokkosClassic::SerialNode                Node;
+    typedef Tpetra::MultiVector<double,int,int,Node> MV;
+    typedef Tpetra::Operator<double,int,int,Node>    OP;
+    typedef StratimikosSolver<MV,OP>                 Linear_Solver_t;
     //@}
 
   private:
