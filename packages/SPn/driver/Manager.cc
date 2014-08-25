@@ -93,30 +93,69 @@ void Manager::setup(const std::string &xml_file)
     // default linear solver type (stratimikios)
     d_db->get("solver_type", std::string("stratimikos"));
 
+    // Determine if epetra or tpetra should be used
+    d_implementation = d_db->get("trilinos_implementation",
+        std::string("epetra"));
+    Require( d_implementation == "epetra" || d_implementation == "tpetra" );
+
     // build the appropriate solver (default is eigenvalue)
-    if (prob_type == "eigenvalue")
+    if( d_implementation == "epetra" )
     {
-        d_eigen_solver = Teuchos::rcp(new Eigenvalue_Solver_t(d_db));
-        d_solver_base  = d_eigen_solver;
-    }
-    else if (prob_type == "fixed")
-    {
-        d_fixed_solver = Teuchos::rcp(new Fixed_Source_Solver_t(d_db));
-        d_solver_base  = d_fixed_solver;
-    }
-    else if (prob_type == "fixed_tdep")
-    {
-        d_time_dep_solver = Teuchos::rcp(new Time_Dependent_Solver_t(d_db));
-        d_solver_base  = d_time_dep_solver;
+        if (prob_type == "eigenvalue")
+        {
+            d_eigen_solver = Teuchos::rcp(new Eigenvalue_Solver_t(d_db));
+            d_solver_base  = d_eigen_solver;
+        }
+        else if (prob_type == "fixed")
+        {
+            d_fixed_solver = Teuchos::rcp(new Fixed_Source_Solver_t(d_db));
+            d_solver_base  = d_fixed_solver;
+        }
+        else if (prob_type == "fixed_tdep")
+        {
+            d_time_dep_solver = Teuchos::rcp(new Time_Dependent_Solver_t(d_db));
+            d_solver_base  = d_time_dep_solver;
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << "Undefined problem type " << prob_type
+                << "; choose eigenvalue, fixed or fixed_tdep" << std::endl;
+            Validate(false,ss.str());
+        }
+
+        // setup the solver
+        d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
     }
     else
     {
-        throw profugus::assertion(
-            "Undefined problem type; choose eigenvalue or fixed");
-    }
+        if (prob_type == "eigenvalue")
+        {
+            d_eigen_solver_tpetra = Teuchos::rcp(
+                new Eigenvalue_Solver_Tpetra_t(d_db));
+            d_solver_base_tpetra  = d_eigen_solver_tpetra;
+        }
+        else if (prob_type == "fixed")
+        {
+            d_fixed_solver_tpetra = Teuchos::rcp(
+                new Fixed_Source_Solver_Tpetra_t(d_db));
+            d_solver_base_tpetra  = d_fixed_solver_tpetra;
+        }
+        else if (prob_type == "fixed_tdep")
+        {
+            Not_Implemented("Time dependent SPN with Tpetra");
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << "Undefined problem type " << prob_type
+                << "; choose eigenvalue or fixed" << std::endl;
+            Validate(false,ss.str());
+        }
 
-    // setup the solver
-    d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
+        // setup the solver
+        d_solver_base_tpetra->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
+    }
 
     // make the state
     d_state = Teuchos::rcp(new State_t(d_mesh, d_mat->xs().num_groups()));
@@ -141,31 +180,52 @@ void Manager::solve()
 
         SCREEN_MSG("Executing solver");
 
-        // run the appropriate solver
-        if (!d_eigen_solver.is_null())
+        if( d_implementation == "epetra" )
         {
-            Check (d_fixed_solver.is_null());
-            Check (d_time_dep_solver.is_null());
-            d_eigen_solver->solve();
-        }
-        else if (!d_fixed_solver.is_null())
-        {
-            Check (d_eigen_solver.is_null());
-            Check (d_time_dep_solver.is_null());
-            Check (!d_external_source.is_null());
-            d_fixed_solver->solve(*d_external_source);
+            // run the appropriate solver
+            if (!d_eigen_solver.is_null())
+            {
+                Check (d_fixed_solver.is_null());
+                Check (d_time_dep_solver.is_null());
+                d_eigen_solver->solve();
+            }
+            else if (!d_fixed_solver.is_null())
+            {
+                Check (d_eigen_solver.is_null());
+                Check (d_time_dep_solver.is_null());
+                Check (!d_external_source.is_null());
+                d_fixed_solver->solve(*d_external_source);
+            }
+            else
+            {
+                Check (d_fixed_solver.is_null());
+                Check (d_eigen_solver.is_null());
+                Check (!d_time_dep_solver.is_null());
+                Check (!d_external_source.is_null());
+                d_time_dep_solver->solve(*d_external_source);
+            }
+
+            // write the solution vector into the state
+            d_solver_base->write_state(*d_state);
         }
         else
         {
-            Check (d_fixed_solver.is_null());
-            Check (d_eigen_solver.is_null());
-            Check (!d_time_dep_solver.is_null());
-            Check (!d_external_source.is_null());
-            d_time_dep_solver->solve(*d_external_source);
-        }
+            // run the appropriate solver
+            if (!d_eigen_solver_tpetra.is_null())
+            {
+                Check (d_fixed_solver_tpetra.is_null());
+                d_eigen_solver_tpetra->solve();
+            }
+            else if (!d_fixed_solver.is_null())
+            {
+                Check (d_eigen_solver_tpetra.is_null());
+                Check (!d_external_source.is_null());
+                d_fixed_solver_tpetra->solve(*d_external_source);
+            }
 
-        // write the solution vector into the state
-        d_solver_base->write_state(*d_state);
+            // write the solution vector into the state
+            d_solver_base_tpetra->write_state(*d_state);
+        }
     }
 }
 
@@ -262,6 +322,9 @@ void Manager::output()
     // >>> OUTPUT MATRICES
     if (d_db->get<bool>("output_matrices", false))
     {
+        Insist(d_implementation == "epetra",
+               "Matrix file output not yet available for Tpetra");
+
         std::string A("A.mtx"), B("B.mtx");
 
         // linear system

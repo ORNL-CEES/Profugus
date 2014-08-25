@@ -22,6 +22,9 @@
 #include "spn/Time_Dependent_Solver.hh"
 #include "Problem_Builder.hh"
 
+#include "spn_tpetra/Eigenvalue_Solver.hh"
+#include "spn_tpetra/Fixed_Source_Solver.hh"
+
 namespace spn
 {
 
@@ -55,6 +58,16 @@ class Manager
     typedef Fixed_Source_Solver_t::External_Source External_Source_t;
     typedef Teuchos::RCP<External_Source_t>        RCP_External_Source;
 
+    // Tpetra variants
+    typedef profugus::tpetra::Solver_Base          Solver_Base_Tpetra_t;
+    typedef Teuchos::RCP<Solver_Base_Tpetra_t>     RCP_Solver_Base_Tpetra;
+    typedef profugus::tpetra::Fixed_Source_Solver  Fixed_Source_Solver_Tpetra_t;
+    typedef profugus::tpetra::Eigenvalue_Solver    Eigenvalue_Solver_Tpetra_t;
+    typedef Teuchos::RCP<Fixed_Source_Solver_Tpetra_t>
+                RCP_Fixed_Source_Solver_Tpetra;
+    typedef Teuchos::RCP<Eigenvalue_Solver_Tpetra_t>
+                RCP_Eigenvalue_Solver_Tpetra;
+
     // >>> DATA
 
     // Problem database.
@@ -74,11 +87,19 @@ class Manager
     // Problem dimensions.
     RCP_Dimensions d_dim;
 
+    // Trilinos implementation (epetra or tpetra)
+    std::string d_implementation;
+
     // Solvers
     RCP_Solver_Base           d_solver_base;
     RCP_Fixed_Source_Solver   d_fixed_solver;
     RCP_Eigenvalue_Solver     d_eigen_solver;
     RCP_Time_Dependent_Solver d_time_dep_solver;
+
+    // Tpetra Solvers
+    RCP_Solver_Base_Tpetra           d_solver_base_tpetra;
+    RCP_Fixed_Source_Solver_Tpetra   d_fixed_solver_tpetra;
+    RCP_Eigenvalue_Solver_Tpetra     d_eigen_solver_tpetra;
 
     // External source for fixed source problems.
     RCP_External_Source d_external_source;
