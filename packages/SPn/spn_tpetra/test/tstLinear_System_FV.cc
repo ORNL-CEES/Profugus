@@ -1872,7 +1872,7 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
     EXPECT_EQ(12 * data->num_cells(), B->getGlobalNumCols());
 
     // extract some blocks
-    if (node == 0)
+    if (node == 0 && nodes == 1 )
     {
         // 2nd equation, 2nd cell
         int row = 28;
@@ -1882,28 +1882,25 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
 
         size_t num_entries;
         B->getGlobalRowCopy(row, indices(), values(), num_entries);
-        EXPECT_EQ(8, num_entries);
+        EXPECT_EQ( 8, num_entries );
 
-        if (nodes == 1)
-        {
-            EXPECT_EQ(24, indices[0]);
-            EXPECT_EQ(25, indices[1]);
-            EXPECT_EQ(27, indices[2]);
-            EXPECT_EQ(28, indices[3]);
-            EXPECT_EQ(30, indices[4]);
-            EXPECT_EQ(31, indices[5]);
-            EXPECT_EQ(33, indices[6]);
-            EXPECT_EQ(34, indices[7]);
+        EXPECT_EQ(24, indices[0]);
+        EXPECT_EQ(25, indices[1]);
+        EXPECT_EQ(27, indices[2]);
+        EXPECT_EQ(28, indices[3]);
+        EXPECT_EQ(30, indices[4]);
+        EXPECT_EQ(31, indices[5]);
+        EXPECT_EQ(33, indices[6]);
+        EXPECT_EQ(34, indices[7]);
 
-            EXPECT_SOFTEQ(-0.69333333, values[0], 1.0e-6);
-            EXPECT_SOFTEQ(-2.24000000, values[1], 1.0e-6);
-            EXPECT_SOFTEQ( 0.46222222, values[2], 1.0e-6);
-            EXPECT_SOFTEQ( 1.49333333, values[3], 1.0e-6);
-            EXPECT_SOFTEQ(-0.36977778, values[4], 1.0e-6);
-            EXPECT_SOFTEQ(-1.19466667, values[5], 1.0e-6);
-            EXPECT_SOFTEQ( 0.31695238, values[6], 1.0e-6);
-            EXPECT_SOFTEQ( 1.02400000, values[7], 1.0e-6);
-        }
+        EXPECT_SOFTEQ(-0.69333333, values[0], 1.0e-6);
+        EXPECT_SOFTEQ(-2.24000000, values[1], 1.0e-6);
+        EXPECT_SOFTEQ( 0.46222222, values[2], 1.0e-6);
+        EXPECT_SOFTEQ( 1.49333333, values[3], 1.0e-6);
+        EXPECT_SOFTEQ(-0.36977778, values[4], 1.0e-6);
+        EXPECT_SOFTEQ(-1.19466667, values[5], 1.0e-6);
+        EXPECT_SOFTEQ( 0.31695238, values[6], 1.0e-6);
+        EXPECT_SOFTEQ( 1.02400000, values[7], 1.0e-6);
     }
 
     // make a vector
