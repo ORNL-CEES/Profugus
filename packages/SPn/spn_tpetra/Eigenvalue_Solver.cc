@@ -18,6 +18,7 @@
 #include "comm/global.hh"
 #include "utils/String_Functions.hh"
 #include "solvers/EigenvalueSolverBuilder.hh"
+#include "solvers/PreconditionerBuilder.hh"
 #include "solvers/InverseOperator.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
@@ -262,37 +263,28 @@ void Eigenvalue_Solver::set_default_parameters()
   <Parameter name='eigensolver' type='string' value='Davidson'/>            \n\
   <Parameter name='Output Level' type='string' value='low'/>                \n\
   <Parameter name='verbosity' type='string' value='Low'/>                   \n\
-  <Parameter name='Preconditioner' type='string' value='Multigrid'/>        \n\
+  <Parameter name='Preconditioner' type='string' value='Ifpack2'/>          \n\
   <ParameterList name='Multigrid Preconditioner'>                           \n\
    <ParameterList name='Smoother'>                                          \n\
     <Parameter name='Preconditioner' type='string' value='Ifpack'/>         \n\
     <Parameter name='verbosity' type='string' value='None'/>                \n\
     <Parameter name='max_itr' type='int' value='3'/>                        \n\
-    <Parameter name='aztec_solver' type='string' value='BiCGStab'/>         \n\
-    <Parameter name='aztec_prec' type='string' value='ilu'/>                \n\
+    <Parameter name='solver_type' type='string' value='stratimikos'/>       \n\
    </ParameterList>                                                         \n\
   </ParameterList>                                                          \n\
   <ParameterList name='Anasazi'>                                            \n\
     <Parameter name='Maximum Subspace Dimension' type='int' value='25'/>    \n\
     <Parameter name='Restart Dimension' type='int' value='5'/>              \n\
   </ParameterList>                                                          \n\
-  <Parameter name='Ifpack Type' type='string' value='ILUT'/>                \n\
-  <Parameter name='Ifpack Overlap' type='int' value='0'/>                   \n\
-  <ParameterList name='Ifpack Params'>                                      \n\
+  <Parameter name='Ifpack2 Type' type='string' value='ILUT'/>               \n\
+  <Parameter name='Ifpack2 Overlap' type='int' value='0'/>                  \n\
+  <ParameterList name='Ifpack2 Params'>                                     \n\
     <Parameter name='fact: drop tolerance' type='double' value='1e-2'/>     \n\
     <Parameter name='fact: ilut level-of-fill' type='double' value='1.2'/>  \n\
   </ParameterList>                                                          \n\
-  <Parameter name='ML Default Type' type='string' value='DD'/>              \n\
-  <ParameterList name='ML Params'>                                          \n\
-    <Parameter name='smoother: type' type='string' value='ILU'/>            \n\
-    <Parameter name='smoother: sweeps' type='int' value='3'/>               \n\
-    <Parameter name='smoother: ifpack overlap' type='int' value='0'/>       \n\
-    <Parameter name='max levels' type='int' value='4'/>                     \n\
-  </ParameterList>                                                          \n\
   <ParameterList name='operator_db'>                                        \n\
    <Parameter name='verbosity' type='string' value='Low'/>                  \n\
-   <Parameter name='aztec_solver' type='string' value='bicgstab'/>          \n\
-   <Parameter name='aztec_prec' type='string' value='ilu'/>                 \n\
+   <Parameter name='solver_type' type='string' value='stratimikos'/>        \n\
   </ParameterList>                                                          \n\
  </ParameterList>                                                           \n"
         );
@@ -324,9 +316,6 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
                                         RCP_Indexer     indexer,
                                         RCP_Global_Data data)
 {
-    ADD_WARNING("No Tpetra preconditioners available yet");
-    return RCP_Tpetra_Op();
-
     Require (b_db->isSublist("eigenvalue_db"));
 
     // preconditioner operator
@@ -350,31 +339,10 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
                                  indexer, data, b_system));
         Check(prec != Teuchos::null);
     }
-    else if (prec_type == "ifpack2")
+    else
     {
-        Not_Implemented("Ifpack2 preconditioning not yet available.");
-    }
-    else if (prec_type == "muelu")
-    {
-        Not_Implemented("Muelu preconditioning not yet available.");
-    }
-    else if (prec_type == "stratimikos" || prec_type == "solver")
-    {
-        // Create default db
-        RCP_ParameterList op_db = Teuchos::sublist(edb, "operator_db");
-
-        // Build Stratimikos Operator
-        Teuchos::RCP<InverseOperator<MV,OP> > solver_op = Teuchos::rcp(
-                new InverseOperator<MV,OP>(op_db));
-        solver_op->set_operator(b_system->get_Operator());
-
-        prec = solver_op;
-
-        Check (prec != Teuchos::null);
-    }
-    else if (prec_type != "none" && prec_type != "internal")
-    {
-        Validate(false, "Unknown preconditioner option: " << prec_type);
+        prec = PreconditionerBuilder<OP>::build_preconditioner(
+                b_system->get_Operator(),edb );
     }
 
     return prec;
