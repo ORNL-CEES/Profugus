@@ -37,6 +37,9 @@
 /* MCLS Linear Solvers */
 #cmakedefine USE_MCLS
 
+/* Trilinos timers */
+#cmakedefine USE_TRILINOS_TIMING
+
 #endif /* SPn_config_h */
 
 /*---------------------------------------------------------------------------*/

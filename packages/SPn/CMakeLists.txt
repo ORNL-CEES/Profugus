@@ -41,6 +41,12 @@ IF (${PROJECT_NAME}_ENABLE_MCLS)
    SET(USE_MCLS 1)
 ENDIF()
 
+## Trilinos Timing options.
+IF (${PROJECT_NAME}_ENABLE_TRILINOS_TIMING)
+   MESSAGE(STATUS "Building Profugus with Trilinos timing")
+   SET(USE_TRILINOS_TIMING 1)
+ENDIF()
+
 # Setup M4 for FORTRAN processing
 APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 

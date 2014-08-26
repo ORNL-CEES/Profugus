@@ -19,6 +19,9 @@
 #include "comm/P_Stream.hh"
 #include "utils/Definitions.hh"
 #include "Manager.hh"
+#include "SPn/config.h"
+
+#include <Teuchos_TimeMonitor.hpp>
 
 // Parallel specs.
 int node  = 0;
@@ -148,7 +151,14 @@ int main(int argc, char *argv[])
     profugus::pcout << "\n" << "Total execution time : "
                     << profugus::scientific
                     << profugus::setprecision(4)
-                    << total << " seconds." << profugus::endl;
+                    << total << " seconds." << profugus::endl << profugus::endl;
+
+#ifdef USE_TRILINOS_TIMING
+    // output final timing from trilinos components
+    Teuchos::TableFormat &format = Teuchos::TimeMonitor::format();
+    format.setPrecision(5);
+    Teuchos::TimeMonitor::summarize();
+#endif
 
     profugus::finalize();
     return 0;
