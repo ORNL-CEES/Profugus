@@ -28,6 +28,9 @@
 #include "PreconditionerBuilder.hh"
 
 #include "Tpetra_Operator.hpp"
+#include "Tpetra_RowMatrix.hpp"
+#include "Ifpack2_Factory_decl.hpp"
+#include "Ifpack2_Factory_def.hpp"
 
 namespace profugus
 {
@@ -144,9 +147,31 @@ PreconditionerBuilder<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>
 {
     string prec_type = to_lower(db->get("Preconditioner", string("none")));
     Teuchos::RCP<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> > prec;
-    if( prec_type != "none" )
+    if( prec_type == "ifpack2" )
     {
-        Validate(false,"No Tpetra preconditioners implemented yet");
+        // Dynamic cast to RowMatrix
+        Teuchos::RCP<Tpetra::CrsMatrix<double,int,int,KokkosClassic::SerialNode> > row_mat =
+            Teuchos::rcp_dynamic_cast< Tpetra::CrsMatrix<double,int,int,KokkosClassic::SerialNode> >( op );
+        Require( row_mat != Teuchos::null );
+
+        std::string ifpack2_type = db->get("Ifpack2_Type","ILUT");
+        int overlap = db->get("Ifpack2_Overlap",0);
+
+        Ifpack2::Factory factory;
+        Teuchos::RCP<Teuchos::ParameterList> ifpack2_pl =
+            Teuchos::sublist(db, "Ifpack2 Params");
+        Teuchos::RCP<Ifpack2::Preconditioner<double,int,int,KokkosClassic::SerialNode> >
+            ifpack_prec = factory.create(ifpack2_type,row_mat.getConst(),overlap);
+        ifpack_prec->setParameters(*ifpack2_pl);
+        ifpack_prec->initialize();
+        ifpack_prec->compute();
+        prec = ifpack_prec;
+    }
+    else if( prec_type != "none" )
+    {
+        std::stringstream ss;
+        ss << "Preconditioner " << prec_type << " not implemented" << std::endl;
+        Validate(false,ss.str());
     }
     return prec;
 }
