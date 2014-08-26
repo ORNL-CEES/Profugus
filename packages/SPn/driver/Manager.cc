@@ -216,7 +216,7 @@ void Manager::solve()
                 Check (d_fixed_solver_tpetra.is_null());
                 d_eigen_solver_tpetra->solve();
             }
-            else if (!d_fixed_solver.is_null())
+            else if (!d_fixed_solver_tpetra.is_null())
             {
                 Check (d_eigen_solver_tpetra.is_null());
                 Check (!d_external_source.is_null());
