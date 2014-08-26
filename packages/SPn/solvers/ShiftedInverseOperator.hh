@@ -134,14 +134,23 @@ class ShiftedInverseOperator<
                Teuchos::ETransp mode=Teuchos::NO_TRANS,
                double alpha=1.0, double beta=0.0) const
     {
-        Require( alpha == 1.0 );
-        Require( beta == 0.0 );
         Require( !d_operator.is_null() );
         Require( x.getLocalLength() == y.getLocalLength() );
         Require( d_operator->getDomainMap()->getNodeNumElements() ==
                  x.getLocalLength() );
 
+        MV z(x,Teuchos::Copy);
+
         d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
+
+        if( beta == 0.0 )
+        {
+            y.scale(alpha);
+        }
+        else
+        {
+            y.update(beta,z,alpha);
+        }
     }
 };
 

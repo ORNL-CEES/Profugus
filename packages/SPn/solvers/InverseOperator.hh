@@ -216,11 +216,11 @@ class InverseOperator<
                Teuchos::ETransp mode=Teuchos::NO_TRANS,
                double alpha=1.0, double beta=0.0) const
     {
-        Require( alpha = 1.0 );
-        Require( beta = 0.0 );
         Require( x.getLocalLength() == y.getLocalLength() );
         Require( d_A->getDomainMap()->getNodeNumElements() ==
                  x.getLocalLength() );
+
+        MV z(x,Teuchos::Copy);
 
         if( !(d_B.is_null()) )
         {
@@ -229,6 +229,15 @@ class InverseOperator<
         }
 
         ApplyImpl(x,y);
+
+        if( beta == 0.0 )
+        {
+            y.scale(alpha);
+        }
+        else
+        {
+            y.update(beta,z,alpha);
+        }
     }
 
     // Required inherited interface.
