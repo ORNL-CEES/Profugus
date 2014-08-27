@@ -28,6 +28,8 @@
 #include "spn/Isotropic_Source.hh"
 #include "spn/Moment_Coefficients.hh"
 
+#include "solvers/TpetraTypedefs.hh"
+
 namespace profugus
 {
 namespace tpetra
@@ -64,15 +66,12 @@ class Linear_System
     typedef Moment_Coefficients::RCP_ParameterList RCP_ParameterList;
     typedef Moment_Coefficients::RCP_Timestep      RCP_Timestep;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
-    typedef KokkosClassic::SerialNode              Node;
-    typedef Tpetra::Map<int,int,Node>              Map_t;
-    typedef Tpetra::RowGraph<int,int,Node>         Graph_t;
-    typedef Tpetra::RowMatrix<double,int,int,Node> Matrix_t;
-    typedef Tpetra::CrsMatrix<double,int,int,Node> CrsMatrix_t;
-    typedef Tpetra::Operator<double,int,int,Node>  Operator_t;
-    typedef Tpetra::Vector<double,int,int,Node>    Vector_t;
+    typedef Tpetra_Map                             Map_t;
+    typedef Tpetra_RowMatrix                       Matrix_t;
+    typedef Tpetra_CrsMatrix                       CrsMatrix_t;
+    typedef Tpetra_Operator                        Operator_t;
+    typedef Tpetra_Vector                          Vector_t;
     typedef Teuchos::RCP<Map_t>                    RCP_Map;
-    typedef Teuchos::RCP<const Graph_t>            RCP_Graph;
     typedef Teuchos::RCP<Matrix_t>                 RCP_Matrix;
     typedef Teuchos::RCP<Operator_t>               RCP_Operator;
     typedef Teuchos::RCP<Vector_t>                 RCP_Vector;

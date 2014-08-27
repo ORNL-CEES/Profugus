@@ -14,15 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "Davidson_Eigensolver.t.hh"
 
+#include "TpetraTypedefs.hh"
+
 namespace profugus
 {
 
 template class Davidson_Eigensolver<Epetra_MultiVector,Epetra_Operator>;
-
-typedef KokkosClassic::SerialNode Node;
-typedef Tpetra::MultiVector<double,int,int,Node> MV;
-typedef Tpetra::Operator<double,int,int,Node> OP;
-template class Davidson_Eigensolver<MV,OP>;
+template class Davidson_Eigensolver<Tpetra_MultiVector,Tpetra_Operator>;
 
 } // end namespace profugus
 

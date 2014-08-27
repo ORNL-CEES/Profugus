@@ -16,14 +16,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "PreconditionerBuilder.t.hh"
 
+#include "TpetraTypedefs.hh"
+
 namespace profugus
 {
 
 template class PreconditionerBuilder<Epetra_Operator>;
-
-typedef KokkosClassic::SerialNode Node;
-typedef Tpetra::Operator<double,int,int,Node> OP;
-template class PreconditionerBuilder<OP>;
+template class PreconditionerBuilder<Tpetra_Operator>;
 
 } // end namespace profugus
 

@@ -14,14 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "PowerIteration.t.hh"
 
+#include "TpetraTypedefs.hh"
+
 namespace profugus
 {
 
 template class PowerIteration<Epetra_MultiVector,Epetra_Operator>;
-typedef KokkosClassic::SerialNode Node;
-typedef Tpetra::MultiVector<double,int,int,Node> MV;
-typedef Tpetra::Operator<double,int,int,Node> OP;
-template class PowerIteration<MV,OP>;
+template class PowerIteration<Tpetra_MultiVector,Tpetra_Operator>;
 
 } // end namespace profugus
 

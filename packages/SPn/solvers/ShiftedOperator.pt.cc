@@ -14,15 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "ShiftedOperator.hh"
 
+#include "TpetraTypedefs.hh"
+
 namespace profugus
 {
 
 template class ShiftedOperator<Epetra_MultiVector,Epetra_Operator>;
-
-typedef KokkosClassic::SerialNode Node;
-typedef Tpetra::MultiVector<double,int,int,Node> MV;
-typedef Tpetra::Operator<double,int,int,Node> OP;
-template class ShiftedOperator<MV,OP>;
+template class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>;
 
 } // end namespace profugus
 

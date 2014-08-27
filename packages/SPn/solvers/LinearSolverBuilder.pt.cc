@@ -14,15 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "LinearSolverBuilder.t.hh"
 
+#include "TpetraTypedefs.hh"
+
 namespace profugus
 {
 
 template class LinearSolverBuilder<Epetra_MultiVector,Epetra_Operator>;
-
-typedef KokkosClassic::SerialNode Node;
-typedef Tpetra::MultiVector<double,int,int,Node> MV;
-typedef Tpetra::Operator<double,int,int,Node> OP;
-template class LinearSolverBuilder<MV,OP>;
+template class LinearSolverBuilder<Tpetra_MultiVector,Tpetra_Operator>;
 
 } // end namespace profugus
 

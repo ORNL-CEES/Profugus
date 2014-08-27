@@ -23,8 +23,6 @@
 // Additional Trilinos pieces
 #include "Teuchos_SerialDenseMatrix.hpp"
 #include "Teuchos_LAPACK.hpp"
-#include "Tpetra_CrsGraph.hpp"
-#include "Tpetra_CrsMatrix.hpp"
 
 namespace profugus
 {
@@ -56,6 +54,8 @@ class Linear_System_FV : public Linear_System
     typedef def::Vec_Int                 Vec_Int;
     typedef def::Vec_Dbl                 Vec_Dbl;
     typedef Teuchos::RCP<FV_Bnd_Indexer> RCP_Bnd_Indexer;
+    typedef Tpetra_Graph                 Graph_t;
+    typedef Teuchos::RCP<const Graph_t>  RCP_Graph;
     //@}
 
   private:

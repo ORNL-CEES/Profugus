@@ -28,6 +28,7 @@
 
 #include "harness/DBC.hh"
 #include "LinearSolver.hh"
+#include "TpetraTypedefs.hh"
 
 namespace profugus
 {
@@ -181,20 +182,16 @@ class InverseOperator<Epetra_MultiVector,Epetra_Operator>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class InverseOperator<
-        Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-        Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
-    : public Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>,
-      public InverseOperatorBase<
-                Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-                Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
+class InverseOperator<Tpetra_MultiVector,Tpetra_Operator>
+    : public Tpetra_Operator,
+      public InverseOperatorBase<Tpetra_MultiVector,Tpetra_Operator>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode> MV;
-    typedef Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>    OP;
-    typedef Tpetra::Map<int,int,KokkosClassic::SerialNode>                Map;
+    typedef Tpetra_MultiVector MV;
+    typedef Tpetra_Operator    OP;
+    typedef Tpetra_Map         Map;
     typedef Teuchos::RCP<OP>   RCP_Operator;
     //@}
 

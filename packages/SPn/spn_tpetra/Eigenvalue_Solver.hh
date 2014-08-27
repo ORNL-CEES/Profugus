@@ -20,6 +20,8 @@
 #include "solvers/EigenvalueSolver.hh"
 #include "Solver_Base.hh"
 
+#include "solvers/TpetraTypedefs.hh"
+
 namespace profugus
 {
 namespace tpetra
@@ -53,13 +55,12 @@ class Eigenvalue_Solver : public Solver_Base
   public:
     //@{
     //! Typedefs.
-    typedef Solver_Base                              Base;
-    typedef KokkosClassic::SerialNode                Node;
-    typedef Tpetra::MultiVector<double,int,int,Node> MV;
-    typedef Tpetra::Operator<double,int,int,Node>    OP;
-    typedef Teuchos::RCP<OP>                         RCP_Tpetra_Op;
-    typedef profugus::EigenvalueSolver<MV,OP>        Eigensolver;
-    typedef Teuchos::RCP<Eigensolver>                RCP_Eigensolver;
+    typedef Solver_Base                       Base;
+    typedef Tpetra_MultiVector                MV;
+    typedef Tpetra_Operator                   OP;
+    typedef Teuchos::RCP<OP>                  RCP_Tpetra_Op;
+    typedef profugus::EigenvalueSolver<MV,OP> Eigensolver;
+    typedef Teuchos::RCP<Eigensolver>         RCP_Eigensolver;
     //@}
 
   private:

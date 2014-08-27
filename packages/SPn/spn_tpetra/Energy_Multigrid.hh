@@ -32,6 +32,8 @@
 #include "Energy_Restriction.hh"
 #include "Energy_Prolongation.hh"
 
+#include "solvers/TpetraTypedefs.hh"
+
 namespace profugus
 {
 namespace tpetra
@@ -51,17 +53,15 @@ namespace tpetra
  */
 //===========================================================================//
 
-class Energy_Multigrid :
-    public Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>
+class Energy_Multigrid : public Tpetra_Operator
 {
   public:
     //@{
     //! Typedefs.
-    typedef KokkosClassic::SerialNode                Node;
-    typedef Tpetra::Map<int,int,Node>                Map_t;
-    typedef Tpetra::Operator<double,int,int,Node>    OP;
-    typedef Tpetra::MultiVector<double,int,int,Node> MV;
-    typedef Tpetra::Vector<double,int,int,Node>      Vector_t;
+    typedef Tpetra_Map                        Map_t;
+    typedef Tpetra_Operator                   OP;
+    typedef Tpetra_MultiVector                MV;
+    typedef Tpetra_Vector                     Vector_t;
     typedef LinearSolver<MV,OP>               LinearSolver_t;
     typedef LinearSolver_t::RCP_ParameterList RCP_ParameterList;
     typedef LinearSolver_t::ParameterList     ParameterList;

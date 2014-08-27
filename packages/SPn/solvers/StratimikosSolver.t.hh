@@ -22,6 +22,7 @@
 #include "harness/DBC.hh"
 #include "harness/Warnings.hh"
 #include "StratimikosSolver.hh"
+#include "TpetraTypedefs.hh"
 
 #ifdef USE_MCLS
 #include <MCLS_StratimikosAdapter.hpp>
@@ -272,17 +273,16 @@ void StratimikosSolver<
  * \param P operator to be applied as preconditioner.
  */
 template <>
-void StratimikosSolver<
-    Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-    Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >::set_preconditioner(
-    Teuchos::RCP<Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> > P)
+void
+StratimikosSolver<Tpetra_MultiVector,Tpetra_Operator>::set_preconditioner(
+    Teuchos::RCP<Tpetra_Operator> P)
 {
     // Create thyra operator
-    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > rangeSpace =
-        Thyra::tpetraVectorSpace<double>(P->getRangeMap());
-    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > domainSpace =
-        Thyra::tpetraVectorSpace<double>(P->getDomainMap());
-    d_prec = Thyra::tpetraLinearOp<double,int,int,KokkosClassic::SerialNode>(
+    Teuchos::RCP<const Thyra::VectorSpaceBase<SCALAR> > rangeSpace =
+        Thyra::tpetraVectorSpace<SCALAR>(P->getRangeMap());
+    Teuchos::RCP<const Thyra::VectorSpaceBase<SCALAR> > domainSpace =
+        Thyra::tpetraVectorSpace<SCALAR>(P->getDomainMap());
+    d_prec = Thyra::tpetraLinearOp<SCALAR,LO,GO,NODE>(
         rangeSpace,domainSpace,P);
 
     Ensure( d_prec != Teuchos::null );
@@ -293,12 +293,10 @@ void StratimikosSolver<
  * \brief Wrap MV into a Thyra vector
  */
 template <>
-Teuchos::RCP<Thyra::MultiVectorBase<double> >
-StratimikosSolver<
-    Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-    Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >::buildThyraMV(
-    Teuchos::RCP<Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode> > x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const
+Teuchos::RCP<Thyra::MultiVectorBase<SCALAR> >
+StratimikosSolver<Tpetra_MultiVector,Tpetra_Operator>::buildThyraMV(
+    Teuchos::RCP<Tpetra_MultiVector> x,
+    Teuchos::RCP<const Thyra::VectorSpaceBase<SCALAR> > space) const
 {
     return Thyra::createMultiVector(x,space);
 }
@@ -308,12 +306,10 @@ StratimikosSolver<
  * \brief Wrap const MV into a Thyra vector
  */
 template <>
-Teuchos::RCP<const Thyra::MultiVectorBase<double> >
-StratimikosSolver<
-    Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-    Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >::buildThyraConstMV(
-    Teuchos::RCP<const Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode> > x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const
+Teuchos::RCP<const Thyra::MultiVectorBase<SCALAR> >
+StratimikosSolver<Tpetra_MultiVector,Tpetra_Operator>::buildThyraConstMV(
+    Teuchos::RCP<const Tpetra_MultiVector> x,
+    Teuchos::RCP<const Thyra::VectorSpaceBase<SCALAR> > space) const
 {
     return Thyra::createConstMultiVector(x,space);
 }

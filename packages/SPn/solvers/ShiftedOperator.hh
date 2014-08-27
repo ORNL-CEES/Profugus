@@ -26,6 +26,8 @@
 #include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Operator.hpp"
 
+#include "TpetraTypedefs.hh"
+
 #include "harness/DBC.hh"
 
 namespace profugus
@@ -162,20 +164,16 @@ class ShiftedOperator<Epetra_MultiVector,Epetra_Operator>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class ShiftedOperator<
-        Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-        Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
-    : public Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>,
-      public ShiftedOperatorBase<
-                Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-                Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
+class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>
+    : public Tpetra_Operator,
+      public ShiftedOperatorBase<Tpetra_MultiVector,Tpetra_Operator>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode> MV;
-    typedef Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>    OP;
-    typedef Tpetra::Map<int,int,KokkosClassic::SerialNode>                Map;
+    typedef Tpetra_MultiVector MV;
+    typedef Tpetra_Operator    OP;
+    typedef Tpetra_Map         Map;
     typedef Teuchos::RCP<OP>   RCP_Operator;
     //@}
 

@@ -16,6 +16,8 @@
 #include "InverseOperator.hh"
 #include "ShiftedOperator.hh"
 
+#include "TpetraTypedefs.hh"
+
 namespace profugus
 {
 
@@ -98,16 +100,12 @@ class ShiftedInverseOperator<Epetra_MultiVector,Epetra_Operator>
 };
 
 template <>
-class ShiftedInverseOperator<
-        Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-        Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
-    : public InverseOperator<
-                Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode>,
-                Tpetra::Operator<double,int,int,KokkosClassic::SerialNode> >
+class ShiftedInverseOperator<Tpetra_MultiVector,Tpetra_Operator>
+    : public InverseOperator<Tpetra_MultiVector,Tpetra_Operator>
 {
   private:
-    typedef Tpetra::MultiVector<double,int,int,KokkosClassic::SerialNode> MV;
-    typedef Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>    OP;
+    typedef Tpetra_MultiVector MV;
+    typedef Tpetra_Operator    OP;
     typedef InverseOperator<MV,OP> Base;
 
     // >>> DATA

@@ -18,6 +18,8 @@
 #include "Tpetra_Operator.hpp"
 #include "Tpetra_Map.hpp"
 
+#include "solvers/TpetraTypedefs.hh"
+
 namespace profugus
 {
 namespace tpetra
@@ -40,15 +42,13 @@ namespace tpetra
  */
 //===========================================================================//
 
-class Energy_Prolongation :
-    public Tpetra::Operator<double,int,int,KokkosClassic::SerialNode>
+class Energy_Prolongation : public Tpetra_Operator
 {
   public:
-    typedef KokkosClassic::SerialNode                Node;
-    typedef Tpetra::Map<int,int,Node>                Map_t;
-    typedef Tpetra::Operator<double,int,int,Node>    OP;
-    typedef Tpetra::MultiVector<double,int,int,Node> MV;
-    typedef Tpetra::Vector<double,int,int,Node>      Vector_t;
+    typedef Tpetra_Map         Map_t;
+    typedef Tpetra_Operator    OP;
+    typedef Tpetra_MultiVector MV;
+    typedef Tpetra_Vector      Vector_t;
 
     Energy_Prolongation( Teuchos::RCP<const MV>  fine_vec,
                          Teuchos::RCP<const MV>  coarse_vec,
