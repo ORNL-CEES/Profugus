@@ -23,17 +23,17 @@
 namespace profugus
 {
 
-typedef double                                 SCALAR;
-typedef int                                    LO;
-typedef int                                    GO;
-typedef KokkosClassic::SerialNode              NODE;
-typedef Tpetra::MultiVector<SCALAR,LO,GO,NODE> Tpetra_MultiVector;
-typedef Tpetra::Vector<SCALAR,LO,GO,NODE>      Tpetra_Vector;
-typedef Tpetra::Operator<SCALAR,LO,GO,NODE>    Tpetra_Operator;
-typedef Tpetra::RowMatrix<SCALAR,LO,GO,NODE>   Tpetra_RowMatrix;
-typedef Tpetra::CrsMatrix<SCALAR,LO,GO,NODE>   Tpetra_CrsMatrix;
-typedef Tpetra::Map<LO,GO,NODE>                Tpetra_Map;
-typedef Tpetra::RowGraph<LO,GO,NODE>           Tpetra_Graph;
+typedef double                                      SCALAR;
+typedef int                                         LO;
+typedef int                                         GO;
+typedef KokkosClassic::DefaultNode::DefaultNodeType NODE;
+typedef Tpetra::MultiVector<SCALAR,LO,GO,NODE>      Tpetra_MultiVector;
+typedef Tpetra::Vector<SCALAR,LO,GO,NODE>           Tpetra_Vector;
+typedef Tpetra::Operator<SCALAR,LO,GO,NODE>         Tpetra_Operator;
+typedef Tpetra::RowMatrix<SCALAR,LO,GO,NODE>        Tpetra_RowMatrix;
+typedef Tpetra::CrsMatrix<SCALAR,LO,GO,NODE>        Tpetra_CrsMatrix;
+typedef Tpetra::Map<LO,GO,NODE>                     Tpetra_Map;
+typedef Tpetra::RowGraph<LO,GO,NODE>                Tpetra_Graph;
 
 } // end namespace profugus
 
