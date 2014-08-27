@@ -266,7 +266,7 @@ void Eigenvalue_Solver::set_default_parameters()
   <Parameter name='Preconditioner' type='string' value='Ifpack2'/>          \n\
   <ParameterList name='Multigrid Preconditioner'>                           \n\
    <ParameterList name='Smoother'>                                          \n\
-    <Parameter name='Preconditioner' type='string' value='Ifpack'/>         \n\
+    <Parameter name='Preconditioner' type='string' value='Ifpack2'/>        \n\
     <Parameter name='verbosity' type='string' value='None'/>                \n\
     <Parameter name='max_itr' type='int' value='3'/>                        \n\
     <Parameter name='solver_type' type='string' value='stratimikos'/>       \n\
