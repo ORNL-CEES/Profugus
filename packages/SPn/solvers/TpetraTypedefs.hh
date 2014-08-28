@@ -20,6 +20,9 @@
 #include "Tpetra_CrsGraph.hpp"
 #include "Kokkos_DefaultNode.hpp"
 
+#include "Xpetra_MultiVector.hpp"
+#include "Xpetra_CrsMatrix.hpp"
+
 namespace profugus
 {
 
@@ -34,6 +37,8 @@ typedef Tpetra::RowMatrix<SCALAR,LO,GO,NODE>        Tpetra_RowMatrix;
 typedef Tpetra::CrsMatrix<SCALAR,LO,GO,NODE>        Tpetra_CrsMatrix;
 typedef Tpetra::Map<LO,GO,NODE>                     Tpetra_Map;
 typedef Tpetra::RowGraph<LO,GO,NODE>                Tpetra_Graph;
+typedef Xpetra::MultiVector<SCALAR,LO,GO,NODE>      Xpetra_MultiVector;
+typedef Xpetra::CrsMatrix<SCALAR,LO,GO,NODE>        Xpetra_CrsMatrix;
 
 } // end namespace profugus
 

@@ -26,6 +26,7 @@
 
 #include "utils/String_Functions.hh"
 #include "PreconditionerBuilder.hh"
+#include "MueLuPreconditioner.hh"
 
 #include "Tpetra_Operator.hpp"
 #include "Tpetra_RowMatrix.hpp"
@@ -151,7 +152,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
     Teuchos::RCP<Tpetra_Operator> prec;
     if( prec_type == "ifpack2" )
     {
-        // Dynamic cast to RowMatrix
+        // Dynamic cast to CrsMatrix
         Teuchos::RCP<Tpetra_CrsMatrix> row_mat =
             Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
         Require( row_mat != Teuchos::null );
@@ -168,6 +169,19 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
         ifpack_prec->initialize();
         ifpack_prec->compute();
         prec = ifpack_prec;
+    }
+    else if( prec_type == "muelu" )
+    {
+        // Dynamic cast to CrsMatrix
+        Teuchos::RCP<Tpetra_CrsMatrix> row_mat =
+            Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
+        Require( row_mat != Teuchos::null );
+
+        // Wrap Tpetra objects as Xpetra
+        prec = Teuchos::rcp(new MueLuPreconditioner<Tpetra_MultiVector,
+                                                    Tpetra_Operator>(row_mat,
+                                                                     db) );
+
     }
     else if( prec_type != "none" )
     {
