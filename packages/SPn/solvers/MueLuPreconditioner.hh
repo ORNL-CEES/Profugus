@@ -31,6 +31,11 @@
 #include "Xpetra_EpetraCrsMatrix.hpp"
 #include "Xpetra_EpetraMultiVector.hpp"
 
+#include "MueLu.hpp"
+#include "MueLu_ParameterListInterpreter.hpp"
+#include "MueLu_EpetraOperator.hpp"
+#include "MueLu_TpetraOperator.hpp"
+
 #include "TpetraTypedefs.hh"
 
 #include "harness/DBC.hh"
@@ -42,6 +47,9 @@ namespace profugus
 /*
  *! \class MueLuPreconditionerBase
  *  \brief Implementation details of MueLuPreconditioner.
+ *
+ *  This class does nothing more than take an Xpetra-wrapped matrix and
+ *  construct the MueLu Hierarchy.
  */
 //===========================================================================//
 class MueLuPreconditionerBase
@@ -53,10 +61,9 @@ class MueLuPreconditionerBase
   protected:
 
     void setup(Teuchos::RCP<Teuchos::ParameterList> pl);
-    void ApplyImpl( Teuchos::RCP<const Xpetra_MultiVector> x,
-                    Teuchos::RCP<Xpetra_MultiVector>       y ) const;
 
     Teuchos::RCP<Xpetra_CrsMatrix> d_matrix;
+    Teuchos::RCP<MueLu::Hierarchy<SCALAR,LO,GO,NODE> > d_hierarchy;
 };
 
 //===========================================================================//
@@ -121,19 +128,11 @@ class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
     {
         REQUIRE( x.MyLength() == y.MyLength() );
 
-        Teuchos::RCP<Epetra_MultiVector> x_rcp =
-            Teuchos::rcp_const_cast<Epetra_MultiVector>(
-                Teuchos::rcpFromRef(x));
-        Teuchos::RCP<const Xpetra_MultiVector> x_wrap =
-            Xpetra::toXpetra(x_rcp);
-        REQUIRE( x_wrap != Teuchos::null );
-        Teuchos::RCP<Xpetra_MultiVector> y_wrap =
-            Xpetra::toXpetra(Teuchos::rcpFromRef(y));
-        REQUIRE( y_wrap != Teuchos::null );
+        MueLu::EpetraOperator op_wrap( d_hierarchy );
+        int err = op_wrap.ApplyInverse(x,y);
+        REQUIRE( 0 == err );
 
-        ApplyImpl(x_wrap,y_wrap);
-
-        return 0;
+        return err;
     }
 
     // Required inherited interface.
@@ -204,28 +203,9 @@ class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
     {
         REQUIRE( x.getLocalLength() == y.getLocalLength() );
 
-        MV z(x,Teuchos::Copy);
+        MueLu::TpetraOperator<SCALAR,LO,GO,NODE> op_wrap(d_hierarchy);
 
-        Teuchos::RCP<Tpetra_MultiVector> x_rcp =
-            Teuchos::rcp_const_cast<Tpetra_MultiVector>(
-                Teuchos::rcpFromRef(x));
-        Teuchos::RCP<const Xpetra_MultiVector> x_wrap =
-            Xpetra::toXpetra(x_rcp);
-        REQUIRE( x_wrap != Teuchos::null );
-        Teuchos::RCP<Xpetra_MultiVector> y_wrap =
-            Xpetra::toXpetra(Teuchos::rcpFromRef(y));
-        REQUIRE( y_wrap != Teuchos::null );
-
-        ApplyImpl(x_wrap,y_wrap);
-
-        if( beta == 0.0 )
-        {
-            y.scale(alpha);
-        }
-        else
-        {
-            y.update(beta,z,alpha);
-        }
+        op_wrap.apply(x,y,mode,alpha,beta);
     }
 
     // Required inherited interface.
