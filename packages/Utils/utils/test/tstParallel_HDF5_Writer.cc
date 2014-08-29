@@ -10,6 +10,7 @@
 
 #include "gtest/utils_gtest.hh"
 
+#include <algorithm>
 #include "../HDF5_Reader.hh"
 #include "../Parallel_HDF5_Writer.hh"
 
