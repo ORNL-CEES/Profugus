@@ -11,12 +11,16 @@
 #include "Epetra_Operator.h"
 #include "Epetra_MultiVector.h"
 #include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 #include "PowerIteration.t.hh"
+
+#include "TpetraTypedefs.hh"
 
 namespace profugus
 {
 
 template class PowerIteration<Epetra_MultiVector,Epetra_Operator>;
+template class PowerIteration<Tpetra_MultiVector,Tpetra_Operator>;
 
 } // end namespace profugus
 

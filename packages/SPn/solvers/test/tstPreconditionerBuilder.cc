@@ -34,10 +34,10 @@ class PreconditionerBuilderTest : public ::testing::Test
 {
   protected:
 
-    typedef profugus::PreconditionerBuilder Builder;
-    typedef Builder::RCP_ParameterList      RCP_ParameterList;
-    typedef Epetra_MultiVector              MV;
-    typedef Epetra_Operator                 OP;
+    typedef Epetra_MultiVector                  MV;
+    typedef Epetra_Operator                     OP;
+    typedef profugus::PreconditionerBuilder<OP> Builder;
+    typedef Builder::RCP_ParameterList          RCP_ParameterList;
 
   protected:
     // Initialization that are performed for each test

@@ -3,10 +3,13 @@
  * \file   solvers/Arnoldi.cc
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:30 2014
- * \brief  Arnoldi member definitions.
+ * \brief  Arnoldi template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef solvers_Arnoldi_t_hh
+#define solvers_Arnoldi_t_hh
 
 #include <string>
 #include <algorithm>
@@ -24,8 +27,8 @@ namespace profugus
 /*!
  *\brief Constructor with user defined tolerance and max iterations.
  */
-Arnoldi::Arnoldi(RCP_ParameterList db)
-    : EigenvalueSolver<Epetra_MultiVector,Epetra_Operator>(db)
+template <class MV, class OP> Arnoldi<MV,OP>::Arnoldi(RCP_ParameterList db)
+    : EigenvalueSolver<MV,OP>(db)
 {
     b_label = "Arnoldi";
 
@@ -55,20 +58,12 @@ Arnoldi::Arnoldi(RCP_ParameterList db)
 /*!
  *\brief Set operator for eigensolver.
  */
-void Arnoldi::set_operator(RCP_OP A)
+template <class MV, class OP>
+void Arnoldi<MV,OP>::set_operator(RCP_OP A)
 {
     Require(!A.is_null());
     d_A = A;
 
-    // calculate problem sizes
-    int subspace   = d_pl->get<int>("subspace");
-    int N          = A->OperatorDomainMap().NumGlobalElements();
-    int block_size = d_pl->get<int>("Block Size");
-    int num_blocks = std::min( (N-2)/block_size, subspace );
-
-    // add remaining defaults
-    if( !d_pl->isType<int>("Num Blocks") )
-        d_pl->set("Num Blocks", num_blocks);
 }
 
 //---------------------------------------------------------------------------//
@@ -79,7 +74,8 @@ void Arnoldi::set_operator(RCP_OP A)
  * dominant eigenvalue will be placed in the input argument eval and the
  * corresponding eigenvector in evec.
  */
-void Arnoldi::solve(double &eval,
+template <class MV, class OP>
+void Arnoldi<MV,OP>::solve(double &eval,
                     RCP_MV  evec)
 {
     Require (!evec.is_null());
@@ -89,6 +85,19 @@ void Arnoldi::solve(double &eval,
     RCP_Eigenproblem problem(new Eigenproblem(d_A, evec));
     problem->setNEV(1);
     problem->setProblem();
+
+    // Set the appropriate number of blocks based on requested subspace
+    if( !d_pl->isType<int>("Num Blocks") )
+    {
+        // calculate problem sizes
+        int subspace   = d_pl->get<int>("subspace");
+        int N = MultiVecTraits::GetVecLength(*evec);
+        int block_size = d_pl->get<int>("Block Size");
+        int num_blocks = std::min( (N-2)/block_size, subspace );
+
+        // add remaining defaults
+        d_pl->set("Num Blocks", num_blocks);
+    }
 
     // Create eigensolver
     KrylovSchur solver( problem, *d_pl );
@@ -110,16 +119,19 @@ void Arnoldi::solve(double &eval,
     // Get solution from eigenproblem
     eval          = problem->getSolution().Evals[0].realpart;
     RCP_MV outvec = problem->getSolution().Evecs;
-    Check( outvec->NumVectors() > 0 );
+    Check( MultiVecTraits::GetNumberVecs(*outvec) > 0 );
 
     // Assign the first vector of the eigensolution (outvec may contain
     //  several even though we only converged on one) to the first vector
     //  of evec.
-    *(*evec)(0) = *(*outvec)(0);
+    std::vector<int> ind(1,0);
+    MultiVecTraits::SetBlock(*outvec,ind,*evec);
 }
 
 } // end namespace profugus
 
+#endif // solvers_Arnoldi_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Arnoldi.cc
+//                 end of Arnoldi.t.hh
 //---------------------------------------------------------------------------//

@@ -39,11 +39,11 @@ class RQITest : public ::testing::Test
 {
   protected:
 
-    typedef profugus::RayleighQuotient          RayleighQuotient;
-    typedef RayleighQuotient::RCP_ParameterList RCP_ParameterList;
-    typedef RayleighQuotient::ParameterList     ParameterList;
     typedef Epetra_MultiVector                  MV;
     typedef Epetra_Operator                     OP;
+    typedef profugus::RayleighQuotient<MV,OP>   RayleighQuotient;
+    typedef RayleighQuotient::RCP_ParameterList RCP_ParameterList;
+    typedef RayleighQuotient::ParameterList     ParameterList;
 
   protected:
 
@@ -134,8 +134,8 @@ class RQITest : public ::testing::Test
         op_db->set("max_itr",20);
 
         // Create ShiftedInverseOperator
-        Teuchos::RCP<profugus::ShiftedInverseOperator> shift_op =
-            rcp(new profugus::ShiftedInverseOperator(op_db));
+        Teuchos::RCP<profugus::ShiftedInverseOperator<MV,OP> > shift_op =
+            rcp(new profugus::ShiftedInverseOperator<MV,OP>(op_db));
         Check(!shift_op.is_null());
         shift_op->set_operator(d_A);
         shift_op->set_rhs_operator(d_B);

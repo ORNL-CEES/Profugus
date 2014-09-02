@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinearSolverBuilder.cc
+ * \file   solvers/LinearSolverBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 12:20:24 2014
- * \brief  LinearSolverBuilder member definitions.
+ * \brief  LinearSolverBuilder template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef solvers_LinearSolverBuilder_t_hh
+#define solvers_LinearSolverBuilder_t_hh
 
 #include <string>
 
@@ -34,8 +37,9 @@ namespace profugus
  */
 //---------------------------------------------------------------------------//
 
-LinearSolverBuilder::RCP_LinearSolver
-LinearSolverBuilder::build_solver( RCP_ParameterList db )
+template <class MV, class OP>
+Teuchos::RCP<LinearSolver<MV,OP> >
+LinearSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db )
 {
     using std::string;
 
@@ -65,7 +69,7 @@ LinearSolverBuilder::build_solver( RCP_ParameterList db )
     else if (solver_type == "stratimikos")
     {
         // Just build the stratimikos solver, let validation be handled there
-        solver = Teuchos::rcp(new StratimikosSolver(db));
+        solver = Teuchos::rcp(new StratimikosSolver<MV,OP>(db));
     }
     else
     {
@@ -81,6 +85,8 @@ LinearSolverBuilder::build_solver( RCP_ParameterList db )
 
 } // end namespace profugus
 
+#endif // solvers_LinearSolverBuilder_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of LinearSolverBuilder.cc
+//                 end of LinearSolverBuilder.t.hh
 //---------------------------------------------------------------------------//

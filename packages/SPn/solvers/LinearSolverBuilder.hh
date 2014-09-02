@@ -13,9 +13,6 @@
 
 #include "LinearSolver.hh"
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_Operator.h"
-
 namespace profugus
 {
 
@@ -25,7 +22,7 @@ namespace profugus
  * \brief Factory class for creating LinearSolver.
  *
  * This class provides a generic interface for creating a linear system
- * involving an Epetra operator.
+ * involving an Epetra/Tpetra operator.
  *
  * \sa LinearSolverBuilder.cc for detailed descriptions.
  */
@@ -36,16 +33,15 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class MV, class OP>
 class LinearSolverBuilder
 {
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector                MV;
-    typedef Epetra_Operator                   OP;
-    typedef LinearSolver<MV,OP>               LinearSolver_t;
-    typedef Teuchos::RCP<LinearSolver_t>      RCP_LinearSolver;
-    typedef LinearSolver_t::RCP_ParameterList RCP_ParameterList;
+    typedef LinearSolver<MV,OP>                  LinearSolver_t;
+    typedef Teuchos::RCP<LinearSolver_t>         RCP_LinearSolver;
+    typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
     //@}
 
     static RCP_LinearSolver build_solver( RCP_ParameterList db );

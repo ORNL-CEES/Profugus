@@ -39,9 +39,10 @@ class ShiftedInverseTest: public ::testing::Test
 {
   protected:
 
-    typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
-    typedef Epetra_MultiVector                   MV;
-    typedef Epetra_Operator                      OP;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_ParameterList;
+    typedef Epetra_MultiVector                      MV;
+    typedef Epetra_Operator                         OP;
+    typedef profugus::ShiftedInverseOperator<MV,OP> ShiftInvOp;
 
   protected:
     // Initialization that are performed for each test
@@ -118,7 +119,7 @@ class ShiftedInverseTest: public ::testing::Test
         d_db->set("max_itr",20);
 
         // Build solver
-        d_operator = Teuchos::rcp(new profugus::ShiftedInverseOperator(d_db));
+        d_operator = Teuchos::rcp(new ShiftInvOp(d_db));
         Check(!d_operator.is_null());
     }
 
@@ -126,11 +127,11 @@ class ShiftedInverseTest: public ::testing::Test
     int node;
     int nodes;
 
-    RCP_ParameterList                              d_db;
-    Teuchos::RCP<Epetra_Map>                       d_map;
-    Teuchos::RCP<Epetra_CrsMatrix>                 d_A;
-    Teuchos::RCP<Epetra_CrsMatrix>                 d_B;
-    Teuchos::RCP<profugus::ShiftedInverseOperator> d_operator;
+    RCP_ParameterList              d_db;
+    Teuchos::RCP<Epetra_Map>       d_map;
+    Teuchos::RCP<Epetra_CrsMatrix> d_A;
+    Teuchos::RCP<Epetra_CrsMatrix> d_B;
+    Teuchos::RCP<ShiftInvOp>       d_operator;
 };
 
 //---------------------------------------------------------------------------//

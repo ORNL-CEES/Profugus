@@ -39,20 +39,20 @@ class Arnoldi_Test : public testing::Test
     typedef Epetra_SerialComm   Comm;
 #endif
 
-    typedef profugus::Arnoldi          Arnoldi;
-    typedef Epetra_Map                 Map;
-    typedef Epetra_CrsGraph            Graph;
-    typedef Epetra_CrsMatrix           Matrix;
-    typedef Arnoldi::MV                MV;
-    typedef Arnoldi::OP                OP;
-    typedef Arnoldi::RCP_MV            RCP_MV;
-    typedef Arnoldi::RCP_OP            RCP_OP;
-    typedef Teuchos::RCP<Matrix>       RCP_Matrix;
-    typedef profugus::InverseOperator  InverseOperator;
-    typedef Arnoldi::RCP_ParameterList RCP_ParameterList;
-    typedef Arnoldi::ParameterList     ParameterList;
-    typedef std::vector<int>           Vec_Int;
-    typedef std::vector<double>        Vec_Dbl;
+    typedef Epetra_MultiVector               MV;
+    typedef Epetra_Operator                  OP;
+    typedef profugus::Arnoldi<MV,OP>         Arnoldi;
+    typedef Epetra_Map                       Map;
+    typedef Epetra_CrsGraph                  Graph;
+    typedef Epetra_CrsMatrix                 Matrix;
+    typedef Arnoldi::RCP_MV                  RCP_MV;
+    typedef Arnoldi::RCP_OP                  RCP_OP;
+    typedef Teuchos::RCP<Matrix>             RCP_Matrix;
+    typedef profugus::InverseOperator<MV,OP> InverseOperator;
+    typedef Arnoldi::RCP_ParameterList       RCP_ParameterList;
+    typedef Arnoldi::ParameterList           ParameterList;
+    typedef std::vector<int>                 Vec_Int;
+    typedef std::vector<double>              Vec_Dbl;
 
   protected:
     void SetUp()

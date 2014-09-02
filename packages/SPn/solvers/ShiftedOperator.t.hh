@@ -1,28 +1,34 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ShiftedInverseOperator.cc
- * \author Thomas M. Evans, Steven Hamilton
- * \date   Fri Feb 21 13:38:42 2014
- * \brief  ShiftedInverseOperator member definitions.
+ * \file   solvers/ShiftedOperator.t.hh
+ * \author Thomas M. Evans, Steven P. Hamilton
+ * \date   Fri Feb 21 13:41:13 2014
+ * \brief  ShiftedOperator template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "ShiftedInverseOperator.hh"
+#ifndef solvers_ShiftedOperator_t_hh
+#define solvers_ShiftedOperator_t_hh
+
+#include "ShiftedOperator.hh"
 
 namespace profugus
 {
 
+//
+// Implementation of ShiftedOperatorBase
+//
+
 //---------------------------------------------------------------------------//
-// Constructor
+// CONSTRUCTOR
 //---------------------------------------------------------------------------//
 /*!
  * \brief Constructor
  */
-ShiftedInverseOperator::ShiftedInverseOperator(RCP_ParameterList db)
-    : Base(db)
-    , d_operator( Teuchos::rcp(new ShiftedOperator) )
-    , d_shift(0.0)
+template <class MV, class OP>
+ShiftedOperatorBase<MV,OP>::ShiftedOperatorBase()
+    : d_shift(0.0)
 {
 }
 
@@ -34,16 +40,11 @@ ShiftedInverseOperator::ShiftedInverseOperator(RCP_ParameterList db)
  *
  * \param A Epetra_Operator
  */
-void ShiftedInverseOperator::set_operator( RCP_Operator A )
+template <class MV, class OP>
+void ShiftedOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
 {
     Require( !A.is_null() );
     d_A = A;
-    d_operator->set_operator(A);
-
-    // Even though ShiftedOperator object exists at construction time,
-    //  we can't give it to the solver until we have A because its
-    //  Epetra interface relies on A
-    d_solver->set_operator(d_operator);
 }
 
 //---------------------------------------------------------------------------//
@@ -52,34 +53,42 @@ void ShiftedInverseOperator::set_operator( RCP_Operator A )
  *
  * \param B Epetra_Operator
  */
-void ShiftedInverseOperator::set_rhs_operator( RCP_Operator B )
+template <class MV, class OP>
+void ShiftedOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
     Require( !B.is_null() );
     d_B = B;
-    d_operator->set_rhs_operator(B);
 }
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Perform y=(A-lambda*I)^{-1}x or y=(A-lambda*B)^{-1}x
+ * \brief Perform y=(A-lambda*I)x or y=(A-lambda*B)x
  *
  * \param x Input vector
  * \param y Output vector
  */
-int ShiftedInverseOperator::Apply(const MV &x,
-                                  MV       &y ) const
+template <class MV, class OP>
+void ShiftedOperatorBase<MV,OP>::ApplyImpl(const MV &x,
+                                                 MV &y ) const
 {
-    Require( !d_operator.is_null() );
-    Require( x.MyLength() == x.MyLength() );
-    Require( d_operator->OperatorDomainMap().NumMyElements()==x.MyLength() );
-
-    d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
-
-    return 0;
+    if( !(d_B.is_null()) )
+    {
+        Teuchos::RCP<MV> z = MVT::Clone(x,MVT::GetNumberVecs(x));
+        OPT::Apply(*d_A,x,y);
+        OPT::Apply(*d_B,x,*z);
+        MVT::MvAddMv(-d_shift,*z,1.0,y,y);
+    }
+    else
+    {
+        OPT::Apply(*d_A,x,y);
+        MVT::MvAddMv(-d_shift,x,1.0,y,y);
+    }
 }
 
 } // end namespace profugus
 
+#endif // solvers_ShiftedOperator_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of ShiftedInverseOperator.cc
+//                 end of ShiftedOperator.t.hh
 //---------------------------------------------------------------------------//

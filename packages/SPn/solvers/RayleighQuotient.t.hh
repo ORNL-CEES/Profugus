@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/RayleighQuotient.cc
+ * \file   solvers/RayleighQuotient.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Feb 24 13:29:04 2014
  * \brief  RayleighQuotient member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef solvers_RayleighQuotient_t_hh
+#define solvers_RayleighQuotient_t_hh
 
 #include "harness/Warnings.hh"
 #include "comm/P_Stream.hh"
@@ -19,7 +22,8 @@ namespace profugus
 /*!
  * \brief Build a RayleighQuotient solver.
  */
-RayleighQuotient::RayleighQuotient( RCP_ParameterList db )
+template <class MV, class OP>
+RayleighQuotient<MV,OP>::RayleighQuotient( RCP_ParameterList db )
     : Base(db)
 {
     b_label           = "Rayleigh Quotient";
@@ -40,8 +44,9 @@ RayleighQuotient::RayleighQuotient( RCP_ParameterList db )
  * \brief Solve an eigenvalue problem using Rayleigh quotient iteration.
  * Note that this solver is intended for solving the k-eigenvalue problem
  */
-void RayleighQuotient::solve( double           &keff,
-                              Teuchos::RCP<MV>  x )
+template <class MV, class OP>
+void RayleighQuotient<MV,OP>::solve( double           &keff,
+                                     Teuchos::RCP<MV>  x )
 {
     Require( !b_A.is_null() );
     Require( !d_Op.is_null() );
@@ -160,6 +165,8 @@ void RayleighQuotient::solve( double           &keff,
 }
 
 } // end namespace profugus
+
+#endif // solvers_RayleighQuotient_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of RayleighQuotient.cc

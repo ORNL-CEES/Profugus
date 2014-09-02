@@ -26,6 +26,8 @@
 class ShiftedOperatorTest : public testing::Test
 {
   protected:
+    typedef Epetra_MultiVector MV;
+    typedef Epetra_Operator    OP;
     // Initialization that are performed for each test
     void SetUp()
     {
@@ -97,7 +99,7 @@ class ShiftedOperatorTest : public testing::Test
         d_x = Teuchos::rcp( new Epetra_Vector(*d_map) );
 
         // Build solver
-        d_operator = Teuchos::rcp(new profugus::ShiftedOperator);
+        d_operator = Teuchos::rcp(new profugus::ShiftedOperator<MV,OP>());
         Check(!d_operator.is_null());
         d_operator->set_operator(d_A);
         d_operator->set_rhs_operator(d_B);
@@ -107,11 +109,11 @@ class ShiftedOperatorTest : public testing::Test
     int node;
     int nodes;
 
-    Teuchos::RCP<Epetra_Map>                d_map;
-    Teuchos::RCP<Epetra_CrsMatrix>          d_A;
-    Teuchos::RCP<Epetra_CrsMatrix>          d_B;
-    Teuchos::RCP<Epetra_Vector>             d_x;
-    Teuchos::RCP<profugus::ShiftedOperator> d_operator;
+    Teuchos::RCP<Epetra_Map>                        d_map;
+    Teuchos::RCP<Epetra_CrsMatrix>                  d_A;
+    Teuchos::RCP<Epetra_CrsMatrix>                  d_B;
+    Teuchos::RCP<Epetra_Vector>                     d_x;
+    Teuchos::RCP<profugus::ShiftedOperator<MV,OP> > d_operator;
 };
 
 //---------------------------------------------------------------------------//

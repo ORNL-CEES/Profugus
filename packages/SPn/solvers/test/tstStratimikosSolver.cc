@@ -15,12 +15,12 @@
 #include "../Decomposition.hh"
 #include "../StratimikosSolver.hh"
 
-#include <Epetra_Operator.h>
-#include <Epetra_MultiVector.h>
-#include <Epetra_CrsMatrix.h>
-#include <Epetra_Vector.h>
-#include <Teuchos_RCP.hpp>
-#include <Teuchos_Array.hpp>
+#include "Epetra_Operator.h"
+#include "Epetra_MultiVector.h"
+#include "Epetra_CrsMatrix.h"
+#include "Epetra_Vector.h"
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_Array.hpp"
 
 //---------------------------------------------------------------------------//
 // TEST HELPERS
@@ -74,7 +74,7 @@ class Operator
 	else if ( 1 == num_elements )
 	{
 	    int my_rank = d_map.comm().MyPID();
-	    d_crs_matrix->InsertGlobalValues( 
+	    d_crs_matrix->InsertGlobalValues(
 		my_rank , num_cols, &matrix[my_rank][0], indices.getRawPtr() );
 	}
 	d_crs_matrix->FillComplete();
@@ -93,10 +93,12 @@ class StratimikosSolver_Test : public testing::Test
 {
   protected:
     // Typedefs usable inside the test fixture
-    typedef profugus::StratimikosSolver Solver_t;
-    typedef Teuchos::RCP<Operator>      RCP_Operator;
-    typedef Solver_t::ParameterList     ParameterList;
-    typedef Solver_t::RCP_ParameterList RCP_ParameterList;
+    typedef Epetra_MultiVector                 MV;
+    typedef Epetra_Operator                    OP;
+    typedef profugus::StratimikosSolver<MV,OP> Solver_t;
+    typedef Teuchos::RCP<Operator>             RCP_Operator;
+    typedef Solver_t::ParameterList            ParameterList;
+    typedef Solver_t::RCP_ParameterList        RCP_ParameterList;
 
   protected:
     // Initialization that are performed for each test
@@ -131,6 +133,9 @@ class StratimikosSolver_Test : public testing::Test
         // wrap rhs into Epetra MV
         Teuchos::RCP<Epetra_Vector> ep_rhs = Teuchos::rcp(
             new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), rhs));
+
+        std::vector<double> rhs_norm(1);
+        ep_rhs->Norm2(&rhs_norm[0]);
 
         // solve
         double x[4] = {0.0};
