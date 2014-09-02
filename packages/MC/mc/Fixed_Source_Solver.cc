@@ -54,7 +54,7 @@ void Fixed_Source_Solver::set(SP_Source_Transporter transporter,
 
     // get the tallies and assign them
     b_tallier = d_transporter->tallier();
-    Insist (b_tallier,
+    INSIST(b_tallier,
             "Tally not assigned in Source_Transporter in fixed-source solver.");
 }
 
@@ -70,8 +70,8 @@ void Fixed_Source_Solver::solve()
 
     REQUIRE(d_source);
     REQUIRE(b_tallier);
-    Insist(!b_tallier->is_built(), "The given tallier can only be built once.");
-    Insist(!b_tallier->is_finalized(), "The given tallier was used in "
+    INSIST(!b_tallier->is_built(), "The given tallier can only be built once.");
+    INSIST(!b_tallier->is_finalized(), "The given tallier was used in "
            "a prior transport solve without reset() being called.");
 
     // Build the tallier

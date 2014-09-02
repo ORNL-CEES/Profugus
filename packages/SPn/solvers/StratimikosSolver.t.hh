@@ -100,7 +100,7 @@ void StratimikosSolver<MV,OP>::solve(Teuchos::RCP<MV>       x,
     using Teuchos::rcp;
     using Teuchos::ptrInArg;
 
-    Insist (d_thyraA != Teuchos::null, "set_operator has not been called");
+    INSIST(d_thyraA != Teuchos::null, "set_operator has not been called");
     REQUIRE(x != Teuchos::null);
     REQUIRE(b != Teuchos::null);
     REQUIRE(MVT::GetNumberVecs(*x) == MVT::GetNumberVecs(*b));

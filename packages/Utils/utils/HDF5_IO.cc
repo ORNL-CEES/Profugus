@@ -71,7 +71,7 @@ void HDF5_IO::close()
 
     // close file on node 0
     herr_t status = H5Fclose(b_file);
-    Insist (status >= 0, "HDF5 failed to close file.");
+    INSIST(status >= 0, "HDF5 failed to close file.");
 
     b_mode = END_FILE_MODE;
     b_loc_stack.clear();
@@ -98,7 +98,7 @@ void HDF5_IO::begin_group(const std_string &dirname)
 {
     REQUIRE(dirname.find('/') == std_string::npos); // disallow slashes
 
-    Remember(size_t ng_orig = b_loc_stack.size());
+    REMEMBER(size_t ng_orig = b_loc_stack.size());
 
     // group
     hid_t new_group = 0;
@@ -133,8 +133,8 @@ void HDF5_IO::begin_group(const std_string &dirname)
  */
 void HDF5_IO::end_group()
 {
-    Insist(b_loc_stack.size() > 1, "Can't close root group.");
-    Remember(size_t ng_orig = b_loc_stack.size());
+    INSIST(b_loc_stack.size() > 1, "Can't close root group.");
+    REMEMBER(size_t ng_orig = b_loc_stack.size());
 
     herr_t status = H5Gclose(b_loc_stack.back().handle);
     if (status < 0)

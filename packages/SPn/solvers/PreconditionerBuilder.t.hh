@@ -64,7 +64,7 @@ PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
     // Get the underlying matrix, must be Epetra_RowMatrix
     Teuchos::RCP<Epetra_RowMatrix> rowmat =
         Teuchos::rcp_dynamic_cast<Epetra_RowMatrix>(op);
-    Insist( rowmat != Teuchos::null,
+    INSIST( rowmat != Teuchos::null,
             "Preconditioner construction requires Epetra_RowMatrix." );
 
     Teuchos::RCP<Epetra_Operator> prec;

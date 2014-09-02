@@ -329,7 +329,7 @@ void Fission_Rebalance::send(int                       num_send,
                              int                       tag)
 {
     REQUIRE(bank.size() >= num_send);
-    Remember (int size = bank.size());
+    REMEMBER(int size = bank.size());
 
     if (num_send)
     {
@@ -369,7 +369,7 @@ void Fission_Rebalance::receive(int                       num_recv,
                                 profugus::Request        &handle,
                                 int                       tag)
 {
-    Remember (int size = bank.size());
+    REMEMBER(int size = bank.size());
 
    if (num_recv)
     {

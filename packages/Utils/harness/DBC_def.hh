@@ -30,7 +30,7 @@
  * example,
  *
  * \code
- * Assert( x > 0. );
+ * ASSERT( x > 0. );
  * y = sqrt(x);
  * \endcode
  *
@@ -85,18 +85,18 @@
  * Post-condition checking macro.  On when UTILS_DBC & 4 is true.
  */
 /*!
- * \def Remember(code)
+ * \def REMEMBER(code)
  *
  * Add code to compilable code.  Used in the following manner:
  * \code
- *     Remember (int old = x;)
+ *     REMEMBER(int old = x;)
  *     // ...
  *     ENSURE(x == old);
  * \endcode
  * On when UTILS_DBC & 4 is true.
  */
 /*!
- * \def Insist(condition, message)
+ * \def INSIST(condition, message)
  *
  * Inviolate check macro.  Insist is always on.
  */
@@ -153,23 +153,23 @@
 #if UTILS_DBC & 2
 #define CHECK_ON
 #define CHECK(c) UTILS_ASSERT_(c)
-#define Assert(c) UTILS_ASSERT_(c)
+#define ASSERT(c) UTILS_ASSERT_(c)
 #else
 #define CHECK(c) UTILS_NOASSERT_(c)
-#define Assert(c) UTILS_NOASSERT_(c)
+#define ASSERT(c) UTILS_NOASSERT_(c)
 #endif
 
 #if UTILS_DBC & 4
 #define REMEMBER_ON
 #define ENSURE_ON
 #define ENSURE(c) UTILS_ASSERT_(c)
-#define Remember(c) c
+#define REMEMBER(c) c
 #else
 #define ENSURE(c) UTILS_NOASSERT_(false)
-#define Remember(c)
+#define REMEMBER(c)
 #endif
 
-#define Insist(COND, MSG) \
+#define INSIST(COND, MSG) \
     do { if (!(COND)) ::profugus::insist( \
             #COND, MSG, __FILE__, __LINE__); } while (0)
 

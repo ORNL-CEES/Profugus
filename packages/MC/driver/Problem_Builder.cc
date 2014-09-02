@@ -53,15 +53,15 @@ void Problem_Builder::setup(const std::string &xml_file)
         xml_file.c_str(), master.ptr(), *d_comm);
 
     // validate the parameter list
-    Insist (master->isSublist("CORE"),
+    INSIST(master->isSublist("CORE"),
             "CORE block not defined in input.");
-    Insist (master->isSublist("ASSEMBLIES"),
+    INSIST(master->isSublist("ASSEMBLIES"),
             "ASSEMBLIES block not defined in input.");
-    Insist (master->isSublist("PINS"),
+    INSIST(master->isSublist("PINS"),
             "PINS block not defined in input.");
-    Insist (master->isSublist("MATERIAL"),
+    INSIST(master->isSublist("MATERIAL"),
             "MATERIAL block not defined in input.");
-    Insist (master->isSublist("PROBLEM"),
+    INSIST(master->isSublist("PROBLEM"),
             "PROBLEM block not defined in input.");
 
     // store the individual parameter lists

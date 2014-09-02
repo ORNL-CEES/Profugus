@@ -35,11 +35,11 @@ FV_Gather::FV_Gather(RCP_Mesh                 mesh,
     using def::PROBLEM_BOUNDARY;
 
     // only allow 1-set problems
-    Insist (indexer.num_sets() == 1,
+    INSIST(indexer.num_sets() == 1,
             "SPN solver does not support multiple sets.");
 
     // for now, only allow 1-block in Z
-    Insist (mesh->block(K) == 1, "Only allow 1 Z-block in SPN.");
+    INSIST(mesh->block(K) == 1, "Only allow 1 Z-block in SPN.");
 
     REQUIRE(!mesh.is_null());
     REQUIRE(!coefficients.is_null());

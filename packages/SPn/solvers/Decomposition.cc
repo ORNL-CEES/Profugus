@@ -35,7 +35,7 @@ Decomposition::Decomposition(const Vec_Int &local_to_global)
 {
     REQUIRE(!d_map.is_null());
 
-    Insist (profugus::nodes() > 1, "Cannot construct with map on 1 pe.");
+    INSIST(profugus::nodes() > 1, "Cannot construct with map on 1 pe.");
 
     ENSURE(d_map->NumMyElements() == local_to_global.size());
     ENSURE(d_comm.NumProc() == profugus::nodes());
@@ -70,7 +70,7 @@ Decomposition::Decomposition(const Vec_Int        &local_to_global,
 
     // set the local communicator
     profugus::set_internal_comm(comm);
-    Insist (profugus::nodes() > 1, "Cannot construct with map on 1 pe.");
+    INSIST(profugus::nodes() > 1, "Cannot construct with map on 1 pe.");
 
     ENSURE(d_map->NumMyElements() == local_to_global.size());
     ENSURE(d_comm.NumProc() == profugus::nodes());
@@ -157,14 +157,14 @@ Decomposition::Decomposition(int                   num_elements,
     else
         d_map = Teuchos::rcp(new Map( -1, num_elements, 0, d_comm));
 
-    Remember (profugus::set_internal_comm(comm));
+    REMEMBER(profugus::set_internal_comm(comm));
     ENSURE(profugus::nodes() == 1 || local_map ?
             d_map->NumGlobalElements() == num_elements :
             d_map->NumMyElements() < d_map->NumGlobalElements());
     ENSURE(d_map->NumMyElements() == num_elements);
     ENSURE(d_comm.NumProc() == profugus::nodes());
     ENSURE(d_comm.MyPID() == profugus::node());
-    Remember (profugus::reset_internal_comm());
+    REMEMBER(profugus::reset_internal_comm());
 }
 
 } // end namespace profugus

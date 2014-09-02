@@ -31,7 +31,7 @@ Mesh_Geometry::Mesh_Geometry(
         const Vec_Dbl& z_edges)
     : d_mesh(x_edges, y_edges, z_edges)
 {
-    Insist(d_mesh.dimension() == 3, "Only 3-D meshes are supported.");
+    INSIST(d_mesh.dimension() == 3, "Only 3-D meshes are supported.");
 }
 
 //---------------------------------------------------------------------------//

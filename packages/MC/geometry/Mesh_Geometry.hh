@@ -115,7 +115,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Return the current material ID
     geometry::matid_type matid(const Geo_State_t &state) const
     {
-        Insist(d_materials, "Material IDs haven't been assigned");
+        INSIST(d_materials, "Material IDs haven't been assigned");
         REQUIRE(cell(state) < d_materials->size());
 
         ENSURE((*d_materials)[cell(state)] >= 0);

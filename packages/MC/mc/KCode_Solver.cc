@@ -67,7 +67,7 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
 
     // get a reference to the tallier
     b_tallier = d_transporter->tallier();
-    Insist (b_tallier, "The tallier has not been assigned.");
+    INSIST(b_tallier, "The tallier has not been assigned.");
     CHECK(b_tallier->geometry() && b_tallier->physics());
 
     // get initial k and build keff tally
@@ -216,7 +216,7 @@ void KCode_Solver::solve()
  */
 void KCode_Solver::reset()
 {
-    Insist (d_build_phase == FINALIZED,
+    INSIST(d_build_phase == FINALIZED,
             "Reset may be called only after finalizing.");
 
     // Reset tallies
@@ -249,11 +249,11 @@ void KCode_Solver::reset()
  */
 void KCode_Solver::initialize()
 {
-    Insist (d_build_phase == ASSIGNED,
+    INSIST(d_build_phase == ASSIGNED,
             "initialize must be called only after calling set()");
 
-    Insist (!b_tallier->is_built(), "The given tallier can only be built once.");
-    Insist (!b_tallier->is_finalized(), "The given tallier was used in "
+    INSIST(!b_tallier->is_built(), "The given tallier can only be built once.");
+    INSIST(!b_tallier->is_finalized(), "The given tallier was used in "
             "a prior transport solve without reset() being called.");
 
     // Add the keff tally to the ACTIVE cycle tallier and build it
@@ -342,7 +342,7 @@ void KCode_Solver::begin_active_cycles()
     REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
     REQUIRE(d_inactive_tallier);
 
-    Insist (d_build_phase == INACTIVE_SOLVE,
+    INSIST(d_build_phase == INACTIVE_SOLVE,
             "begin_active_cycles must be called only after "
             "initializing and iterating on inactive cycles.");
 
@@ -378,9 +378,9 @@ void KCode_Solver::begin_active_cycles()
  */
 void KCode_Solver::finalize()
 {
-    Insist (d_build_phase == ACTIVE_SOLVE,
+    INSIST(d_build_phase == ACTIVE_SOLVE,
             "Finalize can only be called after iterating with active cycles.");
-    Insist (num_cycles() > 0, "No active cycles were performed.");
+    INSIST(num_cycles() > 0, "No active cycles were performed.");
 
     // Finalize tallies using global number particles
     CHECK(!b_tallier->is_finalized());

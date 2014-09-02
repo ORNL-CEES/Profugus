@@ -40,7 +40,7 @@ Partitioner::Partitioner(RCP_ParameterList pl)
 
     // set dimension
     d_dimension = pl->get<int>("dimension");
-    Insist(d_dimension == 2 || d_dimension == 3, "Dimension must be 2 or 3");
+    INSIST(d_dimension == 2 || d_dimension == 3, "Dimension must be 2 or 3");
 
     // initialize blocks and sets
     d_Nb[I]      = pl->get<int>("num_blocks_i");
@@ -101,8 +101,8 @@ Partitioner::Partitioner(RCP_ParameterList pl)
         {
             num_cells = pl->get<int>("num_cells_k");
             delta     = pl->get<double>("delta_z");
-            Insist(num_cells > 0, "num_cells_k must be postitive");
-            Insist(delta > 0., "delta_z must be postitive");
+            INSIST(num_cells > 0, "num_cells_k must be postitive");
+            INSIST(delta > 0., "delta_z must be postitive");
 
             build_uniform_edges(num_cells, delta, d_edges[K]);
         }

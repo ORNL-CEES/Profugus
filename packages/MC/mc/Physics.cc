@@ -41,7 +41,7 @@ Physics::Physics(RCP_Std_DB db,
     REQUIRE(d_mat->num_groups() > 0);
     REQUIRE(d_mat->num_mat() > 0);
 
-    Insist (d_gb.num_groups() == mat->num_groups(),
+    INSIST(d_gb.num_groups() == mat->num_groups(),
             "Number of groups in material is inconsistent with Group_Bounds.");
 
     // implicit capture flag

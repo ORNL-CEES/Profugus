@@ -86,7 +86,7 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
 #endif
 
     // only support single-set decompositions with SPN
-    Insist(indexer->num_sets() == 1,
+    INSIST(indexer->num_sets() == 1,
            "Only support 1-set decomposition in SPN.");
 
     // make the global cell widths
@@ -481,7 +481,7 @@ void Linear_System_FV::build_RHS(const External_Source &q)
     rhs.PutScalar(0.0);
 
     // >>> Add External Sources
-    Insist(q.is_isotropic(),
+    INSIST(q.is_isotropic(),
             "Only isotropic sources are allowed in the SPN solver.");
 
     // loop through cells

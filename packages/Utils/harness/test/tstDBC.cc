@@ -220,7 +220,7 @@ TEST(DBC, Insist)
 
     try
     {
-        Insist( 0 , "This is a bad thing.");
+        INSIST( 0 , "This is a bad thing.");
         throw "Bogus!";
     }
     catch( profugus::assertion const & a )

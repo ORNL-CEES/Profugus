@@ -71,7 +71,7 @@ inline bool soft_equiv(const int &value,
                        const int &reference,
                        const int  precision)
 {
-    Insist (0, "Can't do a soft compare with integers!");
+    INSIST(0, "Can't do a soft compare with integers!");
     return false;
 }
 

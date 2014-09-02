@@ -80,7 +80,7 @@ void Manager::setup(const std::string &xml_file)
     // if a timestep control is defined then this is a time-dependent problem
     if (d_db->isSublist("timestep control"))
     {
-        Insist (prob_type == "fixed",
+        INSIST(prob_type == "fixed",
                 "Cannot do time-dependent eigenproblems.");
         prob_type = "fixed_tdep";
     }
@@ -322,7 +322,7 @@ void Manager::output()
     // >>> OUTPUT MATRICES
     if (d_db->get<bool>("output_matrices", false))
     {
-        Insist(d_implementation == "epetra",
+        INSIST(d_implementation == "epetra",
                "Matrix file output not yet available for Tpetra");
 
         std::string A("A.mtx"), B("B.mtx");

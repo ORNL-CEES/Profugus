@@ -31,7 +31,7 @@ RayleighQuotient<MV,OP>::RayleighQuotient( RCP_ParameterList db )
 
     if( d_use_fixed_shift )
     {
-        Insist( db->isParameter("eig_shift"),
+        INSIST( db->isParameter("eig_shift"),
                 "Must specify 'eig_shift' if fixed shift is requested." );
         d_fixed_shift = 1.0/db->get<double>("eig_shift");
         VALIDATE( d_fixed_shift > 0.0,

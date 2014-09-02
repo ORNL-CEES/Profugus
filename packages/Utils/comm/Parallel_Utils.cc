@@ -66,7 +66,7 @@ bool check_global_equiv(int local_value)
         }
         else
         {
-            Insist(0, "Something is wrong with nodes!");
+            INSIST(0, "Something is wrong with nodes!");
         }
     }
 
@@ -125,7 +125,7 @@ bool check_global_equiv(double local_value, double eps)
         }
         else
         {
-            Insist(0, "Something is wrong with nodes!");
+            INSIST(0, "Something is wrong with nodes!");
         }
     }
 

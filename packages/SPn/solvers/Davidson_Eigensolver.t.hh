@@ -102,7 +102,7 @@ void Davidson_Eigensolver<MV,OP>::solve( double &keff, Teuchos::RCP<MV> x)
     // Solve
     Anasazi::ReturnType davReturn = solver.solve();
 
-    Insist( davReturn == Anasazi::Converged,
+    INSIST( davReturn == Anasazi::Converged,
             "Davidson Solver did not converge!" );
 
     // Extract solution

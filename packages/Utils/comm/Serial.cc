@@ -202,7 +202,7 @@ void blocking_probe(int  /* source */,
                     int  /* tag */,
                     int &/* message_size */)
 {
-    Insist(false, "no messages expected in serial programs!");
+    INSIST(false, "no messages expected in serial programs!");
 }
 
 //---------------------------------------------------------------------------//

@@ -80,7 +80,7 @@ class Energy_Multigrid : public Epetra_Operator
     int ApplyInverse(const Epetra_MultiVector &x,
                            Epetra_MultiVector &y ) const
     {
-        Insist(false,"Energy_Multigrid should use Apply, not ApplyInverse.");
+        INSIST(false,"Energy_Multigrid should use Apply, not ApplyInverse.");
         return -1;
     }
     bool HasNormInf()const {return false;}

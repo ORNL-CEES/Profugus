@@ -16,9 +16,9 @@
 #define REQUIRE(c)
 #define CHECK(c)
 #define ENSURE(c)
-#define Remember(c)
-#define Assert(c)
-#define Insist(c, m)
+#define REMEMBER(c)
+#define ASSERT(c)
+#define INSIST(c, m)
 #define NOT_IMPLEMENTED(m)
 #define VALIDATE(c, m)
 

@@ -32,10 +32,10 @@ Group_Bounds::SP_Group_Bounds Group_Bounds::build_logarithmic(double lower,
                                                               double higher,
                                                               int    num_bins)
 {
-    Insist (lower > 0.0, "Lower energy bound must be > ZERO");
-    Insist (higher > lower,
+    INSIST(lower > 0.0, "Lower energy bound must be > ZERO");
+    INSIST(higher > lower,
             "Upper energy bound must be greater than the lower energy bound");
-    Insist (num_bins > 0, "Must have a least one energy bin");
+    INSIST(num_bins > 0, "Must have a least one energy bin");
 
     // allocate the energy bounds
     Vec_Dbl energy_mesh(num_bins + 1, 0.0);

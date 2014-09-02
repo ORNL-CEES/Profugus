@@ -353,7 +353,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         // Get the matrix from the linear system (may not be full system
         // matrix)
         Teuchos::RCP<Epetra_RowMatrix> rcp_rowmat = b_system->get_Matrix();
-        Insist(!rcp_rowmat.is_null(),
+        INSIST(!rcp_rowmat.is_null(),
                "Cannot use Ifpack preconditioner without constructing matrix.");
 
         // Create Ifpack preconditioner
@@ -387,7 +387,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         // Get the matrix from the linear system (may not be full system
         // matrix)
         Teuchos::RCP<Epetra_RowMatrix> rcp_rowmat = b_system->get_Matrix();
-        Insist(!rcp_rowmat.is_null(),
+        INSIST(!rcp_rowmat.is_null(),
                "Cannot use ML preconditioner without constructing matrix.");
 
         d_ml_prec = Teuchos::rcp(new ML_Epetra::MultiLevelPreconditioner(

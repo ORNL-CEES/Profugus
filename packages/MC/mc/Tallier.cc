@@ -345,7 +345,7 @@ void Tallier::prune(Vec_Tallies &tallies)
         prev_tally = t;
     }
     CHECK(new_tallies.size() <= tallies.size());
-    Remember (int size = new_tallies.size());
+    REMEMBER(int size = new_tallies.size());
 
     // swap the new_tallies with the tallies
     tallies.swap(new_tallies);
