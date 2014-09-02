@@ -62,7 +62,7 @@ class MueLuPreconditionerBase
 
     void setup(Teuchos::RCP<Teuchos::ParameterList> pl);
 
-    Teuchos::RCP<Xpetra_CrsMatrix> d_matrix;
+    Teuchos::RCP<Xpetra_Matrix> d_matrix;
     Teuchos::RCP<MueLu::Hierarchy<SCALAR,LO,GO,NODE> > d_hierarchy;
 };
 
@@ -119,7 +119,15 @@ class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
                                  Teuchos::RCP<Teuchos::ParameterList> pl)
     {
         d_A = A;
-        d_matrix = Teuchos::rcp( new Xpetra::EpetraCrsMatrix(A) );
+
+        // Wrap Epetra_CrsMatrix into an Xpetra::EpetraCrsMatrix
+        Teuchos::RCP<Xpetra_CrsMatrix> temp_matrix = Teuchos::rcp(
+                new Xpetra::EpetraCrsMatrix(A) );
+
+        // Now wrap Xpetra_CrsMatrix into an Xpetra::Matrix
+        // Why wrap twice?  Because it's twice as awesome
+        d_matrix = Teuchos::rcp( new Xpetra::CrsMatrixWrap<SCALAR,LO,GO,NODE>(
+            temp_matrix) );
         this->setup(pl);
     };
 
@@ -191,8 +199,16 @@ class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
                                  Teuchos::RCP<Teuchos::ParameterList> pl)
     {
         d_A = A;
-        d_matrix = Teuchos::rcp(
-            new Xpetra::TpetraCrsMatrix<SCALAR,LO,GO,NODE>(A) );
+        //
+        // Wrap Epetra_CrsMatrix into an Xpetra::EpetraCrsMatrix
+        Teuchos::RCP<Xpetra_CrsMatrix> temp_matrix = Teuchos::rcp(
+                new Xpetra::TpetraCrsMatrix<SCALAR,LO,GO,NODE>(A) );
+
+        // Now wrap Xpetra_CrsMatrix into an Xpetra::Matrix
+        // Why wrap twice?  Because it's twice as awesome
+        d_matrix = Teuchos::rcp( new Xpetra::CrsMatrixWrap<SCALAR,LO,GO,NODE>(
+            temp_matrix) );
+
         this->setup(pl);
     };
 

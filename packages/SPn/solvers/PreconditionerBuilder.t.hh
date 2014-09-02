@@ -177,10 +177,13 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
             Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
         REQUIRE( row_mat != Teuchos::null );
 
+        Teuchos::RCP<Teuchos::ParameterList> muelu_pl =
+            Teuchos::sublist(db, "MueLu Params");
+
         // Wrap Tpetra objects as Xpetra
         prec = Teuchos::rcp(new MueLuPreconditioner<Tpetra_MultiVector,
                                                     Tpetra_Operator>(row_mat,
-                                                                     db) );
+                                                                     muelu_pl));
 
     }
     else if( prec_type != "none" )
