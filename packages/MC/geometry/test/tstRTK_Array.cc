@@ -154,9 +154,9 @@ class LatticeTest : public ::testing::Test
         SP_Object pin3(make_shared<Object_t>(3, 0.45, 10, 1.26, 14.28));
         SP_Object pin5(make_shared<Object_t>(5, 0.54, 10, 1.26, 14.28));
 
-        Check(2 == pin0->num_cells());
-        Check(2 == pin3->num_cells());
-        Check(2 == pin5->num_cells());
+        CHECK(2 == pin0->num_cells());
+        CHECK(2 == pin3->num_cells());
+        CHECK(2 == pin5->num_cells());
 
         // assign pins to the lattice
         lat.id(0, 0, 0) = 3;

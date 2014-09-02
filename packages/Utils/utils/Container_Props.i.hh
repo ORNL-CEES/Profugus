@@ -28,7 +28,7 @@ InputIterator soft_find(InputIterator                          begin,
 {
     typedef typename ITT<InputIterator>::vt  value_type;
 
-    Require (std::distance(begin, end) >= 0);
+    REQUIRE(std::distance(begin, end) >= 0);
 
     return std::find_if(begin, end,
                         std::bind2nd(SoftIsEqual<value_type>(eps), value));
@@ -61,7 +61,7 @@ bool is_sorted(InputIterator iter,
                InputIterator last,
                BinaryOp      comp)
 {
-    Require (std::distance(iter, last) >= 0);
+    REQUIRE(std::distance(iter, last) >= 0);
 
     if (iter == last)
         return true;
@@ -104,8 +104,8 @@ bool is_subset(const Container1 &cont1,
     typedef typename Container1::value_type             val_type;
     typedef typename Compare_Traits<val_type>::eql_comp eql_comp;
 
-    Require ( profugus::is_sorted(cont1.begin(), cont1.end()) );
-    Require ( profugus::is_sorted(cont2.begin(), cont2.end()) );
+    REQUIRE( profugus::is_sorted(cont1.begin(), cont1.end()) );
+    REQUIRE( profugus::is_sorted(cont2.begin(), cont2.end()) );
 
     // Create the equal comparator
     eql_comp comp;
@@ -143,9 +143,9 @@ bool is_subset(const Container1                      &cont1,
 {
     typedef typename Container1::value_type     value_type;
 
-    Require ( profugus::is_sorted(cont1.begin(), cont1.end(),
+    REQUIRE( profugus::is_sorted(cont1.begin(), cont1.end(),
                                   SoftIsLessEqual<value_type>(eps)) );
-    Require ( profugus::is_sorted(cont2.begin(), cont2.end(),
+    REQUIRE( profugus::is_sorted(cont2.begin(), cont2.end(),
                                   SoftIsLessEqual<value_type>(eps)) );
 
     // Create the equal comparator

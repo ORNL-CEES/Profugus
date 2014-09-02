@@ -30,21 +30,21 @@ void TransporterTestBase::SetUp()
     nodes = profugus::nodes();
 
     this->init_group_bounds();
-    Check(group_bounds);
+    CHECK(group_bounds);
 
     this->init_db();
-    Check(!db.is_null());
+    CHECK(!db.is_null());
 
     this->init_geometry();
-    Check(geometry);
+    CHECK(geometry);
 
     this->init_physics();
-    Check(physics);
+    CHECK(physics);
     physics->set_geometry(geometry);
 
     // Create VR
     this->init_vr();
-    Check(var_red);
+    CHECK(var_red);
     var_red->set(geometry);
     var_red->set(physics);
 
@@ -53,13 +53,13 @@ void TransporterTestBase::SetUp()
     tallier->set(geometry, physics);
     this->init_tallies();
 
-    Ensure(rcon);
-    Ensure(!db.is_null());
-    Ensure(geometry);
-    Ensure(physics);
-    Ensure(group_bounds);
-    Ensure(var_red);
-    Ensure(tallier);
+    ENSURE(rcon);
+    ENSURE(!db.is_null());
+    ENSURE(geometry);
+    ENSURE(physics);
+    ENSURE(group_bounds);
+    ENSURE(var_red);
+    ENSURE(tallier);
 }
 
 //---------------------------------------------------------------------------//
@@ -72,7 +72,7 @@ void TransporterTestBase::init_group_bounds()
 
     group_bounds = std::make_shared<profugus::Group_Bounds>(n_bounds);
 
-    Ensure(group_bounds->num_groups() == 1);
+    ENSURE(group_bounds->num_groups() == 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -80,8 +80,8 @@ void TransporterTestBase::init_group_bounds()
 //! Create group information
 void TransporterTestBase::init_db()
 {
-    Require(db.is_null());
-    Require(group_bounds);
+    REQUIRE(db.is_null());
+    REQUIRE(group_bounds);
 
     db = Teuchos::rcp(new ParameterList_t("test"));
 }
@@ -122,9 +122,9 @@ void TransporterTestBase::init_geometry()
     // complete lattice
     lat->complete(0.0, 0.0, 0.0);
 
-    Check(profugus::soft_equiv(lat->pitch(def::X), 3.78));
-    Check(profugus::soft_equiv(lat->pitch(def::Y), 3.78));
-    Check(profugus::soft_equiv(lat->height(), 14.28));
+    CHECK(profugus::soft_equiv(lat->pitch(def::X), 3.78));
+    CHECK(profugus::soft_equiv(lat->pitch(def::Y), 3.78));
+    CHECK(profugus::soft_equiv(lat->height(), 14.28));
 
     // make core
     SP_Core core(std::make_shared<Core_t>(1, 1, 1, 1));
@@ -138,8 +138,8 @@ void TransporterTestBase::init_geometry()
 
 void TransporterTestBase::init_physics()
 {
-    Require (!db.is_null());
-    Require (group_bounds);
+    REQUIRE(!db.is_null());
+    REQUIRE(group_bounds);
     const int ng = num_groups();
 
     RCP_XS xs(Teuchos::rcp(new XS_t()));

@@ -43,8 +43,8 @@ Domain_Transporter::Domain_Transporter()
 void Domain_Transporter::set(SP_Geometry geometry,
                              SP_Physics  physics)
 {
-    Require (geometry);
-    Require (physics);
+    REQUIRE(geometry);
+    REQUIRE(physics);
 
     d_geometry = geometry;
     d_physics  = physics;
@@ -64,7 +64,7 @@ void Domain_Transporter::set(SP_Geometry geometry,
  */
 void Domain_Transporter::set(SP_Variance_Reduction reduction)
 {
-    Require (reduction);
+    REQUIRE(reduction);
     d_var_reduction = reduction;
 
     if (d_geometry)
@@ -81,9 +81,9 @@ void Domain_Transporter::set(SP_Variance_Reduction reduction)
  */
 void Domain_Transporter::set(SP_Tallier tallies)
 {
-    Require (tallies);
+    REQUIRE(tallies);
     d_tallier = tallies;
-    Ensure (d_tallier);
+    ENSURE(d_tallier);
 }
 
 //---------------------------------------------------------------------------//
@@ -125,12 +125,12 @@ void Domain_Transporter::set(SP_Fission_Sites fission_sites,
 void Domain_Transporter::transport(Particle_t &particle,
                                    Bank_t     &bank)
 {
-    Require (d_geometry);
-    Require (d_physics);
-    Require (d_var_reduction);
-    Require (d_tallier);
-    Require (particle.alive());
-    Require (particle.rng().assigned());
+    REQUIRE(d_geometry);
+    REQUIRE(d_physics);
+    REQUIRE(d_var_reduction);
+    REQUIRE(d_tallier);
+    REQUIRE(particle.alive());
+    REQUIRE(particle.rng().assigned());
 
     // particle state
     Geo_State_t &geo_state = particle.geo_state();
@@ -160,12 +160,12 @@ void Domain_Transporter::transport(Particle_t &particle,
         // >>>>>>>>>>>>-<<<<<<<<<<<<<
         while (particle.event() == events::BOUNDARY)
         {
-            Check (particle.alive());
-            Check (d_dist_mfp > 0.0);
+            CHECK(particle.alive());
+            CHECK(d_dist_mfp > 0.0);
 
             // total interaction cross section
             d_xs_tot = d_physics->total(physics::TOTAL, particle);
-            Check (d_xs_tot >= 0.0);
+            CHECK(d_xs_tot >= 0.0);
 
             // sample distance to next collision
             if (d_xs_tot > 0.0)
@@ -181,7 +181,7 @@ void Domain_Transporter::transport(Particle_t &particle,
             d_step.submit(d_dist_bnd, events::BOUNDARY);
 
             // set the next event in the particle
-            Check(d_step.tag() < events::END_EVENT);
+            CHECK(d_step.tag() < events::END_EVENT);
             particle.set_event(static_cast<events::Event>(d_step.tag()));
 
             // path-length tallies (the actual movement of the particle will
@@ -215,8 +215,8 @@ void Domain_Transporter::transport(Particle_t &particle,
 void Domain_Transporter::process_boundary(Particle_t &particle,
                                           Bank_t     &bank)
 {
-    Require (particle.alive());
-    Require (particle.event() == events::BOUNDARY);
+    REQUIRE(particle.alive());
+    REQUIRE(particle.event() == events::BOUNDARY);
 
     // return if not a boundary event
 
@@ -241,18 +241,18 @@ void Domain_Transporter::process_boundary(Particle_t &particle,
             // add a escape diagnostic
             DIAGNOSTICS_TWO(integers["geo_escape"]++);
 
-            Ensure (particle.event() == events::ESCAPE);
+            ENSURE(particle.event() == events::ESCAPE);
             break;
 
         case geometry::REFLECT:
             // the particle has hit a reflecting surface
             reflected = d_geometry->reflect(particle.geo_state());
-            Check (reflected);
+            CHECK(reflected);
 
             // add a reflecting face diagnostic
             DIAGNOSTICS_TWO(integers["geo_reflect"]++);
 
-            Ensure (particle.event() == events::BOUNDARY);
+            ENSURE(particle.event() == events::BOUNDARY);
             break;
 
         case geometry::INSIDE:
@@ -266,11 +266,11 @@ void Domain_Transporter::process_boundary(Particle_t &particle,
             // add a boundary crossing diagnostic
             DIAGNOSTICS_TWO(integers["geo_surface"]++);
 
-            Ensure (particle.event() == events::BOUNDARY);
+            ENSURE(particle.event() == events::BOUNDARY);
             break;
 
         default:
-            Check(0);
+            CHECK(0);
     }
 }
 
@@ -279,8 +279,8 @@ void Domain_Transporter::process_boundary(Particle_t &particle,
 void Domain_Transporter::process_collision(Particle_t &particle,
                                            Bank_t     &bank)
 {
-    Require (d_var_reduction);
-    Require (particle.event() == events::COLLISION);
+    REQUIRE(d_var_reduction);
+    REQUIRE(particle.event() == events::COLLISION);
 
     // move the particle to the collision site
     d_geometry->move_to_point(d_step.step(), particle.geo_state());
@@ -288,8 +288,8 @@ void Domain_Transporter::process_collision(Particle_t &particle,
     // sample fission sites
     if (d_sample_fission_sites)
     {
-        Check (d_fission_sites);
-        Check (d_keff > 0.0);
+        CHECK(d_fission_sites);
+        CHECK(d_keff > 0.0);
         d_num_fission_sites += d_physics->sample_fission_site(
             particle, *d_fission_sites, d_keff);
     }

@@ -127,7 +127,7 @@ TEST(DBC, Require)
 
     try
     {
-        Require( 0 );
+        REQUIRE( 0 );
         throw "Bogus!";
     }
     catch( profugus::assertion const & a )
@@ -158,7 +158,7 @@ TEST(DBC, Check)
 
     try
     {
-        Check( 0 );
+        CHECK( 0 );
         throw "Bogus!";
     }
     catch( profugus::assertion const & a )
@@ -189,7 +189,7 @@ TEST(DBC, Ensure)
 
     try
     {
-        Ensure( 0 );
+        ENSURE( 0 );
         throw "Bogus!";
     }
     catch( profugus::assertion const & a )

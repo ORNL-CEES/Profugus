@@ -66,7 +66,7 @@ void HDF5_IO::close()
         return;
 
     // Check file is at end of group
-    Validate(b_loc_stack.size() <= 1, "HDF5 group was not ended. "
+    VALIDATE(b_loc_stack.size() <= 1, "HDF5 group was not ended. "
             "Last group name was '" << b_loc_stack.back().group_name << "'.");
 
     // close file on node 0
@@ -96,7 +96,7 @@ bool HDF5_IO::query(const std_string &name) const
  */
 void HDF5_IO::begin_group(const std_string &dirname)
 {
-    Require(dirname.find('/') == std_string::npos); // disallow slashes
+    REQUIRE(dirname.find('/') == std_string::npos); // disallow slashes
 
     Remember(size_t ng_orig = b_loc_stack.size());
 
@@ -117,14 +117,14 @@ void HDF5_IO::begin_group(const std_string &dirname)
         new_group = H5Gopen(current_loc(), dirname.c_str(), H5P_DEFAULT);
     }
 
-    Validate(new_group >= 0, "HDF5 failed to create/open group '"
+    VALIDATE(new_group >= 0, "HDF5 failed to create/open group '"
              << b_loc_stack.back().group_name << "'");
 
     // Add it to our stack
     HDF5_Loc loc = {new_group, dirname};
     b_loc_stack.push_back(loc);
 
-    Ensure(b_loc_stack.size() == ng_orig + 1);
+    ENSURE(b_loc_stack.size() == ng_orig + 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -143,7 +143,7 @@ void HDF5_IO::end_group()
 
     b_loc_stack.pop_back();
 
-    Ensure(b_loc_stack.size() == ng_orig - 1);
+    ENSURE(b_loc_stack.size() == ng_orig - 1);
 }
 
 //---------------------------------------------------------------------------//

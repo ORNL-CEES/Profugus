@@ -52,7 +52,7 @@ class Davidson_Eigensolver : public EigenvalueSolver<MV,OP>
     //! Register preconditioner with solver
     void set_preconditioner( RCP_OP prec )
     {
-        Require( prec != Teuchos::null );
+        REQUIRE( prec != Teuchos::null );
         d_prec = prec;
     }
 

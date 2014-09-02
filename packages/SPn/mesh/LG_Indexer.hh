@@ -134,7 +134,7 @@ class LG_Indexer
     int num_blocks() const { return d_num_blocks; }
 
     //! Number of blocks (domains) in \f$(i,j)\f$ directions.
-    int num_blocks(int d) const { Require (d < 3); return d_Nb[d]; }
+    int num_blocks(int d) const { REQUIRE(d < 3); return d_Nb[d]; }
 
     //! Number of global cells in \f$(i,j)\f$.
     int num_global(int d) const { return d_num_global[d]; }
@@ -175,11 +175,11 @@ int LG_Indexer::l2g(int i,
     using def::I;
     using def::J;
 
-    Require (i >= 0);
-    Require (j >= 0);
-    Require (k >= 0);
-    Require (i < d_num[I][d_block[I]]);
-    Require (j < d_num[J][d_block[J]]);
+    REQUIRE(i >= 0);
+    REQUIRE(j >= 0);
+    REQUIRE(k >= 0);
+    REQUIRE(i < d_num[I][d_block[I]]);
+    REQUIRE(j < d_num[J][d_block[J]]);
 
     return (i + d_I_offsets[d_block[I]]) + d_num_global[I] * (
         j + d_J_offsets[d_block[J]] + k * d_num_global[J]);
@@ -198,11 +198,11 @@ int LG_Indexer::l2l(int i,
     using def::I;
     using def::J;
 
-    Require (i >= 0);
-    Require (j >= 0);
-    Require (k >= 0);
-    Require (i < d_num[I][d_block[I]]);
-    Require (j < d_num[J][d_block[J]]);
+    REQUIRE(i >= 0);
+    REQUIRE(j >= 0);
+    REQUIRE(k >= 0);
+    REQUIRE(i < d_num[I][d_block[I]]);
+    REQUIRE(j < d_num[J][d_block[J]]);
 
     return (i + j * d_num[I][d_block[I]] + k * d_num[I][d_block[I]] *
             d_num[J][d_block[J]]);
@@ -232,7 +232,7 @@ void LG_Indexer::l2l(int  cell,
     // get i
     i = cell - j * d_num[I][d_block[I]] - k * NxNy;
 
-    Ensure (cell == l2l(i, j, k));
+    ENSURE(cell == l2l(i, j, k));
 }
 
 //---------------------------------------------------------------------------//
@@ -248,11 +248,11 @@ int LG_Indexer::g2g(int i,
     using def::I;
     using def::J;
 
-    Require (i >= 0);
-    Require (j >= 0);
-    Require (k >= 0);
-    Require (i < d_num_global[I]);
-    Require (j < d_num_global[J]);
+    REQUIRE(i >= 0);
+    REQUIRE(j >= 0);
+    REQUIRE(k >= 0);
+    REQUIRE(i < d_num_global[I]);
+    REQUIRE(j < d_num_global[J]);
 
     return i + d_num_global[I] * (j + k * d_num_global[J]);
 }
@@ -281,7 +281,7 @@ void LG_Indexer::g2g(int  cell,
     // get i
     i = cell - j * d_num_global[I] - k * NxNy;
 
-    Ensure (cell == g2g(i, j, k));
+    ENSURE(cell == g2g(i, j, k));
 }
 
 //---------------------------------------------------------------------------//
@@ -296,10 +296,10 @@ LG_Indexer::IJ_Set LG_Indexer::convert_to_global(int i,
     using def::I;
     using def::J;
 
-    Require (i >= 0);
-    Require (j >= 0);
-    Require (i < d_num[I][d_block[I]]);
-    Require (j < d_num[J][d_block[J]]);
+    REQUIRE(i >= 0);
+    REQUIRE(j >= 0);
+    REQUIRE(i < d_num[I][d_block[I]]);
+    REQUIRE(j < d_num[J][d_block[J]]);
 
     return IJ_Set(i + d_I_offsets[d_block[I]], j + d_J_offsets[d_block[J]]);
 }
@@ -317,10 +317,10 @@ LG_Indexer::IJ_Set LG_Indexer::convert_to_local(int i,
     using def::I;
     using def::J;
 
-    Require (i >= 0);
-    Require (j >= 0);
-    Require (i < d_num_global[I]);
-    Require (j < d_num_global[J]);
+    REQUIRE(i >= 0);
+    REQUIRE(j >= 0);
+    REQUIRE(i < d_num_global[I]);
+    REQUIRE(j < d_num_global[J]);
 
     // default return value
     IJ_Set ij(-1, -1);
@@ -335,8 +335,8 @@ LG_Indexer::IJ_Set LG_Indexer::convert_to_local(int i,
             ij[I] = i - d_I_offsets[d_block[I]];
             ij[J] = j - d_J_offsets[d_block[J]];
 
-            Ensure (ij[I] >= 0 && ij[I] < num_cells(I));
-            Ensure (ij[J] >= 0 && ij[J] < num_cells(J));
+            ENSURE(ij[I] >= 0 && ij[I] < num_cells(I));
+            ENSURE(ij[J] >= 0 && ij[J] < num_cells(J));
         }
     }
 
@@ -349,8 +349,8 @@ LG_Indexer::IJ_Set LG_Indexer::convert_to_local(int i,
  */
 int LG_Indexer::domain(int block, int set) const
 {
-    Require (block < num_blocks());
-    Require (set < num_sets());
+    REQUIRE(block < num_blocks());
+    REQUIRE(set < num_sets());
 
     return set*num_blocks() + block;
 }
@@ -371,7 +371,7 @@ int LG_Indexer::domain(int block, int set) const
  */
 int LG_Indexer::offset(int dir) const
 {
-    Require (dir == def::I || dir == def::J);
+    REQUIRE(dir == def::I || dir == def::J);
     if (dir == def::I) return d_I_offsets[d_block[def::I]];
     return d_J_offsets[d_block[def::J]];
 }

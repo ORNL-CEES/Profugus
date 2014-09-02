@@ -45,7 +45,7 @@ template <class T, size_t N>
 Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u1)
 {
-    Require(N == 2);
+    REQUIRE(N == 2);
     d_U[0] = u0;
     d_U[1] = u1;
 }
@@ -63,7 +63,7 @@ Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u1,
                                const T &u2)
 {
-    Require(N == 3);
+    REQUIRE(N == 3);
     d_U[0] = u0;
     d_U[1] = u1;
     d_U[2] = u2;
@@ -84,7 +84,7 @@ Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u2,
                                const T &u3)
 {
-    Require(N == 4);
+    REQUIRE(N == 4);
     d_U[0] = u0;
     d_U[1] = u1;
     d_U[2] = u2;
@@ -108,7 +108,7 @@ Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u3,
                                const T &u4)
 {
-    Require(N == 5);
+    REQUIRE(N == 5);
     d_U[0] = u0;
     d_U[1] = u1;
     d_U[2] = u2;

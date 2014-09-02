@@ -41,8 +41,8 @@ MueLuPreconditionerBase::MueLuPreconditionerBase()
 void MueLuPreconditionerBase::setup(
     Teuchos::RCP<Teuchos::ParameterList> pl )
 {
-    Require( pl != Teuchos::null );
-    Require( d_matrix != Teuchos::null );
+    REQUIRE( pl != Teuchos::null );
+    REQUIRE( d_matrix != Teuchos::null );
 }
 
 //---------------------------------------------------------------------------//

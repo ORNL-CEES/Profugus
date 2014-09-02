@@ -45,9 +45,9 @@ RTK_Cell::RTK_Cell(int    mod_id,
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
 {
-    Require (d_z > 0.0);
-    Require (d_segments == 1 || d_segments == 4);
-    Require (d_mod_region == 0);
+    REQUIRE(d_z > 0.0);
+    REQUIRE(d_segments == 1 || d_segments == 4);
+    REQUIRE(d_mod_region == 0);
 
     // square cell
     d_xy[0] = pitch;
@@ -81,9 +81,9 @@ RTK_Cell::RTK_Cell(int    mod_id,
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
 {
-    Require (d_z > 0.0);
-    Require (d_segments == 1 || d_segments == 4);
-    Require (d_mod_region == 0);
+    REQUIRE(d_z > 0.0);
+    REQUIRE(d_segments == 1 || d_segments == 4);
+    REQUIRE(d_mod_region == 0);
 
     // unique pitches in X/Y
     d_xy[0] = dx;
@@ -118,10 +118,10 @@ RTK_Cell::RTK_Cell(int    fuel_id,
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
 {
-    Require (d_r[0] > 0.0);
-    Require (d_z > 0.0);
-    Require (d_segments == 1 || d_segments == 4);
-    Require (d_mod_region == 1);
+    REQUIRE(d_r[0] > 0.0);
+    REQUIRE(d_z > 0.0);
+    REQUIRE(d_segments == 1 || d_segments == 4);
+    REQUIRE(d_mod_region == 1);
 
     // square cell
     d_xy[0] = pitch;
@@ -132,8 +132,8 @@ RTK_Cell::RTK_Cell(int    fuel_id,
     d_extent[1][LO] = -d_xy[1] * 0.5;
     d_extent[1][HI] =  d_xy[1] * 0.5;
 
-    Ensure (d_r[0] <= d_extent[0][HI]);
-    Ensure (d_r[0] <= d_extent[1][HI]);
+    ENSURE(d_r[0] <= d_extent[0][HI]);
+    ENSURE(d_r[0] <= d_extent[1][HI]);
 }
 
 //---------------------------------------------------------------------------//
@@ -159,11 +159,11 @@ RTK_Cell::RTK_Cell(const Vec_Int &ids,
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
 {
-    Require (!d_r.empty() ? d_r.front() > 0.0 : true);
-    Require (d_z > 0.0);
-    Require (d_segments == 1 || d_segments == 4);
-    Require (d_r.size() == d_ids.size());
-    Require (!d_r.empty() ? d_mod_region > 0 : d_mod_region == 0);
+    REQUIRE(!d_r.empty() ? d_r.front() > 0.0 : true);
+    REQUIRE(d_z > 0.0);
+    REQUIRE(d_segments == 1 || d_segments == 4);
+    REQUIRE(d_r.size() == d_ids.size());
+    REQUIRE(!d_r.empty() ? d_mod_region > 0 : d_mod_region == 0);
 
     // square cell
     d_xy[0] = pitch;
@@ -174,8 +174,8 @@ RTK_Cell::RTK_Cell(const Vec_Int &ids,
     d_extent[1][LO] = -d_xy[1] * 0.5;
     d_extent[1][HI] =  d_xy[1] * 0.5;
 
-    Ensure (!d_r.empty() ? d_r.back() <= d_extent[0][HI] : true);
-    Ensure (!d_r.empty() ? d_r.back() <= d_extent[1][HI] : true);
+    ENSURE(!d_r.empty() ? d_r.back() <= d_extent[0][HI] : true);
+    ENSURE(!d_r.empty() ? d_r.back() <= d_extent[1][HI] : true);
 }
 
 //---------------------------------------------------------------------------//
@@ -205,15 +205,15 @@ RTK_Cell::RTK_Cell(const Vec_Int    &ids,
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
 {
-    Require (d_r.front() > 0.0);
-    Require (d_z > 0.0);
-    Require (d_segments == 1 || d_segments == 4);
-    Require (d_r.size() == d_ids.size());
-    Require (d_num_shells == 1 ? d_mod_region == 1 : d_mod_region > 1);
-    Require (gap[0] > 0.0 ? gap[1] == 0.0 : true);
-    Require (gap[1] > 0.0 ? gap[0] == 0.0 : true);
-    Require (gap[2] > 0.0 ? gap[3] == 0.0 : true);
-    Require (gap[3] > 0.0 ? gap[2] == 0.0 : true);
+    REQUIRE(d_r.front() > 0.0);
+    REQUIRE(d_z > 0.0);
+    REQUIRE(d_segments == 1 || d_segments == 4);
+    REQUIRE(d_r.size() == d_ids.size());
+    REQUIRE(d_num_shells == 1 ? d_mod_region == 1 : d_mod_region > 1);
+    REQUIRE(gap[0] > 0.0 ? gap[1] == 0.0 : true);
+    REQUIRE(gap[1] > 0.0 ? gap[0] == 0.0 : true);
+    REQUIRE(gap[2] > 0.0 ? gap[3] == 0.0 : true);
+    REQUIRE(gap[3] > 0.0 ? gap[2] == 0.0 : true);
 
     // square cell with gap
     d_xy[0] = pitch + gap[0] + gap[1];
@@ -224,8 +224,8 @@ RTK_Cell::RTK_Cell(const Vec_Int    &ids,
     d_extent[1][LO] = -(pitch * 0.5 + gap[2]);
     d_extent[1][HI] =   pitch * 0.5 + gap[3];
 
-    Ensure (d_r.back() <= pitch * 0.5);
-    Ensure (d_r.back() <= pitch * 0.5);
+    ENSURE(d_r.back() <= pitch * 0.5);
+    ENSURE(d_r.back() <= pitch * 0.5);
 }
 
 //---------------------------------------------------------------------------//
@@ -253,13 +253,13 @@ RTK_Cell::RTK_Cell(int               mod_id,
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
 {
-    Require (d_z > 0.0);
-    Require (d_segments == 1 || d_segments == 4);
-    Require (d_mod_region == 0);
-    Require (gap[0] > 0.0 ? gap[1] == 0.0 : true);
-    Require (gap[1] > 0.0 ? gap[0] == 0.0 : true);
-    Require (gap[2] > 0.0 ? gap[3] == 0.0 : true);
-    Require (gap[3] > 0.0 ? gap[2] == 0.0 : true);
+    REQUIRE(d_z > 0.0);
+    REQUIRE(d_segments == 1 || d_segments == 4);
+    REQUIRE(d_mod_region == 0);
+    REQUIRE(gap[0] > 0.0 ? gap[1] == 0.0 : true);
+    REQUIRE(gap[1] > 0.0 ? gap[0] == 0.0 : true);
+    REQUIRE(gap[2] > 0.0 ? gap[3] == 0.0 : true);
+    REQUIRE(gap[3] > 0.0 ? gap[2] == 0.0 : true);
 
     // square cell with gap
     d_xy[0] = pitch + gap[0] + gap[1];
@@ -369,9 +369,9 @@ RTK_Cell::RTK_Cell(int    mod_id,
 {
     using def::X; using def::Y;
 
-    Require (d_z > 0.0);
-    Require (d_mod_region == 0);
-    Require (R0 < R1);
+    REQUIRE(d_z > 0.0);
+    REQUIRE(d_mod_region == 0);
+    REQUIRE(R0 < R1);
 
     // unique pitches in X/Y
     d_xy[0] = dx;
@@ -409,26 +409,26 @@ RTK_Cell::RTK_Cell(int    mod_id,
 
     // check to see if R0 or R1 bisect the cell, R0 < R1 so if R0 > farR the
     // vessel does not bisect the cell
-    Validate(R0_2 < farR2,
+    VALIDATE(R0_2 < farR2,
              "R0 = " << R0 << " is greater than the far extent "
              << "of the pincell, " << std::sqrt(farR2));
 
     // likewise if R1 < nearR the vessel cannot bisect the cell
-    Validate(R1_2 > nearR2,
+    VALIDATE(R1_2 > nearR2,
              "R1 = " << R1 <<  " is less than the near extent "
              << "of the pincell, " << std::sqrt(farR2));
 
     // now we have to check each vessel radius
     if (R0_2 > nearR2)
     {
-        Check (R0_2 < farR2);
+        CHECK(R0_2 < farR2);
         d_R0    = R0;
         d_inner = true;
     }
 
     if (R1_2 < farR2)
     {
-        Check (R1_2 > nearR2);
+        CHECK(R1_2 > nearR2);
         d_R1    = R1;
         d_outer = true;
     }
@@ -446,12 +446,12 @@ RTK_Cell::RTK_Cell(int    mod_id,
 void RTK_Cell::initialize(const Space_Vector &r,
                           Geo_State_t        &state) const
 {
-    Require (r[0] >= d_extent[0][LO]);
-    Require (r[0] <= d_extent[0][HI]);
-    Require (r[1] >= d_extent[1][LO]);
-    Require (r[1] <= d_extent[1][HI]);
-    Require (r[2] >= 0.0);
-    Require (r[2] <= d_z);
+    REQUIRE(r[0] >= d_extent[0][LO]);
+    REQUIRE(r[0] <= d_extent[0][HI]);
+    REQUIRE(r[1] >= d_extent[1][LO]);
+    REQUIRE(r[1] <= d_extent[1][HI]);
+    REQUIRE(r[2] >= 0.0);
+    REQUIRE(r[2] <= d_z);
 
     // get the current region
     state.region = region(r[0], r[1]);
@@ -477,13 +477,13 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (!d_vessel ? state.region >= 0 && state.region < d_num_regions
+    REQUIRE(!d_vessel ? state.region >= 0 && state.region < d_num_regions
              : state.region == Geo_State_t::MODERATOR ||
              state.region == Geo_State_t::VESSEL);
-    Require (soft_equiv(vector_magnitude(omega), 1., 1.e-6));
-    Require (omega[X]<0.0 ? r[X] >= d_extent[X][LO] : r[X] <= d_extent[X][HI]);
-    Require (omega[Y]<0.0 ? r[Y] >= d_extent[Y][LO] : r[Y] <= d_extent[Y][HI]);
-    Require (omega[Z]<0.0 ? r[Z] >= 0.0             : r[Z] <= d_z);
+    REQUIRE(soft_equiv(vector_magnitude(omega), 1., 1.e-6));
+    REQUIRE(omega[X]<0.0 ? r[X] >= d_extent[X][LO] : r[X] <= d_extent[X][HI]);
+    REQUIRE(omega[Y]<0.0 ? r[Y] >= d_extent[Y][LO] : r[Y] <= d_extent[Y][HI]);
+    REQUIRE(omega[Z]<0.0 ? r[Z] >= 0.0             : r[Z] <= d_z);
 
     // initialize running dist-to-boundary
     d_db                      = constants::huge;
@@ -571,14 +571,14 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
         }
     }
 
-    Ensure (state.dist_to_next_region >= 0.0);
-    Ensure (state.exiting_face == Geo_State_t::INTERNAL ?
+    ENSURE(state.dist_to_next_region >= 0.0);
+    ENSURE(state.exiting_face == Geo_State_t::INTERNAL ?
             state.next_region >= 0 : true);
-    Ensure (state.exiting_face == Geo_State_t::INTERNAL && !d_vessel ?
+    ENSURE(state.exiting_face == Geo_State_t::INTERNAL && !d_vessel ?
             state.next_region >= 0 && state.next_region < d_num_regions : true);
-    Ensure (state.exiting_face == Geo_State_t::INTERNAL && !d_vessel ?
+    ENSURE(state.exiting_face == Geo_State_t::INTERNAL && !d_vessel ?
             state.next_face < d_num_int_faces : true);
-    Ensure (state.next_segment >= 0 && state.next_segment < d_segments);
+    ENSURE(state.next_segment >= 0 && state.next_segment < d_segments);
 }
 
 //---------------------------------------------------------------------------//
@@ -597,7 +597,7 @@ void RTK_Cell::update_state(Geo_State_t &state) const
  */
 void RTK_Cell::cross_surface(Geo_State_t &state) const
 {
-    Require (state.exiting_face == Geo_State_t::INTERNAL);
+    REQUIRE(state.exiting_face == Geo_State_t::INTERNAL);
 
     // update the current face of the particle
     state.face = state.next_face;
@@ -618,16 +618,16 @@ int RTK_Cell::region(double x,
 {
     using def::X; using def::Y;
 
-    Require (d_num_regions > 0);
-    Require (x > d_extent[0][LO] || soft_equiv(x, d_extent[0][LO]));
-    Require (x < d_extent[0][HI] || soft_equiv(x, d_extent[0][HI]));
-    Require (y > d_extent[1][LO] || soft_equiv(y, d_extent[1][LO]));
-    Require (y < d_extent[1][HI] || soft_equiv(y, d_extent[1][HI]));
+    REQUIRE(d_num_regions > 0);
+    REQUIRE(x > d_extent[0][LO] || soft_equiv(x, d_extent[0][LO]));
+    REQUIRE(x < d_extent[0][HI] || soft_equiv(x, d_extent[0][HI]));
+    REQUIRE(y > d_extent[1][LO] || soft_equiv(y, d_extent[1][LO]));
+    REQUIRE(y < d_extent[1][HI] || soft_equiv(y, d_extent[1][HI]));
 
     // if this is an empty box, return the moderator
     if (!d_num_shells)
     {
-        Require (d_num_regions == 1);
+        REQUIRE(d_num_regions == 1);
 
         // check to see if it is in a vessel region
         if (d_vessel)
@@ -662,7 +662,7 @@ int RTK_Cell::region(double x,
             }
             else
             {
-                Validate(false, "Vessel without bisection.");
+                VALIDATE(false, "Vessel without bisection.");
             }
         }
         else
@@ -681,7 +681,7 @@ int RTK_Cell::region(double x,
     }
 
     // point is in the moderator region
-    Ensure (rp2 > d_r[d_num_shells-1]*d_r[d_num_shells-1]);
+    ENSURE(rp2 > d_r[d_num_shells-1]*d_r[d_num_shells-1]);
     return d_num_regions - 1;
 }
 
@@ -784,7 +784,7 @@ void RTK_Cell::dist_to_vessel(const Space_Vector &r,
         return;
     }
 
-    Require (d_num_shells == 0);
+    REQUIRE(d_num_shells == 0);
 
     // local boolean for hitting a vessel wall
     bool hit = false;
@@ -858,7 +858,7 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
                              const Space_Vector &omega,
                              Geo_State_t        &state)
 {
-    Require (d_num_shells > 0);
+    REQUIRE(d_num_shells > 0);
 
     // if we are on a face then check both bounding faces
     if (state.face < d_num_shells)
@@ -917,7 +917,7 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
         // otherwise we are between shells
         else
         {
-            Check (state.region - 1 >= 0);
+            CHECK(state.region - 1 >= 0);
 
             // check hitting lower shell
             check_shell(r, omega, state.region - 1, Geo_State_t::NONE,
@@ -944,7 +944,7 @@ void RTK_Cell::check_shell(const Space_Vector &r,
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (shell >= 0 && shell < d_num_shells);
+    REQUIRE(shell >= 0 && shell < d_num_shells);
 
     // calculate the distance to the requested shell
     dist_to_shell(r[X], r[Y], omega[X], omega[Y], d_r[shell], face);

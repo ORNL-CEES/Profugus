@@ -114,7 +114,7 @@ Request send_async(
         int       destination,
         int       tag)
 {
-    Require (internals::buffers.count(tag));
+    REQUIRE(internals::buffers.count(tag));
 
     // make a comm request handle (no need to set it because we will do an
     // immediate copy into the receive buffer)
@@ -142,7 +142,7 @@ void send_async(
         int        destination,
         int        tag)
 {
-    Require (internals::buffers.count(tag));
+    REQUIRE(internals::buffers.count(tag));
 
     // set the request
     request.set();
@@ -165,7 +165,7 @@ void send_async_comm(
         int                   destination,
         int                   tag)
 {
-    Require (internals::buffers.count(tag));
+    REQUIRE(internals::buffers.count(tag));
 
     // set the request
     request.set();
@@ -186,7 +186,7 @@ Request receive_async(
         int source,
         int tag)
 {
-    Require (source == 0);
+    REQUIRE(source == 0);
 
     // NON-BLOCKING SEND-TO-SELF ALLOWED IN SPEC
 
@@ -212,8 +212,8 @@ void receive_async(Request &request,
                    int      source,
                    int      tag)
 {
-    Require (source == 0);
-    Require (!request.inuse());
+    REQUIRE(source == 0);
+    REQUIRE(!request.inuse());
 
     // set it
     request.set();
@@ -232,8 +232,8 @@ void receive_async_comm(Request &request,
                         int      source,
                         int      tag)
 {
-    Require (source == 0);
-    Require (!request.inuse());
+    REQUIRE(source == 0);
+    REQUIRE(!request.inuse());
 
     // set it
     request.set();
@@ -438,8 +438,8 @@ void all_to_all(const T *sendbuf,
                 T       *recvbuf,
                 int      n)
 {
-    Require (sendbuf);
-    Require (recvbuf);
+    REQUIRE(sendbuf);
+    REQUIRE(recvbuf);
 
     // all-to-all is copy
     std::copy(sendbuf, sendbuf+n, recvbuf);
@@ -452,9 +452,9 @@ void all_to_all(const T   *sendbuf,     const int *sendcounts,
                 const int *sendoffsets, T         *recvbuf,
                 const int *recvcounts,  const int *recvoffsets)
 {
-    Require (sendbuf);
-    Require (recvbuf);
-    Require (sendcounts[0]==recvcounts[0]);
+    REQUIRE(sendbuf);
+    REQUIRE(recvbuf);
+    REQUIRE(sendcounts[0]==recvcounts[0]);
 
     // all-to-all is copy
     std::copy(sendbuf, sendbuf+sendcounts[0], recvbuf);
@@ -465,9 +465,9 @@ void all_to_all(const T   *sendbuf,     const int *sendcounts,
 template<class T>
 void all_gather(const T* sendbuf, T* recvbuf, int num_els)
 {
-    Require(sendbuf);
-    Require(recvbuf);
-    Require(num_els > 0);
+    REQUIRE(sendbuf);
+    REQUIRE(recvbuf);
+    REQUIRE(num_els > 0);
 
     // all_gather is copy
     std::copy(sendbuf, sendbuf + num_els, recvbuf);
@@ -478,10 +478,10 @@ void all_gather(const T* sendbuf, T* recvbuf, int num_els)
 template<class T>
 void gather(const T* sendbuf, T* recvbuf, int num_els, int root)
 {
-    Require(sendbuf);
-    Require(recvbuf);
-    Require(num_els > 0);
-    Require(root == 0);
+    REQUIRE(sendbuf);
+    REQUIRE(recvbuf);
+    REQUIRE(num_els > 0);
+    REQUIRE(root == 0);
 
     // gather is copy
     std::copy(sendbuf, sendbuf + num_els, recvbuf);

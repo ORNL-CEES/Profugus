@@ -69,12 +69,12 @@ Int_Mod_Hash_Function::Int_Mod_Hash_Function(size_type num_objects)
 
     size_type *M = std::lower_bound(&primes[0],
                                     &primes[num_primes], num_objects);
-    Check (M != &primes[num_primes]);
+    CHECK(M != &primes[num_primes]);
 
     // assign M
     d_M = *M;
 
-    Ensure (d_M >= num_objects);
+    ENSURE(d_M >= num_objects);
 }
 
 } // end namespace profugus

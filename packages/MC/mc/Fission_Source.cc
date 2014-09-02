@@ -46,9 +46,9 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
 {
     using def::I; using def::J; using def::K;
 
-    Require (b_geometry);
-    Require (b_physics);
-    Require (b_rng_control);
+    REQUIRE(b_geometry);
+    REQUIRE(b_physics);
+    REQUIRE(b_rng_control);
 
     // Boundaries in -X, +X, -Y, +Y, -Z, +Z
     Teuchos::Array<double> extents(6, 0.);
@@ -59,7 +59,7 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
 
     extents = db->get("init_fission_src", extents);
 
-    Validate(extents.size() == 6,
+    VALIDATE(extents.size() == 6,
              "Fission source must have 6 entries, but it has "
              << extents.size());
 
@@ -84,7 +84,7 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
         d_lower[i] = lower;
         d_width[i] = upper - lower;
 
-        Validate(d_width[i] > 0., "Fission source width for axis " << i
+        VALIDATE(d_width[i] > 0., "Fission source width for axis " << i
                  << " has non-positive width " << d_width[i]
                  << " (lower=" << lower << ", upper=" << upper << ")");
 
@@ -92,7 +92,7 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
 
     // store the total number of requested particles per cycle
     d_np_requested = static_cast<size_type>(db->get("Np", 1000));
-    Validate(d_np_requested > 0, "Number of source particles ("
+    VALIDATE(d_np_requested > 0, "Number of source particles ("
             << d_np_requested << ") must be positive");
 
     // initialize the total for the first cycle
@@ -107,13 +107,13 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
  */
 void Fission_Source::build_initial_source()
 {
-    Require (d_np_total > 0);
+    REQUIRE(d_np_total > 0);
 
     SCOPED_TIMER("MC::Fission_Source.build_initial_source");
 
     // set the fission site container to an unassigned state
     d_fission_sites = SP_Fission_Sites();
-    Check (!d_fission_sites);
+    CHECK(!d_fission_sites);
 
     // make the RNG for this cycle
     make_RNG();
@@ -131,8 +131,8 @@ void Fission_Source::build_initial_source()
 
     profugus::global_barrier();
 
-    Ensure (d_wt >= 1.0);
-    Ensure (d_wt > 0.0);
+    ENSURE(d_wt >= 1.0);
+    ENSURE(d_wt > 0.0);
 }
 
 //---------------------------------------------------------------------------//
@@ -143,7 +143,7 @@ void Fission_Source::build_initial_source()
  */
 void Fission_Source::build_source(SP_Fission_Sites &fission_sites)
 {
-    Require (fission_sites);
+    REQUIRE(fission_sites);
 
     // build an empty fission site container if one doesn't exist (meaning
     // that we haven't yet initialized from an existing fission source)
@@ -153,7 +153,7 @@ void Fission_Source::build_source(SP_Fission_Sites &fission_sites)
     }
 
     // the internal fission source should be empty
-    Require (d_fission_sites->empty());
+    REQUIRE(d_fission_sites->empty());
 
     SCOPED_TIMER("MC::Fission_Source.build_source");
 
@@ -170,7 +170,7 @@ void Fission_Source::build_source(SP_Fission_Sites &fission_sites)
     // globally from the fission-rebalance
     d_np_domain = d_fission_rebalance->num_fissions();
     d_np_total  = d_fission_rebalance->num_global_fissions();
-    Check (d_np_domain >= d_fission_sites->size()); // there could be multiple
+    CHECK(d_np_domain >= d_fission_sites->size()); // there could be multiple
                                                     // fissions at a single
                                                     // site
 
@@ -187,9 +187,9 @@ void Fission_Source::build_source(SP_Fission_Sites &fission_sites)
 
     profugus::global_barrier();
 
-    Ensure (d_wt > 0.0);
-    Ensure (fission_sites);
-    Ensure (fission_sites->empty());
+    ENSURE(d_wt > 0.0);
+    ENSURE(fission_sites);
+    ENSURE(fission_sites->empty());
 }
 
 //---------------------------------------------------------------------------//
@@ -200,8 +200,8 @@ Fission_Source::SP_Fission_Sites
 Fission_Source::create_fission_site_container() const
 {
     SP_Fission_Sites fs(std::make_shared<Fission_Site_Container>());
-    Ensure (fs);
-    Ensure (fs->empty());
+    ENSURE(fs);
+    ENSURE(fs->empty());
     return fs;
 }
 
@@ -213,17 +213,17 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
 {
     using def::I; using def::J; using def::K;
 
-    Require (d_wt > 0.0);
-    Require (profugus::Global_RNG::d_rng.assigned());
+    REQUIRE(d_wt > 0.0);
+    REQUIRE(profugus::Global_RNG::d_rng.assigned());
 
     // particle
     SP_Particle p;
-    Check (!p);
+    CHECK(!p);
 
     // return a null particle if no source
     if (!d_num_left)
     {
-        Ensure (d_fission_sites ? d_fission_sites->empty() : true);
+        ENSURE(d_fission_sites ? d_fission_sites->empty() : true);
         return p;
     }
 
@@ -252,7 +252,7 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
     // otherwise assume this is an initial source
     if (!is_initial_source())
     {
-        Check (!d_fission_sites->empty());
+        CHECK(!d_fission_sites->empty());
 
         // get the last element in the site container
         Fission_Site &fs = d_fission_sites->back();
@@ -268,7 +268,7 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
 
         // initialize the physics state at the fission site
         sampled = b_physics->initialize_fission(fs, *p);
-        Check (sampled);
+        CHECK(sampled);
 
         // pop this fission site from the list
         d_fission_sites->pop_back();
@@ -315,7 +315,7 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
     d_num_left--;
     d_num_run++;
 
-    Ensure (p->matid() == matid);
+    ENSURE(p->matid() == matid);
     return p;
 }
 

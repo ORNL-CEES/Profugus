@@ -62,24 +62,24 @@ class FV_Bnd_Indexer
     //! Get local index of the boundary cell for this face.
     int local(int abscissa, int ordinate) const
     {
-        Require (abscissa < d_N[0]);
-        Require (ordinate < d_N[1]);
+        REQUIRE(abscissa < d_N[0]);
+        REQUIRE(ordinate < d_N[1]);
         return d_face_off_local + abscissa + ordinate * d_N[0];
     }
 
     //! Get the global index of the boundary cell for this face.
     int global(int abscissa, int ordinate) const
     {
-        Require (abscissa < d_G[0]);
-        Require (ordinate < d_G[1]);
+        REQUIRE(abscissa < d_G[0]);
+        REQUIRE(ordinate < d_G[1]);
         return d_face_off_global + abscissa + ordinate * d_G[0];
     }
 
     //! Local-to-global index of the boundary cell for this face.
     int l2g(int abscissa, int ordinate) const
     {
-        Require (abscissa < d_N[0]);
-        Require (ordinate < d_N[1]);
+        REQUIRE(abscissa < d_N[0]);
+        REQUIRE(ordinate < d_N[1]);
         return d_face_off_global + (abscissa + d_off[0]) +
             (ordinate + d_off[1]) * d_G[0];
     }

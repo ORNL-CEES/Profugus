@@ -13,14 +13,14 @@
  */
 //---------------------------------------------------------------------------//
 
-#define Require(c)
-#define Check(c)
-#define Ensure(c)
+#define REQUIRE(c)
+#define CHECK(c)
+#define ENSURE(c)
 #define Remember(c)
 #define Assert(c)
 #define Insist(c, m)
-#define Not_Implemented(m)
-#define Validate(c, m)
+#define NOT_IMPLEMENTED(m)
+#define VALIDATE(c, m)
 
 //---------------------------------------------------------------------------//
 //              end of harness/DBC_nulldef.hh

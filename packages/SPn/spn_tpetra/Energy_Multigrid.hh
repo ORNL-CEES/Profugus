@@ -86,12 +86,12 @@ class Energy_Multigrid : public Tpetra_Operator
     bool hasTransposeApply(){return false;}
     Teuchos::RCP<const Map_t> getDomainMap() const
     {
-        Require( d_operators[0] != Teuchos::null );
+        REQUIRE( d_operators[0] != Teuchos::null );
         return d_operators[0]->getDomainMap();
     }
     Teuchos::RCP<const Map_t> getRangeMap() const
     {
-        Require( d_operators[0] != Teuchos::null );
+        REQUIRE( d_operators[0] != Teuchos::null );
         return d_operators[0]->getRangeMap();
     }
 

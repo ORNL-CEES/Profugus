@@ -173,7 +173,7 @@ class RTK_Cell
     int num_cells() const { return d_num_cells; }
 
     //! Return pin-pitch in X or Y dimension.
-    double pitch(int d) const { Require (d < 2); return d_xy[d]; }
+    double pitch(int d) const { REQUIRE(d < 2); return d_xy[d]; }
 
     //! Return height.
     double height() const { return d_z; }

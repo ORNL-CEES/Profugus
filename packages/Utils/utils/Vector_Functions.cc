@@ -57,7 +57,7 @@ void cartesian_vector_transform(double             costheta,
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
+    REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 
     // cos/sin factors
     const double cosphi   = std::cos(phi);

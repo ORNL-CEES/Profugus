@@ -81,7 +81,7 @@ class Arnoldi : public EigenvalueSolver<MV,OP>
     // Set tolerance
     void set_tolerance(double tol)
     {
-        Require(tol>0.0);
+        REQUIRE(tol>0.0);
         b_tolerance = tol;
         d_pl->set("Convergence Tolerance",tol);
     }
@@ -89,7 +89,7 @@ class Arnoldi : public EigenvalueSolver<MV,OP>
     // Set iteration limit
     void set_max_iters(int iters)
     {
-        Require(iters>0);
+        REQUIRE(iters>0);
         b_max_iters = iters;
         d_pl->set("Maximum Restarts",iters);
     }

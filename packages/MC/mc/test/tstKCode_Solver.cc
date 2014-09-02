@@ -48,7 +48,7 @@ class Dummy_Tally : public profugus::Tally
         , d_finalized_np(-1.)
     {
         Base::set_name("dumb_tally");
-        Ensure (d_pl_counter == 1);
+        ENSURE(d_pl_counter == 1);
     }
 
     //! Virtual destructor for polymorphism

@@ -110,7 +110,7 @@ class Source_Transporter
     const Transporter_t& transporter() const { return d_transporter; }
 
     //! Get the source.
-    const Source_t& source() const { Require (d_source); return *d_source; }
+    const Source_t& source() const { REQUIRE(d_source); return *d_source; }
 
   private:
     // >>> IMPLEMENTATION

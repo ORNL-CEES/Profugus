@@ -64,7 +64,7 @@ class Fixed_Source_Solver : public Solver
     void solve();
 
     // Reset the problem.
-    void reset() { Not_Implemented("Resetting a fixed source calculation."); }
+    void reset() { NOT_IMPLEMENTED("Resetting a fixed source calculation."); }
 
   private:
     // >>> IMPLEMENTATION

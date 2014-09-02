@@ -109,9 +109,9 @@ class FV_Gather
     // Convert (i,j) block indices to domain index.
     int convert(int i, int j)
     {
-        Require (i < d_Nb[def::I]);
-        Require (j < d_Nb[def::J]);
-        Ensure (i + j * d_Nb[def::I] < d_domains);
+        REQUIRE(i < d_Nb[def::I]);
+        REQUIRE(j < d_Nb[def::J]);
+        ENSURE(i + j * d_Nb[def::I] < d_domains);
         return i + j * d_Nb[def::I];
     }
 

@@ -90,12 +90,12 @@ class Energy_Multigrid : public Epetra_Operator
     const Epetra_Comm & Comm() const {return d_solutions[0]->Comm();}
     const Epetra_Map & OperatorDomainMap() const
     {
-        Require( d_restrictions[0] != Teuchos::null );
+        REQUIRE( d_restrictions[0] != Teuchos::null );
         return d_operators[0]->OperatorDomainMap();
     }
     const Epetra_Map & OperatorRangeMap() const
     {
-        Require( d_operators[0] != Teuchos::null );
+        REQUIRE( d_operators[0] != Teuchos::null );
         return d_operators[0]->OperatorRangeMap();
     }
 

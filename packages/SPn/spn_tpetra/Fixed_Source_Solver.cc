@@ -30,7 +30,7 @@ Fixed_Source_Solver::Fixed_Source_Solver(RCP_ParameterList db)
     : Base(db)
     , d_solver(b_db)
 {
-    Ensure (!b_db.is_null());
+    ENSURE(!b_db.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -47,12 +47,12 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
                                 RCP_Indexer     indexer,
                                 RCP_Global_Data data)
 {
-    Require (!b_db.is_null());
-    Require (!dim.is_null());
-    Require (!mat.is_null());
-    Require (!mesh.is_null());
-    Require (!indexer.is_null());
-    Require (!data.is_null());
+    REQUIRE(!b_db.is_null());
+    REQUIRE(!dim.is_null());
+    REQUIRE(!mat.is_null());
+    REQUIRE(!mesh.is_null());
+    REQUIRE(!indexer.is_null());
+    REQUIRE(!data.is_null());
 
     // build the linear system (we only provide finite volume for now)
     std::string &eqn_type = b_db->get("eqn_type", std::string("fv"));
@@ -67,7 +67,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
         std::string msg = "Undefined equation type: " + eqn_type;
         throw profugus::assertion(msg);
     }
-    Check (!b_system.is_null());
+    CHECK(!b_system.is_null());
 
     // build the matrix
     b_system->build_Matrix();
@@ -78,7 +78,7 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
     // allocate the left-hand side solution vector
     d_lhs = Teuchos::rcp(new Vector_t(b_system->get_Map()));
 
-    Ensure (b_system->get_Map()->getNodeNumElements() ==
+    ENSURE(b_system->get_Map()->getNodeNumElements() ==
             d_lhs->getLocalLength());
 }
 
@@ -88,15 +88,15 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
  */
 void Fixed_Source_Solver::solve(const External_Source &q)
 {
-    Require (!b_system.is_null());
-    Require (!d_lhs.is_null());
+    REQUIRE(!b_system.is_null());
+    REQUIRE(!d_lhs.is_null());
 
     // null lhs vector
     d_lhs->putScalar(0.0);
 
     // make the right-hand side vector based on the source
     b_system->build_RHS(q);
-    Check (b_system->get_RHS()->getLocalLength() == d_lhs->getLocalLength());
+    CHECK(b_system->get_RHS()->getLocalLength() == d_lhs->getLocalLength());
 
     // solve the problem
     d_solver.solve(d_lhs, b_system->get_RHS());
@@ -108,7 +108,7 @@ void Fixed_Source_Solver::solve(const External_Source &q)
  */
 void Fixed_Source_Solver::write_state(State_t &state)
 {
-    Require (state.mesh().num_cells() *
+    REQUIRE(state.mesh().num_cells() *
              b_system->get_dims()->num_equations() * state.num_groups()
              <= d_lhs->getLocalLength());
 

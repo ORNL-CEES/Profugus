@@ -34,7 +34,7 @@ RNG::RNG(const std::vector<char> &packed)
     : d_streamid(0)
     , d_stream(0)
 {
-    Require (packed.size() >= 2 * sizeof(int));
+    REQUIRE(packed.size() >= 2 * sizeof(int));
 
     // make an unpacker
     profugus::Unpacker u;
@@ -45,8 +45,8 @@ RNG::RNG(const std::vector<char> &packed)
     // unpack the stream num and size of state
     int rng_size = 0;
     u >> d_stream >> rng_size;
-    Check (d_stream >= 0);
-    Check (rng_size >= 0);
+    CHECK(d_stream >= 0);
+    CHECK(rng_size >= 0);
 
     // unpack the random stream state
     char *prng = new char[rng_size];
@@ -62,8 +62,8 @@ RNG::RNG(const std::vector<char> &packed)
     // reclaim memory
     delete [] prng;
 
-    Ensure (u.get_ptr() == &packed[0] + packed.size());
-    Ensure (d_streamid);
+    ENSURE(u.get_ptr() == &packed[0] + packed.size());
+    ENSURE(d_streamid);
 }
 
 //---------------------------------------------------------------------------//
@@ -72,7 +72,7 @@ RNG::RNG(const std::vector<char> &packed)
  */
 std::vector<char> RNG::pack() const
 {
-    Require (d_streamid);
+    REQUIRE(d_streamid);
 
     // make a packer
     profugus::Packer p;
@@ -81,7 +81,7 @@ std::vector<char> RNG::pack() const
     char *prng   = 0;
     int rng_size = pack_sprng(d_streamid->id, &prng);
     int size     = rng_size + 2 * sizeof(int);
-    Check (prng);
+    CHECK(prng);
 
     // now set the buffer
     std::vector<char> packed(size);
@@ -97,7 +97,7 @@ std::vector<char> RNG::pack() const
     // free the prng buffer
     std::free(prng);
 
-    Ensure (p.get_ptr() == &packed[0] + size);
+    ENSURE(p.get_ptr() == &packed[0] + size);
 
     return packed;
 }
@@ -137,7 +137,7 @@ RNG& RNG::operator=(const RNG &rhs)
  */
 int RNG::get_size() const
 {
-    Require(d_streamid);
+    REQUIRE(d_streamid);
 
     if (d_packed_size > 0)
         return d_packed_size;
@@ -158,7 +158,7 @@ int RNG::get_size() const
  */
 void RNG::print() const
 {
-    Require (d_streamid);
+    REQUIRE(d_streamid);
     print_sprng(d_streamid->id);
 }
 

@@ -102,9 +102,9 @@ class Reflecting_Domain_TransporterTest : public TransporterTestBase
         // complete lattice
         lat->complete(0.0, 0.0, 0.0);
 
-        Check(profugus::soft_equiv(lat->pitch(def::X), 3.78));
-        Check(profugus::soft_equiv(lat->pitch(def::Y), 3.78));
-        Check(profugus::soft_equiv(lat->height(), 14.28));
+        CHECK(profugus::soft_equiv(lat->pitch(def::X), 3.78));
+        CHECK(profugus::soft_equiv(lat->pitch(def::Y), 3.78));
+        CHECK(profugus::soft_equiv(lat->height(), 14.28));
 
         // make core
         SP_Core core(std::make_shared<Core_t>(1, 1, 1, 1));

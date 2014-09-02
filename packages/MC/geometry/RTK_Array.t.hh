@@ -49,9 +49,9 @@ RTK_Array<T>::RTK_Array(int Nx,
     // calculate the level for quick access
     d_level = calc_level();
 
-    Ensure (d_level < Geo_State_t::max_levels);
-    Ensure (d_layout.size() == size());
-    Ensure (size() > 0);
+    ENSURE(d_level < Geo_State_t::max_levels);
+    ENSURE(d_layout.size() == size());
+    ENSURE(size() > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -64,8 +64,8 @@ template<class T>
 void RTK_Array<T>::assign_object(SP_Object object,
                                  int       id)
 {
-    Require (object);
-    Require (id >= 0 && id < d_objects.size());
+    REQUIRE(object);
+    REQUIRE(id >= 0 && id < d_objects.size());
     d_objects[id] = object;
 }
 
@@ -82,8 +82,8 @@ void RTK_Array<T>::assign_object(SP_Object object,
 template<class T>
 void RTK_Array<T>::set_reflecting(const Vec_Int &reflecting_faces)
 {
-    Require (!d_completed);
-    Require (reflecting_faces.size() == 6);
+    REQUIRE(!d_completed);
+    REQUIRE(reflecting_faces.size() == 6);
 
     // assign the reflecting faces
     d_reflect = reflecting_faces;
@@ -106,7 +106,7 @@ void RTK_Array<T>::set_vessel(double r0,
                               double r1,
                               int    vid)
 {
-    Require (!d_completed);
+    REQUIRE(!d_completed);
 
     // set vessel on to true
     d_vessel = true;
@@ -118,8 +118,8 @@ void RTK_Array<T>::set_vessel(double r0,
     // set the vessel material id
     d_vessel_id = vid;
 
-    Ensure (d_r[1] > d_r[0]);
-    Ensure (d_vessel_id >= 0);
+    ENSURE(d_r[1] > d_r[0]);
+    ENSURE(d_vessel_id >= 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -151,9 +151,9 @@ void RTK_Array<T>::complete(double low_x,
     {
         // array id
         id = d_layout[index(i, 0, 0)];
-        Check (id >= 0 && id < d_objects.size());
-        Check (d_objects[id]);
-        Check (d_objects[id]->completed());
+        CHECK(id >= 0 && id < d_objects.size());
+        CHECK(d_objects[id]);
+        CHECK(d_objects[id]->completed());
 
         // assign the lengths
         d_x[i+1] = d_x[i] + d_objects[id]->pitch(X);
@@ -165,9 +165,9 @@ void RTK_Array<T>::complete(double low_x,
     {
         // array id
         id = d_layout[index(0, j, 0)];
-        Check (id >= 0 && id < d_objects.size());
-        Check (d_objects[id]);
-        Check (d_objects[id]->completed());
+        CHECK(id >= 0 && id < d_objects.size());
+        CHECK(d_objects[id]);
+        CHECK(d_objects[id]->completed());
 
         // assign the lengths
         d_y[j+1] = d_y[j] + d_objects[id]->pitch(Y);
@@ -179,9 +179,9 @@ void RTK_Array<T>::complete(double low_x,
     {
         // array id
         id = d_layout[index(0, 0, k)];
-        Check (id >= 0 && id < d_objects.size());
-        Check (d_objects[id]);
-        Check (d_objects[id]->completed());
+        CHECK(id >= 0 && id < d_objects.size());
+        CHECK(d_objects[id]);
+        CHECK(d_objects[id]->completed());
 
         // assign the lengths
         d_z[k+1] = d_z[k] + d_objects[id]->height();
@@ -199,19 +199,19 @@ void RTK_Array<T>::complete(double low_x,
     // object
     std::transform(d_num_cells.begin(), d_num_cells.end(), d_Nc_offset.begin(),
                    d_Nc_offset.begin() + 1, std::plus<int>());
-    Check (d_Nc_offset.back() == d_total_cells);
+    CHECK(d_Nc_offset.back() == d_total_cells);
 
     // setup core vessel if activated
     if (d_vessel)
     {
-        Check (2.0 * d_r[1] <= d_length[X]);
-        Check (2.0 * d_r[1] <= d_length[Y]);
+        CHECK(2.0 * d_r[1] <= d_length[X]);
+        CHECK(2.0 * d_r[1] <= d_length[Y]);
 
         // determine the origin
         d_origin[X] = (d_x.back() + d_x.front()) * 0.5;
         d_origin[Y] = (d_y.back() + d_y.front()) * 0.5;
 
-        Validate (d_origin[X] + d_r[1] <= d_x.back() &&
+        VALIDATE(d_origin[X] + d_r[1] <= d_x.back() &&
                   d_origin[Y] + d_r[1] <= d_y.back(),
                   "Radius of core vessel to large: "
                   << d_origin[X] + d_r[1] << " > " << d_x.back()
@@ -301,7 +301,7 @@ void RTK_Array<T>::complete(double low_x,
         // recursively drift through each object and add the vessel
         for (Vec_Int_Pair_Itr p = vobj.begin(); p != vobj.end(); ++p)
         {
-            Check (d_objects[this->id(p->first, p->second, 0)]);
+            CHECK(d_objects[this->id(p->first, p->second, 0)]);
 
             // determine offsets to this object (the offsets can be negative;
             // the are defined relative to the lower-left corner of each
@@ -332,9 +332,9 @@ void RTK_Array<T>::complete(double low_x,
                 id = d_layout[index(i, j, k)];
 
                 // check the lengths
-                Ensure (soft_equiv(d_objects[id]->pitch(X), dx(i)));
-                Ensure (soft_equiv(d_objects[id]->pitch(Y), dy(j)));
-                Ensure (soft_equiv(d_objects[id]->height(), dz(k)));
+                ENSURE(soft_equiv(d_objects[id]->pitch(X), dx(i)));
+                ENSURE(soft_equiv(d_objects[id]->pitch(Y), dy(j)));
+                ENSURE(soft_equiv(d_objects[id]->height(), dz(k)));
             }
         }
     }
@@ -349,7 +349,7 @@ template<class T>
 void RTK_Array<T>::initialize(const Space_Vector &r,
                               Geo_State_t        &state) const
 {
-    Require (d_completed);
+    REQUIRE(d_completed);
 
     // initialize state
     state.escaping_face   = Geo_State_t::NONE;
@@ -360,7 +360,7 @@ void RTK_Array<T>::initialize(const Space_Vector &r,
 
     // find the object that this point is in
     int id = d_layout[find_object(r, state)];
-    Check (d_objects[id]);
+    CHECK(d_objects[id]);
 
     // Transformed coordinates.
     Space_Vector tr = transform(r, state);
@@ -378,7 +378,7 @@ void RTK_Array<T>::distance_to_boundary(const Space_Vector &r,
                                         const Space_Vector &omega,
                                         Geo_State_t        &state) const
 {
-    Require (d_completed);
+    REQUIRE(d_completed);
 
     // clear reflecting face indicator
     state.reflecting_face = Geo_State_t::NONE;
@@ -397,7 +397,7 @@ void RTK_Array<T>::distance_to_boundary(const Space_Vector &r,
 template<class T>
 void RTK_Array<T>::update_state(Geo_State_t &state) const
 {
-    Require (d_completed);
+    REQUIRE(d_completed);
 
     // clear reflecting face indicator
     state.reflecting_face = Geo_State_t::NONE;
@@ -417,7 +417,7 @@ void RTK_Array<T>::cross_surface(const Space_Vector &r,
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (d_completed);
+    REQUIRE(d_completed);
 
     // initialize exiting level flag
     std::fill(state.exiting_level.begin(), state.exiting_level.end(), 0);
@@ -429,7 +429,7 @@ void RTK_Array<T>::cross_surface(const Space_Vector &r,
     // correctly set
     if (state.exiting_face == Geo_State_t::INTERNAL)
     {
-        Check (!state.exiting_level[d_level]);
+        CHECK(!state.exiting_level[d_level]);
         return;
     }
 
@@ -443,11 +443,11 @@ void RTK_Array<T>::cross_surface(const Space_Vector &r,
     // otherwise, the particle has escaped the geometry, record the state
     else
     {
-        Check (state.exiting_level[d_level]);
-        Check (state.exiting_face > Geo_State_t::INTERNAL);
+        CHECK(state.exiting_level[d_level]);
+        CHECK(state.exiting_face > Geo_State_t::INTERNAL);
 
         int refl_face_index = state.exiting_face - Geo_State_t::MINUS_X;
-        Check (refl_face_index >= 0 && refl_face_index < 6);
+        CHECK(refl_face_index >= 0 && refl_face_index < 6);
 
         // if this is a reflecting face, then reflect the particle and add 1
         // to all of the level coordinates
@@ -483,7 +483,7 @@ void RTK_Array<T>::cross_surface(const Space_Vector &r,
                     reflect[Z] = -1;
                     break;
                 default:
-                    Validate(false, "Lost a reflecting face.");
+                    VALIDATE(false, "Lost a reflecting face.");
             }
 
             // loop through levels and update the coordinates to bring them
@@ -512,9 +512,9 @@ int RTK_Array<T>::find_object(const Space_Vector &r,
 {
     using def::X; using def::Y; using def::Z;
 
-    Require(r[X] >= d_x.front()); Require(r[X] <= d_x.back());
-    Require(r[Y] >= d_y.front()); Require(r[Y] <= d_y.back());
-    Require(r[Z] >= d_z.front()); Require(r[Z] <= d_z.back());
+    REQUIRE(r[X] >= d_x.front()); REQUIRE(r[X] <= d_x.back());
+    REQUIRE(r[Y] >= d_y.front()); REQUIRE(r[Y] <= d_y.back());
+    REQUIRE(r[Z] >= d_z.front()); REQUIRE(r[Z] <= d_z.back());
 
     // iterators
     int                     i,j,k;
@@ -531,33 +531,33 @@ int RTK_Array<T>::find_object(const Space_Vector &r,
     // check for particles on the low face of the array
     if (r[X] == d_x[0])
     {
-        Check (itr == d_x.begin());
+        CHECK(itr == d_x.begin());
 
         // reset index
         i = 0;
     }
     if (r[Y] == d_y[0])
     {
-        Check (jtr == d_y.begin());
+        CHECK(jtr == d_y.begin());
 
         // reset index
         j = 0;
     }
     if (r[Z] == d_z[0])
     {
-        Check (ktr == d_z.begin());
+        CHECK(ktr == d_z.begin());
 
         // reset index
         k = 0;
     }
 
-    Check (i >= 0 && i < d_N[X]);
-    Check (j >= 0 && j < d_N[Y]);
-    Check (k >= 0 && k < d_N[Z]);
+    CHECK(i >= 0 && i < d_N[X]);
+    CHECK(j >= 0 && j < d_N[Y]);
+    CHECK(k >= 0 && k < d_N[Z]);
 
-    Ensure (d_x[i] <= r[X] && d_x[i+1] >= r[X]);
-    Ensure (d_y[j] <= r[Y] && d_y[j+1] >= r[Y]);
-    Ensure (d_z[k] <= r[Z] && d_z[k+1] >= r[Z]);
+    ENSURE(d_x[i] <= r[X] && d_x[i+1] >= r[X]);
+    ENSURE(d_y[j] <= r[Y] && d_y[j+1] >= r[Y]);
+    ENSURE(d_z[k] <= r[Z] && d_z[k+1] >= r[Z]);
     state.level_coord[d_level][X] = i;
     state.level_coord[d_level][Y] = j;
     state.level_coord[d_level][Z] = k;
@@ -587,7 +587,7 @@ int RTK_Array<T>::find_object_on_boundary(const Space_Vector &r,
     {
         itr = std::lower_bound(d_x.begin(), d_x.end(), r[X]);
         i   = itr - d_x.begin() - 1;
-        Check (d_x[i] <= r[X] && d_x[i+1] >= r[X]);
+        CHECK(d_x[i] <= r[X] && d_x[i+1] >= r[X]);
     }
     else
     {
@@ -599,7 +599,7 @@ int RTK_Array<T>::find_object_on_boundary(const Space_Vector &r,
     {
         jtr = std::lower_bound(d_y.begin(), d_y.end(), r[Y]);
         j   = jtr - d_y.begin() - 1;
-        Check (d_y[j] <= r[Y] && d_y[j+1] >= r[Y]);
+        CHECK(d_y[j] <= r[Y] && d_y[j+1] >= r[Y]);
     }
     else
     {
@@ -611,7 +611,7 @@ int RTK_Array<T>::find_object_on_boundary(const Space_Vector &r,
     {
         ktr = std::lower_bound(d_z.begin(), d_z.end(), r[Z]);
         k   = ktr - d_z.begin() - 1;
-        Check (d_z[k] <= r[Z] && d_z[k+1] >= r[Z]);
+        CHECK(d_z[k] <= r[Z] && d_z[k+1] >= r[Z]);
     }
     else
     {
@@ -619,9 +619,9 @@ int RTK_Array<T>::find_object_on_boundary(const Space_Vector &r,
             k = d_N[Z] - 1;
     }
 
-    Ensure (i >= 0 && i < d_N[X]);
-    Ensure (j >= 0 && j < d_N[Y]);
-    Ensure (k >= 0 && k < d_N[Z]);
+    ENSURE(i >= 0 && i < d_N[X]);
+    ENSURE(j >= 0 && j < d_N[Y]);
+    ENSURE(k >= 0 && k < d_N[Z]);
 
     state.level_coord[d_level][X] = i;
     state.level_coord[d_level][Y] = j;
@@ -724,7 +724,7 @@ void RTK_Array<T>::determine_boundary_crossings(Geo_State_t &state)
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (d_level > 0);
+    REQUIRE(d_level > 0);
 
     // dive into the object and see if it crosses a boundary
     object(state)->determine_boundary_crossings(state);
@@ -754,7 +754,7 @@ void RTK_Array<T>::determine_boundary_crossings(Geo_State_t &state)
                 calc_high_face(state, Z, Geo_State_t::PLUS_Z);
                 break;
             default:
-                Validate(false,
+                VALIDATE(false,
                     "Not at a valid array surface crossing.");
         }
     }
@@ -771,7 +771,7 @@ void RTK_Array<T>::update_coordinates(const Space_Vector &r,
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (d_level > 0);
+    REQUIRE(d_level > 0);
 
     // transform coordinates into object's coordinate system
     Space_Vector tr = transform(r, state);
@@ -837,7 +837,7 @@ int RTK_Array<T>::count_cells()
             {
                 // calculate the array index
                 n = index(i, j, k);
-                Check (n < d_num_cells.size());
+                CHECK(n < d_num_cells.size());
 
                 // count the cells in the object
                 d_num_cells[n] = cell_count_dispatch(i, j, k);
@@ -848,7 +848,7 @@ int RTK_Array<T>::count_cells()
         }
     }
 
-    Ensure (d_total_cells > 0);
+    ENSURE(d_total_cells > 0);
     return d_total_cells;
 }
 
@@ -912,9 +912,9 @@ void RTK_Array<T>::add_vessel(double R0,
 
             // the "=" on the check is for -x to +x on centerlines where x ==
             // x
-            Check (std::fabs(near[X]) < std::fabs(far[X]) ||
+            CHECK(std::fabs(near[X]) < std::fabs(far[X]) ||
                    soft_equiv(std::fabs(near[X]), std::fabs(far[X])));
-            Check (std::fabs(near[Y]) < std::fabs(far[Y]) ||
+            CHECK(std::fabs(near[Y]) < std::fabs(far[Y]) ||
                    soft_equiv(std::fabs(near[Y]), std::fabs(far[Y])));
 
             // near and far radii bounding the cell object
@@ -938,15 +938,15 @@ void RTK_Array<T>::add_vessel(double R0,
             // update the running xoffset
             rox += dx(i);
 
-            Check (rox - xoff < pitch(X) || soft_equiv(rox - xoff, pitch(X)));
+            CHECK(rox - xoff < pitch(X) || soft_equiv(rox - xoff, pitch(X)));
         }
 
         // update the running y-offset
         roy += dy(j);
     }
 
-    Ensure (soft_equiv(rox - xoff, pitch(X)));
-    Ensure (soft_equiv(roy - yoff, pitch(Y)));
+    ENSURE(soft_equiv(rox - xoff, pitch(X)));
+    ENSURE(soft_equiv(roy - yoff, pitch(Y)));
 }
 
 //---------------------------------------------------------------------------//

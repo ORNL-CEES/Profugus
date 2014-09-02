@@ -26,7 +26,7 @@ namespace tpetra
 Solver_Base::Solver_Base(RCP_ParameterList db)
     : b_db(db)
 {
-    Require (!b_db.is_null());
+    REQUIRE(!b_db.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -46,9 +46,9 @@ Solver_Base::~Solver_Base()
 void Solver_Base::write_u_into_state(const Vector_t &u,
                                      State_t        &state)
 {
-    Require (state.num_cells() * b_system->get_dims()->num_equations()
+    REQUIRE(state.num_cells() * b_system->get_dims()->num_equations()
              * state.num_groups() <= u.getLocalLength());
-    Require (state.num_cells() == state.mesh().num_cells());
+    REQUIRE(state.num_cells() == state.mesh().num_cells());
 
     // SPN moments
     double u_m[4] = {0.0, 0.0, 0.0, 0.0};
@@ -73,7 +73,7 @@ void Solver_Base::write_u_into_state(const Vector_t &u,
     {
         // get all the fluxes for this group
         View_Field flux = state.flux(g, g);
-        Check (flux.size() == Nc);
+        CHECK(flux.size() == Nc);
 
         // loop over cells on this domain
         for (int cell = 0; cell < Nc; ++cell)
@@ -81,7 +81,7 @@ void Solver_Base::write_u_into_state(const Vector_t &u,
             // loop over moments
             for (int n = 0; n < N; ++n)
             {
-                Check (b_system->index(g, n, cell) < u.getLocalLength());
+                CHECK(b_system->index(g, n, cell) < u.getLocalLength());
 
                 // get the moment from the solution vector
                 u_m[n] = u_view[b_system->index(g, n, cell)];

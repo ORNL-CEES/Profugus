@@ -44,15 +44,15 @@ int sample_discrete_CDF(int      nb,
                         const T *c,
                         const T  ran)
 {
-    Require (nb > 0);
-    Require (soft_equiv(static_cast<double>(c[nb - 1]), 1.0, 1.0e-6));
-    Require (ran >= 0 && ran <= 1);
+    REQUIRE(nb > 0);
+    REQUIRE(soft_equiv(static_cast<double>(c[nb - 1]), 1.0, 1.0e-6));
+    REQUIRE(ran >= 0 && ran <= 1);
 
     // do a binary search on the CDF
     const T *ptr = std::lower_bound(c, c + nb, ran);
 
     // return the value
-    Ensure (ptr - c >= 0 && ptr - c < nb);
+    ENSURE(ptr - c >= 0 && ptr - c < nb);
     return ptr - c;
 }
 
@@ -87,8 +87,8 @@ double sample_watt(RNG   &rng,
     using std::sqrt;
     using std::log;
 
-    Require (a > 0);
-    Require (b > 0);
+    REQUIRE(a > 0);
+    REQUIRE(b > 0);
 
     // the algorithm implemented here is the same as in MCNP5
 
@@ -138,8 +138,8 @@ T sample_linear(
         const T left,
         const T right)
 {
-    Require(0 <= xi_lr && xi_lr <= 1);
-    Require(0 <= xi_linear && xi_linear <= 1);
+    REQUIRE(0 <= xi_lr && xi_lr <= 1);
+    REQUIRE(0 <= xi_linear && xi_linear <= 1);
 
     // use the method that decomposes the line into basically two linear
     // discontinous basis functions
@@ -160,7 +160,7 @@ T sample_linear(
         result = sample_linear<T>(xi_linear);
     }
 
-    Ensure(0 <= result && result <= 1);
+    ENSURE(0 <= result && result <= 1);
     return result;
 }
 

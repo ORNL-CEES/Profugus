@@ -35,7 +35,7 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
                                       const T          *field,
                                       hid_t             type)
 {
-    Require (d.ndims > 0);
+    REQUIRE(d.ndims > 0);
 
     // hyperslab parameters
     Vec_Hsize local(d.local);
@@ -76,8 +76,8 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
 
     // assign the local (common-collective : same on all domains) chunk size
     Vec_Hsize chunk(max_c.begin(), max_c.end());
-    Check (chunk.size() == local.size());
-    Check (local.size() == d.ndims);
+    CHECK(chunk.size() == local.size());
+    CHECK(local.size() == d.ndims);
 
     // make the global chunk size - this is the chunk size * number of
     // domains; first we have to determine the number of domains that can be
@@ -87,7 +87,7 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
     {
         // find the decomposition in this dimension
         int num_domains = global[n] / min_c[n];
-        Check (global[n] <= num_domains * chunk[n]);
+        CHECK(global[n] <= num_domains * chunk[n]);
 
         // calculate the new global for equal chunk sizes
         global[n] = num_domains * chunk[n];
@@ -121,7 +121,7 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
 
     // select the hyperslab (this is in the "true" domain of the data)
     filespace = H5Dget_space(dset_id);
-    Validate (H5Sselect_hyperslab(
+    VALIDATE(H5Sselect_hyperslab(
                   filespace, H5S_SELECT_SET, &offset[0], &stride[0],
                   &count[0], &local[0]) >= 0,
               "Failed to select hyperslab at " << current_loc());;
@@ -131,14 +131,14 @@ void Parallel_HDF5_Writer::write_impl(const std_string &name,
     H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
 
     // write the data
-    Validate (H5Dwrite(dset_id, type, memspace, filespace, plist_id,
+    VALIDATE(H5Dwrite(dset_id, type, memspace, filespace, plist_id,
                        &field[0]) >= 0,
               "Failed to write data on " << b_node << " at " << current_loc());
 
     // write the attribute
     attspace  = H5Aget_space(aset_id);
     int order = d.order;
-    Validate (H5Awrite(aset_id, H5T_NATIVE_INT, &order) >= 0,
+    VALIDATE(H5Awrite(aset_id, H5T_NATIVE_INT, &order) >= 0,
               "Failed to attach attribute to " << name.c_str());
 
     // close
@@ -173,7 +173,7 @@ Parallel_HDF5_Writer::Parallel_HDF5_Writer()
 void Parallel_HDF5_Writer::open(const std_string &filename,
                                 File_Mode         mode)
 {
-    Require (mode < END_FILE_MODE);
+    REQUIRE(mode < END_FILE_MODE);
 
     // Set file name, mode, and node
     b_filename = filename;
@@ -206,9 +206,9 @@ void Parallel_HDF5_Writer::open(const std_string &filename,
     HDF5_Loc loc = {b_file, ""};
     b_loc_stack.push_back(loc);
 
-    Ensure (b_file);
-    Ensure (b_loc_stack.size() == 1);
-    Ensure (b_mode != END_FILE_MODE);
+    ENSURE(b_file);
+    ENSURE(b_loc_stack.size() == 1);
+    ENSURE(b_mode != END_FILE_MODE);
 }
 
 //---------------------------------------------------------------------------//

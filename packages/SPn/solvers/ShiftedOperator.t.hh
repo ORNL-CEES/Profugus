@@ -43,7 +43,7 @@ ShiftedOperatorBase<MV,OP>::ShiftedOperatorBase()
 template <class MV, class OP>
 void ShiftedOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
 {
-    Require( !A.is_null() );
+    REQUIRE( !A.is_null() );
     d_A = A;
 }
 
@@ -56,7 +56,7 @@ void ShiftedOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
 template <class MV, class OP>
 void ShiftedOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
-    Require( !B.is_null() );
+    REQUIRE( !B.is_null() );
     d_B = B;
 }
 

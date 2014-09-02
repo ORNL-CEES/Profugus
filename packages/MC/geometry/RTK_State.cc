@@ -33,19 +33,19 @@ const int RTK_State::minus_face[3] = {MINUS_X, MINUS_Y, MINUS_Z};
  */
 void RTK_State::pack(char *buffer) const
 {
-    Require (buffer);
-    Require (escaping_face == NONE);
+    REQUIRE(buffer);
+    REQUIRE(escaping_face == NONE);
 
     // make a packer
     Packer p;
     p.set_buffer(packed_bytes(), buffer);
-    Check (sizeof(level_coord) == max_levels * 3 * SIZEOF_INT);
+    CHECK(sizeof(level_coord) == max_levels * 3 * SIZEOF_INT);
 
     // pack the data
     p << d_r << d_dir << region << segment << face << next_region
       << next_segment << next_face << exiting_face << level_coord;
 
-    Ensure (p.get_ptr() == p.end());
+    ENSURE(p.get_ptr() == p.end());
 }
 
 //---------------------------------------------------------------------------//
@@ -57,7 +57,7 @@ void RTK_State::pack(char *buffer) const
  */
 void RTK_State::unpack(const char *buffer)
 {
-    Require (buffer);
+    REQUIRE(buffer);
 
     // make an unpacker
     Unpacker u;
@@ -71,7 +71,7 @@ void RTK_State::unpack(const char *buffer)
     // never be packed
     escaping_face = NONE;
 
-    Ensure (u.get_ptr() == u.end());
+    ENSURE(u.get_ptr() == u.end());
 }
 
 } // end namespace profugus

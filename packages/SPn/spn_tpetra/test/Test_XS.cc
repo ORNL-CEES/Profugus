@@ -323,7 +323,7 @@ Teuchos::RCP<profugus::Mat_DB> make_mat(int                        Pn,
 {
     using profugus::Mat_DB;
 
-    Require (f.size() == matids.size());
+    REQUIRE(f.size() == matids.size());
 
     // material db
     Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
@@ -451,7 +451,7 @@ Teuchos::RCP<profugus::Mat_DB> make_mat(int                        Pn,
 {
     using profugus::Mat_DB;
 
-    Require (f.size() == matids.size());
+    REQUIRE(f.size() == matids.size());
 
     // material db
     Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);
@@ -583,7 +583,7 @@ Teuchos::RCP<profugus::Mat_DB> make_mat(int                        Pn,
 {
     using profugus::Mat_DB;
 
-    Require (f.size() == matids.size());
+    REQUIRE(f.size() == matids.size());
 
     // material db
     Teuchos::RCP<Mat_DB> mat = Teuchos::rcp(new Mat_DB);

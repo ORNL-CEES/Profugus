@@ -71,7 +71,7 @@ void Problem_Builder::setup(const std::string &xml_file)
     d_matdb    = Teuchos::sublist(master, "MATERIAL");
     d_db       = Teuchos::sublist(master, "PROBLEM");
 
-    Check (!d_db.is_null());
+    CHECK(!d_db.is_null());
 
     // default the boundary conditions to reflecting
     if (!d_db->isParameter("boundary"))
@@ -118,9 +118,9 @@ void Problem_Builder::setup(const std::string &xml_file)
  */
 void Problem_Builder::build_geometry()
 {
-    Require (d_coredb->isParameter("axial list"));
-    Require (d_coredb->isParameter("axial height"));
-    Require (d_assblydb->isParameter("assembly list"));
+    REQUIRE(d_coredb->isParameter("axial list"));
+    REQUIRE(d_coredb->isParameter("axial height"));
+    REQUIRE(d_assblydb->isParameter("assembly list"));
 
     // get the axial list and heights
     const auto &axial_list   = d_coredb->get<OneDArray_str>("axial list");
@@ -138,7 +138,7 @@ void Problem_Builder::build_geometry()
     int num_x     = base_map.getNumCols();
     int num_y     = base_map.getNumRows();
     int num_axial = axial_list.size();
-    Check (axial_height.size() == num_axial);
+    CHECK(axial_height.size() == num_axial);
 
     // get the assembly list
     const auto &assbly_list = d_assblydb->get<OneDArray_str>("assembly list");
@@ -157,12 +157,12 @@ void Problem_Builder::build_geometry()
     // iterate through the core and build each assembly by axial level
     for (int k = 0; k < num_axial; ++k)
     {
-        Check (d_coredb->isParameter(axial_list[k]));
+        CHECK(d_coredb->isParameter(axial_list[k]));
 
         // get the core map at this axial level
         const auto &core_map = d_coredb->get<TwoDArray_int>(axial_list[k]);
-        Check (core_map.getNumCols() == num_x);
-        Check (core_map.getNumRows() == num_y);
+        CHECK(core_map.getNumCols() == num_x);
+        CHECK(core_map.getNumRows() == num_y);
 
         // run through the core-map on this level and build all of the
         // assemblies
@@ -172,8 +172,8 @@ void Problem_Builder::build_geometry()
             {
                 // get the id of this assembly (in range [0, N))
                 aid = core_map(j, i);
-                Check (aid < assbly_list.size());
-                Check (d_assblydb->isParameter(assbly_list[aid]));
+                CHECK(aid < assbly_list.size());
+                CHECK(d_assblydb->isParameter(assbly_list[aid]));
 
                 // get the assembly map for this lattice
                 const auto &assbly_map = d_assblydb->get<TwoDArray_int>(
@@ -192,10 +192,10 @@ void Problem_Builder::build_geometry()
                     a2rtk[k].emplace(aid, assemblies[k].size() - 1);
                 }
 
-                Check (assemblies[k].count(aid));
+                CHECK(assemblies[k].count(aid));
             }
         }
-        Check (assemblies[k].size() == a2rtk[k].size());
+        CHECK(assemblies[k].size() == a2rtk[k].size());
 
         // add up the number of unique assemblies (on each axial level)
         num_assemblies += assemblies[k].size();
@@ -212,8 +212,8 @@ void Problem_Builder::build_geometry()
         // assign the assemblies
         for (const auto &a : assemblies[k])
         {
-            Check (a.second);
-            Check (a2rtk[k][a.first] + axial_offset >= 0 &&
+            CHECK(a.second);
+            CHECK(a2rtk[k][a.first] + axial_offset >= 0 &&
                    a2rtk[k][a.first] + axial_offset < num_assemblies);
             core->assign_object(a.second, a2rtk[k][a.first] + axial_offset);
         }
@@ -226,7 +226,7 @@ void Problem_Builder::build_geometry()
         {
             for (int i = 0; i < num_x; ++i)
             {
-                Check (a2rtk[k][map(j, i)] + axial_offset >= 0 &&
+                CHECK(a2rtk[k][map(j, i)] + axial_offset >= 0 &&
                        a2rtk[k][map(j, i)] + axial_offset < num_assemblies);
                 core->id(i, j, k) = a2rtk[k][map(j, i)] + axial_offset;
             }
@@ -235,14 +235,14 @@ void Problem_Builder::build_geometry()
         // update the axial offset
         axial_offset += assemblies[k].size();
     }
-    Check (axial_offset == num_assemblies);
+    CHECK(axial_offset == num_assemblies);
 
     // set the boundary conditions
     def::Vec_Int boundary(6, 0);
     if (d_db->get<std::string>("boundary") == "reflect")
     {
-        Check (d_db->isSublist("boundary_db"));
-        Check (d_db->sublist("boundary_db").isParameter("reflect"));
+        CHECK(d_db->isSublist("boundary_db"));
+        CHECK(d_db->sublist("boundary_db").isParameter("reflect"));
         const auto &bnd_array =
             d_db->sublist("boundary_db").get<OneDArray_int>("reflect");
         std::copy(bnd_array.begin(), bnd_array.end(), boundary.begin());
@@ -264,7 +264,7 @@ auto Problem_Builder::build_axial_lattice(
     const TwoDArray_int &map,
     double               height) -> SP_Lattice
 {
-    Require (d_pindb->isParameter("pin list"));
+    REQUIRE(d_pindb->isParameter("pin list"));
 
     // get the pin list from the pindb
     const auto &pin_list = d_pindb->get<OneDArray_str>("pin list");
@@ -289,15 +289,15 @@ auto Problem_Builder::build_axial_lattice(
         {
             // get the pinid
             pid = map(j, i);
-            Check (d_pindb->isSublist(pin_list[pid]));
+            CHECK(d_pindb->isSublist(pin_list[pid]));
 
             // build the pin if we haven't already
             if (!pins.count(pid))
             {
                 // get the pin-sublist
                 const auto &pindb = d_pindb->sublist(pin_list[pid]);
-                Check (pindb.isParameter("pitch"));
-                Check (pindb.isParameter("matid"));
+                CHECK(pindb.isParameter("pitch"));
+                CHECK(pindb.isParameter("matid"));
 
                 // get the pin pitch and overall pin matid
                 double pitch  = pindb.get<double>("pitch");
@@ -310,7 +310,7 @@ auto Problem_Builder::build_axial_lattice(
                 // see if the pin has any internal cylinders
                 if (pindb.isParameter("radii"))
                 {
-                    Check (pindb.isParameter("radial matids"));
+                    CHECK(pindb.isParameter("radial matids"));
                     const auto &radii  = pindb.get<OneDArray_dbl>("radii");
                     const auto &matids = pindb.get<OneDArray_int>(
                         "radial matids");
@@ -318,8 +318,8 @@ auto Problem_Builder::build_axial_lattice(
                     r.insert(r.end(), radii.begin(), radii.end());
                     ids.insert(ids.end(), matids.begin(), matids.end());
 
-                    Check (r.size() == radii.size());
-                    Check (ids.size() == matids.size());
+                    CHECK(r.size() == radii.size());
+                    CHECK(ids.size() == matids.size());
                 }
 
                 // build the pin
@@ -332,10 +332,10 @@ auto Problem_Builder::build_axial_lattice(
                 // make the input-to-rtk pin id
                 inp2rtk_id.emplace(pid, pins.size() - 1);
             }
-            Check (pins.count(pid));
+            CHECK(pins.count(pid));
         }
     }
-    Check (inp2rtk_id.size() == pins.size());
+    CHECK(inp2rtk_id.size() == pins.size());
 
     // make the lattice geometry
     SP_Lattice lattice(std::make_shared<Lattice_t>(
@@ -344,8 +344,8 @@ auto Problem_Builder::build_axial_lattice(
     // assign the pins to the lattice
     for (const auto &p : pins)
     {
-        Check (p.second);
-        Check (inp2rtk_id[p.first] >= 0 && inp2rtk_id[p.first] < pins.size());
+        CHECK(p.second);
+        CHECK(inp2rtk_id[p.first] >= 0 && inp2rtk_id[p.first] < pins.size());
         lattice->assign_object(p.second, inp2rtk_id[p.first]);
     }
 
@@ -354,7 +354,7 @@ auto Problem_Builder::build_axial_lattice(
     {
         for (int i = 0; i < num_x; ++i)
         {
-            Check (inp2rtk_id[map(j, i)] >= 0 &&
+            CHECK(inp2rtk_id[map(j, i)] >= 0 &&
                    inp2rtk_id[map(j, i)] < pins.size());
             lattice->id(i, j, 0) = inp2rtk_id[map(j, i)];
         }
@@ -376,8 +376,8 @@ void Problem_Builder::build_physics()
     typedef profugus::XS_Builder::Matid_Map Matid_Map;
     typedef profugus::XS_Builder::RCP_XS    RCP_XS;
 
-    Require (d_matdb->isParameter("mat list"));
-    Validate (d_matdb->isParameter("xs library"),
+    REQUIRE(d_matdb->isParameter("mat list"));
+    VALIDATE(d_matdb->isParameter("xs library"),
               "Inline cross sections not implemented yet.");
 
     // get the material list off of the database
@@ -390,7 +390,7 @@ void Problem_Builder::build_physics()
         matids.insert(Matid_Map::value_type(id, mat_list[id]));
     }
     matids.complete();
-    Check (matids.size() == mat_list.size());
+    CHECK(matids.size() == mat_list.size());
 
     // make a cross section builder
     profugus::XS_Builder builder;
@@ -405,15 +405,15 @@ void Problem_Builder::build_physics()
     // get the number of groups required
     int g_first = d_db->get("g_first", 0);
     int g_last  = d_db->get("g_last", Ng_data - 1);
-    Validate (1 + (g_last - g_first) <= Ng_data, "Energy group range exceeds "
+    VALIDATE(1 + (g_last - g_first) <= Ng_data, "Energy group range exceeds "
               << "number of groups in data, 1 + g_last - g_first = "
               << 1 + (g_last - g_first) << " > " << Ng_data);
 
     // build the cross sections (always build P0 for Monte Carlo)
     builder.build(matids, 0, g_first, g_last);
     RCP_XS xs = builder.get_xs();
-    Check (xs->num_mat() == matids.size());
-    Check (xs->num_groups() == 1 + (g_last - g_first));
+    CHECK(xs->num_mat() == matids.size());
+    CHECK(xs->num_groups() == 1 + (g_last - g_first));
 
     // make the physics
     d_physics = std::make_shared<Physics_t>(d_db, xs);
@@ -430,7 +430,7 @@ void Problem_Builder::build_var_reduction()
 {
     using profugus::to_lower;
 
-    Require (!d_db.is_null());
+    REQUIRE(!d_db.is_null());
 
     // the default is to do roulette
     const auto &var = to_lower(
@@ -452,7 +452,7 @@ void Problem_Builder::build_var_reduction()
         throw profugus::assertion(m.str());
     }
 
-    Ensure (d_var_reduction);
+    ENSURE(d_var_reduction);
 }
 
 //---------------------------------------------------------------------------//
@@ -463,13 +463,13 @@ void Problem_Builder::build_var_reduction()
  */
 void Problem_Builder::build_source(const ParameterList &source_db)
 {
-    Require (source_db.isParameter("box"));
-    Require (source_db.isParameter("spectrum"));
-    Require (d_physics);
+    REQUIRE(source_db.isParameter("box"));
+    REQUIRE(source_db.isParameter("spectrum"));
+    REQUIRE(d_physics);
 
     // get the source box coordinates
     const auto &box = source_db.get<OneDArray_dbl>("box");
-    Check (box.size() == 6);
+    CHECK(box.size() == 6);
 
     // make the box shape
     d_shape = std::make_shared<profugus::Box_Shape>(
@@ -477,7 +477,7 @@ void Problem_Builder::build_source(const ParameterList &source_db)
 
     // get the source spectrum and add it to the main database
     const auto &shape = source_db.get<OneDArray_dbl>("spectrum");
-    Check (shape.size() == d_physics->num_groups());
+    CHECK(shape.size() == d_physics->num_groups());
 
     // add the shape to the main database because the MC source gets the
     // spectral shape from the main db

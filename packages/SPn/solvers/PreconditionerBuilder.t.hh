@@ -57,7 +57,7 @@ PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
 
     // Default to Ifpack
     string prec_type = to_lower(db->get("Preconditioner", string("ifpack")));
-    Validate(prec_type == "ifpack" || prec_type=="ml" ||
+    VALIDATE(prec_type == "ifpack" || prec_type=="ml" ||
              prec_type=="none",
              "Preconditioner must be 'Ifpack', 'ML', or 'None'.");
 
@@ -87,9 +87,9 @@ PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
         // Process preconditioner
         int err;
         err = ifpack_prec->Initialize();
-        Ensure( err == 0 );
+        ENSURE( err == 0 );
         err = ifpack_prec->Compute();
-        Ensure( err == 0 );
+        ENSURE( err == 0 );
 
         // Wrap raw preconditioner into an Epetra_InvOperator
         // to reverse the sense of Apply and ApplyInverse
@@ -100,7 +100,7 @@ PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
         prec = Teuchos::RCP<Epetra_Operator>(
             new Epetra_InvOperator(ifpack_prec.getRawPtr()) );
         Teuchos::set_extra_data(ifpack_prec,"ifpack_raw_pointer",Teuchos::inOutArg(prec));
-        Ensure( prec != Teuchos::null );
+        ENSURE( prec != Teuchos::null );
     }
     else if( prec_type == "ml" )
     {
@@ -133,9 +133,9 @@ PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
             new Epetra_InvOperator(ml_prec.getRawPtr()) );
         Teuchos::set_extra_data(ml_prec,"ml_raw_pointer",Teuchos::inOutArg(prec));
 
-        Ensure( prec != Teuchos::null );
+        ENSURE( prec != Teuchos::null );
 #else
-        Validate(false,"ML not enabled in this build.");
+        VALIDATE(false,"ML not enabled in this build.");
 #endif
     }
 
@@ -155,7 +155,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
         // Dynamic cast to CrsMatrix
         Teuchos::RCP<Tpetra_CrsMatrix> row_mat =
             Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
-        Require( row_mat != Teuchos::null );
+        REQUIRE( row_mat != Teuchos::null );
 
         std::string ifpack2_type = db->get("Ifpack2_Type","ILUT");
         int overlap = db->get("Ifpack2_Overlap",0);
@@ -175,7 +175,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
         // Dynamic cast to CrsMatrix
         Teuchos::RCP<Tpetra_CrsMatrix> row_mat =
             Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
-        Require( row_mat != Teuchos::null );
+        REQUIRE( row_mat != Teuchos::null );
 
         // Wrap Tpetra objects as Xpetra
         prec = Teuchos::rcp(new MueLuPreconditioner<Tpetra_MultiVector,
@@ -187,7 +187,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
     {
         std::stringstream ss;
         ss << "Preconditioner " << prec_type << " not implemented" << std::endl;
-        Validate(false,ss.str());
+        VALIDATE(false,ss.str());
     }
     return prec;
 }

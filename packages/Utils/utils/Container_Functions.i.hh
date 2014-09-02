@@ -73,8 +73,8 @@ void container_merge(Container1       &cont_1,
     typedef typename Compare_Traits<val_type>::less_comp less_comp;
     typedef typename Compare_Traits<val_type>::eql_comp  eql_comp;
 
-    Require (profugus::is_sorted(cont_1.begin(), cont_1.end()));
-    Require (profugus::is_sorted(cont_2.begin(), cont_2.end()));
+    REQUIRE(profugus::is_sorted(cont_1.begin(), cont_1.end()));
+    REQUIRE(profugus::is_sorted(cont_2.begin(), cont_2.end()));
 
     container_merge(cont_1, cont_2, eql_comp(), less_comp());
 }
@@ -92,9 +92,9 @@ void container_merge(Container1                            &cont_1,
 {
     typedef typename Container1::value_type  value_type;
 
-    Require ( profugus::is_sorted(cont_1.begin(), cont_1.end(),
+    REQUIRE( profugus::is_sorted(cont_1.begin(), cont_1.end(),
                                   SoftIsLessEqual<value_type>(eps)) );
-    Require ( profugus::is_sorted(cont_2.begin(), cont_2.end(),
+    REQUIRE( profugus::is_sorted(cont_2.begin(), cont_2.end(),
                                   SoftIsLessEqual<value_type>(eps)) );
 
     container_merge(cont_1, cont_2, SoftIsEqual<value_type>(eps),
@@ -119,8 +119,8 @@ void container_merge(Container1       &cont_1,
                      EqualOp           eql_comp,
                      LessOp            less_comp)
 {
-    Require ( profugus::is_sorted(cont_1.begin(), cont_1.end(), less_comp) );
-    Require ( profugus::is_sorted(cont_2.begin(), cont_2.end(), less_comp) );
+    REQUIRE( profugus::is_sorted(cont_1.begin(), cont_1.end(), less_comp) );
+    REQUIRE( profugus::is_sorted(cont_2.begin(), cont_2.end(), less_comp) );
 
     // Iterators into the two containers to be merged
     typename Container1::iterator iter_1       = cont_1.begin();
@@ -157,7 +157,7 @@ void container_merge(Container1       &cont_1,
         // *iter_2 at position iter_1.  Reset iter_1 and advance iter_2
         else
         {
-            Check ( less_comp(*iter_2, *iter_1) );
+            CHECK( less_comp(*iter_2, *iter_1) );
             iter_1 = cont_1.insert(iter_1, *iter_2);
             ++iter_2;
         }
@@ -209,19 +209,19 @@ void fill_map(SV_Iterator1  key_iter_begin,
               SV_Iterator2  value_iter_begin,
               AS_Container &assoc_cont)
 {
-    Require (is_unique(key_iter_begin, key_iter_end));
+    REQUIRE(is_unique(key_iter_begin, key_iter_end));
     // Make sure none of the keys are already in the map
 #ifdef REQUIRE_ON
     for(SV_Iterator1 iter = key_iter_begin; iter != key_iter_end; ++iter)
     {
-        Require (assoc_cont.count(*iter) == 0);
+        REQUIRE(assoc_cont.count(*iter) == 0);
     }
 #endif
 
     // Loop over the keys
     while(key_iter_begin != key_iter_end)
     {
-        Check (assoc_cont.count(*key_iter_begin) == 0);
+        CHECK(assoc_cont.count(*key_iter_begin) == 0);
 
         // Insert the value into the associative container
         assoc_cont.insert( std::make_pair(*key_iter_begin, *value_iter_begin) );
@@ -292,7 +292,7 @@ void trim(Container                            &container,
     typedef typename Compare_Traits<val_type>::eql_comp  eql_cmp;
     typedef typename Compare_Traits<val_type>::less_comp less_cmp;
 
-    Require ( profugus::is_sorted(container.begin(), container.end()) );
+    REQUIRE( profugus::is_sorted(container.begin(), container.end()) );
 
     // Trim
     return trim(container, lower_bound, upper_bound, eql_cmp(), less_cmp());
@@ -311,7 +311,7 @@ void trim(Container                            &container,
 {
     typedef typename Container::value_type                 value_type;
 
-    Require ( profugus::is_sorted(container.begin(), container.end(),
+    REQUIRE( profugus::is_sorted(container.begin(), container.end(),
                                   SoftIsLess<value_type>(eps)) );
 
     // Trim
@@ -333,9 +333,9 @@ void trim(Container                            &container,
 {
     typedef typename Container::iterator      iterator;
 
-    Require ( profugus::is_sorted(container.begin(), container.end(),
+    REQUIRE( profugus::is_sorted(container.begin(), container.end(),
                                   less_comp) );
-    Require ( less_comp(lower_bound, upper_bound) );
+    REQUIRE( less_comp(lower_bound, upper_bound) );
 
     // Get iterators to the beginning and end of the range we want to *keep*
     iterator lower_iter =
@@ -411,7 +411,7 @@ void make_unique(Container &container,
 
     // Erase the non-unique entries at the end
     container.erase(iter, container.end());
-    Ensure ( is_unique(container.begin(), container.end(),
+    ENSURE( is_unique(container.begin(), container.end(),
                        equal_comp, less_comp) );
 }
 
@@ -485,9 +485,9 @@ truncate_and_norm(typename Container::iterator  first,
     typedef typename Container::const_iterator const_iterator;
     typedef typename Container::value_type     value_type;
 
-    Require (std::distance(cont.begin(), first) >= 0);
-    Require (std::distance(last, cont.end()) >= 0);
-    Require (std::distance(first, last) > 0);
+    REQUIRE(std::distance(cont.begin(), first) >= 0);
+    REQUIRE(std::distance(last, cont.end()) >= 0);
+    REQUIRE(std::distance(first, last) > 0);
 
     // Calculate the sum of the values in the truncated range
     const value_type norm = std::accumulate(first, last, value_type(0));
@@ -502,8 +502,8 @@ truncate_and_norm(typename Container::iterator  first,
     // Delete the remainder of the container
     cont.erase(dst, cont.end());
 
-    Ensure (cont.size() == static_cast<unsigned int>(last - first));
-    Ensure (profugus::soft_equiv(
+    ENSURE(cont.size() == static_cast<unsigned int>(last - first));
+    ENSURE(profugus::soft_equiv(
                 value_type(1),
                 std::accumulate(cont.begin(), cont.end(), value_type(0))));
     return norm;

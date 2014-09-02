@@ -63,12 +63,12 @@ class Energy_Restriction : public Tpetra_Operator
     bool hasTransposeApply(){return false;}
     Teuchos::RCP<const Map_t> getDomainMap() const
     {
-        Require( d_fine_map != Teuchos::null );
+        REQUIRE( d_fine_map != Teuchos::null );
         return d_fine_map;
     }
     Teuchos::RCP<const Map_t> getRangeMap() const
     {
-        Require( d_coarse_map != Teuchos::null );
+        REQUIRE( d_coarse_map != Teuchos::null );
         return d_coarse_map;
     }
 

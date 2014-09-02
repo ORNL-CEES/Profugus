@@ -28,8 +28,8 @@ namespace profugus
 Mesh::size_type Mesh::convert(size_type i,
                               size_type j) const
 {
-    Require (static_cast<int>(i) < num_cells_dim(def::I) );
-    Require (static_cast<int>(j) < num_cells_dim(def::J) );
+    REQUIRE(static_cast<int>(i) < num_cells_dim(def::I) );
+    REQUIRE(static_cast<int>(j) < num_cells_dim(def::J) );
 
     return i + j * num_cells_dim(def::I);
 }
@@ -44,11 +44,11 @@ Mesh::size_type Mesh::convert(size_type i,
                               size_type j,
                               size_type k) const
 {
-    Require (static_cast<int>(i) < num_cells_dim(def::I) );
-    Require (static_cast<int>(j) < num_cells_dim(def::J) );
+    REQUIRE(static_cast<int>(i) < num_cells_dim(def::I) );
+    REQUIRE(static_cast<int>(j) < num_cells_dim(def::J) );
 
     // Allow 3 arguments for 2D mesh if k=0
-    Require ( d_dimension==3 ? static_cast<int>(k) < num_cells_dim(def::K) :
+    REQUIRE( d_dimension==3 ? static_cast<int>(k) < num_cells_dim(def::K) :
               k == 0 );
 
     return i + j * num_cells_dim(def::I)
@@ -63,7 +63,7 @@ Mesh::size_type Mesh::convert(size_type i,
  */
 Mesh::Dim_Vector Mesh::cardinal(size_type cell) const
 {
-    Require (cell < num_cells() );
+    REQUIRE(cell < num_cells() );
 
     Dim_Vector ijk;
     size_type index = cell;
@@ -87,7 +87,7 @@ Mesh::Dim_Vector Mesh::cardinal(size_type cell) const
  */
 double Mesh::volume(size_type cell) const
 {
-    Require (cell < num_cells());
+    REQUIRE(cell < num_cells());
 
     Dim_Vector ijk = cardinal(cell);
 
@@ -104,9 +104,9 @@ double Mesh::volume(size_type cell) const
  */
 Mesh::Space_Vector Mesh::block_widths() const
 {
-    Require(block_width(0) > 0.0);
-    Require(block_width(1) > 0.0);
-    Require(block_width(2) > 0.0);
+    REQUIRE(block_width(0) > 0.0);
+    REQUIRE(block_width(1) > 0.0);
+    REQUIRE(block_width(2) > 0.0);
 
     //creating Space_Vector to return
     return Space_Vector(block_width(0), block_width(1), block_width(2));
@@ -120,11 +120,11 @@ Mesh::Space_Vector Mesh::block_widths() const
  */
 double Mesh::width(size_type ijk, int dim) const
 {
-    Require (dim < 3);
-    Require (static_cast<int>(ijk) < num_cells_dim(dim));
+    REQUIRE(dim < 3);
+    REQUIRE(static_cast<int>(ijk) < num_cells_dim(dim));
 
-    Ensure (d_width[dim][ijk] > 0);
-    Ensure (profugus::soft_equiv(d_width[dim][ijk], d_edges[dim][ijk+1]
+    ENSURE(d_width[dim][ijk] > 0);
+    ENSURE(profugus::soft_equiv(d_width[dim][ijk], d_edges[dim][ijk+1]
                                  -d_edges[dim][ijk] ) );
     return d_width[dim][ijk];
 }
@@ -138,10 +138,10 @@ double Mesh::width(size_type ijk, int dim) const
 double Mesh::inv_width(size_type ijk,
                        int       dim) const
 {
-    Require (dim < 3);
-    Require (static_cast<int>(ijk) < num_cells_dim(dim));
+    REQUIRE(dim < 3);
+    REQUIRE(static_cast<int>(ijk) < num_cells_dim(dim));
 
-    Ensure (d_width[dim][ijk] > 0.0);
+    ENSURE(d_width[dim][ijk] > 0.0);
     return d_inv_width[dim][ijk];
 }
 
@@ -157,8 +157,8 @@ double Mesh::inv_width(size_type ijk,
 double Mesh::center(size_type ijk,
                     int       dim) const
 {
-    Require (dim < 3);
-    Require (static_cast<int>(ijk) < num_cells_dim(dim));
+    REQUIRE(dim < 3);
+    REQUIRE(static_cast<int>(ijk) < num_cells_dim(dim));
 
     return 0.5 * (d_edges[dim][ijk + 1] + d_edges[dim][ijk]);
 }

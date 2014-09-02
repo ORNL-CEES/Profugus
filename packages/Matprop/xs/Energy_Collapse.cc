@@ -26,10 +26,10 @@ Energy_Collapse::RCP_Mat_DB Energy_Collapse::collapse_all_mats(
     typedef Vec_Int::const_iterator mat_iter;
     typedef Mat_DB_t::XS_t          XS;
 
-    Require( fine_mat->xs().num_groups() == weights.size() );
-    Require( fine_mat->xs().num_groups() ==
+    REQUIRE( fine_mat->xs().num_groups() == weights.size() );
+    REQUIRE( fine_mat->xs().num_groups() ==
              std::accumulate(collapse_vec.begin(),collapse_vec.end(),0) );
-    Require( fine_mat->xs().num_groups() >= 2 );
+    REQUIRE( fine_mat->xs().num_groups() >= 2 );
 
     int fine_grps   = fine_mat->xs().num_groups();
     int coarse_grps = collapse_vec.size();

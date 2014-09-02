@@ -24,7 +24,7 @@ namespace profugus
 VR_Roulette::VR_Roulette(RCP_Std_DB db)
     : Base()
 {
-    Require (!db.is_null());
+    REQUIRE(!db.is_null());
 
     // Get default weight cutoffs and survival
     d_Wc = db->get("weight_cutoff", 0.25);
@@ -32,10 +32,10 @@ VR_Roulette::VR_Roulette(RCP_Std_DB db)
 
     b_splitting = false;
 
-    Validate(d_Wc >= 0, "Weight cutoff must be nonnegative "
+    VALIDATE(d_Wc >= 0, "Weight cutoff must be nonnegative "
             "(got weight_cutoff=" << d_Wc << ")");
 
-    Validate(d_Ws > 0 ? d_Ws > d_Wc : d_Wc == 0.,
+    VALIDATE(d_Ws > 0 ? d_Ws > d_Wc : d_Wc == 0.,
             "Survival weight must be greater than cutoff weight (got "
             "weight_cutoff=" << d_Wc << ", "
             "weight_survival=" << d_Ws << ")");
@@ -60,19 +60,19 @@ void VR_Roulette::post_collision(Particle_t& particle,
     if (orig_weight < d_Wc)
     {
         // the particle should always be alive if it gets here
-        Check (particle.alive());
-        Check (d_Ws >= d_Wc);
+        CHECK(particle.alive());
+        CHECK(d_Ws >= d_Wc);
 
         // calculate survival probablity
         const double survival = orig_weight / d_Ws;
-        Check (survival < 1.0);
+        CHECK(survival < 1.0);
 
         // particle survives roulette
         if (particle.rng().ran() < survival)
         {
             // set the new weight of the surviving particle
             particle.set_wt(d_Ws);
-            Check (particle.wt() == d_Ws);
+            CHECK(particle.wt() == d_Ws);
 
             // update the event
             particle.set_event(events::ROULETTE_SURVIVE);
@@ -95,7 +95,7 @@ void VR_Roulette::post_collision(Particle_t& particle,
         }
     }
 
-    Ensure (particle.wt() >= orig_weight);
+    ENSURE(particle.wt() >= orig_weight);
 }
 
 } // end namespace profugus

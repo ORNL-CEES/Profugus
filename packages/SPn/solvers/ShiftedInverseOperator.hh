@@ -89,9 +89,9 @@ class ShiftedInverseOperator<Epetra_MultiVector,Epetra_Operator>
     // Apply (solve linear system)
     int Apply(const MV &x, MV &y) const
     {
-        Require( !d_operator.is_null() );
-        Require( x.MyLength() == y.MyLength() );
-        Require( d_operator->OperatorDomainMap().NumMyElements()==x.MyLength() );
+        REQUIRE( !d_operator.is_null() );
+        REQUIRE( x.MyLength() == y.MyLength() );
+        REQUIRE( d_operator->OperatorDomainMap().NumMyElements()==x.MyLength() );
 
         d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
 
@@ -132,9 +132,9 @@ class ShiftedInverseOperator<Tpetra_MultiVector,Tpetra_Operator>
                Teuchos::ETransp mode=Teuchos::NO_TRANS,
                double alpha=1.0, double beta=0.0) const
     {
-        Require( !d_operator.is_null() );
-        Require( x.getLocalLength() == y.getLocalLength() );
-        Require( d_operator->getDomainMap()->getNodeNumElements() ==
+        REQUIRE( !d_operator.is_null() );
+        REQUIRE( x.getLocalLength() == y.getLocalLength() );
+        REQUIRE( d_operator->getDomainMap()->getNodeNumElements() ==
                  x.getLocalLength() );
 
         MV z(x,Teuchos::Copy);

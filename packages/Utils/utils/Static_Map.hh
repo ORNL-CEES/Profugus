@@ -129,8 +129,8 @@ class Static_Map
     Static_Map(const This& rhs)
     {
         *this = rhs;
-        Ensure(completed() == rhs.completed());
-        Ensure(size() == rhs.size());
+        ENSURE(completed() == rhs.completed());
+        ENSURE(size() == rhs.size());
     }
 
     // Assignment operator
@@ -140,8 +140,8 @@ class Static_Map
         d_items   = rhs.d_items;
         d_buckets = rhs.d_buckets;
 
-        Ensure(completed() == rhs.completed());
-        Ensure(size() == rhs.size());
+        ENSURE(completed() == rhs.completed());
+        ENSURE(size() == rhs.size());
         return *this;
     }
 
@@ -185,7 +185,7 @@ class Static_Map
      */
     size_type count(key_type key) const
     {
-        Require(this->completed());
+        REQUIRE(this->completed());
         return (exists(key) ? 1u : 0u);
     }
 
@@ -199,9 +199,9 @@ class Static_Map
         d_items.clear();
         d_buckets.clear();
 
-        Ensure(!completed());
-        Ensure(empty());
-        Ensure(d_hash.is_null());
+        ENSURE(!completed());
+        ENSURE(empty());
+        ENSURE(d_hash.is_null());
     }
 
     // Remove all entries from the hash table and set to "incomplete"
@@ -239,7 +239,7 @@ class Static_Map
     //! Number of buckets required to store the objects.
     size_type bucket_count() const
     {
-        Require(completed());
+        REQUIRE(completed());
         return d_buckets.size();
     }
 
@@ -258,8 +258,8 @@ class Static_Map
     // >>> HASH INTERFACE
     const hasher& hash_function() const
     {
-        Require(completed());
-        Ensure(!d_hash.is_null());
+        REQUIRE(completed());
+        ENSURE(!d_hash.is_null());
         return *d_hash;
     }
 

@@ -120,7 +120,7 @@ class ShiftedInverseTest: public ::testing::Test
 
         // Build solver
         d_operator = Teuchos::rcp(new ShiftInvOp(d_db));
-        Check(!d_operator.is_null());
+        CHECK(!d_operator.is_null());
     }
 
   protected:

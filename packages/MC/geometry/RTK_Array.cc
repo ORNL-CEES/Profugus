@@ -38,7 +38,7 @@ void RTK_Array<RTK_Cell>::determine_boundary_crossings(Geo_State_t &state)
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (d_level == 0);
+    REQUIRE(d_level == 0);
 
     switch (state.exiting_face)
     {
@@ -69,7 +69,7 @@ void RTK_Array<RTK_Cell>::determine_boundary_crossings(Geo_State_t &state)
             break;
         default:
             // otherwise we aren't at a surface crossing at all!
-            Validate(false, "Not at a valid pin-cell surface crossing.");
+            VALIDATE(false, "Not at a valid pin-cell surface crossing.");
     }
 }
 
@@ -82,15 +82,15 @@ template<>
 void RTK_Array<RTK_Cell>::update_coordinates(const Space_Vector &r,
                                              Geo_State_t        &state)
 {
-    Require (d_level == 0);
+    REQUIRE(d_level == 0);
 
     // if we exited the last pin-cell array, set the region coordinates in the
     // new array; for radial entrance (x,y), we must be entering the moderator
     // region
     if (state.exiting_face != Geo_State_t::INTERNAL)
     {
-        Check (state.exiting_face != Geo_State_t::NONE);
-        Check (state.region == Geo_State_t::VESSEL ?
+        CHECK(state.exiting_face != Geo_State_t::NONE);
+        CHECK(state.region == Geo_State_t::VESSEL ?
                object(state)->has_vessel() : true);
 
         // update the face of the state
@@ -104,7 +104,7 @@ void RTK_Array<RTK_Cell>::update_coordinates(const Space_Vector &r,
 
         // calculate the segment in the new pin-cell
         state.segment = object(state)->segment(tr[0], tr[1]);
-        Check (state.segment < object(state)->num_segments());
+        CHECK(state.segment < object(state)->num_segments());
 
         // update if crossing into pin cell from high or low Z-face or if the
         // adjoining cell has a vessel
@@ -132,7 +132,7 @@ void RTK_Array<RTK_Cell>::output(std::ostream &out,
     using std::right; using std::fixed; using std::setprecision;
     using def::I; using def::J; using def::K;
 
-    Require (d_level == 0);
+    REQUIRE(d_level == 0);
 
     out << "----------------------------------------"
         << "----------------------------------------" << endl;

@@ -159,7 +159,7 @@ bool Request::RequestRef::complete()
     if (flag != 0)
     {
         clear();
-        Check ( r == MPI_REQUEST_NULL);
+        CHECK( r == MPI_REQUEST_NULL);
         indicator = true;
     }
     return indicator;

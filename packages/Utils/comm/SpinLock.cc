@@ -46,9 +46,9 @@ SpinLock::SpinLock(int begin,
     , d_first(begin)
     , d_last(end - 1)
 {
-    Require (d_last - d_first >= 0);
-    Require (d_first >= 0 && d_first < d_nodes);
-    Require (d_last  >= 0 && d_last  < d_nodes);
+    REQUIRE(d_last - d_first >= 0);
+    REQUIRE(d_first >= 0 && d_first < d_nodes);
+    REQUIRE(d_last  >= 0 && d_last  < d_nodes);
 
     if (d_node > d_first)
         receive( &d_trash, 0, d_node - 1, SL_Next );

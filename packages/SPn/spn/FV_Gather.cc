@@ -41,11 +41,11 @@ FV_Gather::FV_Gather(RCP_Mesh                 mesh,
     // for now, only allow 1-block in Z
     Insist (mesh->block(K) == 1, "Only allow 1 Z-block in SPN.");
 
-    Require (!mesh.is_null());
-    Require (!coefficients.is_null());
-    Require (d_domain == d_ij[I] + d_ij[J] * d_Nb[I]);
-    Require (d_domains == d_Nb[I] * d_Nb[J]);
-    Require (d_domains == 1 ? d_ij[I] == 0 && d_ij[J] == 0 : true);
+    REQUIRE(!mesh.is_null());
+    REQUIRE(!coefficients.is_null());
+    REQUIRE(d_domain == d_ij[I] + d_ij[J] * d_Nb[I]);
+    REQUIRE(d_domains == d_Nb[I] * d_Nb[J]);
+    REQUIRE(d_domains == 1 ? d_ij[I] == 0 && d_ij[J] == 0 : true);
 
     // number of groups
     int Ng = d_coefficients->num_groups();
@@ -68,8 +68,8 @@ FV_Gather::FV_Gather(RCP_Mesh                 mesh,
         d_incoming_I[LO] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, X, Ng));
         d_outgoing_I[LO] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, X, Ng));
 
-        Check (d_neighbor_I[LO] < d_domains);
-        Check (d_neighbor_I[LO] >= 0);
+        CHECK(d_neighbor_I[LO] < d_domains);
+        CHECK(d_neighbor_I[LO] >= 0);
     }
     if (d_ij[I] < last_I)
     {
@@ -77,8 +77,8 @@ FV_Gather::FV_Gather(RCP_Mesh                 mesh,
         d_incoming_I[HI] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, X, Ng));
         d_outgoing_I[HI] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, X, Ng));
 
-        Check (d_neighbor_I[HI] < d_domains);
-        Check (d_neighbor_I[HI] >= 0);
+        CHECK(d_neighbor_I[HI] < d_domains);
+        CHECK(d_neighbor_I[HI] >= 0);
     }
     if (d_ij[J] > first)
     {
@@ -86,8 +86,8 @@ FV_Gather::FV_Gather(RCP_Mesh                 mesh,
         d_incoming_J[LO] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, Y, Ng));
         d_outgoing_J[LO] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, Y, Ng));
 
-        Check (d_neighbor_J[LO] < d_domains);
-        Check (d_neighbor_J[LO] >= 0);
+        CHECK(d_neighbor_J[LO] < d_domains);
+        CHECK(d_neighbor_J[LO] >= 0);
     }
     if (d_ij[J] < last_J)
     {
@@ -95,18 +95,18 @@ FV_Gather::FV_Gather(RCP_Mesh                 mesh,
         d_incoming_J[HI] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, Y, Ng));
         d_outgoing_J[HI] = Teuchos::rcp(new SDM_Face_Field(*d_mesh, Y, Ng));
 
-        Check (d_neighbor_J[HI] < d_domains);
-        Check (d_neighbor_J[HI] >= 0);
+        CHECK(d_neighbor_J[HI] < d_domains);
+        CHECK(d_neighbor_J[HI] >= 0);
     }
 
-    Ensure (d_domains == 1 ? d_incoming_I[LO].is_null() : true);
-    Ensure (d_domains == 1 ? d_incoming_J[LO].is_null() : true);
-    Ensure (d_domains == 1 ? d_incoming_I[HI].is_null() : true);
-    Ensure (d_domains == 1 ? d_incoming_J[HI].is_null() : true);
-    Ensure (d_domains == 1 ? d_neighbor_I[LO] == PROBLEM_BOUNDARY : true);
-    Ensure (d_domains == 1 ? d_neighbor_J[LO] == PROBLEM_BOUNDARY : true);
-    Ensure (d_domains == 1 ? d_neighbor_I[HI] == PROBLEM_BOUNDARY : true);
-    Ensure (d_domains == 1 ? d_neighbor_J[HI] == PROBLEM_BOUNDARY : true);
+    ENSURE(d_domains == 1 ? d_incoming_I[LO].is_null() : true);
+    ENSURE(d_domains == 1 ? d_incoming_J[LO].is_null() : true);
+    ENSURE(d_domains == 1 ? d_incoming_I[HI].is_null() : true);
+    ENSURE(d_domains == 1 ? d_incoming_J[HI].is_null() : true);
+    ENSURE(d_domains == 1 ? d_neighbor_I[LO] == PROBLEM_BOUNDARY : true);
+    ENSURE(d_domains == 1 ? d_neighbor_J[LO] == PROBLEM_BOUNDARY : true);
+    ENSURE(d_domains == 1 ? d_neighbor_I[HI] == PROBLEM_BOUNDARY : true);
+    ENSURE(d_domains == 1 ? d_neighbor_J[HI] == PROBLEM_BOUNDARY : true);
 }
 
 //---------------------------------------------------------------------------//
@@ -121,7 +121,7 @@ void FV_Gather::gather(int eqn)
 {
     using def::I; using def::J; using def::PROBLEM_BOUNDARY;
 
-    Require (eqn >= 0 && eqn < Dimensions::max_num_equations());
+    REQUIRE(eqn >= 0 && eqn < Dimensions::max_num_equations());
 
     // return immediately if only running on 1 domain (although it works
     // without this, we use if for efficiency only)
@@ -139,16 +139,16 @@ void FV_Gather::gather(int eqn)
     // send out data on low sides
     if (!d_outgoing_I[LO].is_null())
     {
-        Check (!d_incoming_I[LO].is_null());
-        Check (d_neighbor_I[LO] != PROBLEM_BOUNDARY);
+        CHECK(!d_incoming_I[LO].is_null());
+        CHECK(d_neighbor_I[LO] != PROBLEM_BOUNDARY);
         profugus::send(
             d_outgoing_I[LO]->data_pointer(), d_outgoing_I[LO]->data_size(),
             d_neighbor_I[LO], 452);
     }
     if (!d_outgoing_J[LO].is_null())
     {
-        Check (!d_incoming_J[LO].is_null());
-        Check (d_neighbor_J[LO] != PROBLEM_BOUNDARY);
+        CHECK(!d_incoming_J[LO].is_null());
+        CHECK(d_neighbor_J[LO] != PROBLEM_BOUNDARY);
         profugus::send(
             d_outgoing_J[LO]->data_pointer(), d_outgoing_J[LO]->data_size(),
             d_neighbor_J[LO], 453);
@@ -157,16 +157,16 @@ void FV_Gather::gather(int eqn)
     // send out data on high sides
     if (!d_outgoing_I[HI].is_null())
     {
-        Check (!d_incoming_I[HI].is_null());
-        Check (d_neighbor_I[HI] != PROBLEM_BOUNDARY);
+        CHECK(!d_incoming_I[HI].is_null());
+        CHECK(d_neighbor_I[HI] != PROBLEM_BOUNDARY);
         profugus::send(
             d_outgoing_I[HI]->data_pointer(), d_outgoing_I[HI]->data_size(),
             d_neighbor_I[HI], 450);
     }
     if (!d_outgoing_J[HI].is_null())
     {
-        Check (!d_incoming_J[HI].is_null());
-        Check (d_neighbor_J[HI] != PROBLEM_BOUNDARY);
+        CHECK(!d_incoming_J[HI].is_null());
+        CHECK(d_neighbor_J[HI] != PROBLEM_BOUNDARY);
         profugus::send(
             d_outgoing_J[HI]->data_pointer(), d_outgoing_J[HI]->data_size(),
             d_neighbor_J[HI], 451);
@@ -178,10 +178,10 @@ void FV_Gather::gather(int eqn)
     d_request_J[LO].wait();
     d_request_J[HI].wait();
 
-    Ensure (!d_request_I[LO].inuse());
-    Ensure (!d_request_I[HI].inuse());
-    Ensure (!d_request_J[LO].inuse());
-    Ensure (!d_request_J[HI].inuse());
+    ENSURE(!d_request_I[LO].inuse());
+    ENSURE(!d_request_I[HI].inuse());
+    ENSURE(!d_request_J[LO].inuse());
+    ENSURE(!d_request_J[HI].inuse());
 }
 
 //---------------------------------------------------------------------------//
@@ -197,7 +197,7 @@ FV_Gather::RCP_Face_Field FV_Gather::low_side_D(int face) const
 {
     using def::I; using def::J; using def::K;
 
-    Require (face < K);
+    REQUIRE(face < K);
 
     // return the appropriate field
     if (face == I)
@@ -220,7 +220,7 @@ FV_Gather::RCP_Face_Field FV_Gather::high_side_D(int face) const
 {
     using def::I; using def::J; using def::K;
 
-    Require (face < K);
+    REQUIRE(face < K);
 
     // return the appropriate field
     if (face == I)
@@ -238,24 +238,24 @@ FV_Gather::RCP_Face_Field FV_Gather::high_side_D(int face) const
  */
 void FV_Gather::post_receives()
 {
-    Require (!d_request_I[LO].inuse());
-    Require (!d_request_I[HI].inuse());
-    Require (!d_request_J[LO].inuse());
-    Require (!d_request_J[HI].inuse());
+    REQUIRE(!d_request_I[LO].inuse());
+    REQUIRE(!d_request_I[HI].inuse());
+    REQUIRE(!d_request_J[LO].inuse());
+    REQUIRE(!d_request_J[HI].inuse());
 
     // post receives on this block
 
     // low sides
     if (!d_incoming_I[LO].is_null())
     {
-        Check (!d_outgoing_I[LO].is_null());
+        CHECK(!d_outgoing_I[LO].is_null());
         profugus::receive_async(
             d_request_I[LO], d_incoming_I[LO]->data_pointer(),
             d_incoming_I[LO]->data_size(), d_neighbor_I[LO], 450);
     }
     if (!d_incoming_J[LO].is_null())
     {
-        Check (!d_outgoing_J[LO].is_null());
+        CHECK(!d_outgoing_J[LO].is_null());
         profugus::receive_async(
             d_request_J[LO], d_incoming_J[LO]->data_pointer(),
             d_incoming_J[LO]->data_size(), d_neighbor_J[LO], 451);
@@ -264,14 +264,14 @@ void FV_Gather::post_receives()
     // high sides
     if (!d_incoming_I[HI].is_null())
     {
-        Check (!d_outgoing_I[HI].is_null());
+        CHECK(!d_outgoing_I[HI].is_null());
         profugus::receive_async(
             d_request_I[HI], d_incoming_I[HI]->data_pointer(),
             d_incoming_I[HI]->data_size(), d_neighbor_I[HI], 452);
     }
     if (!d_incoming_J[HI].is_null())
     {
-        Check (!d_outgoing_J[HI].is_null());
+        CHECK(!d_outgoing_J[HI].is_null());
         profugus::receive_async(
             d_request_J[HI], d_incoming_J[HI]->data_pointer(),
             d_incoming_J[HI]->data_size(), d_neighbor_J[HI], 453);
@@ -292,8 +292,8 @@ void FV_Gather::fill_I_face(int            eqn,
     // here
     if (field.is_null()) return;
 
-    Require (field->abscissa() == d_mesh->num_cells_dim(J));
-    Require (field->ordinate() == d_mesh->num_cells_dim(K));
+    REQUIRE(field->abscissa() == d_mesh->num_cells_dim(J));
+    REQUIRE(field->ordinate() == d_mesh->num_cells_dim(K));
 
     // loop through cells and build the diffusion coefficients and assign them
     // to the face field
@@ -324,8 +324,8 @@ void FV_Gather::fill_J_face(int            eqn,
     // here
     if (field.is_null()) return;
 
-    Require (field->abscissa() == d_mesh->num_cells_dim(I));
-    Require (field->ordinate() == d_mesh->num_cells_dim(K));
+    REQUIRE(field->abscissa() == d_mesh->num_cells_dim(I));
+    REQUIRE(field->ordinate() == d_mesh->num_cells_dim(K));
 
     // loop through cells and build the diffusion coefficients and assign them
     // to the face field

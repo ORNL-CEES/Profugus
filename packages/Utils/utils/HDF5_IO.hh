@@ -253,7 +253,7 @@ class HDF5_IO
     // Access the current location (top of the stack)
     hid_t current_loc() const
     {
-        Require(!b_loc_stack.empty());
+        REQUIRE(!b_loc_stack.empty());
         return b_loc_stack.back().handle;
     }
 };

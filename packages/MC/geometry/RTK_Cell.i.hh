@@ -25,7 +25,7 @@ int RTK_Cell::segment(double x,
 {
     using def::X; using def::Y;
 
-    Require (d_segments == 1 || d_segments == 4);
+    REQUIRE(d_segments == 1 || d_segments == 4);
 
     // search segments
     if (d_segments == 4)
@@ -58,12 +58,12 @@ int RTK_Cell::segment(double x,
 int RTK_Cell::cell(int region,
                    int segment) const
 {
-    Require (d_num_regions > 0);
-    Require (region < d_num_regions);
-    Require (segment < d_segments);
-    Require (d_segments == 1 || d_segments == 4);
+    REQUIRE(d_num_regions > 0);
+    REQUIRE(region < d_num_regions);
+    REQUIRE(segment < d_segments);
+    REQUIRE(d_segments == 1 || d_segments == 4);
 
-    Ensure (region + d_num_regions * segment < d_num_cells);
+    ENSURE(region + d_num_regions * segment < d_num_cells);
     return region + d_num_regions * segment;
 }
 
@@ -73,8 +73,8 @@ int RTK_Cell::cell(int region,
  */
 int RTK_Cell::matid(int region) const
 {
-    Require (d_num_regions > 0);
-    Require (!d_vessel ? region >= 0 && region < d_num_regions :
+    REQUIRE(d_num_regions > 0);
+    REQUIRE(!d_vessel ? region >= 0 && region < d_num_regions :
              region == Geo_State_t::MODERATOR || region == Geo_State_t::VESSEL);
 
     // return if region is in the shells
@@ -84,7 +84,7 @@ int RTK_Cell::matid(int region) const
     // return the vessel-id if the region is vessel
     if (region == Geo_State_t::VESSEL)
     {
-        Check (d_vessel);
+        CHECK(d_vessel);
         return d_vessel_id;
     }
 
@@ -114,7 +114,7 @@ void RTK_Cell::dist_to_radial_face(int          axis,
         d_db   = (d_extent[axis][LO] - p) / dir;
         d_face = Geo_State_t::minus_face[axis];
     }
-    Check (d_db >= 0.0);
+    CHECK(d_db >= 0.0);
 
     // updated distance to boundary info
     if (d_db < state.dist_to_next_region)
@@ -144,7 +144,7 @@ void RTK_Cell::dist_to_axial_face(double       p,
         d_db   = -p / dir;
         d_face = Geo_State_t::MINUS_Z;
     }
-    Check (d_db >= 0.0);
+    CHECK(d_db >= 0.0);
 
     // updated distance to boundary info
     if (d_db < state.dist_to_next_region)

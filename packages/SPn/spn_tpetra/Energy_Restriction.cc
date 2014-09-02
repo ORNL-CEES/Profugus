@@ -32,12 +32,12 @@ Energy_Restriction::Energy_Restriction(
 {
     d_fine_groups = std::accumulate(steer_vec.begin(),steer_vec.end(),0);
     d_coarse_groups = steer_vec.size();
-    Check( d_fine_groups > d_coarse_groups );
+    CHECK( d_fine_groups > d_coarse_groups );
 
     // Determine energy-independent size of vector
-    Check( fine_vec->getLocalLength()%d_fine_groups==0 );
+    CHECK( fine_vec->getLocalLength()%d_fine_groups==0 );
     d_unks_per_grp   = fine_vec->getLocalLength() / d_fine_groups;
-    Ensure( coarse_vec->getLocalLength()==d_unks_per_grp*d_coarse_groups );
+    ENSURE( coarse_vec->getLocalLength()==d_unks_per_grp*d_coarse_groups );
 }
 
 //---------------------------------------------------------------------------//
@@ -47,13 +47,13 @@ Energy_Restriction::Energy_Restriction(
 void Energy_Restriction::apply( const MV &fine_vectors, MV &coarse_vectors,
         Teuchos::ETransp mode, double alpha, double beta ) const
 {
-    Require( alpha == 1.0 );
-    Require( beta  == 0.0 );
-    Require( fine_vectors.getLocalLength()   == d_fine_groups*d_unks_per_grp );
-    Require( coarse_vectors.getLocalLength() == d_coarse_groups*d_unks_per_grp );
+    REQUIRE( alpha == 1.0 );
+    REQUIRE( beta  == 0.0 );
+    REQUIRE( fine_vectors.getLocalLength()   == d_fine_groups*d_unks_per_grp );
+    REQUIRE( coarse_vectors.getLocalLength() == d_coarse_groups*d_unks_per_grp );
 
     int num_vectors = fine_vectors.getNumVectors();
-    Check( coarse_vectors.getNumVectors()==num_vectors );
+    CHECK( coarse_vectors.getNumVectors()==num_vectors );
 
     coarse_vectors.putScalar(0.0);
 

@@ -65,14 +65,14 @@ class Mat_DB
     //! Mutable access to the material id.
     int& matid(int cell)
     {
-        Require (cell < d_matids.size());
+        REQUIRE(cell < d_matids.size());
         return d_matids[cell];
     }
 
     //! Constant access to the material id.
     int matid(int cell) const
     {
-        Require (cell < d_matids.size());
+        REQUIRE(cell < d_matids.size());
         return d_matids[cell];
     }
 
@@ -82,7 +82,7 @@ class Mat_DB
     // >>> ACCESSORS
 
     //! Get the cross section database.
-    const XS_t& xs() const { Require (!d_xs.is_null()); return *d_xs; }
+    const XS_t& xs() const { REQUIRE(!d_xs.is_null()); return *d_xs; }
 
     //! Get the matids.
     const Vec_Int& matids() const { return d_matids; }

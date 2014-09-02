@@ -28,7 +28,7 @@ namespace profugus
 template<class Key, class T, class Hash>
 void Static_Map<Key,T,Hash>::insert(const value_type& value)
 {
-    Require(!completed());
+    REQUIRE(!completed());
 
     d_items.push_back(value);
 }
@@ -48,19 +48,19 @@ void Static_Map<Key,T,Hash>::insert(const value_type& value)
 template<class Key, class T, class Hash>
 void Static_Map<Key,T,Hash>::complete()
 {
-    Require(!completed());
+    REQUIRE(!completed());
 
     // Create the hash using the number of objects in the hash table
     d_hash = Teuchos::rcp(new Hash(d_items.size()));
 
     // Create empty buckets (begin == end)
-    Check(!d_hash.is_null());
+    CHECK(!d_hash.is_null());
     d_buckets.assign(d_hash->num_buckets(), Pair_Size(0, 0));
 
     if (d_items.empty())
     {
-        Ensure(completed());
-        Ensure(empty());
+        ENSURE(completed());
+        ENSURE(empty());
         return;
     }
 
@@ -73,19 +73,19 @@ void Static_Map<Key,T,Hash>::complete()
     key_type  prev_key   = d_items[0].first;
     size_type prev_hash  = d_hash->hash(prev_key);
 
-    Check(prev_hash < d_buckets.size());
+    CHECK(prev_hash < d_buckets.size());
 
     for (size_type i = 1; i < d_items.size(); ++i)
     {
         const key_type this_key = d_items[i].first;
-        Validate(this_key != prev_key, "Duplicate entry " << this_key
+        VALIDATE(this_key != prev_key, "Duplicate entry " << this_key
                 << " in static hash table.");
 
         const size_type this_hash = d_hash->hash(this_key);
         if (this_hash == prev_hash)
             continue;
 
-        Check(this_hash > prev_hash);
+        CHECK(this_hash > prev_hash);
 
         // If different hash, the last bucket has ended...
         d_buckets[prev_hash].second = i;
@@ -97,7 +97,7 @@ void Static_Map<Key,T,Hash>::complete()
     // Add the final bucket 'end' index
     d_buckets[prev_hash].second = d_items.size();
 
-    Ensure(completed());
+    ENSURE(completed());
 }
 
 //---------------------------------------------------------------------------//
@@ -112,8 +112,8 @@ void Static_Map<Key,T,Hash>::complete()
 template<class Key, class T, class Hash>
 const T& Static_Map<Key,T,Hash>::operator[](key_type key) const
 {
-    Require(completed());
-    Require(exists(key));
+    REQUIRE(completed());
+    REQUIRE(exists(key));
 
     const_iterator iter = d_items.begin() + d_buckets[d_hash->hash(key)].first;
     do
@@ -142,8 +142,8 @@ const T& Static_Map<Key,T,Hash>::operator[](key_type key) const
 template<class Key, class T, class Hash>
 T& Static_Map<Key,T,Hash>::operator[](key_type key)
 {
-    Require(completed());
-    Require(exists(key));
+    REQUIRE(completed());
+    REQUIRE(exists(key));
 
     iterator iter = d_items.begin() + d_buckets[d_hash->hash(key)].first;
     do
@@ -172,7 +172,7 @@ template<class Key, class T, class Hash>
 typename Static_Map<Key,T,Hash>::const_iterator
 Static_Map<Key,T,Hash>::find(key_type key) const
 {
-    Require(completed());
+    REQUIRE(completed());
 
     const Pair_Size begend = d_buckets[d_hash->hash(key)];
 
@@ -210,8 +210,8 @@ template<class Key, class T, class Hash>
 typename Static_Map<Key,T,Hash>::size_type
 Static_Map<Key,T,Hash>::bucket_size(size_type bucket_id) const
 {
-    Require(completed());
-    Require(bucket_id < d_buckets.size());
+    REQUIRE(completed());
+    REQUIRE(bucket_id < d_buckets.size());
 
     const Pair_Size& begend = d_buckets[bucket_id];
 
@@ -234,7 +234,7 @@ Static_Map<Key,T,Hash>::max_items_per_bucket() const
     for (typename Vec_Pair_Size::const_iterator iter = d_buckets.begin();
          iter != d_buckets.end(); ++iter)
     {
-        Check(iter->second >= iter->first);
+        CHECK(iter->second >= iter->first);
         n = std::max(n, iter->second - iter->first);
     }
     return n;

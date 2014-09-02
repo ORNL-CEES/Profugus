@@ -52,11 +52,11 @@ Moment_Coefficients::Moment_Coefficients(RCP_ParameterList db,
     , d_work(d_Ng)
     , d_ipiv(d_Ng)
 {
-    Require (!d_dim.is_null());
-    Require (!d_mat.is_null());
-    Require (d_c.size() == 4);
-    Require (d_c[0].size() == 4);
-    Require (d_c[0][0].size() == 4);
+    REQUIRE(!d_dim.is_null());
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(d_c.size() == 4);
+    REQUIRE(d_c[0].size() == 4);
+    REQUIRE(d_c[0][0].size() == 4);
 
     // map of equation-moment order for diffusion coefficients
     d_d[0] = 1;
@@ -159,7 +159,7 @@ Moment_Coefficients::Moment_Coefficients(RCP_ParameterList db,
     // compare across all domains
     profugus::global_min(d_min_moments);
 
-    Ensure (d_min_moments > 0);
+    ENSURE(d_min_moments > 0);
 
     // Determine of Pn correction should be performed
     if( db->isParameter("Pn_correction") )
@@ -167,7 +167,7 @@ Moment_Coefficients::Moment_Coefficients(RCP_ParameterList db,
 
     // Build hash table for Sigma
     d_Sigma = Teuchos::rcp(new Hash_Table);
-    Check (!d_Sigma.is_null());
+    CHECK(!d_Sigma.is_null());
 
     // set the number of moments
     int num_mom = d_dim->num_moments();
@@ -175,7 +175,7 @@ Moment_Coefficients::Moment_Coefficients(RCP_ParameterList db,
     // get the material ids from the database
     Vec_Int mats;
     d_mat->xs().get_matids(mats);
-    Check (mats.size() > 0);
+    CHECK(mats.size() > 0);
 
     // iterate through materials in the database and add them to the
     // hash-table
@@ -191,7 +191,7 @@ Moment_Coefficients::Moment_Coefficients(RCP_ParameterList db,
 
     // complete the hash-table
     d_Sigma->complete();
-    Check (d_Sigma->size() == num_mom * mats.size());
+    CHECK(d_Sigma->size() == num_mom * mats.size());
 }
 
 //---------------------------------------------------------------------------//
@@ -223,12 +223,12 @@ void Moment_Coefficients::make_Sigma(int            n,
                                      int            matid,
                                      Serial_Matrix &S)
 {
-    Require (!d_mat.is_null());
-    Require (n >= 0 && n < d_dim->num_moments());
-    Require (d_mat->xs().has(matid));
-    Require (S.numRows() == S.numCols());
-    Require (S.numRows() == d_Ng);
-    Require (d_mat->xs().num_groups() == d_Ng);
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(n >= 0 && n < d_dim->num_moments());
+    REQUIRE(d_mat->xs().has(matid));
+    REQUIRE(S.numRows() == S.numCols());
+    REQUIRE(S.numRows() == d_Ng);
+    REQUIRE(d_mat->xs().num_groups() == d_Ng);
 
     // assign the matrix to 0.0
     S.putScalar(0.0);
@@ -238,13 +238,13 @@ void Moment_Coefficients::make_Sigma(int            n,
 
     // get the total cross sections for this mat
     const Vector &total = xs.vector(matid, XS_t::TOTAL);
-    Check (total.length() == d_Ng);
+    CHECK(total.length() == d_Ng);
 
     // put the group totals on the diagonal
     for (int g = 0; g < d_Ng; ++g)
     {
         S(g, g) = total(g);
-        Check (S(g, g) >= 0.0);
+        CHECK(S(g, g) >= 0.0);
     }
 
     // add 1/vdT to diagonal for time-dependent problems
@@ -252,16 +252,16 @@ void Moment_Coefficients::make_Sigma(int            n,
     {
         // get group velocities
         const auto &v = d_mat->xs().velocities();
-        Check (v.length() == d_Ng);
+        CHECK(v.length() == d_Ng);
 
         double inv_dt = 1.0 / d_dt->dt();
 
         // put the group totals on the diagonal
         for (int g = 0; g < d_Ng; ++g)
         {
-            Check (v(g) > 0.0);
+            CHECK(v(g) > 0.0);
             S(g, g) += 1.0 / v(g) * inv_dt;
-            Check (S(g, g) >= 0.0);
+            CHECK(S(g, g) >= 0.0);
         }
     }
 
@@ -312,18 +312,18 @@ void Moment_Coefficients::make_D(int            n,
                                  int            cell,
                                  Serial_Matrix &D)
 {
-    Require (!d_mat.is_null());
-    Require (n >= 0 && n < d_dim->num_equations());
-    Require (cell < d_mat->num_cells());
-    Require (D.numRows() == D.numCols());
-    Require (D.numRows() == d_Ng);
-    Require (d_mat->xs().num_groups() == d_Ng);
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(n >= 0 && n < d_dim->num_equations());
+    REQUIRE(cell < d_mat->num_cells());
+    REQUIRE(D.numRows() == D.numCols());
+    REQUIRE(D.numRows() == d_Ng);
+    REQUIRE(d_mat->xs().num_groups() == d_Ng);
 
     // first get sigma for this diffusion coefficient
     int matid = d_mat->matid(cell);
-    Check( d_Sigma->exists(to_size_type(d_d[n],matid)) );
+    CHECK( d_Sigma->exists(to_size_type(d_d[n],matid)) );
     Teuchos::RCP<Serial_Matrix> S = d_Sigma->at(to_size_type(d_d[n],matid));
-    Check( !S.is_null() );
+    CHECK( !S.is_null() );
     D.assign(*S);
 
     if( !d_outscatter_correction )
@@ -331,12 +331,12 @@ void Moment_Coefficients::make_D(int            n,
         // LU decomposition
         d_lapack.GETRF(d_Ng, d_Ng, D.values(), D.stride(), &d_ipiv[0],
                        &d_info);
-        Check (d_info == 0);
+        CHECK(d_info == 0);
 
         // inverse
         d_lapack.GETRI(d_Ng, D.values(), D.stride(), &d_ipiv[0], &d_work[0],
                        d_Ng, &d_info);
-        Check (d_info == 0);
+        CHECK(d_info == 0);
     }
     else
     {
@@ -421,20 +421,20 @@ void Moment_Coefficients::make_A(int            n,
                                  int            cell,
                                  Serial_Matrix &A)
 {
-    Require (!d_mat.is_null());
-    Require (n >= 0 && n < d_dim->num_equations());
-    Require (m >= 0 && m < d_dim->num_equations());
-    Require (cell < d_mat->num_cells());
-    Require (A.numRows() == A.numCols());
-    Require (A.numRows() == d_Ng);
-    Require (d_mat->xs().num_groups() == d_Ng);
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(n >= 0 && n < d_dim->num_equations());
+    REQUIRE(m >= 0 && m < d_dim->num_equations());
+    REQUIRE(cell < d_mat->num_cells());
+    REQUIRE(A.numRows() == A.numCols());
+    REQUIRE(A.numRows() == d_Ng);
+    REQUIRE(d_mat->xs().num_groups() == d_Ng);
 
     // initialize A to the first term in each series entry (Sigma_0)
     int matid = d_mat->matid(cell);
 
-    Check( d_Sigma->exists(to_size_type(0,matid)) );
+    CHECK( d_Sigma->exists(to_size_type(0,matid)) );
     Teuchos::RCP<Serial_Matrix> S = d_Sigma->at(to_size_type(0,matid));
-    Check( !S.is_null() );
+    CHECK( !S.is_null() );
     A.assign(*S);
 
     A *= d_c[n][m][0];
@@ -447,9 +447,9 @@ void Moment_Coefficients::make_A(int            n,
         if (std::fabs(d_c[n][m][k]) > 0.0)
         {
             // make sigma for this iterate in a work matrix
-            Check( d_Sigma->exists(to_size_type(d_a[k],matid)) );
+            CHECK( d_Sigma->exists(to_size_type(d_a[k],matid)) );
             S = d_Sigma->at(to_size_type(d_a[k],matid));
-            Check( !S.is_null() );
+            CHECK( !S.is_null() );
             d_W = *S;
 
             // multiply by the scalar coefficient
@@ -511,10 +511,10 @@ void Moment_Coefficients::make_B(int            n,
                                  int            m,
                                  Serial_Matrix &B)
 {
-    Require (n >= 0 && n < d_dim->num_equations());
-    Require (m >= 0 && m < d_dim->num_equations());
-    Require (B.numRows() == B.numCols());
-    Require (B.numRows() == d_Ng);
+    REQUIRE(n >= 0 && n < d_dim->num_equations());
+    REQUIRE(m >= 0 && m < d_dim->num_equations());
+    REQUIRE(B.numRows() == B.numCols());
+    REQUIRE(B.numRows() == d_Ng);
 
     // add the appropriate cofficient to the diagonal
     B.putScalar(0.0);
@@ -577,13 +577,13 @@ void Moment_Coefficients::make_F(int            n,
                                  int            cell,
                                  Serial_Matrix &F)
 {
-    Require (!d_mat.is_null());
-    Require (n >= 0 && n < d_dim->num_equations());
-    Require (m >= 0 && m < d_dim->num_equations());
-    Require (cell < d_mat->num_cells());
-    Require (F.numRows() == F.numCols());
-    Require (F.numRows() == d_Ng);
-    Require (d_mat->xs().num_groups() == d_Ng);
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(n >= 0 && n < d_dim->num_equations());
+    REQUIRE(m >= 0 && m < d_dim->num_equations());
+    REQUIRE(cell < d_mat->num_cells());
+    REQUIRE(F.numRows() == F.numCols());
+    REQUIRE(F.numRows() == d_Ng);
+    REQUIRE(d_mat->xs().num_groups() == d_Ng);
 
     // initialize F
     F.putScalar(0.0);
@@ -601,8 +601,8 @@ void Moment_Coefficients::make_F(int            n,
     // fission in this material)
     const Vector &nusigf = xs.vector(matid, XS_t::NU_SIG_F);
     const Vector &chi    = xs.vector(matid, XS_t::CHI);
-    Check (nusigf.length() == d_Ng);
-    Check (chi.length() == d_Ng);
+    CHECK(nusigf.length() == d_Ng);
+    CHECK(chi.length() == d_Ng);
 
     // loop over the rows of F
     for (int g = 0; g < d_Ng; ++g)

@@ -34,7 +34,7 @@ Mat_DB::Mat_DB()
 void Mat_DB::set(RCP_XS xs,
                  int    nc)
 {
-    Require (!xs.is_null());
+    REQUIRE(!xs.is_null());
 
     // cross section database
     d_xs = xs;
@@ -57,7 +57,7 @@ void Mat_DB::set(RCP_XS xs,
  */
 void Mat_DB::assign(const Vec_Int &matids)
 {
-    Require (!matids.empty());
+    REQUIRE(!matids.empty());
     d_matids = matids;
 }
 

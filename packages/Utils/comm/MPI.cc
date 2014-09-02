@@ -47,7 +47,7 @@ bool initialized = false;
 void set_default(const Communicator_t& comm)
 {
     int result = MPI_Comm_dup(comm, &default_communicator);
-    Ensure (result == MPI_SUCCESS);
+    ENSURE(result == MPI_SUCCESS);
 
     reset_internal_comm();
 }
@@ -57,7 +57,7 @@ void set_default(const Communicator_t& comm)
 void inherit(const Communicator_t& comm)
 {
     int result = MPI_Comm_dup(comm, &communicator);
-    Ensure (result == MPI_SUCCESS);
+    ENSURE(result == MPI_SUCCESS);
 }
 
 //---------------------------------------------------------------------------//
@@ -68,7 +68,7 @@ void split(
         Communicator_t& new_comm)
 {
     int result = MPI_Comm_split(communicator, color, key, &new_comm);
-    Ensure (result == MPI_SUCCESS);
+    ENSURE(result == MPI_SUCCESS);
 }
 
 //---------------------------------------------------------------------------//
@@ -80,7 +80,7 @@ void split(
         const Communicator_t& comm)
 {
     int result = MPI_Comm_split(comm, color, key, &new_comm);
-    Ensure (result == MPI_SUCCESS);
+    ENSURE(result == MPI_SUCCESS);
 }
 
 //---------------------------------------------------------------------------//
@@ -88,7 +88,7 @@ void split(
 void duplicate_comm(Communicator_t& new_comm, const Communicator_t& comm)
 {
     int result = MPI_Comm_dup(comm, &new_comm);
-    Ensure (result == MPI_SUCCESS);
+    ENSURE(result == MPI_SUCCESS);
 }
 
 //---------------------------------------------------------------------------//
@@ -96,7 +96,7 @@ void duplicate_comm(Communicator_t& new_comm, const Communicator_t& comm)
 void free_comm(Communicator_t& comm)
 {
     int result = MPI_Comm_free(&comm);
-    Ensure (result == MPI_SUCCESS);
+    ENSURE(result == MPI_SUCCESS);
 }
 
 //---------------------------------------------------------------------------//
@@ -112,7 +112,7 @@ void initialize(int &argc, char **&argv)
 {
     int result = MPI_Init(&argc, &argv);
     initialized = (result == MPI_SUCCESS);
-    Check( initialized );
+    CHECK( initialized );
 
     // Resync clocks for Darwin mpich
     MPI_Wtick();
@@ -164,7 +164,7 @@ int node()
 {
     int node = 0;
     MPI_Comm_rank(communicator, &node);
-    Check (node >= 0);
+    CHECK(node >= 0);
     return node;
 }
 
@@ -174,7 +174,7 @@ int nodes()
 {
     int nodes = 0;
     MPI_Comm_size(communicator, &nodes);
-    Check (nodes > 0);
+    CHECK(nodes > 0);
     return nodes;
 }
 
@@ -184,7 +184,7 @@ int node(const Communicator_t& comm)
 {
     int node = 0;
     MPI_Comm_rank(comm, &node);
-    Check (node >= 0);
+    CHECK(node >= 0);
     return node;
 }
 
@@ -194,7 +194,7 @@ int nodes(const Communicator_t& comm)
 {
     int nodes = 0;
     MPI_Comm_size(comm, &nodes);
-    Check (nodes > 0);
+    CHECK(nodes > 0);
     return nodes;
 }
 
@@ -270,7 +270,7 @@ bool probe(int  source,
            int  tag,
            int &message_size)
 {
-    Require(source>=0 && source<nodes());
+    REQUIRE(source>=0 && source<nodes());
 
     int flag;
     MPI_Status status;
@@ -291,7 +291,7 @@ void blocking_probe(int  source,
                     int  tag,
                     int &message_size)
 {
-    Require(source>=0 && source<nodes());
+    REQUIRE(source>=0 && source<nodes());
 
     MPI_Status status;
     MPI_Probe(source, tag, communicator, &status);

@@ -34,9 +34,9 @@ Source_Transporter::Source_Transporter(RCP_Std_DB  db,
     , d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
-    Require (!db.is_null());
-    Require (d_geometry);
-    Require (d_physics);
+    REQUIRE(!db.is_null());
+    REQUIRE(d_geometry);
+    REQUIRE(d_physics);
 
     // set the geometry and physics in the domain transporter
     d_transporter.set(d_geometry, d_physics);
@@ -55,7 +55,7 @@ void Source_Transporter::assign_source(SP_Source source)
 {
     using std::ceil;
 
-    Require (source);
+    REQUIRE(source);
 
     // assign the source
     d_source = source;
@@ -72,7 +72,7 @@ void Source_Transporter::solve()
 {
     using std::cout; using std::endl;
 
-    Require (d_source);
+    REQUIRE(d_source);
 
     // barrier at the start
     profugus::global_barrier();
@@ -87,7 +87,7 @@ void Source_Transporter::solve()
 
     // make a particle bank
     typename Transporter_t::Bank_t bank;
-    Check (bank.empty());
+    CHECK(bank.empty());
 
     // run all the local histories while the source exists, there is no need
     // to communicate particles because the problem is replicated
@@ -95,15 +95,15 @@ void Source_Transporter::solve()
     {
         // get a particle from the source
         SP_Particle p = source.get_particle();
-        Check (p);
-        Check (p->alive());
+        CHECK(p);
+        CHECK(p->alive());
 
         // Do "source event" tallies on the particle
         d_tallier->source(*p);
 
         // transport the particle through this (replicated) domain
         d_transporter.transport(*p, bank);
-        Check (!p->alive());
+        CHECK(!p->alive());
 
         // transport any secondary particles that are part of this history
         // (from splitting or physics) that get put into the bank
@@ -111,15 +111,15 @@ void Source_Transporter::solve()
         {
             // get a particle from the bank
             SP_Particle bank_particle = bank.pop();
-            Check (bank_particle);
-            Check (bank_particle->alive());
+            CHECK(bank_particle);
+            CHECK(bank_particle->alive());
 
             // make particle alive
             bank_particle->live();
 
             // transport it
             d_transporter.transport(*bank_particle, bank);
-            Check (!bank_particle->alive());
+            CHECK(!bank_particle->alive());
         }
 
         // update the counter
@@ -148,8 +148,8 @@ void Source_Transporter::solve()
 
 #ifdef REMEMBER_ON
     profugus::global_sum(counter);
-    Ensure (counter == source.total_num_to_transport());
-    Ensure (bank.empty());
+    ENSURE(counter == source.total_num_to_transport());
+    ENSURE(bank.empty());
 #endif
 }
 
@@ -179,13 +179,13 @@ void Source_Transporter::sample_fission_sites(SP_Fission_Sites fis_sites,
  */
 void Source_Transporter::set(SP_Variance_Reduction vr)
 {
-    Require (vr);
+    REQUIRE(vr);
 
     // set the variance reduction in the domain transporter and locally
     d_transporter.set(vr);
     d_var_reduction = vr;
 
-    Ensure (d_var_reduction);
+    ENSURE(d_var_reduction);
 }
 
 //---------------------------------------------------------------------------//
@@ -194,13 +194,13 @@ void Source_Transporter::set(SP_Variance_Reduction vr)
  */
 void Source_Transporter::set(SP_Tallier tallier)
 {
-    Require (tallier);
+    REQUIRE(tallier);
 
     // set the tally controller in the domain transporter and locally
     d_transporter.set(tallier);
     d_tallier = tallier;
 
-    Ensure (d_tallier);
+    ENSURE(d_tallier);
 }
 
 } // end namespace profugus

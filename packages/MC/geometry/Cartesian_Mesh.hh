@@ -77,7 +77,7 @@ class Cartesian_Mesh
     //! Number of cells along an axis
     dim_type num_cells_along(dim_type d) const
     {
-        Require(0 <= d && d < dimension());
+        REQUIRE(0 <= d && d < dimension());
         return d_extents[d];
     }
 
@@ -93,7 +93,7 @@ class Cartesian_Mesh
     //! Return cell edges along a given direction.
     const Vec_Dbl& edges(dim_type d) const
     {
-        Require(0 <= d && d < d_dimension);
+        REQUIRE(0 <= d && d < d_dimension);
         return d_edges[d];
     }
 
@@ -134,14 +134,14 @@ class Cartesian_Mesh
     //! Low corner of mesh in \e (i,j,k) direction.
     double low_corner(dim_type d) const
     {
-        Require(0 <= d && d < d_dimension);
+        REQUIRE(0 <= d && d < d_dimension);
         return d_edges[d].front();
     }
 
     //! High corner of mesh in \e (i,j,k) direction.
     double high_corner(dim_type d) const
     {
-        Require(0 <= d && d < d_dimension);
+        REQUIRE(0 <= d && d < d_dimension);
         return d_edges[d].back();
     }
 };

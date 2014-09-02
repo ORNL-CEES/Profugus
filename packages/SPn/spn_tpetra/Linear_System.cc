@@ -41,9 +41,9 @@ Linear_System::Linear_System(RCP_ParameterList db,
     , b_node(profugus::node())
     , b_nodes(profugus::nodes())
 {
-    Require (!db.is_null());
-    Require (!dim.is_null());
-    Require (!mat.is_null());
+    REQUIRE(!db.is_null());
+    REQUIRE(!dim.is_null());
+    REQUIRE(!mat.is_null());
 
     // source coefficients
     b_src_coefficients[0] =  1.0;
@@ -76,7 +76,7 @@ Linear_System::Linear_System(RCP_ParameterList db,
         }
     }
 
-    Ensure (!b_mom_coeff.is_null());
+    ENSURE(!b_mom_coeff.is_null());
 }
 
 //---------------------------------------------------------------------------//

@@ -33,9 +33,9 @@ Davidson_Eigensolver<MV,OP>::Davidson_Eigensolver(RCP_ParameterList db,
     , d_LHS(LHS)
     , d_RHS(RHS)
 {
-    Require(!d_db.is_null());
-    Require(d_LHS!=Teuchos::null);
-    Require(d_RHS!=Teuchos::null);
+    REQUIRE(!d_db.is_null());
+    REQUIRE(d_LHS!=Teuchos::null);
+    REQUIRE(d_RHS!=Teuchos::null);
 
     // make a default Anasazi database
     RCP_ParameterList anasazi_db = Teuchos::sublist(db, "Anasazi");
@@ -76,7 +76,7 @@ Davidson_Eigensolver<MV,OP>::Davidson_Eigensolver(RCP_ParameterList db,
 template <class MV,class OP>
 void Davidson_Eigensolver<MV,OP>::solve( double &keff, Teuchos::RCP<MV> x)
 {
-    Require (d_db->isSublist("Anasazi"));
+    REQUIRE(d_db->isSublist("Anasazi"));
 
     // Create eigenproblem
     RCP<Anasazi::BasicEigenproblem<double,MV,OP> > problem(
@@ -90,7 +90,7 @@ void Davidson_Eigensolver<MV,OP>::solve( double &keff, Teuchos::RCP<MV> x)
     problem->setInitVec(x);
     problem->setNEV(1);
     bool problem_set = problem->setProblem();
-    Ensure( problem_set );
+    ENSURE( problem_set );
 
     // Extract Anasazi DB
     Teuchos::ParameterList &anasazi_list = d_db->sublist("Anasazi");
@@ -109,7 +109,7 @@ void Davidson_Eigensolver<MV,OP>::solve( double &keff, Teuchos::RCP<MV> x)
     Anasazi::Eigensolution<double,MV> solution =
         solver.getProblem().getSolution();
     Anasazi::Value<double> eval = (solution.Evals)[0];
-    Check( profugus::soft_equiv( eval.imagpart, 0.0 ) );
+    CHECK( profugus::soft_equiv( eval.imagpart, 0.0 ) );
     keff = eval.realpart;
 
     // Get view of dominant eigenvector

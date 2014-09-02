@@ -47,11 +47,11 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     , d_np_left(0)
     , d_np_run(0)
 {
-    Require (!db.is_null());
+    REQUIRE(!db.is_null());
 
     // store the total number of requested particles
     d_np_requested = static_cast<size_type>(db->get("Np", 1000));
-    Validate(d_np_requested > 0., "Number of source particles ("
+    VALIDATE(d_np_requested > 0., "Number of source particles ("
             << d_np_requested << ") must be positive");
 
     // initialize the total
@@ -60,11 +60,11 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     // get the spectral shape
     const auto &shape = db->get(
         "spectral_shape", Teuchos::Array<double>(b_physics->num_groups(), 1.0));
-    Check (shape.size() == d_erg_cdf.size());
+    CHECK(shape.size() == d_erg_cdf.size());
 
     // calculate the normalization
     double norm = std::accumulate(shape.begin(), shape.end(), 0.0);
-    Check (norm > 0.0);
+    CHECK(norm > 0.0);
 
     // assign to the shape cdf
     Remember (double sum = 0.0);
@@ -76,7 +76,7 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
         Remember (sum += c);
         ++n;
     }
-    Ensure (soft_equiv(sum, 1.0));
+    ENSURE(soft_equiv(sum, 1.0));
 
     // initialize timers in this class, which may be necessary because domains
     // with no source will not make this timer otherwise
@@ -95,7 +95,7 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
  */
 void Uniform_Source::build_source(SP_Shape geometric_shape)
 {
-    Require (geometric_shape);
+    REQUIRE(geometric_shape);
 
     SCOPED_TIMER("profugus::Uniform_Source.build_source");
 
@@ -123,9 +123,9 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
 {
     using def::I; using def::J; using def::K;
 
-    Require (d_wt > 0.0);
-    Require (profugus::Global_RNG::d_rng.assigned());
-    Require (d_geo_shape);
+    REQUIRE(d_wt > 0.0);
+    REQUIRE(profugus::Global_RNG::d_rng.assigned());
+    REQUIRE(d_geo_shape);
 
     // unassigned particle
     SP_Particle p;
@@ -167,7 +167,7 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
         d_erg_cdf.size(), &d_erg_cdf[0], rng.ran());
-    Check (group < b_physics->num_groups());
+    CHECK(group < b_physics->num_groups());
     p->set_group(group);
 
     // set the material id in the particle
@@ -183,7 +183,7 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
     --d_np_left;
     ++d_np_run;
 
-    Ensure (p->matid() == matid);
+    ENSURE(p->matid() == matid);
     return p;
 }
 

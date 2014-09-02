@@ -81,7 +81,7 @@ inline void vector_normalize(def::Space_Vector &vector)
     vector[def::Y] *= norm;
     vector[def::Z] *= norm;
 
-    Ensure (soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
+    ENSURE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 }
 
 } // end namespace profugus

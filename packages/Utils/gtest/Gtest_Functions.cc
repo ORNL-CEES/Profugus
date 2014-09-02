@@ -43,7 +43,7 @@ unsigned int calc_num_digits(std::size_t number)
         ++num_digits;
     } while (number > 0);
 
-    Ensure(num_digits > 0);
+    ENSURE(num_digits > 0);
     return num_digits;
 }
 }

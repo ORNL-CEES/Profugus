@@ -42,9 +42,9 @@ Tallier::Tallier()
 void Tallier::set(SP_Geometry geometry,
                   SP_Physics  physics)
 {
-    Require (geometry);
-    Require (physics);
-    Require (d_build_phase == CONSTRUCTED);
+    REQUIRE(geometry);
+    REQUIRE(physics);
+    REQUIRE(d_build_phase == CONSTRUCTED);
 
     d_geometry = geometry;
     d_physics  = physics;
@@ -52,7 +52,7 @@ void Tallier::set(SP_Geometry geometry,
     // set the build phase
     d_build_phase = ASSIGNED;
 
-    Ensure (d_build_phase == ASSIGNED);
+    ENSURE(d_build_phase == ASSIGNED);
 }
 
 //---------------------------------------------------------------------------//
@@ -61,8 +61,8 @@ void Tallier::set(SP_Geometry geometry,
  */
 void Tallier::add_pathlength_tally(SP_Tally tally)
 {
-    Require (tally);
-    Require (d_build_phase < BUILT);
+    REQUIRE(tally);
+    REQUIRE(d_build_phase < BUILT);
 
     // add the tally
     d_pl.push_back(tally);
@@ -74,8 +74,8 @@ void Tallier::add_pathlength_tally(SP_Tally tally)
  */
 void Tallier::add_source_tally(SP_Tally tally)
 {
-    Require (tally);
-    Require (d_build_phase < BUILT);
+    REQUIRE(tally);
+    REQUIRE(d_build_phase < BUILT);
 
     // add the tally
     d_src.push_back(tally);
@@ -87,8 +87,8 @@ void Tallier::add_source_tally(SP_Tally tally)
  */
 void Tallier::build()
 {
-    Require (d_build_phase == ASSIGNED);
-    Require (d_tallies.empty());
+    REQUIRE(d_build_phase == ASSIGNED);
+    REQUIRE(d_tallies.empty());
 
     // prune the tallies for duplicates
     prune(d_pl);
@@ -97,7 +97,7 @@ void Tallier::build()
     // add pathlength and source tallies to the "totals"
     d_tallies.insert(d_tallies.end(), d_pl.begin(), d_pl.end());
     d_tallies.insert(d_tallies.end(), d_src.begin(), d_src.end());
-    Check (num_tallies() == num_source_tallies() + num_pathlength_tallies());
+    CHECK(num_tallies() == num_source_tallies() + num_pathlength_tallies());
 
     // Set the build phase
     d_build_phase = BUILT;
@@ -108,7 +108,7 @@ void Tallier::build()
         ADD_WARNING("No tallies are being used.");
     }
 
-    Ensure (d_build_phase == BUILT);
+    ENSURE(d_build_phase == BUILT);
 }
 
 //---------------------------------------------------------------------------//
@@ -121,8 +121,8 @@ void Tallier::build()
 void Tallier::path_length(double            step,
                           const Particle_t &p)
 {
-    Require (d_build_phase == BUILT);
-    Require (step >= 0.0);
+    REQUIRE(d_build_phase == BUILT);
+    REQUIRE(step >= 0.0);
 
     if (!num_pathlength_tallies())
         return;
@@ -144,7 +144,7 @@ void Tallier::path_length(double            step,
  */
 void Tallier::source(const Particle_t &p)
 {
-    Require (d_build_phase == BUILT);
+    REQUIRE(d_build_phase == BUILT);
 
     if (!num_source_tallies())
         return;
@@ -164,7 +164,7 @@ void Tallier::source(const Particle_t &p)
  */
 void Tallier::begin_active_cycles()
 {
-    Require(d_build_phase == BUILT);
+    REQUIRE(d_build_phase == BUILT);
 
     SCOPED_TIMER_2("MC::Tallier.begin_active_cycles");
 
@@ -181,7 +181,7 @@ void Tallier::begin_active_cycles()
  */
 void Tallier::begin_cycle()
 {
-    Require(d_build_phase == BUILT);
+    REQUIRE(d_build_phase == BUILT);
 
     SCOPED_TIMER_2("MC::Tallier.begin_cycle");
 
@@ -198,7 +198,7 @@ void Tallier::begin_cycle()
  */
 void Tallier::end_cycle(double num_particles)
 {
-    Require(d_build_phase == BUILT);
+    REQUIRE(d_build_phase == BUILT);
 
     SCOPED_TIMER_2("MC::Tallier.end_cycle");
 
@@ -215,7 +215,7 @@ void Tallier::end_cycle(double num_particles)
  */
 void Tallier::end_history()
 {
-    Require(d_build_phase == BUILT);
+    REQUIRE(d_build_phase == BUILT);
 
     SCOPED_TIMER_2("MC::Tallier.end_history");
 
@@ -237,7 +237,7 @@ void Tallier::end_history()
  */
 void Tallier::finalize(double num_particles)
 {
-    Require (d_build_phase == BUILT);
+    REQUIRE(d_build_phase == BUILT);
 
     SCOPED_TIMER_2("MC::Tallier.finalize");
 
@@ -250,7 +250,7 @@ void Tallier::finalize(double num_particles)
     // set the build phase
     d_build_phase = FINALIZED;
 
-    Ensure (is_finalized());
+    ENSURE(is_finalized());
 }
 
 //---------------------------------------------------------------------------//
@@ -267,7 +267,7 @@ void Tallier::finalize(double num_particles)
  */
 void Tallier::reset()
 {
-    Require (d_build_phase == FINALIZED);
+    REQUIRE(d_build_phase == FINALIZED);
 
     SCOPED_TIMER_2("MC::Tallier.reset");
 
@@ -283,7 +283,7 @@ void Tallier::reset()
     // set the build phase
     d_build_phase = ASSIGNED;
 
-    Ensure (!is_finalized());
+    ENSURE(!is_finalized());
 }
 
 //---------------------------------------------------------------------------//
@@ -327,12 +327,12 @@ void Tallier::prune(Vec_Tallies &tallies)
     // define a place-holder for the "previous tally" to use to check for
     // duplicates
     SP_Tally prev_tally;
-    Check (!prev_tally);
+    CHECK(!prev_tally);
 
     // iterate through tallies and remove duplicates
     for (const auto &t : tallies)
     {
-        Check (t);
+        CHECK(t);
 
         // if this is a dublicate, continue
         if (t == prev_tally)
@@ -344,12 +344,12 @@ void Tallier::prune(Vec_Tallies &tallies)
         // update the previous tally
         prev_tally = t;
     }
-    Check (new_tallies.size() <= tallies.size());
+    CHECK(new_tallies.size() <= tallies.size());
     Remember (int size = new_tallies.size());
 
     // swap the new_tallies with the tallies
     tallies.swap(new_tallies);
-    Ensure (tallies.size() == size);
+    ENSURE(tallies.size() == size);
 }
 
 } // end namespace profugus

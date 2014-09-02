@@ -35,7 +35,7 @@ KCode_Solver::KCode_Solver(RCP_Std_DB db)
     if (profugus::node() != 0)
         d_quiet = true;
 
-    Ensure(d_build_phase == CONSTRUCTED);
+    ENSURE(d_build_phase == CONSTRUCTED);
 }
 
 //---------------------------------------------------------------------------//
@@ -45,9 +45,9 @@ KCode_Solver::KCode_Solver(RCP_Std_DB db)
 void KCode_Solver::set(SP_Source_Transporter transporter,
                        SP_Fission_Source     source)
 {
-    Require (d_build_phase == CONSTRUCTED);
-    Require (transporter);
-    Require (source);
+    REQUIRE(d_build_phase == CONSTRUCTED);
+    REQUIRE(transporter);
+    REQUIRE(source);
 
     // assign the solver
     d_transporter = transporter;
@@ -57,22 +57,22 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
 
     // fission site container
     d_fission_sites = d_source->create_fission_site_container();
-    Check (d_fission_sites);
-    Check (d_fission_sites->empty());
+    CHECK(d_fission_sites);
+    CHECK(d_fission_sites->empty());
 
     // store the integrated cycle weight (const number of requested particles
     // per cycle)
     d_Np = static_cast<double>(d_source->Np());
-    Check (d_Np > 0.0);
+    CHECK(d_Np > 0.0);
 
     // get a reference to the tallier
     b_tallier = d_transporter->tallier();
     Insist (b_tallier, "The tallier has not been assigned.");
-    Check (b_tallier->geometry() && b_tallier->physics());
+    CHECK(b_tallier->geometry() && b_tallier->physics());
 
     // get initial k and build keff tally
     double init_keff = d_db->get("keff_init", 1.0);
-    Validate(init_keff >= 0., "Initial keff guess (keff_init="
+    VALIDATE(init_keff >= 0., "Initial keff guess (keff_init="
             << init_keff << ") must be nonnegative.");
     d_keff_tally = std::make_shared<Keff_Tally>(init_keff,
                                                 b_tallier->physics());
@@ -83,10 +83,10 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
 
     d_build_phase = ASSIGNED;
 
-    Ensure (b_tallier);
-    Ensure (d_keff_tally);
-    Ensure (d_transporter);
-    Ensure (d_build_phase == ASSIGNED);
+    ENSURE(b_tallier);
+    ENSURE(d_keff_tally);
+    ENSURE(d_transporter);
+    ENSURE(d_build_phase == ASSIGNED);
 }
 
 //---------------------------------------------------------------------------//
@@ -110,16 +110,16 @@ void KCode_Solver::solve()
     const int num_inactive = d_db->get("num_inactive_cycles", 10);
     const int num_active   = num_total - num_inactive;
 
-    Validate(num_inactive > 0,
+    VALIDATE(num_inactive > 0,
             "The number of  inactive keff cycles (num_inactive_cycles="
             << num_inactive << ") must be positive");
-    Validate(num_total > num_inactive,
+    VALIDATE(num_total > num_inactive,
             "The number of keff cycles (num_cycles=" << num_total << ") "
             "must be greater than the number of inactive cycles ("
             "num_inactive_cycles=" << num_inactive << ")");
 
-    Ensure (num_inactive + num_active == num_total);
-    Ensure (num_total > 0);
+    ENSURE(num_inactive + num_active == num_total);
+    ENSURE(num_total > 0);
 
     // Preallocate diagnostics
     DIAGNOSTICS_ONE(vec_integers["np_fission"]      .reserve(num_total );)
@@ -161,9 +161,9 @@ void KCode_Solver::solve()
     }
 
     // Prepare for active cycles
-    Check (num_cycles() == num_inactive);
+    CHECK(num_cycles() == num_inactive);
     this->begin_active_cycles();
-    Check (num_cycles() == 0);
+    CHECK(num_cycles() == 0);
 
     // Print column header
     if (!d_quiet)
@@ -197,7 +197,7 @@ void KCode_Solver::solve()
                  << endl;
         }
     }
-    Check (num_cycles() == num_active);
+    CHECK(num_cycles() == num_active);
 
     if (!d_quiet)
         cout << endl;
@@ -207,7 +207,7 @@ void KCode_Solver::solve()
     // Finalize
     this->finalize();
 
-    Ensure (b_tallier->is_finalized());
+    ENSURE(b_tallier->is_finalized());
 }
 
 //---------------------------------------------------------------------------//
@@ -225,8 +225,8 @@ void KCode_Solver::reset()
 
     d_build_phase = ASSIGNED;
 
-    Ensure (!b_tallier->is_built());
-    Ensure (d_build_phase == ASSIGNED);
+    ENSURE(!b_tallier->is_built());
+    ENSURE(d_build_phase == ASSIGNED);
 }
 
 //---------------------------------------------------------------------------//
@@ -259,14 +259,14 @@ void KCode_Solver::initialize()
     // Add the keff tally to the ACTIVE cycle tallier and build it
     b_tallier->add_pathlength_tally(d_keff_tally);
     b_tallier->build();
-    Check (b_tallier->is_built());
-    Check (b_tallier->num_pathlength_tallies() >= 1);
+    CHECK(b_tallier->is_built());
+    CHECK(b_tallier->num_pathlength_tallies() >= 1);
 
     // Add the keff tally to the INACTIVE cycle tallier and build it
     d_inactive_tallier->add_pathlength_tally(d_keff_tally);
     d_inactive_tallier->build();
-    Check (d_inactive_tallier->is_built());
-    Check (d_inactive_tallier->num_pathlength_tallies() >= 1);
+    CHECK(d_inactive_tallier->is_built());
+    CHECK(d_inactive_tallier->num_pathlength_tallies() >= 1);
 
     if (d_source->is_initial_source())
     {
@@ -281,9 +281,9 @@ void KCode_Solver::initialize()
 
     d_build_phase = INACTIVE_SOLVE;
 
-    Ensure (b_tallier->num_pathlength_tallies() >= 1);
-    Ensure (d_keff_tally->cycle_count() == 0);
-    Ensure (d_build_phase == INACTIVE_SOLVE);
+    ENSURE(b_tallier->num_pathlength_tallies() >= 1);
+    ENSURE(d_keff_tally->cycle_count() == 0);
+    ENSURE(d_build_phase == INACTIVE_SOLVE);
 }
 
 //---------------------------------------------------------------------------//
@@ -292,9 +292,9 @@ void KCode_Solver::initialize()
  */
 void KCode_Solver::iterate()
 {
-    Require (d_fission_sites && d_fission_sites->empty());
-    Require (b_tallier->is_built() && !b_tallier->is_finalized());
-    Require (d_build_phase == INACTIVE_SOLVE || d_build_phase == ACTIVE_SOLVE);
+    REQUIRE(d_fission_sites && d_fission_sites->empty());
+    REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
+    REQUIRE(d_build_phase == INACTIVE_SOLVE || d_build_phase == ACTIVE_SOLVE);
 
     // store the number of source particles for this cycle
     DIAGNOSTICS_ONE(vec_integers["np_fission"].push_back(
@@ -326,8 +326,8 @@ void KCode_Solver::iterate()
     // build a new source from the fission site distribution
     d_source->build_source(d_fission_sites);
 
-    Ensure (d_fission_sites);
-    Ensure (d_fission_sites->empty());
+    ENSURE(d_fission_sites);
+    ENSURE(d_fission_sites->empty());
 }
 
 //---------------------------------------------------------------------------//
@@ -339,8 +339,8 @@ void KCode_Solver::iterate()
  */
 void KCode_Solver::begin_active_cycles()
 {
-    Require (b_tallier->is_built() && !b_tallier->is_finalized());
-    Require (d_inactive_tallier);
+    REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
+    REQUIRE(d_inactive_tallier);
 
     Insist (d_build_phase == INACTIVE_SOLVE,
             "begin_active_cycles must be called only after "
@@ -364,9 +364,9 @@ void KCode_Solver::begin_active_cycles()
 
     d_build_phase = ACTIVE_SOLVE;
 
-    Ensure (d_inactive_tallier->is_finalized());
-    Ensure (num_cycles() == 0);
-    Ensure (d_build_phase == ACTIVE_SOLVE);
+    ENSURE(d_inactive_tallier->is_finalized());
+    ENSURE(num_cycles() == 0);
+    ENSURE(d_build_phase == ACTIVE_SOLVE);
 }
 
 //---------------------------------------------------------------------------//
@@ -383,13 +383,13 @@ void KCode_Solver::finalize()
     Insist (num_cycles() > 0, "No active cycles were performed.");
 
     // Finalize tallies using global number particles
-    Check (!b_tallier->is_finalized());
+    CHECK(!b_tallier->is_finalized());
     b_tallier->finalize(num_cycles() * d_Np);
 
     d_build_phase = FINALIZED;
 
-    Ensure (b_tallier->is_finalized());
-    Ensure (d_build_phase == FINALIZED);
+    ENSURE(b_tallier->is_finalized());
+    ENSURE(d_build_phase == FINALIZED);
 }
 
 } // end namespace profugus

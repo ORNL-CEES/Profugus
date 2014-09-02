@@ -111,7 +111,7 @@ class Mesh
     //! Get number of vertices.
     size_type num_vertices() const
     {
-        Require(d_num_vertices != 0);
+        REQUIRE(d_num_vertices != 0);
         return d_num_vertices;
     }
 
@@ -133,13 +133,13 @@ class Mesh
     //! Low corner of mesh in \e (i,j,k) direction.
     double low_corner(int d) const
     {
-        Require(d < static_cast<int>(d_dimension) ); return d_edges[d].front();
+        REQUIRE(d < static_cast<int>(d_dimension) ); return d_edges[d].front();
     }
 
     //! High corner of mesh in \e (i,j,k) direction.
     double high_corner(int d) const
     {
-        Require(d < static_cast<int>(d_dimension) ); return d_edges[d].back();
+        REQUIRE(d < static_cast<int>(d_dimension) ); return d_edges[d].back();
     }
 
     //! Return all cell edges.
@@ -148,13 +148,13 @@ class Mesh
     //! Return cell edges along a given direction.
     const def::Vec_Dbl& edges(int d) const
     {
-        Require (d < static_cast<int>(d_dimension) ); return d_edges[d];
+        REQUIRE(d < static_cast<int>(d_dimension) ); return d_edges[d];
     }
 
     //! Return cell edge coordinate along \e d.
     double edges(int vertices, int d) const
     {
-        Require(d < static_cast<int>(d_dimension) &&
+        REQUIRE(d < static_cast<int>(d_dimension) &&
                 vertices < static_cast<int>(d_edges[d].size()));
         return d_edges[d][vertices];
     }
@@ -162,7 +162,7 @@ class Mesh
     //! Return block width in a particular direction.
     double block_width(int d) const
     {
-        Require(d < 3);
+        REQUIRE(d < 3);
         return d_edges[d].back() - d_edges[d].front();
     }
 
@@ -172,7 +172,7 @@ class Mesh
     //! Return number of cells in a given dimension \e ijk in this mesh.
     inline int num_cells_dim(size_type ijk) const
     {
-        Require (ijk < 3); return d_N[ijk];
+        REQUIRE(ijk < 3); return d_N[ijk];
     }
 
     //! Get block description (block index on i/j; num blocks along z).
@@ -181,7 +181,7 @@ class Mesh
     //! Get block index along dimension (or number of blocks if 3)
     size_type block(size_type ijk) const
     {
-        Require (ijk < d_dimension); return d_blocks[ijk];
+        REQUIRE(ijk < d_dimension); return d_blocks[ijk];
     }
 
     //! Get number of cells in each dimension in each block in this mesh.
@@ -190,7 +190,7 @@ class Mesh
     //! Get number of cells in a given block along dimension \e (i,j,k).
     size_type num_cells_block_dim(size_type ijk) const
     {
-        Require (ijk < d_dimension); return d_Nb[ijk];
+        REQUIRE(ijk < d_dimension); return d_Nb[ijk];
     }
 
   protected:

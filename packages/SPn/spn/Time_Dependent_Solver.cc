@@ -32,11 +32,11 @@ Time_Dependent_Solver::Time_Dependent_Solver(RCP_ParameterList db)
     : Base(db)
     , d_solver(b_db)
 {
-    Require (db->isSublist("timestep control"));
+    REQUIRE(db->isSublist("timestep control"));
 
     // get the timestep control database
     const auto &tdb = db->get<Teuchos::ParameterList>("timestep control");
-    Check (tdb.isParameter("dt"));
+    CHECK(tdb.isParameter("dt"));
 
     // build the timestep object
     d_dt = Teuchos::rcp(new Timestep);
@@ -44,10 +44,10 @@ Time_Dependent_Solver::Time_Dependent_Solver(RCP_ParameterList db)
     // set the first timestep
     d_dt->set(tdb.get<double>("dt"));
 
-    Ensure (!b_db.is_null());
-    Ensure (!d_dt.is_null());
-    Ensure (d_dt->dt() > 0.0);
-    Ensure (d_dt->cycle() == 1);
+    ENSURE(!b_db.is_null());
+    ENSURE(!d_dt.is_null());
+    ENSURE(d_dt->dt() > 0.0);
+    ENSURE(d_dt->cycle() == 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -64,13 +64,13 @@ void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
                                   RCP_Indexer     indexer,
                                   RCP_Global_Data data)
 {
-    Require (!b_db.is_null());
-    Require (!dim.is_null());
-    Require (!mat.is_null());
-    Require (!mesh.is_null());
-    Require (!indexer.is_null());
-    Require (!data.is_null());
-    Require (!d_dt.is_null());
+    REQUIRE(!b_db.is_null());
+    REQUIRE(!dim.is_null());
+    REQUIRE(!mat.is_null());
+    REQUIRE(!mesh.is_null());
+    REQUIRE(!indexer.is_null());
+    REQUIRE(!data.is_null());
+    REQUIRE(!d_dt.is_null());
 
     // build the linear system (we only provide finite volume for now)
     std::string &eqn_type = b_db->get("eqn_type", std::string("fv"));
@@ -85,7 +85,7 @@ void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
         std::string msg = "Undefined equation type: " + eqn_type;
         throw profugus::assertion(msg);
     }
-    Check (!b_system.is_null());
+    CHECK(!b_system.is_null());
 
     // build the matrix
     b_system->build_Matrix();
@@ -96,7 +96,7 @@ void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
     // allocate the left-hand side solution vector
     d_lhs = Teuchos::rcp(new Vector_t(*b_system->get_Map()));
 
-    Ensure (b_system->get_Map()->NumMyElements() == d_lhs->MyLength());
+    ENSURE(b_system->get_Map()->NumMyElements() == d_lhs->MyLength());
 }
 
 //---------------------------------------------------------------------------//
@@ -105,15 +105,15 @@ void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
  */
 void Time_Dependent_Solver::solve(const External_Source &q)
 {
-    Require (!b_system.is_null());
-    Require (!d_lhs.is_null());
+    REQUIRE(!b_system.is_null());
+    REQUIRE(!d_lhs.is_null());
 
     // null lhs vector
     d_lhs->PutScalar(0.0);
 
     // make the right-hand side vector based on the source
     b_system->build_RHS(q);
-    Check (b_system->get_RHS()->MyLength() == d_lhs->MyLength());
+    CHECK(b_system->get_RHS()->MyLength() == d_lhs->MyLength());
 
     // solve the problem
     d_solver.solve(d_lhs, b_system->get_RHS());
@@ -125,7 +125,7 @@ void Time_Dependent_Solver::solve(const External_Source &q)
  */
 void Time_Dependent_Solver::write_state(State_t &state)
 {
-    Require (state.mesh().num_cells() *
+    REQUIRE(state.mesh().num_cells() *
              b_system->get_dims()->num_equations() * state.num_groups()
              <= d_lhs->MyLength());
 

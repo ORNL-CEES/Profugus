@@ -46,7 +46,7 @@ P_Out& P_Out::operator<<(const P_Manip<T> &p)
 {
     if (d_master == node())
     {
-        Require (p.action);
+        REQUIRE(p.action);
         p.action(p.argument);
     }
     return *this;

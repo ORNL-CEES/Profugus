@@ -20,9 +20,9 @@ namespace profugus
 
 Bank::SP_Particle Bank::basic_pop()
 {
-    Require(!empty());
-    Require(!d_particles.empty());
-    Require(!d_count.empty());
+    REQUIRE(!empty());
+    REQUIRE(!d_particles.empty());
+    REQUIRE(!d_count.empty());
 
     SP_Particle new_particle;
 

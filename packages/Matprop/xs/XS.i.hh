@@ -20,7 +20,7 @@ namespace profugus
  */
 bool XS::has(int matid) const
 {
-    Require (!d_totals.empty());
+    REQUIRE(!d_totals.empty());
     return d_totals[TOTAL].exists(matid);
 }
 
@@ -31,8 +31,8 @@ bool XS::has(int matid) const
 const XS::Vector& XS::vector(int matid,
                              int type) const
 {
-    Require (type < d_totals.size());
-    Require (d_totals[type].exists(matid));
+    REQUIRE(type < d_totals.size());
+    REQUIRE(d_totals[type].exists(matid));
     return *d_totals[type][matid];
 }
 
@@ -43,8 +43,8 @@ const XS::Vector& XS::vector(int matid,
 const XS::Matrix& XS::matrix(int matid,
                              int pn) const
 {
-    Require (pn < d_scatter.size());
-    Require (d_scatter[pn].exists(matid));
+    REQUIRE(pn < d_scatter.size());
+    REQUIRE(d_scatter[pn].exists(matid));
     return *d_scatter[pn][matid];
 }
 

@@ -103,7 +103,7 @@ class PowerIterationTest : public ::testing::Test
 
         // Build solver
         d_solver = Teuchos::rcp(new PowerIteration(d_db));
-        Check (!d_solver.is_null());
+        CHECK(!d_solver.is_null());
         d_solver->set_operator(d_A);
     }
 

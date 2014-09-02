@@ -31,8 +31,8 @@ Geometry<Array>::Geometry(SP_Array array)
     , d_modular( false )
 {
     d_array->get_extents(d_lower, d_upper);
-    Ensure (d_array);
-    Ensure (d_lower <= d_upper);
+    ENSURE(d_array);
+    ENSURE(d_lower <= d_upper);
 }
 
 //---------------------------------------------------------------------------//
@@ -48,7 +48,7 @@ void Geometry<Array>::initialize(const Space_Vector &r,
                                  const Space_Vector &direction,
                                  Geo_State_t        &state)
 {
-    Require (d_array);
+    REQUIRE(d_array);
 
     // add position and direction to the state
     state.d_r   = r;
@@ -66,7 +66,7 @@ void Geometry<Array>::initialize(const Space_Vector &r,
         || (r[Z] < d_lower[Z]) || (r[Z] > d_upper[Z]))
     {
         const Space_Vector& omega = state.d_dir;
-        Validate(
+        VALIDATE(
                (omega[X] < 0 ? r[X] > d_lower[X] : r[X] < d_upper[X])
             || (omega[Y] < 0 ? r[Y] > d_lower[Y] : r[Y] < d_upper[Y])
             || (omega[Z] < 0 ? r[Z] > d_lower[Z] : r[Z] < d_upper[Z]),
@@ -111,7 +111,7 @@ bool Geometry<Array>::reflect(Geo_State_t &state)
 {
     using def::X; using def::Y; using def::Z;
 
-    Require (soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+    REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
     // get the outward normal
     Space_Vector n = normal(state);
@@ -127,7 +127,7 @@ bool Geometry<Array>::reflect(Geo_State_t &state)
         state.d_dir[Y] -= 2.0 * n[Y] * dot;
         state.d_dir[Z] -= 2.0 * n[Z] * dot;
 
-        Ensure (soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+        ENSURE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
         return true;
     }
 

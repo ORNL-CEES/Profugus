@@ -44,8 +44,8 @@ XS::XS()
 void XS::set(int Pn_order,
              int num_groups)
 {
-    Require (Pn_order >= 0);
-    Require (num_groups > 0);
+    REQUIRE(Pn_order >= 0);
+    REQUIRE(num_groups > 0);
 
     d_pn = Pn_order;
     d_Ng = num_groups;
@@ -76,12 +76,12 @@ void XS::set(int Pn_order,
  */
 void XS::set_velocities(const OneDArray &velocities)
 {
-    Require (velocities.size() == d_Ng);
-    Require (velocities.size() == d_v.length());
+    REQUIRE(velocities.size() == d_Ng);
+    REQUIRE(velocities.size() == d_v.length());
 
     for (int g = 0; g < d_Ng; ++g)
     {
-        Check (velocities[g] >= 0.0);
+        CHECK(velocities[g] >= 0.0);
         d_v[g] = velocities[g];
     }
 }
@@ -92,13 +92,13 @@ void XS::set_velocities(const OneDArray &velocities)
  */
 void XS::set_bounds(const OneDArray &bounds)
 {
-    Require (bounds.size() == d_Ng + 1);
-    Require (bounds.size() == d_bnds.length());
+    REQUIRE(bounds.size() == d_Ng + 1);
+    REQUIRE(bounds.size() == d_bnds.length());
 
     d_bnds[0] = bounds[0];
     for (int g = 1; g < d_Ng + 1; ++g)
     {
-        Check (bounds[g] < bounds[g-1]);
+        CHECK(bounds[g] < bounds[g-1]);
         d_bnds[g] = bounds[g];
     }
 }
@@ -111,11 +111,11 @@ void XS::add(int              matid,
              int              type,
              const OneDArray &data)
 {
-    Require (data.size() == d_Ng);
-    Require (type < END_XS_TYPES);
-    Require (d_totals.size() == END_XS_TYPES);
-    Require (d_inst_totals.size() == END_XS_TYPES);
-    Require (!d_inst_totals[type].count(matid));
+    REQUIRE(data.size() == d_Ng);
+    REQUIRE(type < END_XS_TYPES);
+    REQUIRE(d_totals.size() == END_XS_TYPES);
+    REQUIRE(d_inst_totals.size() == END_XS_TYPES);
+    REQUIRE(!d_inst_totals[type].count(matid));
 
     // make a new denseVector to hold the data
     RCP_Vector v = Teuchos::rcp(
@@ -128,7 +128,7 @@ void XS::add(int              matid,
     // indicate that this data has been inserted
     d_inst_totals[type].insert(matid);
 
-    Ensure (d_inst_totals[type].count(matid));
+    ENSURE(d_inst_totals[type].count(matid));
 }
 
 //---------------------------------------------------------------------------//
@@ -139,11 +139,11 @@ void XS::add(int              matid,
              int              pn,
              const TwoDArray &data)
 {
-    Require (data.getNumRows() == data.getNumCols());
-    Require (data.getNumRows() == d_Ng);
-    Require (pn <= d_pn);
-    Require (d_scatter.size() == d_pn + 1);
-    Require (!d_inst_scat[d_pn].count(matid));
+    REQUIRE(data.getNumRows() == data.getNumCols());
+    REQUIRE(data.getNumRows() == d_Ng);
+    REQUIRE(pn <= d_pn);
+    REQUIRE(d_scatter.size() == d_pn + 1);
+    REQUIRE(!d_inst_scat[d_pn].count(matid));
 
     // make a new matrix to hold data
     RCP_Matrix m = Teuchos::rcp(new Matrix(d_Ng, d_Ng, true));
@@ -165,7 +165,7 @@ void XS::add(int              matid,
     // indicate that this data has been inserted
     d_inst_scat[pn].insert(matid);
 
-    Ensure (d_inst_scat[pn].count(matid));
+    ENSURE(d_inst_scat[pn].count(matid));
 }
 
 //---------------------------------------------------------------------------//
@@ -211,12 +211,12 @@ void XS::complete()
     for (int type = 0; type < END_XS_TYPES; ++type)
     {
         d_totals[type].complete();
-        Ensure (d_totals[type].size() == d_Nm);
+        ENSURE(d_totals[type].size() == d_Nm);
     }
     for (int n = 0; n < d_pn + 1; ++n)
     {
         d_scatter[n].complete();
-        Ensure (d_scatter[n].size() == d_Nm);
+        ENSURE(d_scatter[n].size() == d_Nm);
     }
 
     // clear work sets
@@ -233,7 +233,7 @@ void XS::complete()
  */
 void XS::get_matids(Vec_Int &matids) const
 {
-    Require (d_totals[TOTAL].size() == d_Nm);
+    REQUIRE(d_totals[TOTAL].size() == d_Nm);
 
     // size the input vector
     matids.resize(d_Nm);

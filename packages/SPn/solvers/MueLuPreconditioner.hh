@@ -119,17 +119,17 @@ class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
     // Apply (solve linear system)
     int Apply(const MV &x, MV &y) const
     {
-        Require( x.MyLength() == y.MyLength() );
+        REQUIRE( x.MyLength() == y.MyLength() );
 
         Teuchos::RCP<Epetra_MultiVector> x_rcp =
             Teuchos::rcp_const_cast<Epetra_MultiVector>(
                 Teuchos::rcpFromRef(x));
         Teuchos::RCP<const Xpetra_MultiVector> x_wrap =
             Xpetra::toXpetra(x_rcp);
-        Require( x_wrap != Teuchos::null );
+        REQUIRE( x_wrap != Teuchos::null );
         Teuchos::RCP<Xpetra_MultiVector> y_wrap =
             Xpetra::toXpetra(Teuchos::rcpFromRef(y));
-        Require( y_wrap != Teuchos::null );
+        REQUIRE( y_wrap != Teuchos::null );
 
         ApplyImpl(x_wrap,y_wrap);
 
@@ -148,17 +148,17 @@ class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
     bool HasNormInf() const { return false; }
     const Epetra_Comm & Comm() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->Comm();
     }
     const Epetra_Map & OperatorDomainMap() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->OperatorDomainMap();
     }
     const Epetra_Map & OperatorRangeMap() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->OperatorRangeMap();
     }
 
@@ -202,7 +202,7 @@ class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
                Teuchos::ETransp mode=Teuchos::NO_TRANS,
                double alpha=1.0, double beta=0.0) const
     {
-        Require( x.getLocalLength() == y.getLocalLength() );
+        REQUIRE( x.getLocalLength() == y.getLocalLength() );
 
         MV z(x,Teuchos::Copy);
 
@@ -211,10 +211,10 @@ class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
                 Teuchos::rcpFromRef(x));
         Teuchos::RCP<const Xpetra_MultiVector> x_wrap =
             Xpetra::toXpetra(x_rcp);
-        Require( x_wrap != Teuchos::null );
+        REQUIRE( x_wrap != Teuchos::null );
         Teuchos::RCP<Xpetra_MultiVector> y_wrap =
             Xpetra::toXpetra(Teuchos::rcpFromRef(y));
-        Require( y_wrap != Teuchos::null );
+        REQUIRE( y_wrap != Teuchos::null );
 
         ApplyImpl(x_wrap,y_wrap);
 
@@ -232,12 +232,12 @@ class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
     bool hasTranposeApply() const {return false;}
     Teuchos::RCP<const Map> getDomainMap() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->getDomainMap();
     }
     Teuchos::RCP<const Map> getRangeMap() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->getRangeMap();
     }
 

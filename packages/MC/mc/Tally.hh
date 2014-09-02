@@ -51,7 +51,7 @@ class Tally
     Tally(SP_Physics physics)
         : b_physics(physics), b_name("tally")
     {
-        Ensure (b_physics);
+        ENSURE(b_physics);
     }
 
     // Destructor.

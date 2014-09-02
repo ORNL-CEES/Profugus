@@ -22,7 +22,7 @@ namespace profugus
  */
 Cartesian_Mesh::Dim_Vector Cartesian_Mesh::cardinal(size_type cell) const
 {
-    Require(cell < num_cells());
+    REQUIRE(cell < num_cells());
     Dim_Vector result;
     cardinal(cell, result[0], result[1], result[2]);
     return result;
@@ -36,9 +36,9 @@ double Cartesian_Mesh::volume(int i, int j, int k) const
 {
     using def::I; using def::J; using def::K;
 
-    Require(i >= 0 && i < d_extents[I]);
-    Require(j >= 0 && j < d_extents[J]);
-    Require(k >= 0 && k < d_extents[K]);
+    REQUIRE(i >= 0 && i < d_extents[I]);
+    REQUIRE(j >= 0 && j < d_extents[J]);
+    REQUIRE(k >= 0 && k < d_extents[K]);
 
     return (d_edges[I][i+1] - d_edges[I][i])
          * (d_edges[J][j+1] - d_edges[J][j])
@@ -78,7 +78,7 @@ bool Cartesian_Mesh::index(dim_type i, dim_type j, dim_type k,
 
     // Calculate cell index
     cell = i + d_extents[I] * (j + k * d_extents[J]);
-    Ensure (cell < num_cells());
+    ENSURE(cell < num_cells());
     return true;
 }
 
@@ -93,7 +93,7 @@ bool Cartesian_Mesh::index(dim_type i, dim_type j, dim_type k,
 Cartesian_Mesh::dim_type
 Cartesian_Mesh::find_upper(double r, dim_type d) const
 {
-    Require(0 <= d && d < d_dimension);
+    REQUIRE(0 <= d && d < d_dimension);
     return std::lower_bound(d_edges[d].begin(), d_edges[d].end(), r)
         - d_edges[d].begin() - 1;
 }
@@ -112,9 +112,9 @@ Cartesian_Mesh::index(dim_type i, dim_type j, dim_type k) const
     using def::I; using def::J; using def::K;
 
     // Check whether the dimesions are inside the mesh
-    Require (i >= 0 && i < d_extents[I]);
-    Require (j >= 0 && j < d_extents[J]);
-    Require (k >= 0 && k < d_extents[K]);
+    REQUIRE(i >= 0 && i < d_extents[I]);
+    REQUIRE(j >= 0 && j < d_extents[J]);
+    REQUIRE(k >= 0 && k < d_extents[K]);
 
     // Calculate cell index
     return i + d_extents[I] * (j + k * d_extents[J]);

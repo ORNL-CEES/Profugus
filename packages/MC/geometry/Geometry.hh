@@ -110,7 +110,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
     //! Get distance to next boundary.
     double distance_to_boundary(Geo_State_t &state)
     {
-        Require (d_array);
+        REQUIRE(d_array);
         d_array->distance_to_boundary(state.d_r, state.d_dir, state);
         return state.dist_to_next_region;
     }
@@ -119,7 +119,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
     //! indicate that the particle is on a reflecting surface).
     void move_to_surface(Geo_State_t &state)
     {
-        Require (d_array);
+        REQUIRE(d_array);
 
         // move the particle
         move(state.dist_to_next_region, state);
@@ -133,7 +133,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
     /// surface.
     void move_to_point(double d, Geo_State_t &state)
     {
-        Require (d_array);
+        REQUIRE(d_array);
 
         // move the particle
         move(d, state);
@@ -149,7 +149,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
     geometry::cell_type cell(const Geo_State_t &state) const
     {
         // Note: large arrays may overflow signed int
-        Ensure(d_array->cellid(state) >= 0);
+        ENSURE(d_array->cellid(state) >= 0);
         return d_array->cellid(state);
     }
 
@@ -167,7 +167,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
         {
             // if the particle has escaped indicate that the particle
             // is outside the geometry
-            Check (state.exiting_level[d_level]
+            CHECK(state.exiting_level[d_level]
                     || state.next_face == Geo_State_t::NONE);
             return geometry::OUTSIDE;
         }
@@ -210,7 +210,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
     // >>> ACCESSORS
 
     //! Return the underlying array representation of objects.
-    const Array_t& array() const { Require (d_array); return *d_array; }
+    const Array_t& array() const { REQUIRE(d_array); return *d_array; }
 
   private:
     // >>> IMPLEMENTATION
@@ -232,8 +232,8 @@ class Geometry : public Tracking_Geometry<RTK_State>
      */
     void move(double d, Geo_State_t &state)
     {
-        Require (d >= 0.0);
-        Require (soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+        REQUIRE(d >= 0.0);
+        REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
         state.d_r[def::X] += d * state.d_dir[def::X];

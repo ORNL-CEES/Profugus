@@ -54,7 +54,7 @@ void Warnings::add(const std::string &w)
  */
 std::string Warnings::pop()
 {
-    Require(!d_warnings.empty());
+    REQUIRE(!d_warnings.empty());
 
     std::string w(d_warnings.front());
     d_warnings.pop_front();

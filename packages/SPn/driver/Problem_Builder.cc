@@ -67,9 +67,9 @@ void Problem_Builder::setup(const std::string &xml_file)
 
     // kill any remaining sources
     d_source = RCP_Source();
-    Check (d_source.is_null());
+    CHECK(d_source.is_null());
 
-    Check (!d_db.is_null());
+    CHECK(!d_db.is_null());
 
     // build mesh
     build_mesh();
@@ -98,19 +98,19 @@ void Problem_Builder::build_mesh()
 {
     using def::I; using def::J; using def::K;
 
-    Require (d_coredb->isParameter("axial list"));
-    Require (d_coredb->isParameter("axial height"));
-    Require (d_assblydb->isParameter("assembly list"));
-    Require (d_assblydb->isParameter("pin pitch"));
-    Require (d_db->isParameter("radial mesh"));
-    Require (d_db->isParameter("axial mesh"));
-    Require (d_db->isParameter("symmetry"));
+    REQUIRE(d_coredb->isParameter("axial list"));
+    REQUIRE(d_coredb->isParameter("axial height"));
+    REQUIRE(d_assblydb->isParameter("assembly list"));
+    REQUIRE(d_assblydb->isParameter("pin pitch"));
+    REQUIRE(d_db->isParameter("radial mesh"));
+    REQUIRE(d_db->isParameter("axial mesh"));
+    REQUIRE(d_db->isParameter("symmetry"));
 
     // get the axial core map and heights
     const auto &axial_list   = d_coredb->get<OneDArray_str>("axial list");
     const auto &axial_height = d_coredb->get<OneDArray_dbl>("axial height");
-    Check (!axial_list.empty());
-    Check (axial_list.size() == axial_height.size());
+    CHECK(!axial_list.empty());
+    CHECK(axial_list.size() == axial_height.size());
 
     // build the mesh dimensions (all axial core maps have the same radial
     // dimensions, so we can just use the first core map here)
@@ -134,7 +134,7 @@ void Problem_Builder::build_mesh()
 
     // get the pin pitch
     double pitch = d_assblydb->get<double>("pin pitch");
-    Check (pitch > 0.0);
+    CHECK(pitch > 0.0);
 
     // get the core dimensions
     double dx = d_Na[I] * d_Np[I] * pitch;
@@ -144,7 +144,7 @@ void Problem_Builder::build_mesh()
     // get the mesh dimensions
     int radial_mesh        = d_db->get<int>("radial mesh");
     const auto &axial_mesh = d_db->get<OneDArray_int>("axial mesh");
-    Check (axial_mesh.size() == axial_height.size());
+    CHECK(axial_mesh.size() == axial_height.size());
 
     // set the mesh radial mesh dimensions
     int ncx = radial_mesh * d_Np[I] * d_Na[I];
@@ -169,13 +169,13 @@ void Problem_Builder::build_mesh()
         // iterate through axial cells on this level
         for (int n = 0; n < axial_mesh[k]; ++n)
         {
-            Check (ctr + 1 < z_edges.size());
+            CHECK(ctr + 1 < z_edges.size());
             z_edges[ctr+1] = z_edges[ctr] + delta;
             ++ctr;
         }
     }
-    Check (ctr == ncz);
-    Check (profugus::soft_equiv(dz, z_edges.back(), 1.0e-12));
+    CHECK(ctr == ncz);
+    CHECK(profugus::soft_equiv(dz, z_edges.back(), 1.0e-12));
 
     // set the axial mesh
     d_db->set("z_edges", z_edges);
@@ -189,9 +189,9 @@ void Problem_Builder::build_mesh()
     d_indexer = p.get_indexer();
     d_gdata   = p.get_global_data();
 
-    Ensure (!d_mesh.is_null());
-    Ensure (!d_indexer.is_null());
-    Ensure (!d_gdata.is_null());
+    ENSURE(!d_mesh.is_null());
+    ENSURE(!d_indexer.is_null());
+    ENSURE(!d_gdata.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -223,7 +223,7 @@ void Problem_Builder::build_matids()
         // determine the begin/end of the axial mesh for this axial level
         k_begin = k_end;
         k_end   = k_begin + axial_mesh[level];
-        Check (k_end - k_begin == axial_mesh[level]);
+        CHECK(k_end - k_begin == axial_mesh[level]);
 
         // loop over local cells
         for (int k = k_begin; k < k_end; ++k)
@@ -234,8 +234,8 @@ void Problem_Builder::build_matids()
                 {
                     // get the global IJ indices
                     auto global = d_indexer->convert_to_global(i, j);
-                    Check (global[I] < axial_matids.getNumCols());
-                    Check (global[J] < axial_matids.getNumRows());
+                    CHECK(global[I] < axial_matids.getNumCols());
+                    CHECK(global[J] < axial_matids.getNumRows());
 
                     // assign the local matid
                     d_matids[d_indexer->l2l(i, j, k)] =
@@ -265,13 +265,13 @@ void Problem_Builder::calc_axial_matids(int            level,
 
     // get the core-map for this axial level
     const auto &core_map = d_coredb->get<TwoDArray_int>(axial_list[level]);
-    Check (core_map.getNumCols() == d_Na[I]);
-    Check (core_map.getNumRows() == d_Na[J]);
+    CHECK(core_map.getNumCols() == d_Na[I]);
+    CHECK(core_map.getNumRows() == d_Na[J]);
 
     // mesh cells per pin
     int radial_mesh = d_db->get<int>("radial mesh");
-    Check (matids.getNumCols() == d_Na[I] * d_Np[I] * radial_mesh);
-    Check (matids.getNumRows() == d_Na[J] * d_Np[J] * radial_mesh);
+    CHECK(matids.getNumCols() == d_Na[I] * d_Np[I] * radial_mesh);
+    CHECK(matids.getNumRows() == d_Na[J] * d_Np[J] * radial_mesh);
 
     // loop over all assemblies, get the pin-maps, and assign the material ids
     // to the matids array (remember, all "core arrays" are ordered
@@ -289,14 +289,14 @@ void Problem_Builder::calc_axial_matids(int            level,
         // loop over assemblies in I
         for (int ai = 0; ai < d_Na[I]; ++ai)
         {
-            Check (core_map(aj, ai) < assbly_list.size());
-            Check (d_assblydb->isParameter(assbly_list[core_map(aj, ai)]));
+            CHECK(core_map(aj, ai) < assbly_list.size());
+            CHECK(d_assblydb->isParameter(assbly_list[core_map(aj, ai)]));
 
             // get the pin-map for this assembly
             const auto &assbly_map = d_assblydb->get<TwoDArray_int>(
                 assbly_list[core_map(aj, ai)]);
-            Check (assbly_map.getNumCols() == d_Np[I]);
-            Check (assbly_map.getNumRows() == d_Np[J]);
+            CHECK(assbly_map.getNumCols() == d_Np[I]);
+            CHECK(assbly_map.getNumRows() == d_Np[J]);
 
             // set the x-offset for this assembly
             aoff_x = (radial_mesh * d_Np[I]) * ai;
@@ -314,7 +314,7 @@ void Problem_Builder::calc_axial_matids(int            level,
 
                     // get the material id for this pin
                     matid = assbly_map(pj, pi);
-                    Check (matid <
+                    CHECK(matid <
                            d_matdb->get<OneDArray_str>("mat list").size());
 
                     // loop over the mesh cells in this pin
@@ -322,8 +322,8 @@ void Problem_Builder::calc_axial_matids(int            level,
                     {
                         for (int i = 0; i < radial_mesh; ++i)
                         {
-                            Check (i + poff_x < matids.getNumCols());
-                            Check (j + poff_y < matids.getNumRows());
+                            CHECK(i + poff_x < matids.getNumCols());
+                            CHECK(j + poff_y < matids.getNumRows());
                             matids(j + poff_y, i + poff_x) = matid;
                         }
                     }
@@ -345,8 +345,8 @@ void Problem_Builder::build_matdb()
     typedef profugus::XS_Builder::Matid_Map Matid_Map;
     typedef profugus::XS_Builder::RCP_XS    RCP_XS;
 
-    Require (d_matdb->isParameter("mat list"));
-    Validate (d_matdb->isParameter("xs library"),
+    REQUIRE(d_matdb->isParameter("mat list"));
+    VALIDATE(d_matdb->isParameter("xs library"),
               "Inline cross sections not implemented yet.");
 
     // get the material list off of the database
@@ -359,7 +359,7 @@ void Problem_Builder::build_matdb()
         matids.insert(Matid_Map::value_type(id, mat_list[id]));
     }
     matids.complete();
-    Check (matids.size() == mat_list.size());
+    CHECK(matids.size() == mat_list.size());
 
     // make a cross section builder
     profugus::XS_Builder builder;
@@ -373,22 +373,22 @@ void Problem_Builder::build_matdb()
 
     // determine the moment order of the problem
     int pn_order = d_db->get("Pn_order", N_data);
-    Validate (pn_order <= N_data, "Requested Pn scattering order of "
+    VALIDATE(pn_order <= N_data, "Requested Pn scattering order of "
               << pn_order << " is greater than available data Pn order of "
               << N_data);
 
     // get the number of groups required
     int g_first = d_db->get("g_first", 0);
     int g_last  = d_db->get("g_last", Ng_data - 1);
-    Validate (1 + (g_last - g_first) <= Ng_data, "Energy group range exceeds "
+    VALIDATE(1 + (g_last - g_first) <= Ng_data, "Energy group range exceeds "
               << "number of groups in data, 1 + g_last - g_first = "
               << 1 + (g_last - g_first) << " > " << Ng_data);
 
     // build the cross sections
     builder.build(matids, pn_order, g_first, g_last);
     RCP_XS xs = builder.get_xs();
-    Check (xs->num_mat() == matids.size());
-    Check (xs->num_groups() == 1 + (g_last - g_first));
+    CHECK(xs->num_mat() == matids.size());
+    CHECK(xs->num_groups() == 1 + (g_last - g_first));
 
     // build the material database
     d_mat = Teuchos::rcp(new profugus::Mat_DB);
@@ -408,11 +408,11 @@ void Problem_Builder::build_source(const ParameterList &source_db)
 {
     using def::I; using def::J;
 
-    Require (source_db.isParameter("source list"));
-    Require (source_db.isParameter("source map"));
-    Require (source_db.isParameter("axial source"));
-    Require (!d_mesh.is_null());
-    Require (!d_mat.is_null());
+    REQUIRE(source_db.isParameter("source list"));
+    REQUIRE(source_db.isParameter("source map"));
+    REQUIRE(source_db.isParameter("axial source"));
+    REQUIRE(!d_mesh.is_null());
+    REQUIRE(!d_mat.is_null());
 
     // get the list of sources
     const auto &source_list  = source_db.get<OneDArray_str>("source list");
@@ -424,8 +424,8 @@ void Problem_Builder::build_source(const ParameterList &source_db)
 
     // get the source-map
     const auto &src_map = source_db.get<TwoDArray_int>("source map");
-    Check (src_map.getNumCols() == d_Na[I]);
-    Check (src_map.getNumRows() == d_Na[J]);
+    CHECK(src_map.getNumCols() == d_Na[I]);
+    CHECK(src_map.getNumRows() == d_Na[J]);
 
     // (x, y) global offsets into the mesh by assembly and pin
     int aoff_x = 0, poff_x = 0;
@@ -453,14 +453,14 @@ void Problem_Builder::build_source(const ParameterList &source_db)
             // if the src_id >= 0 then there is a source defined here
             if (src_id >= 0)
             {
-		Check (src_map(aj, ai) < source_list.size());
-		Check (source_db.isSublist(source_list[src_map(aj, ai)]));
+		CHECK(src_map(aj, ai) < source_list.size());
+		CHECK(source_db.isSublist(source_list[src_map(aj, ai)]));
 
                 // get the source map for this assembly
                 const auto &a_src_map = source_db.sublist(
                     source_list[src_id]).get<TwoDArray_dbl>("strength");
-                Check (a_src_map.getNumCols() == d_Np[I]);
-                Check (a_src_map.getNumRows() == d_Np[J]);
+                CHECK(a_src_map.getNumCols() == d_Np[I]);
+                CHECK(a_src_map.getNumRows() == d_Np[J]);
 
                 // set the x-offset for this assembly
                 aoff_x = (radial_mesh * d_Np[I]) * ai;
@@ -478,15 +478,15 @@ void Problem_Builder::build_source(const ParameterList &source_db)
 
                         // get the source strength for this pin
                         src_strength = a_src_map(pj, pi);
-                        Check (src_strength >= 0.0);
+                        CHECK(src_strength >= 0.0);
 
                         // loop over the mesh cells in this pin
                         for (int j = 0; j < radial_mesh; ++j)
                         {
                             for (int i = 0; i < radial_mesh; ++i)
                             {
-                                Check (i + poff_x < gsrc.getNumCols());
-                                Check (j + poff_y < gsrc.getNumRows());
+                                CHECK(i + poff_x < gsrc.getNumCols());
+                                CHECK(j + poff_y < gsrc.getNumRows());
 
                                 // store the source id (shape id) for this cell
                                 gsrc(j + poff_y, i + poff_x).first = src_id;
@@ -510,28 +510,28 @@ void Problem_Builder::build_source(const ParameterList &source_db)
     // get the first and last groups for the run
     int g_first = d_db->get<int>("g_first");
     int g_last  = d_db->get<int>("g_last");
-    Check (1 + g_last - g_first == d_mat->xs().num_groups());
+    CHECK(1 + g_last - g_first == d_mat->xs().num_groups());
 
     // loop over sources
     int ctr = 0;
     for (auto itr = source_list.begin(); itr != source_list.end(); ++itr, ++ctr)
     {
-        Check (source_db.sublist(*itr).isParameter("shape"));
+        CHECK(source_db.sublist(*itr).isParameter("shape"));
 
         // get the source shapes
         const auto &shape = source_db.sublist(*itr).get<OneDArray_dbl>(
             "shape");
-        Check (shape.size() <= d_mat->xs().num_groups());
+        CHECK(shape.size() <= d_mat->xs().num_groups());
 
         // loop from first-to last groups and add the shapes
         for (int g = g_first; g <= g_last; ++g)
         {
-            Check (g < shape.size());
-            Check (g-g_first < shapes[ctr].size());
+            CHECK(g < shape.size());
+            CHECK(g-g_first < shapes[ctr].size());
             shapes[ctr][g-g_first] = shape[g];
         }
     }
-    Check (ctr == source_list.size());
+    CHECK(ctr == source_list.size());
 
     // build the source
     d_source = Teuchos::rcp(new profugus::Isotropic_Source(
@@ -547,7 +547,7 @@ void Problem_Builder::build_source(const ParameterList &source_db)
     // get the axial source strength and axial mesh
     const auto &axial_mesh = d_db->get<OneDArray_int>("axial mesh");
     const auto &axial_src  = source_db.get<OneDArray_dbl>("axial source");
-    Check (axial_src.size() == axial_mesh.size());
+    CHECK(axial_src.size() == axial_mesh.size());
 
     // k-mesh levels for each axial level
     int k_begin = 0, k_end = 0;
@@ -558,7 +558,7 @@ void Problem_Builder::build_source(const ParameterList &source_db)
         // determine the begin/end of the axial mesh for this axial level
         k_begin = k_end;
         k_end   = k_begin + axial_mesh[level];
-        Check (k_end - k_begin == axial_mesh[level]);
+        CHECK(k_end - k_begin == axial_mesh[level]);
 
         // loop over local cells
         for (int k = k_begin; k < k_end; ++k)
@@ -569,8 +569,8 @@ void Problem_Builder::build_source(const ParameterList &source_db)
                 {
                     // get the global IJ indices
                     auto global = d_indexer->convert_to_global(i, j);
-                    Check (global[I] < gsrc.getNumCols());
-                    Check (global[J] < gsrc.getNumRows());
+                    CHECK(global[I] < gsrc.getNumCols());
+                    CHECK(global[J] < gsrc.getNumRows());
 
                     // assign the source id
                     srcids[d_indexer->l2l(i, j, k)] =

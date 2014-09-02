@@ -135,7 +135,7 @@ void send_async(Request &request,
                 int      destination,
                 int      tag)
 {
-    Require (!request.inuse());
+    REQUIRE(!request.inuse());
 
     // set the request
     request.set();
@@ -156,7 +156,7 @@ void send_async_comm(
         int                   destination,
         int                   tag)
 {
-    Require (!request.inuse());
+    REQUIRE(!request.inuse());
 
     // set the request
     request.set();
@@ -195,7 +195,7 @@ void receive_async(Request &request,
                    int      source,
                    int      tag)
 {
-    Require (!request.inuse());
+    REQUIRE(!request.inuse());
 
     // set the request
     request.set();
@@ -216,7 +216,7 @@ void receive_async_comm(
         int                   source,
         int                   tag)
 {
-    Require (!request.inuse());
+    REQUIRE(!request.inuse());
 
     // set the request
     request.set();
@@ -340,7 +340,7 @@ template<class T>
 void global_sum(T  *x,
                 int n)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into a send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -357,7 +357,7 @@ template<class T>
 void global_prod(T  *x,
                  int n)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into a send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -374,7 +374,7 @@ template<class T>
 void global_min(T  *x,
                 int n)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into a send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -391,7 +391,7 @@ template<class T>
 void global_max(T  *x,
                 int n)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into a send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -467,7 +467,7 @@ void sum(T  *x,
          int n,
          int to_node)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -484,7 +484,7 @@ void prod(T  *x,
           int n,
           int to_node)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -501,7 +501,7 @@ void min(T  *x,
          int n,
          int to_node)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -518,7 +518,7 @@ void max(T  *x,
          int n,
          int to_node)
 {
-    Require (x);
+    REQUIRE(x);
 
     // copy data into send buffer
     std::vector<T> send_buffer(x, x + n);
@@ -537,9 +537,9 @@ void sum_scatter(const T   *x,
                  T         *y,
                  const int *steer)
 {
-    Require (x);
-    Require (y);
-    Require (steer);
+    REQUIRE(x);
+    REQUIRE(y);
+    REQUIRE(steer);
 
     // do MPI Reduce-Scatter into y defined by steer
     MPI_Reduce_scatter(const_cast<T *>(x), y, const_cast<int *>(steer),
@@ -553,9 +553,9 @@ void prod_scatter(const T   *x,
                   T         *y,
                   const int *steer)
 {
-    Require (x);
-    Require (y);
-    Require (steer);
+    REQUIRE(x);
+    REQUIRE(y);
+    REQUIRE(steer);
 
     // do MPI Reduce-Scatter into y defined by steer
     MPI_Reduce_scatter(const_cast<T *>(x), y, const_cast<int *>(steer),
@@ -572,9 +572,9 @@ void all_gather(const T *sendbuf,
                 T       *recvbuf,
                 int      num_els)
 {
-    Require(sendbuf);
-    Require(recvbuf);
-    Require(num_els > 0);
+    REQUIRE(sendbuf);
+    REQUIRE(recvbuf);
+    REQUIRE(num_els > 0);
 
     MPI_Allgather(
             const_cast<T*>(sendbuf), num_els, MPI_Traits<T>::element_type(),
@@ -590,14 +590,14 @@ void gather(const T *sendbuf,
             int      num_els,
             int      root)
 {
-    Require(sendbuf);
-    Require(root ? recvbuf != 0 : true);
-    Require(num_els > 0);
+    REQUIRE(sendbuf);
+    REQUIRE(root ? recvbuf != 0 : true);
+    REQUIRE(num_els > 0);
 
 #ifdef REQUIRE_ON
     int nodes = 0;
     MPI_Comm_size(communicator, &nodes);
-    Validate (root < nodes,
+    VALIDATE(root < nodes,
               "root node " << root << " > number of requested nodes");
 #endif
 
@@ -616,8 +616,8 @@ void all_to_all(const T *sendbuf,
                 T       *recvbuf,
                 int      n)
 {
-    Require (sendbuf);
-    Require (recvbuf);
+    REQUIRE(sendbuf);
+    REQUIRE(recvbuf);
 
     // Do all-to-all communication
     MPI_Alltoall(const_cast<T *>(sendbuf), n, MPI_Traits<T>::element_type(),
@@ -631,12 +631,12 @@ void all_to_all(const T   *sendbuf,     const int *sendcounts,
                 const int *sendoffsets, T         *recvbuf,
                 const int *recvcounts,  const int *recvoffsets)
 {
-    Require (sendbuf);
-    Require (sendcounts);
-    Require (sendoffsets);
-    Require (recvbuf);
-    Require (recvcounts);
-    Require (recvoffsets);
+    REQUIRE(sendbuf);
+    REQUIRE(sendcounts);
+    REQUIRE(sendoffsets);
+    REQUIRE(recvbuf);
+    REQUIRE(recvcounts);
+    REQUIRE(recvoffsets);
 
     // Do all-to-all communication
     MPI_Alltoallv(const_cast<T *>(sendbuf), const_cast<int *>(sendcounts),

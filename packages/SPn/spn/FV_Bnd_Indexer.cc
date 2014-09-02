@@ -42,9 +42,9 @@ FV_Bnd_Indexer::FV_Bnd_Indexer(int face,
     , d_face_off_local(0)
     , d_face_off_global(0)
 {
-    Require (face >= 0 && face < 6);
-    Require (N_abscissa * N_ordinate == bc_local[face]);
-    Require (G_abscissa * G_ordinate == bc_global[face]);
+    REQUIRE(face >= 0 && face < 6);
+    REQUIRE(N_abscissa * N_ordinate == bc_local[face]);
+    REQUIRE(G_abscissa * G_ordinate == bc_global[face]);
 
     // set local/global number of cells on the face
     d_N[0] = N_abscissa;
@@ -64,7 +64,7 @@ FV_Bnd_Indexer::FV_Bnd_Indexer(int face,
         d_face_off_global += bc_global[f];
     }
 
-    Ensure (d_face_off_local <= d_face_off_global);
+    ENSURE(d_face_off_local <= d_face_off_global);
 }
 
 } // end namespace profugus

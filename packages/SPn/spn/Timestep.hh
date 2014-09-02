@@ -56,7 +56,7 @@ class Timestep
     //! Set the current timestep.
     void set(double dt)
     {
-        Require (dt > 0.0);
+        REQUIRE(dt > 0.0);
 
         ++d_cycle;
         d_dt = dt;

@@ -39,14 +39,14 @@ inline InputIterator sample_dcdf(
         InputIterator  iter,
         InputIterator  last)
 {
-    Require(std::distance(iter, last) > 0);
-    Require(xi >= 0 && xi < 1);
+    REQUIRE(std::distance(iter, last) > 0);
+    REQUIRE(xi >= 0 && xi < 1);
 
     // Do a binary search on the CDF
     iter = std::lower_bound(iter, last, xi);
 
     // Return the value
-    Ensure(iter != last);
+    ENSURE(iter != last);
     return iter;
 }
 
@@ -64,8 +64,8 @@ inline InputIterator sample_small_dcdf(
         InputIterator  iter,
         InputIterator  last)
 {
-    Require(std::distance(iter, last) > 0);
-    Require(xi >= 0 && xi < 1);
+    REQUIRE(std::distance(iter, last) > 0);
+    REQUIRE(xi >= 0 && xi < 1);
 
     while (iter != last)
     {
@@ -93,8 +93,8 @@ inline InputIterator sample_smallrev_dcdf(
         InputIterator  first,
         InputIterator  iter)
 {
-    Require(std::distance(first, iter) > 0);
-    Require(xi >= 0 && xi < 1);
+    REQUIRE(std::distance(first, iter) > 0);
+    REQUIRE(xi >= 0 && xi < 1);
 
     while (iter != first)
     {
@@ -115,7 +115,7 @@ inline InputIterator sample_smallrev_dcdf(
 template<class T>
 inline T sample_linear(T xi)
 {
-    Require(0 <= xi && xi < 1);
+    REQUIRE(0 <= xi && xi < 1);
 
     return std::sqrt(xi);
 }

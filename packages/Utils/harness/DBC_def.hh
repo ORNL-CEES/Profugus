@@ -70,17 +70,17 @@
  * you want checked even in a production code.
  */
 /*!
- * \def Require(condition)
+ * \def REQUIRE(condition)
  *
  * Pre-condition checking macro.  On when UTILS_DBC & 1 is true.
  */
 /*!
- * \def Check(condition)
+ * \def CHECK(condition)
  *
  * Intra-scope checking macro.  On when UTILS_DBC & 2 is true.
  */
 /*!
- * \def Ensure(condition)
+ * \def ENSURE(condition)
  *
  * Post-condition checking macro.  On when UTILS_DBC & 4 is true.
  */
@@ -91,7 +91,7 @@
  * \code
  *     Remember (int old = x;)
  *     // ...
- *     Ensure (x == old);
+ *     ENSURE(x == old);
  * \endcode
  * On when UTILS_DBC & 4 is true.
  */
@@ -101,7 +101,7 @@
  * Inviolate check macro.  Insist is always on.
  */
 /*!
- * \def Not_Implemented(feature)
+ * \def NOT_IMPLEMENTED(feature)
  *
  * Throw an error when the given feature string is not implemented. Always on.
  *
@@ -113,7 +113,7 @@
  * Otherwise we hide it from the user.
  */
 /*!
- * \def Validate(condition, message_stream)
+ * \def VALIDATE(condition, message_stream)
  *
  * Throw a user-oriented verbose error when condition is not met. The
  * message_stream is passed directly into a string stream, so it can include
@@ -145,27 +145,27 @@
 
 #if UTILS_DBC & 1
 #define REQUIRE_ON
-#define Require(c) UTILS_ASSERT_(c)
+#define REQUIRE(c) UTILS_ASSERT_(c)
 #else
-#define Require(c) UTILS_NOASSERT_(c)
+#define REQUIRE(c) UTILS_NOASSERT_(c)
 #endif
 
 #if UTILS_DBC & 2
 #define CHECK_ON
-#define Check(c) UTILS_ASSERT_(c)
+#define CHECK(c) UTILS_ASSERT_(c)
 #define Assert(c) UTILS_ASSERT_(c)
 #else
-#define Check(c) UTILS_NOASSERT_(c)
+#define CHECK(c) UTILS_NOASSERT_(c)
 #define Assert(c) UTILS_NOASSERT_(c)
 #endif
 
 #if UTILS_DBC & 4
 #define REMEMBER_ON
 #define ENSURE_ON
-#define Ensure(c) UTILS_ASSERT_(c)
+#define ENSURE(c) UTILS_ASSERT_(c)
 #define Remember(c) c
 #else
-#define Ensure(c) UTILS_NOASSERT_(false)
+#define ENSURE(c) UTILS_NOASSERT_(false)
 #define Remember(c)
 #endif
 
@@ -173,10 +173,10 @@
     do { if (!(COND)) ::profugus::insist( \
             #COND, MSG, __FILE__, __LINE__); } while (0)
 
-#define Not_Implemented(MSG) \
+#define NOT_IMPLEMENTED(MSG) \
     throw ::profugus::not_implemented_error(MSG, __FILE__, __LINE__)
 
-#define Validate(COND, MSG_STREAM) \
+#define VALIDATE(COND, MSG_STREAM) \
     do \
     { \
         if (!(COND)) \

@@ -48,7 +48,7 @@ RNG_Control::RNG_Control(int seed,
     , d_stream(stream)
     , d_parameter(parameter)
 {
-    Require (d_stream <= d_number);
+    REQUIRE(d_stream <= d_number);
 
     // make a spring object and pack it to determine the size
     RNG temp = make_random_number_generator();
@@ -56,7 +56,7 @@ RNG_Control::RNG_Control(int seed,
     // pack it and set size
     std::vector<char> pack = temp.pack();
     d_size                 = pack.size();
-    Check (d_size >= 0);
+    CHECK(d_size >= 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -75,7 +75,7 @@ RNG_Control::RNG_Control(int seed,
  */
 RNG_Control::RNG_t RNG_Control::rng()
 {
-    Require (d_stream <= d_number);
+    REQUIRE(d_stream <= d_number);
 
     // create a new Rnd object
     RNG random = make_random_number_generator();
@@ -102,7 +102,7 @@ RNG_Control::RNG_t RNG_Control::rng()
  */
 RNG_Control::RNG_t RNG_Control::rng(int stream)
 {
-    Require (stream <= d_number);
+    REQUIRE(stream <= d_number);
 
     // reset streamnum
     d_stream = stream;
@@ -165,7 +165,7 @@ RNG_Control::RNG_t RNG_Control::spawn(const RNG_t &random) const
  */
 RNG_Control::RNG_t RNG_Control::make_random_number_generator() const
 {
-    Require (d_stream <= d_number);
+    REQUIRE(d_stream <= d_number);
 
     // declare a stream
     int *id = init_sprng(d_stream, d_number, d_seed, d_parameter);

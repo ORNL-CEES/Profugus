@@ -55,7 +55,7 @@ double Keff_Tally::mean() const
 
     double keff = d_keff_sum / d_cycle;
 
-    Ensure(keff >= 0.);
+    ENSURE(keff >= 0.);
     return keff;
 }
 
@@ -74,7 +74,7 @@ double Keff_Tally::variance() const
     double var = (d_keff_sum_sq - d_keff_sum * d_keff_sum / d_cycle)
                     / (d_cycle * (d_cycle - 1));
 
-    Ensure(var >= 0.);
+    ENSURE(var >= 0.);
     return var;
 }
 
@@ -93,7 +93,7 @@ double Keff_Tally::variance() const
 void Keff_Tally::accumulate(double            step,
                             const Particle_t &p)
 {
-    Require (b_physics);
+    REQUIRE(b_physics);
 
     d_keff_cycle += p.wt() * step * b_physics->total(physics::NU_FISSION, p);
 }
@@ -134,7 +134,7 @@ void Keff_Tally::begin_cycle()
  */
 void Keff_Tally::end_cycle(double num_particles)
 {
-    Require (num_particles > 0.);
+    REQUIRE(num_particles > 0.);
 
     // Keff estimate is total nu-sigma-f reaction rate / num particles
     d_keff_cycle /= num_particles;

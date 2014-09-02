@@ -64,8 +64,8 @@ class State
         , d_num_groups(num_groups)
         , d_flux(mesh->num_cells() * d_num_groups, 0.0)
     {
-        Require (!mesh.is_null());
-        Require (d_num_groups > 0);
+        REQUIRE(!mesh.is_null());
+        REQUIRE(d_num_groups > 0);
     }
 
     // >>> ACCESSORS
@@ -97,7 +97,7 @@ class State
     //! Get a const-view to fluxes over a range of groups.
     const_View_Field flux(int first, int last) const
     {
-        Require (1 + last - first > 0 && last - first < d_num_groups);
+        REQUIRE(1 + last - first > 0 && last - first < d_num_groups);
         return const_View_Field(&d_flux[0] + first * d_mesh->num_cells(),
                                 d_mesh->num_cells() * (1 + last - first));
     }
@@ -105,7 +105,7 @@ class State
     //! Get a mutable-view to fluxes over a range of groups.
     View_Field flux(int first, int last)
     {
-        Require (1 + last - first > 0 && last - first < d_num_groups);
+        REQUIRE(1 + last - first > 0 && last - first < d_num_groups);
         return View_Field(&d_flux[0] + first * d_mesh->num_cells(),
                           d_mesh->num_cells() * (1 + last - first));
     }

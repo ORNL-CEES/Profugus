@@ -59,7 +59,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
                                     fine_system->get_Matrix(),smoother_db) );
     if (d_preconditioners.back() != Teuchos::null)
     {
-        Check (d_preconditioners.back()->OperatorDomainMap().NumMyElements()
+        CHECK(d_preconditioners.back()->OperatorDomainMap().NumMyElements()
                == d_solutions.back()->MyLength());
         d_smoothers.back()->set_preconditioner(d_preconditioners.back());
     }
@@ -90,7 +90,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         old_mat = new_mat;
         new_mat = Energy_Collapse::collapse_all_mats(
             old_mat, collapse, weights);
-        Check( !new_mat.is_null() );
+        CHECK( !new_mat.is_null() );
 
         // Build linear system
         RCP<Linear_System> system = rcp(
@@ -98,7 +98,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
         system->build_Matrix();
         d_operators.push_back( system->get_Operator() );
-        Check( d_operators.back() != Teuchos::null );
+        CHECK( d_operators.back() != Teuchos::null );
 
         // Allocate Epetra vectors
         RCP<Epetra_Vector> tmp_vec = system->get_RHS();
@@ -128,7 +128,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
                                         system->get_Matrix(),smoother_db) );
         if( d_preconditioners.back() != Teuchos::null )
         {
-            Check (d_preconditioners.back()->OperatorDomainMap()
+            CHECK(d_preconditioners.back()->OperatorDomainMap()
                    .NumMyElements() == d_solutions.back()->MyLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
@@ -154,7 +154,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         d_smoothers.back()->set_operator(d_operators.back());
         if( d_preconditioners.back() != Teuchos::null )
         {
-            Require(d_preconditioners.back()->OperatorDomainMap()
+            REQUIRE(d_preconditioners.back()->OperatorDomainMap()
                     .NumMyElements() == d_solutions.back()->MyLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
@@ -173,7 +173,7 @@ int Energy_Multigrid::Apply(const Epetra_MultiVector &x,
                                   Epetra_MultiVector &y ) const
 {
     int num_vectors = x.NumVectors();
-    Require (y.NumVectors() == num_vectors);
+    REQUIRE(y.NumVectors() == num_vectors);
 
     // Process each vector in multivec individually (all of the
     //  multivecs have been allocated for a single vec)

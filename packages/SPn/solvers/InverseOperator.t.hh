@@ -41,7 +41,7 @@ InverseOperatorBase<MV,OP>::InverseOperatorBase(
 template <class MV, class OP>
 void InverseOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
 {
-    Require( !A.is_null() );
+    REQUIRE( !A.is_null() );
     d_solver->set_operator(A);
 
     // Store A for some of the operator interface functions
@@ -57,7 +57,7 @@ void InverseOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
 template <class MV, class OP>
 void InverseOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
-    Require( !B.is_null() );
+    REQUIRE( !B.is_null() );
     d_B = B;
 }
 
@@ -70,8 +70,8 @@ void InverseOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
 template <class MV, class OP>
 void InverseOperatorBase<MV,OP>::set_preconditioner( Teuchos::RCP<OP> P )
 {
-    Require( !P.is_null() );
-    Require( !d_solver.is_null() );
+    REQUIRE( !P.is_null() );
+    REQUIRE( !d_solver.is_null() );
     d_solver->set_preconditioner(P);
 }
 

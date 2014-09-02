@@ -32,12 +32,12 @@ Energy_Restriction::Energy_Restriction(
 {
     d_fine_groups = std::accumulate(steer_vec.begin(),steer_vec.end(),0);
     d_coarse_groups = steer_vec.size();
-    Check( d_fine_groups > d_coarse_groups );
+    CHECK( d_fine_groups > d_coarse_groups );
 
     // Determine energy-independent size of vector
-    Check( fine_vec.MyLength()%d_fine_groups==0 );
+    CHECK( fine_vec.MyLength()%d_fine_groups==0 );
     d_unks_per_grp   = fine_vec.MyLength() / d_fine_groups;
-    Ensure( coarse_vec.MyLength()==d_unks_per_grp*d_coarse_groups );
+    ENSURE( coarse_vec.MyLength()==d_unks_per_grp*d_coarse_groups );
 }
 
 //---------------------------------------------------------------------------//
@@ -48,11 +48,11 @@ int Energy_Restriction::Apply(
         const Epetra_MultiVector &fine_vectors,
               Epetra_MultiVector &coarse_vectors ) const
 {
-    Require( fine_vectors.MyLength()   == d_fine_groups*d_unks_per_grp );
-    Require( coarse_vectors.MyLength() == d_coarse_groups*d_unks_per_grp );
+    REQUIRE( fine_vectors.MyLength()   == d_fine_groups*d_unks_per_grp );
+    REQUIRE( coarse_vectors.MyLength() == d_coarse_groups*d_unks_per_grp );
 
     int num_vectors = fine_vectors.NumVectors();
-    Check( coarse_vectors.NumVectors()==num_vectors );
+    CHECK( coarse_vectors.NumVectors()==num_vectors );
 
     coarse_vectors.PutScalar(0.0);
 

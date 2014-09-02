@@ -34,7 +34,7 @@ RayleighQuotient<MV,OP>::RayleighQuotient( RCP_ParameterList db )
         Insist( db->isParameter("eig_shift"),
                 "Must specify 'eig_shift' if fixed shift is requested." );
         d_fixed_shift = 1.0/db->get<double>("eig_shift");
-        Validate( d_fixed_shift > 0.0,
+        VALIDATE( d_fixed_shift > 0.0,
                   "Value of 'eig_shift' must be positive." );
     }
 }
@@ -48,9 +48,9 @@ template <class MV, class OP>
 void RayleighQuotient<MV,OP>::solve( double           &keff,
                                      Teuchos::RCP<MV>  x )
 {
-    Require( !b_A.is_null() );
-    Require( !d_Op.is_null() );
-    Require( !x.is_null() );
+    REQUIRE( !b_A.is_null() );
+    REQUIRE( !d_Op.is_null() );
+    REQUIRE( !x.is_null() );
 
     // Allocate necessary vectors
     Teuchos::RCP<MV> Ax = MVT::Clone(*x,1);

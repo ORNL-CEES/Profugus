@@ -102,13 +102,13 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Return the current cell ID, valid only when inside the mesh
     geometry::cell_type cell(const Geo_State_t &state) const
     {
-        Require(boundary_state(state) != geometry::OUTSIDE);
+        REQUIRE(boundary_state(state) != geometry::OUTSIDE);
 
         using def::I; using def::J; using def::K;
         Cartesian_Mesh::size_type c = num_cells();
         bool found = d_mesh.index(state.ijk[I], state.ijk[J], state.ijk[K], c);
 
-        Ensure(found);
+        ENSURE(found);
         return c;
     }
 
@@ -116,9 +116,9 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     geometry::matid_type matid(const Geo_State_t &state) const
     {
         Insist(d_materials, "Material IDs haven't been assigned");
-        Require(cell(state) < d_materials->size());
+        REQUIRE(cell(state) < d_materials->size());
 
-        Ensure((*d_materials)[cell(state)] >= 0);
+        ENSURE((*d_materials)[cell(state)] >= 0);
         return (*d_materials)[cell(state)];
     }
 
@@ -174,13 +174,13 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Reflect the direction at a reflecting surface.
     bool reflect(Geo_State_t& state)
     {
-        Not_Implemented("reflect in mesh_geometry");
+        NOT_IMPLEMENTED("reflect in mesh_geometry");
     }
 
     //! Return the outward normal at the location dictated by the state.
     Space_Vector normal(const Geo_State_t& state) const
     {
-        Not_Implemented("normal in mesh_geometry");
+        NOT_IMPLEMENTED("normal in mesh_geometry");
     }
 
     // >>> PUBLIC INTERFACE
@@ -206,8 +206,8 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         using profugus::soft_equiv;
         using def::X; using def::Y; using def::Z;
 
-        Require (dist >= 0.0);
-        Require (soft_equiv(vector_magnitude(state.dir), 1.0, 1.0e-6));
+        REQUIRE(dist >= 0.0);
+        REQUIRE(soft_equiv(vector_magnitude(state.dir), 1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
         state.pos[X] += dist * state.dir[X];

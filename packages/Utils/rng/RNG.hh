@@ -127,10 +127,10 @@ class RNG
     }
 
     //! Return the SPRNG ID pointer.
-    int* get_id() const { Require (d_streamid); return d_streamid->id; }
+    int* get_id() const { REQUIRE(d_streamid); return d_streamid->id; }
 
     //! Return the stream number.
-    int get_num() const { Require (d_streamid); return d_stream; }
+    int get_num() const { REQUIRE(d_streamid); return d_stream; }
 
     // Return the packed size
     int get_size() const;

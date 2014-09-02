@@ -38,7 +38,7 @@ Eigenvalue_Solver::Eigenvalue_Solver(RCP_ParameterList db)
     : Base(db)
     , d_keff(2.0)
 {
-    Require (!b_db.is_null());
+    REQUIRE(!b_db.is_null());
 
     set_default_parameters();
 }
@@ -57,13 +57,13 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
                               RCP_Indexer     indexer,
                               RCP_Global_Data data)
 {
-    Require (!b_db.is_null());
-    Require (!dim.is_null());
-    Require (!mat.is_null());
-    Require (!mesh.is_null());
-    Require (!indexer.is_null());
-    Require (!data.is_null());
-    Require (b_db->isSublist("eigenvalue_db"));
+    REQUIRE(!b_db.is_null());
+    REQUIRE(!dim.is_null());
+    REQUIRE(!mat.is_null());
+    REQUIRE(!mesh.is_null());
+    REQUIRE(!indexer.is_null());
+    REQUIRE(!data.is_null());
+    REQUIRE(b_db->isSublist("eigenvalue_db"));
 
     // build the linear system (we only provide finite volume for now)
     std::string &eqn_type = b_db->get("eqn_type", std::string("fv"));
@@ -78,7 +78,7 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
         std::string msg = "Undefined equation type: " + eqn_type;
         throw profugus::assertion(msg);
     }
-    Check (!b_system.is_null());
+    CHECK(!b_system.is_null());
 
     // build the SPN matrix and build the fission matrix
     b_system->build_Matrix();
@@ -113,10 +113,10 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
 
     // the map is a block map where the block size is the number of groups
     //  OR a point map
-    Check (b_system->get_Map()->NumMyElements() * mat->xs().num_groups()
+    CHECK(b_system->get_Map()->NumMyElements() * mat->xs().num_groups()
            == d_u->MyLength() ||
            b_system->get_Map()->NumMyElements() == d_u->MyLength() );
-    Check (!d_u.is_null());
+    CHECK(!d_u.is_null());
 
     // get the eigenvalue solver settings
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
@@ -137,7 +137,7 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     d_eigensolver = EigenvalueSolverBuilder<MV,OP>::build_solver(
         edb, b_system->get_Operator(), b_system->get_fission_matrix(), prec);
 
-    Ensure (!d_eigensolver.is_null());
+    ENSURE(!d_eigensolver.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -146,9 +146,9 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
  */
 void Eigenvalue_Solver::solve()
 {
-    Require (!b_system.is_null());
-    Require (!d_u.is_null());
-    Require (!d_eigensolver.is_null());
+    REQUIRE(!b_system.is_null());
+    REQUIRE(!d_u.is_null());
+    REQUIRE(!d_eigensolver.is_null());
 
     // solve the problem
     d_eigensolver->solve(d_keff, d_u);
@@ -164,7 +164,7 @@ void Eigenvalue_Solver::solve()
  */
 void Eigenvalue_Solver::write_state(State_t &state)
 {
-    Require (state.mesh().num_cells() *
+    REQUIRE(state.mesh().num_cells() *
              b_system->get_dims()->num_equations() * state.num_groups()
              <= d_u->MyLength());
 
@@ -204,7 +204,7 @@ void Eigenvalue_Solver::write_state(State_t &state)
 
     // do a global reduction on the normalization
     profugus::global_sum(norm, 2);
-    Check (norm[0] > 0.0);
+    CHECK(norm[0] > 0.0);
 
     // apply the normalization
     double norm_f = (1.0 / std::sqrt(norm[0])) * (std::fabs(norm[1]) / norm[1]);
@@ -235,7 +235,7 @@ void Eigenvalue_Solver::set_default_parameters()
     // Get eigenvalue db
     RCP_ParameterList eig_db = Teuchos::sublist(
         b_db, std::string("eigenvalue_db"));
-    Check (!eig_db.is_null());
+    CHECK(!eig_db.is_null());
 
     // Look for user specified tolerance in a few places, set a default if we
     // can't find one
@@ -325,7 +325,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
                                         RCP_Indexer     indexer,
                                         RCP_Global_Data data)
 {
-    Require (b_db->isSublist("eigenvalue_db"));
+    REQUIRE(b_db->isSublist("eigenvalue_db"));
 
     // preconditioner operator
     RCP_Epetra_Op prec;
@@ -346,7 +346,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         prec = Teuchos::rcp(
             new Energy_Multigrid(b_db, prec_db, dim, mat, mesh,
                                  indexer, data, b_system));
-        Check(prec != Teuchos::null);
+        CHECK(prec != Teuchos::null);
     }
     else if (prec_type == "ifpack")
     {
@@ -405,7 +405,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         //  but we want it to be used with "Apply", wrap the
         //  preconditioner into an object that reverses the functionality
         prec = Teuchos::rcp(new Epetra_InvOperator(d_ml_prec.get()));
-        Check (!prec.is_null());
+        CHECK(!prec.is_null());
 #else
         throw profugus::assertion("ML must be enabled at configure.");
 #endif
@@ -422,11 +422,11 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
 
         prec = solver_op;
 
-        Check (prec != Teuchos::null);
+        CHECK(prec != Teuchos::null);
     }
     else if (prec_type != "none" && prec_type != "internal")
     {
-        Validate(false, "Unknown preconditioner option: " << prec_type);
+        VALIDATE(false, "Unknown preconditioner option: " << prec_type);
     }
 
     return prec;

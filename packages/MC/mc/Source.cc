@@ -32,9 +32,9 @@ Source::Source(SP_Geometry    geometry,
     , b_nodes(profugus::nodes())
     , d_rng_stream(0)
 {
-    Require (b_geometry);
-    Require (b_physics);
-    Require (b_rng_control);
+    REQUIRE(b_geometry);
+    REQUIRE(b_physics);
+    REQUIRE(b_rng_control);
 }
 
 //---------------------------------------------------------------------------//
@@ -65,7 +65,7 @@ void Source::make_RNG()
     // advance to the next set of streams
     d_rng_stream += b_nodes;
 
-    Ensure (profugus::Global_RNG::d_rng.assigned());
+    ENSURE(profugus::Global_RNG::d_rng.assigned());
 }
 
 } // end namespace profugus

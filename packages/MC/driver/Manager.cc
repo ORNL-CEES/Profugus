@@ -56,7 +56,7 @@ void Manager::setup(const std::string &xml_file)
 
     // get the problem database from the problem-builder
     d_db = builder.problem_db();
-    Check (!d_db.is_null());
+    CHECK(!d_db.is_null());
 
     // store the problem name
     d_problem_name = d_db->get("problem_name", std::string("MC"));
@@ -65,8 +65,8 @@ void Manager::setup(const std::string &xml_file)
     // get the geometry and physics
     d_geometry = builder.get_geometry();
     d_physics  = builder.get_physics();
-    Check (d_geometry);
-    Check (d_physics);
+    CHECK(d_geometry);
+    CHECK(d_physics);
 
     // output the geometry
     if (d_db->get<bool>("output_geometry", false))
@@ -86,7 +86,7 @@ void Manager::setup(const std::string &xml_file)
 
     // get the variance reduction
     auto var_reduction = builder.get_var_reduction();
-    Check (var_reduction);
+    CHECK(var_reduction);
 
     // get the external source shape (it could be null)
     auto shape = builder.get_source_shape();
@@ -154,9 +154,9 @@ void Manager::setup(const std::string &xml_file)
             "Undefined problem type; choose eigenvalue or fixed");
     }
 
-    Ensure (d_geometry);
-    Ensure (d_physics);
-    Ensure (d_solver);
+    ENSURE(d_geometry);
+    ENSURE(d_physics);
+    ENSURE(d_solver);
 }
 
 //---------------------------------------------------------------------------//
@@ -174,12 +174,12 @@ void Manager::solve()
         // run the appropriate solver
         if (d_kcode_solver)
         {
-            Check (!d_fixed_solver);
+            CHECK(!d_fixed_solver);
             d_kcode_solver->solve();
         }
         else if (d_fixed_solver)
         {
-            Check (!d_kcode_solver);
+            CHECK(!d_kcode_solver);
             d_fixed_solver->solve();
         }
         else
@@ -226,7 +226,7 @@ void Manager::output()
     {
         // get the kcode tally
         auto keff = d_kcode_solver->keff_tally();
-        Check (keff);
+        CHECK(keff);
 
         // make the hdf5 file
         profugus::Serial_HDF5_Writer writer;

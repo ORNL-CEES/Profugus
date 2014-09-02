@@ -40,9 +40,9 @@ Box_Shape::Box_Shape(double lox,
     , d_Dy(hiy - loy)
     , d_Dz(hiz - loz)
 {
-    Require (d_Dx >= 0.0);
-    Require (d_Dy >= 0.0);
-    Require (d_Dz >= 0.0);
+    REQUIRE(d_Dx >= 0.0);
+    REQUIRE(d_Dy >= 0.0);
+    REQUIRE(d_Dz >= 0.0);
 }
 
 //---------------------------------------------------------------------------//
@@ -58,9 +58,9 @@ Box_Shape::Box_Shape(Buffer &buffer)
     // Get the data
     u >> d_lox >> d_loy >> d_loz >> d_Dx >> d_Dy >> d_Dz;
 
-    Require (d_Dx >= 0.0);
-    Require (d_Dy >= 0.0);
-    Require (d_Dz >= 0.0);
+    REQUIRE(d_Dx >= 0.0);
+    REQUIRE(d_Dy >= 0.0);
+    REQUIRE(d_Dz >= 0.0);
 }
 
 //---------------------------------------------------------------------------//

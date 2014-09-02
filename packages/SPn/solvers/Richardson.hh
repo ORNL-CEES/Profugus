@@ -68,7 +68,7 @@ class Richardson : public LinearSolver<MV,OP>
     //! Set the preconditioner.
     void set_preconditioner( Teuchos::RCP<OP> P )
     {
-        Require( P != Teuchos::null );
+        REQUIRE( P != Teuchos::null );
         d_P = P;
     }
 

@@ -47,7 +47,7 @@ StratimikosSolver<MV,OP>::StratimikosSolver(RCP_ParameterList db)
     // read database
     // get stratimikos database and convert to a ParameterList
     RCP_ParameterList builderplist = Teuchos::sublist(db, "Stratimikos");
-    Check (!builderplist.is_null());
+    CHECK(!builderplist.is_null());
 
     if (db->isParameter("linear_solver_xml_file"))
     {
@@ -101,11 +101,11 @@ void StratimikosSolver<MV,OP>::solve(Teuchos::RCP<MV>       x,
     using Teuchos::ptrInArg;
 
     Insist (d_thyraA != Teuchos::null, "set_operator has not been called");
-    Require (x != Teuchos::null);
-    Require (b != Teuchos::null);
-    Require (MVT::GetNumberVecs(*x) == MVT::GetNumberVecs(*b));
-    Require (b_tolerance >= 0.0);
-    Require (b_max_iters > 0);
+    REQUIRE(x != Teuchos::null);
+    REQUIRE(b != Teuchos::null);
+    REQUIRE(MVT::GetNumberVecs(*x) == MVT::GetNumberVecs(*b));
+    REQUIRE(b_tolerance >= 0.0);
+    REQUIRE(b_max_iters > 0);
 
     // Create Thyra preconditioner if we have an operator for it
     RCP_Prec prec;
@@ -196,7 +196,7 @@ void StratimikosSolver<Epetra_MultiVector,Epetra_Operator>::set_operator(
     // Indicate that the operator has been updated.
     d_updated_operator = true;
 
-    Ensure (d_thyraA != Teuchos::null );
+    ENSURE(d_thyraA != Teuchos::null );
 }
 
 //---------------------------------------------------------------------------//
@@ -212,7 +212,7 @@ void StratimikosSolver<Epetra_MultiVector,Epetra_Operator>::set_preconditioner(
     // Create thyra operator
     d_prec = Thyra::epetraLinearOp(P);
 
-    Ensure( d_prec != Teuchos::null );
+    ENSURE( d_prec != Teuchos::null );
 }
 
 //---------------------------------------------------------------------------//
@@ -263,7 +263,7 @@ void StratimikosSolver<
     // Indicate that the operator has been updated.
     d_updated_operator = true;
 
-    Ensure (d_thyraA != Teuchos::null );
+    ENSURE(d_thyraA != Teuchos::null );
 }
 
 //---------------------------------------------------------------------------//
@@ -285,7 +285,7 @@ StratimikosSolver<Tpetra_MultiVector,Tpetra_Operator>::set_preconditioner(
     d_prec = Thyra::tpetraLinearOp<SCALAR,LO,GO,NODE>(
         rangeSpace,domainSpace,P);
 
-    Ensure( d_prec != Teuchos::null );
+    ENSURE( d_prec != Teuchos::null );
 }
 
 //---------------------------------------------------------------------------//

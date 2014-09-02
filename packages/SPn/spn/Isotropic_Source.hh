@@ -66,11 +66,11 @@ class Isotropic_Source
     //! Get source in particles/cm^3/str.
     double q_e(int cell, int g) const
     {
-        Require (!d_shapes.empty());
+        REQUIRE(!d_shapes.empty());
 
-        Require (cell >= 0 && cell < d_ids.size());
-        Require (d_ids[cell] >= 0 && d_ids[cell] < d_shapes.size());
-        Require (g >= 0 && g < d_shapes[d_ids[cell]].size());
+        REQUIRE(cell >= 0 && cell < d_ids.size());
+        REQUIRE(d_ids[cell] >= 0 && d_ids[cell] < d_shapes.size());
+        REQUIRE(g >= 0 && g < d_shapes[d_ids[cell]].size());
 
         return d_source[cell] * d_shapes[d_ids[cell]][g];
     }

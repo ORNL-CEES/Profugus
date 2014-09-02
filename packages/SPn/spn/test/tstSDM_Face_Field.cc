@@ -98,11 +98,11 @@ class SDM_Face_Field_Test : public testing::Test
 
         // LU decomposition
         lapack.GETRF(G, G, A.values(), A.stride(), &ipiv[0], &info);
-        Check (info == 0);
+        CHECK(info == 0);
 
         // inverse
         lapack.GETRI(G, A.values(), A.stride(), &ipiv[0], &work[0], G, &info);
-        Check (info == 0);
+        CHECK(info == 0);
     }
 
   protected:

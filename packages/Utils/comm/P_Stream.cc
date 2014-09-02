@@ -37,7 +37,7 @@ P_Out::P_Out(int master)
  */
 P_Out& P_Out::operator<<(FP f)
 {
-    Require (f);
+    REQUIRE(f);
     f(*this);
     return *this;
 }

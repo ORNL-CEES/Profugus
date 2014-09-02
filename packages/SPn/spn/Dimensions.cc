@@ -27,7 +27,7 @@ namespace profugus
 Dimensions::Dimensions(int N)
     : d_spn(N)
 {
-    Require (N == 1 || N == 3 || N == 5 || N == 7);
+    REQUIRE(N == 1 || N == 3 || N == 5 || N == 7);
 
     // set the number of equations
     d_num_eqs = (N + 1) / 2;

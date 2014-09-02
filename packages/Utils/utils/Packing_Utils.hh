@@ -96,13 +96,13 @@ class Packer
     // >>> ACCESSORS
 
     //! Get a pointer to the current position of the data stream.
-    const_pointer get_ptr() const { Require(!size_mode); return ptr; }
+    const_pointer get_ptr() const { REQUIRE(!size_mode); return ptr; }
 
     //! Get a pointer to the beginning position of the data stream.
-    const_pointer begin() const { Require(!size_mode); return begin_ptr; }
+    const_pointer begin() const { REQUIRE(!size_mode); return begin_ptr; }
 
     //! Get a pointer to the ending position of the data stream.
-    const_pointer end() const { Require(!size_mode); return end_ptr; }
+    const_pointer end() const { REQUIRE(!size_mode); return end_ptr; }
 
     //! Get the size of the data stream.
     unsigned int size() const { return stream_size; }
@@ -270,7 +270,7 @@ inline Unpacker& operator>>(Unpacker &u, T &value)
 template<class FT>
 void pack_data(const FT &field, std::vector<char> &packed)
 {
-    Require (packed.empty());
+    REQUIRE(packed.empty());
 
     // determine the size of the field
     int field_size = field.size();
@@ -293,7 +293,7 @@ void pack_data(const FT &field, std::vector<char> &packed)
          ++itr)
         packer << *itr;
 
-    Ensure (packer.get_ptr() == &packed[0] + size);
+    ENSURE(packer.get_ptr() == &packed[0] + size);
 }
 
 //---------------------------------------------------------------------------//
@@ -334,8 +334,8 @@ void pack_data(const FT &field, std::vector<char> &packed)
 template<class FT>
 void unpack_data(FT &field, const std::vector<char> &packed)
 {
-    Require (field.empty());
-    Require (packed.size() >= sizeof(int));
+    REQUIRE(field.empty());
+    REQUIRE(packed.size() >= sizeof(int));
 
     // make an unpacker and set it
     Unpacker unpacker;
@@ -352,7 +352,7 @@ void unpack_data(FT &field, const std::vector<char> &packed)
     for (typename FT::iterator itr = field.begin(); itr != field.end(); itr++)
         unpacker >> *itr;
 
-    Require (unpacker.get_ptr() == &packed[0] + packed.size());
+    REQUIRE(unpacker.get_ptr() == &packed[0] + packed.size());
 }
 
 } // end namespace profugus

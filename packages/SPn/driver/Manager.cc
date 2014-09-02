@@ -96,7 +96,7 @@ void Manager::setup(const std::string &xml_file)
     // Determine if epetra or tpetra should be used
     d_implementation = d_db->get("trilinos_implementation",
         std::string("epetra"));
-    Require( d_implementation == "epetra" || d_implementation == "tpetra" );
+    REQUIRE( d_implementation == "epetra" || d_implementation == "tpetra" );
 
     // build the appropriate solver (default is eigenvalue)
     if( d_implementation == "epetra" )
@@ -121,7 +121,7 @@ void Manager::setup(const std::string &xml_file)
             std::stringstream ss;
             ss << "Undefined problem type " << prob_type
                 << "; choose eigenvalue, fixed or fixed_tdep" << std::endl;
-            Validate(false,ss.str());
+            VALIDATE(false,ss.str());
         }
 
         // setup the solver
@@ -143,14 +143,14 @@ void Manager::setup(const std::string &xml_file)
         }
         else if (prob_type == "fixed_tdep")
         {
-            Not_Implemented("Time dependent SPN with Tpetra");
+            NOT_IMPLEMENTED("Time dependent SPN with Tpetra");
         }
         else
         {
             std::stringstream ss;
             ss << "Undefined problem type " << prob_type
                 << "; choose eigenvalue or fixed" << std::endl;
-            Validate(false,ss.str());
+            VALIDATE(false,ss.str());
         }
 
         // setup the solver
@@ -160,12 +160,12 @@ void Manager::setup(const std::string &xml_file)
     // make the state
     d_state = Teuchos::rcp(new State_t(d_mesh, d_mat->xs().num_groups()));
 
-    Ensure (!d_mesh.is_null());
-    Ensure (!d_indexer.is_null());
-    Ensure (!d_gdata.is_null());
-    Ensure (!d_mat.is_null());
-    Ensure (!d_dim.is_null());
-    Ensure (!d_state.is_null());
+    ENSURE(!d_mesh.is_null());
+    ENSURE(!d_indexer.is_null());
+    ENSURE(!d_gdata.is_null());
+    ENSURE(!d_mat.is_null());
+    ENSURE(!d_dim.is_null());
+    ENSURE(!d_state.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -185,23 +185,23 @@ void Manager::solve()
             // run the appropriate solver
             if (!d_eigen_solver.is_null())
             {
-                Check (d_fixed_solver.is_null());
-                Check (d_time_dep_solver.is_null());
+                CHECK(d_fixed_solver.is_null());
+                CHECK(d_time_dep_solver.is_null());
                 d_eigen_solver->solve();
             }
             else if (!d_fixed_solver.is_null())
             {
-                Check (d_eigen_solver.is_null());
-                Check (d_time_dep_solver.is_null());
-                Check (!d_external_source.is_null());
+                CHECK(d_eigen_solver.is_null());
+                CHECK(d_time_dep_solver.is_null());
+                CHECK(!d_external_source.is_null());
                 d_fixed_solver->solve(*d_external_source);
             }
             else
             {
-                Check (d_fixed_solver.is_null());
-                Check (d_eigen_solver.is_null());
-                Check (!d_time_dep_solver.is_null());
-                Check (!d_external_source.is_null());
+                CHECK(d_fixed_solver.is_null());
+                CHECK(d_eigen_solver.is_null());
+                CHECK(!d_time_dep_solver.is_null());
+                CHECK(!d_external_source.is_null());
                 d_time_dep_solver->solve(*d_external_source);
             }
 
@@ -213,13 +213,13 @@ void Manager::solve()
             // run the appropriate solver
             if (!d_eigen_solver_tpetra.is_null())
             {
-                Check (d_fixed_solver_tpetra.is_null());
+                CHECK(d_fixed_solver_tpetra.is_null());
                 d_eigen_solver_tpetra->solve();
             }
             else if (!d_fixed_solver_tpetra.is_null())
             {
-                Check (d_eigen_solver_tpetra.is_null());
-                Check (!d_external_source.is_null());
+                CHECK(d_eigen_solver_tpetra.is_null());
+                CHECK(!d_external_source.is_null());
                 d_fixed_solver_tpetra->solve(*d_external_source);
             }
 
@@ -237,8 +237,8 @@ void Manager::output()
 {
     using def::I; using def::J; using def::K;
 
-    Require (!d_state.is_null());
-    Require (!d_db.is_null());
+    REQUIRE(!d_state.is_null());
+    REQUIRE(!d_db.is_null());
 
     SCOPED_TIMER("Manager.output");
 
@@ -268,7 +268,7 @@ void Manager::output()
 
     // group offset (if doing a truncated range)
     auto g_first = d_db->get<int>("g_first");
-    Check (1 + d_db->get<int>("g_last") - g_first == state.num_groups());
+    CHECK(1 + d_db->get<int>("g_last") - g_first == state.num_groups());
 
     // output the fluxes if Parallel HDF5 is available
 #ifdef H5_HAVE_PARALLEL
@@ -303,8 +303,8 @@ void Manager::output()
 
             // get the group fluxes
             State_t::const_View_Field flux = state.flux(g, g);
-            Check (!flux.is_null());
-            Check (flux.size() == d_mesh->num_cells());
+            CHECK(!flux.is_null());
+            CHECK(flux.size() == d_mesh->num_cells());
 
             // write that data in parallel
             writer.write(f.str(), d, flux.getRawPtr());
@@ -342,7 +342,7 @@ void Manager::output()
             Teuchos::RCP<Epetra_RowMatrix> rowmat =
                 Teuchos::rcp_dynamic_cast<Epetra_RowMatrix>(
                     linear_system.get_fission_matrix());
-            Check (!rowmat.is_null());
+            CHECK(!rowmat.is_null());
 
             EpetraExt::RowMatrixToMatrixMarketFile(B.c_str(), *rowmat);
         }

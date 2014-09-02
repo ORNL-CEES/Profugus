@@ -76,8 +76,8 @@ class Bank
     //! Is the bank empty?
     bool empty() const
     {
-        Check(d_particles.size() == d_count.size());
-        Check(d_particles.empty() ? d_total == 0 : true);
+        CHECK(d_particles.size() == d_count.size());
+        CHECK(d_particles.empty() ? d_total == 0 : true);
         return d_total == 0;
     }
 
@@ -88,8 +88,8 @@ class Bank
     //! View the particle on the top of the stack
     const SP_Particle& top() const
     {
-        Require(!empty());
-        Require(!d_particles.empty());
+        REQUIRE(!empty());
+        REQUIRE(!d_particles.empty());
         return d_particles.back();
     }
     const SP_Particle& back() const { return top(); }
@@ -97,8 +97,8 @@ class Bank
     //! Just pushing a particle
     void basic_push(const SP_Particle& p, size_type count)
     {
-        Require(p);
-        Require(count > 0);
+        REQUIRE(p);
+        REQUIRE(count > 0);
 
         // Add a copy of the particle to the stack
         d_particles.push_back(std::make_shared<Particle_t>(*p));

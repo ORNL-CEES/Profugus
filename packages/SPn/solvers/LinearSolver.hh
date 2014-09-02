@@ -93,7 +93,7 @@ class LinearSolver
     // Set operator
     virtual void set_operator( Teuchos::RCP<OP> A )
     {
-        Require( !A.is_null() );
+        REQUIRE( !A.is_null() );
         b_A = A;
     }
 
@@ -110,14 +110,14 @@ class LinearSolver
     // Set tolerance
     virtual void set_tolerance(double tol)
     {
-        Require(tol>0.0);
+        REQUIRE(tol>0.0);
         b_tolerance = tol;
     }
 
     // Set max iterations
     virtual void set_max_iters(int iters)
     {
-        Require(iters>0);
+        REQUIRE(iters>0);
         b_max_iters=iters;
     }
 

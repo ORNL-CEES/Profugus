@@ -82,7 +82,7 @@ class Box_Shape : public Shape
         Space_Vector point(d_Dx * rng.ran() + d_lox,
                            d_Dy * rng.ran() + d_loy,
                            d_Dz * rng.ran() + d_loz);
-        Ensure(is_point_inside(point));
+        ENSURE(is_point_inside(point));
         return point;
     }
 

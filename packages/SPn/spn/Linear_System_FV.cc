@@ -67,16 +67,16 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
 {
     using def::I; using def::J; using def::K;
 
-    Require (!mesh.is_null());
-    Require (!indexer.is_null());
-    Require (!data.is_null());
-    Require (mesh->dimension() == 3);
-    Require (data->which_dimension() == 3);
-    Require (!b_dim.is_null());
-    Require (!b_mat.is_null());
-    Require (b_db->isParameter("boundary"));
-    Require (d_Nc == d_mesh->num_cells());
-    Require (d_Gc == data->num_cells());
+    REQUIRE(!mesh.is_null());
+    REQUIRE(!indexer.is_null());
+    REQUIRE(!data.is_null());
+    REQUIRE(mesh->dimension() == 3);
+    REQUIRE(data->which_dimension() == 3);
+    REQUIRE(!b_dim.is_null());
+    REQUIRE(!b_mat.is_null());
+    REQUIRE(b_db->isParameter("boundary"));
+    REQUIRE(d_Nc == d_mesh->num_cells());
+    REQUIRE(d_Gc == data->num_cells());
 
     // make the communicator
 #ifdef COMM_MPI
@@ -94,15 +94,15 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
     {
         // get the global cell edges in this direction
         const Vec_Dbl &edges = data->edges(d);
-        Check (edges.size() == d_widths[d].size() + 1);
-        Check (edges.size() == data->num_cells(d) + 1);
+        CHECK(edges.size() == d_widths[d].size() + 1);
+        CHECK(edges.size() == data->num_cells(d) + 1);
 
         // loop through edges and generate the global cell width in each
         // "plane"
         for (int n = 0, N = d_widths[d].size(); n < N; ++n)
         {
             d_widths[d][n] = edges[n+1] - edges[n];
-            Check (d_widths[d][n] > 0.0);
+            CHECK(d_widths[d][n] > 0.0);
         }
     }
 
@@ -141,11 +141,11 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
                 {
                     // get the global cell index
                     global = d_indexer->l2g(i, j, k);
-                    Check (global >= 0 && global < d_Gc);
+                    CHECK(global >= 0 && global < d_Gc);
 
                     // get the local cell index
                     local = d_mesh->convert(i, j, k);
-                    Check (local >= 0 && local < d_Nc);
+                    CHECK(local >= 0 && local < d_Nc);
 
                     // loop over the equations (all equation moments are
                     // stored locally for a cell)
@@ -182,8 +182,8 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
         b_map = Teuchos::rcp(new Epetra_Map(-1, N_global, 0, comm));
     }
 
-    Check (b_map->NumMyElements() == N_local);
-    Check (b_map->NumGlobalElements() == N_global);
+    CHECK(b_map->NumMyElements() == N_local);
+    CHECK(b_map->NumGlobalElements() == N_global);
 
     // allocate space for the number of potential non-zero indices per row;
     // the matrix bandwidth (entries per row) is the (number of equations +
@@ -195,7 +195,7 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
 
     // make the RHS vector
     b_rhs = Teuchos::rcp(new Vector_t(*b_map));
-    Check (b_rhs->MyLength() == N_local);
+    CHECK(b_rhs->MyLength() == N_local);
 }
 
 //---------------------------------------------------------------------------//
@@ -208,13 +208,13 @@ void Linear_System_FV::build_Matrix()
 {
     using def::I; using def::J; using def::K;
 
-    Require (!d_mesh.is_null());
-    Require (!d_indexer.is_null());
+    REQUIRE(!d_mesh.is_null());
+    REQUIRE(!d_indexer.is_null());
 
     // make the matrix
     d_matrix   = Teuchos::rcp(new Epetra_CrsMatrix(Copy, *b_map, d_Ng));
     b_operator = d_matrix;
-    Check (!d_matrix->StorageOptimized());
+    CHECK(!d_matrix->StorageOptimized());
 
     // off-processor face fields of diffusion coefficients
     RCP_Face_Field Dx_low, Dx_high, Dy_low, Dy_high;
@@ -255,9 +255,9 @@ void Linear_System_FV::build_Matrix()
                     // decomposition
                     g_i = i + i_off;
                     g_j = j + j_off;
-                    Check (index.convert_to_global(i, j) ==
+                    CHECK(index.convert_to_global(i, j) ==
                            LG_Indexer::IJ_Set(g_i, g_j));
-                    Check (index.l2g(i, j, k) == index.g2g(g_i, g_j, k));
+                    CHECK(index.l2g(i, j, k) == index.g2g(g_i, g_j, k));
 
                     // global cell index
                     global = index.l2g(i, j, k);
@@ -377,7 +377,7 @@ void Linear_System_FV::build_Matrix()
 
     // complete fill of matrix
     d_matrix->FillComplete();
-    Ensure (d_matrix->StorageOptimized());
+    ENSURE(d_matrix->StorageOptimized());
 
     // Epetra returns the global number of nonzeros as a 32 bit signed int
     //  which is prone to overflow (this is only used for output and doesn't
@@ -398,8 +398,8 @@ void Linear_System_FV::build_fission_matrix()
 {
     using def::I; using def::J; using def::K;
 
-    Require (!d_mesh.is_null());
-    Require (!b_mat.is_null());
+    REQUIRE(!d_mesh.is_null());
+    REQUIRE(!b_mat.is_null());
 
     // as for the A matrix, here we build the matrix/graph at the same time
     // (since the coupling is much easier->no spatial coupling)
@@ -444,8 +444,8 @@ void Linear_System_FV::build_fission_matrix()
     // finish matrix
     d_fission->FillComplete();
 
-    Ensure (d_fission->IndicesAreLocal());
-    Ensure (d_fission->StorageOptimized());
+    ENSURE(d_fission->IndicesAreLocal());
+    ENSURE(d_fission->StorageOptimized());
 
     // Epetra returns the global number of nonzeros as a 32 bit signed int
     //  which is prone to overflow (this is only used for output and doesn't
@@ -470,8 +470,8 @@ void Linear_System_FV::build_RHS(const External_Source &q)
 {
     using def::I; using def::J; using def::K;
 
-    Require (q.num_groups() == d_Ng);
-    Require (b_rhs->MyLength() == (d_Nv_local + d_Nb_local)
+    REQUIRE(q.num_groups() == d_Ng);
+    REQUIRE(b_rhs->MyLength() == (d_Nv_local + d_Nb_local)
              * d_block_size);
 
     // reference to rhs vector
@@ -524,7 +524,7 @@ void Linear_System_FV::build_RHS(const External_Source &q)
     add_boundary_sources(4, face, "minus_z_phi", d_N[I]*d_N[J]); // low  z
     add_boundary_sources(5, face, "plus_z_phi",  d_N[I]*d_N[J]); // high z
 
-    Check (face == d_Nc + d_Nb_local / d_unknowns_per_cell);
+    CHECK(face == d_Nc + d_Nb_local / d_unknowns_per_cell);
 }
 
 //---------------------------------------------------------------------------//
@@ -546,12 +546,12 @@ void Linear_System_FV::calc_bnd_sizes()
 
     if (b_db->get<std::string>("boundary") == "reflect")
     {
-        Check (b_db->isSublist("boundary_db"));
+        CHECK(b_db->isSublist("boundary_db"));
 
         // get the reflecting faces indicator
         const Array_Int &r = b_db->get<Teuchos::ParameterList>("boundary_db").
                              get<Array_Int>("reflect");
-        Check (r.size() == 6);
+        CHECK(r.size() == 6);
 
         // set the number of boundary unknowns on each face
         d_bc_global[0] = (1 - r[0]) * d_G[J] * d_G[K];
@@ -584,8 +584,8 @@ void Linear_System_FV::calc_bnd_sizes()
     int first  = 0;
     int last_I = d_indexer->num_blocks(I) - 1;
     int last_J = d_indexer->num_blocks(J) - 1;
-    Check (mesh_I >= first && mesh_I <= last_I);
-    Check (mesh_J >= first && mesh_J <= last_J);
+    CHECK(mesh_I >= first && mesh_I <= last_I);
+    CHECK(mesh_J >= first && mesh_J <= last_J);
 
     // this mesh block will have low I/J or high I/J boundary unknowns if it
     // is on the partition boundary and there are vaccum/source boundary
@@ -634,53 +634,53 @@ void Linear_System_FV::calc_bnd_sizes()
     // K is always 0 since we are using the KBA decomposition
     if (d_bc_local[0])
     {
-        Check (d_bc_global[0]);
-        Check (mesh_I == first);
+        CHECK(d_bc_global[0]);
+        CHECK(mesh_I == first);
         d_bnd_index[0] = Teuchos::rcp(new FV_Bnd_Indexer(
             0, d_N[J], d_N[K], d_bc_local, d_G[J], d_G[K], d_bc_global,
             d_indexer->offset(J), 0));
     }
     if (d_bc_local[1])
     {
-        Check (d_bc_global[1]);
-        Check (mesh_I == last_I);
+        CHECK(d_bc_global[1]);
+        CHECK(mesh_I == last_I);
         d_bnd_index[1] = Teuchos::rcp(new FV_Bnd_Indexer(
             1, d_N[J], d_N[K], d_bc_local, d_G[J], d_G[K], d_bc_global,
             d_indexer->offset(J), 0));
     }
     if (d_bc_local[2])
     {
-        Check (d_bc_global[2]);
-        Check (mesh_J == first);
+        CHECK(d_bc_global[2]);
+        CHECK(mesh_J == first);
         d_bnd_index[2] = Teuchos::rcp(new FV_Bnd_Indexer(
             2, d_N[I], d_N[K], d_bc_local, d_G[I], d_G[K], d_bc_global,
             d_indexer->offset(I), 0));
     }
     if (d_bc_local[3])
     {
-        Check (d_bc_global[3]);
-        Check (mesh_J == last_J);
+        CHECK(d_bc_global[3]);
+        CHECK(mesh_J == last_J);
         d_bnd_index[3] = Teuchos::rcp(new FV_Bnd_Indexer(
             3, d_N[I], d_N[K], d_bc_local, d_G[I], d_G[K], d_bc_global,
             d_indexer->offset(I), 0));
     }
     if (d_bc_local[4])
     {
-        Check (d_bc_global[4]);
+        CHECK(d_bc_global[4]);
         d_bnd_index[4] = Teuchos::rcp(new FV_Bnd_Indexer(
             4, d_N[I], d_N[J], d_bc_local, d_G[I], d_G[J], d_bc_global,
             d_indexer->offset(I), d_indexer->offset(J)));
     }
     if (d_bc_local[5])
     {
-        Check (d_bc_global[5]);
+        CHECK(d_bc_global[5]);
         d_bnd_index[5] = Teuchos::rcp(new FV_Bnd_Indexer(
             5, d_N[I], d_N[J], d_bc_local, d_G[I], d_G[J], d_bc_global,
             d_indexer->offset(I), d_indexer->offset(J)));
     }
 
-    Ensure (d_Nb_local <= d_Nb_global);
-    Ensure (b_nodes == 1 ? d_Nb_local == d_Nb_global : true);
+    ENSURE(d_Nb_local <= d_Nb_global);
+    ENSURE(b_nodes == 1 ? d_Nb_local == d_Nb_global : true);
 }
 
 //---------------------------------------------------------------------------//
@@ -692,8 +692,8 @@ void Linear_System_FV::add_boundary_sources(int         face_id,
                                             const char *phi_d_str,
                                             int         num_face_cells)
 {
-    Require (face >= d_Nc);
-    Require (b_db->isSublist("boundary_db"));
+    REQUIRE(face >= d_Nc);
+    REQUIRE(b_db->isSublist("boundary_db"));
 
     // get a reference to the boundary sublist
     const Teuchos::ParameterList &bnd = b_db->sublist("boundary_db");
@@ -704,14 +704,14 @@ void Linear_System_FV::add_boundary_sources(int         face_id,
         // check for sources on this face
         if (bnd.isParameter(phi_d_str))
         {
-            Check (d_bc_global[face_id]); // better be sources on this face
+            CHECK(d_bc_global[face_id]); // better be sources on this face
 
             // reference to RHS vector
             Vector_t &rhs = *b_rhs;
 
             // get the boundary sources
             const Array_Dbl &phi_b = bnd.get<Array_Dbl>(phi_d_str);
-            Check (phi_b.size() == d_Ng);
+            CHECK(phi_b.size() == d_Ng);
 
             // loop over faces
             for (int f = 0; f < num_face_cells; ++f, ++face)
@@ -738,7 +738,7 @@ void Linear_System_FV::add_boundary_sources(int         face_id,
         }
     }
 
-    Ensure (face <= d_Nc + d_Nb_local / d_unknowns_per_cell);
+    ENSURE(face <= d_Nc + d_Nb_local / d_unknowns_per_cell);
 }
 
 //---------------------------------------------------------------------------//
@@ -750,7 +750,7 @@ void Linear_System_FV::map_bnd_l2g(RCP_Bnd_Indexer  indexer,
                                    int              N_ordinate,
                                    Vec_Int         &l2g)
 {
-    Require (l2g.size() == d_Nv_local + d_Nb_local);
+    REQUIRE(l2g.size() == d_Nv_local + d_Nb_local);
 
     // only map elements on this boundary face if the indexer exists (if it
     // doesn't exist, then there are no boundary unknowns on this block)
@@ -768,9 +768,9 @@ void Linear_System_FV::map_bnd_l2g(RCP_Bnd_Indexer  indexer,
                     // loop over groups
                     for (int g = 0; g < d_Ng; ++g)
                     {
-                        Check (d_Nv_local + index(g, n, indexer->local(a, o)) <
+                        CHECK(d_Nv_local + index(g, n, indexer->local(a, o)) <
                                d_Nv_local + d_Nb_local);
-                        Check (d_Nv_global + index(g, n, indexer->l2g(a, o)) <
+                        CHECK(d_Nv_global + index(g, n, indexer->l2g(a, o)) <
                                d_Nv_global + d_Nb_global);
 
                         l2g[d_Nv_local + index(g, n, indexer->local(a, o))] =
@@ -801,7 +801,7 @@ void Linear_System_FV::spatial_coupled_element(int            n,
 
     // global cell
     int global = d_indexer->l2g(i, j, k);
-    Check (global == d_indexer->g2g(g_i, g_j, k));
+    CHECK(global == d_indexer->g2g(g_i, g_j, k));
 
     // spatially-coupled global cell index
     int neighbor = 0;
@@ -827,8 +827,8 @@ void Linear_System_FV::spatial_coupled_element(int            n,
         // multi-domain problem
         else
         {
-            Check (!Dx_low.is_null());
-            Check (b_nodes > 1);
+            CHECK(!Dx_low.is_null());
+            CHECK(b_nodes > 1);
 
             // this is a *View* into the field data, so we can't use a copy
             // matrix without potentially hosing data
@@ -870,8 +870,8 @@ void Linear_System_FV::spatial_coupled_element(int            n,
         // multi-domain problem
         else
         {
-            Check (!Dx_high.is_null());
-            Check (b_nodes > 1);
+            CHECK(!Dx_high.is_null());
+            CHECK(b_nodes > 1);
 
             // this is a *View* into the field data, so we can't use a copy
             // matrix without potentially hosing data
@@ -913,8 +913,8 @@ void Linear_System_FV::spatial_coupled_element(int            n,
         // multi-domain problem
         else
         {
-            Check (!Dy_low.is_null());
-            Check (b_nodes > 1);
+            CHECK(!Dy_low.is_null());
+            CHECK(b_nodes > 1);
 
             // this is a *View* into the field data, so we can't use a copy
             // matrix without potentially hosing data
@@ -956,8 +956,8 @@ void Linear_System_FV::spatial_coupled_element(int            n,
         // multi-domain problem
         else
         {
-            Check (!Dy_high.is_null());
-            Check (b_nodes > 1);
+            CHECK(!Dy_high.is_null());
+            CHECK(b_nodes > 1);
 
             // this is a *View* into the field data, so we can't use a copy
             // matrix without potentially hosing data
@@ -1041,15 +1041,15 @@ void Linear_System_FV::add_spatial_element(int                  eqn,
                                            const Serial_Matrix &Dl,
                                            const Serial_Matrix &Dr)
 {
-    Require (Dl.numRows()    == d_Ng);
-    Require (Dl.numCols()    == d_Ng);
-    Require (Dr.numRows()    == d_Ng);
-    Require (Dr.numCols()    == d_Ng);
-    Require (d_C.numCols()   == d_Ng);
-    Require (d_C.numRows()   == d_Ng);
-    Require (d_C_c.numCols() == d_Ng);
-    Require (d_C_c.numRows() == d_Ng);
-    Require (delta_c > 0.0);
+    REQUIRE(Dl.numRows()    == d_Ng);
+    REQUIRE(Dl.numCols()    == d_Ng);
+    REQUIRE(Dr.numRows()    == d_Ng);
+    REQUIRE(Dr.numCols()    == d_Ng);
+    REQUIRE(d_C.numCols()   == d_Ng);
+    REQUIRE(d_C.numRows()   == d_Ng);
+    REQUIRE(d_C_c.numCols() == d_Ng);
+    REQUIRE(d_C_c.numRows() == d_Ng);
+    REQUIRE(delta_c > 0.0);
 
     // make C for this neighbor coupling -> note that Dl and Dr are references
     // to d_D and d_D_c depending on the spatial coupling direction
@@ -1067,12 +1067,12 @@ void Linear_System_FV::add_spatial_element(int                  eqn,
 
     // LU decomposition
     d_lapack.GETRF(d_Ng, d_Ng, d_C.values(), d_C.stride(), &d_ipiv[0], &d_info);
-    Check (d_info == 0);
+    CHECK(d_info == 0);
 
     // inverse
     d_lapack.GETRI(d_Ng, d_C.values(), d_C.stride(), &d_ipiv[0], &d_work[0],
                    d_Ng, &d_info);
-    Check (d_info == 0);
+    CHECK(d_info == 0);
 
     // multiply W = C*Dr
     d_W.multiply(Teuchos::NO_TRANS, Teuchos::NO_TRANS, 1.0, d_C, Dr, 0.0);
@@ -1104,11 +1104,11 @@ void Linear_System_FV::build_bnd_element(int    eqn,
                                          int    global_col,
                                          double delta_c)
 {
-    Require (d_C.numCols()   == d_Ng);
-    Require (d_C.numRows()   == d_Ng);
-    Require (d_C_c.numCols() == d_Ng);
-    Require (d_C_c.numRows() == d_Ng);
-    Require (delta_c > 0.0);
+    REQUIRE(d_C.numCols()   == d_Ng);
+    REQUIRE(d_C.numRows()   == d_Ng);
+    REQUIRE(d_C_c.numCols() == d_Ng);
+    REQUIRE(d_C_c.numRows() == d_Ng);
+    REQUIRE(delta_c > 0.0);
 
     // make C for this boundary coupling
 
@@ -1199,10 +1199,10 @@ void Linear_System_FV::insert_block_matrix(int                  row_n,
                                            const Serial_Matrix &M,
                                            Epetra_CrsMatrix    &matrix)
 {
-    Require (row_n < d_Ne);
-    Require (col_m < d_Ne);
-    Require (M.numCols() == d_Ng);
-    Require (M.numRows() == d_Ng);
+    REQUIRE(row_n < d_Ne);
+    REQUIRE(col_m < d_Ne);
+    REQUIRE(M.numCols() == d_Ng);
+    REQUIRE(M.numRows() == d_Ng);
 
     // global row and column indices
     int row = 0, col = 0;
@@ -1215,7 +1215,7 @@ void Linear_System_FV::insert_block_matrix(int                  row_n,
     {
         // determine the row in global index space
         row = row_off + index(g, row_n, row_cell);
-        Check (row >= 0 && row < d_Nv_global + d_Nb_global);
+        CHECK(row >= 0 && row < d_Nv_global + d_Nb_global);
 
         // initialize the row counter
         ctr = 0;
@@ -1223,11 +1223,11 @@ void Linear_System_FV::insert_block_matrix(int                  row_n,
         // loop over columns (in gp)
         for (int gp = 0; gp < d_Ng; ++gp)
         {
-            Check (ctr < d_Ng);
+            CHECK(ctr < d_Ng);
 
             // determine the column in global index space
             col = col_off + index(gp, col_m, col_cell);
-            Check (col >= 0 && col < d_Nv_global + d_Nb_global);
+            CHECK(col >= 0 && col < d_Nv_global + d_Nb_global);
 
             // only add non-zero entries
             if (std::fabs(M(g, gp)) > 0.0)

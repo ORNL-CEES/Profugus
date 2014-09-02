@@ -54,7 +54,7 @@ Fission_Rebalance::Fission_Rebalance()
         d_right = d_set + 1;
         ++d_num_nbors;
     }
-    Check (d_num_nbors > 0);
+    CHECK(d_num_nbors > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -132,7 +132,7 @@ void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
 #ifdef ENSURE_ON
     int global_check = fission_bank.size();
     profugus::global_sum(global_check);
-    Validate(global_check == d_num_global,
+    VALIDATE(global_check == d_num_global,
              "Failed to preserve global fission sites: Calculated = "
              << global_check << "; Expected = " << d_num_global
              << "; Set = " << d_set
@@ -150,15 +150,15 @@ void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
 void Fission_Rebalance::fission_bank_parameters(
     const Fission_Site_Container_t &fission_bank)
 {
-    Require (d_num_sets > 1);
-    Require (d_sites_set.size() == d_num_sets);
+    REQUIRE(d_num_sets > 1);
+    REQUIRE(d_sites_set.size() == d_num_sets);
 
     // calculate the number of fission sites and local array bounds
     calc_num_sites(fission_bank);
 
     // determine the global number of fission sites
     d_num_global = std::accumulate(d_sites_set.begin(), d_sites_set.end(), 0);
-    Check (d_num_global > 0);
+    CHECK(d_num_global > 0);
 
     // calculate the target number of fission sites on this set
     d_target_set = d_num_global / d_num_sets;
@@ -168,7 +168,7 @@ void Fission_Rebalance::fission_bank_parameters(
 
     // determine extra sites when for non-uniform numbers of sites
     int pad = d_num_global - d_target_set * d_num_sets;
-    Check (pad >= 0 && pad < d_num_sets);
+    CHECK(pad >= 0 && pad < d_num_sets);
 
     // add sites to account for padding, one site is added to each set until
     // the correct global number of sites is attained
@@ -188,11 +188,11 @@ void Fission_Rebalance::fission_bank_parameters(
 #ifdef CHECK_ON
     int global_check = d_target_set;
     profugus::global_sum(global_check);
-    Validate(global_check == d_num_global,
+    VALIDATE(global_check == d_num_global,
             "Failed to accurately pad sets for non-uniform fission sites.");
 #endif
 
-    Ensure (d_target_bnds.second - d_target_bnds.first + 1 == d_target_set);
+    ENSURE(d_target_bnds.second - d_target_bnds.first + 1 == d_target_set);
 }
 
 //---------------------------------------------------------------------------//
@@ -201,8 +201,8 @@ void Fission_Rebalance::fission_bank_parameters(
  */
 void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
 {
-    Require (d_recv_left.empty());
-    Require (d_recv_right.empty());
+    REQUIRE(d_recv_left.empty());
+    REQUIRE(d_recv_right.empty());
 
     // send/receive from right/left
     int num_send_left  = 0;
@@ -216,13 +216,13 @@ void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
     // determine the number to send to the left
     if (d_bnds.first < d_target_bnds.first)
     {
-        Check (d_left != -1);
+        CHECK(d_left != -1);
         num_send_left = std::min(d_target_bnds.first - d_bnds.first,
                                  d_sites_set[d_set]);
     }
     else if (d_bnds.first > d_target_bnds.first)
     {
-        Check (d_left != -1);
+        CHECK(d_left != -1);
         num_recv_left = std::min(d_bnds.first - d_target_bnds.first,
                                  d_sites_set[d_set - 1]);
     }
@@ -230,7 +230,7 @@ void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
     // determine the number to send to the right
     if (d_bnds.second > d_target_bnds.second)
     {
-        Check (d_right != -1);
+        CHECK(d_right != -1);
         num_send_right = std::min(d_bnds.second - d_target_bnds.second,
                                   d_sites_set[d_set]);
     }
@@ -238,16 +238,16 @@ void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
     // determine the number we receive from the right
     else if (d_bnds.second < d_target_bnds.second)
     {
-        Check (d_right != -1);
+        CHECK(d_right != -1);
         num_recv_right = std::min(d_target_bnds.second - d_bnds.second,
                                   d_sites_set[d_set + 1]);
     }
 
-    Check (num_send_left >= 0 && num_send_left <= d_sites_set[d_set]);
-    Check (num_send_right >= 0 && num_send_right <= d_sites_set[d_set]);
-    Check (num_send_left + num_send_right <= d_sites_set[d_set]);
-    Check (num_send_left ? num_recv_left == 0 : true);
-    Check (num_send_right ? num_recv_right == 0 : true);
+    CHECK(num_send_left >= 0 && num_send_left <= d_sites_set[d_set]);
+    CHECK(num_send_right >= 0 && num_send_right <= d_sites_set[d_set]);
+    CHECK(num_send_left + num_send_right <= d_sites_set[d_set]);
+    CHECK(num_send_left ? num_recv_left == 0 : true);
+    CHECK(num_send_right ? num_recv_right == 0 : true);
 
     // post receives
     post_receives(num_recv_left, d_recv_left, d_left, d_handle_left, 303);
@@ -263,8 +263,8 @@ void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
     receive(num_recv_right, fission_bank, d_recv_right, d_right,
             d_handle_right, 304);
 
-    Ensure (!d_handle_right.inuse());
-    Ensure (!d_handle_left.inuse());
+    ENSURE(!d_handle_right.inuse());
+    ENSURE(!d_handle_left.inuse());
 }
 
 //---------------------------------------------------------------------------//
@@ -275,8 +275,8 @@ void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
 void Fission_Rebalance::calc_num_sites(
     const Fission_Site_Container_t &fission_bank)
 {
-    Require (d_sites_set.size() == d_num_sets);
-    Require (profugus::nodes() == d_num_sets);
+    REQUIRE(d_sites_set.size() == d_num_sets);
+    REQUIRE(profugus::nodes() == d_num_sets);
 
     // do a global reduction to determine the current number of sites on all
     // sets
@@ -287,7 +287,7 @@ void Fission_Rebalance::calc_num_sites(
     // make the array bounds on this set --> the array bounds are (first,last)
     d_bnds.first  = std::accumulate(&d_sites_set[0], &d_sites_set[0]+d_set, 0);
     d_bnds.second = d_bnds.first + d_sites_set[d_set] - 1;
-    Check (d_bnds.second - d_bnds.first + 1 == d_sites_set[d_set]);
+    CHECK(d_bnds.second - d_bnds.first + 1 == d_sites_set[d_set]);
 }
 
 //---------------------------------------------------------------------------//
@@ -302,7 +302,7 @@ void Fission_Rebalance::post_receives(int                       num_recv,
 {
     if (num_recv)
     {
-        Require (destination >= 0 && destination < d_num_sets);
+        REQUIRE(destination >= 0 && destination < d_num_sets);
 
         // allocate space in the receive buffer
         recv_bank.resize(num_recv);
@@ -328,12 +328,12 @@ void Fission_Rebalance::send(int                       num_send,
                              int                       destination,
                              int                       tag)
 {
-    Require (bank.size() >= num_send);
+    REQUIRE(bank.size() >= num_send);
     Remember (int size = bank.size());
 
     if (num_send)
     {
-        Require (!bank.empty());
+        REQUIRE(!bank.empty());
 
         // make a void * to the LAST num_send sites in the bank
         const void *buffer = &bank[0] + (bank.size() - num_send);
@@ -347,7 +347,7 @@ void Fission_Rebalance::send(int                       num_send,
         // pop sites off the bank that have been sent
         for (int n = 0; n < num_send; ++n)
         {
-            Check (!bank.empty());
+            CHECK(!bank.empty());
             bank.pop_back();
         }
 
@@ -355,7 +355,7 @@ void Fission_Rebalance::send(int                       num_send,
         ++d_num_send;
     }
 
-    Ensure (bank.size() == size - num_send);
+    ENSURE(bank.size() == size - num_send);
 }
 
 //---------------------------------------------------------------------------//
@@ -373,8 +373,8 @@ void Fission_Rebalance::receive(int                       num_recv,
 
    if (num_recv)
     {
-        Require (destination >= 0 && destination < d_num_sets);
-        Require (handle.inuse());
+        REQUIRE(destination >= 0 && destination < d_num_sets);
+        REQUIRE(handle.inuse());
 
         // wait for the data to arrive
         handle.wait();
@@ -389,8 +389,8 @@ void Fission_Rebalance::receive(int                       num_recv,
         recv_bank.clear();
     }
 
-    Ensure (!handle.inuse());
-    Ensure (bank.size() == size + num_recv);
+    ENSURE(!handle.inuse());
+    ENSURE(bank.size() == size + num_recv);
 }
 
 } // end namespace profugus

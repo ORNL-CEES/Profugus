@@ -111,8 +111,8 @@ class Decomposition
  */
 int Decomposition::global(int local) const
 {
-    Require (local >= 0);
-    Require (local < d_map->NumMyElements());
+    REQUIRE(local >= 0);
+    REQUIRE(local < d_map->NumMyElements());
 
     return d_map->MyGlobalElements()[local];
 }

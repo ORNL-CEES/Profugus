@@ -57,7 +57,7 @@ Timing_Diagnostics::Vec_Keys Timing_Diagnostics::timer_keys()
     // add keys to the vector
     for (; m != timers.end(); m++, v++)
     {
-        Check (v != keys.end());
+        CHECK(v != keys.end());
         *v = m->first;
     }
 
@@ -74,7 +74,7 @@ Timing_Diagnostics::Vec_Keys Timing_Diagnostics::timer_keys()
 void Timing_Diagnostics::reset_timer(const std::string &key)
 {
     timers[key] = 0.0;
-    Ensure (timers[key] == 0.0);
+    ENSURE(timers[key] == 0.0);
 }
 
 //---------------------------------------------------------------------------//
@@ -98,7 +98,7 @@ void Timing_Diagnostics::reset_timers()
 void Timing_Diagnostics::delete_timer(const std::string &key)
 {
     timers.erase(key);
-    Ensure (timers.count(key) == 0);
+    ENSURE(timers.count(key) == 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -112,7 +112,7 @@ void Timing_Diagnostics::delete_timers()
 
     // swap it with timers
     timers.swap(null);
-    Ensure (timers.empty());
+    ENSURE(timers.empty());
 }
 
 //---------------------------------------------------------------------------//

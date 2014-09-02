@@ -112,8 +112,8 @@ class KCode_Solver : public Solver
      */
     SP_Tallier inactive_tallier()
     {
-        Require(d_build_phase >= ASSIGNED);
-        Ensure(d_inactive_tallier);
+        REQUIRE(d_build_phase >= ASSIGNED);
+        ENSURE(d_inactive_tallier);
         return d_inactive_tallier;
     }
 

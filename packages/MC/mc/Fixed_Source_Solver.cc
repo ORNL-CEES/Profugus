@@ -39,8 +39,8 @@ Fixed_Source_Solver::Fixed_Source_Solver()
 void Fixed_Source_Solver::set(SP_Source_Transporter transporter,
                               SP_Source             source)
 {
-    Require (transporter);
-    Require (source);
+    REQUIRE(transporter);
+    REQUIRE(source);
 
     // assign the solver
     d_transporter = transporter;
@@ -68,15 +68,15 @@ void Fixed_Source_Solver::solve()
 {
     using profugus::endl; using profugus::pcout;
 
-    Require (d_source);
-    Require (b_tallier);
+    REQUIRE(d_source);
+    REQUIRE(b_tallier);
     Insist(!b_tallier->is_built(), "The given tallier can only be built once.");
     Insist(!b_tallier->is_finalized(), "The given tallier was used in "
            "a prior transport solve without reset() being called.");
 
     // Build the tallier
     b_tallier->build();
-    Check(b_tallier->is_built());
+    CHECK(b_tallier->is_built());
 
     SCOPED_TIMER("MC::Fixed_Source_Solver.solve");
 
@@ -107,7 +107,7 @@ void Fixed_Source_Solver::solve()
 
     // Finalize tallies using global number of particles
     b_tallier->finalize(d_Np);
-    Ensure(b_tallier->is_finalized());
+    ENSURE(b_tallier->is_finalized());
 }
 
 } // end namespace profugus

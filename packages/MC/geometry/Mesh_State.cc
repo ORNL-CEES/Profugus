@@ -21,7 +21,7 @@ namespace profugus
  */
 void Mesh_State::pack(char *buffer) const
 {
-    Not_Implemented("packing Mesh_State.");
+    NOT_IMPLEMENTED("packing Mesh_State.");
 }
 
 //---------------------------------------------------------------------------//
@@ -30,7 +30,7 @@ void Mesh_State::pack(char *buffer) const
  */
 void Mesh_State::unpack(const char *buffer)
 {
-    Not_Implemented("unpacking Mesh_State.");
+    NOT_IMPLEMENTED("unpacking Mesh_State.");
 }
 
 } // end namespace profugus

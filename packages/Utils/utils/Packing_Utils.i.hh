@@ -47,7 +47,7 @@ namespace profugus
  */
 void Packer::set_buffer(unsigned int size_in, pointer buffer)
 {
-    Require (buffer);
+    REQUIRE(buffer);
 
     size_mode = false;
 
@@ -118,9 +118,9 @@ void Packer::pack(const T &value)
         stream_size += sizeof(T);
     else
     {
-        Require (begin_ptr);
-        Ensure (ptr >= begin_ptr);
-        Ensure (ptr + sizeof(T) <= end_ptr);
+        REQUIRE(begin_ptr);
+        ENSURE(ptr >= begin_ptr);
+        ENSURE(ptr + sizeof(T) <= end_ptr);
 
         // copy value into the buffer
         std::memcpy(ptr, &value, sizeof(T));
@@ -159,7 +159,7 @@ void Packer::pack(const T &value)
  */
 void Unpacker::set_buffer(unsigned int size_in, const_pointer buffer)
 {
-    Require (buffer);
+    REQUIRE(buffer);
 
     // set the size, begin and end pointers, and iterator
     stream_size  = size_in;
@@ -189,9 +189,9 @@ void Unpacker::set_buffer(unsigned int size_in, const_pointer buffer)
 template<class T>
 void Unpacker::unpack(T &value)
 {
-    Require (begin_ptr);
-    Ensure  (ptr >= begin_ptr);
-    Ensure  (ptr + sizeof(T) <= end_ptr);
+    REQUIRE(begin_ptr);
+    ENSURE(ptr >= begin_ptr);
+    ENSURE(ptr + sizeof(T) <= end_ptr);
 
     // copy data into the value reference
     std::memcpy(&value, ptr, sizeof(T));

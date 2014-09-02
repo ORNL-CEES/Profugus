@@ -52,8 +52,8 @@ Group_Bounds::SP_Group_Bounds Group_Bounds::build_logarithmic(double lower,
     // make the group bounds
     SP_Group_Bounds gb(std::make_shared<Group_Bounds>(energy_mesh));
 
-    Ensure(gb);
-    Ensure(gb->num_groups() == num_bins);
+    ENSURE(gb);
+    ENSURE(gb->num_groups() == num_bins);
     return gb;
 }
 
@@ -72,7 +72,7 @@ Group_Bounds::Group_Bounds(const Vec_Dbl &bounds)
     // check monotonicity
     for (int g = 0; g < num_groups(); ++g)
     {
-        Validate (d_bounds[g] > d_bounds[g+1],
+        VALIDATE(d_bounds[g] > d_bounds[g+1],
                   "Energy bounds for group " << g << " <= bounds at "
                   << g+1);
     }
@@ -86,13 +86,13 @@ void Group_Bounds::get_energy(int     group_index,
                               double &lower,
                               double &upper) const
 {
-    Require(group_index < num_groups());
-    Require(group_index + 1 < d_bounds.size());
+    REQUIRE(group_index < num_groups());
+    REQUIRE(group_index + 1 < d_bounds.size());
 
     upper = d_bounds[group_index];
     lower = d_bounds[group_index + 1];
 
-    Ensure(lower < upper);
+    ENSURE(lower < upper);
 }
 
 //---------------------------------------------------------------------------//
@@ -109,7 +109,7 @@ void Group_Bounds::get_energy(int     group_index,
 bool Group_Bounds::find(const double  energy,
                         int          &group_index) const
 {
-    Require(energy >= 0.);
+    REQUIRE(energy >= 0.);
 
     if ((energy > d_bounds.front()) || (energy < d_bounds.back()))
         return false;
@@ -120,8 +120,8 @@ bool Group_Bounds::find(const double  energy,
                   - d_bounds.begin() - 1;
     if (group_index == -1)
         ++group_index;
-    Check(group_index >= 0);
-    Check(group_index < d_bounds.size() - 1);
+    CHECK(group_index >= 0);
+    CHECK(group_index < d_bounds.size() - 1);
     return true;
 }
 

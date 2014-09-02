@@ -95,7 +95,7 @@ class RNG_Control
     int get_num() const { return d_stream; }
 
     //! Set (reset) the random number stream index.
-    void set_num(int stream) { Require (stream < d_number); d_stream = stream; }
+    void set_num(int stream) { REQUIRE(stream < d_number); d_stream = stream; }
 
     //! Query size of a packed random number state.
     int get_size() const { return d_size; }

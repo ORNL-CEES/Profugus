@@ -136,13 +136,13 @@ class RQITest : public ::testing::Test
         // Create ShiftedInverseOperator
         Teuchos::RCP<profugus::ShiftedInverseOperator<MV,OP> > shift_op =
             rcp(new profugus::ShiftedInverseOperator<MV,OP>(op_db));
-        Check(!shift_op.is_null());
+        CHECK(!shift_op.is_null());
         shift_op->set_operator(d_A);
         shift_op->set_rhs_operator(d_B);
 
         // Build solver
         d_solver = rcp(new RayleighQuotient(d_db));
-        Check(!d_solver.is_null());
+        CHECK(!d_solver.is_null());
         d_solver->set_operator(d_A);
         d_solver->set_rhs_operator(d_B);
         d_solver->set_shifted_operator(shift_op);

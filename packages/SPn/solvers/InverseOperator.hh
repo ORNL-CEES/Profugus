@@ -132,12 +132,12 @@ class InverseOperator<Epetra_MultiVector,Epetra_Operator>
     // Apply (solve linear system)
     int Apply(const MV &x, MV &y) const
     {
-        Require( x.MyLength() == y.MyLength() );
-        Require( d_A->OperatorDomainMap().NumMyElements()==x.MyLength() );
+        REQUIRE( x.MyLength() == y.MyLength() );
+        REQUIRE( d_A->OperatorDomainMap().NumMyElements()==x.MyLength() );
 
         if( !(d_B.is_null()) )
         {
-            Require( d_B->OperatorDomainMap().NumMyElements()==x.MyLength() );
+            REQUIRE( d_B->OperatorDomainMap().NumMyElements()==x.MyLength() );
         }
 
         ApplyImpl(x,y);
@@ -157,7 +157,7 @@ class InverseOperator<Epetra_MultiVector,Epetra_Operator>
     bool HasNormInf() const { return false; }
     const Epetra_Comm & Comm() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->Comm();
     }
     const Epetra_Map & OperatorDomainMap() const
@@ -168,13 +168,13 @@ class InverseOperator<Epetra_MultiVector,Epetra_Operator>
         }
         else
         {
-            Require(d_A != Teuchos::null);
+            REQUIRE(d_A != Teuchos::null);
             return d_A->OperatorRangeMap();
         }
     }
     const Epetra_Map & OperatorRangeMap() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->OperatorDomainMap();
     }
 
@@ -213,15 +213,15 @@ class InverseOperator<Tpetra_MultiVector,Tpetra_Operator>
                Teuchos::ETransp mode=Teuchos::NO_TRANS,
                double alpha=1.0, double beta=0.0) const
     {
-        Require( x.getLocalLength() == y.getLocalLength() );
-        Require( d_A->getDomainMap()->getNodeNumElements() ==
+        REQUIRE( x.getLocalLength() == y.getLocalLength() );
+        REQUIRE( d_A->getDomainMap()->getNodeNumElements() ==
                  x.getLocalLength() );
 
         MV z(x,Teuchos::Copy);
 
         if( !(d_B.is_null()) )
         {
-            Require( d_B->getDomainMap()->getNodeNumElements() ==
+            REQUIRE( d_B->getDomainMap()->getNodeNumElements() ==
                      x.getLocalLength() );
         }
 
@@ -241,20 +241,20 @@ class InverseOperator<Tpetra_MultiVector,Tpetra_Operator>
     bool hasTranposeApply() const {return false;}
     Teuchos::RCP<const Map> getDomainMap() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         if( d_B != Teuchos::null )
         {
             return d_B->getDomainMap();
         }
         else
         {
-            Require(d_A != Teuchos::null);
+            REQUIRE(d_A != Teuchos::null);
             return d_A->getRangeMap();
         }
     }
     Teuchos::RCP<const Map> getRangeMap() const
     {
-        Require(d_A != Teuchos::null);
+        REQUIRE(d_A != Teuchos::null);
         return d_A->getDomainMap();
     }
 

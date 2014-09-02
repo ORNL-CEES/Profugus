@@ -56,7 +56,7 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
     }
     else
     {
-        Validate(false,
+        VALIDATE(false,
                   "Error: Invalid EigenvalueSolver option." << std::endl
                  << " Specify eigenvalue solver by setting eigensolver="
                  << "'arnoldi', 'power'"
@@ -183,7 +183,7 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
     }
     else
     {
-        Validate(false,
+        VALIDATE(false,
                  "Error: Invalid EigenvalueSolver option." << std::endl
                  << " Specify eigenvalue solver by setting eigensolver="
                  << "'arnoldi', 'power', 'davidson', 'rqi'"

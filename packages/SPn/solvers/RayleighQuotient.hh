@@ -62,14 +62,14 @@ class RayleighQuotient : public EigenvalueSolver<MV,OP>
     // Set shifted inverse operator
     void set_rhs_operator( Teuchos::RCP<OP> B )
     {
-        Require( !B.is_null() );
+        REQUIRE( !B.is_null() );
         d_B = B;
     }
 
     // Set shifted inverse operator
     void set_shifted_operator( Teuchos::RCP<ShiftedInverseOperator<MV,OP> > Op )
     {
-        Require( !Op.is_null() );
+        REQUIRE( !Op.is_null() );
         d_Op = Op;
     }
 

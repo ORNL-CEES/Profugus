@@ -37,8 +37,8 @@ void Serial_HDF5_Writer::open(const std_string &filename,
                               File_Mode         mode,
                               int               node)
 {
-    Require (node < b_nodes);
-    Require (mode < END_FILE_MODE);
+    REQUIRE(node < b_nodes);
+    REQUIRE(mode < END_FILE_MODE);
 
     // Set file name, mode, and node
     b_filename = filename;
@@ -69,9 +69,9 @@ void Serial_HDF5_Writer::open(const std_string &filename,
     HDF5_Loc loc = {b_file, ""};
     b_loc_stack.push_back(loc);
 
-    Ensure (b_file);
-    Ensure (b_loc_stack.size() == 1);
-    Ensure (b_mode != END_FILE_MODE);
+    ENSURE(b_file);
+    ENSURE(b_loc_stack.size() == 1);
+    ENSURE(b_mode != END_FILE_MODE);
 }
 
 //---------------------------------------------------------------------------//
@@ -86,7 +86,7 @@ void Serial_HDF5_Writer::open(const std_string &filename,
 void Serial_HDF5_Writer::write(const std_string &name,
                                double            value)
 {
-    Require(!is_readonly());
+    REQUIRE(!is_readonly());
 
     if (b_node != b_master)
         return;
@@ -108,7 +108,7 @@ void Serial_HDF5_Writer::write(const std_string &name,
 void Serial_HDF5_Writer::write(const std_string &name,
                                int               value)
 {
-    Require(!is_readonly());
+    REQUIRE(!is_readonly());
 
     if (b_node != b_master)
         return;
@@ -130,7 +130,7 @@ void Serial_HDF5_Writer::write(const std_string &name,
 void Serial_HDF5_Writer::write(const std_string &name,
                                const std_string &value)
 {
-    Require(!is_readonly());
+    REQUIRE(!is_readonly());
 
     if (b_node != b_master)
         return;
@@ -149,7 +149,7 @@ void Serial_HDF5_Writer::write(const std_string &name,
 void Serial_HDF5_Writer::write(const std_string &name,
                                char              value)
 {
-    Require(!is_readonly());
+    REQUIRE(!is_readonly());
 
     if (b_node != b_master)
         return;
@@ -173,7 +173,7 @@ void Serial_HDF5_Writer::write(const std_string &name,
                                const double     *value,
                                std::size_t       size)
 {
-    Require(!is_readonly());
+    REQUIRE(!is_readonly());
 
     if (b_node != b_master)
         return;
@@ -195,7 +195,7 @@ void Serial_HDF5_Writer::write(const std_string &name,
 void Serial_HDF5_Writer::write(const std_string &name,
                                const Vec_Int    &value)
 {
-    Require(!is_readonly());
+    REQUIRE(!is_readonly());
 
     if (b_node != b_master)
         return;
@@ -219,7 +219,7 @@ void Serial_HDF5_Writer::write(const std_string &name,
                                const char       *value,
                                std::size_t       size)
 {
-    Require(!is_readonly());
+    REQUIRE(!is_readonly());
 
     if (b_node != b_master)
         return;

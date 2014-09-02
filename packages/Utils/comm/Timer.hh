@@ -121,16 +121,16 @@ class Timer
     inline double posix_err()  const;
 
     //! Return the wall clock time in seconds, summed over all intervals.
-    double sum_wall_clock() const { Require(! timer_on); return sum_wall; }
+    double sum_wall_clock() const { REQUIRE(! timer_on); return sum_wall; }
 
     //! Return the system cpu time in seconds, summed over all intervals.
-    double sum_system_cpu() const { Require(! timer_on); return sum_system; }
+    double sum_system_cpu() const { REQUIRE(! timer_on); return sum_system; }
 
     //! Return the user cpu time in seconds, summed over all intervals.
-    double sum_user_cpu() const { Require(! timer_on); return sum_user; }
+    double sum_user_cpu() const { REQUIRE(! timer_on); return sum_user; }
 
     //! Return the number of time intervals used in the sums.
-    int intervals() const { Require(! timer_on); return num_intervals; }
+    int intervals() const { REQUIRE(! timer_on); return num_intervals; }
 
     inline void reset();
     void print( std::ostream &, int p = 2 ) const;
@@ -142,7 +142,7 @@ class Timer
 //! Set the beginning of the time interval.
 void Timer::start()
 {
-    Require(! timer_on);
+    REQUIRE(! timer_on);
     timer_on = true;
     ++num_intervals;
 
@@ -154,7 +154,7 @@ void Timer::start()
 //! Set the end of the time interval.
 void Timer::stop()
 {
-    Require( timer_on );
+    REQUIRE( timer_on );
 
     // set both end and tms_end.
     end      = wall_clock_time( tms_end );
@@ -169,7 +169,7 @@ void Timer::stop()
 //! Return the wall clock time in seconds, for the last interval.
 double Timer::wall_clock() const
 {
-    Require(! timer_on);
+    REQUIRE(! timer_on);
     return( end - begin );
 }
 
@@ -177,7 +177,7 @@ double Timer::wall_clock() const
 //! Return the system cpu time in seconds, for the last interval.
 double Timer::system_cpu() const
 {
-    Require(! timer_on);
+    REQUIRE(! timer_on);
     return( tms_end.tms_stime - tms_begin.tms_stime )
         / static_cast<double>(posix_clock_ticks_per_second);
 }
@@ -186,7 +186,7 @@ double Timer::system_cpu() const
 //! Return the user cpu time in seconds, for the last interval.
 double Timer::user_cpu() const
 {
-    Require(! timer_on);
+    REQUIRE(! timer_on);
     return( tms_end.tms_utime - tms_begin.tms_utime )
         / static_cast<double>(posix_clock_ticks_per_second);
 }
@@ -202,7 +202,7 @@ double Timer::posix_err() const
 //! Reset the interval sums.
 void Timer::reset()
 {
-    Require(! timer_on);
+    REQUIRE(! timer_on);
 
     begin         = 0.0;
     end           = 0.0;

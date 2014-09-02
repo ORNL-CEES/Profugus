@@ -31,8 +31,8 @@ void HDF5_Reader::read_impl(const std_string &name,
                             T                *field,
                             hid_t             type)
 {
-    Require (field != 0);
-    Require (d.ndims > 0);
+    REQUIRE(field != 0);
+    REQUIRE(d.ndims > 0);
 
     // get the dataset
     hid_t dset_id = H5Dopen(current_loc(), name.c_str(), H5P_DEFAULT);
@@ -56,11 +56,11 @@ void HDF5_Reader::read_impl(const std_string &name,
         std::copy(d.local.rbegin(),  d.local.rend(),  local.begin());
         std::copy(d.offset.rbegin(), d.offset.rend(), offset.begin());
     }
-    Check (std::accumulate(local.begin(), local.end(), 0) <=
+    CHECK(std::accumulate(local.begin(), local.end(), 0) <=
            std::accumulate(d.global.begin(), d.global.end(), 0));
 
     // select the desired data in the dataset on the file
-    Validate (H5Sselect_hyperslab(
+    VALIDATE(H5Sselect_hyperslab(
                   dspace_id, H5S_SELECT_SET, &offset[0], &stride[0], &count[0],
                   &local[0]) >= 0, "Unable to select hyperslab at "
               << current_loc());
@@ -70,13 +70,13 @@ void HDF5_Reader::read_impl(const std_string &name,
     hid_t memspace = H5Screate_simple(d.ndims, &local[0], NULL);
 
     // select the hyperslab for this output
-    Validate (H5Sselect_hyperslab(
+    VALIDATE(H5Sselect_hyperslab(
                   memspace, H5S_SELECT_SET, &offset_out[0], &stride[0],
                   &count[0], &local[0]) >= 0, "Unable to select hyperslab "
               << " memspace at " << current_loc());
 
     // read the field
-    Validate (H5Dread(dset_id, type, memspace, dspace_id, H5P_DEFAULT,
+    VALIDATE(H5Dread(dset_id, type, memspace, dspace_id, H5P_DEFAULT,
                       field) >= 0,
               "Unable to read data at " << current_loc());
 
@@ -108,7 +108,7 @@ HDF5_Reader::HDF5_Reader()
 void HDF5_Reader::open(const std_string &filename,
                        int               node)
 {
-    Require (node < b_nodes);
+    REQUIRE(node < b_nodes);
 
     // Set file name, mode, and node
     b_filename = filename;
@@ -129,8 +129,8 @@ void HDF5_Reader::open(const std_string &filename,
     HDF5_Loc loc = {b_file, ""};
     b_loc_stack.push_back(loc);
 
-    Ensure (b_file);
-    Ensure (b_loc_stack.size() == 1);
+    ENSURE(b_file);
+    ENSURE(b_loc_stack.size() == 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -155,9 +155,9 @@ void HDF5_Reader::get_decomposition(const std_string &name,
     H5T_class_t dt_class;
 
     // get the rank of the data
-    Validate (H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
+    VALIDATE(H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
               "Failed to read " << name << " from " << b_filename);
-    Check (rank > 0);
+    CHECK(rank > 0);
 
     // allocate space
     d.ndims = rank;
@@ -184,9 +184,9 @@ void HDF5_Reader::get_decomposition(const std_string &name,
         std::copy(dims.begin(), dims.end(), d.global.begin());
     }
 
-    Ensure (d.global.size() == d.ndims);
-    Ensure (d.local.size()  == d.ndims);
-    Ensure (d.offset.size() == d.ndims);
+    ENSURE(d.global.size() == d.ndims);
+    ENSURE(d.local.size()  == d.ndims);
+    ENSURE(d.offset.size() == d.ndims);
 }
 
 //---------------------------------------------------------------------------//
@@ -231,7 +231,7 @@ void HDF5_Reader::read(const std_string &name,
     if (b_node != b_master)
         return;
 
-    Validate (H5LTread_dataset_double(current_loc(), name.c_str(), &value) >= 0,
+    VALIDATE(H5LTread_dataset_double(current_loc(), name.c_str(), &value) >= 0,
               "Failed to read " << name << " from " << b_filename);
 }
 
@@ -245,7 +245,7 @@ void HDF5_Reader::read(const std_string &name,
     if (b_node != b_master)
         return;
 
-      Validate (H5LTread_dataset_int(current_loc(), name.c_str(), &value) >= 0,
+      VALIDATE(H5LTread_dataset_int(current_loc(), name.c_str(), &value) >= 0,
                 "Failed to read " << name << " from " << b_filename);
 }
 
@@ -259,7 +259,7 @@ void HDF5_Reader::read(const std_string &name,
     if (b_node != b_master)
         return;
 
-      Validate (H5LTread_dataset_char(current_loc(), name.c_str(), &value) >= 0,
+      VALIDATE(H5LTread_dataset_char(current_loc(), name.c_str(), &value) >= 0,
                 "Failed to read " << name << " from " << b_filename);
 }
 
@@ -279,9 +279,9 @@ void HDF5_Reader::read(const std_string &name,
     H5T_class_t dt_class;
 
     // get the ndims (should be 1 for 1-D vector)
-    Validate (H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
+    VALIDATE(H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
               "Failed to read " << name << " from " << b_filename);
-    Check (rank == 0); // rank is 0 for strings for some reason
+    CHECK(rank == 0); // rank is 0 for strings for some reason
 
     // read the dimensions
     hsize_t ndims[1] = {0};
@@ -313,9 +313,9 @@ void HDF5_Reader::read(const std_string &name,
     H5T_class_t dt_class;
 
     // get the ndims
-    Validate (H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
+    VALIDATE(H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
               "Failed to read " << name << " from " << b_filename);
-    Check (rank > 0);
+    CHECK(rank > 0);
 
     // read the dimensions
     Vec_Hsize ndims(rank, 0);
@@ -352,9 +352,9 @@ void HDF5_Reader::read(const std_string &name,
     H5T_class_t dt_class;
 
     // get the ndims (should be 1 for 1-D vector)
-    Validate (H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
+    VALIDATE(H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
               "Failed to read " << name << " from " << b_filename);
-    Check (rank > 0);
+    CHECK(rank > 0);
 
     // read the dimensions
     Vec_Hsize ndims(rank, 0);
@@ -391,9 +391,9 @@ void HDF5_Reader::read(const std_string &name,
     H5T_class_t dt_class;
 
     // get the ndims (should be 1 for 1-D vector)
-    Validate (H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
+    VALIDATE(H5LTget_dataset_ndims(current_loc(), name.c_str(), &rank) >= 0,
               "Failed to read " << name << " from " << b_filename);
-    Check (rank > 0);
+    CHECK(rank > 0);
 
     // read the dimensions
     Vec_Hsize ndims(rank, 0);

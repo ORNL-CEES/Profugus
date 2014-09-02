@@ -31,15 +31,15 @@ void SourceTestBase::SetUp()
     this->init_geometry();
     this->init_physics();
 
-    Check(b_physics);
-    Check(b_geometry);
+    CHECK(b_physics);
+    CHECK(b_geometry);
     b_physics->set_geometry(b_geometry);
 
-    Ensure(b_rcon);
-    Ensure(!b_db.is_null());
-    Ensure(b_geometry);
-    Ensure(b_physics);
-    Ensure(b_group_bounds);
+    ENSURE(b_rcon);
+    ENSURE(!b_db.is_null());
+    ENSURE(b_geometry);
+    ENSURE(b_physics);
+    ENSURE(b_group_bounds);
 }
 
 //---------------------------------------------------------------------------//
@@ -61,7 +61,7 @@ void SourceTestBase::init_group_bounds()
 
     b_group_bounds = std::make_shared<profugus::Group_Bounds>(n_bounds);
 
-    Ensure(b_group_bounds->num_groups() == 1);
+    ENSURE(b_group_bounds->num_groups() == 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -69,8 +69,8 @@ void SourceTestBase::init_group_bounds()
 //! Create group information
 void SourceTestBase::init_db()
 {
-    Require(b_db.is_null());
-    Require(b_group_bounds);
+    REQUIRE(b_db.is_null());
+    REQUIRE(b_group_bounds);
 
     b_db = Teuchos::rcp(new ParameterList_t("test"));
 }
@@ -80,8 +80,8 @@ void SourceTestBase::init_db()
 //! Fill with four vertical cells of water from -2,-2,-4 to 2,2,4
 void SourceTestBase::init_geometry()
 {
-    Require(!b_db.is_null());
-    Require(!b_geometry);
+    REQUIRE(!b_db.is_null());
+    REQUIRE(!b_geometry);
 
     typedef Geometry_t::SP_Array SP_Core;
     typedef Geometry_t::Array_t  Core_t;
@@ -116,8 +116,8 @@ void SourceTestBase::init_geometry()
 //! Set materials with scattering
 void SourceTestBase::init_physics()
 {
-    Require (!b_db.is_null());
-    Require (b_group_bounds);
+    REQUIRE(!b_db.is_null());
+    REQUIRE(b_group_bounds);
     const int ng = num_groups();
 
     RCP_XS xs(Teuchos::rcp(new XS_t()));

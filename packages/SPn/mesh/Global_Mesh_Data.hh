@@ -83,7 +83,7 @@ class Global_Mesh_Data
     //! Get global number of cells.
     int num_cells() const
     {
-        Require(d_dimension == 2 || d_dimension == 3);
+        REQUIRE(d_dimension == 2 || d_dimension == 3);
         int temp =1;
         for (int i=0; i<d_dimension;++i)
             temp *= d_N[i];
@@ -93,7 +93,7 @@ class Global_Mesh_Data
     //! Get global number of vertices.
     int num_vertices() const
     {
-        Require(d_dimension == 2 || d_dimension == 3);
+        REQUIRE(d_dimension == 2 || d_dimension == 3);
         int temp=1;
         for (int i=0; i<d_dimension; ++i)
           temp *= d_V[i];

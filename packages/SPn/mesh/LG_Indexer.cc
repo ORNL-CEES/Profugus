@@ -49,8 +49,8 @@ LG_Indexer::LG_Indexer(const Vec_Int &num_I,
     using def::I;
     using def::J;
 
-    Require (d_num[I].size() * d_num[J].size() == d_num_blocks);
-    Require (d_num_blocks * d_num_sets == d_nodes);
+    REQUIRE(d_num[I].size() * d_num[J].size() == d_num_blocks);
+    REQUIRE(d_num_blocks * d_num_sets == d_nodes);
 
     // set LG_Indexer to current domain (processor node)
     set_to_domain(profugus::node());
@@ -69,9 +69,9 @@ LG_Indexer::LG_Indexer(const Vec_Int &num_I,
     d_num_global[I] = d_I_offsets.back();
     d_num_global[J] = d_J_offsets.back();
 
-    Ensure (d_num_global[I] ==
+    ENSURE(d_num_global[I] ==
             std::accumulate(d_num[I].begin(), d_num[I].end(), 0));
-    Ensure (d_num_global[J] ==
+    ENSURE(d_num_global[J] ==
             std::accumulate(d_num[J].begin(), d_num[J].end(), 0));
 }
 
@@ -83,7 +83,7 @@ LG_Indexer::LG_Indexer(const Vec_Int &num_I,
  */
 void LG_Indexer::set_to_domain(int domain)
 {
-    Require (domain >= 0 && domain < d_nodes);
+    REQUIRE(domain >= 0 && domain < d_nodes);
 
     using std::accumulate;
     using def::I;
@@ -95,20 +95,20 @@ void LG_Indexer::set_to_domain(int domain)
 
     // calculate the set id
     d_set_id = d_domain / (d_num_blocks);
-    Check (d_set_id >= 0 && d_set_id < d_num_sets);
+    CHECK(d_set_id >= 0 && d_set_id < d_num_sets);
 
     // calculate the block id
     d_block_id = d_domain - d_set_id * d_num_blocks;
-    Check (d_block_id >= 0 && d_block_id < d_num_blocks);
+    CHECK(d_block_id >= 0 && d_block_id < d_num_blocks);
 
     // calculate the processor index
     d_block[J] = d_block_id / d_Nb[I];
     d_block[I] = d_block_id - d_block[J] * d_Nb[I];
 
-    Ensure (d_block[J] < d_Nb[J]);
-    Ensure (d_block[I] < d_Nb[I]);
-    Ensure (d_block[I] + d_block[J] * d_Nb[I] == d_block_id);
-    Ensure (d_block_id + d_set_id * d_num_blocks == d_domain);
+    ENSURE(d_block[J] < d_Nb[J]);
+    ENSURE(d_block[I] < d_Nb[I]);
+    ENSURE(d_block[I] + d_block[J] * d_Nb[I] == d_block_id);
+    ENSURE(d_block_id + d_set_id * d_num_blocks == d_domain);
 }
 
 //---------------------------------------------------------------------------//
@@ -129,10 +129,10 @@ void LG_Indexer::global_to_manylocal(const IJ_Set& gbegin,
 {
     using def::I; using def::J;
 
-    Require(0         <= gbegin[I]);     Require(0         <= gbegin[J]);
-    Require(gbegin[I] <  gend[I]);       Require(gbegin[J] <  gend[J]);
-    Require(gend[I]   <= num_global(I)); Require(gend[J]   <= num_global(J));
-    Require(set < num_sets());
+    REQUIRE(0         <= gbegin[I]);     REQUIRE(0         <= gbegin[J]);
+    REQUIRE(gbegin[I] <  gend[I]);       REQUIRE(gbegin[J] <  gend[J]);
+    REQUIRE(gend[I]   <= num_global(I)); REQUIRE(gend[J]   <= num_global(J));
+    REQUIRE(set < num_sets());
 
     domains.clear();
     lbegins.clear();
@@ -145,14 +145,14 @@ void LG_Indexer::global_to_manylocal(const IJ_Set& gbegin,
             gbegin[def::I]) - d_I_offsets.begin();
     if (d_I_offsets[ib_begin] != gbegin[def::I])
         --ib_begin;
-    Check(0 <= ib_begin && ib_begin < num_blocks(I));
+    CHECK(0 <= ib_begin && ib_begin < num_blocks(I));
 
     int ib_end = std::lower_bound(
             d_I_offsets.begin(),
             d_I_offsets.end(),
             gend[def::I]) - d_I_offsets.begin();
-    Check(0 < ib_end && ib_end <= num_blocks(I));
-    Check(ib_begin < ib_end);
+    CHECK(0 < ib_end && ib_end <= num_blocks(I));
+    CHECK(ib_begin < ib_end);
 
     int jb_begin = std::lower_bound(
             d_J_offsets.begin(),
@@ -160,14 +160,14 @@ void LG_Indexer::global_to_manylocal(const IJ_Set& gbegin,
             gbegin[def::J]) - d_J_offsets.begin();
     if (d_J_offsets[jb_begin] != gbegin[def::J])
         --jb_begin;
-    Check(0 <= jb_begin && jb_begin < num_blocks(J));
+    CHECK(0 <= jb_begin && jb_begin < num_blocks(J));
 
     int jb_end = std::lower_bound(
             d_J_offsets.begin(),
             d_J_offsets.end(),
             gend[def::J]) - d_J_offsets.begin();
-    Check(0 < jb_end && jb_end <= num_blocks(J));
-    Check(jb_begin < jb_end);
+    CHECK(0 < jb_end && jb_end <= num_blocks(J));
+    CHECK(jb_begin < jb_end);
 
     const unsigned int num_domains = (jb_end - jb_begin) * (ib_end - ib_begin);
     domains.reserve(num_domains);
@@ -188,9 +188,9 @@ void LG_Indexer::global_to_manylocal(const IJ_Set& gbegin,
         if (gend[J] < d_J_offsets[jb + 1])
             lend[J] = gend[J] - d_J_offsets[jb];
 
-        Check(0 <= lbegin[J]);
-        Check(lbegin[J] < lend[J]);
-        Check(lend[J] <= d_num[J][jb]);
+        CHECK(0 <= lbegin[J]);
+        CHECK(lbegin[J] < lend[J]);
+        CHECK(lend[J] <= d_num[J][jb]);
 
         for (int ib = ib_begin; ib < ib_end; ++ib)
         {
@@ -203,9 +203,9 @@ void LG_Indexer::global_to_manylocal(const IJ_Set& gbegin,
             if (gend[I] < d_I_offsets[ib + 1])
                 lend[I] = gend[I] - d_I_offsets[ib];
 
-            Check(0 <= lbegin[I]);
-            Check(lbegin[I] < lend[I]);
-            Check(lend[I] <= d_num[I][ib]);
+            CHECK(0 <= lbegin[I]);
+            CHECK(lbegin[I] < lend[I]);
+            CHECK(lend[I] <= d_num[I][ib]);
 
             // Add the domain
             domains.push_back(domain(ib + jb * num_blocks(I), set));
@@ -215,9 +215,9 @@ void LG_Indexer::global_to_manylocal(const IJ_Set& gbegin,
         }
     }
 
-    Ensure(domains.size() == num_domains);
-    Ensure(domains.size() == lbegins.size());
-    Ensure(domains.size() == lends.size());
+    ENSURE(domains.size() == num_domains);
+    ENSURE(domains.size() == lbegins.size());
+    ENSURE(domains.size() == lends.size());
 }
 
 } // end namespace profugus

@@ -39,8 +39,8 @@ void move_from_outside(
     Space_Vector& r           = state.d_r;
     using def::X; using def::Y; using def::Z;
 
-    Require(soft_equiv(vector_magnitude(omega), 1., 1.e-6));
-    Require(   (omega[X] < 0 ? r[X] > lower[X] : r[X] < upper[X])
+    REQUIRE(soft_equiv(vector_magnitude(omega), 1., 1.e-6));
+    REQUIRE(   (omega[X] < 0 ? r[X] > lower[X] : r[X] < upper[X])
             || (omega[Y] < 0 ? r[Y] > lower[Y] : r[Y] < upper[Y])
             || (omega[Z] < 0 ? r[Z] > lower[Z] : r[Z] < upper[Z]));
 
@@ -91,7 +91,7 @@ void move_from_outside(
 
     // Distance might be zero if the particle is outside the problem and
     // parallel to the face
-    Check(distance > 0. || omega[X] == 0. || omega[Y] == 0. || omega[Z] == 0.);
+    CHECK(distance > 0. || omega[X] == 0. || omega[Y] == 0. || omega[Z] == 0.);
 
     // Now move the particle, with a little extra push to make sure it's just
     // inside the boundary
@@ -101,7 +101,7 @@ void move_from_outside(
 
     // Now again, check if it missed our outer boundaries and move it to inside
     // the array
-    // Check(state.escaping_face == RTK_State::NONE);
+    // CHECK(state.escaping_face == RTK_State::NONE);
     if      (omega[X] >= 0.0 && r[X] > upper[X])
     {
         state.escaping_face = RTK_State::PLUS_X;
@@ -135,9 +135,9 @@ void move_from_outside(
         r[Z] = lower[Z];
     }
 
-    Ensure((state.d_r[X] >= lower[X]) && (state.d_r[X] <= upper[X]));
-    Ensure((state.d_r[Y] >= lower[Y]) && (state.d_r[Y] <= upper[Y]));
-    Ensure((state.d_r[Z] >= lower[Z]) && (state.d_r[Z] <= upper[Z]));
+    ENSURE((state.d_r[X] >= lower[X]) && (state.d_r[X] <= upper[X]));
+    ENSURE((state.d_r[Y] >= lower[Y]) && (state.d_r[Y] <= upper[Y]));
+    ENSURE((state.d_r[Z] >= lower[Z]) && (state.d_r[Z] <= upper[Z]));
 }
 
 } // end namespace profugus

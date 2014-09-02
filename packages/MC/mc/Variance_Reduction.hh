@@ -51,10 +51,10 @@ class Variance_Reduction
     virtual ~Variance_Reduction() { /*...*/ }
 
     //! Set the geometry class
-    void set(SP_Geometry geometry) { Require(geometry); b_geometry = geometry; }
+    void set(SP_Geometry geometry) { REQUIRE(geometry); b_geometry = geometry; }
 
     //! Set the physics class
-    void set(SP_Physics physics) { Require(physics); b_physics = physics; }
+    void set(SP_Physics physics) { REQUIRE(physics); b_physics = physics; }
 
     //! Return the splitting boolean
     bool uses_splitting() { return b_splitting; }

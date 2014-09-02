@@ -70,9 +70,9 @@ void XS_Builder::open_and_broadcast(const std_string &xml_file)
     Teuchos::updateParametersFromXmlFileAndBroadcast(
         xml_file.c_str(), d_plxs.ptr(), *d_comm);
 
-    Check (!d_plxs.is_null());
-    Check (d_plxs->isParameter("num groups"));
-    Check (d_plxs->isParameter("pn order"));
+    CHECK(!d_plxs.is_null());
+    CHECK(d_plxs->isParameter("num groups"));
+    CHECK(d_plxs->isParameter("pn order"));
 
     // assign number of groups and pn order
     d_pn_order   = d_plxs->get<int>("pn order");
@@ -82,14 +82,14 @@ void XS_Builder::open_and_broadcast(const std_string &xml_file)
     if (d_plxs->isParameter("group v"))
     {
         d_velocity = d_plxs->get<OneDArray>("group v");
-        Check (d_velocity.size() == d_num_groups);
+        CHECK(d_velocity.size() == d_num_groups);
     }
 
     // get the group bounds if they are on the file
     if (d_plxs->isParameter("bounds"))
     {
         d_bounds = d_plxs->get<OneDArray>("bounds");
-        Check (d_bounds.size() == d_num_groups + 1);
+        CHECK(d_bounds.size() == d_num_groups + 1);
     }
 
     // get the materials in the file
@@ -103,7 +103,7 @@ void XS_Builder::open_and_broadcast(const std_string &xml_file)
         }
     }
 
-    Ensure (d_matids.size() > 0);
+    ENSURE(d_matids.size() > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -154,17 +154,17 @@ void XS_Builder::build(const Matid_Map &map,
                        int              g_first,
                        int              g_last)
 {
-    Require (map.completed());
-    Require (1 + g_last - g_first <= d_num_groups);
-    Require (pn_order <= d_pn_order);
+    REQUIRE(map.completed());
+    REQUIRE(1 + g_last - g_first <= d_num_groups);
+    REQUIRE(pn_order <= d_pn_order);
 
     // number of groups in the produced XS
     int num_groups = 1 + g_last - g_first;
-    Check (num_groups >= 0);
+    CHECK(num_groups >= 0);
 
     // create g-end (1 past the last valid entry)
     int g_end = g_last + 1;
-    Check (g_end - g_first == num_groups);
+    CHECK(g_end - g_first == num_groups);
 
     // make a new xs database
     d_xs = Teuchos::rcp(new XS);
@@ -198,7 +198,7 @@ void XS_Builder::build(const Matid_Map &map,
         // the cross section database
         int matid                 = itr->first;
         const std_string &matname = itr->second;
-        Check (d_plxs->isSublist(matname));
+        CHECK(d_plxs->isSublist(matname));
 
         // get the sublist
         const ParameterList &mpl = d_plxs->sublist(matname);
@@ -215,7 +215,7 @@ void XS_Builder::build(const Matid_Map &map,
                 // truncate the range
                 OneDArray sigma(sig_file.begin() + g_first,
                                 sig_file.begin() + g_end);
-                Check (sigma.size() == num_groups);
+                CHECK(sigma.size() == num_groups);
 
                 // add the cross sections to the xs database
                 d_xs->add(matid, t, sigma);

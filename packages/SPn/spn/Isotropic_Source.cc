@@ -44,12 +44,12 @@ Isotropic_Source::Isotropic_Source(int num_cells)
 void Isotropic_Source::truncate(int g_first,
                                 int g_last)
 {
-    Require (g_first >= 0 && g_first <= g_last);
-    Require (g_last < this->num_groups());
+    REQUIRE(g_first >= 0 && g_first <= g_last);
+    REQUIRE(g_last < this->num_groups());
 
     // number of groups in new source
     int num_groups = 1 + g_last - g_first;
-    Check (num_groups > 0);
+    CHECK(num_groups > 0);
 
     // return if the number of groups are equivalent
     if (num_groups == this->num_groups()) return;
@@ -70,7 +70,7 @@ void Isotropic_Source::truncate(int g_first,
         d_shapes[s] = ns;
     }
 
-    Ensure (this->num_groups() == num_groups);
+    ENSURE(this->num_groups() == num_groups);
 }
 
 //---------------------------------------------------------------------------//
@@ -91,9 +91,9 @@ void Isotropic_Source::set(const ID_Field      &ids,
 {
     using profugus::constants::inv_four_pi;
 
-    Require (!shapes.empty());
-    Require (ids.size() == d_ids.size());
-    Require (source.size() == d_source.size());
+    REQUIRE(!shapes.empty());
+    REQUIRE(ids.size() == d_ids.size());
+    REQUIRE(source.size() == d_source.size());
 
     // assign the shapes
     d_shapes = shapes;
@@ -107,7 +107,7 @@ void Isotropic_Source::set(const ID_Field      &ids,
         // convert isotropic source to per steradian
         d_source[cell] = inv_four_pi * source[cell];
 
-        Check (d_source[cell] >= 0.0);
+        CHECK(d_source[cell] >= 0.0);
     }
 }
 

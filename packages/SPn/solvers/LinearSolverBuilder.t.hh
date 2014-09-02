@@ -62,7 +62,7 @@ LinearSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db )
         }
         else
         {
-            Validate (false, "Invalid 'profugus_solver' type of "
+            VALIDATE(false, "Invalid 'profugus_solver' type of "
                       << type << " entered.  Valid entries are 'richardson'");
         }
     }
@@ -73,7 +73,7 @@ LinearSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db )
     }
     else
     {
-        Validate(false, "Error: Invalid LinearSolver option "
+        VALIDATE(false, "Error: Invalid LinearSolver option "
                  "'" << solver_type << "'\n"
                  "Specify linear solver by setting solver_type="
                  "'profugus' or 'stratimikos' or by setting the "

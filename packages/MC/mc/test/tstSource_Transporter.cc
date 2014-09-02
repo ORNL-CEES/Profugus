@@ -62,7 +62,7 @@ class DR_Source : public profugus::Source
 
     SP_Particle get_particle()
     {
-        Require (d_Np);
+        REQUIRE(d_Np);
 
         using def::X; using def::Y; using def::Z;
 

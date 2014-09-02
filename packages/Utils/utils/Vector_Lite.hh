@@ -124,25 +124,25 @@ class Vector_Lite
     //! Indexing using ().
     reference operator()(const size_type i)
     {
-        Require(valid_index(i)); return d_U[i];
+        REQUIRE(valid_index(i)); return d_U[i];
     }
 
     //! Const indexing using ().
     const_reference operator()(const size_type i) const
     {
-        Require(valid_index(i)); return d_U[i];
+        REQUIRE(valid_index(i)); return d_U[i];
     }
 
     //! Indexing using [].
     reference operator[](const size_type i)
     {
-        Require(valid_index(i)); return d_U[i];
+        REQUIRE(valid_index(i)); return d_U[i];
     }
 
     //! const indexing using [].
     const_reference operator[](const size_type i) const
     {
-        Require(valid_index(i)); return d_U[i];
+        REQUIRE(valid_index(i)); return d_U[i];
     }
 
     // >>> ITERATOR SUPPORT

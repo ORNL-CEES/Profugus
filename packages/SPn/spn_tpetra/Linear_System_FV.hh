@@ -233,8 +233,8 @@ int Linear_System_FV::index(int g,
                             int eqn,
                             int cell) const
 {
-    Require (g < d_Ng);
-    Require (eqn < d_Ne);
+    REQUIRE(g < d_Ng);
+    REQUIRE(eqn < d_Ne);
     return g + d_Ng * (eqn + d_Ne * (cell));
 }
 
@@ -249,7 +249,7 @@ int Linear_System_FV::index(int g,
  */
 Linear_System_FV::RCP_Bnd_Indexer Linear_System_FV::bnd_indexer(int face) const
 {
-    Require (face >= 0 && face < 6);
+    REQUIRE(face >= 0 && face < 6);
     return d_bnd_index[face];
 }
 

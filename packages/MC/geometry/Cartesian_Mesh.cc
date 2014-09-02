@@ -31,7 +31,7 @@ inline int edge_signed_index(const std::vector<double>& edges,
 {
     std::vector<double>::const_iterator result =
         std::lower_bound(edges.begin(), edges.end(), val);
-    Check(result != edges.end());
+    CHECK(result != edges.end());
 
     if (*result != val)
     {
@@ -82,17 +82,17 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
         // Increase dimension
         ++d_dimension;
 
-        Validate(profugus::is_sorted(d_edges[ax].begin(), d_edges[ax].end()),
+        VALIDATE(profugus::is_sorted(d_edges[ax].begin(), d_edges[ax].end()),
                  "Mesh along " << "xyz"[ax] << " axis is not monotonically "
                  "increasing.");
     }
 
     // For now only support 2-D (missing Z) or 3-D
-    Validate(d_dimension == 3 || (d_dimension == 2 && d_edges[def::Z].empty()),
+    VALIDATE(d_dimension == 3 || (d_dimension == 2 && d_edges[def::Z].empty()),
              "Only xy and xyz meshes are currently supported.");
 
-    Ensure(d_dimension >= 2);
-    Ensure(d_num_cells >= 1);
+    ENSURE(d_dimension >= 2);
+    ENSURE(d_num_cells >= 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -106,7 +106,7 @@ void Cartesian_Mesh::cardinal(size_type cell,
                               dim_type& j,
                               dim_type& k) const
 {
-    Require(cell < num_cells());
+    REQUIRE(cell < num_cells());
 
     using def::I; using def::J; using def::K;
 
@@ -118,9 +118,9 @@ void Cartesian_Mesh::cardinal(size_type cell,
 
     i = cell;
 
-    Ensure(0 <= i && i < d_extents[I]);
-    Ensure(0 <= j && j < d_extents[J]);
-    Ensure(0 <= k && k < d_extents[K]);
+    ENSURE(0 <= i && i < d_extents[I]);
+    ENSURE(0 <= j && j < d_extents[J]);
+    ENSURE(0 <= k && k < d_extents[K]);
 }
 
 //---------------------------------------------------------------------------//

@@ -100,7 +100,7 @@ class ShiftedOperatorTest : public testing::Test
 
         // Build solver
         d_operator = Teuchos::rcp(new profugus::ShiftedOperator<MV,OP>());
-        Check(!d_operator.is_null());
+        CHECK(!d_operator.is_null());
         d_operator->set_operator(d_A);
         d_operator->set_rhs_operator(d_B);
     }

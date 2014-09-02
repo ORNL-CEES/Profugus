@@ -97,7 +97,7 @@ class Physics
     // >>> PUBLIC TRANSPORT INTERFACE
 
     //! Set the geometry.
-    void set_geometry(SP_Geometry g) { Require(g); d_geometry = g; }
+    void set_geometry(SP_Geometry g) { REQUIRE(g); d_geometry = g; }
 
     //! Get the geometry.
     SP_Geometry get_geometry() const { return d_geometry; }

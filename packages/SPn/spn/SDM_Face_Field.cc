@@ -39,7 +39,7 @@ SDM_Face_Field::SDM_Face_Field(const Mesh_t &mesh,
     using def::Y;
     using def::Z;
 
-    Require (M > 0);
+    REQUIRE(M > 0);
 
     // get the number of cells for a block face
 

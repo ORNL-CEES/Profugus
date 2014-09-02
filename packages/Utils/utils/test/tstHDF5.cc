@@ -53,9 +53,9 @@ class Block_Data_Simple : public testing::Test
         dims[2] = Nx;
         gcells  = Nx * Ny * Nz;
 
-        Check (Nx % Px == 0);
-        Check (Ny % Py == 0);
-        Check (Nz % Pz == 0);
+        CHECK(Nx % Px == 0);
+        CHECK(Ny % Py == 0);
+        CHECK(Nz % Pz == 0);
 
         local[2] = Nx / Px;
         local[1] = Ny / Py;
@@ -157,9 +157,9 @@ class Block_Data : public testing::Test
         Nc[2]   = Nz;
         gcells  = Nx * Ny * Nz;
 
-        Check (Nx % Px == 0);
-        Check (Ny % Py == 0);
-        Check (Nz % Pz == 0);
+        CHECK(Nx % Px == 0);
+        CHECK(Ny % Py == 0);
+        CHECK(Nz % Pz == 0);
 
         Nl[0]  = Nx / Px;
         Nl[1]  = Ny / Py;

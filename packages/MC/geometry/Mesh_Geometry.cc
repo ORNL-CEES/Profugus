@@ -40,8 +40,8 @@ Mesh_Geometry::Mesh_Geometry(
  */
 void Mesh_Geometry::set_matids(SP_Vec_Int matids)
 {
-    Require(matids);
-    Require(matids->size() == num_cells());
+    REQUIRE(matids);
+    REQUIRE(matids->size() == num_cells());
     d_materials = matids;
 }
 
@@ -60,7 +60,7 @@ void Mesh_Geometry::initialize(
     using profugus::soft_equiv;
     using def::I; using def::J; using def::K;
 
-    Require(soft_equiv(vector_magnitude(direction), 1.0, 1.e-5));
+    REQUIRE(soft_equiv(vector_magnitude(direction), 1.0, 1.e-5));
 
     // Set struct attributes
     state.pos = r;
@@ -68,9 +68,9 @@ void Mesh_Geometry::initialize(
 
     update_state(state);
 
-    Ensure(state.ijk[I] >= -1 && state.ijk[I] <= d_mesh.num_cells_along(I));
-    Ensure(state.ijk[J] >= -1 && state.ijk[J] <= d_mesh.num_cells_along(J));
-    Ensure(state.ijk[K] >= -1 && state.ijk[K] <= d_mesh.num_cells_along(K));
+    ENSURE(state.ijk[I] >= -1 && state.ijk[I] <= d_mesh.num_cells_along(I));
+    ENSURE(state.ijk[J] >= -1 && state.ijk[J] <= d_mesh.num_cells_along(J));
+    ENSURE(state.ijk[K] >= -1 && state.ijk[K] <= d_mesh.num_cells_along(K));
 }
 
 //---------------------------------------------------------------------------//
@@ -82,7 +82,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
     using def::I; using def::J; using def::K;
     using profugus::soft_equiv;
 
-    Require(soft_equiv(vector_magnitude(state.dir), 1.0, 1.e-5));
+    REQUIRE(soft_equiv(vector_magnitude(state.dir), 1.0, 1.e-5));
 
     const Vec_Dbl& edges_x(d_mesh.edges(I));
     const Vec_Dbl& edges_y(d_mesh.edges(J));
@@ -162,7 +162,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
         state.next_ijk[K] = test_next;
     }
 
-    Ensure(state.next_dist >= 0.);
+    ENSURE(state.next_dist >= 0.);
     return state.next_dist;
 }
 
@@ -332,7 +332,7 @@ double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
                 v = I;
                 break;
             default:
-                Check(0); // shouldn't ever get here
+                CHECK(0); // shouldn't ever get here
                 break;
         }
 
@@ -365,7 +365,7 @@ double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
         }
     }
 
-    Ensure(state.next_dist >= 0.);
+    ENSURE(state.next_dist >= 0.);
     return state.next_dist;
 }
 
@@ -398,7 +398,7 @@ Mesh_Geometry::SP_Vec_Dbl Mesh_Geometry::get_cell_volumes()
         }
     }
 
-    Ensure (d_volumes->size() == num_cells());
+    ENSURE(d_volumes->size() == num_cells());
     return d_volumes;
 }
 

@@ -32,12 +32,12 @@ Energy_Prolongation::Energy_Prolongation(
 {
     d_fine_groups = std::accumulate(steer_vec.begin(),steer_vec.end(),0);
     d_coarse_groups = steer_vec.size();
-    Check( d_fine_groups > d_coarse_groups );
+    CHECK( d_fine_groups > d_coarse_groups );
 
     // Determine energy-independent size of vector
-    Check( fine_vec->getLocalLength()%d_fine_groups==0 );
+    CHECK( fine_vec->getLocalLength()%d_fine_groups==0 );
     d_unks_per_grp   = fine_vec->getLocalLength() / d_fine_groups;
-    Check( coarse_vec->getLocalLength()==d_unks_per_grp*d_coarse_groups );
+    CHECK( coarse_vec->getLocalLength()==d_unks_per_grp*d_coarse_groups );
 }
 
 //---------------------------------------------------------------------------//
@@ -48,14 +48,14 @@ void Energy_Prolongation::apply( const MV &coarse_vectors, MV &fine_vectors,
         Teuchos::ETransp mode, double alpha, double beta ) const
 
 {
-    Require( alpha == Teuchos::ScalarTraits<double>::one() );
-    Require( beta == Teuchos::ScalarTraits<double>::zero() );
-    Require( fine_vectors.getLocalLength()   == d_fine_groups*d_unks_per_grp );
-    Require( coarse_vectors.getLocalLength() ==
+    REQUIRE( alpha == Teuchos::ScalarTraits<double>::one() );
+    REQUIRE( beta == Teuchos::ScalarTraits<double>::zero() );
+    REQUIRE( fine_vectors.getLocalLength()   == d_fine_groups*d_unks_per_grp );
+    REQUIRE( coarse_vectors.getLocalLength() ==
              d_coarse_groups*d_unks_per_grp );
 
     int num_vectors = fine_vectors.getNumVectors();
-    Check( coarse_vectors.getNumVectors()==num_vectors );
+    CHECK( coarse_vectors.getNumVectors()==num_vectors );
 
     fine_vectors.putScalar(0.0);
 

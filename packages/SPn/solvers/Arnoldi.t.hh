@@ -49,7 +49,7 @@ template <class MV, class OP> Arnoldi<MV,OP>::Arnoldi(RCP_ParameterList db)
     d_pl->get("Verbosity", static_cast<int>(Anasazi::IterationDetails));
 
     // Create Teuchos parameter list to give to eigensolver
-    Ensure (!d_pl.is_null());
+    ENSURE(!d_pl.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -61,7 +61,7 @@ template <class MV, class OP> Arnoldi<MV,OP>::Arnoldi(RCP_ParameterList db)
 template <class MV, class OP>
 void Arnoldi<MV,OP>::set_operator(RCP_OP A)
 {
-    Require(!A.is_null());
+    REQUIRE(!A.is_null());
     d_A = A;
 
 }
@@ -78,8 +78,8 @@ template <class MV, class OP>
 void Arnoldi<MV,OP>::solve(double &eval,
                     RCP_MV  evec)
 {
-    Require (!evec.is_null());
-    Require (!d_A.is_null());
+    REQUIRE(!evec.is_null());
+    REQUIRE(!d_A.is_null());
 
     // Create eigenproblem
     RCP_Eigenproblem problem(new Eigenproblem(d_A, evec));
@@ -119,7 +119,7 @@ void Arnoldi<MV,OP>::solve(double &eval,
     // Get solution from eigenproblem
     eval          = problem->getSolution().Evals[0].realpart;
     RCP_MV outvec = problem->getSolution().Evecs;
-    Check( MultiVecTraits::GetNumberVecs(*outvec) > 0 );
+    CHECK( MultiVecTraits::GetNumberVecs(*outvec) > 0 );
 
     // Assign the first vector of the eigensolution (outvec may contain
     //  several even though we only converged on one) to the first vector

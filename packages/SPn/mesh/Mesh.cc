@@ -42,10 +42,10 @@ Mesh::Mesh(const def::Vec_Dbl &x_edges,
            size_type           num_K_blocks)
     : d_dimension(z_edges.empty() ? 2 : 3)
 {
-    Require(x_edges.size() >= 2);
-    Require(y_edges.size() >= 2);
-    Require(z_edges.size() >= 2 || z_edges.empty());
-    Require(z_edges.empty() || num_K_blocks > 0);
+    REQUIRE(x_edges.size() >= 2);
+    REQUIRE(y_edges.size() >= 2);
+    REQUIRE(z_edges.size() >= 2 || z_edges.empty());
+    REQUIRE(z_edges.empty() || num_K_blocks > 0);
 
     using def::I; using def::J; using def::K;
 
@@ -62,10 +62,10 @@ Mesh::Mesh(const def::Vec_Dbl &x_edges,
     // build widths, edges, block counts, etc
     this->build_mesh();
 
-    Ensure(d_num_cells == (x_edges.size() - 1)
+    ENSURE(d_num_cells == (x_edges.size() - 1)
                         * (y_edges.size() - 1)
                         * (d_dimension == 3 ? z_edges.size() - 1 : 1));
-    Ensure(d_num_vertices == x_edges.size()
+    ENSURE(d_num_vertices == x_edges.size()
                            * y_edges.size()
                            * (d_dimension == 3 ? z_edges.size() : 1));
 }
@@ -91,8 +91,8 @@ Mesh::Mesh(const def::Vec_Dbl &x_edges,
            size_type           J_block)
     : d_dimension(2)
 {
-    Require(x_edges.size() >= 2);
-    Require(y_edges.size() >= 2);
+    REQUIRE(x_edges.size() >= 2);
+    REQUIRE(y_edges.size() >= 2);
 
     using def::I; using def::J;
 
@@ -107,8 +107,8 @@ Mesh::Mesh(const def::Vec_Dbl &x_edges,
     // build widths, edges, block counts, etc
     this->build_mesh();
 
-    Ensure(d_num_cells    == (x_edges.size() - 1) * (y_edges.size() - 1));
-    Ensure(d_num_vertices == x_edges.size() * y_edges.size());
+    ENSURE(d_num_cells    == (x_edges.size() - 1) * (y_edges.size() - 1));
+    ENSURE(d_num_vertices == x_edges.size() * y_edges.size());
 }
 
 //---------------------------------------------------------------------------//
@@ -148,7 +148,7 @@ bool Mesh::find_cell(const Space_Vector &r,
                      Dim_Vector         &ijk) const
 {
     using def::I; using def::J; using def::K;
-    Require (dimension() == 2 ? profugus::soft_equiv(r[K], 0.) : true);
+    REQUIRE(dimension() == 2 ? profugus::soft_equiv(r[K], 0.) : true);
 
     // first check to see if the point is in the mesh before doing a search
     // for the cell index
@@ -167,7 +167,7 @@ bool Mesh::find_cell(const Space_Vector &r,
     if (*itr != r[I])
     {
         ijk[I] = itr - d_edges[I].begin() - 1;
-        Ensure (ijk[I] >= 0 && ijk[I] < num_cells_dim(I));
+        ENSURE(ijk[I] >= 0 && ijk[I] < num_cells_dim(I));
     }
     else
     {
@@ -179,7 +179,7 @@ bool Mesh::find_cell(const Space_Vector &r,
     if (*itr != r[J])
     {
         ijk[J] = itr - d_edges[J].begin() - 1;
-        Ensure (ijk[J] >= 0 && ijk[J] < num_cells_dim(J));
+        ENSURE(ijk[J] >= 0 && ijk[J] < num_cells_dim(J));
     }
     else
     {
@@ -191,7 +191,7 @@ bool Mesh::find_cell(const Space_Vector &r,
     if (*itr != r[K])
     {
         ijk[K] = itr - d_edges[K].begin() - 1;
-        Ensure (ijk[K] >= 0 && ijk[K] < num_cells_dim(K));
+        ENSURE(ijk[K] >= 0 && ijk[K] < num_cells_dim(K));
     }
     else
     {
@@ -211,11 +211,11 @@ void Mesh::build_mesh()
 {
     using def::K;
 
-    Require(d_dimension == 2 || d_dimension == 3);
-    Require(d_dimension == 2 || d_blocks[K] > 0);
+    REQUIRE(d_dimension == 2 || d_dimension == 3);
+    REQUIRE(d_dimension == 2 || d_blocks[K] > 0);
 #ifdef REQUIRE_ON
     for (unsigned int d = 0; d < d_dimension; ++d)
-        Require(!d_edges[d].empty());
+        REQUIRE(!d_edges[d].empty());
 #endif
 
 
@@ -265,7 +265,7 @@ void Mesh::build_mesh()
             // cell width
             d_width[d][l] = d_edges[d][l+1] - d_edges[d][l];
 
-            Check (d_width[d][l] > 0.0);
+            CHECK(d_width[d][l] > 0.0);
 
             // inverse width
             d_inv_width[d][l] = 1.0 / d_width[d][l];

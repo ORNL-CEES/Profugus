@@ -43,9 +43,9 @@ template <class MV, class OP>
 void Richardson<MV,OP>::solve( Teuchos::RCP<MV>       x,
                                Teuchos::RCP<const MV> b )
 {
-    Require( b_A != Teuchos::null );
-    Require( x   != Teuchos::null );
-    Require( b   != Teuchos::null );
+    REQUIRE( b_A != Teuchos::null );
+    REQUIRE( x   != Teuchos::null );
+    REQUIRE( b   != Teuchos::null );
 
     // Allocate necessary vectors
     Teuchos::RCP<MV> r = MVT::Clone(*x,1);

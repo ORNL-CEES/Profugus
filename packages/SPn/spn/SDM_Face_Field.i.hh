@@ -27,8 +27,8 @@ SDM_Face_Field::Serial_Matrix SDM_Face_Field::view(int abscissa,
 {
     Serial_Matrix m(
         Teuchos::View, convert(abscissa, ordinate), d_M, d_M, d_M);
-    Ensure (m.numRows() == d_M);
-    Ensure (m.numCols() == d_M);
+    ENSURE(m.numRows() == d_M);
+    ENSURE(m.numCols() == d_M);
     return m;
 }
 
@@ -42,9 +42,9 @@ void SDM_Face_Field::insert(int                  abscissa,
                             int                  ordinate,
                             const Serial_Matrix &m)
 {
-    Require (m.numRows() == d_M);
-    Require (m.numCols() == d_M);
-    Require (m.stride() == d_M);
+    REQUIRE(m.numRows() == d_M);
+    REQUIRE(m.numCols() == d_M);
+    REQUIRE(m.stride() == d_M);
 
     d_blas.COPY(d_size, m.values(), 1, convert(abscissa, ordinate), 1);
 }
@@ -64,17 +64,17 @@ void SDM_Face_Field::insert(int                  abscissa,
  */
 void SDM_Face_Field::swap(SDM_Face_Field &b)
 {
-    Require (b.d_face == d_face);
-    Require (b.d_N_abscissa == d_N_abscissa);
-    Require (b.d_N_ordinate == d_N_ordinate);
-    Require (b.d_N == d_N);
-    Require (b.d_M == d_M);
-    Require (b.d_size == d_size);
+    REQUIRE(b.d_face == d_face);
+    REQUIRE(b.d_N_abscissa == d_N_abscissa);
+    REQUIRE(b.d_N_ordinate == d_N_ordinate);
+    REQUIRE(b.d_N == d_N);
+    REQUIRE(b.d_M == d_M);
+    REQUIRE(b.d_size == d_size);
 
     d_field.swap(b.d_field);
 
-    Ensure (b.d_field.size() == d_field.size());
-    Ensure (static_cast<int>(d_field.size()) == d_N * d_size);
+    ENSURE(b.d_field.size() == d_field.size());
+    ENSURE(static_cast<int>(d_field.size()) == d_N * d_size);
 }
 
 //---------------------------------------------------------------------------//
@@ -96,12 +96,12 @@ void SDM_Face_Field::swap(SDM_Face_Field &b)
  */
 void SDM_Face_Field::fast_copy(const SDM_Face_Field &b)
 {
-    Require (b.d_face == d_face);
-    Require (b.d_N_abscissa == d_N_abscissa);
-    Require (b.d_N_ordinate == d_N_ordinate);
-    Require (b.d_N == d_N);
-    Require (b.d_M == d_M);
-    Require (b.d_size == d_size);
+    REQUIRE(b.d_face == d_face);
+    REQUIRE(b.d_N_abscissa == d_N_abscissa);
+    REQUIRE(b.d_N_ordinate == d_N_ordinate);
+    REQUIRE(b.d_N == d_N);
+    REQUIRE(b.d_M == d_M);
+    REQUIRE(b.d_size == d_size);
 
     d_blas.COPY(d_N * d_size, &b.d_field[0], 1, &d_field[0], 1);
 }
@@ -126,7 +126,7 @@ void SDM_Face_Field::fast_copy(const SDM_Face_Field &b)
 void SDM_Face_Field::fast_copy(const_pointer begin,
                                const_pointer end)
 {
-    Require (end - begin == d_size * d_N);
+    REQUIRE(end - begin == d_size * d_N);
 
     d_blas.COPY(d_N * d_size, begin, 1, &d_field[0], 1);
 }
@@ -138,7 +138,7 @@ void SDM_Face_Field::fast_copy(const_pointer begin,
  */
 SDM_Face_Field::const_pointer SDM_Face_Field::data_pointer() const
 {
-    Require (!d_field.empty());
+    REQUIRE(!d_field.empty());
     return &d_field[0];
 }
 
@@ -148,7 +148,7 @@ SDM_Face_Field::const_pointer SDM_Face_Field::data_pointer() const
  */
 SDM_Face_Field::pointer SDM_Face_Field::data_pointer()
 {
-    Require (!d_field.empty());
+    REQUIRE(!d_field.empty());
     return &d_field[0];
 }
 
@@ -163,11 +163,11 @@ SDM_Face_Field::pointer SDM_Face_Field::data_pointer()
 SDM_Face_Field::const_pointer SDM_Face_Field::convert(int abscissa,
                                                       int ordinate) const
 {
-    Require (abscissa < d_N_abscissa);
-    Require (ordinate < d_N_ordinate);
+    REQUIRE(abscissa < d_N_abscissa);
+    REQUIRE(ordinate < d_N_ordinate);
 
-    Ensure (abscissa + ordinate * d_N_abscissa < d_N);
-    Ensure ((abscissa + ordinate * d_N_abscissa) * d_size
+    ENSURE(abscissa + ordinate * d_N_abscissa < d_N);
+    ENSURE((abscissa + ordinate * d_N_abscissa) * d_size
             <= d_size * (d_N - 1));
     return &d_field[0] + (abscissa + ordinate * d_N_abscissa) * d_size;
 }
@@ -175,11 +175,11 @@ SDM_Face_Field::const_pointer SDM_Face_Field::convert(int abscissa,
 SDM_Face_Field::pointer SDM_Face_Field::convert(int abscissa,
                                                 int ordinate)
 {
-    Require (abscissa < d_N_abscissa);
-    Require (ordinate < d_N_ordinate);
+    REQUIRE(abscissa < d_N_abscissa);
+    REQUIRE(ordinate < d_N_ordinate);
 
-    Ensure (abscissa + ordinate * d_N_abscissa < d_N);
-    Ensure ((abscissa + ordinate * d_N_abscissa) * d_size
+    ENSURE(abscissa + ordinate * d_N_abscissa < d_N);
+    ENSURE((abscissa + ordinate * d_N_abscissa) * d_size
             <= d_size * (d_N - 1));
     return &d_field[0] + (abscissa + ordinate * d_N_abscissa) * d_size;
 }

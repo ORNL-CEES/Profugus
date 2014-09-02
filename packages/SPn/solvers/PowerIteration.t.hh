@@ -42,8 +42,8 @@ template <class MV, class OP>
 void PowerIteration<MV,OP>::solve( double           &lambda,
                                    Teuchos::RCP<MV>  x )
 {
-    Require( !b_A.is_null() );
-    Require( !x.is_null() );
+    REQUIRE( !b_A.is_null() );
+    REQUIRE( !x.is_null() );
 
     // Allocate necessary vectors
     Teuchos::RCP<MV> Ax = MVT::Clone(*x,1);

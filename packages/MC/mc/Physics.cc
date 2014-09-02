@@ -36,10 +36,10 @@ Physics::Physics(RCP_Std_DB db,
     , d_scatter(d_Nm)
     , d_fissionable(d_Nm)
 {
-    Require (!db.is_null());
-    Require (!d_mat.is_null());
-    Require (d_mat->num_groups() > 0);
-    Require (d_mat->num_mat() > 0);
+    REQUIRE(!db.is_null());
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(d_mat->num_groups() > 0);
+    REQUIRE(d_mat->num_mat() > 0);
 
     Insist (d_gb.num_groups() == mat->num_groups(),
             "Number of groups in material is inconsistent with Group_Bounds.");
@@ -56,7 +56,7 @@ Physics::Physics(RCP_Std_DB db,
     // get the material ids in the database
     def::Vec_Int matids;
     d_mat->get_matids(matids);
-    Check (matids.size() == d_Nm);
+    CHECK(matids.size() == d_Nm);
 
     // make the matid-to-local has map
     for (unsigned int l = 0; l < d_Nm; ++l)
@@ -65,7 +65,7 @@ Physics::Physics(RCP_Std_DB db,
                            static_cast<unsigned int>(matids[l]), l));
     }
     d_mid2l.complete();
-    Check (d_mid2l.size() == d_Nm);
+    CHECK(d_mid2l.size() == d_Nm);
 
     // calculate total scattering over all groups for each material and
     // determine if fission is available for a given material
@@ -73,15 +73,15 @@ Physics::Physics(RCP_Std_DB db,
     {
         // get the local index in the range [0, N)
         int m = d_mid2l[static_cast<unsigned int>(matid)];
-        Check (m < d_Nm);
+        CHECK(m < d_Nm);
 
         // size the group vector for this material
         d_scatter[m].resize(d_Ng, 0.0);
 
         // get the P0 scattering matrix for this material
         const auto &sig_s = d_mat->matrix(matid, 0);
-        Check (sig_s.numRows() == d_Ng);
-        Check (sig_s.numCols() == d_Ng);
+        CHECK(sig_s.numRows() == d_Ng);
+        CHECK(sig_s.numCols() == d_Ng);
 
         // loop over all groups and calculate the in-scatter from other
         // groups and add them to the group OUT-SCATTER; remember, we
@@ -114,7 +114,7 @@ Physics::Physics(RCP_Std_DB db,
 
                     // terminate if we are running analog
                     if (!d_implicit_capture)
-                        Validate(false, mm.str());
+                        VALIDATE(false, mm.str());
                     // else add to warnings
                     else
                         ADD_WARNING(mm.str());
@@ -127,8 +127,8 @@ Physics::Physics(RCP_Std_DB db,
                            true : false;
     }
 
-    Ensure (d_Nm > 0);
-    Ensure (d_Ng > 0);
+    ENSURE(d_Nm > 0);
+    ENSURE(d_Ng > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -150,11 +150,11 @@ void Physics::initialize(double      energy,
     int  group_index = 0;
     bool success     = d_gb.find(energy, group_index);
 
-    Validate(success, "Particle with energy " << energy
+    VALIDATE(success, "Particle with energy " << energy
              << " is outside the multigroup boundaries.");
 
     // set the group index in the particle
-    Ensure (group_index < d_Ng);
+    ENSURE(group_index < d_Ng);
     p.set_group(group_index);
 }
 
@@ -165,17 +165,17 @@ void Physics::initialize(double      energy,
 void Physics::collide(Particle_t &particle,
                       Bank_t     &bank)
 {
-    Require (d_geometry);
-    Require (particle.event() == events::COLLISION);
-    Require (!d_mat.is_null());
-    Require (d_mat->num_mat() == d_Nm);
-    Require (d_mat->num_groups() == d_Ng);
-    Require (particle.group() < d_Ng);
+    REQUIRE(d_geometry);
+    REQUIRE(particle.event() == events::COLLISION);
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(d_mat->num_mat() == d_Nm);
+    REQUIRE(d_mat->num_groups() == d_Ng);
+    REQUIRE(particle.group() < d_Ng);
 
     // get the material id of the current region
     d_matid = particle.matid();
-    Check (d_mid2l[static_cast<unsigned int>(d_matid)] < d_Nm);
-    Check (d_geometry->matid(particle.geo_state()) == d_matid);
+    CHECK(d_mid2l[static_cast<unsigned int>(d_matid)] < d_Nm);
+    CHECK(d_geometry->matid(particle.geo_state()) == d_matid);
 
     // get the group index
     int group = particle.group();
@@ -183,7 +183,7 @@ void Physics::collide(Particle_t &particle,
     // calculate the scattering cross section ratio
     register double c = d_scatter[d_mid2l[d_matid]][group] /
                         d_mat->vector(d_matid, XS_t::TOTAL)[group];
-    Check (!d_implicit_capture ? c <= 1.0 : c >= 0.0);
+    CHECK(!d_implicit_capture ? c <= 1.0 : c >= 0.0);
 
     // we need to do analog transport if the particle is c = 0.0 regardless of
     // whether implicit capture is on or not
@@ -222,7 +222,7 @@ void Physics::collide(Particle_t &particle,
     {
         // determine new group of particle
         group = sample_group(d_matid, group, particle.rng().ran());
-        Check (group >= 0 && group < d_Ng);
+        CHECK(group >= 0 && group < d_Ng);
 
         // set the group
         particle.set_group(group);
@@ -243,13 +243,13 @@ void Physics::collide(Particle_t &particle,
 double Physics::total(physics::Reaction_Type  type,
                       const Particle_t       &p)
 {
-    Require (d_mat->num_mat() == d_Nm);
-    Require (d_mat->num_groups() == d_Ng);
-    Require (p.group() < d_Ng);
+    REQUIRE(d_mat->num_mat() == d_Nm);
+    REQUIRE(d_mat->num_groups() == d_Ng);
+    REQUIRE(p.group() < d_Ng);
 
     // get the matid from the particle
     unsigned int matid = p.matid();
-    Check (d_mat->has(matid));
+    CHECK(d_mat->has(matid));
 
     // return the approprate reaction type
     switch (type)
@@ -289,7 +289,7 @@ double Physics::total(physics::Reaction_Type  type,
 bool Physics::initialize_fission(unsigned int  matid,
                                  Particle_t   &p)
 {
-    Require (d_mat->has(matid));
+    REQUIRE(d_mat->has(matid));
 
     // sampled flag
     bool sampled = false;
@@ -337,8 +337,8 @@ int Physics::sample_fission_site(const Particle_t       &p,
                                  Fission_Site_Container &fsc,
                                  double                  keff)
 {
-    Require (d_geometry);
-    Require (d_mat->has(p.matid()));
+    REQUIRE(d_geometry);
+    REQUIRE(d_mat->has(p.matid()));
 
     // material id
     unsigned int matid = p.matid();
@@ -388,12 +388,12 @@ int Physics::sample_fission_site(const Particle_t       &p,
 bool Physics::initialize_fission(Fission_Site &fs,
                                  Particle_t   &p)
 {
-    Require (d_mat->has(fs.m));
-    Require (is_fissionable(fs.m));
+    REQUIRE(d_mat->has(fs.m));
+    REQUIRE(is_fissionable(fs.m));
 
     // sample the fission group
     int group = sample_fission_group(fs.m, p.rng().ran());
-    Check (group < d_Ng);
+    CHECK(group < d_Ng);
 
     // set the particle group
     p.set_group(group);
@@ -412,12 +412,12 @@ int Physics::sample_group(int    matid,
                           int    g,
                           double rnd) const
 {
-    Require (!d_mat.is_null());
-    Require (d_mat->num_groups() == d_Ng);
-    Require (g >= 0 && g < d_Ng);
-    Require (rnd >= 0.0 && rnd < 1.0);
-    Require (d_mat->has(matid));
-    Require (d_mid2l.exists(matid));
+    REQUIRE(!d_mat.is_null());
+    REQUIRE(d_mat->num_groups() == d_Ng);
+    REQUIRE(g >= 0 && g < d_Ng);
+    REQUIRE(rnd >= 0.0 && rnd < 1.0);
+    REQUIRE(d_mat->has(matid));
+    REQUIRE(d_mid2l.exists(matid));
 
     // running cdf
     double cdf = 0.0;
@@ -440,10 +440,10 @@ int Physics::sample_group(int    matid,
         if (rnd <= cdf)
             return gp;
     }
-    Check (soft_equiv(cdf, 1.0));
+    CHECK(soft_equiv(cdf, 1.0));
 
     // we failed to sample
-    Validate(false, "Failed to sample group.");
+    VALIDATE(false, "Failed to sample group.");
     return -1;
 }
 
@@ -457,8 +457,8 @@ int Physics::sample_group(int    matid,
 int Physics::sample_fission_group(unsigned int matid,
                                   double       rnd) const
 {
-    Require (d_mat->has(matid));
-    Require (is_fissionable(matid));
+    REQUIRE(d_mat->has(matid));
+    REQUIRE(is_fissionable(matid));
 
     // running cdf; we make the cdf on the fly because nearly all of the
     // emission is in the first couple of groups so its not worth storing for
@@ -467,7 +467,7 @@ int Physics::sample_fission_group(unsigned int matid,
 
     // get the fission chi
     const auto &chi = d_mat->vector(matid, XS_t::CHI);
-    Check (chi.length() == d_Ng);
+    CHECK(chi.length() == d_Ng);
 
     // sample cdf
     for (int g = 0; g < d_Ng; ++g)
@@ -484,7 +484,7 @@ int Physics::sample_fission_group(unsigned int matid,
     }
 
     // we failed to sample
-    Validate(false, "Failed to sample fission group.");
+    VALIDATE(false, "Failed to sample fission group.");
     return -1;
 }
 
