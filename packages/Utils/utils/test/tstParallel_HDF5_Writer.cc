@@ -817,9 +817,9 @@ TEST_F(HDF_IO_Test, asymmetric_decomposition2)
 
         for (int n = 0; n < 36; ++n)
         {
-        EXPECT_EQ(30 + n, d3[n]);
-        EXPECT_EQ(40 + n, d4[n]);
-    }
+            EXPECT_EQ(30 + n, d3[n]);
+            EXPECT_EQ(40 + n, d4[n]);
+        }
 
         reader.end_group();
 
