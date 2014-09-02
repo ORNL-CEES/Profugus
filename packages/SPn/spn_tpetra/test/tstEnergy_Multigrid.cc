@@ -19,6 +19,7 @@
 #include "Tpetra_Vector.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
+#include "Teuchos_XMLParameterListHelpers.hpp"
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
@@ -106,40 +107,40 @@ TEST(MultigridTest, Heuristic)
     system->build_Matrix();
     RCP<Tpetra_Op> matrix = system->get_Operator();
 
-    // Create db for preconditioner
-    RCP_ParameterList block_gmres_db =
-        rcp(new ParameterList("Block GMRES"));
-    block_gmres_db->set("Convergence Tolerance",1e-4);
-    block_gmres_db->set("Maximum Iterations",5);
+    /*
+    const std::string plrefstr(
+        );
+        */
 
-    RCP_ParameterList belos_solver_types_db =
-        rcp(new ParameterList("Solver Types"));
-    belos_solver_types_db->set("Block GMRES",*block_gmres_db);
+    const std::string plrefstr(
+ "<ParameterList name='Multigrid Preconditioner'>                            \n\
+   <ParameterList name='Smoother'>                                           \n\
+    <Parameter name='Preconditioner' type='string' value='Ifpack2'/>         \n\
+    <Parameter name='Ifpack2_Type' type='string' value='RILUK'/>             \n\
+    <Parameter name='verbosity' type='string' value='None'/>                 \n\
+    <Parameter name='max_itr' type='int' value='1'/>                         \n\
+    <Parameter name='solver_type' type='string' value='stratimikos'/>        \n\
+    <ParameterList name='Stratimikos'>                                       \n\
+     <Parameter name='Linear Solver Type' type='string' value='Belos'/>      \n\
+     <Parameter name='Preconditioner Type' type='string' value='None'/>      \n\
+     <ParameterList name='Linear Solver Types'>                              \n\
+      <ParameterList name='Belos'>                                           \n\
+       <Parameter name='Solver Type' type='string' value='Block GMRES'/>     \n\
+       <ParameterList name='Solver Types'>                                   \n\
+        <ParameterList name='Block GMRES'>                                   \n\
+         <Parameter name='Convergence Tolerance' type='double' value='1e-4'/>\n\
+        </ParameterList>                                                     \n\
+       </ParameterList>                                                      \n\
+      </ParameterList>                                                       \n\
+     </ParameterList>                                                        \n\
+    </ParameterList>                                                         \n\
+   </ParameterList>                                                          \n\
+  </ParameterList>                                                           \n"
+        );
 
-    RCP_ParameterList belos_db =
-        rcp(new ParameterList("Belos"));
-    belos_db->set("Solver Type",string("Block GMRES"));
-    belos_db->set("Solver Types",*belos_solver_types_db);
-
-    RCP_ParameterList solver_types_db =
-        rcp(new ParameterList("Linear Solver Types"));
-    solver_types_db->set("Belos", *belos_db);
-
-    RCP_ParameterList stratimikos_db =
-        rcp(new ParameterList("Stratimikos"));
-    stratimikos_db->set("Linear Solver Types", *solver_types_db);
-    stratimikos_db->set("Linear Solver Type", string("Belos"));
-    stratimikos_db->set("Preconditioner Type",string("None"));
-
-    RCP_ParameterList smoother_db =
-        rcp(new ParameterList("Smoother"));
-    smoother_db->set("Stratimikos", *stratimikos_db);
-    smoother_db->set("max_itr", 5);
-    smoother_db->set("solver_type", string("stratimikos"));
-
-    RCP_ParameterList prec_db =
-        rcp(new ParameterList("Prec"));
-    prec_db->set("Smoother", *smoother_db);
+    // Convert string to a Teuchos PL
+    RCP_ParameterList prec_pl =
+        Teuchos::getParametersFromXmlString(plrefstr);
 
     // Create two vectors
     RCP<Tpetra_Vector> tmp_vec = system->get_RHS();
@@ -149,7 +150,7 @@ TEST(MultigridTest, Heuristic)
             Teuchos::rcp( new Tpetra_MV(*tmp_vec,Teuchos::Copy)));
 
     // Create preconditioner
-    Energy_Multigrid prec(db, prec_db, dim, mat, mesh, indexer, data, system);
+    Energy_Multigrid prec(db, prec_pl, dim, mat, mesh, indexer, data, system);
 
     x->putScalar(1.0);
     prec.apply(*x, *y);
@@ -164,15 +165,15 @@ TEST(MultigridTest, Heuristic)
     // Heuristic test of output vector norm
     if (nodes == 1)
     {
-        EXPECT_SOFTEQ(2.66046e2, norm2[0], 1.0e-3);
+        EXPECT_SOFTEQ(329.171, norm2[0], 1.0e-3);
     }
     else if (nodes == 2)
     {
-        EXPECT_SOFTEQ(2.899e+02, norm2[0], 1.0e-3);
+        EXPECT_SOFTEQ(299.947, norm2[0], 1.0e-3);
     }
     else if (nodes == 4)
     {
-        EXPECT_SOFTEQ(2.758546e+02, norm2[0], 1.0e-3);
+        EXPECT_SOFTEQ(272.649, norm2[0], 1.0e-3);
     }
 }
 
