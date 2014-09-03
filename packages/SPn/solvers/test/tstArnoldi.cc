@@ -17,6 +17,7 @@
 
 #include "../Arnoldi.hh"
 #include "../InverseOperator.hh"
+#include "Test_Matrices.hh"
 
 #include "Teuchos_RCP.hpp"
 #include "Epetra_MultiVector.h"
@@ -90,98 +91,12 @@ TEST_F(Arnoldi_Test, Eigensolver)
     // Matrix size
     int N = 8;
 
-    // Create Epetra Map
-    Map map( N, 0, *comm );
-
-    int myoffset = 0;
-    if( node==0 )
-        myoffset=0;
-    else if( node==1 )
-        myoffset=4;
-
-    int mylength = map.NumMyElements();
-
-    Vec_Int ind(3);
-    Vec_Dbl val(3);
-
-    // Create Graphs for A (tridiagonal) and B (diagonal)
-    Graph graphA(Copy,map,3);
-    Graph graphB(Copy,map,1);
-    for( int i=0; i<N; ++i )
-    {
-        if( i==0 )
-        {
-            ind[0] = 0;
-            ind[1] = 1;
-            graphA.InsertGlobalIndices(i,2,&ind[0]);
-        }
-        else if( i==N-1 )
-        {
-            ind[0] = N-2;
-            ind[1] = N-1;
-            graphA.InsertGlobalIndices(N-1,2,&ind[0]);
-        }
-        else
-        {
-            ind[0] = i-1;
-            ind[1] = i;
-            ind[2] = i+1;
-            graphA.InsertGlobalIndices(i,3,&ind[0]);
-        }
-        ind[0] = i;
-        graphB.InsertGlobalIndices(i,1,&ind[0]);
-    }
-    graphA.FillComplete();
-    graphA.OptimizeStorage();
-    graphB.FillComplete();
-    graphB.OptimizeStorage();
-
-    RCP_Matrix A( new Matrix(Copy,graphA) );
-    RCP_Matrix B( new Matrix(Copy,graphB) );
-
-    // Assign Values to matrices
-    int result;
-    for( int i=0; i<mylength; ++i )
-    {
-        if( i+myoffset == 0 )
-        {
-            ind[0] =  A->LCID(0);
-            ind[1] =  A->LCID(1);
-            val[0] =  2.0;
-            val[1] = -1.0;
-            A->ReplaceMyValues(i,2,&val[0],&ind[0]);
-        }
-        else if( i+myoffset == N-1 )
-        {
-            ind[0] = A->LCID(N-2);
-            ind[1] = A->LCID(N-1);
-            val[0] = -1.0;
-            val[1] =  2.0;
-            A->ReplaceMyValues(i,2,&val[0],&ind[0]);
-        }
-        else
-        {
-            ind[0] = A->LCID(myoffset+i-1);
-            ind[1] = A->LCID(myoffset+i);
-            ind[2] = A->LCID(myoffset+i+1);
-            val[0] = -1.0;
-            val[1] =  2.0;
-            val[2] = -1.0;
-            A->ReplaceMyValues(i,3,&val[0],&ind[0]);
-        }
-        ind[0] = B->LCID(myoffset+i);
-        val[0] = double(myoffset+i+1);
-        B->ReplaceMyValues(i,1,&val[0],&ind[0]);
-    }
-
-    // Finalize A
-    A->FillComplete();
-    A->OptimizeStorage();
-    B->FillComplete();
-    B->OptimizeStorage();
+    RCP_Matrix A = test_matrix::build_matrix<Matrix>("laplacian",N);
+    RCP_Matrix B = test_matrix::build_matrix<Matrix>("diagonal",N);
+    RCP_MV e_vec = test_matrix::build_vector<MV>(N);
+    e_vec->Random();
 
     // Test with matrix A
-    RCP_MV init_vec = Teuchos::rcp( new MV(map,1) );
     double e_val;
 
     // database settings
@@ -200,14 +115,10 @@ TEST_F(Arnoldi_Test, Eigensolver)
     // eigenvector is exactly orthogonal to a constant vector.  We have
     // to initialize with a random vector or else we'll converge to the
     // 2nd eigenmode.
-    init_vec->Random();
-    solver.solve( e_val, init_vec );
+    solver.solve( e_val, e_vec );
 
     cout.precision(15);
     cout << "Eig(A) = " << e_val << endl;
-
-    MV e_vec(map,1);
-    e_vec = *init_vec;
 
     int offset;
     if( node==0 )
@@ -215,8 +126,8 @@ TEST_F(Arnoldi_Test, Eigensolver)
     else
         offset=N/2;
 
-    for( int i=0; i<e_vec.MyLength(); ++i )
-        cout << "Evec[" << i+offset << "]: " << e_vec[0][i] << endl;
+    for( int i=0; i<e_vec->MyLength(); ++i )
+        cout << "Evec[" << i+offset << "]: " << (*e_vec)[0][i] << endl;
 
     vector<double> eref(8);
     eref[0] =   0.161229841765317;
@@ -234,14 +145,14 @@ TEST_F(Arnoldi_Test, Eigensolver)
 
     // Get sign of computed eigenvector
     double sign = 1.0;
-    if( e_vec[0][0] < 0.0 )
+    if( (*e_vec)[0][0] < 0.0 )
         sign = -1.0;
 
     // Check eigenvector values
     // Can only check absolute values because e-vec can vary +/-
     //  (running with a different number of processors may change the sign)
-    for( int i=0; i<e_vec.MyLength(); ++i )
-        EXPECT_SOFTEQ(sign*e_vec[0][i], eref[i+offset], tol);
+    for( int i=0; i<e_vec->MyLength(); ++i )
+        EXPECT_SOFTEQ(sign*(*e_vec)[0][i], eref[i+offset], tol);
 
     // Create operator for A^{-1}B
     {
@@ -259,14 +170,13 @@ TEST_F(Arnoldi_Test, Eigensolver)
     gensolver.set_operator( AinvB );
 
     // Solve
-    init_vec->Random();
-    gensolver.solve( e_val, init_vec );
-    e_vec = *init_vec;
+    e_vec = test_matrix::build_vector<MV>(N);
+    gensolver.solve( e_val, e_vec );
 
     cout << "Eig(AinvB) = " << e_val << endl;
 
-    for( int i=0; i<e_vec.MyLength(); ++i )
-        cout << "Evec[" << i+offset << "]: " << e_vec[0][i] << endl;
+    for( int i=0; i<e_vec->MyLength(); ++i )
+        cout << "Evec[" << i+offset << "]: " << (*e_vec)[0][i] << endl;
 
     eref[0] = 0.125730096111867;
     eref[1] = 0.248228875407670;
@@ -282,13 +192,13 @@ TEST_F(Arnoldi_Test, Eigensolver)
 
     // Get sign of computed eigenvector
     sign = 1.0;
-    if( e_vec[0][0] < 0.0 )
+    if( (*e_vec)[0][0] < 0.0 )
         sign = -1.0;
 
     // Check eigenvector values
-    for( int i=0; i<e_vec.MyLength(); ++i )
+    for( int i=0; i<e_vec->MyLength(); ++i )
     {
-        EXPECT_SOFTEQ(sign*e_vec[0][i], eref[i+offset], tol);
+        EXPECT_SOFTEQ(sign*(*e_vec)[0][i], eref[i+offset], tol);
     }
 }
 
