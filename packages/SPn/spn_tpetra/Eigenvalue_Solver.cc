@@ -250,9 +250,8 @@ void Eigenvalue_Solver::set_default_parameters()
     eig_db->get("Maximum Restarts", max_itr);
 
     // Forgive the formatting, column limits are a bit of an issue
-    // If no parameters are provided, the default solver is a
-    //  Davidson solver with a multigrid-in-energy preconditioner which
-    //  internally uses an ilu-preconditioned BiCGStab as a smoother
+    // If no parameters are provided, the default solver is a MueLu
+    //  algebraic multigrid preconditioner.
     // The goal here is to support "good" default parameters for a variety
     //  of different solvers and preconditioners so that the user can toggle
     //  between a small number of options without having to set many
@@ -267,24 +266,54 @@ void Eigenvalue_Solver::set_default_parameters()
   <ParameterList name='Multigrid Preconditioner'>                           \n\
    <ParameterList name='Smoother'>                                          \n\
     <Parameter name='Preconditioner' type='string' value='Ifpack2'/>        \n\
+    <Parameter name='Ifpack2_Type' type='string' value='ILUT'/>             \n\
     <Parameter name='verbosity' type='string' value='None'/>                \n\
-    <Parameter name='max_itr' type='int' value='3'/>                        \n\
+    <Parameter name='max_itr' type='int' value='5'/>                        \n\
     <Parameter name='solver_type' type='string' value='stratimikos'/>       \n\
+    <ParameterList name='Stratimikos'>                                      \n\
+     <Parameter name='Linear Solver Type' type='string' value='Belos'/>     \n\
+     <Parameter name='Preconditioner Type' type='string' value='None'/>     \n\
+    </ParameterList>                                                        \n\
+   <ParameterList name='Ifpack2 Params'>                                    \n\
+    <Parameter name='fact: drop tolerance' type='double' value='1e-1'/>     \n\
+   </ParameterList>                                                         \n\
    </ParameterList>                                                         \n\
   </ParameterList>                                                          \n\
   <ParameterList name='Anasazi'>                                            \n\
     <Parameter name='Maximum Subspace Dimension' type='int' value='25'/>    \n\
     <Parameter name='Restart Dimension' type='int' value='5'/>              \n\
+    <Parameter name='Output Level' type='string' value='medium'/>           \n\
   </ParameterList>                                                          \n\
-  <Parameter name='Ifpack2 Type' type='string' value='ILUT'/>               \n\
-  <Parameter name='Ifpack2 Overlap' type='int' value='0'/>                  \n\
+  <Parameter name='Ifpack2_Type' type='string' value='ILUT'/>               \n\
   <ParameterList name='Ifpack2 Params'>                                     \n\
-    <Parameter name='fact: drop tolerance' type='double' value='1e-2'/>     \n\
-    <Parameter name='fact: ilut level-of-fill' type='double' value='1.2'/>  \n\
+   <Parameter name='fact: drop tolerance' type='double' value='1e-2'/>      \n\
+   <Parameter name='fact: ilut level-of-fill' type='double' value='1.2'/>   \n\
+  </ParameterList>                                                          \n\
+  <ParameterList name='MueLu Params'>                                       \n\
+   <Parameter name='multigrid algorithm' type='string' value='unsmoothed'/> \n\
+   <Parameter name='max levels' type='int' value='5'/>                      \n\
+   <Parameter name='print initial parameters' type='bool' value='false'/>   \n\
+   <Parameter name='verbosity' type='string' value='low'/>                  \n\
+   <Parameter name='smoother: type' type='string' value='ILUT'/>            \n\
+   <ParameterList name='smoother: params'>                                  \n\
+    <Parameter name='relaxation: type' type='string' value='Gauss-Seidel'/> \n\
+    <Parameter name='relaxation: sweeps' type='int' value='5'/>             \n\
+    <Parameter name='fact: drop tolerance' type='double' value='1e-1'/>     \n\
+   </ParameterList>                                                         \n\
+   <Parameter name='coarse: type' type='string' value='ILUT'/>              \n\
+   <ParameterList name='coarse: params'>                                    \n\
+    <Parameter name='relaxation: type' type='string' value='Gauss-Seidel'/> \n\
+    <Parameter name='relaxation: sweeps' type='int' value='5'/>             \n\
+    <Parameter name='fact: drop tolerance' type='double' value='1e-1'/>     \n\
+   </ParameterList>                                                         \n\
   </ParameterList>                                                          \n\
   <ParameterList name='operator_db'>                                        \n\
    <Parameter name='verbosity' type='string' value='Low'/>                  \n\
    <Parameter name='solver_type' type='string' value='stratimikos'/>        \n\
+   <ParameterList name='Stratimikos'>                                       \n\
+    <Parameter name='Linear Solver Type' type='string' value='Belos'/>      \n\
+    <Parameter name='Preconditioner Type' type='string' value='None'/>      \n\
+   </ParameterList>                                                         \n\
   </ParameterList>                                                          \n\
  </ParameterList>                                                           \n"
         );

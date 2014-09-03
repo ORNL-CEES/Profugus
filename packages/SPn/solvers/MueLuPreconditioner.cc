@@ -38,24 +38,23 @@ MueLuPreconditionerBase::MueLuPreconditionerBase()
  *
  * \param pl List of problem parameters
  */
-void MueLuPreconditionerBase::setup(
-    Teuchos::RCP<Teuchos::ParameterList> pl )
+void MueLuPreconditionerBase::setup( Teuchos::RCP<Teuchos::ParameterList> pl )
 {
     REQUIRE( pl != Teuchos::null );
     REQUIRE( d_matrix != Teuchos::null );
-}
 
-//---------------------------------------------------------------------------//
-/*!
- * \brief Apply MueLu preconditioner to vector
- *
- * \param x Input vector
- * \param y Output vector
- */
-void MueLuPreconditionerBase::ApplyImpl(
-        Teuchos::RCP<const Xpetra_MultiVector> x,
-        Teuchos::RCP<Xpetra_MultiVector>       y ) const
-{
+    Teuchos::RCP<MueLu::HierarchyManager<SCALAR,LO,GO,NODE> > mueLuFactory =
+        Teuchos::rcp(
+            new MueLu::ParameterListInterpreter<SCALAR,LO,GO,NODE>(*pl));
+
+    d_hierarchy = mueLuFactory->CreateHierarchy();
+
+    Teuchos::RCP<MueLu::Level> L = d_hierarchy->GetLevel(0);
+    L->Set("A",d_matrix);
+
+    mueLuFactory->SetupHierarchy(*d_hierarchy);
+
+    d_hierarchy->IsPreconditioner(true);
 }
 
 } // end namespace profugus

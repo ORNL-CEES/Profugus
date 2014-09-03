@@ -22,6 +22,7 @@
 
 #include "Xpetra_MultiVector.hpp"
 #include "Xpetra_CrsMatrix.hpp"
+#include "Xpetra_Matrix.hpp"
 
 namespace profugus
 {
@@ -39,6 +40,7 @@ typedef Tpetra::Map<LO,GO,NODE>                     Tpetra_Map;
 typedef Tpetra::RowGraph<LO,GO,NODE>                Tpetra_Graph;
 typedef Xpetra::MultiVector<SCALAR,LO,GO,NODE>      Xpetra_MultiVector;
 typedef Xpetra::CrsMatrix<SCALAR,LO,GO,NODE>        Xpetra_CrsMatrix;
+typedef Xpetra::Matrix<SCALAR,LO,GO,NODE>           Xpetra_Matrix;
 
 } // end namespace profugus
 
