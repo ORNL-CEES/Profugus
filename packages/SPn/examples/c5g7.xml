@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='ASCII'?>
+<ParameterList name="C5G7 Benchmark Problem">
+  <ParameterList name="CORE">
+    <Parameter name="axial list" type="Array(string)" value="{Core,AxialRef}"/>
+    <Parameter name="axial height" type="Array(double)" value="{42.84,21.42}"/>
+    <Parameter name="Core" type="TwoDArray(int)" value="3x3:{0,1,2,1,0,2,2,2,2}"/>
+    <Parameter name="AxialRef" type="TwoDArray(int)" value="3x3:{2,2,2,2,2,2,2,2,2}"/>
+  </ParameterList>
+  <ParameterList name="ASSEMBLIES">
+    <Parameter name="pin pitch" type="double" value="1.26"/>
+    <Parameter name="assembly list" type="Array(string)" value="{UO2,MOX,Reflector}"/>
+    <Parameter name="UO2" type="TwoDArray(int)" value="17x17:{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}"/>
+    <Parameter name="MOX" type="TwoDArray(int)" value="17x17:{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 0, 3, 3, 0, 3, 3, 0, 3, 3, 3, 3, 2, 2, 3, 3, 0, 3, 4, 4, 4, 4, 4, 4, 4, 3, 0, 3, 3, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 2, 3, 0, 4, 4, 0, 4, 4, 0, 4, 4, 0, 4, 4, 0, 3, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2, 2, 3, 0, 4, 4, 0, 4, 4, 0, 4, 4, 0, 4, 4, 0, 3, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2, 2, 3, 0, 4, 4, 0, 4, 4, 0, 4, 4, 0, 4, 4, 0, 3, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 2, 3, 3, 0, 3, 4, 4, 4, 4, 4, 4, 4, 3, 0, 3, 3, 2, 2, 3, 3, 3, 3, 0, 3, 3, 0, 3, 3, 0, 3, 3, 3, 3, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}"/>
+    <Parameter name="Reflector" type="TwoDArray(int)" value="17x17:{5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5}"/>
+  </ParameterList>
+  <ParameterList name="MATERIAL">
+    <Parameter name="xs library" type="string" value="c5g7_23G.xml"/>
+    <Parameter name="mat list" type="Array(string)" value="{guide, uo2, mox43, mox70, mox87, moderator}"/>
+  </ParameterList>
+  <ParameterList name="PROBLEM">
+    <Parameter name="boundary" type="string" value="reflect"/>
+    <ParameterList name="boundary_db">
+      <Parameter name="reflect" type="Array(int)" value="{1, 0, 1, 0, 1, 0}"/>
+    </ParameterList>
+    <Parameter name="radial mesh" type="int" value="1"/>
+    <Parameter name="axial mesh" type="Array(int)" value="{20,10}"/>
+    <Parameter name="symmetry" type="string" value="full"/>
+    <Parameter name="Pn_order" type="int" value="0"/>
+    <Parameter name="SPn_order" type="int" value="1"/>
+    <Parameter name="num_blocks_i" type="int" value="2"/>
+    <Parameter name="num_blocks_j" type="int" value="2"/>
+  </ParameterList>
+</ParameterList>
