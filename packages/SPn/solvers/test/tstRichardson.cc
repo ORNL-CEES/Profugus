@@ -42,19 +42,17 @@ class RichardsonTest : public testing::Test
         nodes = profugus::nodes();
 
         // Build an Epetra map
-        int global_size = 8;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",global_size);
-        int my_size = global_size / nodes;
+        d_N = 8;
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
+        int my_size = d_N / nodes;
 
         // Build lhs and rhs vectors
-        d_x = linalg_traits::build_vector<MV>(global_size);
-        d_b = linalg_traits::build_vector<MV>(global_size);
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_A->GRID(my_row);
-            d_b->ReplaceGlobalValue(global_row,0,
-                    static_cast<double>(4*(8-global_row)));
-        }
+        d_x = linalg_traits::build_vector<MV>(d_N);
+        d_b = linalg_traits::build_vector<MV>(d_N);
+        std::vector<double> vals(d_N);
+        for( int i=0; i<d_N; ++i )
+            vals[i] = static_cast<double>(4*(8-i));
+        linalg_traits::fill_vector<MV>(d_b,vals);
 
         // Create options database
         d_db = Teuchos::rcp(new ParameterList("test"));
@@ -78,6 +76,7 @@ class RichardsonTest : public testing::Test
   protected:
     int node;
     int nodes;
+    int d_N;
 
     RCP_ParameterList                d_db;
     Teuchos::RCP<Epetra_CrsMatrix>   d_A;
@@ -105,14 +104,15 @@ TEST_F(RichardsonTest, basic)
 
     // Reset initial vector and re-solve
     d_solver->set_max_iters(1000);
-    d_x->PutScalar(0.0);
+    std::vector<double> one(d_N,1.0);
+    linalg_traits::fill_vector<MV>(d_x,one);
     solve();
 
     EXPECT_EQ( 294, d_iters ); // Iteration count from Matlab implementation
     EXPECT_TRUE( d_converged );
 
     // Compare against reference solution from Matlab
-    double ref[] = {
+    std::vector<double> ref = {
         90.6666666666667,
        149.3333333333333,
        180.0000000000000,
@@ -122,11 +122,7 @@ TEST_F(RichardsonTest, basic)
        102.6666666666666,
         53.3333333333333};
 
-    for( int my_row = 0; my_row < 10/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-7 );
-    }
+    linalg_traits::test_vector<MV>(d_x,ref);
 
     // Solve again, should return without iterating
     solve();
@@ -135,11 +131,7 @@ TEST_F(RichardsonTest, basic)
     EXPECT_TRUE( d_converged );
 
     // Make sure solution didn't change
-    for( int my_row = 0; my_row < 10/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-7 );
-    }
+    linalg_traits::test_vector<MV>(d_x,ref);
 }
 
 //---------------------------------------------------------------------------//

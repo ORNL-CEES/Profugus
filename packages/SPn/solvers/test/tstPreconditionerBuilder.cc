@@ -20,6 +20,9 @@
 #include "Epetra_Map.h"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
+#include "AnasaziOperatorTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 
 #include "../PreconditionerBuilder.hh"
 
@@ -39,6 +42,8 @@ class PreconditionerBuilderTest : public ::testing::Test
     typedef Epetra_MultiVector                  MV;
     typedef Epetra_Operator                     OP;
     typedef Epetra_CrsMatrix                    Matrix;
+    typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
+    typedef Anasazi::MultiVecTraits<double,MV>  MVT;
     typedef profugus::PreconditionerBuilder<OP> Builder;
     typedef Builder::RCP_ParameterList          RCP_ParameterList;
 
@@ -46,25 +51,19 @@ class PreconditionerBuilderTest : public ::testing::Test
     // Initialization that are performed for each test
     void SetUp()
     {
-        // Parallelism
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
         // Build an Epetra map
-        int global_size = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",global_size);
+        d_N = 20;
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
 
         int my_size = d_A->NumMyRows();
 
         // Build lhs and rhs vectors
-        d_x = linalg_traits::build_vector<MV>(global_size);
-        d_y = linalg_traits::build_vector<MV>(global_size);
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_A->GRID(my_row);
-            d_x->ReplaceGlobalValue(global_row,0,
-                    static_cast<double>(20-global_row));
-        }
+        d_x = linalg_traits::build_vector<MV>(d_N);
+        d_y = linalg_traits::build_vector<MV>(d_N);
+        std::vector<double> vals(d_N);
+        for( int i=0; i<d_N; ++i )
+            vals[i] = static_cast<double>(d_N-i);
+        linalg_traits::fill_vector<MV>(d_x,vals);
     }
 
     void build_preconditioner( RCP_ParameterList db )
@@ -73,13 +72,13 @@ class PreconditionerBuilderTest : public ::testing::Test
     }
 
   protected:
-    int node;
-    int nodes;
 
-    Teuchos::RCP<Epetra_CrsMatrix>       d_A;
-    Teuchos::RCP<Epetra_Operator>        d_P;
-    Teuchos::RCP<Epetra_MultiVector>     d_x;
-    Teuchos::RCP<Epetra_MultiVector>     d_y;
+    int d_N;
+
+    Teuchos::RCP<Matrix> d_A;
+    Teuchos::RCP<OP>     d_P;
+    Teuchos::RCP<MV>     d_x;
+    Teuchos::RCP<MV>     d_y;
 };
 
 //---------------------------------------------------------------------------//
@@ -89,17 +88,16 @@ class PreconditionerBuilderTest : public ::testing::Test
 TEST_F(PreconditionerBuilderTest, basic)
 {
     RCP_ParameterList db = rcp(new Teuchos::ParameterList("test_db"));
-    int ierr;
     std::vector<double> y_norm(1);
 
     // Default preconditioner should be valid
     std::cout << "Building default preconditioner" << std::endl;
     build_preconditioner(db);
     EXPECT_FALSE( d_P == Teuchos::null );
-    d_y->PutScalar(0.0);
-    ierr = d_P->Apply(*d_x,*d_y);
-    EXPECT_FALSE(ierr);
-    d_y->Norm2(&y_norm[0]);
+    std::vector<double> zero(d_N,0.0);
+    linalg_traits::fill_vector<MV>(d_y,zero);
+    OPT::Apply(*d_P,*d_x,*d_y);
+    MVT::MvNorm(*d_y,y_norm);
     EXPECT_TRUE(y_norm[0] > 1.0);
 
     // Set preconditioner to "None", should return null RCP
@@ -113,10 +111,9 @@ TEST_F(PreconditionerBuilderTest, basic)
     db->set("Preconditioner", std::string("Ifpack"));
     build_preconditioner(db);
     EXPECT_FALSE( d_P == Teuchos::null );
-    d_y->PutScalar(0.0);
-    ierr = d_P->Apply(*d_x,*d_y);
-    EXPECT_FALSE(ierr);
-    d_y->Norm2(&y_norm[0]);
+    linalg_traits::fill_vector<MV>(d_y,zero);
+    OPT::Apply(*d_P,*d_x,*d_y);
+    MVT::MvNorm(*d_y,y_norm);
     EXPECT_TRUE(y_norm[0] > 1.0);
 
 #ifdef USE_ML
@@ -125,10 +122,9 @@ TEST_F(PreconditionerBuilderTest, basic)
     db->set("Preconditioner", std::string("ML"));
     build_preconditioner(db);
     EXPECT_FALSE( d_P == Teuchos::null );
-    d_y->PutScalar(0.0);
-    ierr = d_P->Apply(*d_x,*d_y);
-    EXPECT_FALSE(ierr);
-    d_y->Norm2(&y_norm[0]);
+    linalg_traits::fill_vector<MV>(d_y,zero);
+    OPT::Apply(*d_P,*d_x,*d_y);
+    MVT::MvNorm(*d_y,y_norm);
     EXPECT_TRUE(y_norm[0] > 1.0);
 #endif
 }

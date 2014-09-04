@@ -11,6 +11,7 @@
 #define solvers_test_LinAlgTraits_hh
 
 #include <vector>
+#include "gtest/utils_gtest.hh"
 
 #include <SPn/config.h>
 
@@ -26,6 +27,7 @@ using profugus::Tpetra_MultiVector;
 namespace linalg_traits
 {
 
+// build_vector
 template <class MV>
 Teuchos::RCP<MV> build_vector(int N)
 {
@@ -45,8 +47,89 @@ Teuchos::RCP<Epetra_MultiVector> build_vector<Epetra_MultiVector>(int N)
     Epetra_Map map( N, 0, comm );
     Teuchos::RCP<Epetra_MultiVector> x =
         Teuchos::rcp( new Epetra_MultiVector(map,1) );
-    x->Random();
+    x->PutScalar(0.0);
     return x;
+}
+
+template <>
+Teuchos::RCP<Tpetra_MultiVector> build_vector<Tpetra_MultiVector>(int N)
+{
+    return Teuchos::null;
+}
+
+// fill_vector
+template <class MV>
+void fill_vector(Teuchos::RCP<MV> x, std::vector<double> &vals)
+{
+    NOT_IMPLEMENTED("fill_vector for arbitrary MV type.");
+}
+
+template <>
+void fill_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
+                                     std::vector<double> &vals)
+{
+    REQUIRE( vals.size() == x->GlobalLength() );
+
+    for( int i=0; i<x->MyLength(); ++i )
+    {
+        int global = x->Map().GID(i);
+        x->ReplaceGlobalValue(global,0,vals[global]);
+    }
+}
+
+template <>
+void fill_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
+                                     std::vector<double> &vals)
+{
+}
+
+// set_sign
+template <class MV>
+void set_sign(Teuchos::RCP<MV> x)
+{
+    NOT_IMPLEMENTED("set_sign for arbitrary MV type.");
+}
+
+template <>
+void set_sign<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x)
+{
+    double sign = (*x)[0][0] > 0.0 ? 1.0 : -1.0;
+
+    for( int i=0; i<x->MyLength(); ++i )
+    {
+        (*x)[0][i] = sign * (*x)[0][i];
+    }
+}
+
+template <>
+void set_sign<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x)
+{
+}
+
+// test_vector
+template <class MV>
+void test_vector(Teuchos::RCP<MV> x, std::vector<double> &vals)
+{
+    NOT_IMPLEMENTED("test_vector for arbitrary MV type.");
+}
+
+template <>
+void test_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
+                                     std::vector<double> &vals)
+{
+    REQUIRE( vals.size() == x->GlobalLength() );
+
+    for( int i=0; i<x->MyLength(); ++i )
+    {
+        int global = x->Map().GID(i);
+        EXPECT_SOFTEQ( (*x)[0][i], vals[global], 1e-6 );
+    }
+}
+
+template <>
+void test_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
+                                     std::vector<double> &vals)
+{
 }
 
 // build_laplacian

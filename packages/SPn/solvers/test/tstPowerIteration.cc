@@ -43,12 +43,13 @@ class PowerIterationTest : public ::testing::Test
         nodes = profugus::nodes();
 
         // Build an Epetra map
-        int global_size = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",global_size);
+        d_N = 20;
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
 
         // Build eigenvector
-        d_x = linalg_traits::build_vector<MV>(global_size);
-        d_x->PutScalar(1.0);
+        d_x = linalg_traits::build_vector<MV>(d_N);
+        std::vector<double> one(d_N,1.0);
+        linalg_traits::fill_vector<MV>(d_x,one);
 
         // Create options database
         d_db = Teuchos::rcp(new ParameterList("test"));
@@ -71,12 +72,13 @@ class PowerIterationTest : public ::testing::Test
   protected:
     int node;
     int nodes;
+    int d_N;
 
-    RCP_ParameterList                d_db;
-    Teuchos::RCP<Matrix>             d_A;
-    Teuchos::RCP<Epetra_MultiVector> d_x;
-    Teuchos::RCP<PowerIteration>     d_solver;
-    double                           d_lambda;
+    RCP_ParameterList            d_db;
+    Teuchos::RCP<Matrix>         d_A;
+    Teuchos::RCP<MV>             d_x;
+    Teuchos::RCP<PowerIteration> d_solver;
+    double                       d_lambda;
 
     int d_iters;
     bool d_converged;
@@ -98,7 +100,8 @@ TEST_F(PowerIterationTest, basic)
 
     // Reset initial vector and re-solve
     d_solver->set_max_iters(1000);
-    d_x->PutScalar(1.0);
+    std::vector<double> one(d_N,1.0);
+    linalg_traits::fill_vector<MV>(d_x,one);
     solve();
 
     EXPECT_EQ( 261, d_iters );
@@ -106,8 +109,8 @@ TEST_F(PowerIterationTest, basic)
     EXPECT_SOFTEQ( d_lambda, 3.911145611572282, 1.0e-6 );
 
     // Compare against reference solution from Matlab
-    double ref[] = {
-             9.096342209328087e-02,  -1.738443448352310e-01,
+    std::vector<double> ref =
+            {9.096342209328087e-02,  -1.738443448352310e-01,
              2.412784344502512e-01,  -2.872738761376646e-01,
              3.077437731144456e-01,  -3.008692853090870e-01,
              2.672612412471236e-01,  -2.099058632158057e-01,
@@ -118,11 +121,7 @@ TEST_F(PowerIterationTest, basic)
              -2.872738761376664e-01,  2.412784344502525e-01,
              -1.738443448352319e-01,  9.096342209328130e-02};
 
-    for( int my_row = 0; my_row < 20/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-6 );
-    }
+    linalg_traits::test_vector<MV>(d_x,ref);
 
     // Solve again, should return without iterating
     solve();
@@ -131,11 +130,7 @@ TEST_F(PowerIterationTest, basic)
     EXPECT_TRUE( d_converged );
 
     // Make sure solution didn't change
-    for( int my_row = 0; my_row < 20/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-6 );
-    }
+    linalg_traits::test_vector<MV>(d_x,ref);
 }
 
 //---------------------------------------------------------------------------//

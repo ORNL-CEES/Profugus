@@ -26,7 +26,7 @@
 // Reference solution from matlab
 
 double ref_eigenvalue = 0.4890748754542557;
-double ref_eigenvector[] = {
+std::vector<double> ref_eigenvector = {
     4.599544191e-02, 9.096342166e-02, 1.338994289e-01, 1.738443441e-01,
     2.099058640e-01, 2.412784337e-01, 2.672612419e-01, 2.872738756e-01,
     3.008692856e-01, 3.077437730e-01, 3.077437730e-01, 3.008692856e-01,
@@ -59,22 +59,15 @@ class RQITest : public ::testing::Test
         node  = profugus::node();
         nodes = profugus::nodes();
 
-        // Build Epetra communicator
-#ifdef COMM_MPI
-        Epetra_MpiComm comm(profugus::communicator);
-#else
-        Epetra_SerialComm comm;
-#endif
-
         // Build an Epetra map
-        int global_size = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",global_size);
-        d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",global_size);
+        d_N = 20;
+        d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",d_N);
+        d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",d_N);
 
         int my_size = d_A->NumMyRows();
 
         // Build eigenvector
-        d_x = linalg_traits::build_vector<MV>(global_size);
+        d_x = linalg_traits::build_vector<MV>(d_N);
 
         // Create options database
         d_db = rcp(new ParameterList("test"));
@@ -115,6 +108,7 @@ class RQITest : public ::testing::Test
   protected:
     int node;
     int nodes;
+    int d_N;
 
     RCP_ParameterList                d_db;
     Teuchos::RCP<Epetra_CrsMatrix>   d_A;
@@ -141,7 +135,8 @@ TEST_F(RQITest, basic)
     build_solver();
 
     // Run two iterations and stop
-    d_x->PutScalar(1.0);
+    std::vector<double> one(d_N,1.0);
+    linalg_traits::fill_vector<MV>(d_x,one);
     d_lambda = 1.0;
     solve();
 
@@ -152,7 +147,7 @@ TEST_F(RQITest, basic)
 
     // Reset initial vector and re-solve
     d_solver->set_max_iters(10);
-    d_x->PutScalar(1.0);
+    linalg_traits::fill_vector<MV>(d_x,one);
     d_lambda = 1.0;
     solve();
 
@@ -160,13 +155,8 @@ TEST_F(RQITest, basic)
     EXPECT_TRUE( d_converged );
     EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
 
-    double sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
-    for( int my_row = 0; my_row < 20/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref_eigenvector[global_row],
-                       sign*(*d_x)[0][my_row], vec_tol );
-    }
+    linalg_traits::set_sign<MV>(d_x);
+    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
 
     // Solve again, should return in 1 iteration
     solve();
@@ -176,13 +166,8 @@ TEST_F(RQITest, basic)
     EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
-    for( int my_row = 0; my_row < 20/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref_eigenvector[global_row],
-                       sign*(*d_x)[0][my_row], vec_tol );
-    }
+    linalg_traits::set_sign<MV>(d_x);
+    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
 
     // Now reset and solve with fixed shift
     d_use_fixed_shift = true;
@@ -190,7 +175,7 @@ TEST_F(RQITest, basic)
     build_solver();
 
     // Run two iterations and stop
-    d_x->PutScalar(1.0);
+    linalg_traits::fill_vector<MV>(d_x,one);
     d_lambda = 1.0;
     solve();
 
@@ -201,7 +186,7 @@ TEST_F(RQITest, basic)
 
     // Reset initial vector and re-solve
     d_solver->set_max_iters(1000);
-    d_x->PutScalar(1.0);
+    linalg_traits::fill_vector<MV>(d_x,one);
     d_lambda = 1.0;
     solve();
 
@@ -209,13 +194,8 @@ TEST_F(RQITest, basic)
     EXPECT_TRUE( d_converged );
     EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
 
-    sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
-    for( int my_row = 0; my_row < 20/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref_eigenvector[global_row],
-                       sign*(*d_x)[0][my_row], vec_tol );
-    }
+    linalg_traits::set_sign<MV>(d_x);
+    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
 
     // Solve again, should return in 1 iteration
     solve();
@@ -225,13 +205,8 @@ TEST_F(RQITest, basic)
     EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
-    for( int my_row = 0; my_row < 20/nodes; ++my_row )
-    {
-        int global_row = d_A->GRID(my_row);
-        EXPECT_SOFTEQ( ref_eigenvector[global_row],
-                       sign*(*d_x)[0][my_row], vec_tol );
-    }
+    linalg_traits::set_sign<MV>(d_x);
+    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
 }
 
 //---------------------------------------------------------------------------//

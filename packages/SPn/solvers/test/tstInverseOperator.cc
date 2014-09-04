@@ -16,8 +16,6 @@
 
 #include <Epetra_Operator.h>
 #include <Epetra_MultiVector.h>
-#include <Epetra_Vector.h>
-#include <Thyra_EpetraLinearOp.hpp>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCP.hpp>
 
@@ -68,99 +66,48 @@ class Inverse_Operator_Test : public testing::Test
         db    = Teuchos::rcp(new Teuchos::ParameterList("test"));
     }
 
-    void one_pe(const std::string &xmlfile)
+    void std_test(const std::string &xmlfile)
     {
-        if (nodes != 1)
-            return;
-
         // database
         db->set("linear_solver_xml_file", xmlfile);
         db->set("solver_type", std::string("Stratimikos"));
 
         // make the operator
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
+        int N = 4;
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",N);
 
         // make the solver
         InverseOperator solver_op(db);
 
         solver_op.set_operator(A);
 
-        // wrap rhs into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_rhs = Teuchos::rcp(
-            new Epetra_Vector(View, A->OperatorDomainMap(),&u1[0]) );
+        // wrap rhs into MV
+        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<MV>(N);
+        linalg_traits::fill_vector<MV>(ep_rhs,u1);
 
         // solve
-        double x[4] = {0.0};
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),x) );
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(N);
         int ret;
         ret = solver_op.Apply(*ep_rhs, *ep_x);
         EXPECT_EQ(0, ret);
-        double tol = 1e-6;
-        for( int i=0; i<4; ++i )
-            EXPECT_SOFTEQ( x[i], sol[i], tol );
+        linalg_traits::test_vector<MV>(ep_x,sol);
 
         // solve again and limit iterations
-        x[0] = 0.0;
-        x[1] = 0.0;
-        x[2] = 0.0;
-        x[3] = 0.0;
+        std::vector<double> zero(N,0.0);
+        linalg_traits::fill_vector<MV>(ep_x,zero);
         ret = solver_op.Apply(*ep_rhs,*ep_x);
         EXPECT_EQ(0, ret);
     }
 
-    void four_pe(const std::string &xmlfile)
+    void gen_test(const std::string &xmlfile)
     {
-        if (nodes != 4)
-            return;
-
         db->set("linear_solver_xml_file", xmlfile);
         db->set("solver_type", std::string("Stratimikos"));
 
         // make the operator
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
-
-        // make the solver
-        InverseOperator solver_op(db);
-
-        solver_op.set_operator(A);
-
-        // solve
-        double x[1] = {0.0};
-        double b[1] = {u1[node]};
-
-        // wrap arrays into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_b = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),b) );
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),x) );
-
-        int ret;
-        ret = solver_op.Apply(*ep_b,*ep_x);
-        EXPECT_EQ(0, ret);
-
-        // reduce and check
-        double global[4] = {0.0};
-        global[node] = x[0];
-        profugus::global_sum(global, 4);
-
-        // check solution
-        double tol = 1e-6;
-        for( int i=0; i<4; ++i )
-            EXPECT_SOFTEQ( global[i], sol[i], tol );
-    }
-
-    void one_pe_gen(const std::string &xmlfile)
-    {
-        if (nodes != 1)
-            return;
-
-        db->set("linear_solver_xml_file", xmlfile);
-        db->set("solver_type", std::string("Stratimikos"));
-
-        // make the operator
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
-        Teuchos::RCP<OP> B = linalg_traits::build_matrix<Matrix>("4x4_rhs",4);
+        int N = 4;
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",N);
+        Teuchos::RCP<OP> B = linalg_traits::build_matrix<Matrix>("4x4_rhs",N);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -168,71 +115,22 @@ class Inverse_Operator_Test : public testing::Test
         solver_op.set_operator(A);
         solver_op.set_rhs_operator(B);
 
-        // wrap rhs into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_rhs = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),&u2[0]) );
+        // wrap rhs into MV
+        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<MV>(N);
+        linalg_traits::fill_vector<MV>(ep_rhs,u2);
 
         // solve
-        double x[4] = {0.0};
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),x) );
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(N);
         int ret;
         ret = solver_op.Apply(*ep_rhs, *ep_x);
         EXPECT_EQ(0, ret);
-        double tol = 1e-6;
-        for( int i=0; i<4; ++i )
-            EXPECT_SOFTEQ( x[i], sol[i], tol );
+        linalg_traits::test_vector(ep_x,sol);
 
         // solve again and limit iterations
-        x[0] = 0.0;
-        x[1] = 0.0;
-        x[2] = 0.0;
-        x[3] = 0.0;
+        std::vector<double> zero(N,0.0);
+        linalg_traits::fill_vector<MV>(ep_x,zero);
         ret = solver_op.Apply(*ep_rhs,*ep_x);
         EXPECT_EQ(0, ret);
-    }
-
-    void four_pe_gen(const std::string &xmlfile)
-    {
-        if (nodes != 4)
-            return;
-
-        db->set("linear_solver_xml_file", xmlfile);
-        db->set("solver_type", std::string("Stratimikos"));
-
-        // make the operator
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
-        Teuchos::RCP<OP> B = linalg_traits::build_matrix<Matrix>("4x4_rhs",4);
-
-        // make the solver
-        InverseOperator solver_op(db);
-
-        solver_op.set_operator(A);
-        solver_op.set_rhs_operator(B);
-
-        // solve
-        double x[1] = {0.0};
-        double b[1] = {u2[node]};
-
-        // wrap arrays into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_b = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),b) );
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),x) );
-
-        int ret;
-        ret = solver_op.Apply(*ep_b,*ep_x);
-        EXPECT_EQ(0, ret);
-
-        // reduce and check
-        double global[4] = {0.0};
-        global[node] = x[0];
-        profugus::global_sum(global, 4);
-
-        // check solution
-        double tol = 1e-6;
-        for( int i=0; i<4; ++i )
-            EXPECT_SOFTEQ( global[i], sol[i], tol );
     }
 
   protected:
@@ -247,32 +145,28 @@ class Inverse_Operator_Test : public testing::Test
 
 TEST_F(Inverse_Operator_Test, Aztec)
 {
-    one_pe("aztecoo.xml");
-    four_pe("aztecoo.xml");
+    std_test("aztecoo.xml");
 }
 
 //---------------------------------------------------------------------------//
 
 TEST_F(Inverse_Operator_Test, Belos)
 {
-    one_pe("belos.xml");
-    four_pe("belos.xml");
+    std_test("belos.xml");
 }
 
 //---------------------------------------------------------------------------//
 
 TEST_F(Inverse_Operator_Test, Gen_Aztec)
 {
-    one_pe_gen("aztecoo.xml");
-    four_pe_gen("aztecoo.xml");
+    gen_test("aztecoo.xml");
 }
 
 //---------------------------------------------------------------------------//
 
 TEST_F(Inverse_Operator_Test, Gen_Belos)
 {
-    one_pe_gen("belos.xml");
-    four_pe_gen("belos.xml");
+    gen_test("belos.xml");
 }
 
 //---------------------------------------------------------------------------//
