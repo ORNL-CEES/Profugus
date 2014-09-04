@@ -366,6 +366,23 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         // Convert "Ifpack Params" database to Teuchos::ParameterList
         Teuchos::ParameterList &ifpack_db = edb->sublist("Ifpack Params");
         d_ifpack_prec->SetParameters(ifpack_db);
+
+        // Process preconditioner
+        d_ifpack_prec->Initialize();
+        d_ifpack_prec->Compute();
+        if( edb->get<std::string>("Output Level") == "high" &&
+            profugus::node() == 0 )
+        {
+            std::cout << "Ifpack Parameter List" << std::endl;
+            d_ifpack_prec->Print(std::cout);
+        }
+
+        // Ifpack preconditioners are applied with "Apply_Inverse"
+        //  but we want it to be used with "Apply", wrap the
+        //  preconditioner into an object that reverses the functionality
+        prec = Teuchos::rcp( new Epetra_InvOperator(d_ifpack_prec.get()) );
+
+        CHECK( prec != Teuchos::null );
     }
     else if (prec_type == "ml")
     {
