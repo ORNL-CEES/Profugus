@@ -16,16 +16,41 @@
 #include <SPn/config.h>
 
 #include "Teuchos_RCP.hpp"
+#include "Teuchos_DefaultComm.hpp"
 
-#include "Epetra_CrsMatrix.h"
 #include "Epetra_MultiVector.h"
+#include "Epetra_CrsMatrix.h"
+#include "Epetra_Operator.h"
 #include "../TpetraTypedefs.hh"
 
 using profugus::Tpetra_CrsMatrix;
 using profugus::Tpetra_MultiVector;
+using profugus::Tpetra_Operator;
+using profugus::Tpetra_Map;
 
 namespace linalg_traits
 {
+
+template <class T>
+struct traits_types
+{
+};
+
+template <>
+struct traits_types<Epetra_MultiVector>
+{
+    typedef Epetra_MultiVector MV;
+    typedef Epetra_Operator    OP;
+    typedef Epetra_CrsMatrix   Matrix;
+};
+
+template <>
+struct traits_types<Tpetra_MultiVector>
+{
+    typedef Tpetra_MultiVector MV;
+    typedef Tpetra_Operator    OP;
+    typedef Tpetra_CrsMatrix   Matrix;
+};
 
 // build_vector
 template <class MV>
@@ -54,7 +79,14 @@ Teuchos::RCP<Epetra_MultiVector> build_vector<Epetra_MultiVector>(int N)
 template <>
 Teuchos::RCP<Tpetra_MultiVector> build_vector<Tpetra_MultiVector>(int N)
 {
-    return Teuchos::null;
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int index_base = 0;
+    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+    Teuchos::RCP<Tpetra_MultiVector> x( new Tpetra_MultiVector(map,1) );
+    x->putScalar(0.0);
+    return x;
 }
 
 // fill_vector
@@ -81,6 +113,12 @@ template <>
 void fill_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
                                      std::vector<double> &vals)
 {
+    Teuchos::ArrayRCP<double> x_data = x->getDataNonConst(0);
+    for( int i=0; i<x->getLocalLength(); ++i )
+    {
+        int gid = x->getMap()->getGlobalElement(i);
+        x_data[i] = vals[gid];
+    }
 }
 
 // set_sign
@@ -104,6 +142,12 @@ void set_sign<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x)
 template <>
 void set_sign<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x)
 {
+    Teuchos::ArrayRCP<double> x_data = x->getDataNonConst(0);
+    double sign = x_data[0] > 0.0 ? 1.0 : -1.0;
+    for( int i=0; i<x->getLocalLength(); ++i )
+    {
+        x_data[i] = sign * x_data[i];
+    }
 }
 
 // test_vector
@@ -130,6 +174,12 @@ template <>
 void test_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
                                      std::vector<double> &vals)
 {
+    Teuchos::ArrayRCP<const double> x_data = x->getData(0);
+    for( int i=0; i<x->getLocalLength(); ++i )
+    {
+        int gid = x->getMap()->getGlobalElement(i);
+        EXPECT_SOFTEQ( x_data[i], vals[gid], 1e-6 );
+    }
 }
 
 // build_laplacian
@@ -197,7 +247,47 @@ Teuchos::RCP<Epetra_CrsMatrix> build_laplacian<Epetra_CrsMatrix>(int N)
 template <>
 Teuchos::RCP<Tpetra_CrsMatrix> build_laplacian<Tpetra_CrsMatrix>(int N)
 {
-    return Teuchos::null;
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int index_base = 0;
+    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+
+    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::ArrayRCP<double> vals(3);
+    Teuchos::ArrayRCP<int> inds(3);
+    for( int i=0; i<map->getNodeNumElements(); ++i )
+    {
+        int gid = map->getGlobalElement(i);
+        if( 0 == gid )
+        {
+            inds[0] = 0;
+            inds[1] = 1;
+            vals[0] = 2.0;
+            vals[1] = -1.0;
+            A->insertGlobalValues(gid,inds(0,2),vals(0,2));
+        }
+        else if( N-1 == gid )
+        {
+            inds[0] = N-2;
+            inds[1] = N-1;
+            vals[0] = -1.0;
+            vals[1] = 2.0;
+            A->insertGlobalValues(gid,inds(0,2),vals(0,2));
+        }
+        else
+        {
+            inds[0] = gid-1;
+            inds[1] = gid;
+            inds[2] = gid+1;
+            vals[0] = -1.0;
+            vals[1] = 2.0;
+            vals[2] = -1.0;
+            A->insertGlobalValues(gid,inds(),vals());
+        }
+    }
+    A->fillComplete();
+    return A;
 }
 
 // build_diagonal
@@ -240,7 +330,24 @@ Teuchos::RCP<Epetra_CrsMatrix> build_diagonal<Epetra_CrsMatrix>(int N)
 template <>
 Teuchos::RCP<Tpetra_CrsMatrix> build_diagonal<Tpetra_CrsMatrix>(int N)
 {
-    return Teuchos::null;
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int index_base = 0;
+    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+
+    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::ArrayRCP<double> vals(1);
+    Teuchos::ArrayRCP<int> inds(1);
+    for( int i=0; i<map->getNodeNumElements(); ++i )
+    {
+        int gid = map->getGlobalElement(i);
+        inds[0] = gid;
+        vals[0] = static_cast<double>(gid+1);
+        A->insertGlobalValues(gid,inds(),vals());
+    }
+    A->fillComplete();
+    return A;
 }
 
 // build_4x4_lhs
@@ -286,7 +393,30 @@ Teuchos::RCP<Epetra_CrsMatrix> build_4x4_lhs<Epetra_CrsMatrix>()
 template <>
 Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_lhs<Tpetra_CrsMatrix>()
 {
-    return Teuchos::null;
+    std::vector<std::vector<double> > A_vals =
+        {{10.0, 1.1, 2.0, 4.0},
+         { 1.1, 9.9, 2.1, 3.2},
+         { 0.8, 0.4, 5.3, 1.9},
+         { 0.3, 0.1, 0.4, 3.1}};
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int N = 4;
+    int index_base = 0;
+    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+
+    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::ArrayRCP<double> vals;
+    std::vector<int> inds_vec = {0, 1, 2, 3};
+    Teuchos::ArrayRCP<int> inds = Teuchos::arcp( Teuchos::rcpFromRef(inds_vec) );
+    for( int i=0; i<map->getNodeNumElements(); ++i )
+    {
+        int gid = map->getGlobalElement(i);
+        vals = Teuchos::arcp(Teuchos::rcpFromRef(A_vals[gid]));
+        A->insertGlobalValues(gid,inds(),vals());
+    }
+    A->fillComplete();
+    return A;
 }
 
 // build_4x4_rhs
@@ -331,7 +461,30 @@ Teuchos::RCP<Epetra_CrsMatrix> build_4x4_rhs<Epetra_CrsMatrix>()
 template <>
 Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_rhs<Tpetra_CrsMatrix>()
 {
-    return Teuchos::null;
+    std::vector<std::vector<double> > A_vals =
+        {{0.56, 0.26, 0.51, 0.26},
+         {0.52, 0.13, 0.11, 0.41},
+         {0.73, 0.45, 0.40, 0.98},
+         {0.30, 0.44, 0.93, 0.35}};
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int N = 4;
+    int index_base = 0;
+    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+
+    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::ArrayRCP<double> vals;
+    std::vector<int> inds_vec = {0, 1, 2, 3};
+    Teuchos::ArrayRCP<int> inds = Teuchos::arcp( Teuchos::rcpFromRef(inds_vec) );
+    for( int i=0; i<map->getNodeNumElements(); ++i )
+    {
+        int gid = map->getGlobalElement(i);
+        vals = Teuchos::arcp(Teuchos::rcpFromRef(A_vals[gid]));
+        A->insertGlobalValues(gid,inds(),vals());
+    }
+    A->fillComplete();
+    return A;
 }
 
 // build_shifted_laplacian
@@ -399,7 +552,47 @@ Teuchos::RCP<Epetra_CrsMatrix> build_shifted_laplacian<Epetra_CrsMatrix>(int N)
 template <>
 Teuchos::RCP<Tpetra_CrsMatrix> build_shifted_laplacian<Tpetra_CrsMatrix>(int N)
 {
-    return Teuchos::null;
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int index_base = 0;
+    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+
+    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::ArrayRCP<double> vals(3);
+    Teuchos::ArrayRCP<int> inds(3);
+    for( int i=0; i<N; ++i )
+    {
+        int gid = map->getGlobalElement(i);
+        if( 0 == gid )
+        {
+            inds[0] = 0;
+            inds[1] = 1;
+            vals[0] = 3.0;
+            vals[1] = -1.0;
+            A->insertGlobalValues(gid,inds(0,2),vals(0,2));
+        }
+        else if( N-1 == gid )
+        {
+            inds[0] = N-2;
+            inds[1] = N-1;
+            vals[0] = -1.0;
+            vals[1] = 3.0;
+            A->insertGlobalValues(gid,inds(0,2),vals(0,2));
+        }
+        else
+        {
+            inds[0] = gid-1;
+            inds[1] = gid;
+            inds[2] = gid+1;
+            vals[0] = -1.0;
+            vals[1] = 3.0;
+            vals[2] = -1.0;
+            A->insertGlobalValues(gid,inds(),vals());
+        }
+    }
+    A->fillComplete();
+    return A;
 }
 
 // build_scaled_identity
@@ -442,7 +635,24 @@ Teuchos::RCP<Epetra_CrsMatrix> build_scaled_identity<Epetra_CrsMatrix>(int N)
 template <>
 Teuchos::RCP<Tpetra_CrsMatrix> build_scaled_identity<Tpetra_CrsMatrix>(int N)
 {
-    return Teuchos::null;
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int index_base = 0;
+    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+
+    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::ArrayRCP<double> vals(1);
+    Teuchos::ArrayRCP<int> inds(1);
+    for( int i=0; i<N; ++i )
+    {
+        int gid = map->getGlobalElement(i);
+        inds[0] = gid;
+        vals[0] = 0.5;
+        A->insertGlobalValues(gid,inds(),vals());
+    }
+    A->fillComplete();
+    return A;
 }
 
 template <class Matrix>
