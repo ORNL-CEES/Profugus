@@ -23,159 +23,28 @@
 
 #include "../Decomposition.hh"
 #include "../InverseOperator.hh"
+#include "LinAlgTraits.hh"
 
 using namespace std;
 
 //---------------------------------------------------------------------------//
 // TEST HELPERS
 //---------------------------------------------------------------------------//
-// Define a 4x4 matrix.
 
-double A[][4] = {{10.0, 1.1, 2.0, 4.0},
-                 { 1.1, 9.9, 2.1, 3.2},
-                 { 0.8, 0.4, 5.3, 1.9},
-                 { 0.3, 0.1, 0.4, 3.1}};
+std::vector<double> u1 = {0.1, 0.3, 0.4, 0.9};
 
-double B[][4] = {{0.56, 0.26, 0.51, 0.26},
-                 {0.52, 0.13, 0.11, 0.41},
-                 {0.73, 0.45, 0.40, 0.98},
-                 {0.30, 0.44, 0.93, 0.35}};
+std::vector<double> u2 = {  -1.233282375522885,
+                           -12.025836540161043,
+                             5.290319979906284,
+                             4.689586311471083};
 
-double u1[] = {0.1, 0.3, 0.4, 0.9};
-
-double u2[] = {  -1.233282375522885,
-                -12.025836540161043,
-                  5.290319979906284,
-                  4.689586311471083};
-
-double sol[] = {-0.102855551350840,
-                -0.053521967514522,
-                -0.013870314679620,
-                 0.303792576783404};
+std::vector<double> sol = {-0.102855551350840,
+                           -0.053521967514522,
+                           -0.013870314679620,
+                            0.303792576783404};
 
 //---------------------------------------------------------------------------//
 
-class OperatorA : public Epetra_Operator
-{
-  public:
-    typedef profugus::Decomposition::Comm Comm_t;
-    typedef profugus::Decomposition::Map  Map_t;
-
-  private:
-    profugus::Decomposition d_map;
-    int nodes, node;
-
-  public:
-    OperatorA(int num_elements)
-        : d_map(num_elements)
-        , nodes(profugus::nodes())
-        , node(profugus::node())
-    {
-
-    }
-
-    // Thyra interface
-    int Apply(const Epetra_MultiVector &v, Epetra_MultiVector &y) const
-    {
-        if (nodes == 1)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                y[0][i] = 0.0;
-                for (int j = 0; j < 4; j++)
-                    y[0][i] += A[i][j] * v[0][j];
-            }
-        }
-
-        if (nodes == 4)
-        {
-            // do a poor-man's gather
-            double vv[4] = {0.0};
-            vv[node] = v[0][0];
-            profugus::global_sum(vv, 4);
-
-            y[0][0] = 0.0;
-            for (int j = 0; j < 4; j++)
-                y[0][0] += A[node][j] * vv[j];
-        }
-
-        return 0;
-    }
-
-    const char* Label() const { return "A"; }
-    const Comm_t& Comm() const { return d_map.comm(); }
-    const Map_t& OperatorDomainMap() const { return d_map.map(); }
-    const Map_t& OperatorRangeMap() const { return d_map.map(); }
-
-    int SetUseTranspose(bool UseTranspose) { return 0; }
-    int ApplyInverse(const Epetra_MultiVector &x,
-                     Epetra_MultiVector &y) const { return 0; }
-    double NormInf() const { return 0.0; }
-    bool UseTranspose() const { return false; }
-    bool HasNormInf() const { return false; }
-};
-
-//---------------------------------------------------------------------------//
-
-class OperatorB : public Epetra_Operator
-{
-  public:
-    typedef profugus::Decomposition::Comm Comm_t;
-    typedef profugus::Decomposition::Map  Map_t;
-
-  private:
-    profugus::Decomposition d_map;
-    int nodes, node;
-
-  public:
-    OperatorB(int num_elements)
-        : d_map(num_elements)
-        , nodes(profugus::nodes())
-        , node(profugus::node())
-    {
-
-    }
-
-    // Thyra interface
-    int Apply(const Epetra_MultiVector &v, Epetra_MultiVector &y) const
-    {
-        if (nodes == 1)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                y[0][i] = 0.0;
-                for (int j = 0; j < 4; j++)
-                    y[0][i] += B[i][j] * v[0][j];
-            }
-        }
-
-        if (nodes == 4)
-        {
-            // do a poor-man's gather
-            double vv[4] = {0.0};
-            vv[node] = v[0][0];
-            profugus::global_sum(vv, 4);
-
-            y[0][0] = 0.0;
-            for (int j = 0; j < 4; j++)
-                y[0][0] += B[node][j] * vv[j];
-        }
-
-        return 0;
-    }
-
-    const char* Label() const { return "A"; }
-    const Comm_t& Comm() const { return d_map.comm(); }
-    const Map_t& OperatorDomainMap() const { return d_map.map(); }
-    const Map_t& OperatorRangeMap() const { return d_map.map(); }
-
-    int SetUseTranspose(bool UseTranspose) { return 0; }
-    int ApplyInverse(const Epetra_MultiVector &x,
-                     Epetra_MultiVector &y) const { return 0; }
-    double NormInf() const { return 0.0; }
-    bool UseTranspose() const { return false; }
-    bool HasNormInf() const { return false; }
-};
 
 //---------------------------------------------------------------------------//
 // FIXTURES
@@ -186,6 +55,7 @@ class Inverse_Operator_Test : public testing::Test
   protected:
     typedef Epetra_MultiVector                   MV;
     typedef Epetra_Operator                      OP;
+    typedef Epetra_CrsMatrix                     Matrix;
     typedef profugus::InverseOperator<MV,OP>     InverseOperator;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
 
@@ -208,7 +78,7 @@ class Inverse_Operator_Test : public testing::Test
         db->set("solver_type", std::string("Stratimikos"));
 
         // make the operator
-        Teuchos::RCP<OperatorA> A = Teuchos::rcp(new OperatorA(4));
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -217,7 +87,7 @@ class Inverse_Operator_Test : public testing::Test
 
         // wrap rhs into Epetra MV
         Teuchos::RCP<Epetra_Vector> ep_rhs = Teuchos::rcp(
-            new Epetra_Vector(View, A->OperatorDomainMap(),u1) );
+            new Epetra_Vector(View, A->OperatorDomainMap(),&u1[0]) );
 
         // solve
         double x[4] = {0.0};
@@ -226,7 +96,9 @@ class Inverse_Operator_Test : public testing::Test
         int ret;
         ret = solver_op.Apply(*ep_rhs, *ep_x);
         EXPECT_EQ(0, ret);
-        EXPECT_TRUE(soft_equiv(x, x + 4, sol, sol + 4));
+        double tol = 1e-6;
+        for( int i=0; i<4; ++i )
+            EXPECT_SOFTEQ( x[i], sol[i], tol );
 
         // solve again and limit iterations
         x[0] = 0.0;
@@ -246,7 +118,7 @@ class Inverse_Operator_Test : public testing::Test
         db->set("solver_type", std::string("Stratimikos"));
 
         // make the operator
-        Teuchos::RCP<OperatorA> A = Teuchos::rcp(new OperatorA(1));
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -273,7 +145,9 @@ class Inverse_Operator_Test : public testing::Test
         profugus::global_sum(global, 4);
 
         // check solution
-        EXPECT_TRUE(soft_equiv(global, global + 4, sol, sol + 4));
+        double tol = 1e-6;
+        for( int i=0; i<4; ++i )
+            EXPECT_SOFTEQ( global[i], sol[i], tol );
     }
 
     void one_pe_gen(const std::string &xmlfile)
@@ -285,8 +159,8 @@ class Inverse_Operator_Test : public testing::Test
         db->set("solver_type", std::string("Stratimikos"));
 
         // make the operator
-        Teuchos::RCP<OperatorA> A = Teuchos::rcp(new OperatorA(4));
-        Teuchos::RCP<OperatorB> B = Teuchos::rcp(new OperatorB(4));
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
+        Teuchos::RCP<OP> B = linalg_traits::build_matrix<Matrix>("4x4_rhs",4);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -296,7 +170,7 @@ class Inverse_Operator_Test : public testing::Test
 
         // wrap rhs into Epetra MV
         Teuchos::RCP<Epetra_Vector> ep_rhs = Teuchos::rcp(
-            new Epetra_Vector(View,A->OperatorDomainMap(),u2) );
+            new Epetra_Vector(View,A->OperatorDomainMap(),&u2[0]) );
 
         // solve
         double x[4] = {0.0};
@@ -305,7 +179,9 @@ class Inverse_Operator_Test : public testing::Test
         int ret;
         ret = solver_op.Apply(*ep_rhs, *ep_x);
         EXPECT_EQ(0, ret);
-        EXPECT_TRUE(soft_equiv(x, x + 4, sol, sol + 4));
+        double tol = 1e-6;
+        for( int i=0; i<4; ++i )
+            EXPECT_SOFTEQ( x[i], sol[i], tol );
 
         // solve again and limit iterations
         x[0] = 0.0;
@@ -325,8 +201,8 @@ class Inverse_Operator_Test : public testing::Test
         db->set("solver_type", std::string("Stratimikos"));
 
         // make the operator
-        Teuchos::RCP<OperatorA> A = Teuchos::rcp(new OperatorA(1));
-        Teuchos::RCP<OperatorB> B = Teuchos::rcp(new OperatorB(1));
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
+        Teuchos::RCP<OP> B = linalg_traits::build_matrix<Matrix>("4x4_rhs",4);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -354,7 +230,9 @@ class Inverse_Operator_Test : public testing::Test
         profugus::global_sum(global, 4);
 
         // check solution
-        EXPECT_TRUE(soft_equiv(global, global + 4, sol, sol + 4));
+        double tol = 1e-6;
+        for( int i=0; i<4; ++i )
+            EXPECT_SOFTEQ( global[i], sol[i], tol );
     }
 
   protected:

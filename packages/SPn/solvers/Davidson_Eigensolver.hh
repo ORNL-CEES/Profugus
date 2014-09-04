@@ -67,6 +67,7 @@ class Davidson_Eigensolver : public EigenvalueSolver<MV,OP>
 
     using Base::b_tolerance;
     using Base::b_verbosity;
+    using Base::b_label;
     using Base::LOW;
     using Base::MEDIUM;
     using Base::HIGH;

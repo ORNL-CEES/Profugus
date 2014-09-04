@@ -22,15 +22,11 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
 
+#include "LinAlgTraits.hh"
+
 //---------------------------------------------------------------------------//
 // TEST HELPERS
 //---------------------------------------------------------------------------//
-// Define a 4x4 matrix.
-
-double matrix[][4] = {{10.0, 1.1, 2.0, 4.0},
-                      { 1.1, 9.9, 2.1, 3.2},
-                      { 0.8, 0.4, 5.3, 1.9},
-                      { 0.3, 0.1, 0.4, 3.1}};
 
 double rhs[] = {0.1, 0.3, 0.4, 0.9};
 
@@ -40,49 +36,6 @@ double sol[] = {-0.102855551350840,
                 0.303792576783404};
 
 int nodes, node;
-
-//---------------------------------------------------------------------------//
-
-class Operator
-{
-  public:
-    typedef profugus::Decomposition Decomposition;
-
-  private:
-    Decomposition d_map;
-    Teuchos::RCP<Epetra_CrsMatrix> d_crs_matrix;
-
-  public:
-    Operator(int num_elements)
-        : d_map(num_elements)
-    {
-	int num_cols = 4;
-	d_crs_matrix = Teuchos::rcp(
-	    new Epetra_CrsMatrix(Copy, d_map.map(), num_cols) );
-	Teuchos::Array<int> indices( num_cols );
-	for ( int i = 0; i < num_cols; ++i )
-	{
-	    indices[i] = i;
-	}
-	if ( 4 == num_elements )
-	{
-	    for ( int i = 0; i < num_elements; ++i )
-	    {
-		d_crs_matrix->InsertGlobalValues( i, num_cols, matrix[i], indices.getRawPtr() );
-	    }
-	}
-	else if ( 1 == num_elements )
-	{
-	    int my_rank = d_map.comm().MyPID();
-	    d_crs_matrix->InsertGlobalValues(
-		my_rank , num_cols, &matrix[my_rank][0], indices.getRawPtr() );
-	}
-	d_crs_matrix->FillComplete();
-    }
-
-    Teuchos::RCP<Epetra_CrsMatrix> getOperator() const
-    { return d_crs_matrix; }
-};
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -95,8 +48,8 @@ class StratimikosSolver_Test : public testing::Test
     // Typedefs usable inside the test fixture
     typedef Epetra_MultiVector                 MV;
     typedef Epetra_Operator                    OP;
+    typedef Epetra_CrsMatrix                   Matrix;
     typedef profugus::StratimikosSolver<MV,OP> Solver_t;
-    typedef Teuchos::RCP<Operator>             RCP_Operator;
     typedef Solver_t::ParameterList            ParameterList;
     typedef Solver_t::RCP_ParameterList        RCP_ParameterList;
 
@@ -107,7 +60,7 @@ class StratimikosSolver_Test : public testing::Test
         node  = profugus::node();
         nodes = profugus::nodes();
 
-        db = Teuchos::rcp(new ParameterList("test"));
+        d_db = Teuchos::rcp(new ParameterList("test"));
     }
 
     void one_pe(const std::string &which,
@@ -120,30 +73,32 @@ class StratimikosSolver_Test : public testing::Test
         }
 
         // database
-        db->set("linear_solver_xml_file", xmlfile);
+        d_db->set("linear_solver_xml_file", xmlfile);
 
         // make the operator
-        A = Teuchos::rcp(new Operator(4));
+        d_A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
 
         // make the solver
-        Solver_t solver(db);
+        Solver_t solver(d_db);
 
-        solver.set_operator(A->getOperator());
+        solver.set_operator(d_A);
 
         // wrap rhs into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_rhs = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), rhs));
+        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<MV>(4);
+        for( int i=0; i<4; ++i )
+            ep_rhs->ReplaceGlobalValue(i,0,rhs[i]);
 
         std::vector<double> rhs_norm(1);
         ep_rhs->Norm2(&rhs_norm[0]);
 
         // solve
         double x[4] = {0.0};
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), x));
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(4);
+        for( int i=0; i<4; ++i )
+            ep_x->ReplaceGlobalValue(i,0,x[i]);
         solver.set_tolerance(1.0e-8);
         solver.solve(ep_x, ep_rhs);
-        EXPECT_TRUE(soft_equiv(x, x + 4, sol, sol + 4, 1.0e-6));
+        EXPECT_TRUE(soft_equiv((*ep_x)[0], (*ep_x)[0] + 4, sol, sol + 4, 1.0e-6));
         EXPECT_TRUE( 10 >  solver.num_iters() );
 
         // solve again and limit iterations
@@ -177,31 +132,31 @@ class StratimikosSolver_Test : public testing::Test
         }
 
         // database
-        db->set("linear_solver_xml_file", xmlfile);
+        d_db->set("linear_solver_xml_file", xmlfile);
 
         // make the operator
-        A = Teuchos::rcp(new Operator(1));
+        d_A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
 
         // make the solver
-        Solver_t solver(db);
+        Solver_t solver(d_db);
 
-        solver.set_operator(A->getOperator());
-
-        // solve
-        double x[1] = {0.0};
-        double b[1] = {rhs[node]};
+        solver.set_operator(d_A);
 
         // wrap arrays into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_b = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), b));
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), x));
+        Teuchos::RCP<MV> ep_b = linalg_traits::build_vector<MV>(4);
+        for( int i=0; i<2; ++i )
+        {
+            int global = d_A->GRID(i);
+            ep_b->ReplaceGlobalValue(global,0,rhs[global]);
+        }
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(4);
+        ep_x->PutScalar(0.0);
 
         solver.solve(ep_x, ep_b);
 
         // reduce and check
         double global[4] = {0.0};
-        global[node] = x[0];
+        global[node] = (*ep_x)[0][0];
         profugus::global_sum(global, 4);
 
         // check solution
@@ -212,8 +167,8 @@ class StratimikosSolver_Test : public testing::Test
   protected:
     // >>> Data that get re-initialized between tests
 
-    RCP_ParameterList db;
-    RCP_Operator      A;
+    RCP_ParameterList d_db;
+    Teuchos::RCP<Matrix> d_A;
 };
 
 //---------------------------------------------------------------------------//

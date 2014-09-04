@@ -37,6 +37,8 @@ Davidson_Eigensolver<MV,OP>::Davidson_Eigensolver(RCP_ParameterList db,
     REQUIRE(d_LHS!=Teuchos::null);
     REQUIRE(d_RHS!=Teuchos::null);
 
+    b_label = "Davidson";
+
     // make a default Anasazi database
     RCP_ParameterList anasazi_db = Teuchos::sublist(db, "Anasazi");
 

@@ -17,6 +17,8 @@
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_Map.h"
 
+#include "LinAlgTraits.hh"
+
 //---------------------------------------------------------------------------//
 // Test fixture base class
 //---------------------------------------------------------------------------//
@@ -27,6 +29,7 @@ class PowerIterationTest : public ::testing::Test
 
     typedef Epetra_MultiVector                MV;
     typedef Epetra_Operator                   OP;
+    typedef Epetra_CrsMatrix                  Matrix;
     typedef profugus::PowerIteration<MV,OP>   PowerIteration;
     typedef PowerIteration::RCP_ParameterList RCP_ParameterList;
     typedef PowerIteration::ParameterList     ParameterList;
@@ -39,61 +42,12 @@ class PowerIterationTest : public ::testing::Test
         node  = profugus::node();
         nodes = profugus::nodes();
 
-        // Build Epetra communicator
-#ifdef COMM_MPI
-        Epetra_MpiComm comm(profugus::communicator);
-#else
-        Epetra_SerialComm comm;
-#endif
-
         // Build an Epetra map
         int global_size = 20;
-        d_map = Teuchos::rcp( new Epetra_Map( global_size, 0, comm ) );
-
-        int my_size = global_size / nodes;
-
-        // Build CrsMatrix
-        d_A = Teuchos::rcp( new Epetra_CrsMatrix(Copy,*d_map,3) );
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_map->GID(my_row);
-            if( global_row == 0 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 0;
-                ids[1] = 1;
-                std::vector<double> vals(2);
-                vals[0] =  2.0;
-                vals[1] = -1.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else if( global_row == global_size-1 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 18;
-                ids[1] = 19;
-                std::vector<double> vals(2);
-                vals[0] = -1.0;
-                vals[1] =  2.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else
-            {
-                std::vector<int> ids(3);
-                ids[0] = global_row-1;
-                ids[1] = global_row;
-                ids[2] = global_row+1;
-                std::vector<double> vals(3);
-                vals[0] = -1.0;
-                vals[1] =  2.0;
-                vals[2] = -1.0;
-                d_A->InsertGlobalValues(global_row,3,&vals[0],&ids[0]);
-            }
-        }
-        d_A->FillComplete();
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",global_size);
 
         // Build eigenvector
-        d_x = Teuchos::rcp( new Epetra_MultiVector(*d_map,1) );
+        d_x = linalg_traits::build_vector<MV>(global_size);
         d_x->PutScalar(1.0);
 
         // Create options database
@@ -119,10 +73,8 @@ class PowerIterationTest : public ::testing::Test
     int nodes;
 
     RCP_ParameterList                d_db;
-    Teuchos::RCP<Epetra_Map>         d_map;
-    Teuchos::RCP<Epetra_CrsMatrix>   d_A;
+    Teuchos::RCP<Matrix>             d_A;
     Teuchos::RCP<Epetra_MultiVector> d_x;
-    Teuchos::RCP<Epetra_MultiVector> d_b;
     Teuchos::RCP<PowerIteration>     d_solver;
     double                           d_lambda;
 
@@ -168,7 +120,7 @@ TEST_F(PowerIterationTest, basic)
 
     for( int my_row = 0; my_row < 20/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-6 );
     }
 
@@ -181,7 +133,7 @@ TEST_F(PowerIterationTest, basic)
     // Make sure solution didn't change
     for( int my_row = 0; my_row < 20/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-6 );
     }
 }

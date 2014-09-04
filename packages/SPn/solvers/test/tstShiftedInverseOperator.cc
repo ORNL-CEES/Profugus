@@ -23,11 +23,7 @@
 #include "harness/DBC.hh"
 #include "../ShiftedInverseOperator.hh"
 
-#ifdef COMM_MPI
-#include "Epetra_MpiComm.h"
-#else
-#include "Epetra_SerialComm.h"
-#endif
+#include "LinAlgTraits.hh"
 
 using namespace std;
 
@@ -42,6 +38,7 @@ class ShiftedInverseTest: public ::testing::Test
     typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_ParameterList;
     typedef Epetra_MultiVector                      MV;
     typedef Epetra_Operator                         OP;
+    typedef Epetra_CrsMatrix                        Matrix;
     typedef profugus::ShiftedInverseOperator<MV,OP> ShiftInvOp;
 
   protected:
@@ -61,56 +58,11 @@ class ShiftedInverseTest: public ::testing::Test
 
         // Build an Epetra map
         int global_size = 20;
-        d_map = Teuchos::rcp( new Epetra_Map( global_size, 0, comm ) );
-
         int my_size = global_size / nodes;
 
         // Build CrsMatrix
-        d_A = Teuchos::rcp( new Epetra_CrsMatrix(Copy,*d_map,3) );
-        d_B = Teuchos::rcp( new Epetra_CrsMatrix(Copy,*d_map,1) );
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_map->GID(my_row);
-            if( global_row == 0 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 0;
-                ids[1] = 1;
-                std::vector<double> vals(2);
-                vals[0] =  2.0;
-                vals[1] = -1.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else if( global_row == global_size-1 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 18;
-                ids[1] = 19;
-                std::vector<double> vals(2);
-                vals[0] = -1.0;
-                vals[1] =  2.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else
-            {
-                std::vector<int> ids(3);
-                ids[0] = global_row-1;
-                ids[1] = global_row;
-                ids[2] = global_row+1;
-                std::vector<double> vals(3);
-                vals[0] = -1.0;
-                vals[1] =  2.0;
-                vals[2] = -1.0;
-                d_A->InsertGlobalValues(global_row,3,&vals[0],&ids[0]);
-            }
-            std::vector<int>    inds(1);
-            std::vector<double> vals(1);
-            inds[0] = global_row;
-            vals[0] = static_cast<double>(global_row+1);
-            d_B->InsertGlobalValues(global_row,1,&vals[0],&inds[0]);
-        }
-        d_A->FillComplete();
-        d_B->FillComplete();
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",global_size);
+        d_B = linalg_traits::build_matrix<Matrix>("diagonal",global_size);
 
         // Create options database
         d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
@@ -128,7 +80,6 @@ class ShiftedInverseTest: public ::testing::Test
     int nodes;
 
     RCP_ParameterList              d_db;
-    Teuchos::RCP<Epetra_Map>       d_map;
     Teuchos::RCP<Epetra_CrsMatrix> d_A;
     Teuchos::RCP<Epetra_CrsMatrix> d_B;
     Teuchos::RCP<ShiftInvOp>       d_operator;
@@ -140,9 +91,9 @@ class ShiftedInverseTest: public ::testing::Test
 
 TEST_F(ShiftedInverseTest, basic)
 {
-    Teuchos::RCP<Epetra_Vector> x1( new Epetra_Vector(*d_map) );
-    Teuchos::RCP<Epetra_Vector> x2( new Epetra_Vector(*d_map) );
-    Teuchos::RCP<Epetra_Vector>  y( new Epetra_Vector(*d_map) );
+    Teuchos::RCP<MV> x1 = linalg_traits::build_vector<MV>(d_A->NumGlobalRows());
+    Teuchos::RCP<MV> x2 = linalg_traits::build_vector<MV>(d_A->NumGlobalRows());
+    Teuchos::RCP<MV>  y = linalg_traits::build_vector<MV>(d_A->NumGlobalRows());
 
     // Solver tolerance is 1e-10, this should give is 1e-8 in vector entries
     double tol = 1e-8;
@@ -151,8 +102,8 @@ TEST_F(ShiftedInverseTest, basic)
     x1->PutScalar(1.0);
     for( int i=0; i<x2->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        (*x2)[i] = static_cast<double>(global_row+1);
+        int global_row = d_A->GRID(i);
+        (*x2)[0][i] = static_cast<double>(global_row+1);
     }
 
     // First set only one operator
@@ -170,8 +121,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref[global_row], (*y)[0][i], tol );
     }
 
     // Second vector
@@ -186,8 +137,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref2[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref2[global_row], (*y)[0][i], tol );
     }
 
     // Set nonzero shift
@@ -205,8 +156,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref3[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref3[global_row], (*y)[0][i], tol );
     }
 
     // Second vector
@@ -221,8 +172,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref4[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref4[global_row], (*y)[0][i], tol );
     }
 
     // Set second operator and shift=0, results should be same as original
@@ -234,8 +185,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref[global_row], (*y)[0][i], tol );
     }
 
     // Second vector
@@ -243,8 +194,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref2[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref2[global_row], (*y)[0][i], tol );
     }
 
     // Nonzero shift
@@ -262,8 +213,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref5[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref5[global_row], (*y)[0][i], tol );
     }
 
     // Second vector
@@ -278,8 +229,8 @@ TEST_F(ShiftedInverseTest, basic)
 
     for( int i=0; i<y->MyLength(); ++i )
     {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref6[global_row], (*y)[i], tol );
+        int global_row = d_A->GRID(i);
+        EXPECT_SOFTEQ( ref6[global_row], (*y)[0][i], tol );
     }
 }
 

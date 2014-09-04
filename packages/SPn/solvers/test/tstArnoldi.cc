@@ -17,7 +17,7 @@
 
 #include "../Arnoldi.hh"
 #include "../InverseOperator.hh"
-#include "Test_Matrices.hh"
+#include "LinAlgTraits.hh"
 
 #include "Teuchos_RCP.hpp"
 #include "Epetra_MultiVector.h"
@@ -91,9 +91,9 @@ TEST_F(Arnoldi_Test, Eigensolver)
     // Matrix size
     int N = 8;
 
-    RCP_Matrix A = test_matrix::build_matrix<Matrix>("laplacian",N);
-    RCP_Matrix B = test_matrix::build_matrix<Matrix>("diagonal",N);
-    RCP_MV e_vec = test_matrix::build_vector<MV>(N);
+    RCP_Matrix A = linalg_traits::build_matrix<Matrix>("laplacian",N);
+    RCP_Matrix B = linalg_traits::build_matrix<Matrix>("diagonal",N);
+    RCP_MV e_vec = linalg_traits::build_vector<MV>(N);
     e_vec->Random();
 
     // Test with matrix A
@@ -170,7 +170,7 @@ TEST_F(Arnoldi_Test, Eigensolver)
     gensolver.set_operator( AinvB );
 
     // Solve
-    e_vec = test_matrix::build_vector<MV>(N);
+    e_vec = linalg_traits::build_vector<MV>(N);
     gensolver.solve( e_val, e_vec );
 
     cout << "Eig(AinvB) = " << e_val << endl;

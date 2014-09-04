@@ -20,6 +20,11 @@
 #include <SPn/config.h>
 
 #include "../EigenvalueSolverBuilder.hh"
+#include "../Arnoldi.hh"
+#include "../Davidson_Eigensolver.hh"
+#include "../PowerIteration.hh"
+#include "../RayleighQuotient.hh"
+#include "LinAlgTraits.hh"
 
 //---------------------------------------------------------------------------//
 // Test fixture base class
@@ -39,30 +44,12 @@ class EigenvalueSolverBuilderTest : public ::testing::Test
     // Initialization that are performed for each test
     void SetUp()
     {
-        // Build Epetra communicator
-#ifdef COMM_MPI
-        Epetra_MpiComm comm(profugus::communicator);
-#else
-        Epetra_SerialComm comm;
-#endif
-        int num_global = profugus::nodes();
-        Epetra_Map map(num_global,0,comm);
-        d_A = Teuchos::rcp( new Epetra_CrsMatrix(Copy,map,1) );
-        d_B = Teuchos::rcp( new Epetra_CrsMatrix(Copy,map,1) );
-        std::vector<int> ind(1);
-        std::vector<double> val(1);
-        ind[0] = profugus::node();
-        val[0] = static_cast<double>((profugus::node()+1)*2);
-        d_A->InsertMyValues(0,1,&val[0],&ind[0]);
-        d_A->FillComplete();
-        val[0] = 2.0;
-        d_B->InsertMyValues(0,1,&val[0],&ind[0]);
-        d_B->FillComplete();
+        int num_global = 4;
+        d_A = linalg_traits::build_matrix<Epetra_CrsMatrix>("laplacian",num_global);
+        d_B = linalg_traits::build_matrix<Epetra_CrsMatrix>("diagonal",num_global);
     }
 
   protected:
-    int node;
-    int nodes;
 
     RCP_EigenvalueSolver           d_solver;
     Teuchos::RCP<Epetra_CrsMatrix> d_A;
@@ -80,34 +67,61 @@ TEST_F(EigenvalueSolverBuilderTest, basic)
     // Default standard eigenvalue solver is Arnoldi
     d_solver = Builder::build_solver(db,d_A);
     EXPECT_EQ("Arnoldi",d_solver->solver_label());
+    Teuchos::RCP<profugus::Arnoldi<MV,OP> > arnoldi =
+        Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+    EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Default generalized eigenvalue solver is Arnoldi (for now)
     d_solver = Builder::build_solver(db,d_A,d_B);
     EXPECT_EQ("Arnoldi",d_solver->solver_label());
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+    EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Make sure "Arnoldi" keyword is recognized by both functions
     db->set("eigensolver",std::string("Arnoldi"));
 
     d_solver = Builder::build_solver(db,d_A);
     EXPECT_EQ("Arnoldi",d_solver->solver_label());
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+    EXPECT_TRUE( arnoldi != Teuchos::null );
 
     d_solver = Builder::build_solver(db,d_A,d_B);
     EXPECT_EQ("Arnoldi",d_solver->solver_label());
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+    EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Power iteration for both standard and generalized problems
     db->set("eigensolver",std::string("Power"));
 
     d_solver = Builder::build_solver(db,d_A);
     EXPECT_EQ("Power Iteration",d_solver->solver_label());
+    Teuchos::RCP<profugus::PowerIteration<MV,OP> > power =
+        Teuchos::rcp_dynamic_cast<profugus::PowerIteration<MV,OP> >(d_solver);
+    EXPECT_TRUE( power != Teuchos::null );
 
     d_solver = Builder::build_solver(db,d_A,d_B);
     EXPECT_EQ("Power Iteration",d_solver->solver_label());
+    power = Teuchos::rcp_dynamic_cast<profugus::PowerIteration<MV,OP> >(d_solver);
+    EXPECT_TRUE( power != Teuchos::null );
 
     // Rayleigh quotient iteration for generalized problem
     db->set("eigensolver",std::string("RQI"));
 
     d_solver = Builder::build_solver(db,d_A,d_B);
     EXPECT_EQ("Rayleigh Quotient",d_solver->solver_label());
+    Teuchos::RCP<profugus::RayleighQuotient<MV,OP> > rqi =
+        Teuchos::rcp_dynamic_cast<profugus::RayleighQuotient<MV,OP> >(d_solver);
+    EXPECT_TRUE( rqi != Teuchos::null );
+
+    // Davidson for generalized problem
+    db->set("eigensolver",std::string("Davidson"));
+
+    d_solver = Builder::build_solver(db,d_A,d_B);
+    EXPECT_EQ("Davidson",d_solver->solver_label());
+    Teuchos::RCP<profugus::Davidson_Eigensolver<MV,OP> > davidson =
+        Teuchos::rcp_dynamic_cast<profugus::Davidson_Eigensolver<MV,OP> >(d_solver);
+    EXPECT_TRUE( davidson!= Teuchos::null );
+
 }
 
 //---------------------------------------------------------------------------//

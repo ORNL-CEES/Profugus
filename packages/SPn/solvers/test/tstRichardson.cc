@@ -16,6 +16,8 @@
 #include <SPn/config.h>
 #include "../Richardson.hh"
 
+#include "LinAlgTraits.hh"
+
 //---------------------------------------------------------------------------//
 // Test fixture base class
 //---------------------------------------------------------------------------//
@@ -26,6 +28,7 @@ class RichardsonTest : public testing::Test
 
     typedef Epetra_MultiVector            MV;
     typedef Epetra_Operator               OP;
+    typedef Epetra_CrsMatrix              Matrix;
     typedef profugus::Richardson<MV,OP>   Richardson;
     typedef Richardson::RCP_ParameterList RCP_ParameterList;
     typedef Richardson::ParameterList     ParameterList;
@@ -38,79 +41,26 @@ class RichardsonTest : public testing::Test
         node  = profugus::node();
         nodes = profugus::nodes();
 
-        // Build Epetra communicator
-#ifdef COMM_MPI
-        Epetra_MpiComm comm(profugus::communicator);
-#else
-        Epetra_SerialComm comm;
-#endif
-
         // Build an Epetra map
         int global_size = 8;
-        d_map = Teuchos::rcp( new Epetra_Map( global_size, 0, comm ) );
-
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",global_size);
         int my_size = global_size / nodes;
 
-        std::cout << "Global size: " << global_size << std::endl;
-        std::cout << "Local size: " << my_size << std::endl;
-
-        // Build CrsMatrix
-        d_A = Teuchos::rcp( new Epetra_CrsMatrix(Copy,*d_map,3) );
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_map->GID(my_row);
-            if( global_row == 0 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 0;
-                ids[1] = 1;
-                std::vector<double> vals(2);
-                vals[0] =  0.50;
-                vals[1] = -0.25;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else if( global_row == global_size-1 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = global_size-2;
-                ids[1] = global_size-1;
-                std::vector<double> vals(2);
-                vals[0] = -0.25;
-                vals[1] =  0.50;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else
-            {
-                std::vector<int> ids(3);
-                ids[0] = global_row-1;
-                ids[1] = global_row;
-                ids[2] = global_row+1;
-                std::vector<double> vals(3);
-                vals[0] = -0.25;
-                vals[1] =  0.50;
-                vals[2] = -0.25;
-                d_A->InsertGlobalValues(global_row,3,&vals[0],&ids[0]);
-            }
-        }
-        d_A->FillComplete();
-
-        std::cout << "Matrix built" << std::endl;
-
         // Build lhs and rhs vectors
-        d_x = Teuchos::rcp( new Epetra_MultiVector(*d_map,1) );
-        d_b = Teuchos::rcp( new Epetra_MultiVector(*d_map,1) );
+        d_x = linalg_traits::build_vector<MV>(global_size);
+        d_b = linalg_traits::build_vector<MV>(global_size);
         for( int my_row=0; my_row<my_size; ++my_row )
         {
-            int global_row = d_map->GID(my_row);
+            int global_row = d_A->GRID(my_row);
             d_b->ReplaceGlobalValue(global_row,0,
-                    static_cast<double>(8-global_row));
+                    static_cast<double>(4*(8-global_row)));
         }
 
         // Create options database
         d_db = Teuchos::rcp(new ParameterList("test"));
         d_db->set("tolerance",1e-8);
         d_db->set("max_itr",2);
-        d_db->set("Damping Factor",2.0);
+        d_db->set("Damping Factor",0.5);
 
         // Build solver
         d_solver = Teuchos::rcp(new Richardson(d_db));
@@ -130,7 +80,6 @@ class RichardsonTest : public testing::Test
     int nodes;
 
     RCP_ParameterList                d_db;
-    Teuchos::RCP<Epetra_Map>         d_map;
     Teuchos::RCP<Epetra_CrsMatrix>   d_A;
     Teuchos::RCP<Epetra_MultiVector> d_x;
     Teuchos::RCP<Epetra_MultiVector> d_b;
@@ -175,7 +124,7 @@ TEST_F(RichardsonTest, basic)
 
     for( int my_row = 0; my_row < 10/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-7 );
     }
 
@@ -188,7 +137,7 @@ TEST_F(RichardsonTest, basic)
     // Make sure solution didn't change
     for( int my_row = 0; my_row < 10/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref[global_row], (*d_x)[0][my_row], 1.0e-7 );
     }
 }

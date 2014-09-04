@@ -1,14 +1,14 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/Test_Matrices.hh
+ * \file   spn/test/LinAlgTraits.hh
  * \author Steven Hamilton
  * \brief  Matrices for solver testing.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_test_Test_Matrices_hh
-#define solvers_test_Test_Matrices_hh
+#ifndef solvers_test_LinAlgTraits_hh
+#define solvers_test_LinAlgTraits_hh
 
 #include <vector>
 
@@ -23,7 +23,7 @@
 using profugus::Tpetra_CrsMatrix;
 using profugus::Tpetra_MultiVector;
 
-namespace test_matrix
+namespace linalg_traits
 {
 
 template <class MV>
@@ -71,7 +71,6 @@ Teuchos::RCP<Epetra_CrsMatrix> build_laplacian<Epetra_CrsMatrix>(int N)
     std::vector<int> inds(3);
     std::vector<double> vals(3);
 
-    // Boundaries first
     int local_size = A->NumMyRows();
     int err;
     for( int i=0; i<local_size; ++i )
@@ -140,7 +139,6 @@ Teuchos::RCP<Epetra_CrsMatrix> build_diagonal<Epetra_CrsMatrix>(int N)
     std::vector<int> inds(1);
     std::vector<double> vals(1);
 
-    // Boundaries first
     int local_size = A->NumMyRows();
     int err;
     for( int i=0; i<local_size; ++i )
@@ -173,7 +171,33 @@ Teuchos::RCP<Matrix> build_4x4_lhs()
 template <>
 Teuchos::RCP<Epetra_CrsMatrix> build_4x4_lhs<Epetra_CrsMatrix>()
 {
-    return Teuchos::null;
+    std::vector<std::vector<double> > A_vals =
+        {{10.0, 1.1, 2.0, 4.0},
+         { 1.1, 9.9, 2.1, 3.2},
+         { 0.8, 0.4, 5.3, 1.9},
+         { 0.3, 0.1, 0.4, 3.1}};
+#ifdef COMM_MPI
+    Epetra_MpiComm comm(profugus::communicator);
+#else
+    Epetra_SerialComm comm;
+#endif
+
+    Epetra_Map map( 4, 0, comm );
+    Teuchos::RCP<Epetra_CrsMatrix> A( new Epetra_CrsMatrix(Copy,map,4) );
+    std::vector<int> inds = {0, 1, 2, 3};
+
+    int local_size = A->NumMyRows();
+    int err;
+    for( int i=0; i<local_size; ++i )
+    {
+        int gid = A->GRID(i);
+        err = A->InsertGlobalValues(gid,4,&A_vals[gid][0],&inds[0]);
+        CHECK( 0 == err );
+    }
+    A->FillComplete();
+    A->OptimizeStorage();
+    return A;
+
 }
 
 template <>
@@ -193,7 +217,32 @@ Teuchos::RCP<Matrix> build_4x4_rhs()
 template <>
 Teuchos::RCP<Epetra_CrsMatrix> build_4x4_rhs<Epetra_CrsMatrix>()
 {
-    return Teuchos::null;
+    std::vector<std::vector<double> > A_vals =
+        {{0.56, 0.26, 0.51, 0.26},
+         {0.52, 0.13, 0.11, 0.41},
+         {0.73, 0.45, 0.40, 0.98},
+         {0.30, 0.44, 0.93, 0.35}};
+#ifdef COMM_MPI
+    Epetra_MpiComm comm(profugus::communicator);
+#else
+    Epetra_SerialComm comm;
+#endif
+
+    Epetra_Map map( 4, 0, comm );
+    Teuchos::RCP<Epetra_CrsMatrix> A( new Epetra_CrsMatrix(Copy,map,4) );
+    std::vector<int> inds = {0, 1, 2, 3};
+
+    int local_size = A->NumMyRows();
+    int err;
+    for( int i=0; i<local_size; ++i )
+    {
+        int gid = A->GRID(i);
+        err = A->InsertGlobalValues(gid,4,&A_vals[gid][0],&inds[0]);
+        CHECK( 0 == err );
+    }
+    A->FillComplete();
+    A->OptimizeStorage();
+    return A;
 }
 
 template <>
@@ -213,7 +262,55 @@ Teuchos::RCP<Matrix> build_shifted_laplacian(int N)
 template <>
 Teuchos::RCP<Epetra_CrsMatrix> build_shifted_laplacian<Epetra_CrsMatrix>(int N)
 {
-    return Teuchos::null;
+#ifdef COMM_MPI
+    Epetra_MpiComm comm(profugus::communicator);
+#else
+    Epetra_SerialComm comm;
+#endif
+
+    Epetra_Map map( N, 0, comm );
+    Teuchos::RCP<Epetra_CrsMatrix> A( new Epetra_CrsMatrix(Copy,map,3) );
+    std::vector<int> inds(3);
+    std::vector<double> vals(3);
+
+    int local_size = A->NumMyRows();
+    int err;
+    for( int i=0; i<local_size; ++i )
+    {
+        int gid = A->GRID(i);
+        if( gid == 0 )
+        {
+            inds[0] = 0;
+            inds[1] = 1;
+            vals[0] = 3.0;
+            vals[1] = -1.0;
+            err = A->InsertGlobalValues(gid,2,&vals[0],&inds[0]);
+            CHECK( 0 == err );
+        }
+        else if( gid == N-1 )
+        {
+            inds[0] = N-2;
+            inds[1] = N-1;
+            vals[0] = -1.0;
+            vals[1] = 3.0;
+            err = A->InsertGlobalValues(gid,2,&vals[0],&inds[0]);
+            CHECK( 0 == err );
+        }
+        else
+        {
+            inds[0] = gid-1;
+            inds[1] = gid;
+            inds[2] = gid+1;
+            vals[0] = -1.0;
+            vals[1] = 3.0;
+            vals[2] = -1.0;
+            err = A->InsertGlobalValues(gid,3,&vals[0],&inds[0]);
+            CHECK( 0 == err );
+        }
+    }
+    A->FillComplete();
+    A->OptimizeStorage();
+    return A;
 }
 
 template <>
@@ -233,7 +330,30 @@ Teuchos::RCP<Matrix> build_scaled_identity(int N)
 template <>
 Teuchos::RCP<Epetra_CrsMatrix> build_scaled_identity<Epetra_CrsMatrix>(int N)
 {
-    return Teuchos::null;
+#ifdef COMM_MPI
+    Epetra_MpiComm comm(profugus::communicator);
+#else
+    Epetra_SerialComm comm;
+#endif
+
+    Epetra_Map map( N, 0, comm );
+    Teuchos::RCP<Epetra_CrsMatrix> A( new Epetra_CrsMatrix(Copy,map,1) );
+    std::vector<int> inds(1);
+    std::vector<double> vals(1);
+
+    int local_size = A->NumMyRows();
+    int err;
+    for( int i=0; i<local_size; ++i )
+    {
+        int gid = A->GRID(i);
+        inds[0] = gid;
+        vals[0] = 0.5;
+        err = A->InsertGlobalValues(gid,1,&vals[0],&inds[0]);
+        CHECK( 0 == err );
+    }
+    A->FillComplete();
+    A->OptimizeStorage();
+    return A;
 }
 
 template <>
@@ -274,9 +394,9 @@ Teuchos::RCP<Matrix> build_matrix(std::string mat_name, int N)
     return Teuchos::null;
 }
 
-} // namespace test_matrix
+} // namespace linalg_traits
 
-#endif // spn_test_Test_Matrices_hh
+#endif // spn_test_LinAlgTraits_hh
 
 //---------------------------------------------------------------------------//
 

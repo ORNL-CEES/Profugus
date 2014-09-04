@@ -21,6 +21,8 @@
 #include "../RayleighQuotient.hh"
 #include "../ShiftedInverseOperator.hh"
 
+#include "LinAlgTraits.hh"
+
 // Reference solution from matlab
 
 double ref_eigenvalue = 0.4890748754542557;
@@ -41,6 +43,7 @@ class RQITest : public ::testing::Test
 
     typedef Epetra_MultiVector                  MV;
     typedef Epetra_Operator                     OP;
+    typedef Epetra_CrsMatrix                    Matrix;
     typedef profugus::RayleighQuotient<MV,OP>   RayleighQuotient;
     typedef RayleighQuotient::RCP_ParameterList RCP_ParameterList;
     typedef RayleighQuotient::ParameterList     ParameterList;
@@ -65,59 +68,13 @@ class RQITest : public ::testing::Test
 
         // Build an Epetra map
         int global_size = 20;
-        d_map = Teuchos::rcp( new Epetra_Map( global_size, 0, comm ) );
+        d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",global_size);
+        d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",global_size);
 
-        int my_size = global_size / nodes;
-
-        // Build CrsMatrix
-        d_B = rcp( new Epetra_CrsMatrix(Copy,*d_map,1) );
-        d_A = rcp( new Epetra_CrsMatrix(Copy,*d_map,3) );
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_map->GID(my_row);
-            if( global_row == 0 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 0;
-                ids[1] = 1;
-                std::vector<double> vals(2);
-                vals[0] =  3.0;
-                vals[1] = -1.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else if( global_row == global_size-1 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 18;
-                ids[1] = 19;
-                std::vector<double> vals(2);
-                vals[0] = -1.0;
-                vals[1] =  3.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else
-            {
-                std::vector<int> ids(3);
-                ids[0] = global_row-1;
-                ids[1] = global_row;
-                ids[2] = global_row+1;
-                std::vector<double> vals(3);
-                vals[0] = -1.0;
-                vals[1] =  3.0;
-                vals[2] = -1.0;
-                d_A->InsertGlobalValues(global_row,3,&vals[0],&ids[0]);
-            }
-            std::vector<int>    inds(1);
-            std::vector<double> vals(1);
-            inds[0] = global_row;
-            vals[0] = 0.5;
-            d_B->InsertGlobalValues(global_row,1,&vals[0],&inds[0]);
-        }
-        d_A->FillComplete();
-        d_B->FillComplete();
+        int my_size = d_A->NumMyRows();
 
         // Build eigenvector
-        d_x = Teuchos::rcp( new Epetra_MultiVector(*d_map,1) );
+        d_x = linalg_traits::build_vector<MV>(global_size);
 
         // Create options database
         d_db = rcp(new ParameterList("test"));
@@ -160,7 +117,6 @@ class RQITest : public ::testing::Test
     int nodes;
 
     RCP_ParameterList                d_db;
-    Teuchos::RCP<Epetra_Map>         d_map;
     Teuchos::RCP<Epetra_CrsMatrix>   d_A;
     Teuchos::RCP<Epetra_CrsMatrix>   d_B;
     Teuchos::RCP<Epetra_MultiVector> d_x;
@@ -207,7 +163,7 @@ TEST_F(RQITest, basic)
     double sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
     for( int my_row = 0; my_row < 20/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref_eigenvector[global_row],
                        sign*(*d_x)[0][my_row], vec_tol );
     }
@@ -223,7 +179,7 @@ TEST_F(RQITest, basic)
     sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
     for( int my_row = 0; my_row < 20/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref_eigenvector[global_row],
                        sign*(*d_x)[0][my_row], vec_tol );
     }
@@ -256,7 +212,7 @@ TEST_F(RQITest, basic)
     sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
     for( int my_row = 0; my_row < 20/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref_eigenvector[global_row],
                        sign*(*d_x)[0][my_row], vec_tol );
     }
@@ -272,7 +228,7 @@ TEST_F(RQITest, basic)
     sign = (*d_x)[0][0] / std::fabs((*d_x)[0][0]);
     for( int my_row = 0; my_row < 20/nodes; ++my_row )
     {
-        int global_row = d_map->GID(my_row);
+        int global_row = d_A->GRID(my_row);
         EXPECT_SOFTEQ( ref_eigenvector[global_row],
                        sign*(*d_x)[0][my_row], vec_tol );
     }
