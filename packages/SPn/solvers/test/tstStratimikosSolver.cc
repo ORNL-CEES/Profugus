@@ -12,234 +12,123 @@
 
 #include <string>
 
-#include "../Decomposition.hh"
-#include "../StratimikosSolver.hh"
-
-#include "Epetra_Operator.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Vector.h"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
+#include "AnasaziMultiVecTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
+
+#include "../Decomposition.hh"
+#include "../StratimikosSolver.hh"
+#include "LinAlgTraits.hh"
 
 //---------------------------------------------------------------------------//
 // TEST HELPERS
 //---------------------------------------------------------------------------//
-// Define a 4x4 matrix.
 
-double matrix[][4] = {{10.0, 1.1, 2.0, 4.0},
-                      { 1.1, 9.9, 2.1, 3.2},
-                      { 0.8, 0.4, 5.3, 1.9},
-                      { 0.3, 0.1, 0.4, 3.1}};
+std::vector<double> rhs = {0.1, 0.3, 0.4, 0.9};
 
-double rhs[] = {0.1, 0.3, 0.4, 0.9};
-
-double sol[] = {-0.102855551350840,
-                -0.053521967514522,
-                -0.013870314679620,
-                0.303792576783404};
-
-int nodes, node;
-
-//---------------------------------------------------------------------------//
-
-class Operator
-{
-  public:
-    typedef profugus::Decomposition Decomposition;
-
-  private:
-    Decomposition d_map;
-    Teuchos::RCP<Epetra_CrsMatrix> d_crs_matrix;
-
-  public:
-    Operator(int num_elements)
-        : d_map(num_elements)
-    {
-	int num_cols = 4;
-	d_crs_matrix = Teuchos::rcp(
-	    new Epetra_CrsMatrix(Copy, d_map.map(), num_cols) );
-	Teuchos::Array<int> indices( num_cols );
-	for ( int i = 0; i < num_cols; ++i )
-	{
-	    indices[i] = i;
-	}
-	if ( 4 == num_elements )
-	{
-	    for ( int i = 0; i < num_elements; ++i )
-	    {
-		d_crs_matrix->InsertGlobalValues( i, num_cols, matrix[i], indices.getRawPtr() );
-	    }
-	}
-	else if ( 1 == num_elements )
-	{
-	    int my_rank = d_map.comm().MyPID();
-	    d_crs_matrix->InsertGlobalValues(
-		my_rank , num_cols, &matrix[my_rank][0], indices.getRawPtr() );
-	}
-	d_crs_matrix->FillComplete();
-    }
-
-    Teuchos::RCP<Epetra_CrsMatrix> getOperator() const
-    { return d_crs_matrix; }
-};
-
+std::vector<double> sol = {-0.102855551350840, -0.053521967514522,
+                           -0.013870314679620, 0.303792576783404};
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
-// NOTE: the test class name must not contain underscores.
-class StratimikosSolver_Test : public testing::Test
+template <class T>
+class StratimikosSolverTest : public testing::Test
 {
   protected:
-    // Typedefs usable inside the test fixture
-    typedef Epetra_MultiVector                 MV;
-    typedef Epetra_Operator                    OP;
+    typedef typename linalg_traits::traits_types<T>::MV       MV;
+    typedef typename linalg_traits::traits_types<T>::OP       OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+
+    typedef Anasazi::MultiVecTraits<double,MV> MVT;
     typedef profugus::StratimikosSolver<MV,OP> Solver_t;
-    typedef Teuchos::RCP<Operator>             RCP_Operator;
-    typedef Solver_t::ParameterList            ParameterList;
-    typedef Solver_t::RCP_ParameterList        RCP_ParameterList;
 
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
-        db = Teuchos::rcp(new ParameterList("test"));
+        d_db = Teuchos::rcp(new ParameterList("test"));
     }
 
-    void one_pe(const std::string &which,
-                const std::string &xmlfile)
+    void strat_test(const std::string &which,
+                    const std::string &xmlfile)
     {
-        if (nodes != 1)
-        {
-            SUCCEED() << "Test set for 1 processor only.";
-            return;
-        }
-
         // database
-        db->set("linear_solver_xml_file", xmlfile);
+        d_db->set("linear_solver_xml_file", xmlfile);
 
         // make the operator
-        A = Teuchos::rcp(new Operator(4));
+        d_A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
 
         // make the solver
-        Solver_t solver(db);
+        Solver_t solver(d_db);
 
-        solver.set_operator(A->getOperator());
+        solver.set_operator(d_A);
 
         // wrap rhs into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_rhs = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), rhs));
+        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<MV>(4);
+        linalg_traits::fill_vector<MV>(ep_rhs,rhs);
 
         std::vector<double> rhs_norm(1);
-        ep_rhs->Norm2(&rhs_norm[0]);
+        MVT::MvNorm(*ep_rhs,rhs_norm);
 
         // solve
-        double x[4] = {0.0};
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), x));
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(4);
+        std::vector<double> zero(4,0.0);
+        linalg_traits::fill_vector<MV>(ep_x,zero);
         solver.set_tolerance(1.0e-8);
         solver.solve(ep_x, ep_rhs);
-        EXPECT_TRUE(soft_equiv(x, x + 4, sol, sol + 4, 1.0e-6));
+        linalg_traits::test_vector<MV>(ep_x,sol);
         EXPECT_TRUE( 10 >  solver.num_iters() );
 
         // solve again and limit iterations
-        x[0] = 0.0;
-        x[1] = 0.0;
-        x[2] = 0.0;
-        x[3] = 0.0;
+        linalg_traits::fill_vector<MV>(ep_x,zero);
         solver.set_max_iters(1);
         solver.set_tolerance(1.0e-12);
         solver.solve(ep_x, ep_rhs);
         EXPECT_TRUE( 10 >  solver.num_iters() );
 
         // solve again and limit tolerance
-        x[0] = 0.0;
-        x[1] = 0.0;
-        x[2] = 0.0;
-        x[3] = 0.0;
+        linalg_traits::fill_vector<MV>(ep_x,zero);
         solver.set_max_iters(1000);
         solver.set_tolerance(0.1);
         solver.solve(ep_x, ep_rhs);
         EXPECT_TRUE( 10 >  solver.num_iters() );
     }
 
-    void four_pe(const std::string &which,
-                 const std::string &xmlfile)
-    {
-        if (nodes != 4)
-        {
-            SUCCEED() << "Test set for 4 processors only.";
-            return;
-        }
-
-        // database
-        db->set("linear_solver_xml_file", xmlfile);
-
-        // make the operator
-        A = Teuchos::rcp(new Operator(1));
-
-        // make the solver
-        Solver_t solver(db);
-
-        solver.set_operator(A->getOperator());
-
-        // solve
-        double x[1] = {0.0};
-        double b[1] = {rhs[node]};
-
-        // wrap arrays into Epetra MV
-        Teuchos::RCP<Epetra_Vector> ep_b = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), b));
-        Teuchos::RCP<Epetra_Vector> ep_x = Teuchos::rcp(
-            new Epetra_Vector(View, A->getOperator()->OperatorDomainMap(), x));
-
-        solver.solve(ep_x, ep_b);
-
-        // reduce and check
-        double global[4] = {0.0};
-        global[node] = x[0];
-        profugus::global_sum(global, 4);
-
-        // check solution
-        EXPECT_TRUE(soft_equiv(global, global + 4, sol, sol + 4, 1.0e-5));
-        EXPECT_TRUE( 10 >  solver.num_iters() );
-    }
-
   protected:
+
     // >>> Data that get re-initialized between tests
 
-    RCP_ParameterList db;
-    RCP_Operator      A;
+    Teuchos::RCP<Teuchos::ParameterList> d_db;
+    Teuchos::RCP<Matrix> d_A;
 };
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(StratimikosSolver_Test, Aztec)
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(StratimikosSolverTest, MyTypes);
+
+TYPED_TEST(StratimikosSolverTest, Aztec)
 {
-    one_pe("AztecOO", "aztecoo.xml");
-    four_pe("AztecOO", "aztecoo.xml");
+    this->strat_test("AztecOO", "aztecoo.xml");
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(StratimikosSolver_Test, Belos)
+TYPED_TEST(StratimikosSolverTest, Belos)
 {
-    one_pe("Belos", "belos.xml");
-    four_pe("Belos", "belos.xml");
+    this->strat_test("Belos", "belos.xml");
 }
 
 //---------------------------------------------------------------------------//
 #ifdef USE_MCLS
-TEST_F(StratimikosSolver_Test, MCLS)
+TYPED_TEST(StratimikosSolverTest, MCLS)
 {
-    one_pe("MCLS", "mcls.xml");
-    four_pe("MCLS", "mcls.xml");
+    this->strat_test("MCLS", "mcls.xml");
 }
 #endif
 

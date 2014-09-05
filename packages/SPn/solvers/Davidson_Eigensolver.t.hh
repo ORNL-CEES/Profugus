@@ -14,6 +14,7 @@
 #include "AnasaziBasicEigenproblem.hpp"
 
 #include "harness/Soft_Equivalence.hh"
+#include "harness/Warnings.hh"
 #include "comm/P_Stream.hh"
 #include "Davidson_Eigensolver.hh"
 
@@ -36,6 +37,8 @@ Davidson_Eigensolver<MV,OP>::Davidson_Eigensolver(RCP_ParameterList db,
     REQUIRE(!d_db.is_null());
     REQUIRE(d_LHS!=Teuchos::null);
     REQUIRE(d_RHS!=Teuchos::null);
+
+    b_label = "Davidson";
 
     // make a default Anasazi database
     RCP_ParameterList anasazi_db = Teuchos::sublist(db, "Anasazi");
@@ -93,17 +96,34 @@ void Davidson_Eigensolver<MV,OP>::solve( double &keff, Teuchos::RCP<MV> x)
     ENSURE( problem_set );
 
     // Extract Anasazi DB
-    Teuchos::ParameterList &anasazi_list = d_db->sublist("Anasazi");
+    Teuchos::RCP<Teuchos::ParameterList> anasazi_list =
+        Teuchos::sublist(d_db,"Anasazi");
+    if( anasazi_list->get<int>("Maximum Subspace Dimension") >
+        MultiVecTraits::GetVecLength(*x) )
+    {
+        anasazi_list->set<int>("Maximum Subspace Dimension",
+                               MultiVecTraits::GetVecLength(*x));
+    }
 
     // Create solver
     Anasazi::GeneralizedDavidsonSolMgr<double,MV,OP> solver(
-            problem, anasazi_list);
+            problem, *anasazi_list);
 
     // Solve
-    Anasazi::ReturnType davReturn = solver.solve();
+    Anasazi::ReturnType returnval = solver.solve();
 
-    INSIST( davReturn == Anasazi::Converged,
-            "Davidson Solver did not converge!" );
+    // Ensure convergence
+    if( returnval == Anasazi::Converged )
+    {
+        b_converged = true;
+    }
+    else
+    {
+        if( profugus::node()==0 )
+            ADD_WARNING("Arnoldi failed to converge");
+    }
+
+    b_num_iters = solver.getNumIters();
 
     // Extract solution
     Anasazi::Eigensolution<double,MV> solution =

@@ -1,25 +1,38 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstRichardson.cc
+ * \file   solvers/test/tstDavidsonEigensolver.cc
  * \author Steven Hamilton
- * \brief  Richardson unit-test.
+ * \brief  Davidson_Eigensolver unit-test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
 #include "gtest/utils_gtest.hh"
 
-#include <SPn/config.h>
-#include "../Richardson.hh"
+#include <vector>
+#include <string>
 
+#include <SPn/config.h>
+
+#include "../Davidson_Eigensolver.hh"
 #include "LinAlgTraits.hh"
+
+// Reference solution from matlab
+double ref_eigenvalue = 0.4890748754542557;
+
+std::vector<double> ref_eigenvector = {
+    4.599544191e-02, 9.096342166e-02, 1.338994289e-01, 1.738443441e-01,
+    2.099058640e-01, 2.412784337e-01, 2.672612419e-01, 2.872738756e-01,
+    3.008692856e-01, 3.077437730e-01, 3.077437730e-01, 3.008692856e-01,
+    2.872738756e-01, 2.672612419e-01, 2.412784337e-01, 2.099058640e-01,
+    1.738443441e-01, 1.338994289e-01, 9.096342166e-02, 4.599544191e-02 };
 
 //---------------------------------------------------------------------------//
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
 template <class T>
-class RichardsonTest : public testing::Test
+class DavidsonTest : public ::testing::Test
 {
   protected:
 
@@ -27,39 +40,35 @@ class RichardsonTest : public testing::Test
     typedef typename linalg_traits::traits_types<T>::OP       OP;
     typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
 
-    typedef profugus::Richardson<MV,OP>   Richardson;
+    typedef profugus::Davidson_Eigensolver<MV,OP> Davidson_Eigensolver;
 
   protected:
-    // Initialization that are performed for each test
-    void SetUp()
-    {
-        // Build a map
-        d_N = 8;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
 
-        // Build lhs and rhs vectors
+    // Initialization that are performed for each test
+    void build_solver()
+    {
+        using Teuchos::rcp;
+
+        // Build an map
+        d_N = 20;
+        d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",d_N);
+        d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",d_N);
+
+        // Build eigenvector
         d_x = linalg_traits::build_vector<MV>(d_N);
-        d_b = linalg_traits::build_vector<MV>(d_N);
-        std::vector<double> vals(d_N);
-        for( int i=0; i<d_N; ++i )
-            vals[i] = static_cast<double>(4*(8-i));
-        linalg_traits::fill_vector<MV>(d_b,vals);
 
         // Create options database
-        d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
+        d_db = rcp(new ParameterList("test"));
         d_db->set("tolerance",1e-8);
-        d_db->set("max_itr",2);
-        d_db->set("Damping Factor",0.5);
 
         // Build solver
-        d_solver = Teuchos::rcp(new Richardson(d_db));
+        d_solver = rcp(new Davidson_Eigensolver(d_db,d_A,d_B));
         CHECK(!d_solver.is_null());
-        d_solver->set_operator(d_A);
     }
 
     void solve()
     {
-        d_solver->solve(d_x,d_b);
+        d_solver->solve(d_lambda,d_x);
         d_iters = d_solver->num_iters();
         d_converged = d_solver->converged();
     }
@@ -69,65 +78,54 @@ class RichardsonTest : public testing::Test
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
     Teuchos::RCP<Matrix>                 d_A;
+    Teuchos::RCP<Matrix>                 d_B;
     Teuchos::RCP<MV>                     d_x;
-    Teuchos::RCP<MV>                     d_b;
-    Teuchos::RCP<Richardson>             d_solver;
+    Teuchos::RCP<Davidson_Eigensolver>   d_solver;
+    double                               d_lambda;
 
     int d_iters;
     bool d_converged;
 };
 
 //---------------------------------------------------------------------------//
-// TESTS
+// Test fixture
 //---------------------------------------------------------------------------//
-
 typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
-TYPED_TEST_CASE(RichardsonTest, MyTypes);
+TYPED_TEST_CASE(DavidsonTest, MyTypes);
 
-TYPED_TEST(RichardsonTest, basic)
+TYPED_TEST(DavidsonTest, basic)
 {
-    typedef typename TestFixture::MV       MV;
+    typedef typename TestFixture::MV MV;
 
-    // Run two iterations and stop
-    this->solve();
+    double eig_tol = 1e-10;
+    double vec_tol = 1e-7;
+    this->build_solver();
 
-    // Make sure solver reports that two iterations were performed
-    //  and that it is not converged
-    EXPECT_EQ( 2, this->d_iters );
-    EXPECT_TRUE( !this->d_converged );
-
-    // Reset initial vector and re-solve
-    this->d_solver->set_max_iters(1000);
+    // Solve and check convergence
     std::vector<double> one(this->d_N,1.0);
     linalg_traits::fill_vector<MV>(this->d_x,one);
+    this->d_lambda = 1.0;
     this->solve();
 
-    EXPECT_EQ( 294, this->d_iters ); // Iteration count from Matlab implementation
+    EXPECT_EQ( 9, this->d_iters ); // Heuristic
     EXPECT_TRUE( this->d_converged );
+    EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
-    // Compare against reference solution from Matlab
-    std::vector<double> ref = {
-        90.6666666666667,
-       149.3333333333333,
-       180.0000000000000,
-       186.6666666666666,
-       173.3333333333333,
-       144.0000000000000,
-       102.6666666666666,
-        53.3333333333333};
-
-    linalg_traits::test_vector<MV>(this->d_x,ref);
+    linalg_traits::set_sign<MV>(this->d_x);
+    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
 
     // Solve again, should return without iterating
     this->solve();
 
     EXPECT_EQ( 0, this->d_iters );
     EXPECT_TRUE( this->d_converged );
+    EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    linalg_traits::test_vector<MV>(this->d_x,ref);
+    linalg_traits::set_sign<MV>(this->d_x);
+    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
 }
 
 //---------------------------------------------------------------------------//
-//                        end of tstRichardson.cc
+//                 end of tstDavidsonEigensolver.cc
 //---------------------------------------------------------------------------//

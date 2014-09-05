@@ -14,14 +14,14 @@
 
 #include <SPn/config.h>
 
-#include "Epetra_Operator.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
+#include "AnasaziOperatorTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 
 #include "../PreconditionerBuilder.hh"
+#include "LinAlgTraits.hh"
 
 using Teuchos::RCP;
 using Teuchos::rcp;
@@ -30,152 +30,141 @@ using Teuchos::rcp;
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class PreconditionerBuilderTest : public ::testing::Test
 {
   protected:
 
-    typedef Epetra_MultiVector                  MV;
-    typedef Epetra_Operator                     OP;
-    typedef profugus::PreconditionerBuilder<OP> Builder;
-    typedef Builder::RCP_ParameterList          RCP_ParameterList;
+    typedef typename linalg_traits::traits_types<T>::MV     MV;
+    typedef typename linalg_traits::traits_types<T>::OP     OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
+
+    typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
+    typedef Anasazi::MultiVecTraits<double,MV>    MVT;
+    typedef profugus::PreconditionerBuilder<OP>   Builder;
 
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
-        // Parallelism
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
-        // Build Epetra communicator
-#ifdef COMM_MPI
-        Epetra_MpiComm comm(profugus::communicator);
-#else
-        Epetra_SerialComm comm;
-#endif
-
         // Build an Epetra map
-        int global_size = 20;
-        d_map = Teuchos::rcp( new Epetra_Map( global_size, 0, comm ) );
-
-        int my_size = global_size / nodes;
-
-        // Build CrsMatrix
-        d_A = Teuchos::rcp( new Epetra_CrsMatrix(Copy,*d_map,3) );
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_map->GID(my_row);
-            if( global_row == 0 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 0;
-                ids[1] = 1;
-                std::vector<double> vals(2);
-                vals[0] = 1.0;
-                vals[1] = 1.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else if( global_row == global_size-1 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 18;
-                ids[1] = 19;
-                std::vector<double> vals(2);
-                vals[0] = -1.0;
-                vals[1] = 20.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else
-            {
-                std::vector<int> ids(3);
-                ids[0] = global_row-1;
-                ids[1] = global_row;
-                ids[2] = global_row+1;
-                std::vector<double> vals(3);
-                vals[0] = -1.0;
-                vals[1] = static_cast<double>(global_row+1);
-                vals[2] =  1.0;
-                d_A->InsertGlobalValues(global_row,3,&vals[0],&ids[0]);
-            }
-        }
-        d_A->FillComplete();
+        d_N = 20;
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
 
         // Build lhs and rhs vectors
-        d_x = Teuchos::rcp( new Epetra_MultiVector(*d_map,1) );
-        d_y = Teuchos::rcp( new Epetra_MultiVector(*d_map,1) );
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_map->GID(my_row);
-            d_x->ReplaceGlobalValue(global_row,0,
-                    static_cast<double>(20-global_row));
-        }
+        d_x = linalg_traits::build_vector<MV>(d_N);
+        d_y = linalg_traits::build_vector<MV>(d_N);
+        std::vector<double> vals(d_N);
+        for( int i=0; i<d_N; ++i )
+            vals[i] = static_cast<double>(d_N-i);
+        linalg_traits::fill_vector<MV>(d_x,vals);
     }
 
-    void build_preconditioner( RCP_ParameterList db )
+    void build_preconditioner( RCP<Teuchos::ParameterList> db )
     {
         d_P = Builder::build_preconditioner(d_A,db);
     }
 
   protected:
-    int node;
-    int nodes;
 
-    Teuchos::RCP<Epetra_Map>             d_map;
-    Teuchos::RCP<Epetra_CrsMatrix>       d_A;
-    Teuchos::RCP<Epetra_Operator>        d_P;
-    Teuchos::RCP<Epetra_MultiVector>     d_x;
-    Teuchos::RCP<Epetra_MultiVector>     d_y;
+    int d_N;
+
+    Teuchos::RCP<Matrix> d_A;
+    Teuchos::RCP<OP>     d_P;
+    Teuchos::RCP<MV>     d_x;
+    Teuchos::RCP<MV>     d_y;
 };
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(PreconditionerBuilderTest, MyTypes);
 
-TEST_F(PreconditionerBuilderTest, basic)
+TYPED_TEST(PreconditionerBuilderTest, basic)
 {
-    RCP_ParameterList db = rcp(new Teuchos::ParameterList("test_db"));
-    int ierr;
+    typedef typename TestFixture::MV  MV;
+    typedef typename TestFixture::OPT OPT;
+    typedef typename TestFixture::MVT MVT;
+
+    RCP<Teuchos::ParameterList> db =
+        rcp(new Teuchos::ParameterList("test_db"));
     std::vector<double> y_norm(1);
+
+    // Determine if this is epetra or tpetra
+    Teuchos::RCP<Epetra_MultiVector> x_ep =
+        Teuchos::rcp_dynamic_cast<Epetra_MultiVector>(this->d_x);
+    bool epetra = (x_ep != Teuchos::null);
 
     // Default preconditioner should be valid
     std::cout << "Building default preconditioner" << std::endl;
-    build_preconditioner(db);
-    EXPECT_FALSE( d_P == Teuchos::null );
-    d_y->PutScalar(0.0);
-    ierr = d_P->Apply(*d_x,*d_y);
-    EXPECT_FALSE(ierr);
-    d_y->Norm2(&y_norm[0]);
+    this->build_preconditioner(db);
+    EXPECT_FALSE( this->d_P == Teuchos::null );
+    std::vector<double> zero(this->d_N,0.0);
+    linalg_traits::fill_vector<MV>(this->d_y,zero);
+    OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
+    MVT::MvNorm(*this->d_y,y_norm);
     EXPECT_TRUE(y_norm[0] > 1.0);
 
     // Set preconditioner to "None", should return null RCP
     std::cout << "Building null prec" << std::endl;
     db->set("Preconditioner", std::string("None"));
-    build_preconditioner(db);
-    EXPECT_TRUE( d_P == Teuchos::null );
+    this->build_preconditioner(db);
+    EXPECT_TRUE( this->d_P == Teuchos::null );
 
-    // Change preconditioner to "Ifpack", should be valid
-    std::cout << "Building Ifpack prec" << std::endl;
-    db->set("Preconditioner", std::string("Ifpack"));
-    build_preconditioner(db);
-    EXPECT_FALSE( d_P == Teuchos::null );
-    d_y->PutScalar(0.0);
-    ierr = d_P->Apply(*d_x,*d_y);
-    EXPECT_FALSE(ierr);
-    d_y->Norm2(&y_norm[0]);
-    EXPECT_TRUE(y_norm[0] > 1.0);
+    if( epetra )
+    {
+        // Change preconditioner to "Ifpack", should be valid for epetra
+        std::cout << "Building Ifpack prec" << std::endl;
+        db->set("Preconditioner", std::string("Ifpack"));
+        this->build_preconditioner(db);
+        EXPECT_FALSE( this->d_P == Teuchos::null );
+        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
+        MVT::MvNorm(*this->d_y,y_norm);
+        EXPECT_TRUE(y_norm[0] > 1.0);
+    }
 
 #ifdef USE_ML
-    // Change preconditioner to "ML", should be valid
-    std::cout << "Building ML prec" << std::endl;
-    db->set("Preconditioner", std::string("ML"));
-    build_preconditioner(db);
-    EXPECT_FALSE( d_P == Teuchos::null );
-    d_y->PutScalar(0.0);
-    ierr = d_P->Apply(*d_x,*d_y);
-    EXPECT_FALSE(ierr);
-    d_y->Norm2(&y_norm[0]);
-    EXPECT_TRUE(y_norm[0] > 1.0);
+    if( epetra )
+    {
+        // Change preconditioner to "ML", should be valid
+        std::cout << "Building ML prec" << std::endl;
+        db->set("Preconditioner", std::string("ML"));
+        this->build_preconditioner(db);
+        EXPECT_FALSE( this->d_P == Teuchos::null );
+        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
+        MVT::MvNorm(*this->d_y,y_norm);
+        EXPECT_TRUE(y_norm[0] > 1.0);
+    }
 #endif
+
+    if( !epetra )
+    {
+        // Change preconditioner to "Ifpack2", should be valid for tpetra
+        std::cout << "Building Ifpack2 prec" << std::endl;
+        db->set("Preconditioner", std::string("Ifpack2"));
+        this->build_preconditioner(db);
+        EXPECT_FALSE( this->d_P == Teuchos::null );
+        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
+        MVT::MvNorm(*this->d_y,y_norm);
+        EXPECT_TRUE(y_norm[0] > 1.0);
+    }
+
+    if( !epetra )
+    {
+        // Change preconditioner to "MueLu", should be valid for tpetra
+        std::cout << "Building MueLu prec" << std::endl;
+        db->set("Preconditioner", std::string("MueLu"));
+        this->build_preconditioner(db);
+        EXPECT_FALSE( this->d_P == Teuchos::null );
+        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
+        MVT::MvNorm(*this->d_y,y_norm);
+        EXPECT_TRUE(y_norm[0] > 1.0);
+    }
 }
 
 //---------------------------------------------------------------------------//

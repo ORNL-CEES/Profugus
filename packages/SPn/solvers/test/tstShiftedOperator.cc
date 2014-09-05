@@ -9,94 +9,41 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include "../ShiftedOperator.hh"
-
 #include <SPn/config.h>
 
 #include "comm/global.hh"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Vector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
+#include "AnasaziOperatorTraits.hpp"
+
+#include "../ShiftedOperator.hh"
+#include "LinAlgTraits.hh"
 
 //---------------------------------------------------------------------------//
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class ShiftedOperatorTest : public testing::Test
 {
   protected:
-    typedef Epetra_MultiVector MV;
-    typedef Epetra_Operator    OP;
+    typedef typename linalg_traits::traits_types<T>::MV       MV;
+    typedef typename linalg_traits::traits_types<T>::OP       OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+
+    typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
+
     // Initialization that are performed for each test
     void SetUp()
     {
-        // Parallelism
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
-        // Build Epetra communicator
-#ifdef COMM_MPI
-        Epetra_MpiComm comm(profugus::communicator);
-#else
-        Epetra_SerialComm comm;
-#endif
-
-        // Build an Epetra map
-        int global_size = 20;
-        d_map = Teuchos::rcp( new Epetra_Map( global_size, 0, comm ) );
-
-        int my_size = global_size / nodes;
+        // Build an map
+        d_N = 20;
 
         // Build CrsMatrix
-        d_A = Teuchos::rcp( new Epetra_CrsMatrix(Copy,*d_map,3) );
-        d_B = Teuchos::rcp( new Epetra_CrsMatrix(Copy,*d_map,1) );
-        for( int my_row=0; my_row<my_size; ++my_row )
-        {
-            int global_row = d_map->GID(my_row);
-            if( global_row == 0 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 0;
-                ids[1] = 1;
-                std::vector<double> vals(2);
-                vals[0] =  2.0;
-                vals[1] = -1.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else if( global_row == global_size-1 )
-            {
-                std::vector<int> ids(2);
-                ids[0] = 18;
-                ids[1] = 19;
-                std::vector<double> vals(2);
-                vals[0] = -1.0;
-                vals[1] =  2.0;
-                d_A->InsertGlobalValues(global_row,2,&vals[0],&ids[0]);
-            }
-            else
-            {
-                std::vector<int> ids(3);
-                ids[0] = global_row-1;
-                ids[1] = global_row;
-                ids[2] = global_row+1;
-                std::vector<double> vals(3);
-                vals[0] = -1.0;
-                vals[1] =  2.0;
-                vals[2] = -1.0;
-                d_A->InsertGlobalValues(global_row,3,&vals[0],&ids[0]);
-            }
-            std::vector<int>    inds(1);
-            std::vector<double> vals(1);
-            inds[0] = global_row;
-            vals[0] = static_cast<double>(global_row+1);
-            d_B->InsertGlobalValues(global_row,1,&vals[0],&inds[0]);
-        }
-        d_A->FillComplete();
-        d_B->FillComplete();
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
+        d_B = linalg_traits::build_matrix<Matrix>("diagonal",d_N);
 
         // Build eigenvector
-        d_x = Teuchos::rcp( new Epetra_Vector(*d_map) );
+        d_x = linalg_traits::build_vector<MV>(d_N);
+        d_y = linalg_traits::build_vector<MV>(d_N);
 
         // Build solver
         d_operator = Teuchos::rcp(new profugus::ShiftedOperator<MV,OP>());
@@ -106,13 +53,14 @@ class ShiftedOperatorTest : public testing::Test
     }
 
   protected:
-    int node;
-    int nodes;
 
-    Teuchos::RCP<Epetra_Map>                        d_map;
-    Teuchos::RCP<Epetra_CrsMatrix>                  d_A;
-    Teuchos::RCP<Epetra_CrsMatrix>                  d_B;
-    Teuchos::RCP<Epetra_Vector>                     d_x;
+    int d_N;
+
+    Teuchos::RCP<Matrix> d_A;
+    Teuchos::RCP<Matrix> d_B;
+    Teuchos::RCP<MV>     d_x;
+    Teuchos::RCP<MV>     d_y;
+
     Teuchos::RCP<profugus::ShiftedOperator<MV,OP> > d_operator;
 };
 
@@ -120,88 +68,61 @@ class ShiftedOperatorTest : public testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(ShiftedOperatorTest, basic)
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(ShiftedOperatorTest, MyTypes);
+
+TYPED_TEST(ShiftedOperatorTest, basic)
 {
-    //Clone vector for holding solutions
-    Teuchos::RCP<Epetra_Vector> y(new Epetra_Vector(*d_map));
+    typedef typename TestFixture::MV  MV;
+    typedef typename TestFixture::OPT OPT;
 
     // Unshifted operator, same as multiplying by A
-    d_operator->set_shift(0.0);
-    d_x->PutScalar(1.0);
-    d_operator->Apply(*d_x,*y);
+    this->d_operator->set_shift(0.0);
+    std::vector<double> one(this->d_N,1.0);
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
 
-    for( int i=0; i<y->MyLength(); ++i )
-    {
-        int global_row = d_map->GID(i);
-        if( global_row == 0 || global_row == 19 )
-        {
-            EXPECT_SOFTEQ( 1.0, (*y)[i], 1e-14 );
-        }
-        else
-        {
-            EXPECT_SOFTEQ( 0.0, (*y)[i], 1e-14 );
-        }
-    }
+    std::vector<double> ref(this->d_N,0.0);
+    ref[0]  = 1.0;
+    ref[19] = 1.0;
+    linalg_traits::test_vector<MV>(this->d_y,ref);
 
     // New vector
-    for( int i=0; i<y->MyLength(); ++i )
-    {
-        int global_row = d_map->GID(i);
-        (*d_x)[i] = static_cast<double>(global_row+1);
-    }
+    std::vector<double> vals(this->d_N);
+    for( int i=0; i<this->d_N; ++i )
+        vals[i] = static_cast<double>(i+1);
+    linalg_traits::fill_vector<MV>(this->d_x,vals);
 
-    d_operator->Apply(*d_x,*y);
-    for( int i=0; i<y->MyLength(); ++i )
-    {
-        int global_row = d_map->GID(i);
-        if( global_row == 19 )
-        {
-            EXPECT_SOFTEQ( 21.0, (*y)[i], 1e-14 );
-        }
-        else
-        {
-            EXPECT_SOFTEQ( 0.0, (*y)[i], 1e-14 );
-        }
-    }
+    OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
+    std::fill(ref.begin(),ref.end(),0.0);
+    ref[19] = 21.0;
+    linalg_traits::test_vector<MV>(this->d_y,ref);
 
     // Now set a shift
-    d_operator->set_shift(0.5);
-    d_x->PutScalar(1.0);
-    d_operator->Apply(*d_x,*y);
+    this->d_operator->set_shift(0.5);
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
 
     // Matlab computed reference
-    double ref[] = {
+    std::vector<double> ref2 = {
         0.5000,  -1.0000,  -1.5000,  -2.0000,  -2.5000,  -3.0000,  -3.5000,
        -4.0000,  -4.5000,  -5.0000,  -5.5000,  -6.0000,  -6.5000,  -7.0000,
        -7.5000,  -8.0000,  -8.5000,  -9.0000,  -9.5000,  -9.0000 };
 
-    for( int i=0; i<y->MyLength(); ++i )
-    {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref[global_row], (*y)[i], 1e-14 );
-    }
-
+    linalg_traits::test_vector<MV>(this->d_y,ref2);
 
     // Different vector
-    for( int i=0; i<y->MyLength(); ++i )
-    {
-        int global_row = d_map->GID(i);
-        (*d_x)[i] = static_cast<double>(global_row+1);
-    }
-    d_operator->Apply(*d_x,*y);
-
+    linalg_traits::fill_vector<MV>(this->d_x,vals);
+    OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
 
     // Matlab computed reference
-    double ref2[] = {
+    std::vector<double> ref3 = {
         -0.5000,   -2.0000,   -4.5000,   -8.0000,  -12.5000, -18.0000,
        -24.5000,  -32.0000,  -40.5000,  -50.0000,  -60.5000, -72.0000,
        -84.5000,  -98.0000, -112.5000, -128.0000, -144.5000, -162.0000,
       -180.5000, -179.0000 };
-    for( int i=0; i<y->MyLength(); ++i )
-    {
-        int global_row = d_map->GID(i);
-        EXPECT_SOFTEQ( ref2[global_row], (*y)[i], 1e-14 );
-    }
+
+    linalg_traits::test_vector<MV>(this->d_y,ref3);
 }
 
 //---------------------------------------------------------------------------//
