@@ -9,10 +9,6 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
-
 #include <SPn/config.h>
 #include "../Richardson.hh"
 

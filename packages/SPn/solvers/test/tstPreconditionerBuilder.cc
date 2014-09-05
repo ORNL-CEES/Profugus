@@ -21,7 +21,6 @@
 #include "AnasaziTpetraAdapter.hpp"
 
 #include "../PreconditionerBuilder.hh"
-
 #include "LinAlgTraits.hh"
 
 using Teuchos::RCP;

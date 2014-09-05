@@ -11,10 +11,6 @@
 
 #include <vector>
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_Vector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 

@@ -11,9 +11,6 @@
 
 #include <string>
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_Operator.h"
-
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 

@@ -12,19 +12,14 @@
 
 #include <string>
 
-#include "../Decomposition.hh"
-#include "../StratimikosSolver.hh"
-
-#include "Epetra_Operator.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Vector.h"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
 #include "AnasaziMultiVecTraits.hpp"
 #include "AnasaziEpetraAdapter.hpp"
 #include "AnasaziTpetraAdapter.hpp"
 
+#include "../Decomposition.hh"
+#include "../StratimikosSolver.hh"
 #include "LinAlgTraits.hh"
 
 //---------------------------------------------------------------------------//

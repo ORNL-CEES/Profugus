@@ -14,8 +14,6 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
 
 #include <SPn/config.h>
 

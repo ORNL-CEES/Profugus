@@ -14,8 +14,6 @@
 #include <iomanip>
 #include <string>
 
-#include <Epetra_Operator.h>
-#include <Epetra_MultiVector.h>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCP.hpp>
 

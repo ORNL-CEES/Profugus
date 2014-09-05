@@ -9,17 +9,12 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include "../ShiftedOperator.hh"
-
 #include <SPn/config.h>
 
 #include "comm/global.hh"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Vector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
 #include "AnasaziOperatorTraits.hpp"
 
+#include "../ShiftedOperator.hh"
 #include "LinAlgTraits.hh"
 
 //---------------------------------------------------------------------------//
