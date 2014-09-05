@@ -23,8 +23,6 @@
 #include "../InverseOperator.hh"
 #include "LinAlgTraits.hh"
 
-using namespace std;
-
 //---------------------------------------------------------------------------//
 // TEST HELPERS
 //---------------------------------------------------------------------------//
@@ -48,21 +46,21 @@ std::vector<double> sol = {-0.102855551350840,
 // FIXTURES
 //---------------------------------------------------------------------------//
 
+template <class T>
 class Inverse_Operator_Test : public testing::Test
 {
   protected:
-    typedef Epetra_MultiVector                   MV;
-    typedef Epetra_Operator                      OP;
-    typedef Epetra_CrsMatrix                     Matrix;
-    typedef profugus::InverseOperator<MV,OP>     InverseOperator;
-    typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
+
+    typedef typename linalg_traits::traits_types<T>::MV     MV;
+    typedef typename linalg_traits::traits_types<T>::OP     OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
+    typedef profugus::InverseOperator<MV,OP>                InverseOperator;
+    typedef Anasazi::OperatorTraits<double,MV,OP>           OPT;
 
   protected:
 
     void SetUp()
     {
-        nodes = profugus::nodes();
-        node  = profugus::node();
         db    = Teuchos::rcp(new Teuchos::ParameterList("test"));
     }
 
@@ -87,16 +85,13 @@ class Inverse_Operator_Test : public testing::Test
 
         // solve
         Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(N);
-        int ret;
-        ret = solver_op.Apply(*ep_rhs, *ep_x);
-        EXPECT_EQ(0, ret);
+        OPT::Apply(solver_op,*ep_rhs,*ep_x);
         linalg_traits::test_vector<MV>(ep_x,sol);
 
         // solve again and limit iterations
         std::vector<double> zero(N,0.0);
         linalg_traits::fill_vector<MV>(ep_x,zero);
-        ret = solver_op.Apply(*ep_rhs,*ep_x);
-        EXPECT_EQ(0, ret);
+        OPT::Apply(solver_op,*ep_rhs,*ep_x);
     }
 
     void gen_test(const std::string &xmlfile)
@@ -122,51 +117,50 @@ class Inverse_Operator_Test : public testing::Test
         // solve
         Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(N);
         int ret;
-        ret = solver_op.Apply(*ep_rhs, *ep_x);
-        EXPECT_EQ(0, ret);
+        OPT::Apply(solver_op,*ep_rhs,*ep_x);
         linalg_traits::test_vector(ep_x,sol);
 
         // solve again and limit iterations
         std::vector<double> zero(N,0.0);
         linalg_traits::fill_vector<MV>(ep_x,zero);
-        ret = solver_op.Apply(*ep_rhs,*ep_x);
-        EXPECT_EQ(0, ret);
+        OPT::Apply(solver_op,*ep_rhs,*ep_x);
     }
 
   protected:
-    int nodes, node;
 
-    RCP_ParameterList db;
+    Teuchos::RCP<Teuchos::ParameterList> db;
 };
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(Inverse_Operator_Test, MyTypes);
 
-TEST_F(Inverse_Operator_Test, Aztec)
+TYPED_TEST(Inverse_Operator_Test, Aztec)
 {
-    std_test("aztecoo.xml");
+    this->std_test("aztecoo.xml");
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inverse_Operator_Test, Belos)
+TYPED_TEST(Inverse_Operator_Test, Belos)
 {
-    std_test("belos.xml");
+    this->std_test("belos.xml");
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inverse_Operator_Test, Gen_Aztec)
+TYPED_TEST(Inverse_Operator_Test, Gen_Aztec)
 {
-    gen_test("aztecoo.xml");
+    this->gen_test("aztecoo.xml");
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inverse_Operator_Test, Gen_Belos)
+TYPED_TEST(Inverse_Operator_Test, Gen_Belos)
 {
-    gen_test("belos.xml");
+    this->gen_test("belos.xml");
 }
 
 //---------------------------------------------------------------------------//

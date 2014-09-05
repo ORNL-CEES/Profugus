@@ -14,18 +14,13 @@
 
 #include <SPn/config.h>
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
-
 #include "../RayleighQuotient.hh"
 #include "../ShiftedInverseOperator.hh"
-
 #include "LinAlgTraits.hh"
 
 // Reference solution from matlab
-
 double ref_eigenvalue = 0.4890748754542557;
+
 std::vector<double> ref_eigenvector = {
     4.599544191e-02, 9.096342166e-02, 1.338994289e-01, 1.738443441e-01,
     2.099058640e-01, 2.412784337e-01, 2.672612419e-01, 2.872738756e-01,
@@ -37,16 +32,16 @@ std::vector<double> ref_eigenvector = {
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class RQITest : public ::testing::Test
 {
   protected:
 
-    typedef Epetra_MultiVector                  MV;
-    typedef Epetra_Operator                     OP;
-    typedef Epetra_CrsMatrix                    Matrix;
+    typedef typename linalg_traits::traits_types<T>::MV       MV;
+    typedef typename linalg_traits::traits_types<T>::OP       OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+
     typedef profugus::RayleighQuotient<MV,OP>   RayleighQuotient;
-    typedef RayleighQuotient::RCP_ParameterList RCP_ParameterList;
-    typedef RayleighQuotient::ParameterList     ParameterList;
 
   protected:
 
@@ -55,16 +50,10 @@ class RQITest : public ::testing::Test
     {
         using Teuchos::rcp;
 
-        // Parallelism
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
-        // Build an Epetra map
+        // Build an map
         d_N = 20;
         d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",d_N);
         d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",d_N);
-
-        int my_size = d_A->NumMyRows();
 
         // Build eigenvector
         d_x = linalg_traits::build_vector<MV>(d_N);
@@ -73,12 +62,14 @@ class RQITest : public ::testing::Test
         d_db = rcp(new ParameterList("test"));
         d_db->set("tolerance",1e-8);
         d_db->set("max_itr",2);
+        d_db->set("verbosity",std::string("high"));
         if( d_use_fixed_shift )
         {
             d_db->set("use_fixed_shift",d_use_fixed_shift);
             d_db->set("eig_shift",d_eig_shift);
         }
-        RCP_ParameterList op_db = Teuchos::sublist(d_db, "operator_db");
+        Teuchos::RCP<Teuchos::ParameterList> op_db =
+            Teuchos::sublist(d_db, "operator_db");
         op_db->set("solver_type", std::string("stratimikos"));
         op_db->set("tolerance",1e-8);
         op_db->set("max_itr",20);
@@ -106,16 +97,14 @@ class RQITest : public ::testing::Test
     }
 
   protected:
-    int node;
-    int nodes;
     int d_N;
 
-    RCP_ParameterList                d_db;
-    Teuchos::RCP<Epetra_CrsMatrix>   d_A;
-    Teuchos::RCP<Epetra_CrsMatrix>   d_B;
-    Teuchos::RCP<Epetra_MultiVector> d_x;
-    Teuchos::RCP<RayleighQuotient>   d_solver;
-    double                           d_lambda;
+    Teuchos::RCP<Teuchos::ParameterList> d_db;
+    Teuchos::RCP<Matrix>                 d_A;
+    Teuchos::RCP<Matrix>                 d_B;
+    Teuchos::RCP<MV>                     d_x;
+    Teuchos::RCP<RayleighQuotient>       d_solver;
+    double                               d_lambda;
 
     int d_iters;
     bool d_converged;
@@ -126,87 +115,91 @@ class RQITest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(RQITest, MyTypes);
 
-TEST_F(RQITest, basic)
+TYPED_TEST(RQITest, basic)
 {
+    typedef typename TestFixture::MV MV;
+
     double eig_tol = 1e-10;
     double vec_tol = 1e-7;
-    d_use_fixed_shift = false;
-    build_solver();
+    this->d_use_fixed_shift = false;
+    this->build_solver();
 
     // Run two iterations and stop
-    std::vector<double> one(d_N,1.0);
-    linalg_traits::fill_vector<MV>(d_x,one);
-    d_lambda = 1.0;
-    solve();
+    std::vector<double> one(this->d_N,1.0);
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    this->d_lambda = 1.0;
+    this->solve();
 
     // Make sure solver reports that two iterations were performed
     //  and that it is not converged
-    EXPECT_EQ( 2, d_iters );
-    EXPECT_TRUE( !d_converged );
+    EXPECT_EQ( 2, this->d_iters );
+    EXPECT_TRUE( !this->d_converged );
 
     // Reset initial vector and re-solve
-    d_solver->set_max_iters(10);
-    linalg_traits::fill_vector<MV>(d_x,one);
-    d_lambda = 1.0;
-    solve();
+    this->d_solver->set_max_iters(10);
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    this->d_lambda = 1.0;
+    this->solve();
 
-    EXPECT_EQ( 4, d_iters );
-    EXPECT_TRUE( d_converged );
-    EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
+    EXPECT_EQ( 4, this->d_iters );
+    EXPECT_TRUE( this->d_converged );
+    EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
-    linalg_traits::set_sign<MV>(d_x);
-    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
+    linalg_traits::set_sign<MV>(this->d_x);
+    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
 
     // Solve again, should return in 1 iteration
-    solve();
+    this->solve();
 
-    EXPECT_EQ( 1, d_iters );
-    EXPECT_TRUE( d_converged );
-    EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
+    EXPECT_EQ( 1, this->d_iters );
+    EXPECT_TRUE( this->d_converged );
+    EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    linalg_traits::set_sign<MV>(d_x);
-    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
+    linalg_traits::set_sign<MV>(this->d_x);
+    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
 
     // Now reset and solve with fixed shift
-    d_use_fixed_shift = true;
-    d_eig_shift = 0.5;
-    build_solver();
+    this->d_use_fixed_shift = true;
+    this->d_eig_shift = 0.5;
+    this->build_solver();
 
     // Run two iterations and stop
-    linalg_traits::fill_vector<MV>(d_x,one);
-    d_lambda = 1.0;
-    solve();
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    this->d_lambda = 1.0;
+    this->solve();
 
     // Make sure solver reports that two iterations were performed
     //  and that it is not converged
-    EXPECT_EQ( 2, d_iters );
-    EXPECT_TRUE( !d_converged );
+    EXPECT_EQ( 2, this->d_iters );
+    EXPECT_TRUE( !this->d_converged );
 
     // Reset initial vector and re-solve
-    d_solver->set_max_iters(1000);
-    linalg_traits::fill_vector<MV>(d_x,one);
-    d_lambda = 1.0;
-    solve();
+    this->d_solver->set_max_iters(1000);
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    this->d_lambda = 1.0;
+    this->solve();
 
-    EXPECT_EQ( 8, d_iters ); // Heuristic
-    EXPECT_TRUE( d_converged );
-    EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
+    EXPECT_EQ( 8, this->d_iters ); // Heuristic
+    EXPECT_TRUE( this->d_converged );
+    EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
-    linalg_traits::set_sign<MV>(d_x);
-    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
+    linalg_traits::set_sign<MV>(this->d_x);
+    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
 
     // Solve again, should return in 1 iteration
-    solve();
+    this->solve();
 
-    EXPECT_EQ( 1, d_iters );
-    EXPECT_TRUE( d_converged );
-    EXPECT_SOFTEQ( d_lambda, ref_eigenvalue, eig_tol );
+    EXPECT_EQ( 1, this->d_iters );
+    EXPECT_TRUE( this->d_converged );
+    EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    linalg_traits::set_sign<MV>(d_x);
-    linalg_traits::test_vector<MV>(d_x,ref_eigenvector);
+    linalg_traits::set_sign<MV>(this->d_x);
+    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
 }
 
 //---------------------------------------------------------------------------//

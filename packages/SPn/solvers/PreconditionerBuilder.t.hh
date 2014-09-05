@@ -148,7 +148,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
     Teuchos::RCP<Tpetra_Operator> op,
     RCP_ParameterList             db )
 {
-    string prec_type = to_lower(db->get("Preconditioner", string("none")));
+    string prec_type = to_lower(db->get("Preconditioner", string("Ifpack2")));
     Teuchos::RCP<Tpetra_Operator> prec;
     if( prec_type == "ifpack2" )
     {
@@ -179,6 +179,11 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
 
         Teuchos::RCP<Teuchos::ParameterList> muelu_pl =
             Teuchos::sublist(db, "MueLu Params");
+
+        // As of 9/4/14, MueLu throws an exception if constructed with default
+        // parameters unless SuperLU is available.  We switch to a different
+        // default coarse grid solver to avoid this.
+        muelu_pl->set("coarse: type",std::string("ILUT"));
 
         // Wrap Tpetra objects as Xpetra
         prec = Teuchos::rcp(new MueLuPreconditioner<Tpetra_MultiVector,

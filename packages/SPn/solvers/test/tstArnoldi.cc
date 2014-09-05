@@ -21,64 +21,50 @@
 #include "LinAlgTraits.hh"
 
 #include "Teuchos_RCP.hpp"
-#include "Epetra_MultiVector.h"
-#include "Epetra_CrsMatrix.h"
-
-using namespace std;
 
 //---------------------------------------------------------------------------//
 // Test Fixture
 //---------------------------------------------------------------------------//
 
+template <class T>
 class Arnoldi_Test : public testing::Test
 {
   protected:
-
-    typedef Epetra_MultiVector               MV;
-    typedef Epetra_Operator                  OP;
-    typedef Epetra_CrsMatrix                 Matrix;
-    typedef profugus::Arnoldi<MV,OP>         Arnoldi;
-    typedef profugus::InverseOperator<MV,OP> InverseOperator;
-    typedef Arnoldi::RCP_ParameterList       RCP_ParameterList;
-    typedef Arnoldi::ParameterList           ParameterList;
-
-  protected:
     void SetUp()
     {
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
-        db  = Teuchos::rcp(new ParameterList("test"));
-        db2 = Teuchos::rcp(new ParameterList("test"));
     }
-
-  protected:
-    int node, nodes;
-    RCP_ParameterList  db, db2;
 };
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(Arnoldi_Test, MyTypes);
 
-TEST_F(Arnoldi_Test, Eigensolver)
+TYPED_TEST(Arnoldi_Test, Eigensolver)
 {
-    using Teuchos::RCP;
+    typedef typename linalg_traits::traits_types<TypeParam>::MV     MV;
+    typedef typename linalg_traits::traits_types<TypeParam>::OP     OP;
+    typedef typename linalg_traits::traits_types<TypeParam>::Matrix Matrix;
 
-    if (nodes > 2)
-        return;
+    typedef profugus::Arnoldi<MV,OP>         Arnoldi;
+    typedef profugus::InverseOperator<MV,OP> InverseOperator;
+
+    using Teuchos::RCP;
+    RCP<Teuchos::ParameterList> db(new Teuchos::ParameterList("test"));
+    RCP<Teuchos::ParameterList> db2(new Teuchos::ParameterList("test"));
 
     // Matrix size
     int N = 8;
 
-    Teuchos::RCP<Matrix> A = linalg_traits::build_matrix<Matrix>("laplacian",N);
-    Teuchos::RCP<Matrix> B = linalg_traits::build_matrix<Matrix>("diagonal",N);
-    Teuchos::RCP<MV> e_vec = linalg_traits::build_vector<MV>(N);
-    random_device rd;
+    RCP<Matrix> A = linalg_traits::build_matrix<Matrix>("laplacian",N);
+    RCP<Matrix> B = linalg_traits::build_matrix<Matrix>("diagonal",N);
+    RCP<MV> evec = linalg_traits::build_vector<MV>(N);
+    std::random_device rd;
     std::vector<double> init(N);
     for( int i=0; i<N; ++i )
         init[i] = rd();
-    linalg_traits::fill_vector<MV>(e_vec,init);
+    linalg_traits::fill_vector<MV>(evec,init);
 
     // Test with matrix A
     double e_val;
@@ -99,18 +85,12 @@ TEST_F(Arnoldi_Test, Eigensolver)
     // eigenvector is exactly orthogonal to a constant vector.  We have
     // to initialize with a random vector or else we'll converge to the
     // 2nd eigenmode.
-    solver.solve( e_val, e_vec );
+    solver.solve( e_val, evec );
 
-    cout.precision(15);
-    cout << "Eig(A) = " << e_val << endl;
+    std::cout.precision(15);
+    std::cout << "Eig(A) = " << e_val << endl;
 
-    int offset;
-    if( node==0 )
-        offset=0;
-    else
-        offset=N/2;
-
-    vector<double> eref =
+    std::vector<double> eref =
       { 0.161229841765317, -0.303012985114695, 0.408248290463863,
        -0.464242826880012, 0.464242826880013, -0.408248290463863,
         0.303012985114696, -0.161229841765317};
@@ -119,8 +99,8 @@ TEST_F(Arnoldi_Test, Eigensolver)
     double tol = 1.0e-6;
     EXPECT_SOFTEQ(e_val, 3.879385241571816, tol);
 
-    linalg_traits::set_sign(e_vec);
-    linalg_traits::test_vector<MV>(e_vec,eref);
+    linalg_traits::set_sign(evec);
+    linalg_traits::test_vector<MV>(evec,eref);
 
     // Create operator for A^{-1}B
     {
@@ -129,7 +109,7 @@ TEST_F(Arnoldi_Test, Eigensolver)
         db2->set("solver_type", std::string("stratimikos"));
     }
 
-    RCP<InverseOperator> AinvB(Teuchos::rcp(new InverseOperator(db2)));
+    RCP<InverseOperator> AinvB(Teuchos::rcp( new InverseOperator(db2)));
     AinvB->set_operator(A);
     AinvB->set_rhs_operator(B);
 
@@ -138,10 +118,10 @@ TEST_F(Arnoldi_Test, Eigensolver)
     gensolver.set_operator( AinvB );
 
     // Solve
-    e_vec = linalg_traits::build_vector<MV>(N);
-    gensolver.solve( e_val, e_vec );
+    evec = linalg_traits::build_vector<MV>(N);
+    gensolver.solve( e_val, evec );
 
-    cout << "Eig(AinvB) = " << e_val << endl;
+    std::cout << "Eig(AinvB) = " << e_val << endl;
 
     std::vector<double> eref2 =
         {0.125730096111867, 0.248228875407670, 0.357968479865590,
@@ -151,8 +131,8 @@ TEST_F(Arnoldi_Test, Eigensolver)
     // Test against Matlab computed values
     EXPECT_SOFTEQ(e_val, 38.909863460868493, tol);
 
-    linalg_traits::set_sign(e_vec);
-    linalg_traits::test_vector<MV>(e_vec,eref2);
+    linalg_traits::set_sign(evec);
+    linalg_traits::test_vector<MV>(evec,eref2);
 }
 
 //---------------------------------------------------------------------------//

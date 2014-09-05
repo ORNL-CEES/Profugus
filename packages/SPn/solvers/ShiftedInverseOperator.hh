@@ -126,6 +126,20 @@ class ShiftedInverseOperator<Tpetra_MultiVector,Tpetra_Operator>
     {
         d_operator->set_shift(shift);
     }
+    //
+    // Set "A" operator
+    void set_operator( Teuchos::RCP<OP> A )
+    {
+        d_operator->set_operator(A);
+        Base::set_operator(d_operator);
+    }
+
+    // Set "B" operator
+    void set_rhs_operator( Teuchos::RCP<OP> B )
+    {
+        d_operator->set_rhs_operator(B);
+        Base::set_rhs_operator(B);
+    }
 
     // Apply (solve linear system)
     void apply(const MV &x, MV &y,

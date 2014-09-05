@@ -561,7 +561,7 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_shifted_laplacian<Tpetra_CrsMatrix>(int N)
     Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals(3);
     Teuchos::ArrayRCP<int> inds(3);
-    for( int i=0; i<N; ++i )
+    for( int i=0; i<map->getNodeNumElements(); ++i )
     {
         int gid = map->getGlobalElement(i);
         if( 0 == gid )
@@ -644,7 +644,7 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_scaled_identity<Tpetra_CrsMatrix>(int N)
     Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals(1);
     Teuchos::ArrayRCP<int> inds(1);
-    for( int i=0; i<N; ++i )
+    for( int i=0; i<map->getNodeNumElements(); ++i )
     {
         int gid = map->getGlobalElement(i);
         inds[0] = gid;

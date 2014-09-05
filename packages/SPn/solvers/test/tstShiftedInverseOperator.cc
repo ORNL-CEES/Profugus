@@ -34,14 +34,15 @@ using namespace std;
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class ShiftedInverseTest: public ::testing::Test
 {
   protected:
 
-    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_ParameterList;
-    typedef Epetra_MultiVector                      MV;
-    typedef Epetra_Operator                         OP;
-    typedef Epetra_CrsMatrix                        Matrix;
+    typedef typename linalg_traits::traits_types<T>::MV       MV;
+    typedef typename linalg_traits::traits_types<T>::OP       OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+
     typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
     typedef profugus::ShiftedInverseOperator<MV,OP> ShiftInvOp;
 
@@ -70,39 +71,45 @@ class ShiftedInverseTest: public ::testing::Test
 
     int d_N;
 
-    RCP_ParameterList              d_db;
-    Teuchos::RCP<Matrix>           d_A;
-    Teuchos::RCP<Matrix>           d_B;
-    Teuchos::RCP<ShiftInvOp>       d_operator;
+    Teuchos::RCP<Teuchos::ParameterList> d_db;
+    Teuchos::RCP<Matrix>                 d_A;
+    Teuchos::RCP<Matrix>                 d_B;
+    Teuchos::RCP<ShiftInvOp>             d_operator;
 };
 
 //---------------------------------------------------------------------------//
 // Tests
 //---------------------------------------------------------------------------//
 
-TEST_F(ShiftedInverseTest, basic)
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(ShiftedInverseTest, MyTypes);
+
+TYPED_TEST(ShiftedInverseTest, basic)
 {
-    Teuchos::RCP<MV> x1 = linalg_traits::build_vector<MV>(d_N);
-    Teuchos::RCP<MV> x2 = linalg_traits::build_vector<MV>(d_N);
-    Teuchos::RCP<MV>  y = linalg_traits::build_vector<MV>(d_N);
+    typedef typename TestFixture::MV  MV;
+    typedef typename TestFixture::OPT OPT;
+
+    Teuchos::RCP<MV> x1 = linalg_traits::build_vector<MV>(this->d_N);
+    Teuchos::RCP<MV> x2 = linalg_traits::build_vector<MV>(this->d_N);
+    Teuchos::RCP<MV>  y = linalg_traits::build_vector<MV>(this->d_N);
 
     // Solver tolerance is 1e-10, this should give is 1e-8 in vector entries
     double tol = 1e-8;
 
     // Test all cases against two vectors
-    std::vector<double> one(d_N,1.0);
+    std::vector<double> one(this->d_N,1.0);
     linalg_traits::fill_vector<MV>(x1,one);
-    std::vector<double> vals(d_N);
-    for( int i=0; i<d_N; ++ i )
+    std::vector<double> vals(this->d_N);
+    for( int i=0; i<this->d_N; ++ i )
         vals[i] = static_cast<double>(i+1);
     linalg_traits::fill_vector<MV>(x2,vals);
 
     // First set only one operator
-    d_operator->set_operator(d_A);
-    d_operator->set_shift(0.0);
+    this->d_operator->set_operator(this->d_A);
+    this->d_operator->set_shift(0.0);
 
     // First vector
-    OPT::Apply(*d_operator,*x1,*y);
+    OPT::Apply(*this->d_operator,*x1,*y);
 
     std::vector<double> ref = {
         1.0000e+01, 1.9000e+01, 2.7000e+01, 3.4000e+01, 4.0000e+01,
@@ -113,7 +120,7 @@ TEST_F(ShiftedInverseTest, basic)
     linalg_traits::test_vector<MV>(y,ref);
 
     // Second vector
-    OPT::Apply(*d_operator,*x2,*y);
+    OPT::Apply(*this->d_operator,*x2,*y);
 
     std::vector<double> ref2 = {
         7.33333333e+01, 1.45666667e+02, 2.16000000e+02, 2.83333333e+02,
@@ -125,10 +132,10 @@ TEST_F(ShiftedInverseTest, basic)
     linalg_traits::test_vector<MV>(y,ref2);
 
     // Set nonzero shift
-    d_operator->set_shift(0.5);
+    this->d_operator->set_shift(0.5);
 
     // First vector
-    OPT::Apply(*d_operator,*x1,*y);
+    OPT::Apply(*this->d_operator,*x1,*y);
 
     std::vector<double> ref3 = {
         4.36933798e+00,  5.55400697e+00,  2.96167247e+00, -2.11149826e+00,
@@ -140,7 +147,7 @@ TEST_F(ShiftedInverseTest, basic)
     linalg_traits::test_vector<MV>(y,ref3);
 
     // Second vector
-    OPT::Apply(*d_operator,*x2,*y);
+    OPT::Apply(*this->d_operator,*x2,*y);
 
     std::vector<double> ref4 = {
         5.29016624e+01,  7.83524936e+01,  6.26270780e+01,  1.25881234e+01,
@@ -152,24 +159,24 @@ TEST_F(ShiftedInverseTest, basic)
     linalg_traits::test_vector<MV>(y,ref4);
 
     // Set second operator and shift=0, results should be same as original
-    d_operator->set_rhs_operator(d_B);
-    d_operator->set_shift(0.0);
+    this->d_operator->set_rhs_operator(this->d_B);
+    this->d_operator->set_shift(0.0);
 
     // First vector
-    OPT::Apply(*d_operator,*x1,*y);
+    OPT::Apply(*this->d_operator,*x1,*y);
 
     linalg_traits::test_vector<MV>(y,ref);
 
     // Second vector
-    OPT::Apply(*d_operator,*x2,*y);
+    OPT::Apply(*this->d_operator,*x2,*y);
 
     linalg_traits::test_vector<MV>(y,ref2);
 
     // Nonzero shift
-    d_operator->set_shift(0.5);
+    this->d_operator->set_shift(0.5);
 
     // First vector
-    OPT::Apply(*d_operator,*x1,*y);
+    OPT::Apply(*this->d_operator,*x1,*y);
 
     std::vector<double> ref5 = {
         1.84013100e+00,  1.76019650e+00, -1.07993450e+00, -3.30016375e+00,
@@ -181,7 +188,7 @@ TEST_F(ShiftedInverseTest, basic)
     linalg_traits::test_vector<MV>(y,ref5);
 
     // Second vector
-    OPT::Apply(*d_operator,*x2,*y);
+    OPT::Apply(*this->d_operator,*x2,*y);
 
     std::vector<double> ref6 = {
         1.06031307e+00,  5.90469609e-01, -2.46984346e+00, -4.82539134e+00,

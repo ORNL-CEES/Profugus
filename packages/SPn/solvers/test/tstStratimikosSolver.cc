@@ -35,32 +35,25 @@ std::vector<double> rhs = {0.1, 0.3, 0.4, 0.9};
 
 std::vector<double> sol = {-0.102855551350840, -0.053521967514522,
                            -0.013870314679620, 0.303792576783404};
-int nodes, node;
-
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
-// NOTE: the test class name must not contain underscores.
-class StratimikosSolver_Test : public testing::Test
+template <class T>
+class StratimikosSolverTest : public testing::Test
 {
   protected:
-    // Typedefs usable inside the test fixture
-    typedef Epetra_MultiVector                 MV;
-    typedef Epetra_Operator                    OP;
-    typedef Epetra_CrsMatrix                   Matrix;
+    typedef typename linalg_traits::traits_types<T>::MV       MV;
+    typedef typename linalg_traits::traits_types<T>::OP       OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
     typedef profugus::StratimikosSolver<MV,OP> Solver_t;
-    typedef Solver_t::ParameterList            ParameterList;
-    typedef Solver_t::RCP_ParameterList        RCP_ParameterList;
 
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
         d_db = Teuchos::rcp(new ParameterList("test"));
     }
 
@@ -113,7 +106,7 @@ class StratimikosSolver_Test : public testing::Test
 
     // >>> Data that get re-initialized between tests
 
-    RCP_ParameterList d_db;
+    Teuchos::RCP<Teuchos::ParameterList> d_db;
     Teuchos::RCP<Matrix> d_A;
 };
 
@@ -121,23 +114,26 @@ class StratimikosSolver_Test : public testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(StratimikosSolver_Test, Aztec)
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(StratimikosSolverTest, MyTypes);
+
+TYPED_TEST(StratimikosSolverTest, Aztec)
 {
-    strat_test("AztecOO", "aztecoo.xml");
+    this->strat_test("AztecOO", "aztecoo.xml");
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(StratimikosSolver_Test, Belos)
+TYPED_TEST(StratimikosSolverTest, Belos)
 {
-    strat_test("Belos", "belos.xml");
+    this->strat_test("Belos", "belos.xml");
 }
 
 //---------------------------------------------------------------------------//
 #ifdef USE_MCLS
-TEST_F(StratimikosSolver_Test, MCLS)
+TYPED_TEST(StratimikosSolverTest, MCLS)
 {
-    strat_test("MCLS", "mcls.xml");
+    this->strat_test("MCLS", "mcls.xml");
 }
 #endif
 

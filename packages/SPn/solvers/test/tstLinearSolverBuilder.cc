@@ -20,20 +20,24 @@
 #include <SPn/config.h>
 
 #include "../LinearSolverBuilder.hh"
+#include "../Richardson.hh"
+#include "../StratimikosSolver.hh"
+#include "LinAlgTraits.hh"
 
 //---------------------------------------------------------------------------//
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class SolverBuilderTest : public testing::Test
 {
   protected:
 
-    typedef Epetra_MultiVector                   MV;
-    typedef Epetra_Operator                      OP;
+    typedef typename linalg_traits::traits_types<T>::MV     MV;
+    typedef typename linalg_traits::traits_types<T>::OP     OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
+
     typedef profugus::LinearSolverBuilder<MV,OP> Builder;
-    typedef Builder::RCP_ParameterList           RCP_ParameterList;
-    typedef Builder::RCP_LinearSolver            RCP_LinearSolver;
 
   protected:
     // Initialization that are performed for each test
@@ -41,29 +45,36 @@ class SolverBuilderTest : public testing::Test
     {
     }
 
-    void build_solver( RCP_ParameterList db )
+    void build_solver( Teuchos::RCP<Teuchos::ParameterList> db )
     {
         d_solver = Builder::build_solver(db);
     }
 
   protected:
-    int node;
-    int nodes;
 
-    RCP_LinearSolver d_solver;
+    Teuchos::RCP<profugus::LinearSolver<MV,OP> > d_solver;
 };
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(SolverBuilderTest, MyTypes);
 
-TEST_F(SolverBuilderTest, basic)
+TYPED_TEST(SolverBuilderTest, basic)
 {
-    RCP_ParameterList db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
+    typedef typename linalg_traits::traits_types<TypeParam>::MV MV;
+    typedef typename linalg_traits::traits_types<TypeParam>::OP OP;
+
+    Teuchos::RCP<Teuchos::ParameterList> db =
+        Teuchos::rcp(new Teuchos::ParameterList("test_db"));
 
     // Default solver is Richardson
-    build_solver(db);
-    EXPECT_EQ("Profugus Richardson", d_solver->solver_label());
+    this->build_solver(db);
+    EXPECT_EQ("Profugus Richardson", this->d_solver->solver_label());
+    Teuchos::RCP<profugus::Richardson<MV,OP> > rich =
+        Teuchos::rcp_dynamic_cast<profugus::Richardson<MV,OP> >(this->d_solver);
+    EXPECT_TRUE( rich != Teuchos::null );
 
     //
     // Profugus solver by specifying profugus_solver
@@ -71,8 +82,10 @@ TEST_F(SolverBuilderTest, basic)
 
     db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
     db->set("profugus_solver", std::string("Richardson"));
-    build_solver(db);
-    EXPECT_EQ("Profugus Richardson", d_solver->solver_label());
+    this->build_solver(db);
+    EXPECT_EQ("Profugus Richardson", this->d_solver->solver_label());
+    rich = Teuchos::rcp_dynamic_cast<profugus::Richardson<MV,OP> >(this->d_solver);
+    EXPECT_TRUE( rich != Teuchos::null );
 
     //
     // Profugus solver by specifying solver_type
@@ -80,8 +93,10 @@ TEST_F(SolverBuilderTest, basic)
 
     db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
     db->set("solver_type", std::string("Profugus"));
-    build_solver(db);
-    EXPECT_EQ("Profugus Richardson", d_solver->solver_label());
+    this->build_solver(db);
+    EXPECT_EQ("Profugus Richardson", this->d_solver->solver_label());
+    rich = Teuchos::rcp_dynamic_cast<profugus::Richardson<MV,OP> >(this->d_solver);
+    EXPECT_TRUE( rich != Teuchos::null );
 
     //
     // Stratimikos solver (default is AztecOO)
@@ -89,8 +104,12 @@ TEST_F(SolverBuilderTest, basic)
 
     db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
     db->set("solver_type", std::string("Stratimikos"));
-    build_solver(db);
-    EXPECT_EQ("Stratimikos AztecOO", d_solver->solver_label());
+    this->build_solver(db);
+    EXPECT_EQ("Stratimikos AztecOO", this->d_solver->solver_label());
+    Teuchos::RCP<profugus::StratimikosSolver<MV,OP> > strat =
+        Teuchos::rcp_dynamic_cast<profugus::StratimikosSolver<MV,OP> >(
+            this->d_solver);
+    EXPECT_TRUE( strat != Teuchos::null );
 }
 
 //---------------------------------------------------------------------------//

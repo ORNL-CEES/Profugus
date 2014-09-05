@@ -30,98 +30,107 @@
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class EigenvalueSolverBuilderTest : public ::testing::Test
 {
   protected:
 
-    typedef Epetra_MultiVector                       MV;
-    typedef Epetra_Operator                          OP;
+    typedef typename linalg_traits::traits_types<T>::MV       MV;
+    typedef typename linalg_traits::traits_types<T>::OP       OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+
     typedef profugus::EigenvalueSolverBuilder<MV,OP> Builder;
-    typedef Builder::RCP_ParameterList               RCP_ParameterList;
-    typedef Builder::RCP_EigenvalueSolver            RCP_EigenvalueSolver;
 
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
         int num_global = 4;
-        d_A = linalg_traits::build_matrix<Epetra_CrsMatrix>("laplacian",num_global);
-        d_B = linalg_traits::build_matrix<Epetra_CrsMatrix>("diagonal",num_global);
+        d_A = linalg_traits::build_matrix<Matrix>("laplacian",num_global);
+        d_B = linalg_traits::build_matrix<Matrix>("diagonal",num_global);
     }
 
   protected:
 
-    RCP_EigenvalueSolver           d_solver;
-    Teuchos::RCP<Epetra_CrsMatrix> d_A;
-    Teuchos::RCP<Epetra_CrsMatrix> d_B;
+    Teuchos::RCP<profugus::EigenvalueSolver<MV,OP> > d_solver;
+    Teuchos::RCP<Matrix> d_A;
+    Teuchos::RCP<Matrix> d_B;
 };
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(EigenvalueSolverBuilderTest, MyTypes);
 
-TEST_F(EigenvalueSolverBuilderTest, basic)
+TYPED_TEST(EigenvalueSolverBuilderTest, basic)
 {
-    RCP_ParameterList db = Teuchos::rcp(new Teuchos::ParameterList("test_db"));
+    typedef typename TestFixture::MV       MV;
+    typedef typename TestFixture::OP       OP;
+    typedef typename TestFixture::Matrix   Matrix;
+
+    typedef profugus::EigenvalueSolverBuilder<MV,OP> Builder;
+
+    Teuchos::RCP<Teuchos::ParameterList> db =
+        Teuchos::rcp(new Teuchos::ParameterList("test_db"));
 
     // Default standard eigenvalue solver is Arnoldi
-    d_solver = Builder::build_solver(db,d_A);
-    EXPECT_EQ("Arnoldi",d_solver->solver_label());
+    this->d_solver = Builder::build_solver(db,this->d_A);
+    EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
     Teuchos::RCP<profugus::Arnoldi<MV,OP> > arnoldi =
-        Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+        Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Default generalized eigenvalue solver is Arnoldi (for now)
-    d_solver = Builder::build_solver(db,d_A,d_B);
-    EXPECT_EQ("Arnoldi",d_solver->solver_label());
-    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+    this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
+    EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Make sure "Arnoldi" keyword is recognized by both functions
     db->set("eigensolver",std::string("Arnoldi"));
 
-    d_solver = Builder::build_solver(db,d_A);
-    EXPECT_EQ("Arnoldi",d_solver->solver_label());
-    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+    this->d_solver = Builder::build_solver(db,this->d_A);
+    EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
-    d_solver = Builder::build_solver(db,d_A,d_B);
-    EXPECT_EQ("Arnoldi",d_solver->solver_label());
-    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(d_solver);
+    this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
+    EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<MV,OP> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Power iteration for both standard and generalized problems
     db->set("eigensolver",std::string("Power"));
 
-    d_solver = Builder::build_solver(db,d_A);
-    EXPECT_EQ("Power Iteration",d_solver->solver_label());
+    this->d_solver = Builder::build_solver(db,this->d_A);
+    EXPECT_EQ("Power Iteration",this->d_solver->solver_label());
     Teuchos::RCP<profugus::PowerIteration<MV,OP> > power =
-        Teuchos::rcp_dynamic_cast<profugus::PowerIteration<MV,OP> >(d_solver);
+        Teuchos::rcp_dynamic_cast<profugus::PowerIteration<MV,OP> >(this->d_solver);
     EXPECT_TRUE( power != Teuchos::null );
 
-    d_solver = Builder::build_solver(db,d_A,d_B);
-    EXPECT_EQ("Power Iteration",d_solver->solver_label());
-    power = Teuchos::rcp_dynamic_cast<profugus::PowerIteration<MV,OP> >(d_solver);
+    this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
+    EXPECT_EQ("Power Iteration",this->d_solver->solver_label());
+    power = Teuchos::rcp_dynamic_cast<profugus::PowerIteration<MV,OP> >(this->d_solver);
     EXPECT_TRUE( power != Teuchos::null );
 
     // Rayleigh quotient iteration for generalized problem
     db->set("eigensolver",std::string("RQI"));
 
-    d_solver = Builder::build_solver(db,d_A,d_B);
-    EXPECT_EQ("Rayleigh Quotient",d_solver->solver_label());
+    this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
+    EXPECT_EQ("Rayleigh Quotient",this->d_solver->solver_label());
     Teuchos::RCP<profugus::RayleighQuotient<MV,OP> > rqi =
-        Teuchos::rcp_dynamic_cast<profugus::RayleighQuotient<MV,OP> >(d_solver);
+        Teuchos::rcp_dynamic_cast<profugus::RayleighQuotient<MV,OP> >(this->d_solver);
     EXPECT_TRUE( rqi != Teuchos::null );
 
     // Davidson for generalized problem
     db->set("eigensolver",std::string("Davidson"));
 
-    d_solver = Builder::build_solver(db,d_A,d_B);
-    EXPECT_EQ("Davidson",d_solver->solver_label());
+    this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
+    EXPECT_EQ("Davidson",this->d_solver->solver_label());
     Teuchos::RCP<profugus::Davidson_Eigensolver<MV,OP> > davidson =
-        Teuchos::rcp_dynamic_cast<profugus::Davidson_Eigensolver<MV,OP> >(d_solver);
+        Teuchos::rcp_dynamic_cast<profugus::Davidson_Eigensolver<MV,OP> >(this->d_solver);
     EXPECT_TRUE( davidson!= Teuchos::null );
-
 }
 
 //---------------------------------------------------------------------------//

@@ -22,29 +22,24 @@
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class RichardsonTest : public testing::Test
 {
   protected:
 
-    typedef Epetra_MultiVector            MV;
-    typedef Epetra_Operator               OP;
-    typedef Epetra_CrsMatrix              Matrix;
+    typedef typename linalg_traits::traits_types<T>::MV       MV;
+    typedef typename linalg_traits::traits_types<T>::OP       OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+
     typedef profugus::Richardson<MV,OP>   Richardson;
-    typedef Richardson::RCP_ParameterList RCP_ParameterList;
-    typedef Richardson::ParameterList     ParameterList;
 
   protected:
     // Initialization that are performed for each test
     void SetUp()
     {
-        // Parallelism
-        node  = profugus::node();
-        nodes = profugus::nodes();
-
-        // Build an Epetra map
+        // Build a map
         d_N = 8;
         d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
-        int my_size = d_N / nodes;
 
         // Build lhs and rhs vectors
         d_x = linalg_traits::build_vector<MV>(d_N);
@@ -55,7 +50,7 @@ class RichardsonTest : public testing::Test
         linalg_traits::fill_vector<MV>(d_b,vals);
 
         // Create options database
-        d_db = Teuchos::rcp(new ParameterList("test"));
+        d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
         d_db->set("tolerance",1e-8);
         d_db->set("max_itr",2);
         d_db->set("Damping Factor",0.5);
@@ -74,15 +69,13 @@ class RichardsonTest : public testing::Test
     }
 
   protected:
-    int node;
-    int nodes;
     int d_N;
 
-    RCP_ParameterList                d_db;
-    Teuchos::RCP<Epetra_CrsMatrix>   d_A;
-    Teuchos::RCP<Epetra_MultiVector> d_x;
-    Teuchos::RCP<Epetra_MultiVector> d_b;
-    Teuchos::RCP<Richardson>         d_solver;
+    Teuchos::RCP<Teuchos::ParameterList> d_db;
+    Teuchos::RCP<Matrix>                 d_A;
+    Teuchos::RCP<MV>                     d_x;
+    Teuchos::RCP<MV>                     d_b;
+    Teuchos::RCP<Richardson>             d_solver;
 
     int d_iters;
     bool d_converged;
@@ -92,24 +85,29 @@ class RichardsonTest : public testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(RichardsonTest, basic)
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(RichardsonTest, MyTypes);
+
+TYPED_TEST(RichardsonTest, basic)
 {
+    typedef typename TestFixture::MV       MV;
+
     // Run two iterations and stop
-    solve();
+    this->solve();
 
     // Make sure solver reports that two iterations were performed
     //  and that it is not converged
-    EXPECT_EQ( 2, d_iters );
-    EXPECT_TRUE( !d_converged );
+    EXPECT_EQ( 2, this->d_iters );
+    EXPECT_TRUE( !this->d_converged );
 
     // Reset initial vector and re-solve
-    d_solver->set_max_iters(1000);
-    std::vector<double> one(d_N,1.0);
-    linalg_traits::fill_vector<MV>(d_x,one);
-    solve();
+    this->d_solver->set_max_iters(1000);
+    std::vector<double> one(this->d_N,1.0);
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    this->solve();
 
-    EXPECT_EQ( 294, d_iters ); // Iteration count from Matlab implementation
-    EXPECT_TRUE( d_converged );
+    EXPECT_EQ( 294, this->d_iters ); // Iteration count from Matlab implementation
+    EXPECT_TRUE( this->d_converged );
 
     // Compare against reference solution from Matlab
     std::vector<double> ref = {
@@ -122,16 +120,16 @@ TEST_F(RichardsonTest, basic)
        102.6666666666666,
         53.3333333333333};
 
-    linalg_traits::test_vector<MV>(d_x,ref);
+    linalg_traits::test_vector<MV>(this->d_x,ref);
 
     // Solve again, should return without iterating
-    solve();
+    this->solve();
 
-    EXPECT_EQ( 0, d_iters );
-    EXPECT_TRUE( d_converged );
+    EXPECT_EQ( 0, this->d_iters );
+    EXPECT_TRUE( this->d_converged );
 
     // Make sure solution didn't change
-    linalg_traits::test_vector<MV>(d_x,ref);
+    linalg_traits::test_vector<MV>(this->d_x,ref);
 }
 
 //---------------------------------------------------------------------------//

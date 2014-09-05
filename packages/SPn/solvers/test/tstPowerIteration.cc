@@ -12,27 +12,22 @@
 #include <SPn/config.h>
 
 #include "../PowerIteration.hh"
-
-#include "Epetra_MultiVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Map.h"
-
 #include "LinAlgTraits.hh"
 
 //---------------------------------------------------------------------------//
 // Test fixture base class
 //---------------------------------------------------------------------------//
 
+template <class T>
 class PowerIterationTest : public ::testing::Test
 {
   protected:
 
-    typedef Epetra_MultiVector                MV;
-    typedef Epetra_Operator                   OP;
-    typedef Epetra_CrsMatrix                  Matrix;
+    typedef typename linalg_traits::traits_types<T>::MV     MV;
+    typedef typename linalg_traits::traits_types<T>::OP     OP;
+    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
+
     typedef profugus::PowerIteration<MV,OP>   PowerIteration;
-    typedef PowerIteration::RCP_ParameterList RCP_ParameterList;
-    typedef PowerIteration::ParameterList     ParameterList;
 
   protected:
     // Initialization that are performed for each test
@@ -42,7 +37,7 @@ class PowerIterationTest : public ::testing::Test
         node  = profugus::node();
         nodes = profugus::nodes();
 
-        // Build an Epetra map
+        // Build matrix
         d_N = 20;
         d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
 
@@ -74,7 +69,7 @@ class PowerIterationTest : public ::testing::Test
     int nodes;
     int d_N;
 
-    RCP_ParameterList            d_db;
+    Teuchos::RCP<Teuchos::ParameterList> d_db;
     Teuchos::RCP<Matrix>         d_A;
     Teuchos::RCP<MV>             d_x;
     Teuchos::RCP<PowerIteration> d_solver;
@@ -87,26 +82,30 @@ class PowerIterationTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
+typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+TYPED_TEST_CASE(PowerIterationTest, MyTypes);
 
-TEST_F(PowerIterationTest, basic)
+TYPED_TEST(PowerIterationTest, basic)
 {
+    typedef typename TestFixture::MV MV;
+
     // Run two iterations and stop
-    solve();
+    this->solve();
 
     // Make sure solver reports that two iterations were performed
     //  and that it is not converged
-    EXPECT_EQ( 2, d_iters );
-    EXPECT_TRUE( !d_converged );
+    EXPECT_EQ( 2, this->d_iters );
+    EXPECT_TRUE( !this->d_converged );
 
     // Reset initial vector and re-solve
-    d_solver->set_max_iters(1000);
-    std::vector<double> one(d_N,1.0);
-    linalg_traits::fill_vector<MV>(d_x,one);
-    solve();
+    this->d_solver->set_max_iters(1000);
+    std::vector<double> one(this->d_N,1.0);
+    linalg_traits::fill_vector<MV>(this->d_x,one);
+    this->solve();
 
-    EXPECT_EQ( 261, d_iters );
-    EXPECT_TRUE( d_converged );
-    EXPECT_SOFTEQ( d_lambda, 3.911145611572282, 1.0e-6 );
+    EXPECT_EQ( 261, this->d_iters );
+    EXPECT_TRUE( this->d_converged );
+    EXPECT_SOFTEQ( this->d_lambda, 3.911145611572282, 1.0e-6 );
 
     // Compare against reference solution from Matlab
     std::vector<double> ref =
@@ -121,16 +120,16 @@ TEST_F(PowerIterationTest, basic)
              -2.872738761376664e-01,  2.412784344502525e-01,
              -1.738443448352319e-01,  9.096342209328130e-02};
 
-    linalg_traits::test_vector<MV>(d_x,ref);
+    linalg_traits::test_vector<MV>(this->d_x,ref);
 
     // Solve again, should return without iterating
-    solve();
+    this->solve();
 
-    EXPECT_EQ( 1, d_iters );
-    EXPECT_TRUE( d_converged );
+    EXPECT_EQ( 1, this->d_iters );
+    EXPECT_TRUE( this->d_converged );
 
     // Make sure solution didn't change
-    linalg_traits::test_vector<MV>(d_x,ref);
+    linalg_traits::test_vector<MV>(this->d_x,ref);
 }
 
 //---------------------------------------------------------------------------//
