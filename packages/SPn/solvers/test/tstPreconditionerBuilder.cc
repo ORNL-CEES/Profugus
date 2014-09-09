@@ -47,7 +47,7 @@ class PreconditionerBuilderTest : public ::testing::Test
     // Initialization that are performed for each test
     void SetUp()
     {
-        // Build an Epetra map
+        // Build a map
         d_N = 20;
         d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
 

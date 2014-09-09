@@ -65,7 +65,6 @@ TYPED_TEST(EigenvalueSolverBuilderTest, basic)
 {
     typedef typename TestFixture::MV       MV;
     typedef typename TestFixture::OP       OP;
-    typedef typename TestFixture::Matrix   Matrix;
 
     typedef profugus::EigenvalueSolverBuilder<MV,OP> Builder;
 
