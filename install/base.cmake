@@ -20,6 +20,9 @@ SET(Profugus_ENABLE_SECONDARY_STABLE_CODE    ON  CACHE BOOL "")
 # Turn off binutils
 SET(Teuchos_ENABLE_BinUtils OFF CACHE BOOL "")
 
+# Turn off Zoltan2
+SET(Profugus_ENABLE_Zoltan2 OFF CACHE BOOL "")
+
 # Compiler options
 SET(BUILD_SHARED_LIBS ON CACHE BOOL "")
 SET(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated-declarations" CACHE STRING "")

@@ -10,7 +10,7 @@ INCLUDE(TribitsListHelpers)
 ## PACKAGES PROVIDED
 ##---------------------------------------------------------------------------##
 
-SET(Profugus_PACKAGES_AND_DIRS_AND_CLASSIFICATIONS
+TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   ParaSails ParaSails          SS
   MCLS      MCLS               SS
   Utils     packages/Utils     SS

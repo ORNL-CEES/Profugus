@@ -3,6 +3,7 @@ aclocal.m4
 autom4te.cache
 /Scale
 /Trilinos
+/TriBITS
 /VERAInExt
 /DataTransferKit
 /MCLS
