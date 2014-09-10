@@ -52,6 +52,9 @@ Profugus Packages
 **SPn**
   Mini-app of Simplified Spherical Harmonics (``SPn``) computational kernel.
 
+**MC**
+  Mini-app of Monte Carlo computational kernel.
+
 Documentation on the mini-apps (methods and execution) are given in
 :ref:`running_mini_app`. There are several support packages that are used by
 the mini-apps.  These are:
@@ -72,6 +75,8 @@ TPLs for |Profugus| are listed in the following table:
 +---------------------+-------------+-------------------------------------+
 |         TPL         |  Required   |         Comments                    |
 +=====================+=============+=====================================+
+|TriBITS_             |Yes          |TriBITS is the Trilinos build system |
++---------------------+-------------+-------------------------------------+
 |Trilinos_            |Yes          |Trilinos_ is an open-source solvers  |
 |                     |             |library.                             |
 +---------------------+-------------+-------------------------------------+
@@ -90,7 +95,8 @@ TPLs for |Profugus| are listed in the following table:
 +---------------------+-------------+-------------------------------------+
 
 .. _Exnihilo: denovo@email.ornl.gov
-.. _Trilinos: http://trilinos.sandia.gov
+.. _TriBITS: http://github.com/TriBITSPub
+.. _Trilinos: http://trilinos.org
 .. _MPI: http://www.mcs.anl.gov/mpi
 .. _MPICH: http://www.mcs.anl.gov/mpi
 .. _OpenMPI: http://www.openmpi.org

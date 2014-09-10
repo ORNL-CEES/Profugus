@@ -5,9 +5,14 @@ Building The Code
 .. highlight:: sh
 
 The most straightforward method for building |Profugus| is to use the scripts
-in :file:`Profugus/install`.  |Profugus| uses the :download:`TriBits build
+in :file:`Profugus/install`.  |Profugus| uses the :download:`TriBITS build
 system <../../Trilinos/TrilinosBuildQuickRef.pdf>`.  This system is a set of
-package-based extensions to standard cmake_.
+package-based extensions to standard cmake_.  So, first you need to obtain
+`Trilinos` and `TriBITS` and put them in your top-level |Profugus| directory::
+
+ > cd Profugus
+ > git clone https://github.com/TriBITSPub/TriBITS.git
+ > ln -s $PATH_TO_TRILINOS .
 
 The preferred mechanism for using the build scripts is to make a *target*
 directory where the build is to be performed::
