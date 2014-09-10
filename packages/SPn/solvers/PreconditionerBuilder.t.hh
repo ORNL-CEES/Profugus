@@ -195,7 +195,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
                                                     Tpetra_Operator>(row_mat,
                                                                      muelu_pl));
 #else
-        Validate(false,"Muelu must be enabled to use Preconditioner=muelu");
+        VALIDATE(false,"Muelu must be enabled to use Preconditioner=muelu");
 #endif
 
     }

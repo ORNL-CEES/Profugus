@@ -26,6 +26,8 @@
 #include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Operator.hpp"
 
+// Only include Xpetra headers if MueLu is enabled
+#ifdef USE_MUELU
 #include "Xpetra_TpetraCrsMatrix.hpp"
 #include "Xpetra_TpetraMultiVector.hpp"
 #include "Xpetra_EpetraCrsMatrix.hpp"
@@ -35,6 +37,7 @@
 #include "MueLu_ParameterListInterpreter.hpp"
 #include "MueLu_EpetraOperator.hpp"
 #include "MueLu_TpetraOperator.hpp"
+#endif
 
 #include "TpetraTypedefs.hh"
 
@@ -62,8 +65,10 @@ class MueLuPreconditionerBase
 
     void setup(Teuchos::RCP<Teuchos::ParameterList> pl);
 
+#ifdef USE_MUELU
     Teuchos::RCP<Xpetra_Matrix> d_matrix;
     Teuchos::RCP<MueLu::Hierarchy<SCALAR,LO,GO,NODE> > d_hierarchy;
+#endif
 };
 
 //===========================================================================//
@@ -92,6 +97,7 @@ class MueLuPreconditioner
     MueLuPreconditioner();
 };
 
+#ifdef USE_MUELU
 // Implementation for Epetra_MultiVector/Operator
 template <>
 class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
@@ -238,6 +244,7 @@ class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
     }
 
 };
+#endif // USE_MUELU
 
 } // end namespace profugus
 
