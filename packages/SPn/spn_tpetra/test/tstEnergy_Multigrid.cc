@@ -144,10 +144,8 @@ TEST(MultigridTest, Heuristic)
 
     // Create two vectors
     RCP<Tpetra_Vector> tmp_vec = system->get_RHS();
-    RCP<Tpetra_MV> x(
-            Teuchos::rcp( new Tpetra_MV(*tmp_vec,Teuchos::Copy)));
-    RCP<Tpetra_MV> y(
-            Teuchos::rcp( new Tpetra_MV(*tmp_vec,Teuchos::Copy)));
+    RCP<Tpetra_MV> x( new Tpetra_MV(tmp_vec->getMap(),1) );
+    RCP<Tpetra_MV> y( new Tpetra_MV(tmp_vec->getMap(),1) );
 
     // Create preconditioner
     Energy_Multigrid prec(db, prec_pl, dim, mat, mesh, indexer, data, system);

@@ -175,6 +175,7 @@ class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>
     typedef Tpetra_Operator    OP;
     typedef Tpetra_Map         Map;
     typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef Anasazi::MultiVecTraits<double,MV> MVT;
     //@}
 
   private:
@@ -204,7 +205,7 @@ class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>
                      x.getLocalLength() );
         }
 
-        MV z(x,Teuchos::Copy);
+        Teuchos::RCP<MV> z = MVT::CloneCopy(x);
 
         ApplyImpl(x,y);
 
@@ -214,7 +215,7 @@ class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>
         }
         else
         {
-            y.update(beta,z,alpha);
+            y.update(beta,*z,alpha);
         }
     }
 

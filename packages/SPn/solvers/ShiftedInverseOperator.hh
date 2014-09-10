@@ -107,6 +107,7 @@ class ShiftedInverseOperator<Tpetra_MultiVector,Tpetra_Operator>
     typedef Tpetra_MultiVector MV;
     typedef Tpetra_Operator    OP;
     typedef InverseOperator<MV,OP> Base;
+    typedef Anasazi::MultiVecTraits<double,MV> MVT;
 
     // >>> DATA
     Teuchos::RCP<ShiftedOperator<MV,OP> > d_operator;
@@ -151,7 +152,7 @@ class ShiftedInverseOperator<Tpetra_MultiVector,Tpetra_Operator>
         REQUIRE( d_operator->getDomainMap()->getNodeNumElements() ==
                  x.getLocalLength() );
 
-        MV z(x,Teuchos::Copy);
+        Teuchos::RCP<MV> z = MVT::CloneCopy(x);
 
         d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
 
@@ -161,7 +162,7 @@ class ShiftedInverseOperator<Tpetra_MultiVector,Tpetra_Operator>
         }
         else
         {
-            y.update(beta,z,alpha);
+            y.update(beta,*z,alpha);
         }
     }
 };
