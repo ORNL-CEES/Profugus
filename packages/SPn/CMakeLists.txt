@@ -41,6 +41,12 @@ IF (${PROJECT_NAME}_ENABLE_MCLS)
    SET(USE_MCLS 1)
 ENDIF()
 
+## MueLu
+IF (${PROJECT_NAME}_ENABLE_MueLu)
+    MESSAGE(STATUS "Building Profugus with MueLu support")
+    SET(USE_MUELU 1)
+ENDIF()
+
 ## Trilinos Timing options.
 IF (${PROJECT_NAME}_ENABLE_TRILINOS_TIMING)
    MESSAGE(STATUS "Building Profugus with Trilinos timing")
@@ -118,6 +124,14 @@ SET(SOLVERS_SOURCES
   )
 LIST(APPEND HEADERS ${SOLVERS_HEADERS})
 LIST(APPEND SOURCES ${SOLVERS_SOURCES})
+
+IF( USE_MUELU )
+  SET(MUELU_SOURCES
+    solvers/MueLuPreconditioner.cc
+    solvers/MueLuPreconditioner.pt.cc
+  )
+  LIST(APPEND SOURCES ${MUELU_SOURCES})
+)
 
 # spn sources
 

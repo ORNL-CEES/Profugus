@@ -153,6 +153,7 @@ TYPED_TEST(PreconditionerBuilderTest, basic)
         EXPECT_TRUE(y_norm[0] > 1.0);
     }
 
+#ifdef USE_MUELU
     if( !epetra )
     {
         // Change preconditioner to "MueLu", should be valid for tpetra
@@ -165,6 +166,7 @@ TYPED_TEST(PreconditionerBuilderTest, basic)
         MVT::MvNorm(*this->d_y,y_norm);
         EXPECT_TRUE(y_norm[0] > 1.0);
     }
+#endif
 }
 
 //---------------------------------------------------------------------------//

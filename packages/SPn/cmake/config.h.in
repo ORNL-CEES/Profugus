@@ -37,6 +37,9 @@
 /* MCLS Linear Solvers */
 #cmakedefine USE_MCLS
 
+// Turn on MueLu
+#cmakedefine USE_MUELU
+
 /* Trilinos timers */
 #cmakedefine USE_TRILINOS_TIMING
 

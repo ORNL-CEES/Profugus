@@ -26,7 +26,11 @@
 
 #include "utils/String_Functions.hh"
 #include "PreconditionerBuilder.hh"
+
+// Make MueLu optional due to excessive build times
+#ifdef USE_MUELU
 #include "MueLuPreconditioner.hh"
+#endif
 
 #include "Tpetra_Operator.hpp"
 #include "Tpetra_RowMatrix.hpp"
@@ -172,6 +176,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
     }
     else if( prec_type == "muelu" )
     {
+#ifdef USE_MUELU
         // Dynamic cast to CrsMatrix
         Teuchos::RCP<Tpetra_CrsMatrix> row_mat =
             Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
@@ -189,6 +194,9 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
         prec = Teuchos::rcp(new MueLuPreconditioner<Tpetra_MultiVector,
                                                     Tpetra_Operator>(row_mat,
                                                                      muelu_pl));
+#else
+        Validate(false,"Muelu must be enabled to use Preconditioner=muelu");
+#endif
 
     }
     else if( prec_type != "none" )
