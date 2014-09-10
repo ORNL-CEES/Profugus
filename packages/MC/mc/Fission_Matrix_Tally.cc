@@ -32,8 +32,8 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(SP_Physics       physics,
     , d_denominator(d_fm_mesh->num_cells(), 0.0)
     , d_birth_idx(Particle::Metadata::new_pod_member<int>("fm_birth_cell"))
 {
-    Ensure (d_geometry);
-    Ensure (d_fm_mesh);
+    ENSURE(d_geometry);
+    ENSURE(d_fm_mesh);
 }
 
 //---------------------------------------------------------------------------//
@@ -44,7 +44,7 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(SP_Physics       physics,
  */
 void Fission_Matrix_Tally::birth(const Particle_t &p)
 {
-    Require (p.metadata().name(d_birth_idx) == "fm_birth_cell");
+    REQUIRE(p.metadata().name(d_birth_idx) == "fm_birth_cell");
 
     // get the particle's geometric state
     const auto &geo_state = p.geo_state();
@@ -55,7 +55,7 @@ void Fission_Matrix_Tally::birth(const Particle_t &p)
 
     // determine the birth cell in the fission matrix mesh
     auto mesh_idx = d_fm_mesh->cell(d_fm_state);
-    Check (mesh_idx >= 0 && mesh_idx < d_fm_mesh->num_cells());
+    CHECK(mesh_idx >= 0 && mesh_idx < d_fm_mesh->num_cells());
 
     // set it in the particle's metadata
     const_cast<Particle_t &>(p).metadata().access<int>(d_birth_idx) = mesh_idx;
@@ -73,7 +73,7 @@ void Fission_Matrix_Tally::accumulate(double            step,
 {
     using geometry::INSIDE;
 
-    Require (p.metadata().name(d_birth_idx) == "fm_birth_cell");
+    REQUIRE(p.metadata().name(d_birth_idx) == "fm_birth_cell");
 
     // get the particle's geometric state
     const auto &geo_state = p.geo_state();
@@ -109,7 +109,7 @@ void Fission_Matrix_Tally::accumulate(double            step,
 
         // get the current cell
         i = d_fm_mesh->cell(d_fm_state);
-        Check (i >= 0 && i < d_fm_mesh->num_cells());
+        CHECK(i >= 0 && i < d_fm_mesh->num_cells());
 
         // tally the fission matrix contribution to the (i,j) element
         d_numerator[i][j] += d * keff;

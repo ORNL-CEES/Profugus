@@ -39,13 +39,13 @@ unsigned int Metaclass<I>::new_member(
     const std::string& name,
     SP_Member_Manager  manager)
 {
-    Require(name.size() > 0);
-    Require(manager);
-    Remember(unsigned int orig_storage_size = d_storage_size);
-    Remember(unsigned int orig_size = d_member_md.size());
+    REQUIRE(name.size() > 0);
+    REQUIRE(manager);
+    REMEMBER(unsigned int orig_storage_size = d_storage_size);
+    REMEMBER(unsigned int orig_size = d_member_md.size());
 
 #if UTILS_DBC > 0
-    Insist(Metaclass::d_num_instances == 0,
+    INSIST(Metaclass::d_num_instances == 0,
            "new_member can only be called when no instances exist.");
 #endif
 
@@ -69,14 +69,14 @@ unsigned int Metaclass<I>::new_member(
 
     md.data_offset = ((d_storage_size + aligned_size - 1) / aligned_size)
                      * aligned_size;
-    Check(md.data_offset % aligned_size == 0);
-    Check(md.data_offset >= d_storage_size);
+    CHECK(md.data_offset % aligned_size == 0);
+    CHECK(md.data_offset >= d_storage_size);
 
     // Now update the accumulated size of this class
     d_storage_size = md.data_offset + sizeof(T);
 
-    Ensure(d_storage_size > orig_storage_size);
-    Ensure(d_member_md.size() > orig_size);
+    ENSURE(d_storage_size > orig_storage_size);
+    ENSURE(d_member_md.size() > orig_size);
     return d_member_md.size() - 1;
 }
 
@@ -88,15 +88,15 @@ template<typename I>
 template<typename T>
 inline T& Metaclass<I>::access(unsigned int member_id)
 {
-    Require(d_data);
-    Require(is_valid_access<T>(member_id));
+    REQUIRE(d_data);
+    REQUIRE(is_valid_access<T>(member_id));
 
     // Pointer to the start of the requested entry
     char* data = d_data + d_member_md[member_id].data_offset;
 
     // Make sure the back end of data doesn't point past the end of allocated
     // memory
-    Ensure(data + sizeof(T) <= data + storage_size());
+    ENSURE(data + sizeof(T) <= data + storage_size());
     return reinterpret_cast<T&>(*data);
 }
 
@@ -108,15 +108,15 @@ template<typename I>
 template<typename T>
 inline const T& Metaclass<I>::access(unsigned int member_id) const
 {
-    Require(d_data);
-    Require(is_valid_access<T>(member_id));
+    REQUIRE(d_data);
+    REQUIRE(is_valid_access<T>(member_id));
 
     // Pointer to the start of the requested entry
     const char* data = d_data + d_member_md[member_id].data_offset;
 
     // Make sure the back end of data doesn't point past the end of allocated
     // memory
-    Ensure(data + sizeof(T) <= data + storage_size());
+    ENSURE(data + sizeof(T) <= data + storage_size());
     return reinterpret_cast<const T&>(*data);
 }
 
@@ -132,7 +132,7 @@ inline bool Metaclass<I>::is_valid_access(unsigned int member_id) const
     bool type_equal = true;
 #ifdef REQUIRE_ON
     type_equal = (typeid(T).name() == d_member_md[member_id].type_string);
-    Validate(type_equal,
+    VALIDATE(type_equal,
              "Tried to access member '" << d_member_md[member_id].name
              << "' (index " << member_id << ") with incorrect type.");
 #endif

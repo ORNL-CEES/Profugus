@@ -41,7 +41,7 @@ unsigned int Metaclass<I>::d_num_instances = 0;
 template<typename I>
 std::string Metaclass<I>::name(unsigned int member_id)
 {
-    Require(member_id < size());
+    REQUIRE(member_id < size());
 
     return d_member_md[member_id].name;
 }
@@ -57,7 +57,7 @@ template<class I>
 void Metaclass<I>::reset()
 {
 #if UTILS_DBC > 0
-    Insist(Metaclass::d_num_instances == 0,
+    INSIST(Metaclass::d_num_instances == 0,
             "Reset can only be called when no instances exist.");
 #endif
 
@@ -90,12 +90,12 @@ Metaclass<I>::Metaclass()
             md != end_md;
             ++md)
     {
-        Check(md->member_manager);
+        CHECK(md->member_manager);
         char* data = d_data + md->data_offset;
         md->member_manager->construct(reinterpret_cast<void*>(data));
     }
 
-    Ensure(d_data);
+    ENSURE(d_data);
 }
 
 //---------------------------------------------------------------------------//
@@ -121,7 +121,7 @@ Metaclass<I>::Metaclass(const This& rhs)
             md != end_md;
             ++md)
     {
-        Check(md->member_manager);
+        CHECK(md->member_manager);
         char*           data = d_data + md->data_offset;
         const char* rhs_data = rhs.d_data + md->data_offset;
         md->member_manager->copy_construct(
@@ -129,7 +129,7 @@ Metaclass<I>::Metaclass(const This& rhs)
                 reinterpret_cast<const void*>(rhs_data));
     }
 
-    Ensure(d_data);
+    ENSURE(d_data);
 }
 
 //---------------------------------------------------------------------------//
@@ -156,15 +156,15 @@ Metaclass<I>::Metaclass(const char* const buffer_begin, unsigned int size)
             md != end_md;
             ++md)
     {
-        Check(md->member_manager);
+        CHECK(md->member_manager);
         char* data = d_data + md->data_offset;
         buffer = md->member_manager->unpack_construct(
                 reinterpret_cast<void*>(data),
                 buffer);
-        Check(buffer <= buffer_begin + size);
+        CHECK(buffer <= buffer_begin + size);
     }
-    Check(buffer == buffer_begin + size);
-    Ensure(d_data);
+    CHECK(buffer == buffer_begin + size);
+    ENSURE(d_data);
 }
 
 //---------------------------------------------------------------------------//
@@ -176,8 +176,8 @@ Metaclass<I>::Metaclass(const char* const buffer_begin, unsigned int size)
 template<class I>
 Metaclass<I>& Metaclass<I>::operator=(const This& rhs)
 {
-    Require(d_data);
-    Require(rhs.d_data);
+    REQUIRE(d_data);
+    REQUIRE(rhs.d_data);
 
     // Apply assignment
     for (typename Vec_Member_Md::const_iterator md = d_member_md.begin(),
@@ -185,7 +185,7 @@ Metaclass<I>& Metaclass<I>::operator=(const This& rhs)
             md != end_md;
             ++md)
     {
-        Check(md->member_manager);
+        CHECK(md->member_manager);
         char*           data = d_data + md->data_offset;
         const char* rhs_data = rhs.d_data + md->data_offset;
         md->member_manager->assign(
@@ -212,7 +212,7 @@ Metaclass<I>::~Metaclass()
     {
         try
         {
-            Check(md->member_manager);
+            CHECK(md->member_manager);
             char* data = d_data + md->data_offset;
             md->member_manager->destroy(reinterpret_cast<void*>(data));
         }
@@ -248,7 +248,7 @@ typename Metaclass<I>::size_type Metaclass<I>::packed_size() const
             md != end_md;
             ++md)
     {
-        Check(md->member_manager);
+        CHECK(md->member_manager);
         char* data = d_data + md->data_offset;
         // Add the packed size of this data object
         result += md->member_manager->packed_size(
@@ -272,7 +272,7 @@ char* Metaclass<I>::pack(char* buffer) const
             md != end_md;
             ++md)
     {
-        Check(md->member_manager);
+        CHECK(md->member_manager);
         char* data = d_data + md->data_offset;
         // Pack into the buffer and set the newly incremented pointer
         buffer = md->member_manager->pack(
@@ -293,7 +293,7 @@ void Metaclass<I>::alloc()
 {
     d_data = reinterpret_cast<char*>(std::malloc(storage_size()));
 
-    Ensure(d_data);
+    ENSURE(d_data);
 }
 
 } // end namespace profugus
