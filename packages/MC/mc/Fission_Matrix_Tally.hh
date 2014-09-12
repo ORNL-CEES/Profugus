@@ -12,16 +12,13 @@
 #define mc_Fission_Matrix_Tally_hh
 
 #include <memory>
-#include <unordered_map>
-#include <vector>
-#include <utility>
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
-#include "harness/DBC.hh"
 #include "geometry/Mesh_Geometry.hh"
 #include "Tally.hh"
+#include "Fission_Matrix_Processor.hh"
 
 namespace profugus
 {
@@ -45,36 +42,14 @@ class Fission_Matrix_Tally : public Tally
   public:
     //@{
     //! Typedefs.
-    typedef Physics_t::SP_Geometry         SP_Geometry;
-    typedef std::shared_ptr<Mesh_Geometry> SP_Mesh_Geometry;
-    typedef Teuchos::ParameterList         ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t>  RCP_Std_DB;
+    typedef Physics_t::SP_Geometry                  SP_Geometry;
+    typedef std::shared_ptr<Mesh_Geometry>          SP_Mesh_Geometry;
+    typedef Teuchos::ParameterList                  ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>           RCP_Std_DB;
+    typedef Fission_Matrix_Processor::Idx           Idx;
+    typedef Fission_Matrix_Processor::Sparse_Matrix Sparse_Matrix;
+    typedef Fission_Matrix_Processor::Denominator   Denominator;
     //@}
-
-  private:
-    // >>> DATA
-
-    //! Hash table for pair of ints.
-    struct Idx_Hash
-    {
-      public:
-        std::hash<int> d_hash;
-        int            d_N;
-
-        //! Constructor.
-        Idx_Hash(int N = 0) : d_N(N) {/*...*/}
-
-        size_t operator()(const std::pair<int, int> &x) const
-        {
-            REQUIRE(d_N > 0);
-            return d_hash(x.first + d_N * x.second);
-        }
-    };
-    
-  public:
-    // Sparse matrix storage for FM Tally.
-    typedef std::pair<int, int>                       Idx;
-    typedef std::unordered_map<Idx, double, Idx_Hash> Sparse_Matrix;
 
   private:
     // Geometry.
@@ -84,8 +59,8 @@ class Fission_Matrix_Tally : public Tally
     SP_Mesh_Geometry d_fm_mesh;
 
     // Fission matrix tallies.
-    Sparse_Matrix       d_numerator;
-    std::vector<double> d_denominator;
+    Sparse_Matrix d_numerator;
+    Denominator   d_denominator;
 
   public:
     // Constructor.

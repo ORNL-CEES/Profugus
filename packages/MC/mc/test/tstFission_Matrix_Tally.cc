@@ -131,7 +131,7 @@ TEST(Sparse_Matrix, proto)
     for (const auto &e : matrix)
     {
         *itr = e.first;
-        ++itr; 
+        ++itr;
     }
 
     // push some more keys

@@ -49,7 +49,7 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
 
     // make the sparse matrix using the optimal number of initial buckets and
     // with the correct block size in the hasher
-    Idx_Hash h(d_fm_mesh->num_cells());
+    Fission_Matrix_Processor::Idx_Hash h(d_fm_mesh->num_cells());
     Sparse_Matrix m(d_numerator.bucket_count(), h);
     std::swap(m, d_numerator);
 
@@ -165,7 +165,7 @@ void Fission_Matrix_Tally::reset()
 
     // make a new sparse mesh
     Sparse_Matrix n;
-    Idx_Hash h(d_fm_mesh->num_cells());
+    Fission_Matrix_Processor::Idx_Hash h(d_fm_mesh->num_cells());
     Sparse_Matrix m(n.bucket_count(), h);
     std::swap(m, d_numerator);
 
