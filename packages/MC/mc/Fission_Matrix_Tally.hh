@@ -14,7 +14,12 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_ParameterList.hpp"
+
+#include "harness/DBC.hh"
 #include "geometry/Mesh_Geometry.hh"
 #include "Tally.hh"
 
@@ -42,15 +47,36 @@ class Fission_Matrix_Tally : public Tally
     //! Typedefs.
     typedef Physics_t::SP_Geometry         SP_Geometry;
     typedef std::shared_ptr<Mesh_Geometry> SP_Mesh_Geometry;
+    typedef Teuchos::ParameterList         ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>  RCP_Std_DB;
     //@}
 
   private:
     // >>> DATA
 
-    // Sparse matrix storage for FM Tally.
-    typedef std::unordered_map<int, double> Sparse_Row;
-    typedef std::vector<Sparse_Row>         Sparse_Matrix;
+    //! Hash table for pair of ints.
+    struct Idx_Hash
+    {
+      public:
+        std::hash<int> d_hash;
+        int            d_N;
 
+        //! Constructor.
+        Idx_Hash(int N = 0) : d_N(N) {/*...*/}
+
+        size_t operator()(const std::pair<int, int> &x) const
+        {
+            REQUIRE(d_N > 0);
+            return d_hash(x.first + d_N * x.second);
+        }
+    };
+    
+  public:
+    // Sparse matrix storage for FM Tally.
+    typedef std::pair<int, int>                       Idx;
+    typedef std::unordered_map<Idx, double, Idx_Hash> Sparse_Matrix;
+
+  private:
     // Geometry.
     SP_Geometry d_geometry;
 
@@ -63,7 +89,8 @@ class Fission_Matrix_Tally : public Tally
 
   public:
     // Constructor.
-    Fission_Matrix_Tally(SP_Physics physics, SP_Mesh_Geometry fm_mesh);
+    Fission_Matrix_Tally(RCP_Std_DB db, SP_Physics physics,
+                         SP_Mesh_Geometry fm_mesh);
 
     // >>> INHERITED INTERFACE
 
@@ -85,8 +112,8 @@ class Fission_Matrix_Tally : public Tally
     //! Begin a new cycle in a kcode calculation (no-op)
     void begin_cycle() { /* * */ }
 
-    //! End a cycle in a kcode calculation (default no-op)
-    void end_cycle(double num_particles) { /* * */ }
+    //! End a cycle in a kcode calculation.
+    void end_cycle(double num_particles);
 
     //! Clear/re-initialize all tally values between solves
     void reset();
@@ -99,6 +126,10 @@ class Fission_Matrix_Tally : public Tally
 
     // Fission matrix birth cell metadata index.
     const unsigned int d_birth_idx;
+
+    // Fission matrix generation options.
+    int d_cycle_out;
+    int d_cycle_ctr;
 };
 
 } // end namespace profugus

@@ -23,15 +23,37 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Fission_Matrix_Tally::Fission_Matrix_Tally(SP_Physics       physics,
+Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
+                                           SP_Physics       physics,
                                            SP_Mesh_Geometry fm_mesh)
     : Base(physics)
     , d_geometry(physics->get_geometry())
     , d_fm_mesh(fm_mesh)
-    , d_numerator(d_fm_mesh->num_cells())
+    , d_numerator()
     , d_denominator(d_fm_mesh->num_cells(), 0.0)
     , d_birth_idx(Particle::Metadata::new_pod_member<int>("fm_birth_cell"))
+    , d_cycle_ctr(0)
 {
+    REQUIRE(!db.is_null());
+    REQUIRE(db->isParameter("num_cycles"));
+    REQUIRE(db->isSublist("fission_matrix_db"));
+
+    // get the fission matrix sublist
+    ParameterList_t &opt = db->sublist("fission_matrix_db");
+
+    // get the number of cycles in the problem
+    int num_cycles = db->get<int>("num_cycles");
+
+    // set the cycle output
+    d_cycle_out = opt.get<int>("output_cycle", num_cycles - 1);
+
+    // make the sparse matrix using the optimal number of initial buckets and
+    // with the correct block size in the hasher
+    Idx_Hash h(d_fm_mesh->num_cells());
+    Sparse_Matrix m(d_numerator.bucket_count(), h);
+    std::swap(m, d_numerator);
+
+    ENSURE(d_cycle_out < num_cycles);
     ENSURE(d_geometry);
     ENSURE(d_fm_mesh);
 }
@@ -112,7 +134,7 @@ void Fission_Matrix_Tally::accumulate(double            step,
         CHECK(i >= 0 && i < d_fm_mesh->num_cells());
 
         // tally the fission matrix contribution to the (i,j) element
-        d_numerator[i][j] += d * keff;
+        d_numerator[Idx(i, j)] += d * keff;
 
         // subtract this step from the reaming distance
         remaining -= d;
@@ -124,6 +146,16 @@ void Fission_Matrix_Tally::accumulate(double            step,
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief End cycle processing of fission matrix.
+ */
+void Fission_Matrix_Tally::end_cycle(double num_particles)
+{
+    // update internal counter
+    ++d_cycle_ctr;
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Reset the tallies.
  */
 void Fission_Matrix_Tally::reset()
@@ -131,10 +163,13 @@ void Fission_Matrix_Tally::reset()
     // clear all the tallies
     std::fill(d_denominator.begin(), d_denominator.end(), 0.0);
 
-    for (auto &row : d_numerator)
-    {
-        row.clear();
-    }
+    // make a new sparse mesh
+    Sparse_Matrix n;
+    Idx_Hash h(d_fm_mesh->num_cells());
+    Sparse_Matrix m(n.bucket_count(), h);
+    std::swap(m, d_numerator);
+
+    ENSURE(d_numerator.empty());
 }
 
 } // end namespace profugus

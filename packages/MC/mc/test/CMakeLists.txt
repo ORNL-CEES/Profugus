@@ -39,6 +39,7 @@ ADD_UTILS_TEST(tstSource_Transporter.cc           DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstDomain_Transporter.cc  NP 1     DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstFission_Source.cc      NP 1 2 4 DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstUniform_Source.cc      NP 1 2 4 DEPLIBS mc_test_lib)
+ADD_UTILS_TEST(tstFission_Matrix_Tally   NP 1 2 4 DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstFixed_Source_Solver.cc          DEPLIBS mc_test_lib)
 
 ##---------------------------------------------------------------------------##
