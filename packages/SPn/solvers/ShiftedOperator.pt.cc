@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "ShiftedOperator.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class ShiftedOperator<Epetra_MultiVector,Epetra_Operator>;
-template class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>;
+template class ShiftedOperator<EPETRA>;
+template class ShiftedOperator<TPETRA>;
 
 } // end namespace profugus
 

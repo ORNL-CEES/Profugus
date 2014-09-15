@@ -37,11 +37,11 @@ class RQITest : public ::testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+    typedef typename LinAlgTypedefs<T>::MV       MV;
+    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
 
-    typedef profugus::RayleighQuotient<MV,OP>   RayleighQuotient;
+    typedef profugus::RayleighQuotient<T>   RayleighQuotient;
 
   protected:
 
@@ -52,8 +52,8 @@ class RQITest : public ::testing::Test
 
         // Build an map
         d_N = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",d_N);
-        d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",d_N);
+        d_A = linalg_traits::build_matrix<MATRIX>("shifted_laplacian",d_N);
+        d_B = linalg_traits::build_matrix<MATRIX>("scaled_identity",d_N);
 
         // Build eigenvector
         d_x = linalg_traits::build_vector<MV>(d_N);
@@ -75,8 +75,8 @@ class RQITest : public ::testing::Test
         op_db->set("max_itr",20);
 
         // Create ShiftedInverseOperator
-        Teuchos::RCP<profugus::ShiftedInverseOperator<MV,OP> > shift_op =
-            rcp(new profugus::ShiftedInverseOperator<MV,OP>(op_db));
+        Teuchos::RCP<profugus::ShiftedInverseOperator<T> > shift_op =
+            rcp(new profugus::ShiftedInverseOperator<T>(op_db));
         CHECK(!shift_op.is_null());
         shift_op->set_operator(d_A);
         shift_op->set_rhs_operator(d_B);
@@ -100,8 +100,8 @@ class RQITest : public ::testing::Test
     int d_N;
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
-    Teuchos::RCP<Matrix>                 d_A;
-    Teuchos::RCP<Matrix>                 d_B;
+    Teuchos::RCP<MATRIX>                 d_A;
+    Teuchos::RCP<MATRIX>                 d_B;
     Teuchos::RCP<MV>                     d_x;
     Teuchos::RCP<RayleighQuotient>       d_solver;
     double                               d_lambda;
@@ -115,7 +115,7 @@ class RQITest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(RQITest, MyTypes);
 
 TYPED_TEST(RQITest, basic)

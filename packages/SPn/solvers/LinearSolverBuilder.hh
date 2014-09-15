@@ -33,13 +33,13 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
+template <LinAlgType T>
 class LinearSolverBuilder
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinearSolver<MV,OP>                  LinearSolver_t;
+    typedef LinearSolver<T>                      LinearSolver_t;
     typedef Teuchos::RCP<LinearSolver_t>         RCP_LinearSolver;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
     //@}

@@ -39,13 +39,15 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
-class PowerIteration : public EigenvalueSolver<MV,OP>
+template <LinAlgType T>
+class PowerIteration : public EigenvalueSolver<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef EigenvalueSolver<MV,OP>               Base;
+    typedef typename LinAlgTypedefs<T>::MV        MV;
+    typedef typename LinAlgTypedefs<T>::OP        OP;
+    typedef EigenvalueSolver<T>                   Base;
     typedef typename Base::ParameterList          ParameterList;
     typedef typename Base::RCP_ParameterList      RCP_ParameterList;
     typedef Teuchos::ScalarTraits<double>         SCT;
@@ -62,14 +64,14 @@ class PowerIteration : public EigenvalueSolver<MV,OP>
 
   private:
 
-    using EigenvalueSolver<MV,OP>::b_db;
-    using EigenvalueSolver<MV,OP>::b_A;
-    using EigenvalueSolver<MV,OP>::b_tolerance;
-    using EigenvalueSolver<MV,OP>::b_num_iters;
-    using EigenvalueSolver<MV,OP>::b_max_iters;
-    using EigenvalueSolver<MV,OP>::b_converged;
-    using EigenvalueSolver<MV,OP>::b_label;
-    using EigenvalueSolver<MV,OP>::b_verbosity;
+    using EigenvalueSolver<T>::b_db;
+    using EigenvalueSolver<T>::b_A;
+    using EigenvalueSolver<T>::b_tolerance;
+    using EigenvalueSolver<T>::b_num_iters;
+    using EigenvalueSolver<T>::b_max_iters;
+    using EigenvalueSolver<T>::b_converged;
+    using EigenvalueSolver<T>::b_label;
+    using EigenvalueSolver<T>::b_verbosity;
 };
 
 } // end namespace profugus

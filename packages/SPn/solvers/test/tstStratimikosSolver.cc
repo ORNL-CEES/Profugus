@@ -38,12 +38,12 @@ template <class T>
 class StratimikosSolverTest : public testing::Test
 {
   protected:
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+    typedef typename LinAlgTypedefs<T>::MV       MV;
+    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
 
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
-    typedef profugus::StratimikosSolver<MV,OP> Solver_t;
+    typedef profugus::StratimikosSolver<T> Solver_t;
 
   protected:
     // Initialization that are performed for each test
@@ -59,7 +59,7 @@ class StratimikosSolverTest : public testing::Test
         d_db->set("linear_solver_xml_file", xmlfile);
 
         // make the operator
-        d_A = linalg_traits::build_matrix<Matrix>("4x4_lhs",4);
+        d_A = linalg_traits::build_matrix<MATRIX>("4x4_lhs",4);
 
         // make the solver
         Solver_t solver(d_db);
@@ -102,14 +102,14 @@ class StratimikosSolverTest : public testing::Test
     // >>> Data that get re-initialized between tests
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
-    Teuchos::RCP<Matrix> d_A;
+    Teuchos::RCP<MATRIX> d_A;
 };
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(StratimikosSolverTest, MyTypes);
 
 TYPED_TEST(StratimikosSolverTest, Aztec)

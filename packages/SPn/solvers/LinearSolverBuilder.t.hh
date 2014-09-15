@@ -37,9 +37,9 @@ namespace profugus
  */
 //---------------------------------------------------------------------------//
 
-template <class MV, class OP>
-Teuchos::RCP<LinearSolver<MV,OP> >
-LinearSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db )
+template <LinAlgType T>
+Teuchos::RCP<LinearSolver<T> >
+LinearSolverBuilder<T>::build_solver( RCP_ParameterList db )
 {
     using std::string;
 
@@ -58,7 +58,7 @@ LinearSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db )
 
         if (type == "richardson")
         {
-            solver = Teuchos::rcp( new Richardson<MV,OP>(db));
+            solver = Teuchos::rcp( new Richardson<T>(db));
         }
         else
         {
@@ -69,7 +69,7 @@ LinearSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db )
     else if (solver_type == "stratimikos")
     {
         // Just build the stratimikos solver, let validation be handled there
-        solver = Teuchos::rcp(new StratimikosSolver<MV,OP>(db));
+        solver = Teuchos::rcp(new StratimikosSolver<T>(db));
     }
     else
     {

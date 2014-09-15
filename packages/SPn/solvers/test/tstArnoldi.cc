@@ -38,17 +38,17 @@ class Arnoldi_Test : public testing::Test
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(Arnoldi_Test, MyTypes);
 
 TYPED_TEST(Arnoldi_Test, Eigensolver)
 {
-    typedef typename linalg_traits::traits_types<TypeParam>::MV     MV;
-    typedef typename linalg_traits::traits_types<TypeParam>::OP     OP;
-    typedef typename linalg_traits::traits_types<TypeParam>::Matrix Matrix;
+    typedef typename LinAlgTypedefs<TypeParam>::MV     MV;
+    typedef typename LinAlgTypedefs<TypeParam>::OP     OP;
+    typedef typename LinAlgTypedefs<TypeParam>::MATRIX MATRIX;
 
-    typedef profugus::Arnoldi<MV,OP>         Arnoldi;
-    typedef profugus::InverseOperator<MV,OP> InverseOperator;
+    typedef profugus::Arnoldi<T>         Arnoldi;
+    typedef profugus::InverseOperator<T> InverseOperator;
 
     using Teuchos::RCP;
     RCP<Teuchos::ParameterList> db(new Teuchos::ParameterList("test"));
@@ -57,8 +57,8 @@ TYPED_TEST(Arnoldi_Test, Eigensolver)
     // Matrix size
     int N = 8;
 
-    RCP<Matrix> A = linalg_traits::build_matrix<Matrix>("laplacian",N);
-    RCP<Matrix> B = linalg_traits::build_matrix<Matrix>("diagonal",N);
+    RCP<MATRIX> A = linalg_traits::build_matrix<MATRIX>("laplacian",N);
+    RCP<MATRIX> B = linalg_traits::build_matrix<MATRIX>("diagonal",N);
     RCP<MV> evec = linalg_traits::build_vector<MV>(N);
     std::random_device rd;
     std::vector<double> init(N);

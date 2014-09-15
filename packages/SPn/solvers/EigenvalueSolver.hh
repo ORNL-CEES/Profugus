@@ -19,6 +19,8 @@
 #include "harness/DBC.hh"
 #include "utils/String_Functions.hh"
 
+#include "LinAlgTypedefs.hh"
+
 namespace profugus
 {
 
@@ -30,14 +32,16 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
+template <LinAlgType T>
 class EigenvalueSolver
 {
   public:
     //@{
     //! Typedefs.
-    typedef Teuchos::ParameterList      ParameterList;
-    typedef Teuchos::RCP<ParameterList> RCP_ParameterList;
+    typedef typename LinAlgTypedefs<T>::MV  MV;
+    typedef typename LinAlgTypedefs<T>::OP  OP;
+    typedef Teuchos::ParameterList          ParameterList;
+    typedef Teuchos::RCP<ParameterList>     RCP_ParameterList;
     //@}
 
   protected:

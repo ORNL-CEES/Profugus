@@ -49,10 +49,10 @@ class Inverse_Operator_Test : public testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV     MV;
-    typedef typename linalg_traits::traits_types<T>::OP     OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
-    typedef profugus::InverseOperator<MV,OP>                InverseOperator;
+    typedef typename LinAlgTypedefs<T>::MV     MV;
+    typedef typename LinAlgTypedefs<T>::OP     OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX MATRIX;
+    typedef profugus::InverseOperator<T>                InverseOperator;
     typedef Anasazi::OperatorTraits<double,MV,OP>           OPT;
 
   protected:
@@ -70,7 +70,7 @@ class Inverse_Operator_Test : public testing::Test
 
         // make the operator
         int N = 4;
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",N);
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<MATRIX>("4x4_lhs",N);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -99,8 +99,8 @@ class Inverse_Operator_Test : public testing::Test
 
         // make the operator
         int N = 4;
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",N);
-        Teuchos::RCP<OP> B = linalg_traits::build_matrix<Matrix>("4x4_rhs",N);
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<MATRIX>("4x4_lhs",N);
+        Teuchos::RCP<OP> B = linalg_traits::build_matrix<MATRIX>("4x4_rhs",N);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -132,7 +132,7 @@ class Inverse_Operator_Test : public testing::Test
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(Inverse_Operator_Test, MyTypes);
 
 TYPED_TEST(Inverse_Operator_Test, Aztec)

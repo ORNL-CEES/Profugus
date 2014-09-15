@@ -25,9 +25,9 @@ namespace profugus
 /*!
  * \brief Build a PowerIteration solver.
  */
-template <class MV, class OP>
-PowerIteration<MV,OP>::PowerIteration( RCP_ParameterList db )
-    : EigenvalueSolver<MV,OP>(db)
+template <LinAlgType T>
+PowerIteration<T>::PowerIteration( RCP_ParameterList db )
+    : EigenvalueSolver<T>(db)
 {
     b_label = "Power Iteration";
 }
@@ -38,8 +38,8 @@ PowerIteration<MV,OP>::PowerIteration( RCP_ParameterList db )
 /*!
  * \brief Solver a linear system using bicgstab.
  */
-template <class MV, class OP>
-void PowerIteration<MV,OP>::solve( double           &lambda,
+template <LinAlgType T>
+void PowerIteration<T>::solve( double           &lambda,
                                    Teuchos::RCP<MV>  x )
 {
     REQUIRE( !b_A.is_null() );
@@ -81,7 +81,7 @@ void PowerIteration<MV,OP>::solve( double           &lambda,
         MVT::MvNorm(*r,tmp_nrm);
         res_norm = tmp_nrm[0];
 
-        if( b_verbosity >= EigenvalueSolver<MV,OP>::LOW )
+        if( b_verbosity >= EigenvalueSolver<T>::LOW )
         {
             profugus::pout << " Power Iteration eigenvalue at iteration "
                            << b_num_iters << " is "
@@ -107,7 +107,7 @@ void PowerIteration<MV,OP>::solve( double           &lambda,
             break;
     }
 
-    if( b_verbosity >= EigenvalueSolver<MV,OP>::MEDIUM )
+    if( b_verbosity >= EigenvalueSolver<T>::MEDIUM )
     {
         profugus::pout << "+++ Power Iteration converged in "
                        << b_num_iters << " iterations." << profugus::endl;

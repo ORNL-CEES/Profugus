@@ -21,47 +21,26 @@
 #include "Epetra_MultiVector.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_Operator.h"
-#include "../TpetraTypedefs.hh"
+#include "../LinAlgTypedefs.hh"
 
 using profugus::Tpetra_CrsMatrix;
-using profugus::Tpetra_MultiVector;
+using profugus::LinAlgTypedefs<TPETRA>::MV;
 using profugus::Tpetra_Operator;
 using profugus::Tpetra_Map;
 
 namespace linalg_traits
 {
 
-template <class T>
-struct traits_types
-{
-};
-
-template <>
-struct traits_types<Epetra_MultiVector>
-{
-    typedef Epetra_MultiVector MV;
-    typedef Epetra_Operator    OP;
-    typedef Epetra_CrsMatrix   Matrix;
-};
-
-template <>
-struct traits_types<Tpetra_MultiVector>
-{
-    typedef Tpetra_MultiVector MV;
-    typedef Tpetra_Operator    OP;
-    typedef Tpetra_CrsMatrix   Matrix;
-};
-
 // build_vector
-template <class MV>
-Teuchos::RCP<MV> build_vector(int N)
+template <LinAlgType T>
+Teuchos::RCP<LinAlgTypeDefs<T>::MV> build_vector(int N)
 {
     NOT_IMPLEMENTED("build_vector for arbitrary MV type.");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_MultiVector> build_vector<Epetra_MultiVector>(int N)
+Teuchos::RCP<Epetra_MultiVector> build_vector<EPETRA>(int N)
 {
 #ifdef COMM_MPI
     Epetra_MpiComm comm(profugus::communicator);
@@ -77,27 +56,27 @@ Teuchos::RCP<Epetra_MultiVector> build_vector<Epetra_MultiVector>(int N)
 }
 
 template <>
-Teuchos::RCP<Tpetra_MultiVector> build_vector<Tpetra_MultiVector>(int N)
+Teuchos::RCP<LinAlgTypedefs<TPETRA>::MV> build_vector<TPETRA>(int N)
 {
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
         Teuchos::DefaultComm<int>::getComm();
 
     int index_base = 0;
     Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
-    Teuchos::RCP<Tpetra_MultiVector> x( new Tpetra_MultiVector(map,1) );
+    Teuchos::RCP<LinAlgTypedefs<TPETRA>::MV> x( new LinAlgTypedefs<TPETRA>::MV(map,1) );
     x->putScalar(0.0);
     return x;
 }
 
 // fill_vector
-template <class MV>
+template <LinAlgType T>
 void fill_vector(Teuchos::RCP<MV> x, std::vector<double> &vals)
 {
     NOT_IMPLEMENTED("fill_vector for arbitrary MV type.");
 }
 
 template <>
-void fill_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
+void fill_vector<EPETRA>(Teuchos::RCP<Epetra_MultiVector> x,
                                      std::vector<double> &vals)
 {
     REQUIRE( vals.size() == x->GlobalLength() );
@@ -110,7 +89,7 @@ void fill_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
 }
 
 template <>
-void fill_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
+void fill_vector<TPETRA>(Teuchos::RCP<LinAlgTypedefs<TPETRA>::MV> x,
                                      std::vector<double> &vals)
 {
     Teuchos::ArrayRCP<double> x_data = x->getDataNonConst(0);
@@ -122,14 +101,14 @@ void fill_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
 }
 
 // set_sign
-template <class MV>
+template <LinAlgType T>
 void set_sign(Teuchos::RCP<MV> x)
 {
     NOT_IMPLEMENTED("set_sign for arbitrary MV type.");
 }
 
 template <>
-void set_sign<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x)
+void set_sign<EPETRA>(Teuchos::RCP<Epetra_MultiVector> x)
 {
     double sign = (*x)[0][0] > 0.0 ? 1.0 : -1.0;
 
@@ -140,7 +119,7 @@ void set_sign<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x)
 }
 
 template <>
-void set_sign<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x)
+void set_sign<TPETRA>(Teuchos::RCP<LinAlgTypedefs<TPETRA>::MV> x)
 {
     Teuchos::ArrayRCP<double> x_data = x->getDataNonConst(0);
     double sign = x_data[0] > 0.0 ? 1.0 : -1.0;
@@ -151,14 +130,14 @@ void set_sign<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x)
 }
 
 // test_vector
-template <class MV>
+template <LinAlgType T>
 void test_vector(Teuchos::RCP<MV> x, std::vector<double> &vals)
 {
     NOT_IMPLEMENTED("test_vector for arbitrary MV type.");
 }
 
 template <>
-void test_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
+void test_vector<EPETRA>(Teuchos::RCP<Epetra_MultiVector> x,
                                      std::vector<double> &vals)
 {
     REQUIRE( vals.size() == x->GlobalLength() );
@@ -171,7 +150,7 @@ void test_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
 }
 
 template <>
-void test_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
+void test_vector<TPETRA>(Teuchos::RCP<LinAlgTypedefs<TPETRA>::MV> x,
                                      std::vector<double> &vals)
 {
     Teuchos::ArrayRCP<const double> x_data = x->getData(0);

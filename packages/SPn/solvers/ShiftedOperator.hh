@@ -19,14 +19,9 @@
 #include "AnasaziOperatorTraits.hpp"
 #include "AnasaziEpetraAdapter.hpp"
 #include "AnasaziTpetraAdapter.hpp"
-#include "Epetra_Operator.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Map.h"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Operator.hpp"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 #include "harness/DBC.hh"
 
@@ -44,11 +39,13 @@ namespace profugus
  *  additionally implement either the Epetra or Tpetra operator interface.
  */
 //===========================================================================//
-template <class MV, class OP>
+template <LinAlgType T>
 class ShiftedOperatorBase
 {
   public:
 
+    typedef typename LinAlgTypedefs<T>::MV        MV;
+    typedef typename LinAlgTypedefs<T>::OP        OP;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
@@ -84,7 +81,7 @@ class ShiftedOperatorBase
 
 // Dummy implementation for MV/OP combos lacking a specialization.
 // Attempt to instantiate will cause a compile error.
-template <class MV, class OP>
+template <LinAlgType T>
 class ShiftedOperator
 {
   public:
@@ -94,21 +91,22 @@ class ShiftedOperator
 
 // Implementation for Epetra_MultiVector/Operator
 template <>
-class ShiftedOperator<Epetra_MultiVector,Epetra_Operator>
+class ShiftedOperator<EPETRA>
     : public Epetra_Operator,
-      public ShiftedOperatorBase<Epetra_MultiVector,Epetra_Operator>
+      public ShiftedOperatorBase<EPETRA>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector MV;
-    typedef Epetra_Operator    OP;
-    typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef LinAlgTypedefs<EPETRA>  LinAlgType;
+    typedef typename LinAlgType::MV MV;
+    typedef typename LinAlgType::OP OP;
+    typedef Teuchos::RCP<OP>        RCP_Operator;
     //@}
 
   private:
 
-    typedef ShiftedOperatorBase<MV,OP> Base;
+    typedef ShiftedOperatorBase<EPETRA> Base;
     using Base::d_A;
     using Base::d_B;
     using Base::d_shift;
@@ -164,23 +162,24 @@ class ShiftedOperator<Epetra_MultiVector,Epetra_Operator>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>
-    : public Tpetra_Operator,
-      public ShiftedOperatorBase<Tpetra_MultiVector,Tpetra_Operator>
+class ShiftedOperator<TPETRA>
+    : public LinAlgTypedefs<TPETRA>::OP,
+      public ShiftedOperatorBase<TPETRA>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Tpetra_MultiVector MV;
-    typedef Tpetra_Operator    OP;
-    typedef Tpetra_Map         Map;
+    typedef LinAlgTypedefs<TPETRA>   LinAlgType;
+    typedef typename LinAlgType::MV  MV;
+    typedef typename LinAlgType::OP  OP;
+    typedef typename LinAlgType::MAP MAP;
     typedef Teuchos::RCP<OP>   RCP_Operator;
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
     //@}
 
   private:
 
-    typedef ShiftedOperatorBase<MV,OP> Base;
+    typedef ShiftedOperatorBase<TPETRA> Base;
     using Base::d_A;
     using Base::d_B;
     using Base::d_shift;
@@ -221,7 +220,7 @@ class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>
 
     // Required inherited interface.
     bool hasTranposeApply() const {return false;}
-    Teuchos::RCP<const Map> getDomainMap() const
+    Teuchos::RCP<const MAP> getDomainMap() const
     {
         REQUIRE(d_A != Teuchos::null);
         if( d_B != Teuchos::null )
@@ -234,7 +233,7 @@ class ShiftedOperator<Tpetra_MultiVector,Tpetra_Operator>
             return d_A->getRangeMap();
         }
     }
-    Teuchos::RCP<const Map> getRangeMap() const
+    Teuchos::RCP<const MAP> getRangeMap() const
     {
         REQUIRE(d_A != Teuchos::null);
         return d_A->getDomainMap();

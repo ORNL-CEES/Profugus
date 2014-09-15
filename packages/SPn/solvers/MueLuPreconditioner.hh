@@ -39,7 +39,7 @@
 #include "MueLu_TpetraOperator.hpp"
 #endif
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 #include "harness/DBC.hh"
 
@@ -65,9 +65,14 @@ class MueLuPreconditionerBase
 
     void setup(Teuchos::RCP<Teuchos::ParameterList> pl);
 
+    typedef typename LinAlgTypedefs<TPETRA>::ST   ST;
+    typedef typename LinAlgTypedefs<TPETRA>::LO   LO;
+    typedef typename LinAlgTypedefs<TPETRA>::GO   GO;
+    typedef typename LinAlgTypedefs<TPETRA>::NODE NODE;
+
 #ifdef USE_MUELU
-    Teuchos::RCP<Xpetra_Matrix> d_matrix;
-    Teuchos::RCP<MueLu::Hierarchy<SCALAR,LO,GO,NODE> > d_hierarchy;
+    Teuchos::RCP<LinAlgTypedefs<XPETRA>::MATRIX>   d_matrix;
+    Teuchos::RCP<MueLu::Hierarchy<ST,LO,GO,NODE> > d_hierarchy;
 #endif
 };
 
@@ -89,7 +94,7 @@ class MueLuPreconditionerBase
 
 // Dummy implementation for MV/OP combos lacking a specialization.
 // Attempt to instantiate will cause a compile error.
-template <class MV, class OP>
+template <LinAlgType T>
 class MueLuPreconditioner
 {
   public:
@@ -100,15 +105,19 @@ class MueLuPreconditioner
 #ifdef USE_MUELU
 // Implementation for Epetra_MultiVector/Operator
 template <>
-class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
+class MueLuPreconditioner<EPETRA>
     : public Epetra_Operator,
       public MueLuPreconditionerBase
 {
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector MV;
-    typedef Epetra_Operator    OP;
+    typedef typename LinAlgTypedefs<EPETRA>::ST    ST;
+    typedef typename LinAlgTypedefs<EPETRA>::LO    LO;
+    typedef typename LinAlgTypedefs<EPETRA>::GO    GO;
+    typedef typename LinAlgTypedefs<EPETRA>::NODE  NODE;
+    typedef typename LinAlgTypedefs<EPETRA>::MV    MV;
+    typedef typename LinAlgTypedefs<EPETRA>::OP    OP;
     typedef Teuchos::RCP<OP>   RCP_Operator;
     //@}
 
@@ -127,12 +136,12 @@ class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
         d_A = A;
 
         // Wrap Epetra_CrsMatrix into an Xpetra::EpetraCrsMatrix
-        Teuchos::RCP<Xpetra_CrsMatrix> temp_matrix = Teuchos::rcp(
-                new Xpetra::EpetraCrsMatrix(A) );
+        Teuchos::RCP<LinAlgTypedefs<XPETRA>::CRS_MATRIX> temp_matrix =
+            Teuchos::rcp( new Xpetra::EpetraCrsMatrix(A) );
 
         // Now wrap Xpetra_CrsMatrix into an Xpetra::Matrix
         // Why wrap twice?  Because it's twice as awesome
-        d_matrix = Teuchos::rcp( new Xpetra::CrsMatrixWrap<SCALAR,LO,GO,NODE>(
+        d_matrix = Teuchos::rcp( new Xpetra::CrsMatrixWrap<ST,LO,GO,NODE>(
             temp_matrix) );
         this->setup(pl);
     };
@@ -179,40 +188,48 @@ class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
-    : public Tpetra_Operator,
+class MueLuPreconditioner<TPETRA>
+    : public LinAlgTypedefs<TPETRA>::OP,
       public MueLuPreconditionerBase
 {
   public:
     //@{
     //! Typedefs.
-    typedef Tpetra_MultiVector MV;
-    typedef Tpetra_Operator    OP;
-    typedef Tpetra_Map         Map;
-    typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef LinAlgTypedefs<TPETRA> TpetraType;
+    typedef TpetraType::ST         ST;
+    typedef TpetraType::LO         LO;
+    typedef TpetraType::GO         GO;
+    typedef TpetraType::NODE       NODE;
+    typedef TpetraType::MV         MV;
+    typedef TpetraType::OP         OP;
+    typedef TpetraType::MAP        MAP;
+    typedef TpetraType::MATRIX     MATRIX;
+    typedef LinAlgTypedefs<XPETRA> XpetraType;
+    typedef XpetraType::MATRIX     X_MATRIX;
+    typedef XpetraType::CRS_MATRIX X_CRS_MATRIX;
     //@}
 
   private:
 
     typedef MueLuPreconditionerBase Base;
     using Base::d_matrix;
-    Teuchos::RCP<Tpetra_CrsMatrix> d_A;
+    Teuchos::RCP<X_MATRIX> d_A;
 
   public:
 
     // Constructor.
-    explicit MueLuPreconditioner(Teuchos::RCP<Tpetra_CrsMatrix> A,
+    explicit MueLuPreconditioner(Teuchos::RCP<MATRIX> A,
                                  Teuchos::RCP<Teuchos::ParameterList> pl)
     {
         d_A = A;
-        //
+
         // Wrap Epetra_CrsMatrix into an Xpetra::EpetraCrsMatrix
-        Teuchos::RCP<Xpetra_CrsMatrix> temp_matrix = Teuchos::rcp(
-                new Xpetra::TpetraCrsMatrix<SCALAR,LO,GO,NODE>(A) );
+        Teuchos::RCP<X_CRS_MATRIX> temp_matrix = Teuchos::rcp(
+                new Xpetra::TpetraCrsMatrix<ST,LO,GO,NODE>(A) );
 
         // Now wrap Xpetra_CrsMatrix into an Xpetra::Matrix
         // Why wrap twice?  Because it's twice as awesome
-        d_matrix = Teuchos::rcp( new Xpetra::CrsMatrixWrap<SCALAR,LO,GO,NODE>(
+        d_matrix = Teuchos::rcp( new Xpetra::CrsMatrixWrap<ST,LO,GO,NODE>(
             temp_matrix) );
 
         this->setup(pl);
@@ -225,19 +242,19 @@ class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>
     {
         REQUIRE( x.getLocalLength() == y.getLocalLength() );
 
-        MueLu::TpetraOperator<SCALAR,LO,GO,NODE> op_wrap(d_hierarchy);
+        MueLu::TpetraOperator<ST,LO,GO,NODE> op_wrap(d_hierarchy);
 
         op_wrap.apply(x,y,mode,alpha,beta);
     }
 
     // Required inherited interface.
     bool hasTranposeApply() const {return false;}
-    Teuchos::RCP<const Map> getDomainMap() const
+    Teuchos::RCP<const MAP> getDomainMap() const
     {
         REQUIRE(d_A != Teuchos::null);
         return d_A->getDomainMap();
     }
-    Teuchos::RCP<const Map> getRangeMap() const
+    Teuchos::RCP<const MAP> getRangeMap() const
     {
         REQUIRE(d_A != Teuchos::null);
         return d_A->getRangeMap();

@@ -36,11 +36,11 @@ class DavidsonTest : public ::testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+    typedef typename LinAlgTypedefs<T>::MV       MV;
+    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
 
-    typedef profugus::Davidson_Eigensolver<MV,OP> Davidson_Eigensolver;
+    typedef profugus::Davidson_Eigensolver<T> Davidson_Eigensolver;
 
   protected:
 
@@ -51,8 +51,8 @@ class DavidsonTest : public ::testing::Test
 
         // Build an map
         d_N = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",d_N);
-        d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",d_N);
+        d_A = linalg_traits::build_matrix<MATRIX>("shifted_laplacian",d_N);
+        d_B = linalg_traits::build_matrix<MATRIX>("scaled_identity",d_N);
 
         // Build eigenvector
         d_x = linalg_traits::build_vector<MV>(d_N);
@@ -77,8 +77,8 @@ class DavidsonTest : public ::testing::Test
     int d_N;
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
-    Teuchos::RCP<Matrix>                 d_A;
-    Teuchos::RCP<Matrix>                 d_B;
+    Teuchos::RCP<MATRIX>                 d_A;
+    Teuchos::RCP<MATRIX>                 d_B;
     Teuchos::RCP<MV>                     d_x;
     Teuchos::RCP<Davidson_Eigensolver>   d_solver;
     double                               d_lambda;
@@ -90,7 +90,7 @@ class DavidsonTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(DavidsonTest, MyTypes);
 
 TYPED_TEST(DavidsonTest, basic)

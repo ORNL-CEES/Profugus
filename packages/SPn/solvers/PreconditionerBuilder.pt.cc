@@ -8,21 +8,17 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Epetra_Operator.h"
-#include "Epetra_MultiVector.h"
-#include "Tpetra_Operator.hpp"
-#include "Tpetra_MultiVector.hpp"
 #include "AnasaziEpetraAdapter.hpp"
 #include "AnasaziTpetraAdapter.hpp"
 #include "PreconditionerBuilder.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class PreconditionerBuilder<Epetra_Operator>;
-template class PreconditionerBuilder<Tpetra_Operator>;
+template class PreconditionerBuilder<EPETRA>;
+template class PreconditionerBuilder<TPETRA>;
 
 } // end namespace profugus
 

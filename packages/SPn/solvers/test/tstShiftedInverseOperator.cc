@@ -35,12 +35,12 @@ class ShiftedInverseTest: public ::testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+    typedef typename LinAlgTypedefs<T>::MV       MV;
+    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
 
     typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
-    typedef profugus::ShiftedInverseOperator<MV,OP> ShiftInvOp;
+    typedef profugus::ShiftedInverseOperator<T> ShiftInvOp;
 
   protected:
     // Initialization that are performed for each test
@@ -49,8 +49,8 @@ class ShiftedInverseTest: public ::testing::Test
         d_N = 20;
 
         // Build CrsMatrix
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
-        d_B = linalg_traits::build_matrix<Matrix>("diagonal",d_N);
+        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",d_N);
+        d_B = linalg_traits::build_matrix<MATRIX>("diagonal",d_N);
 
         // Create options database
         d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
@@ -68,8 +68,8 @@ class ShiftedInverseTest: public ::testing::Test
     int d_N;
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
-    Teuchos::RCP<Matrix>                 d_A;
-    Teuchos::RCP<Matrix>                 d_B;
+    Teuchos::RCP<MATRIX>                 d_A;
+    Teuchos::RCP<MATRIX>                 d_B;
     Teuchos::RCP<ShiftInvOp>             d_operator;
 };
 
@@ -77,7 +77,7 @@ class ShiftedInverseTest: public ::testing::Test
 // Tests
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(ShiftedInverseTest, MyTypes);
 
 TYPED_TEST(ShiftedInverseTest, basic)

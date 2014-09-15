@@ -50,9 +50,21 @@ void MueLuPreconditionerBase::setup( Teuchos::RCP<Teuchos::ParameterList> pl )
     // default coarse grid solver to avoid this.
     pl->get("coarse: type",std::string("RELAXATION"));
 
-    Teuchos::RCP<MueLu::HierarchyManager<SCALAR,LO,GO,NODE> > mueLuFactory =
+    // The template parameters here are a bit tricky...
+    // We didn't want this class to be templated, but we need access
+    // to SCALAR/LO/GO/NODE values for the HierarchyManager.  Right
+    // now we're just pulling them from our Tpetra type which will
+    // work as long as the Tpetra type is consistent with Epetra
+    // (i.e. double/int/int).  If we change the Tpetra template parameters
+    // this may cause problems with an Epetra instantiation, in which case
+    // we would need to have this class be templated.
+    typedef typename LinAlgTypedefs<TPETRA>::ST   ST;
+    typedef typename LinAlgTypedefs<TPETRA>::MV   MV;
+    typedef typename LinAlgTypedefs<TPETRA>::OP   OP;
+    typedef typename LinAlgTypedefs<TPETRA>::NODE NODE;
+    Teuchos::RCP<MueLu::HierarchyManager<ST,LO,GO,NODE> > mueLuFactory =
         Teuchos::rcp(
-            new MueLu::EasyParameterListInterpreter<SCALAR,LO,GO,NODE>(*pl));
+            new MueLu::EasyParameterListInterpreter<ST,LO,GO,NODE>(*pl));
 
     d_hierarchy = mueLuFactory->CreateHierarchy();
 

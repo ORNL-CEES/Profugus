@@ -25,9 +25,9 @@ template <class T>
 class ShiftedOperatorTest : public testing::Test
 {
   protected:
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+    typedef typename LinAlgTypedefs<T>::MV       MV;
+    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
 
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
@@ -38,15 +38,15 @@ class ShiftedOperatorTest : public testing::Test
         d_N = 20;
 
         // Build CrsMatrix
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
-        d_B = linalg_traits::build_matrix<Matrix>("diagonal",d_N);
+        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",d_N);
+        d_B = linalg_traits::build_matrix<MATRIX>("diagonal",d_N);
 
         // Build eigenvector
         d_x = linalg_traits::build_vector<MV>(d_N);
         d_y = linalg_traits::build_vector<MV>(d_N);
 
         // Build solver
-        d_operator = Teuchos::rcp(new profugus::ShiftedOperator<MV,OP>());
+        d_operator = Teuchos::rcp(new profugus::ShiftedOperator<T>());
         CHECK(!d_operator.is_null());
         d_operator->set_operator(d_A);
         d_operator->set_rhs_operator(d_B);
@@ -56,19 +56,19 @@ class ShiftedOperatorTest : public testing::Test
 
     int d_N;
 
-    Teuchos::RCP<Matrix> d_A;
-    Teuchos::RCP<Matrix> d_B;
+    Teuchos::RCP<MATRIX> d_A;
+    Teuchos::RCP<MATRIX> d_B;
     Teuchos::RCP<MV>     d_x;
     Teuchos::RCP<MV>     d_y;
 
-    Teuchos::RCP<profugus::ShiftedOperator<MV,OP> > d_operator;
+    Teuchos::RCP<profugus::ShiftedOperator<T> > d_operator;
 };
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(ShiftedOperatorTest, MyTypes);
 
 TYPED_TEST(ShiftedOperatorTest, basic)

@@ -22,8 +22,8 @@ namespace profugus
 /*!
  * \brief Build a RayleighQuotient solver.
  */
-template <class MV, class OP>
-RayleighQuotient<MV,OP>::RayleighQuotient( RCP_ParameterList db )
+template <LinAlgType T>
+RayleighQuotient<T>::RayleighQuotient( RCP_ParameterList db )
     : Base(db)
 {
     b_label           = "Rayleigh Quotient";
@@ -44,8 +44,8 @@ RayleighQuotient<MV,OP>::RayleighQuotient( RCP_ParameterList db )
  * \brief Solve an eigenvalue problem using Rayleigh quotient iteration.
  * Note that this solver is intended for solving the k-eigenvalue problem
  */
-template <class MV, class OP>
-void RayleighQuotient<MV,OP>::solve( double           &keff,
+template <LinAlgType T>
+void RayleighQuotient<T>::solve( double           &keff,
                                      Teuchos::RCP<MV>  x )
 {
     REQUIRE( !b_A.is_null() );
@@ -135,7 +135,7 @@ void RayleighQuotient<MV,OP>::solve( double           &keff,
         MVT::MvNorm(*r,tmp_nrm);
         res_norm = tmp_nrm[0];
 
-        if( b_verbosity >= EigenvalueSolver<MV,OP>::LOW )
+        if( b_verbosity >= EigenvalueSolver<T>::LOW )
         {
             profugus::pout << " Rayleigh Quotient eigenvalue at iteration "
                            << profugus::fixed << profugus::setprecision(8)
@@ -157,7 +157,7 @@ void RayleighQuotient<MV,OP>::solve( double           &keff,
 
     }
 
-    if( b_verbosity >= EigenvalueSolver<MV,OP>::LOW )
+    if( b_verbosity >= EigenvalueSolver<T>::LOW )
     {
         profugus::pout << "+++ Rayleigh Quotient Iteration converged in "
                        << b_num_iters << " iterations." << profugus::endl;

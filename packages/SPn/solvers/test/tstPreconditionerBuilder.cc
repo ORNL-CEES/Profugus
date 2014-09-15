@@ -35,9 +35,9 @@ class PreconditionerBuilderTest : public ::testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV     MV;
-    typedef typename linalg_traits::traits_types<T>::OP     OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
+    typedef typename LinAlgTypedefs<T>::MV     MV;
+    typedef typename LinAlgTypedefs<T>::OP     OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX MATRIX;
 
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
@@ -49,7 +49,7 @@ class PreconditionerBuilderTest : public ::testing::Test
     {
         // Build a map
         d_N = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
+        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",d_N);
 
         // Build lhs and rhs vectors
         d_x = linalg_traits::build_vector<MV>(d_N);
@@ -69,7 +69,7 @@ class PreconditionerBuilderTest : public ::testing::Test
 
     int d_N;
 
-    Teuchos::RCP<Matrix> d_A;
+    Teuchos::RCP<MATRIX> d_A;
     Teuchos::RCP<OP>     d_P;
     Teuchos::RCP<MV>     d_x;
     Teuchos::RCP<MV>     d_y;
@@ -78,7 +78,7 @@ class PreconditionerBuilderTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(PreconditionerBuilderTest, MyTypes);
 
 TYPED_TEST(PreconditionerBuilderTest, basic)

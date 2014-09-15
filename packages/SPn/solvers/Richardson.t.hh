@@ -25,9 +25,9 @@ namespace profugus
 /*!
  * \brief Build a native Richardson solver.
  */
-template <class MV, class OP>
-Richardson<MV,OP>::Richardson( RCP_ParameterList db )
-    : LinearSolver<MV,OP>(db)
+template <LinAlgType T>
+Richardson<T>::Richardson( RCP_ParameterList db )
+    : LinearSolver<T>(db)
 {
     d_damping = b_db->get("Damping Factor", 1.0);
     b_label   = "Profugus Richardson";
@@ -39,8 +39,8 @@ Richardson<MV,OP>::Richardson( RCP_ParameterList db )
 /*!
  * \brief Solve a linear system using damped Richardson iteration.
  */
-template <class MV, class OP>
-void Richardson<MV,OP>::solve( Teuchos::RCP<MV>       x,
+template <LinAlgType T>
+void Richardson<T>::solve( Teuchos::RCP<MV>       x,
                                Teuchos::RCP<const MV> b )
 {
     REQUIRE( b_A != Teuchos::null );
@@ -98,7 +98,7 @@ void Richardson<MV,OP>::solve( Teuchos::RCP<MV>       x,
         }
 
         // Print status if requested
-        if( b_verbosity >= LinearSolver<MV,OP>::MEDIUM )
+        if( b_verbosity >= LinearSolver<T>::MEDIUM )
         {
             profugus::pout << b_label << " residual norm at iteration "
                            << b_num_iters << " is "
@@ -117,7 +117,7 @@ void Richardson<MV,OP>::solve( Teuchos::RCP<MV>       x,
     }
 
     // Print final status
-    if( b_verbosity >= LinearSolver<MV,OP>::LOW )
+    if( b_verbosity >= LinearSolver<T>::LOW )
     {
         if( b_converged )
         {

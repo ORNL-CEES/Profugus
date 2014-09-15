@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "EigenvalueSolverBuilder.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class EigenvalueSolverBuilder<Epetra_MultiVector,Epetra_Operator>;
-template class EigenvalueSolverBuilder<Tpetra_MultiVector,Tpetra_Operator>;
+template class EigenvalueSolverBuilder<EPETRA>;
+template class EigenvalueSolverBuilder<TPETRA>;
 
 } // end namespace profugus
 

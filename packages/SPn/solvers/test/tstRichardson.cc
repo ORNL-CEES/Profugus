@@ -23,11 +23,11 @@ class RichardsonTest : public testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+    typedef typename LinAlgTypedefs<T>::MV       MV;
+    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
 
-    typedef profugus::Richardson<MV,OP>   Richardson;
+    typedef profugus::Richardson<T>   Richardson;
 
   protected:
     // Initialization that are performed for each test
@@ -35,7 +35,7 @@ class RichardsonTest : public testing::Test
     {
         // Build a map
         d_N = 8;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
+        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",d_N);
 
         // Build lhs and rhs vectors
         d_x = linalg_traits::build_vector<MV>(d_N);
@@ -68,7 +68,7 @@ class RichardsonTest : public testing::Test
     int d_N;
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
-    Teuchos::RCP<Matrix>                 d_A;
+    Teuchos::RCP<MATRIX>                 d_A;
     Teuchos::RCP<MV>                     d_x;
     Teuchos::RCP<MV>                     d_b;
     Teuchos::RCP<Richardson>             d_solver;
@@ -81,7 +81,7 @@ class RichardsonTest : public testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
 TYPED_TEST_CASE(RichardsonTest, MyTypes);
 
 TYPED_TEST(RichardsonTest, basic)

@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "Arnoldi.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class Arnoldi<Epetra_MultiVector,Epetra_Operator>;
-template class Arnoldi<Tpetra_MultiVector,Tpetra_Operator>;
+template class Arnoldi<EPETRA>;
+template class Arnoldi<TPETRA>;
 
 } // end namespace profugus
 
