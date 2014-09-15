@@ -58,10 +58,6 @@ void MueLuPreconditionerBase::setup( Teuchos::RCP<Teuchos::ParameterList> pl )
     // (i.e. double/int/int).  If we change the Tpetra template parameters
     // this may cause problems with an Epetra instantiation, in which case
     // we would need to have this class be templated.
-    typedef typename LinAlgTypedefs<TPETRA>::ST   ST;
-    typedef typename LinAlgTypedefs<TPETRA>::MV   MV;
-    typedef typename LinAlgTypedefs<TPETRA>::OP   OP;
-    typedef typename LinAlgTypedefs<TPETRA>::NODE NODE;
     Teuchos::RCP<MueLu::HierarchyManager<ST,LO,GO,NODE> > mueLuFactory =
         Teuchos::rcp(
             new MueLu::EasyParameterListInterpreter<ST,LO,GO,NODE>(*pl));
