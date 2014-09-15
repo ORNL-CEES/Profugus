@@ -12,6 +12,7 @@
 #define mc_Fission_Matrix_Processor_hh
 
 #include <utility>
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
@@ -118,6 +119,10 @@ class Fission_Matrix_Processor
   private:
     // >>> IMPLEMENTATION
 
+    // Parallel merge sort of global graph.
+    void reduce();
+    void receive_and_merge(int child_node);
+
     // Node type.
     Node_Types d_type;
 
@@ -129,6 +134,9 @@ class Fission_Matrix_Processor
 
     // Number of domains and domain id.
     int d_node, d_nodes;
+
+    // Full size of the fission matrix
+    int d_N;
 };
 
 } // end namespace profugus
