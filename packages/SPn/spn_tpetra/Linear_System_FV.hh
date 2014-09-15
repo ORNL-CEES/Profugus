@@ -16,6 +16,7 @@
 #include "harness/DBC.hh"
 #include "utils/Vector_Lite.hh"
 #include "utils/Definitions.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "spn/FV_Bnd_Indexer.hh"
 #include "spn/FV_Gather.hh"
 #include "Linear_System.hh"
@@ -51,11 +52,10 @@ class Linear_System_FV : public Linear_System
   public:
     //@{
     //! Typedefs.
-    typedef def::Vec_Int                 Vec_Int;
-    typedef def::Vec_Dbl                 Vec_Dbl;
-    typedef Teuchos::RCP<FV_Bnd_Indexer> RCP_Bnd_Indexer;
-    typedef Tpetra_Graph                 Graph_t;
-    typedef Teuchos::RCP<const Graph_t>  RCP_Graph;
+    typedef def::Vec_Int                            Vec_Int;
+    typedef def::Vec_Dbl                            Vec_Dbl;
+    typedef Teuchos::RCP<FV_Bnd_Indexer>            RCP_Bnd_Indexer;
+    typedef typename LinAlgTypedefs<TPETRA>::MATRIX CrsMatrix_t;
     //@}
 
   private:
@@ -90,9 +90,6 @@ class Linear_System_FV : public Linear_System
     inline int index(int g, int eqn, int spatial_unknown) const;
 
     // >>> ACCESSORS
-
-    //! Get the graph.
-    RCP_Graph graph() const { return d_matrix->getGraph(); }
 
     //! Get an RCP to the LHS matrix (may not be full matrix)
     RCP_Matrix get_Matrix() const { return d_matrix; }

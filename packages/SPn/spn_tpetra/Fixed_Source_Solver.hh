@@ -15,7 +15,7 @@
 #include "solvers/StratimikosSolver.hh"
 #include "Solver_Base.hh"
 
-#include "solvers/TpetraTypedefs.hh"
+#include "solvers/LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -53,9 +53,10 @@ class Fixed_Source_Solver : public Solver_Base
     typedef Solver_Base                              Base;
     typedef Linear_System_t::External_Source         External_Source;
     typedef Linear_System_t::RCP_Timestep            RCP_Timestep;
-    typedef Tpetra_MultiVector                       MV;
-    typedef Tpetra_Operator                          OP;
-    typedef StratimikosSolver<MV,OP>                 Linear_Solver_t;
+    typedef LinAlgTypedefs<TPETRA>            LinAlgImpl;
+    typedef typename LinAlgImpl::OP           OP;
+    typedef typename LinAlgImpl::MV           MV;
+    typedef StratimikosSolver<TPETRA>                Linear_Solver_t;
     //@}
 
   private:

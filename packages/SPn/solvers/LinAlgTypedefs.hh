@@ -48,6 +48,7 @@ struct LinAlgTypedefs<EPETRA>
     typedef int                       GO;
     typedef KokkosClassic::SerialNode NODE;
     typedef Epetra_MultiVector        MV;
+    typedef Epetra_Vector             VECTOR;
     typedef Epetra_Operator           OP;
     typedef Epetra_Map                MAP;
     typedef Epetra_CrsMatrix          MATRIX;
@@ -62,10 +63,11 @@ struct LinAlgTypedefs<TPETRA>
     typedef int                                         GO;
     typedef KokkosClassic::DefaultNode::DefaultNodeType NODE;
     typedef Tpetra::MultiVector<ST,LO,GO,NODE>          MV;
+    typedef Tpetra::Vector<ST,LO,GO,NODE>               VECTOR;
     typedef Tpetra::Operator<ST,LO,GO,NODE>             OP;
     typedef Tpetra::Map<LO,GO,NODE>                     MAP;
     typedef Tpetra::CrsMatrix<ST,LO,GO,NODE>            MATRIX;
-    typedef Tpetra::RowGraph<LO,GO,NODE>                GRAPH;
+    typedef Tpetra::CrsGraph<LO,GO,NODE>                GRAPH;
 };
 
 template <>

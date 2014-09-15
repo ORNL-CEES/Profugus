@@ -192,7 +192,7 @@ TEST_F(MatrixTest, SP7_3Grp_Refl_Graph)
     system->build_Matrix();
 
     // get the graph
-    const Graph_t &g = system->graph();
+    const auto &g = system->get_Matrix()->Graph();
     EXPECT_TRUE(g.StorageOptimized());
 
     EXPECT_EQ(4 * 3 * mesh->num_cells(), g.NumMyRows());
@@ -610,7 +610,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Graph)
     system->build_Matrix();
 
     // get the graph
-    const Graph_t &g = system->graph();
+    const auto &g = system->get_Matrix()->Graph();
     EXPECT_TRUE(g.StorageOptimized());
 
     // number of faces

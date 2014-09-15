@@ -14,11 +14,8 @@
 #include <vector>
 
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Operator.hpp"
-#include "Tpetra_Map.hpp"
 
-#include "solvers/TpetraTypedefs.hh"
+#include "solvers/LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -42,13 +39,15 @@ namespace tpetra
  */
 //===========================================================================//
 
-class Energy_Prolongation : public Tpetra_Operator
+class Energy_Prolongation : public LinAlgTypedefs<TPETRA>::OP
 {
   public:
-    typedef Tpetra_Map         Map_t;
-    typedef Tpetra_Operator    OP;
-    typedef Tpetra_MultiVector MV;
-    typedef Tpetra_Vector      Vector_t;
+
+    typedef LinAlgTypedefs<TPETRA>            LinAlgImpl;
+    typedef typename LinAlgImpl::MAP          Map_t;
+    typedef typename LinAlgImpl::OP           OP;
+    typedef typename LinAlgImpl::MV           MV;
+    typedef typename LinAlgImpl::VECTOR       Vector_t;
 
     Energy_Prolongation( Teuchos::RCP<const MV>  fine_vec,
                          Teuchos::RCP<const MV>  coarse_vec,

@@ -191,7 +191,7 @@ TEST_F(MatrixTest, SP7_3Grp_Refl_Graph)
     system->build_Matrix();
 
     // get the graph
-    Teuchos::RCP<const Graph_t> g = system->graph();
+    auto g = system->get_Matrix()->getGraph();
     EXPECT_TRUE(g->isLocallyIndexed());
 
     EXPECT_EQ(4 * 3 * mesh->num_cells(), g->getNodeNumRows());
@@ -614,7 +614,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Graph)
     system->build_Matrix();
 
     // get the graph
-    Teuchos::RCP<const Graph_t> g = system->graph();
+    auto g = system->get_Matrix()->getGraph();
     EXPECT_TRUE(g->isLocallyIndexed());
 
     // number of faces

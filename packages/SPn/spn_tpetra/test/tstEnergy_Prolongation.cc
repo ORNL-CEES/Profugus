@@ -14,17 +14,14 @@
 #include <vector>
 
 #include "Teuchos_DefaultComm.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Vector.hpp"
-#include "Tpetra_Map.hpp"
 
+#include "solvers/LinAlgTypedefs.hh"
 #include "../Energy_Prolongation.hh"
 
-typedef KokkosClassic::SerialNode           Node;
-typedef Tpetra::Operator<double,int,int,Node> Tpetra_Op;
-typedef Tpetra::MultiVector<double,int,int,Node> Tpetra_MV;
-typedef Tpetra::Vector<double,int,int,Node> Tpetra_Vector;
-typedef Tpetra::Map<int,int,Node> Tpetra_Map;
+typedef typename LinAlgTypedefs<TPETRA>::MV     MV;
+typedef typename LinAlgTypedefs<TPETRA>::OP     OP;
+typedef typename LinAlgTypedefs<TPETRA>::VECTOR VECTOR;
+typedef typename LinAlgTypedefs<TPETRA>::MAP    MAP;
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -40,14 +37,14 @@ TEST(ProlongTest, Even)
         Teuchos::DefaultComm<int>::getComm();
 
     // Create Epetra maps
-    Teuchos::RCP<Tpetra_Map> map0( new Tpetra_Map(
+    Teuchos::RCP<MAP> map0( new MAP(
                 Teuchos::OrdinalTraits<int>::invalid(),Nv*Ng  ,0,comm) );
-    Teuchos::RCP<Tpetra_Map> map1( new Tpetra_Map(
+    Teuchos::RCP<MAP> map1( new MAP(
                 Teuchos::OrdinalTraits<int>::invalid(),Nv*Ng/2,0,comm) );
 
     // Create Epetra vectors
-    Teuchos::RCP<Tpetra_MV> vec0( new Tpetra_MV(map0,1) );
-    Teuchos::RCP<Tpetra_MV> vec1( new Tpetra_MV(map1,1) );
+    Teuchos::RCP<MV> vec0( new MV(map0,1) );
+    Teuchos::RCP<MV> vec1( new MV(map1,1) );
 
     std::vector<int> steer(4,2);
     profugus::tpetra::Energy_Prolongation prolong0( vec1, vec0, steer );

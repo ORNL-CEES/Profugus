@@ -13,14 +13,11 @@
 
 #include <SPn/config.h>
 
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Operator.hpp"
-
 #include "comm/Timer.hh"
 #include "solvers/EigenvalueSolver.hh"
 #include "Solver_Base.hh"
 
-#include "solvers/TpetraTypedefs.hh"
+#include "solvers/LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -55,12 +52,13 @@ class Eigenvalue_Solver : public Solver_Base
   public:
     //@{
     //! Typedefs.
-    typedef Solver_Base                       Base;
-    typedef Tpetra_MultiVector                MV;
-    typedef Tpetra_Operator                   OP;
-    typedef Teuchos::RCP<OP>                  RCP_Tpetra_Op;
-    typedef profugus::EigenvalueSolver<MV,OP> Eigensolver;
-    typedef Teuchos::RCP<Eigensolver>         RCP_Eigensolver;
+    typedef Solver_Base                        Base;
+    typedef LinAlgTypedefs<TPETRA>             LinAlgImpl;
+    typedef typename LinAlgImpl::MV            MV;
+    typedef typename LinAlgImpl::OP            OP;
+    typedef Teuchos::RCP<OP>                   RCP_Tpetra_Op;
+    typedef profugus::EigenvalueSolver<TPETRA> Eigensolver;
+    typedef Teuchos::RCP<Eigensolver>          RCP_Eigensolver;
     //@}
 
   private:

@@ -15,8 +15,6 @@
 #include "gtest/utils_gtest.hh"
 #include <SPn/config.h>
 
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Vector.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
 #include "Teuchos_XMLParameterListHelpers.hpp"
@@ -24,6 +22,7 @@
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
 #include "spn/Dimensions.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "../Linear_System_FV.hh"
 #include "../Energy_Multigrid.hh"
 
@@ -32,14 +31,13 @@
 using Teuchos::RCP;
 using Teuchos::rcp;
 
-typedef profugus::tpetra::Energy_Multigrid  Energy_Multigrid;
-typedef Energy_Multigrid::ParameterList     ParameterList;
-typedef Energy_Multigrid::RCP_ParameterList RCP_ParameterList;
-typedef profugus::Partitioner               Partitioner;
-typedef KokkosClassic::SerialNode           Node;
-typedef Tpetra::Operator<double,int,int,Node> Tpetra_Op;
-typedef Tpetra::MultiVector<double,int,int,Node> Tpetra_MV;
-typedef Tpetra::Vector<double,int,int,Node> Tpetra_Vector;
+typedef profugus::tpetra::Energy_Multigrid      Energy_Multigrid;
+typedef Energy_Multigrid::ParameterList         ParameterList;
+typedef Energy_Multigrid::RCP_ParameterList     RCP_ParameterList;
+typedef profugus::Partitioner                   Partitioner;
+typedef typename LinAlgTypedefs<TPETRA>::MV     MV;
+typedef typename LinAlgTypedefs<TPETRA>::OP     OP;
+typedef typename LinAlgTypedefs<TPETRA>::VECTOR VECTOR;
 
 using namespace std;
 
@@ -105,7 +103,7 @@ TEST(MultigridTest, Heuristic)
     RCP<profugus::tpetra::Linear_System> system = rcp(
         new profugus::tpetra::Linear_System_FV(db, dim, mat, mesh, indexer, data) );
     system->build_Matrix();
-    RCP<Tpetra_Op> matrix = system->get_Operator();
+    RCP<OP> matrix = system->get_Operator();
 
     /*
     const std::string plrefstr(
@@ -143,9 +141,9 @@ TEST(MultigridTest, Heuristic)
         Teuchos::getParametersFromXmlString(plrefstr);
 
     // Create two vectors
-    RCP<Tpetra_Vector> tmp_vec = system->get_RHS();
-    RCP<Tpetra_MV> x( new Tpetra_MV(tmp_vec->getMap(),1) );
-    RCP<Tpetra_MV> y( new Tpetra_MV(tmp_vec->getMap(),1) );
+    RCP<VECTOR> tmp_vec = system->get_RHS();
+    RCP<MV> x( new MV(tmp_vec->getMap(),1) );
+    RCP<MV> y( new MV(tmp_vec->getMap(),1) );
 
     // Create preconditioner
     Energy_Multigrid prec(db, prec_pl, dim, mat, mesh, indexer, data, system);

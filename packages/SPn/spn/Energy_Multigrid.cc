@@ -53,10 +53,10 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
     // Build level 0 smoother
     RCP_ParameterList smoother_db = sublist(prec_db, "Smoother");
     d_smoothers.push_back(
-        LinearSolverBuilder<MV,OP>::build_solver(smoother_db));
+        LinearSolverBuilder<EPETRA>::build_solver(smoother_db));
     d_smoothers.back()->set_operator(d_operators.back());
-    d_preconditioners.push_back(PreconditionerBuilder<OP>::build_preconditioner(
-                                    fine_system->get_Matrix(),smoother_db) );
+    d_preconditioners.push_back(PreconditionerBuilder<EPETRA>::
+        build_preconditioner(fine_system->get_Matrix(),smoother_db) );
     if (d_preconditioners.back() != Teuchos::null)
     {
         CHECK(d_preconditioners.back()->OperatorDomainMap().NumMyElements()
@@ -120,12 +120,12 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
         // Build smoother
         d_smoothers.push_back(
-            LinearSolverBuilder<MV,OP>::build_solver(smoother_db));
+            LinearSolverBuilder<EPETRA>::build_solver(smoother_db));
         d_smoothers.back()->set_operator(d_operators.back());
 
         // Store and set preconditioner
-        d_preconditioners.push_back(PreconditionerBuilder<OP>::build_preconditioner(
-                                        system->get_Matrix(),smoother_db) );
+        d_preconditioners.push_back(PreconditionerBuilder<EPETRA>::
+            build_preconditioner(system->get_Matrix(),smoother_db) );
         if( d_preconditioners.back() != Teuchos::null )
         {
             CHECK(d_preconditioners.back()->OperatorDomainMap()
@@ -150,7 +150,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
         // Replace last smoother, don't add a new one
         d_smoothers.push_back(
-            profugus::LinearSolverBuilder<MV,OP>::build_solver(coarse_db));
+            profugus::LinearSolverBuilder<EPETRA>::build_solver(coarse_db));
         d_smoothers.back()->set_operator(d_operators.back());
         if( d_preconditioners.back() != Teuchos::null )
         {

@@ -134,7 +134,7 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     RCP_Tpetra_Op prec = build_preconditioner(dim, mat, mesh, indexer, data);
 
     // Build the eigensolver
-    d_eigensolver = EigenvalueSolverBuilder<MV,OP>::build_solver(
+    d_eigensolver = EigenvalueSolverBuilder<TPETRA>::build_solver(
         edb, b_system->get_Operator(), b_system->get_fission_matrix(), prec);
 
     ENSURE(!d_eigensolver.is_null());
@@ -368,7 +368,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
     }
     else
     {
-        prec = PreconditionerBuilder<OP>::build_preconditioner(
+        prec = PreconditionerBuilder<TPETRA>::build_preconditioner(
                 b_system->get_Operator(),edb );
     }
 

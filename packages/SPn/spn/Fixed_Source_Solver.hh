@@ -13,6 +13,7 @@
 
 #include "comm/Timer.hh"
 #include "solvers/StratimikosSolver.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Solver_Base.hh"
 
 namespace profugus
@@ -51,7 +52,7 @@ class Fixed_Source_Solver : public Solver_Base
     typedef Linear_System_t::RCP_Timestep    RCP_Timestep;
     typedef Epetra_MultiVector               MV;
     typedef Epetra_Operator                  OP;
-    typedef StratimikosSolver<MV,OP>         Linear_Solver_t;
+    typedef StratimikosSolver<EPETRA>        Linear_Solver_t;
     //@}
 
   private:

@@ -14,10 +14,6 @@
 #include <vector>
 
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_Operator.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Vector.hpp"
-#include "Tpetra_RowMatrix.hpp"
 
 #include "harness/DBC.hh"
 #include "xs/Mat_DB.hh"
@@ -32,7 +28,7 @@
 #include "Energy_Restriction.hh"
 #include "Energy_Prolongation.hh"
 
-#include "solvers/TpetraTypedefs.hh"
+#include "solvers/LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -53,16 +49,17 @@ namespace tpetra
  */
 //===========================================================================//
 
-class Energy_Multigrid : public Tpetra_Operator
+class Energy_Multigrid : public LinAlgTypedefs<TPETRA>::OP
 {
   public:
     //@{
     //! Typedefs.
-    typedef Tpetra_Map                        Map_t;
-    typedef Tpetra_Operator                   OP;
-    typedef Tpetra_MultiVector                MV;
-    typedef Tpetra_Vector                     Vector_t;
-    typedef LinearSolver<MV,OP>               LinearSolver_t;
+    typedef LinAlgTypedefs<TPETRA>            LinAlgImpl;
+    typedef typename LinAlgImpl::MAP          Map_t;
+    typedef typename LinAlgImpl::OP           OP;
+    typedef typename LinAlgImpl::MV           MV;
+    typedef typename LinAlgImpl::VECTOR       Vector_t;
+    typedef LinearSolver<TPETRA>              LinearSolver_t;
     typedef LinearSolver_t::RCP_ParameterList RCP_ParameterList;
     typedef LinearSolver_t::ParameterList     ParameterList;
     //@}

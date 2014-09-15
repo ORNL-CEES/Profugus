@@ -91,9 +91,6 @@ class Linear_System_FV : public Linear_System
 
     // >>> ACCESSORS
 
-    //! Get the graph.
-    const Graph_t& graph() const { return d_matrix->Graph(); }
-
     //! Get an RCP to the LHS matrix (may not be full matrix)
     Teuchos::RCP<Epetra_RowMatrix> get_Matrix() const { return d_matrix; }
 

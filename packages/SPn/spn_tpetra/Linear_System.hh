@@ -17,10 +17,6 @@
 // Trilinos Includes
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
-#include "Tpetra_Map.hpp"
-#include "Tpetra_RowMatrix.hpp"
-#include "Tpetra_Vector.hpp"
-#include "Tpetra_RowGraph.hpp"
 
 #include "mesh/Mesh.hh"
 #include "mesh/LG_Indexer.hh"
@@ -28,7 +24,7 @@
 #include "spn/Isotropic_Source.hh"
 #include "spn/Moment_Coefficients.hh"
 
-#include "solvers/TpetraTypedefs.hh"
+#include "solvers/LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -66,11 +62,11 @@ class Linear_System
     typedef Moment_Coefficients::RCP_ParameterList RCP_ParameterList;
     typedef Moment_Coefficients::RCP_Timestep      RCP_Timestep;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
-    typedef Tpetra_Map                             Map_t;
-    typedef Tpetra_RowMatrix                       Matrix_t;
-    typedef Tpetra_CrsMatrix                       CrsMatrix_t;
-    typedef Tpetra_Operator                        Operator_t;
-    typedef Tpetra_Vector                          Vector_t;
+    typedef LinAlgTypedefs<TPETRA>                 LinAlgImpl;
+    typedef typename LinAlgImpl::MAP               Map_t;
+    typedef typename LinAlgImpl::MATRIX            Matrix_t;
+    typedef typename LinAlgImpl::OP                Operator_t;
+    typedef typename LinAlgImpl::VECTOR            Vector_t;
     typedef Teuchos::RCP<Map_t>                    RCP_Map;
     typedef Teuchos::RCP<Matrix_t>                 RCP_Matrix;
     typedef Teuchos::RCP<Operator_t>               RCP_Operator;

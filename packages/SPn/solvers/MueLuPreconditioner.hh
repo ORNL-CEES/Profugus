@@ -213,7 +213,7 @@ class MueLuPreconditioner<TPETRA>
 
     typedef MueLuPreconditionerBase Base;
     using Base::d_matrix;
-    Teuchos::RCP<X_MATRIX> d_A;
+    Teuchos::RCP<MATRIX> d_A;
 
   public:
 
