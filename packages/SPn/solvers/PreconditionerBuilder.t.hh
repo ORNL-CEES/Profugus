@@ -14,6 +14,7 @@
 #include <string>
 
 #include <SPn/config.h>
+#include "harness/Warnings.hh"
 
 #include "Epetra_RowMatrix.h"
 #include "Epetra_InvOperator.h"
@@ -185,10 +186,8 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
         Teuchos::RCP<Teuchos::ParameterList> muelu_pl =
             Teuchos::sublist(db, "MueLu Params");
 
-        // As of 9/4/14, MueLu throws an exception if constructed with default
-        // parameters unless SuperLU is available.  We switch to a different
-        // default coarse grid solver to avoid this.
-        muelu_pl->set("coarse: type",std::string("ILUT"));
+        ADD_WARNING("MueLu is currently unstable and known to produce "
+            "incorrect results.  Examine output carefully.");
 
         // Wrap Tpetra objects as Xpetra
         prec = Teuchos::rcp(new MueLuPreconditioner<Tpetra_MultiVector,

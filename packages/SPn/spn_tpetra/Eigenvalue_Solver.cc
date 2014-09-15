@@ -298,13 +298,11 @@ void Eigenvalue_Solver::set_default_parameters()
    <ParameterList name='smoother: params'>                                  \n\
     <Parameter name='relaxation: type' type='string' value='Gauss-Seidel'/> \n\
     <Parameter name='relaxation: sweeps' type='int' value='5'/>             \n\
-    <Parameter name='fact: drop tolerance' type='double' value='1e-1'/>     \n\
    </ParameterList>                                                         \n\
    <Parameter name='coarse: type' type='string' value='ILUT'/>              \n\
    <ParameterList name='coarse: params'>                                    \n\
     <Parameter name='relaxation: type' type='string' value='Gauss-Seidel'/> \n\
     <Parameter name='relaxation: sweeps' type='int' value='5'/>             \n\
-    <Parameter name='fact: drop tolerance' type='double' value='1e-1'/>     \n\
    </ParameterList>                                                         \n\
   </ParameterList>                                                          \n\
   <ParameterList name='operator_db'>                                        \n\

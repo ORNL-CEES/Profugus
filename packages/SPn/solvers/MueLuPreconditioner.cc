@@ -13,6 +13,8 @@
 
 #include "MueLuPreconditioner.hh"
 
+#include "MueLu_EasyParameterListInterpreter.hpp"
+
 namespace profugus
 {
 
@@ -43,9 +45,14 @@ void MueLuPreconditionerBase::setup( Teuchos::RCP<Teuchos::ParameterList> pl )
     REQUIRE( pl != Teuchos::null );
     REQUIRE( d_matrix != Teuchos::null );
 
+    // As of 9/4/14, MueLu throws an exception if constructed with default
+    // parameters unless SuperLU is available.  We switch to a different
+    // default coarse grid solver to avoid this.
+    pl->get("coarse: type",std::string("RELAXATION"));
+
     Teuchos::RCP<MueLu::HierarchyManager<SCALAR,LO,GO,NODE> > mueLuFactory =
         Teuchos::rcp(
-            new MueLu::ParameterListInterpreter<SCALAR,LO,GO,NODE>(*pl));
+            new MueLu::EasyParameterListInterpreter<SCALAR,LO,GO,NODE>(*pl));
 
     d_hierarchy = mueLuFactory->CreateHierarchy();
 
