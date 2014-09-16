@@ -25,7 +25,7 @@ namespace profugus
 /*!
  * \brief Build a PowerIteration solver.
  */
-template <LinAlgType T>
+template <class T>
 PowerIteration<T>::PowerIteration( RCP_ParameterList db )
     : EigenvalueSolver<T>(db)
 {
@@ -38,7 +38,7 @@ PowerIteration<T>::PowerIteration( RCP_ParameterList db )
 /*!
  * \brief Solver a linear system using bicgstab.
  */
-template <LinAlgType T>
+template <class T>
 void PowerIteration<T>::solve( double           &lambda,
                                    Teuchos::RCP<MV>  x )
 {

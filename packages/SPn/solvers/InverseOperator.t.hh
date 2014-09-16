@@ -23,7 +23,7 @@ namespace profugus
 /*!
  * \brief Constructor
  */
-template <LinAlgType T>
+template <class T>
 InverseOperatorBase<T>::InverseOperatorBase(
     Teuchos::RCP<Teuchos::ParameterList> pl )
 {
@@ -38,7 +38,7 @@ InverseOperatorBase<T>::InverseOperatorBase(
  *
  * \param A Epetra_Operator
  */
-template <LinAlgType T>
+template <class T>
 void InverseOperatorBase<T>::set_operator( Teuchos::RCP<OP> A )
 {
     REQUIRE( !A.is_null() );
@@ -54,7 +54,7 @@ void InverseOperatorBase<T>::set_operator( Teuchos::RCP<OP> A )
  *
  * \param B Epetra_Operator
  */
-template <LinAlgType T>
+template <class T>
 void InverseOperatorBase<T>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
     REQUIRE( !B.is_null() );
@@ -67,7 +67,7 @@ void InverseOperatorBase<T>::set_rhs_operator( Teuchos::RCP<OP> B )
  *
  * \param P Epetra_Operator
  */
-template <LinAlgType T>
+template <class T>
 void InverseOperatorBase<T>::set_preconditioner( Teuchos::RCP<OP> P )
 {
     REQUIRE( !P.is_null() );
@@ -82,7 +82,7 @@ void InverseOperatorBase<T>::set_preconditioner( Teuchos::RCP<OP> P )
  * \param x Input vector
  * \param y Output vector
  */
-template <LinAlgType T>
+template <class T>
 void InverseOperatorBase<T>::ApplyImpl(const MV &x, MV &y ) const
 {
     if( !(d_B.is_null()) )

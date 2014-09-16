@@ -39,15 +39,14 @@ namespace tpetra
  */
 //===========================================================================//
 
-class Energy_Prolongation : public LinAlgTypedefs<TPETRA>::OP
+class Energy_Prolongation : public TpetraTypes::OP
 {
   public:
 
-    typedef LinAlgTypedefs<TPETRA>            LinAlgImpl;
-    typedef typename LinAlgImpl::MAP          Map_t;
-    typedef typename LinAlgImpl::OP           OP;
-    typedef typename LinAlgImpl::MV           MV;
-    typedef typename LinAlgImpl::VECTOR       Vector_t;
+    typedef typename TpetraTypes::MAP    Map_t;
+    typedef typename TpetraTypes::OP     OP;
+    typedef typename TpetraTypes::MV     MV;
+    typedef typename TpetraTypes::VECTOR Vector_t;
 
     Energy_Prolongation( Teuchos::RCP<const MV>  fine_vec,
                          Teuchos::RCP<const MV>  coarse_vec,

@@ -22,7 +22,7 @@ namespace profugus
 /*!
  * \brief Build a RayleighQuotient solver.
  */
-template <LinAlgType T>
+template <class T>
 RayleighQuotient<T>::RayleighQuotient( RCP_ParameterList db )
     : Base(db)
 {
@@ -44,7 +44,7 @@ RayleighQuotient<T>::RayleighQuotient( RCP_ParameterList db )
  * \brief Solve an eigenvalue problem using Rayleigh quotient iteration.
  * Note that this solver is intended for solving the k-eigenvalue problem
  */
-template <LinAlgType T>
+template <class T>
 void RayleighQuotient<T>::solve( double           &keff,
                                      Teuchos::RCP<MV>  x )
 {

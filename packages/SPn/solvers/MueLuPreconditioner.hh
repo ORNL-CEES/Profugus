@@ -65,13 +65,13 @@ class MueLuPreconditionerBase
 
     void setup(Teuchos::RCP<Teuchos::ParameterList> pl);
 
-    typedef typename LinAlgTypedefs<TPETRA>::ST   ST;
-    typedef typename LinAlgTypedefs<TPETRA>::LO   LO;
-    typedef typename LinAlgTypedefs<TPETRA>::GO   GO;
-    typedef typename LinAlgTypedefs<TPETRA>::NODE NODE;
+    typedef typename TpetraTypes::ST   ST;
+    typedef typename TpetraTypes::LO   LO;
+    typedef typename TpetraTypes::GO   GO;
+    typedef typename TpetraTypes::NODE NODE;
 
 #ifdef USE_MUELU
-    Teuchos::RCP<LinAlgTypedefs<XPETRA>::MATRIX>   d_matrix;
+    Teuchos::RCP<XpetraTypes::MATRIX>   d_matrix;
     Teuchos::RCP<MueLu::Hierarchy<ST,LO,GO,NODE> > d_hierarchy;
 #endif
 };
@@ -94,7 +94,7 @@ class MueLuPreconditionerBase
 
 // Dummy implementation for MV/OP combos lacking a specialization.
 // Attempt to instantiate will cause a compile error.
-template <LinAlgType T>
+template <class T>
 class MueLuPreconditioner
 {
   public:
@@ -105,20 +105,20 @@ class MueLuPreconditioner
 #ifdef USE_MUELU
 // Implementation for Epetra_MultiVector/Operator
 template <>
-class MueLuPreconditioner<EPETRA>
+class MueLuPreconditioner<EpetraTypes>
     : public Epetra_Operator,
       public MueLuPreconditionerBase
 {
   public:
     //@{
     //! Typedefs.
-    typedef typename LinAlgTypedefs<EPETRA>::ST    ST;
-    typedef typename LinAlgTypedefs<EPETRA>::LO    LO;
-    typedef typename LinAlgTypedefs<EPETRA>::GO    GO;
-    typedef typename LinAlgTypedefs<EPETRA>::NODE  NODE;
-    typedef typename LinAlgTypedefs<EPETRA>::MV    MV;
-    typedef typename LinAlgTypedefs<EPETRA>::OP    OP;
-    typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef typename EpetraTypes::ST    ST;
+    typedef typename EpetraTypes::LO    LO;
+    typedef typename EpetraTypes::GO    GO;
+    typedef typename EpetraTypes::NODE  NODE;
+    typedef typename EpetraTypes::MV    MV;
+    typedef typename EpetraTypes::OP    OP;
+    typedef Teuchos::RCP<OP>            RCP_Operator;
     //@}
 
   private:
@@ -136,7 +136,7 @@ class MueLuPreconditioner<EPETRA>
         d_A = A;
 
         // Wrap Epetra_CrsMatrix into an Xpetra::EpetraCrsMatrix
-        Teuchos::RCP<LinAlgTypedefs<XPETRA>::CRS_MATRIX> temp_matrix =
+        Teuchos::RCP<XpetraTypes::CRS_MATRIX> temp_matrix =
             Teuchos::rcp( new Xpetra::EpetraCrsMatrix(A) );
 
         // Now wrap Xpetra_CrsMatrix into an Xpetra::Matrix
@@ -188,25 +188,23 @@ class MueLuPreconditioner<EPETRA>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class MueLuPreconditioner<TPETRA>
-    : public LinAlgTypedefs<TPETRA>::OP,
+class MueLuPreconditioner<TpetraTypes>
+    : public TpetraTypes::OP,
       public MueLuPreconditionerBase
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinAlgTypedefs<TPETRA> TpetraType;
-    typedef TpetraType::ST         ST;
-    typedef TpetraType::LO         LO;
-    typedef TpetraType::GO         GO;
-    typedef TpetraType::NODE       NODE;
-    typedef TpetraType::MV         MV;
-    typedef TpetraType::OP         OP;
-    typedef TpetraType::MAP        MAP;
-    typedef TpetraType::MATRIX     MATRIX;
-    typedef LinAlgTypedefs<XPETRA> XpetraType;
-    typedef XpetraType::MATRIX     X_MATRIX;
-    typedef XpetraType::CRS_MATRIX X_CRS_MATRIX;
+    typedef TpetraTypes::ST         ST;
+    typedef TpetraTypes::LO         LO;
+    typedef TpetraTypes::GO         GO;
+    typedef TpetraTypes::NODE       NODE;
+    typedef TpetraTypes::MV         MV;
+    typedef TpetraTypes::OP         OP;
+    typedef TpetraTypes::MAP        MAP;
+    typedef TpetraTypes::MATRIX     MATRIX;
+    typedef XpetraTypes::MATRIX     X_MATRIX;
+    typedef XpetraTypes::CRS_MATRIX X_CRS_MATRIX;
     //@}
 
   private:

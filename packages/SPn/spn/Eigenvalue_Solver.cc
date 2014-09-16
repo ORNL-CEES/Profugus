@@ -134,7 +134,7 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     RCP_Epetra_Op prec = build_preconditioner(dim, mat, mesh, indexer, data);
 
     // Build the eigensolver
-    d_eigensolver = EigenvalueSolverBuilder<EPETRA>::build_solver(
+    d_eigensolver = EigenvalueSolverBuilder<EpetraTypes>::build_solver(
         edb, b_system->get_Operator(), b_system->get_fission_matrix(), prec);
 
     ENSURE(!d_eigensolver.is_null());
@@ -433,8 +433,8 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         RCP_ParameterList op_db = Teuchos::sublist(edb, "operator_db");
 
         // Build Stratimikos Operator
-        Teuchos::RCP<InverseOperator<EPETRA> > solver_op = Teuchos::rcp(
-                new InverseOperator<EPETRA>(op_db));
+        Teuchos::RCP<InverseOperator<EpetraTypes> > solver_op = Teuchos::rcp(
+                new InverseOperator<EpetraTypes>(op_db));
         solver_op->set_operator(b_system->get_Operator());
 
         prec = solver_op;

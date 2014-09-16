@@ -39,13 +39,13 @@ namespace profugus
  *  additionally implement either the Epetra or Tpetra operator interface.
  */
 //===========================================================================//
-template <LinAlgType T>
+template <class T>
 class ShiftedOperatorBase
 {
   public:
 
-    typedef typename LinAlgTypedefs<T>::MV        MV;
-    typedef typename LinAlgTypedefs<T>::OP        OP;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
@@ -81,7 +81,7 @@ class ShiftedOperatorBase
 
 // Dummy implementation for MV/OP combos lacking a specialization.
 // Attempt to instantiate will cause a compile error.
-template <LinAlgType T>
+template <class T>
 class ShiftedOperator
 {
   public:
@@ -91,22 +91,21 @@ class ShiftedOperator
 
 // Implementation for Epetra_MultiVector/Operator
 template <>
-class ShiftedOperator<EPETRA>
-    : public Epetra_Operator,
-      public ShiftedOperatorBase<EPETRA>
+class ShiftedOperator<EpetraTypes>
+    : public EpetraTypes::OP,
+      public ShiftedOperatorBase<EpetraTypes>
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinAlgTypedefs<EPETRA>  LinAlgType;
-    typedef typename LinAlgType::MV MV;
-    typedef typename LinAlgType::OP OP;
-    typedef Teuchos::RCP<OP>        RCP_Operator;
+    typedef typename EpetraTypes::MV MV;
+    typedef typename EpetraTypes::OP OP;
+    typedef Teuchos::RCP<OP>         RCP_Operator;
     //@}
 
   private:
 
-    typedef ShiftedOperatorBase<EPETRA> Base;
+    typedef ShiftedOperatorBase<EpetraTypes> Base;
     using Base::d_A;
     using Base::d_B;
     using Base::d_shift;
@@ -162,24 +161,23 @@ class ShiftedOperator<EPETRA>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class ShiftedOperator<TPETRA>
-    : public LinAlgTypedefs<TPETRA>::OP,
-      public ShiftedOperatorBase<TPETRA>
+class ShiftedOperator<TpetraTypes>
+    : public TpetraTypes::OP,
+      public ShiftedOperatorBase<TpetraTypes>
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinAlgTypedefs<TPETRA>   LinAlgType;
-    typedef typename LinAlgType::MV  MV;
-    typedef typename LinAlgType::OP  OP;
-    typedef typename LinAlgType::MAP MAP;
-    typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef typename TpetraTypes::MV           MV;
+    typedef typename TpetraTypes::OP           OP;
+    typedef typename TpetraTypes::MAP          MAP;
+    typedef Teuchos::RCP<OP>                   RCP_Operator;
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
     //@}
 
   private:
 
-    typedef ShiftedOperatorBase<TPETRA> Base;
+    typedef ShiftedOperatorBase<TpetraTypes> Base;
     using Base::d_A;
     using Base::d_B;
     using Base::d_shift;

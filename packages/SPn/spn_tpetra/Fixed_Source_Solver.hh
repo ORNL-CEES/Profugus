@@ -50,13 +50,12 @@ class Fixed_Source_Solver : public Solver_Base
   public:
     //@{
     //! Typedefs.
-    typedef Solver_Base                              Base;
-    typedef Linear_System_t::External_Source         External_Source;
-    typedef Linear_System_t::RCP_Timestep            RCP_Timestep;
-    typedef LinAlgTypedefs<TPETRA>            LinAlgImpl;
-    typedef typename LinAlgImpl::OP           OP;
-    typedef typename LinAlgImpl::MV           MV;
-    typedef StratimikosSolver<TPETRA>                Linear_Solver_t;
+    typedef Solver_Base                        Base;
+    typedef Linear_System_t::External_Source   External_Source;
+    typedef Linear_System_t::RCP_Timestep      RCP_Timestep;
+    typedef typename TpetraTypes::OP           OP;
+    typedef typename TpetraTypes::MV           MV;
+    typedef StratimikosSolver<TpetraTypes>     Linear_Solver_t;
     //@}
 
   private:

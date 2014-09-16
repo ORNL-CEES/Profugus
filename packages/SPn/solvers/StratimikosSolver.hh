@@ -48,18 +48,18 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class StratimikosSolver : public LinearSolver<T>
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef typename LinAlgTypedefs<T>::ST              ST;
-    typedef typename LinAlgTypedefs<T>::LO              LO;
-    typedef typename LinAlgTypedefs<T>::GO              GO;
-    typedef typename LinAlgTypedefs<T>::NODE            NODE;
-    typedef typename LinAlgTypedefs<T>::MV              MV;
-    typedef typename LinAlgTypedefs<T>::OP              OP;
+    typedef typename T::ST                              ST;
+    typedef typename T::LO                              LO;
+    typedef typename T::GO                              GO;
+    typedef typename T::NODE                            NODE;
+    typedef typename T::MV                              MV;
+    typedef typename T::OP                              OP;
     typedef LinearSolver<T>                             Base;
     typedef Teuchos::ParameterList                      ParameterList;
     typedef Teuchos::RCP<ParameterList>                 RCP_ParameterList;

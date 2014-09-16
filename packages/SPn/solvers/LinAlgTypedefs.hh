@@ -33,15 +33,7 @@
 namespace profugus
 {
 
-enum LinAlgType {EPETRA, TPETRA, XPETRA};
-
-template <LinAlgType T>
-struct LinAlgTypedefs
-{
-};
-
-template <>
-struct LinAlgTypedefs<EPETRA>
+struct EpetraTypes
 {
     typedef double                    ST;
     typedef int                       LO;
@@ -55,8 +47,7 @@ struct LinAlgTypedefs<EPETRA>
     typedef Epetra_CrsGraph           GRAPH;
 };
 
-template <>
-struct LinAlgTypedefs<TPETRA>
+struct TpetraTypes
 {
     typedef double                                      ST;
     typedef int                                         LO;
@@ -70,8 +61,7 @@ struct LinAlgTypedefs<TPETRA>
     typedef Tpetra::CrsGraph<LO,GO,NODE>                GRAPH;
 };
 
-template <>
-struct LinAlgTypedefs<XPETRA>
+struct XpetraTypes
 {
     typedef double                                      ST;
     typedef int                                         LO;

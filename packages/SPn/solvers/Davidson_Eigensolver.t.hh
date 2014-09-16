@@ -25,7 +25,7 @@ namespace profugus
 // Constructor
 //---------------------------------------------------------------------------//
 
-template <LinAlgType T>
+template <class T>
 Davidson_Eigensolver<T>::Davidson_Eigensolver(RCP_ParameterList db,
                                                   RCP_OP            LHS,
                                                   RCP_OP            RHS)
@@ -76,7 +76,7 @@ Davidson_Eigensolver<T>::Davidson_Eigensolver(RCP_ParameterList db,
 // SOLVE EIGENPROBLEM
 //---------------------------------------------------------------------------//
 
-template <LinAlgType T>
+template <class T>
 void Davidson_Eigensolver<T>::solve( double &keff, Teuchos::RCP<MV> x)
 {
     REQUIRE(d_db->isSublist("Anasazi"));

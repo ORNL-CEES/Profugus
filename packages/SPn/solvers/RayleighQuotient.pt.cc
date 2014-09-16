@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class RayleighQuotient<EPETRA>;
-template class RayleighQuotient<TPETRA>;
+template class RayleighQuotient<EpetraTypes>;
+template class RayleighQuotient<TpetraTypes>;
 
 } // end namespace profugus
 

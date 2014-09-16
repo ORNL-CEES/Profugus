@@ -57,7 +57,7 @@ class Energy_Multigrid : public Epetra_Operator
     //! Typedefs.
     typedef Epetra_Operator                   OP;
     typedef Epetra_MultiVector                MV;
-    typedef LinearSolver<EPETRA>              LinearSolver_t;
+    typedef LinearSolver<EpetraTypes>              LinearSolver_t;
     typedef LinearSolver_t::RCP_ParameterList RCP_ParameterList;
     typedef LinearSolver_t::ParameterList     ParameterList;
     //@}

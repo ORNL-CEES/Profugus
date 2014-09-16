@@ -33,7 +33,7 @@ namespace profugus
  * determined by the database entry "eigensolver", which can be "Power",
  * "Arnoldi".
  */
-template <LinAlgType T>
+template <class T>
 Teuchos::RCP<EigenvalueSolver<T> >
 EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
                                           Teuchos::RCP<OP>  A)
@@ -92,7 +92,7 @@ EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
  * should be given if it is desired to use internal preconditioners
  * (i.e. native Aztec/Stratimikos preconditioning).
  */
-template <LinAlgType T>
+template <class T>
 Teuchos::RCP<EigenvalueSolver<T> >
 EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
                                               Teuchos::RCP<OP>  A,

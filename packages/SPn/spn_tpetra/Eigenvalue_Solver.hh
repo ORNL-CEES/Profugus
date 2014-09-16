@@ -52,13 +52,12 @@ class Eigenvalue_Solver : public Solver_Base
   public:
     //@{
     //! Typedefs.
-    typedef Solver_Base                        Base;
-    typedef LinAlgTypedefs<TPETRA>             LinAlgImpl;
-    typedef typename LinAlgImpl::MV            MV;
-    typedef typename LinAlgImpl::OP            OP;
-    typedef Teuchos::RCP<OP>                   RCP_Tpetra_Op;
-    typedef profugus::EigenvalueSolver<TPETRA> Eigensolver;
-    typedef Teuchos::RCP<Eigensolver>          RCP_Eigensolver;
+    typedef Solver_Base                             Base;
+    typedef typename TpetraTypes::MV                MV;
+    typedef typename TpetraTypes::OP                OP;
+    typedef Teuchos::RCP<OP>                        RCP_Tpetra_Op;
+    typedef profugus::EigenvalueSolver<TpetraTypes> Eigensolver;
+    typedef Teuchos::RCP<Eigensolver>               RCP_Eigensolver;
     //@}
 
   private:

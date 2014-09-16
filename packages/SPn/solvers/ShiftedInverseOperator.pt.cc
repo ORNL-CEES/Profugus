@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class ShiftedInverseOperator<EPETRA>;
-template class ShiftedInverseOperator<TPETRA>;
+template class ShiftedInverseOperator<EpetraTypes>;
+template class ShiftedInverseOperator<TpetraTypes>;
 
 } // end namespace profugus
 

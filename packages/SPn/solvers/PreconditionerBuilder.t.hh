@@ -54,7 +54,7 @@ namespace profugus
  */
 template <>
 Teuchos::RCP<Epetra_Operator>
-PreconditionerBuilder<EPETRA>::build_preconditioner(
+PreconditionerBuilder<EpetraTypes>::build_preconditioner(
     Teuchos::RCP<Epetra_Operator> op,
     RCP_ParameterList             db )
 {
@@ -148,17 +148,17 @@ PreconditionerBuilder<EPETRA>::build_preconditioner(
 }
 
 template <>
-Teuchos::RCP<LinAlgTypedefs<TPETRA>::OP>
-PreconditionerBuilder<TPETRA>::build_preconditioner(
-    Teuchos::RCP<LinAlgTypedefs<TPETRA>::OP> op,
+Teuchos::RCP<TpetraTypes::OP>
+PreconditionerBuilder<TpetraTypes>::build_preconditioner(
+    Teuchos::RCP<TpetraTypes::OP> op,
     RCP_ParameterList             db )
 {
-    typedef typename LinAlgTypedefs<TPETRA>::MATRIX MATRIX;
-    typedef typename LinAlgTypedefs<TPETRA>::OP     OP;
-    typedef typename LinAlgTypedefs<TPETRA>::ST     ST;
-    typedef typename LinAlgTypedefs<TPETRA>::LO     LO;
-    typedef typename LinAlgTypedefs<TPETRA>::GO     GO;
-    typedef typename LinAlgTypedefs<TPETRA>::NODE   NODE;
+    typedef typename TpetraTypes::MATRIX MATRIX;
+    typedef typename TpetraTypes::OP     OP;
+    typedef typename TpetraTypes::ST     ST;
+    typedef typename TpetraTypes::LO     LO;
+    typedef typename TpetraTypes::GO     GO;
+    typedef typename TpetraTypes::NODE   NODE;
 
     string prec_type = to_lower(db->get("Preconditioner", string("Ifpack2")));
     Teuchos::RCP<OP> prec;
@@ -195,7 +195,7 @@ PreconditionerBuilder<TPETRA>::build_preconditioner(
             "incorrect results.  Examine output carefully.");
 
         // Wrap Tpetra objects as Xpetra
-        prec = Teuchos::rcp(new MueLuPreconditioner<TPETRA>(row_mat,muelu_pl));
+        prec = Teuchos::rcp(new MueLuPreconditioner<TpetraTypes>(row_mat,muelu_pl));
 #else
         VALIDATE(false,"Muelu must be enabled to use Preconditioner=muelu");
 #endif

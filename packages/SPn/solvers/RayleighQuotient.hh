@@ -43,12 +43,12 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class RayleighQuotient : public EigenvalueSolver<T>
 {
-    typedef EigenvalueSolver<T>             Base;
-    typedef typename LinAlgTypedefs<T>::MV  MV;
-    typedef typename LinAlgTypedefs<T>::OP  OP;
+    typedef EigenvalueSolver<T> Base;
+    typedef typename T::MV      MV;
+    typedef typename T::OP      OP;
 
   public:
     //@{

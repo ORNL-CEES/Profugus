@@ -61,7 +61,7 @@ class Eigenvalue_Solver : public Solver_Base
     typedef Epetra_MultiVector                 MV;
     typedef Epetra_Operator                    OP;
     typedef Teuchos::RCP<OP>                   RCP_Epetra_Op;
-    typedef profugus::EigenvalueSolver<EPETRA> Eigensolver;
+    typedef profugus::EigenvalueSolver<EpetraTypes> Eigensolver;
     typedef Teuchos::RCP<Eigensolver>          RCP_Eigensolver;
     //@}
 

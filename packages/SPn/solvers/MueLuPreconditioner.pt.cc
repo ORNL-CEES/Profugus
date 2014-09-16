@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class MueLuPreconditioner<EPETRA>;
-template class MueLuPreconditioner<TPETRA>;
+template class MueLuPreconditioner<EpetraTypes>;
+template class MueLuPreconditioner<TpetraTypes>;
 
 } // end namespace profugus
 

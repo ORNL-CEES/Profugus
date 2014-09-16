@@ -35,12 +35,11 @@ class ShiftedInverseTest: public ::testing::Test
 {
   protected:
 
-    typedef typename LinAlgTypedefs<T>::MV       MV;
-    typedef typename LinAlgTypedefs<T>::OP       OP;
-    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
-
-    typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
-    typedef profugus::ShiftedInverseOperator<T> ShiftInvOp;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
+    typedef typename T::MATRIX                    MATRIX;
+    typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
+    typedef profugus::ShiftedInverseOperator<T>   ShiftInvOp;
 
   protected:
     // Initialization that are performed for each test
@@ -49,8 +48,8 @@ class ShiftedInverseTest: public ::testing::Test
         d_N = 20;
 
         // Build CrsMatrix
-        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",d_N);
-        d_B = linalg_traits::build_matrix<MATRIX>("diagonal",d_N);
+        d_A = linalg_traits::build_matrix<T>("laplacian",d_N);
+        d_B = linalg_traits::build_matrix<T>("diagonal",d_N);
 
         // Create options database
         d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
@@ -77,7 +76,9 @@ class ShiftedInverseTest: public ::testing::Test
 // Tests
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(ShiftedInverseTest, MyTypes);
 
 TYPED_TEST(ShiftedInverseTest, basic)
@@ -85,20 +86,20 @@ TYPED_TEST(ShiftedInverseTest, basic)
     typedef typename TestFixture::MV  MV;
     typedef typename TestFixture::OPT OPT;
 
-    Teuchos::RCP<MV> x1 = linalg_traits::build_vector<MV>(this->d_N);
-    Teuchos::RCP<MV> x2 = linalg_traits::build_vector<MV>(this->d_N);
-    Teuchos::RCP<MV>  y = linalg_traits::build_vector<MV>(this->d_N);
+    Teuchos::RCP<MV> x1 = linalg_traits::build_vector<TypeParam>(this->d_N);
+    Teuchos::RCP<MV> x2 = linalg_traits::build_vector<TypeParam>(this->d_N);
+    Teuchos::RCP<MV>  y = linalg_traits::build_vector<TypeParam>(this->d_N);
 
     // Solver tolerance is 1e-10, this should give is 1e-8 in vector entries
     double tol = 1e-8;
 
     // Test all cases against two vectors
     std::vector<double> one(this->d_N,1.0);
-    linalg_traits::fill_vector<MV>(x1,one);
+    linalg_traits::fill_vector<TypeParam>(x1,one);
     std::vector<double> vals(this->d_N);
     for( int i=0; i<this->d_N; ++ i )
         vals[i] = static_cast<double>(i+1);
-    linalg_traits::fill_vector<MV>(x2,vals);
+    linalg_traits::fill_vector<TypeParam>(x2,vals);
 
     // First set only one operator
     this->d_operator->set_operator(this->d_A);
@@ -113,7 +114,7 @@ TYPED_TEST(ShiftedInverseTest, basic)
         5.5000e+01, 5.4000e+01, 5.2000e+01, 4.9000e+01, 4.5000e+01,
         4.0000e+01, 3.4000e+01, 2.7000e+01, 1.9000e+01, 1.0000e+01 };
 
-    linalg_traits::test_vector<MV>(y,ref);
+    linalg_traits::test_vector<TypeParam>(y,ref);
 
     // Second vector
     OPT::Apply(*this->d_operator,*x2,*y);
@@ -125,7 +126,7 @@ TYPED_TEST(ShiftedInverseTest, basic)
         5.89333333e+02, 5.71666667e+02, 5.40000000e+02, 4.93333333e+02,
         4.30666667e+02, 3.51000000e+02, 2.53333333e+02, 1.36666667e+02 };
 
-    linalg_traits::test_vector<MV>(y,ref2);
+    linalg_traits::test_vector<TypeParam>(y,ref2);
 
     // Set nonzero shift
     this->d_operator->set_shift(0.5);
@@ -140,7 +141,7 @@ TYPED_TEST(ShiftedInverseTest, basic)
        -3.78397213e+00, -8.24390244e+00, -9.58188153e+00, -7.12891986e+00,
        -2.11149826e+00,  2.96167247e+00,  5.55400697e+00,  4.36933798e+00 };
 
-    linalg_traits::test_vector<MV>(y,ref3);
+    linalg_traits::test_vector<TypeParam>(y,ref3);
 
     // Second vector
     OPT::Apply(*this->d_operator,*x2,*y);
@@ -152,7 +153,7 @@ TYPED_TEST(ShiftedInverseTest, basic)
        -2.35739256e+01, -8.10586500e+01, -1.12014049e+02, -1.01962424e+02,
        -5.69295868e+01, -4.31956019e-01,  3.82816528e+01,  3.88544352e+01 };
 
-    linalg_traits::test_vector<MV>(y,ref4);
+    linalg_traits::test_vector<TypeParam>(y,ref4);
 
     // Set second operator and shift=0, results should be same as original
     this->d_operator->set_rhs_operator(this->d_B);
@@ -161,12 +162,12 @@ TYPED_TEST(ShiftedInverseTest, basic)
     // First vector
     OPT::Apply(*this->d_operator,*x1,*y);
 
-    linalg_traits::test_vector<MV>(y,ref);
+    linalg_traits::test_vector<TypeParam>(y,ref);
 
     // Second vector
     OPT::Apply(*this->d_operator,*x2,*y);
 
-    linalg_traits::test_vector<MV>(y,ref2);
+    linalg_traits::test_vector<TypeParam>(y,ref2);
 
     // Nonzero shift
     this->d_operator->set_shift(0.5);
@@ -181,7 +182,7 @@ TYPED_TEST(ShiftedInverseTest, basic)
        -1.60240543e-01, -1.41264818e-01, -1.33435369e-01, -1.24840654e-01,
        -1.17520705e-01, -1.11274761e-01, -1.03555965e-01, -1.12055504e-01 };
 
-    linalg_traits::test_vector<MV>(y,ref5);
+    linalg_traits::test_vector<TypeParam>(y,ref5);
 
     // Second vector
     OPT::Apply(*this->d_operator,*x2,*y);
@@ -193,7 +194,7 @@ TYPED_TEST(ShiftedInverseTest, basic)
        -2.00667608e+00, -1.99861790e+00, -2.00023440e+00, -2.00009290e+00,
        -1.99920823e+00, -2.00505362e+00, -1.96541646e+00, -2.25432294e+00 };
 
-    linalg_traits::test_vector<MV>(y,ref6);
+    linalg_traits::test_vector<TypeParam>(y,ref6);
 }
 
 //---------------------------------------------------------------------------//

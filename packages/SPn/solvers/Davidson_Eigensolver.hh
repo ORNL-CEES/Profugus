@@ -32,14 +32,14 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class Davidson_Eigensolver : public EigenvalueSolver<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef typename LinAlgTypedefs<T>::MV       MV;
-    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename T::MV                       MV;
+    typedef typename T::OP                       OP;
     typedef Teuchos::RCP<OP>                     RCP_OP;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
     typedef Anasazi::MultiVecTraits<double,MV>   MultiVecTraits;

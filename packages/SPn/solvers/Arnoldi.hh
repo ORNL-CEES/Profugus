@@ -38,14 +38,14 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class Arnoldi : public EigenvalueSolver<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef typename LinAlgTypedefs<T>::MV                MV;
-    typedef typename LinAlgTypedefs<T>::OP                OP;
+    typedef typename T::MV                                MV;
+    typedef typename T::OP                                OP;
     typedef Anasazi::BasicEigenproblem<double,MV,OP>      Eigenproblem;
     typedef Anasazi::BlockKrylovSchurSolMgr<double,MV,OP> KrylovSchur;
     typedef Anasazi::Eigensolution<double,MV>             Eigensolution;

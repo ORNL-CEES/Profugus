@@ -33,7 +33,7 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class LinearSolverBuilder
 {
   public:

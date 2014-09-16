@@ -62,11 +62,10 @@ class Linear_System
     typedef Moment_Coefficients::RCP_ParameterList RCP_ParameterList;
     typedef Moment_Coefficients::RCP_Timestep      RCP_Timestep;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
-    typedef LinAlgTypedefs<TPETRA>                 LinAlgImpl;
-    typedef typename LinAlgImpl::MAP               Map_t;
-    typedef typename LinAlgImpl::MATRIX            Matrix_t;
-    typedef typename LinAlgImpl::OP                Operator_t;
-    typedef typename LinAlgImpl::VECTOR            Vector_t;
+    typedef typename TpetraTypes::MAP              Map_t;
+    typedef typename TpetraTypes::MATRIX           Matrix_t;
+    typedef typename TpetraTypes::OP               Operator_t;
+    typedef typename TpetraTypes::VECTOR           Vector_t;
     typedef Teuchos::RCP<Map_t>                    RCP_Map;
     typedef Teuchos::RCP<Matrix_t>                 RCP_Matrix;
     typedef Teuchos::RCP<Operator_t>               RCP_Operator;

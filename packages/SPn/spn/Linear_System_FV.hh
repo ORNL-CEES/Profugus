@@ -92,7 +92,7 @@ class Linear_System_FV : public Linear_System
     // >>> ACCESSORS
 
     //! Get an RCP to the LHS matrix (may not be full matrix)
-    Teuchos::RCP<Epetra_RowMatrix> get_Matrix() const { return d_matrix; }
+    Teuchos::RCP<Epetra_CrsMatrix> get_Matrix() const { return d_matrix; }
 
     // Get the boundary indexer for a face.
     inline RCP_Bnd_Indexer bnd_indexer(int face) const;

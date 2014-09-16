@@ -49,17 +49,16 @@ namespace tpetra
  */
 //===========================================================================//
 
-class Energy_Multigrid : public LinAlgTypedefs<TPETRA>::OP
+class Energy_Multigrid : public TpetraTypes::OP
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinAlgTypedefs<TPETRA>            LinAlgImpl;
-    typedef typename LinAlgImpl::MAP          Map_t;
-    typedef typename LinAlgImpl::OP           OP;
-    typedef typename LinAlgImpl::MV           MV;
-    typedef typename LinAlgImpl::VECTOR       Vector_t;
-    typedef LinearSolver<TPETRA>              LinearSolver_t;
+    typedef typename TpetraTypes::MAP         Map_t;
+    typedef typename TpetraTypes::OP          OP;
+    typedef typename TpetraTypes::MV          MV;
+    typedef typename TpetraTypes::VECTOR      Vector_t;
+    typedef LinearSolver<TpetraTypes>         LinearSolver_t;
     typedef LinearSolver_t::RCP_ParameterList RCP_ParameterList;
     typedef LinearSolver_t::ParameterList     ParameterList;
     //@}

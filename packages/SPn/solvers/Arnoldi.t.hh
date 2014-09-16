@@ -27,7 +27,7 @@ namespace profugus
 /*!
  *\brief Constructor with user defined tolerance and max iterations.
  */
-template <LinAlgType T>
+template <class T>
 Arnoldi<T>::Arnoldi(RCP_ParameterList db)
     : EigenvalueSolver<T>(db)
 {
@@ -59,7 +59,7 @@ Arnoldi<T>::Arnoldi(RCP_ParameterList db)
 /*!
  *\brief Set operator for eigensolver.
  */
-template <LinAlgType T>
+template <class T>
 void Arnoldi<T>::set_operator(RCP_OP A)
 {
     REQUIRE(!A.is_null());
@@ -75,7 +75,7 @@ void Arnoldi<T>::set_operator(RCP_OP A)
  * dominant eigenvalue will be placed in the input argument eval and the
  * corresponding eigenvector in evec.
  */
-template <LinAlgType T>
+template <class T>
 void Arnoldi<T>::solve(double &eval,
                     RCP_MV  evec)
 {

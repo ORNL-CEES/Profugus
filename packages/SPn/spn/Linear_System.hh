@@ -63,10 +63,10 @@ class Linear_System
     typedef Moment_Coefficients::RCP_Timestep      RCP_Timestep;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
     typedef Epetra_Map                             Map_t;
-    typedef Epetra_RowMatrix                       Matrix_t;
+    typedef Epetra_CrsMatrix                       Matrix_t;
     typedef Epetra_Vector                          Vector_t;
     typedef Teuchos::RCP<Epetra_Map>               RCP_Map;
-    typedef Teuchos::RCP<Epetra_RowMatrix>         RCP_Matrix;
+    typedef Teuchos::RCP<Epetra_CrsMatrix>         RCP_Matrix;
     typedef Teuchos::RCP<Epetra_Operator>          RCP_Operator;
     typedef Teuchos::RCP<Epetra_Vector>            RCP_Vector;
     typedef Isotropic_Source                       External_Source;

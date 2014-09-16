@@ -43,14 +43,14 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class Richardson : public LinearSolver<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef typename LinAlgTypedefs<T>::MV        MV;
-    typedef typename LinAlgTypedefs<T>::OP        OP;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
     typedef LinearSolver<T>                       Base;
     typedef typename Base::ParameterList          ParameterList;
     typedef typename Base::RCP_ParameterList      RCP_ParameterList;

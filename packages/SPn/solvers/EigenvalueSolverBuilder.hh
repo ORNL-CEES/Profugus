@@ -33,14 +33,14 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class EigenvalueSolverBuilder
 {
   public:
     //@{
     //! Typedefs.
-    typedef typename LinAlgTypedefs<T>::MV        MV;
-    typedef typename LinAlgTypedefs<T>::OP        OP;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
     typedef EigenvalueSolver<T>                   EigenvalueSolver_t;
     typedef Teuchos::RCP<EigenvalueSolver_t>      RCP_EigenvalueSolver;
     typedef Teuchos::RCP<Teuchos::ParameterList>  RCP_ParameterList;

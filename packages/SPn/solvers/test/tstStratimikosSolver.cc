@@ -38,12 +38,10 @@ template <class T>
 class StratimikosSolverTest : public testing::Test
 {
   protected:
-    typedef typename LinAlgTypedefs<T>::MV       MV;
-    typedef typename LinAlgTypedefs<T>::OP       OP;
-    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
-
+    typedef typename T::MV                     MV;
+    typedef typename T::MATRIX                 MATRIX;
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
-    typedef profugus::StratimikosSolver<T> Solver_t;
+    typedef profugus::StratimikosSolver<T>     Solver_t;
 
   protected:
     // Initialization that are performed for each test
@@ -59,7 +57,7 @@ class StratimikosSolverTest : public testing::Test
         d_db->set("linear_solver_xml_file", xmlfile);
 
         // make the operator
-        d_A = linalg_traits::build_matrix<MATRIX>("4x4_lhs",4);
+        d_A = linalg_traits::build_matrix<T>("4x4_lhs",4);
 
         // make the solver
         Solver_t solver(d_db);
@@ -67,30 +65,30 @@ class StratimikosSolverTest : public testing::Test
         solver.set_operator(d_A);
 
         // wrap rhs into Epetra MV
-        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<MV>(4);
-        linalg_traits::fill_vector<MV>(ep_rhs,rhs);
+        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<T>(4);
+        linalg_traits::fill_vector<T>(ep_rhs,rhs);
 
         std::vector<double> rhs_norm(1);
         MVT::MvNorm(*ep_rhs,rhs_norm);
 
         // solve
-        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(4);
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<T>(4);
         std::vector<double> zero(4,0.0);
-        linalg_traits::fill_vector<MV>(ep_x,zero);
+        linalg_traits::fill_vector<T>(ep_x,zero);
         solver.set_tolerance(1.0e-8);
         solver.solve(ep_x, ep_rhs);
-        linalg_traits::test_vector<MV>(ep_x,sol);
+        linalg_traits::test_vector<T>(ep_x,sol);
         EXPECT_TRUE( 10 >  solver.num_iters() );
 
         // solve again and limit iterations
-        linalg_traits::fill_vector<MV>(ep_x,zero);
+        linalg_traits::fill_vector<T>(ep_x,zero);
         solver.set_max_iters(1);
         solver.set_tolerance(1.0e-12);
         solver.solve(ep_x, ep_rhs);
         EXPECT_TRUE( 10 >  solver.num_iters() );
 
         // solve again and limit tolerance
-        linalg_traits::fill_vector<MV>(ep_x,zero);
+        linalg_traits::fill_vector<T>(ep_x,zero);
         solver.set_max_iters(1000);
         solver.set_tolerance(0.1);
         solver.solve(ep_x, ep_rhs);
@@ -109,7 +107,9 @@ class StratimikosSolverTest : public testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(StratimikosSolverTest, MyTypes);
 
 TYPED_TEST(StratimikosSolverTest, Aztec)

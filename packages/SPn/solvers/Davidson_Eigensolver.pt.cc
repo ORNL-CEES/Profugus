@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class Davidson_Eigensolver<EPETRA>;
-template class Davidson_Eigensolver<TPETRA>;
+template class Davidson_Eigensolver<EpetraTypes>;
+template class Davidson_Eigensolver<TpetraTypes>;
 
 } // end namespace profugus
 

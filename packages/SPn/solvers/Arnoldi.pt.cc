@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class Arnoldi<EPETRA>;
-template class Arnoldi<TPETRA>;
+template class Arnoldi<EpetraTypes>;
+template class Arnoldi<TpetraTypes>;
 
 } // end namespace profugus
 

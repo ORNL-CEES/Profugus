@@ -20,8 +20,8 @@
 namespace profugus
 {
 
-template class Richardson<EPETRA>;
-template class Richardson<TPETRA>;
+template class Richardson<EpetraTypes>;
+template class Richardson<TpetraTypes>;
 
 } // end namespace profugus
 

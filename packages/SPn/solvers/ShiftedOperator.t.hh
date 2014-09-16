@@ -26,7 +26,7 @@ namespace profugus
 /*!
  * \brief Constructor
  */
-template <LinAlgType T>
+template <class T>
 ShiftedOperatorBase<T>::ShiftedOperatorBase()
     : d_shift(0.0)
 {
@@ -40,7 +40,7 @@ ShiftedOperatorBase<T>::ShiftedOperatorBase()
  *
  * \param A Epetra_Operator
  */
-template <LinAlgType T>
+template <class T>
 void ShiftedOperatorBase<T>::set_operator( Teuchos::RCP<OP> A )
 {
     REQUIRE( !A.is_null() );
@@ -53,7 +53,7 @@ void ShiftedOperatorBase<T>::set_operator( Teuchos::RCP<OP> A )
  *
  * \param B Epetra_Operator
  */
-template <LinAlgType T>
+template <class T>
 void ShiftedOperatorBase<T>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
     REQUIRE( !B.is_null() );
@@ -67,7 +67,7 @@ void ShiftedOperatorBase<T>::set_rhs_operator( Teuchos::RCP<OP> B )
  * \param x Input vector
  * \param y Output vector
  */
-template <LinAlgType T>
+template <class T>
 void ShiftedOperatorBase<T>::ApplyImpl(const MV &x,
                                                  MV &y ) const
 {

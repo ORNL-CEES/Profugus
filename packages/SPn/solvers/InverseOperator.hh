@@ -39,13 +39,13 @@ namespace profugus
  *  additionally implement either the Epetra or Tpetra operator interface.
  */
 //===========================================================================//
-template <LinAlgType T>
+template <class T>
 class InverseOperatorBase
 {
   public:
 
-    typedef typename LinAlgTypedefs<T>::MV        MV;
-    typedef typename LinAlgTypedefs<T>::OP        OP;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
@@ -91,7 +91,7 @@ class InverseOperatorBase
 
 // Dummy implementation for MV/OP combos lacking a specialization.
 // Attempt to instantiate will cause a compile error.
-template <LinAlgType T>
+template <class T>
 class InverseOperator
 {
   public:
@@ -101,22 +101,21 @@ class InverseOperator
 
 // Implementation for Epetra_MultiVector/Operator
 template <>
-class InverseOperator<EPETRA>
+class InverseOperator<EpetraTypes>
     : public Epetra_Operator,
-      public InverseOperatorBase<EPETRA>
+      public InverseOperatorBase<EpetraTypes>
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinAlgTypedefs<EPETRA>  LinAlgType;
-    typedef typename LinAlgType::MV MV;
-    typedef typename LinAlgType::OP OP;
-    typedef Teuchos::RCP<OP>        RCP_Operator;
+    typedef typename EpetraTypes::MV MV;
+    typedef typename EpetraTypes::OP OP;
+    typedef Teuchos::RCP<OP>         RCP_Operator;
     //@}
 
   private:
 
-    typedef InverseOperatorBase<EPETRA> Base;
+    typedef InverseOperatorBase<EpetraTypes> Base;
     using Base::d_A;
     using Base::d_B;
 
@@ -180,24 +179,23 @@ class InverseOperator<EPETRA>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class InverseOperator<TPETRA>
-    : public LinAlgTypedefs<TPETRA>::OP,
-      public InverseOperatorBase<TPETRA>
+class InverseOperator<TpetraTypes>
+    : public TpetraTypes::OP,
+      public InverseOperatorBase<TpetraTypes>
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinAlgTypedefs<TPETRA>   LinAlgType;
-    typedef typename LinAlgType::MV  MV;
-    typedef typename LinAlgType::OP  OP;
-    typedef typename LinAlgType::MAP MAP;
-    typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef typename TpetraTypes::MV           MV;
+    typedef typename TpetraTypes::OP           OP;
+    typedef typename TpetraTypes::MAP          MAP;
+    typedef Teuchos::RCP<OP>                   RCP_Operator;
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
     //@}
 
   private:
 
-    typedef InverseOperatorBase<TPETRA> Base;
+    typedef InverseOperatorBase<TpetraTypes> Base;
     using Base::d_A;
     using Base::d_B;
 

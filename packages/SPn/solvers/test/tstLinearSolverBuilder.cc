@@ -30,10 +30,7 @@ class SolverBuilderTest : public testing::Test
 {
   protected:
 
-    typedef typename LinAlgTypedefs<T>::MV     MV;
-    typedef typename LinAlgTypedefs<T>::OP     OP;
-    typedef typename LinAlgTypedefs<T>::MATRIX MATRIX;
-
+    typedef typename T::MATRIX MATRIX;
     typedef profugus::LinearSolverBuilder<T> Builder;
 
   protected:
@@ -55,22 +52,21 @@ class SolverBuilderTest : public testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(SolverBuilderTest, MyTypes);
 
 TYPED_TEST(SolverBuilderTest, basic)
 {
-    typedef typename LinAlgTypedefs<TypeParam>::MV MV;
-    typedef typename LinAlgTypedefs<TypeParam>::OP OP;
-
     Teuchos::RCP<Teuchos::ParameterList> db =
         Teuchos::rcp(new Teuchos::ParameterList("test_db"));
 
     // Default solver is Richardson
     this->build_solver(db);
     EXPECT_EQ("Profugus Richardson", this->d_solver->solver_label());
-    Teuchos::RCP<profugus::Richardson<T> > rich =
-        Teuchos::rcp_dynamic_cast<profugus::Richardson<T> >(this->d_solver);
+    Teuchos::RCP<profugus::Richardson<TypeParam> > rich =
+        Teuchos::rcp_dynamic_cast<profugus::Richardson<TypeParam> >(this->d_solver);
     EXPECT_TRUE( rich != Teuchos::null );
 
     //
@@ -81,7 +77,7 @@ TYPED_TEST(SolverBuilderTest, basic)
     db->set("profugus_solver", std::string("Richardson"));
     this->build_solver(db);
     EXPECT_EQ("Profugus Richardson", this->d_solver->solver_label());
-    rich = Teuchos::rcp_dynamic_cast<profugus::Richardson<T> >(this->d_solver);
+    rich = Teuchos::rcp_dynamic_cast<profugus::Richardson<TypeParam> >(this->d_solver);
     EXPECT_TRUE( rich != Teuchos::null );
 
     //
@@ -92,7 +88,7 @@ TYPED_TEST(SolverBuilderTest, basic)
     db->set("solver_type", std::string("Profugus"));
     this->build_solver(db);
     EXPECT_EQ("Profugus Richardson", this->d_solver->solver_label());
-    rich = Teuchos::rcp_dynamic_cast<profugus::Richardson<T> >(this->d_solver);
+    rich = Teuchos::rcp_dynamic_cast<profugus::Richardson<TypeParam> >(this->d_solver);
     EXPECT_TRUE( rich != Teuchos::null );
 
     //
@@ -103,8 +99,8 @@ TYPED_TEST(SolverBuilderTest, basic)
     db->set("solver_type", std::string("Stratimikos"));
     this->build_solver(db);
     EXPECT_EQ("Stratimikos AztecOO", this->d_solver->solver_label());
-    Teuchos::RCP<profugus::StratimikosSolver<T> > strat =
-        Teuchos::rcp_dynamic_cast<profugus::StratimikosSolver<T> >(
+    Teuchos::RCP<profugus::StratimikosSolver<TypeParam> > strat =
+        Teuchos::rcp_dynamic_cast<profugus::StratimikosSolver<TypeParam> >(
             this->d_solver);
     EXPECT_TRUE( strat != Teuchos::null );
 }

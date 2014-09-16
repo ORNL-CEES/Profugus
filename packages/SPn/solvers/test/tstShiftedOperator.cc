@@ -25,10 +25,9 @@ template <class T>
 class ShiftedOperatorTest : public testing::Test
 {
   protected:
-    typedef typename LinAlgTypedefs<T>::MV       MV;
-    typedef typename LinAlgTypedefs<T>::OP       OP;
-    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
-
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
+    typedef typename T::MATRIX                    MATRIX;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
     // Initialization that are performed for each test
@@ -38,12 +37,12 @@ class ShiftedOperatorTest : public testing::Test
         d_N = 20;
 
         // Build CrsMatrix
-        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",d_N);
-        d_B = linalg_traits::build_matrix<MATRIX>("diagonal",d_N);
+        d_A = linalg_traits::build_matrix<T>("laplacian",d_N);
+        d_B = linalg_traits::build_matrix<T>("diagonal",d_N);
 
         // Build eigenvector
-        d_x = linalg_traits::build_vector<MV>(d_N);
-        d_y = linalg_traits::build_vector<MV>(d_N);
+        d_x = linalg_traits::build_vector<T>(d_N);
+        d_y = linalg_traits::build_vector<T>(d_N);
 
         // Build solver
         d_operator = Teuchos::rcp(new profugus::ShiftedOperator<T>());
@@ -68,39 +67,40 @@ class ShiftedOperatorTest : public testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(ShiftedOperatorTest, MyTypes);
 
 TYPED_TEST(ShiftedOperatorTest, basic)
 {
-    typedef typename TestFixture::MV  MV;
     typedef typename TestFixture::OPT OPT;
 
     // Unshifted operator, same as multiplying by A
     this->d_operator->set_shift(0.0);
     std::vector<double> one(this->d_N,1.0);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
 
     std::vector<double> ref(this->d_N,0.0);
     ref[0]  = 1.0;
     ref[19] = 1.0;
-    linalg_traits::test_vector<MV>(this->d_y,ref);
+    linalg_traits::test_vector<TypeParam>(this->d_y,ref);
 
     // New vector
     std::vector<double> vals(this->d_N);
     for( int i=0; i<this->d_N; ++i )
         vals[i] = static_cast<double>(i+1);
-    linalg_traits::fill_vector<MV>(this->d_x,vals);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,vals);
 
     OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
     std::fill(ref.begin(),ref.end(),0.0);
     ref[19] = 21.0;
-    linalg_traits::test_vector<MV>(this->d_y,ref);
+    linalg_traits::test_vector<TypeParam>(this->d_y,ref);
 
     // Now set a shift
     this->d_operator->set_shift(0.5);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
 
     // Matlab computed reference
@@ -109,10 +109,10 @@ TYPED_TEST(ShiftedOperatorTest, basic)
        -4.0000,  -4.5000,  -5.0000,  -5.5000,  -6.0000,  -6.5000,  -7.0000,
        -7.5000,  -8.0000,  -8.5000,  -9.0000,  -9.5000,  -9.0000 };
 
-    linalg_traits::test_vector<MV>(this->d_y,ref2);
+    linalg_traits::test_vector<TypeParam>(this->d_y,ref2);
 
     // Different vector
-    linalg_traits::fill_vector<MV>(this->d_x,vals);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,vals);
     OPT::Apply(*this->d_operator,*this->d_x,*this->d_y);
 
     // Matlab computed reference
@@ -122,7 +122,7 @@ TYPED_TEST(ShiftedOperatorTest, basic)
        -84.5000,  -98.0000, -112.5000, -128.0000, -144.5000, -162.0000,
       -180.5000, -179.0000 };
 
-    linalg_traits::test_vector<MV>(this->d_y,ref3);
+    linalg_traits::test_vector<TypeParam>(this->d_y,ref3);
 }
 
 //---------------------------------------------------------------------------//

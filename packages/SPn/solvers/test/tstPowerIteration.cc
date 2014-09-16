@@ -23,11 +23,9 @@ class PowerIterationTest : public ::testing::Test
 {
   protected:
 
-    typedef typename LinAlgTypedefs<T>::MV     MV;
-    typedef typename LinAlgTypedefs<T>::OP     OP;
-    typedef typename LinAlgTypedefs<T>::MATRIX MATRIX;
-
-    typedef profugus::PowerIteration<T>   PowerIteration;
+    typedef typename T::MV              MV;
+    typedef typename T::MATRIX          MATRIX;
+    typedef profugus::PowerIteration<T> PowerIteration;
 
   protected:
     // Initialization that are performed for each test
@@ -39,12 +37,12 @@ class PowerIterationTest : public ::testing::Test
 
         // Build matrix
         d_N = 20;
-        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",d_N);
+        d_A = linalg_traits::build_matrix<T>("laplacian",d_N);
 
         // Build eigenvector
-        d_x = linalg_traits::build_vector<MV>(d_N);
+        d_x = linalg_traits::build_vector<T>(d_N);
         std::vector<double> one(d_N,1.0);
-        linalg_traits::fill_vector<MV>(d_x,one);
+        linalg_traits::fill_vector<T>(d_x,one);
 
         // Create options database
         d_db = Teuchos::rcp(new ParameterList("test"));
@@ -82,13 +80,13 @@ class PowerIterationTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(PowerIterationTest, MyTypes);
 
 TYPED_TEST(PowerIterationTest, basic)
 {
-    typedef typename TestFixture::MV MV;
-
     // Run two iterations and stop
     this->solve();
 
@@ -100,7 +98,7 @@ TYPED_TEST(PowerIterationTest, basic)
     // Reset initial vector and re-solve
     this->d_solver->set_max_iters(1000);
     std::vector<double> one(this->d_N,1.0);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     this->solve();
 
     EXPECT_EQ( 261, this->d_iters );
@@ -120,7 +118,7 @@ TYPED_TEST(PowerIterationTest, basic)
              -2.872738761376664e-01,  2.412784344502525e-01,
              -1.738443448352319e-01,  9.096342209328130e-02};
 
-    linalg_traits::test_vector<MV>(this->d_x,ref);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref);
 
     // Solve again, should return without iterating
     this->solve();
@@ -129,7 +127,7 @@ TYPED_TEST(PowerIterationTest, basic)
     EXPECT_TRUE( this->d_converged );
 
     // Make sure solution didn't change
-    linalg_traits::test_vector<MV>(this->d_x,ref);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref);
 }
 
 //---------------------------------------------------------------------------//

@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class LinearSolverBuilder<EPETRA>;
-template class LinearSolverBuilder<TPETRA>;
+template class LinearSolverBuilder<EpetraTypes>;
+template class LinearSolverBuilder<TpetraTypes>;
 
 } // end namespace profugus
 

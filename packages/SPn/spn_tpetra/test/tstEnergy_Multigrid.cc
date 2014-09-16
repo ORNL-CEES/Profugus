@@ -35,9 +35,11 @@ typedef profugus::tpetra::Energy_Multigrid      Energy_Multigrid;
 typedef Energy_Multigrid::ParameterList         ParameterList;
 typedef Energy_Multigrid::RCP_ParameterList     RCP_ParameterList;
 typedef profugus::Partitioner                   Partitioner;
-typedef typename LinAlgTypedefs<TPETRA>::MV     MV;
-typedef typename LinAlgTypedefs<TPETRA>::OP     OP;
-typedef typename LinAlgTypedefs<TPETRA>::VECTOR VECTOR;
+
+using profugus::TpetraTypes;
+typedef typename TpetraTypes::MV     MV;
+typedef typename TpetraTypes::OP     OP;
+typedef typename TpetraTypes::VECTOR VECTOR;
 
 using namespace std;
 

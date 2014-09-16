@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class PowerIteration<EPETRA>;
-template class PowerIteration<TPETRA>;
+template class PowerIteration<EpetraTypes>;
+template class PowerIteration<TpetraTypes>;
 
 } // end namespace profugus
 

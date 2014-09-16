@@ -18,10 +18,11 @@
 #include "solvers/LinAlgTypedefs.hh"
 #include "../Energy_Restriction.hh"
 
-typedef typename LinAlgTypedefs<TPETRA>::MV     MV;
-typedef typename LinAlgTypedefs<TPETRA>::OP     OP;
-typedef typename LinAlgTypedefs<TPETRA>::VECTOR VECTOR;
-typedef typename LinAlgTypedefs<TPETRA>::MAP    MAP;
+using profugus::TpetraTypes;
+typedef typename TpetraTypes::MV     MV;
+typedef typename TpetraTypes::OP     OP;
+typedef typename TpetraTypes::VECTOR VECTOR;
+typedef typename TpetraTypes::MAP    MAP;
 
 //---------------------------------------------------------------------------//
 // Test fixture

@@ -33,9 +33,9 @@ class EigenvalueSolverBuilderTest : public ::testing::Test
 {
   protected:
 
-    typedef typename LinAlgTypedefs<T>::MV       MV;
-    typedef typename LinAlgTypedefs<T>::OP       OP;
-    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
+    typedef typename T::MV     MV;
+    typedef typename T::OP     OP;
+    typedef typename T::MATRIX MATRIX;
 
     typedef profugus::EigenvalueSolverBuilder<T> Builder;
 
@@ -44,8 +44,8 @@ class EigenvalueSolverBuilderTest : public ::testing::Test
     void SetUp()
     {
         int num_global = 4;
-        d_A = linalg_traits::build_matrix<MATRIX>("laplacian",num_global);
-        d_B = linalg_traits::build_matrix<MATRIX>("diagonal",num_global);
+        d_A = linalg_traits::build_matrix<T>("laplacian",num_global);
+        d_B = linalg_traits::build_matrix<T>("diagonal",num_global);
     }
 
   protected:
@@ -58,15 +58,14 @@ class EigenvalueSolverBuilderTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(EigenvalueSolverBuilderTest, MyTypes);
 
 TYPED_TEST(EigenvalueSolverBuilderTest, basic)
 {
-    typedef typename TestFixture::MV       MV;
-    typedef typename TestFixture::OP       OP;
-
-    typedef profugus::EigenvalueSolverBuilder<T> Builder;
+    typedef profugus::EigenvalueSolverBuilder<TypeParam> Builder;
 
     Teuchos::RCP<Teuchos::ParameterList> db =
         Teuchos::rcp(new Teuchos::ParameterList("test_db"));
@@ -74,14 +73,14 @@ TYPED_TEST(EigenvalueSolverBuilderTest, basic)
     // Default standard eigenvalue solver is Arnoldi
     this->d_solver = Builder::build_solver(db,this->d_A);
     EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
-    Teuchos::RCP<profugus::Arnoldi<T> > arnoldi =
-        Teuchos::rcp_dynamic_cast<profugus::Arnoldi<T> >(this->d_solver);
+    Teuchos::RCP<profugus::Arnoldi<TypeParam> > arnoldi =
+        Teuchos::rcp_dynamic_cast<profugus::Arnoldi<TypeParam> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Default generalized eigenvalue solver is Arnoldi (for now)
     this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
     EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
-    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<T> >(this->d_solver);
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<TypeParam> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Make sure "Arnoldi" keyword is recognized by both functions
@@ -89,12 +88,12 @@ TYPED_TEST(EigenvalueSolverBuilderTest, basic)
 
     this->d_solver = Builder::build_solver(db,this->d_A);
     EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
-    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<T> >(this->d_solver);
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<TypeParam> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
     this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
     EXPECT_EQ("Arnoldi",this->d_solver->solver_label());
-    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<T> >(this->d_solver);
+    arnoldi = Teuchos::rcp_dynamic_cast<profugus::Arnoldi<TypeParam> >(this->d_solver);
     EXPECT_TRUE( arnoldi != Teuchos::null );
 
     // Power iteration for both standard and generalized problems
@@ -102,13 +101,13 @@ TYPED_TEST(EigenvalueSolverBuilderTest, basic)
 
     this->d_solver = Builder::build_solver(db,this->d_A);
     EXPECT_EQ("Power Iteration",this->d_solver->solver_label());
-    Teuchos::RCP<profugus::PowerIteration<T> > power =
-        Teuchos::rcp_dynamic_cast<profugus::PowerIteration<T> >(this->d_solver);
+    Teuchos::RCP<profugus::PowerIteration<TypeParam> > power =
+        Teuchos::rcp_dynamic_cast<profugus::PowerIteration<TypeParam> >(this->d_solver);
     EXPECT_TRUE( power != Teuchos::null );
 
     this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
     EXPECT_EQ("Power Iteration",this->d_solver->solver_label());
-    power = Teuchos::rcp_dynamic_cast<profugus::PowerIteration<T> >(this->d_solver);
+    power = Teuchos::rcp_dynamic_cast<profugus::PowerIteration<TypeParam> >(this->d_solver);
     EXPECT_TRUE( power != Teuchos::null );
 
     // Rayleigh quotient iteration for generalized problem
@@ -116,8 +115,8 @@ TYPED_TEST(EigenvalueSolverBuilderTest, basic)
 
     this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
     EXPECT_EQ("Rayleigh Quotient",this->d_solver->solver_label());
-    Teuchos::RCP<profugus::RayleighQuotient<T> > rqi =
-        Teuchos::rcp_dynamic_cast<profugus::RayleighQuotient<T> >(this->d_solver);
+    Teuchos::RCP<profugus::RayleighQuotient<TypeParam> > rqi =
+        Teuchos::rcp_dynamic_cast<profugus::RayleighQuotient<TypeParam> >(this->d_solver);
     EXPECT_TRUE( rqi != Teuchos::null );
 
     // Davidson for generalized problem
@@ -125,8 +124,8 @@ TYPED_TEST(EigenvalueSolverBuilderTest, basic)
 
     this->d_solver = Builder::build_solver(db,this->d_A,this->d_B);
     EXPECT_EQ("Davidson",this->d_solver->solver_label());
-    Teuchos::RCP<profugus::Davidson_Eigensolver<T> > davidson =
-        Teuchos::rcp_dynamic_cast<profugus::Davidson_Eigensolver<T> >(this->d_solver);
+    Teuchos::RCP<profugus::Davidson_Eigensolver<TypeParam> > davidson =
+        Teuchos::rcp_dynamic_cast<profugus::Davidson_Eigensolver<TypeParam> >(this->d_solver);
     EXPECT_TRUE( davidson!= Teuchos::null );
 }
 

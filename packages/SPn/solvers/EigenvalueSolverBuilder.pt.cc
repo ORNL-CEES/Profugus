@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class EigenvalueSolverBuilder<EPETRA>;
-template class EigenvalueSolverBuilder<TPETRA>;
+template class EigenvalueSolverBuilder<EpetraTypes>;
+template class EigenvalueSolverBuilder<TpetraTypes>;
 
 } // end namespace profugus
 

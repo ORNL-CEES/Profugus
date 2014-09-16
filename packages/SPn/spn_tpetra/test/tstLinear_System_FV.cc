@@ -45,9 +45,7 @@ class MatrixTest : public testing::Test
     typedef Linear_System::RCP_Mesh            RCP_Mesh;
     typedef Linear_System::RCP_Indexer         RCP_Indexer;
     typedef Linear_System::RCP_Global_Data     RCP_Global_Data;
-    typedef Linear_System::RCP_Graph           RCP_Graph;
     typedef Linear_System::RCP_Bnd_Indexer     RCP_Bnd_Indexer;
-    typedef Linear_System::Graph_t             Graph_t;
     typedef Linear_System::Matrix_t            Matrix_t;
     typedef Linear_System::Vector_t            Vector_t;
     typedef Linear_System::CrsMatrix_t         Element_Matrix_t;

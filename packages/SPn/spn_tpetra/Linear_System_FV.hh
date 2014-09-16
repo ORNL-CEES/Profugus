@@ -52,10 +52,10 @@ class Linear_System_FV : public Linear_System
   public:
     //@{
     //! Typedefs.
-    typedef def::Vec_Int                            Vec_Int;
-    typedef def::Vec_Dbl                            Vec_Dbl;
-    typedef Teuchos::RCP<FV_Bnd_Indexer>            RCP_Bnd_Indexer;
-    typedef typename LinAlgTypedefs<TPETRA>::MATRIX CrsMatrix_t;
+    typedef def::Vec_Int                 Vec_Int;
+    typedef def::Vec_Dbl                 Vec_Dbl;
+    typedef Teuchos::RCP<FV_Bnd_Indexer> RCP_Bnd_Indexer;
+    typedef typename TpetraTypes::MATRIX CrsMatrix_t;
     //@}
 
   private:

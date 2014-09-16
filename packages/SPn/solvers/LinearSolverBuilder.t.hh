@@ -37,7 +37,7 @@ namespace profugus
  */
 //---------------------------------------------------------------------------//
 
-template <LinAlgType T>
+template <class T>
 Teuchos::RCP<LinearSolver<T> >
 LinearSolverBuilder<T>::build_solver( RCP_ParameterList db )
 {

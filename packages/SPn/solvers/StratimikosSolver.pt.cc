@@ -19,8 +19,8 @@
 namespace profugus
 {
 
-template class StratimikosSolver<EPETRA>;
-template class StratimikosSolver<TPETRA>;
+template class StratimikosSolver<EpetraTypes>;
+template class StratimikosSolver<TpetraTypes>;
 
 } // end namespace profugus
 

@@ -37,24 +37,23 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class ShiftedInverseOperator
 {
     ShiftedInverseOperator();
 };
 
 template <>
-class ShiftedInverseOperator<EPETRA>
-    : public InverseOperator<EPETRA>
+class ShiftedInverseOperator<EpetraTypes>
+    : public InverseOperator<EpetraTypes>
 {
   private:
-    typedef LinAlgTypedefs<EPETRA>  LinAlgType;
-    typedef typename LinAlgType::MV MV;
-    typedef typename LinAlgType::OP OP;
-    typedef InverseOperator<EPETRA> Base;
+    typedef typename EpetraTypes::MV     MV;
+    typedef typename EpetraTypes::OP     OP;
+    typedef InverseOperator<EpetraTypes> Base;
 
     // >>> DATA
-    Teuchos::RCP<ShiftedOperator<EPETRA> > d_operator;
+    Teuchos::RCP<ShiftedOperator<EpetraTypes> > d_operator;
     double d_shift;
 
   public:
@@ -62,7 +61,7 @@ class ShiftedInverseOperator<EPETRA>
     // Constructor.
     explicit ShiftedInverseOperator(Teuchos::RCP<Teuchos::ParameterList> pl)
         : Base(pl)
-        , d_operator( Teuchos::rcp( new ShiftedOperator<EPETRA>() ) )
+        , d_operator( Teuchos::rcp( new ShiftedOperator<EpetraTypes>() ) )
         , d_shift(0.0)
     {
     }
@@ -101,18 +100,17 @@ class ShiftedInverseOperator<EPETRA>
 };
 
 template <>
-class ShiftedInverseOperator<TPETRA>
-    : public InverseOperator<TPETRA>
+class ShiftedInverseOperator<TpetraTypes>
+    : public InverseOperator<TpetraTypes>
 {
   private:
-    typedef LinAlgTypedefs<TPETRA>  LinAlgType;
-    typedef typename LinAlgType::MV MV;
-    typedef typename LinAlgType::OP OP;
-    typedef InverseOperator<TPETRA> Base;
+    typedef typename TpetraTypes::MV           MV;
+    typedef typename TpetraTypes::OP           OP;
+    typedef InverseOperator<TpetraTypes>            Base;
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
 
     // >>> DATA
-    Teuchos::RCP<ShiftedOperator<TPETRA> > d_operator;
+    Teuchos::RCP<ShiftedOperator<TpetraTypes> > d_operator;
     double d_shift;
 
   public:
@@ -120,7 +118,7 @@ class ShiftedInverseOperator<TPETRA>
     // Constructor.
     explicit ShiftedInverseOperator(Teuchos::RCP<Teuchos::ParameterList> pl)
         : Base(pl)
-        , d_operator( Teuchos::rcp( new ShiftedOperator<TPETRA>() ) )
+        , d_operator( Teuchos::rcp( new ShiftedOperator<TpetraTypes>() ) )
         , d_shift(0.0)
     {}
 

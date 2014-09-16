@@ -43,7 +43,7 @@ class Time_Dependent_Solver : public Solver_Base
     typedef Linear_System_t::RCP_Timestep    RCP_Timestep;
     typedef Epetra_MultiVector               MV;
     typedef Epetra_Operator                  OP;
-    typedef StratimikosSolver<EPETRA>        Linear_Solver_t;
+    typedef StratimikosSolver<EpetraTypes>        Linear_Solver_t;
     //@}
 
   private:

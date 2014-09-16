@@ -36,9 +36,9 @@ class DavidsonTest : public ::testing::Test
 {
   protected:
 
-    typedef typename LinAlgTypedefs<T>::MV       MV;
-    typedef typename LinAlgTypedefs<T>::OP       OP;
-    typedef typename LinAlgTypedefs<T>::MATRIX   MATRIX;
+    typedef typename T::MV       MV;
+    typedef typename T::OP       OP;
+    typedef typename T::MATRIX   MATRIX;
 
     typedef profugus::Davidson_Eigensolver<T> Davidson_Eigensolver;
 
@@ -51,11 +51,11 @@ class DavidsonTest : public ::testing::Test
 
         // Build an map
         d_N = 20;
-        d_A = linalg_traits::build_matrix<MATRIX>("shifted_laplacian",d_N);
-        d_B = linalg_traits::build_matrix<MATRIX>("scaled_identity",d_N);
+        d_A = linalg_traits::build_matrix<T>("shifted_laplacian",d_N);
+        d_B = linalg_traits::build_matrix<T>("scaled_identity",d_N);
 
         // Build eigenvector
-        d_x = linalg_traits::build_vector<MV>(d_N);
+        d_x = linalg_traits::build_vector<T>(d_N);
 
         // Create options database
         d_db = rcp(new ParameterList("test"));
@@ -90,20 +90,20 @@ class DavidsonTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<EPETRA,TPETRA> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(DavidsonTest, MyTypes);
 
 TYPED_TEST(DavidsonTest, basic)
 {
-    typedef typename TestFixture::MV MV;
-
     double eig_tol = 1e-10;
     double vec_tol = 1e-7;
     this->build_solver();
 
     // Solve and check convergence
     std::vector<double> one(this->d_N,1.0);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     this->d_lambda = 1.0;
     this->solve();
 
@@ -111,8 +111,8 @@ TYPED_TEST(DavidsonTest, basic)
     EXPECT_TRUE( this->d_converged );
     EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
-    linalg_traits::set_sign<MV>(this->d_x);
-    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
+    linalg_traits::set_sign<TypeParam>(this->d_x);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref_eigenvector);
 
     // Solve again, should return without iterating
     this->solve();
@@ -122,8 +122,8 @@ TYPED_TEST(DavidsonTest, basic)
     EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    linalg_traits::set_sign<MV>(this->d_x);
-    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
+    linalg_traits::set_sign<TypeParam>(this->d_x);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref_eigenvector);
 }
 
 //---------------------------------------------------------------------------//

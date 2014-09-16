@@ -33,12 +33,12 @@ namespace profugus
  */
 //===========================================================================//
 
-template <LinAlgType T>
+template <class T>
 class PreconditionerBuilder
 {
   public:
 
-    typedef typename LinAlgTypedefs<T>::OP       OP;
+    typedef typename T::OP                       OP;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
 
     static Teuchos::RCP<OP> build_preconditioner(

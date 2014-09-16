@@ -25,7 +25,7 @@ namespace profugus
 /*!
  * \brief Build a native Richardson solver.
  */
-template <LinAlgType T>
+template <class T>
 Richardson<T>::Richardson( RCP_ParameterList db )
     : LinearSolver<T>(db)
 {
@@ -39,7 +39,7 @@ Richardson<T>::Richardson( RCP_ParameterList db )
 /*!
  * \brief Solve a linear system using damped Richardson iteration.
  */
-template <LinAlgType T>
+template <class T>
 void Richardson<T>::solve( Teuchos::RCP<MV>       x,
                                Teuchos::RCP<const MV> b )
 {

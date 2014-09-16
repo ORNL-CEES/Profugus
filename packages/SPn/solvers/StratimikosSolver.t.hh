@@ -37,7 +37,7 @@ namespace profugus
 /*!
  * \brief Constructor
  */
-template <LinAlgType T>
+template <class T>
 StratimikosSolver<T>::StratimikosSolver(RCP_ParameterList db)
     : LinearSolver<T>(db)
     , d_updated_operator( false )
@@ -92,7 +92,7 @@ StratimikosSolver<T>::StratimikosSolver(RCP_ParameterList db)
  * \param x pointer to solution vector
  * \param b pointer to RHS vector
  */
-template <LinAlgType T>
+template <class T>
 void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
                                      Teuchos::RCP<const MV> b)
 {
@@ -187,7 +187,7 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
  * \param A operator
  */
 template <>
-void StratimikosSolver<EPETRA>::set_operator(
+void StratimikosSolver<EpetraTypes>::set_operator(
     Teuchos::RCP<Epetra_Operator> A)
 {
     // Create thyra operator
@@ -206,7 +206,7 @@ void StratimikosSolver<EPETRA>::set_operator(
  * \param P operator to be applied as preconditioner.
  */
 template <>
-void StratimikosSolver<EPETRA>::set_preconditioner(
+void StratimikosSolver<EpetraTypes>::set_preconditioner(
     Teuchos::RCP<Epetra_Operator> P)
 {
     // Create thyra operator
@@ -221,7 +221,7 @@ void StratimikosSolver<EPETRA>::set_preconditioner(
  */
 template <>
 Teuchos::RCP<Thyra::MultiVectorBase<double> >
-StratimikosSolver<EPETRA>::buildThyraMV(
+StratimikosSolver<EpetraTypes>::buildThyraMV(
     Teuchos::RCP<Epetra_MultiVector> x,
     Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const
 {
@@ -234,7 +234,7 @@ StratimikosSolver<EPETRA>::buildThyraMV(
  */
 template <>
 Teuchos::RCP<const Thyra::MultiVectorBase<double> >
-StratimikosSolver<EPETRA>::buildThyraConstMV(
+StratimikosSolver<EpetraTypes>::buildThyraConstMV(
     Teuchos::RCP<const Epetra_MultiVector> x,
     Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const
 {
@@ -247,8 +247,8 @@ StratimikosSolver<EPETRA>::buildThyraConstMV(
  * \param A operator
  */
 template <>
-void StratimikosSolver<TPETRA>::set_operator(
-        Teuchos::RCP<LinAlgTypedefs<TPETRA>::OP> A)
+void StratimikosSolver<TpetraTypes>::set_operator(
+        Teuchos::RCP<TpetraTypes::OP> A)
 {
     // Create thyra operator
     Teuchos::RCP<Thyra::VectorSpaceBase<double> > rangeSpace =
@@ -271,8 +271,8 @@ void StratimikosSolver<TPETRA>::set_operator(
  * \param P operator to be applied as preconditioner.
  */
 template <>
-void StratimikosSolver<TPETRA>::set_preconditioner(
-    Teuchos::RCP<LinAlgTypedefs<TPETRA>::OP> P)
+void StratimikosSolver<TpetraTypes>::set_preconditioner(
+    Teuchos::RCP<TpetraTypes::OP> P)
 {
     // Create thyra operator
     Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > rangeSpace =
@@ -291,8 +291,8 @@ void StratimikosSolver<TPETRA>::set_preconditioner(
  */
 template <>
 Teuchos::RCP<Thyra::MultiVectorBase<double> >
-StratimikosSolver<TPETRA>::buildThyraMV(
-    Teuchos::RCP<LinAlgTypedefs<TPETRA>::MV> x,
+StratimikosSolver<TpetraTypes>::buildThyraMV(
+    Teuchos::RCP<TpetraTypes::MV> x,
     Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
 {
     return Thyra::createMultiVector(x,space);
@@ -304,8 +304,8 @@ StratimikosSolver<TPETRA>::buildThyraMV(
  */
 template <>
 Teuchos::RCP<const Thyra::MultiVectorBase<double> >
-StratimikosSolver<TPETRA>::buildThyraConstMV(
-    Teuchos::RCP<const LinAlgTypedefs<TPETRA>::MV> x,
+StratimikosSolver<TpetraTypes>::buildThyraConstMV(
+    Teuchos::RCP<const TpetraTypes::MV> x,
     Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
 {
     return Thyra::createConstMultiVector(x,space);
