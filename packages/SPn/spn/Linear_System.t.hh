@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Linear_System.cc
+ * \file   spn/Linear_System.t.hh
  * \author Thomas M. Evans
  * \date   Sun Oct 28 18:37:01 2012
- * \brief  Linear_System member definitions.
+ * \brief  Linear_System template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef spn_LinearSystem_t_hh
+#define spn_LinearSystem_t_hh
 
 #include "Teuchos_ParameterList.hpp"
 
@@ -27,10 +30,11 @@ namespace profugus
  * \param dim SPN dimensions object
  * \param mat material database
  */
-Linear_System::Linear_System(RCP_ParameterList db,
-                             RCP_Dimensions    dim,
-                             RCP_Mat_DB        mat,
-                             RCP_Timestep      dt)
+template <class T>
+Linear_System<T>::Linear_System(RCP_ParameterList db,
+                                RCP_Dimensions    dim,
+                                RCP_Mat_DB        mat,
+                                RCP_Timestep      dt)
     : b_db(db)
     , b_dim(dim)
     , b_mat(mat)
@@ -81,12 +85,15 @@ Linear_System::Linear_System(RCP_ParameterList db,
 /*!
  * \brief Virtual destructor.
  */
-Linear_System::~Linear_System()
+template <class T>
+Linear_System<T>::~Linear_System()
 {
 }
 
 } // end namespace profugus
 
+#endif // spn_LinearSystem_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Linear_System.cc
+//                 end of Linear_System.t.hh
 //---------------------------------------------------------------------------//

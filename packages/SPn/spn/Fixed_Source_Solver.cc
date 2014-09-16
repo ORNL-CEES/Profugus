@@ -12,6 +12,7 @@
 
 #include "harness/DBC.hh"
 #include "utils/String_Functions.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Linear_System_FV.hh"
 #include "Fixed_Source_Solver.hh"
 
@@ -58,7 +59,8 @@ void Fixed_Source_Solver::setup(RCP_Dimensions  dim,
     if (profugus::to_lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
-            new Linear_System_FV(b_db, dim, mat, mesh, indexer, data));
+            new Linear_System_FV<EpetraTypes>(
+                b_db, dim, mat, mesh, indexer, data));
     }
     else
     {

@@ -21,6 +21,7 @@
 #include "utils/Definitions.hh"
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "../Isotropic_Source.hh"
 #include "../Dimensions.hh"
 #include "../Linear_System_FV.hh"
@@ -36,7 +37,7 @@ using namespace std;
 class MatrixTest : public testing::Test
 {
   protected:
-    typedef profugus::Linear_System_FV       Linear_System;
+    typedef profugus::Linear_System_FV<EpetraTypes> Linear_System;
     typedef Teuchos::RCP<Linear_System>      RCP_Linear_System;
     typedef profugus::Mat_DB                 Mat_DB_t;
     typedef Linear_System::RCP_Mat_DB        RCP_Mat_DB;

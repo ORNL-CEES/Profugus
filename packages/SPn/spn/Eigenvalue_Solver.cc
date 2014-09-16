@@ -21,6 +21,7 @@
 #include "utils/String_Functions.hh"
 #include "solvers/EigenvalueSolverBuilder.hh"
 #include "solvers/InverseOperator.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
 #include "Eigenvalue_Solver.hh"
@@ -71,7 +72,8 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     if (profugus::to_lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
-            new Linear_System_FV(b_db, dim, mat, mesh, indexer, data));
+            new Linear_System_FV<EpetraTypes>(
+                b_db, dim, mat, mesh, indexer, data));
     }
     else
     {

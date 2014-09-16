@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "solvers/PreconditionerBuilder.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "xs/Energy_Collapse.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
@@ -27,7 +28,8 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
                                    Teuchos::RCP<Mesh>             mesh,
                                    Teuchos::RCP<LG_Indexer>       indexer,
                                    Teuchos::RCP<Global_Mesh_Data> data,
-                                   Teuchos::RCP<Linear_System>    fine_system)
+                                   Teuchos::RCP<Linear_System<EpetraTypes> >
+                                       fine_system)
 {
     using Teuchos::RCP;
     using Teuchos::rcp;
@@ -93,8 +95,9 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         CHECK( !new_mat.is_null() );
 
         // Build linear system
-        RCP<Linear_System> system = rcp(
-            new Linear_System_FV(main_db, dim, new_mat, mesh, indexer, data));
+        RCP<Linear_System<EpetraTypes> > system = rcp(
+            new Linear_System_FV<EpetraTypes>(
+                main_db, dim, new_mat, mesh, indexer, data));
 
         system->build_Matrix();
         d_operators.push_back( system->get_Operator() );

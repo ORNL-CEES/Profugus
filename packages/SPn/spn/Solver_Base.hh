@@ -15,6 +15,7 @@
 
 #include "State.hh"
 #include "Linear_System.hh"
+#include "solvers/LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -36,7 +37,7 @@ class Solver_Base
   public:
     //@{
     //! Typedefs.
-    typedef Linear_System                      Linear_System_t;
+    typedef Linear_System<EpetraTypes>         Linear_System_t;
     typedef Linear_System_t::Matrix_t          Matrix_t;
     typedef Linear_System_t::Vector_t          Vector_t;
     typedef Linear_System_t::RCP_ParameterList RCP_ParameterList;

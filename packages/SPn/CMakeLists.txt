@@ -144,8 +144,8 @@ SET(SPN_SOURCES
   spn/FV_Gather.cc
   spn/Fixed_Source_Solver.cc
   spn/Isotropic_Source.cc
-  spn/Linear_System.cc
-  spn/Linear_System_FV.cc
+  spn/Linear_System.pt.cc
+  spn/Linear_System_FV.pt.cc
   spn/Moment_Coefficients.cc
   spn/SDM_Face_Field.cc
   spn/Solver_Base.cc

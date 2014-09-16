@@ -1,18 +1,24 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Linear_System_FV.cc
+ * \file   spn/Linear_System_FV.t.hh
  * \author Thomas M. Evans
  * \date   Fri Feb 14 19:58:19 2014
- * \brief  Linear_System_FV member definitions.
+ * \brief  Linear_System_FV template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef spn_Linear_System_FV_t_hh
+#define spn_Linear_System_FV_t_hh
 
 #include "comm/global.hh"
 #include "comm/P_Stream.hh"
 #include "utils/Constants.hh"
 
 #include "Linear_System_FV.hh"
+
+#include "MatrixTraits.hh"
+#include "VectorTraits.hh"
 
 namespace profugus
 {
@@ -26,13 +32,14 @@ namespace profugus
  * \param dim SPN dimensions object
  * \param mat material database
  */
-Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
-                                   RCP_Dimensions    dim,
-                                   RCP_Mat_DB        mat,
-                                   RCP_Mesh          mesh,
-                                   RCP_Indexer       indexer,
-                                   RCP_Global_Data   data,
-                                   RCP_Timestep      dt)
+template <class T>
+Linear_System_FV<T>::Linear_System_FV(RCP_ParameterList db,
+                                      RCP_Dimensions    dim,
+                                      RCP_Mat_DB        mat,
+                                      RCP_Mesh          mesh,
+                                      RCP_Indexer       indexer,
+                                      RCP_Global_Data   data,
+                                      RCP_Timestep      dt)
     : Base(db, dim, mat, dt)
     , d_mesh(mesh)
     , d_indexer(indexer)
@@ -78,13 +85,6 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
     REQUIRE(d_Nc == d_mesh->num_cells());
     REQUIRE(d_Gc == data->num_cells());
 
-    // make the communicator
-#ifdef COMM_MPI
-    Comm comm(profugus::communicator);
-#else
-    Comm comm;
-#endif
-
     // only support single-set decompositions with SPN
     INSIST(indexer->num_sets() == 1,
            "Only support 1-set decomposition in SPN.");
@@ -124,13 +124,14 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
     int N_global = d_Nv_global + d_Nb_global;
 
     // make the block-map using the indexer; each block is an Ng x Ng matrix
+    Vec_Int l2g;
     if (b_nodes > 1)
     {
         // local and global cell indices
         int global, local;
 
         // local-to-global cell map
-        Vec_Int l2g(N_local, -1);
+        l2g.resize(N_local, -1);
 
         // loop through cells on this mesh block and convert to global ids
         for (int k = 0; k < d_N[K]; ++k)
@@ -171,17 +172,10 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
         map_bnd_l2g(d_bnd_index[4], d_N[I], d_N[J], l2g); // low  z face
         map_bnd_l2g(d_bnd_index[5], d_N[I], d_N[J], l2g); // high z face
 
-        // make the map
-        b_map = Teuchos::rcp(
-            new Epetra_Map(-1, N_local, &l2g[0], 0, comm));
     }
 
-    // otherwise we simply set the number of cells
-    else
-    {
-        b_map = Teuchos::rcp(new Epetra_Map(-1, N_global, 0, comm));
-    }
-
+    // make the map
+    b_map = MatrixTraits<T>::build_map(N_local,N_global,l2g);
     CHECK(b_map->NumMyElements() == N_local);
     CHECK(b_map->NumGlobalElements() == N_global);
 
@@ -194,8 +188,7 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
     d_values.resize(d_Ng);
 
     // make the RHS vector
-    b_rhs = Teuchos::rcp(new Vector_t(*b_map));
-    CHECK(b_rhs->MyLength() == N_local);
+    b_rhs = VectorTraits<T>::build_vector(b_map,N_local);
 }
 
 //---------------------------------------------------------------------------//
@@ -204,7 +197,8 @@ Linear_System_FV::Linear_System_FV(RCP_ParameterList db,
 /*!
  * \brief Build the matrix.
  */
-void Linear_System_FV::build_Matrix()
+template <class T>
+void Linear_System_FV<T>::build_Matrix()
 {
     using def::I; using def::J; using def::K;
 
@@ -212,9 +206,8 @@ void Linear_System_FV::build_Matrix()
     REQUIRE(!d_indexer.is_null());
 
     // make the matrix
-    d_matrix   = Teuchos::rcp(new Epetra_CrsMatrix(Copy, *b_map, d_Ng));
+    d_matrix   = MatrixTraits<T>::construct_matrix(b_map,d_Ng);
     b_operator = d_matrix;
-    CHECK(!d_matrix->StorageOptimized());
 
     // off-processor face fields of diffusion coefficients
     RCP_Face_Field Dx_low, Dx_high, Dy_low, Dy_high;
@@ -283,7 +276,7 @@ void Linear_System_FV::build_Matrix()
 
                     // SECOND: insert the diagonal block
                     insert_block_matrix(eqn, global, 0, eqn, global, 0, d_C_c,
-                                        *d_matrix);
+                                        d_matrix);
 
                     // LAST: insert within-cell coupling with other moment
                     // equations
@@ -296,7 +289,7 @@ void Linear_System_FV::build_Matrix()
 
                             // add it to the matrix
                             insert_block_matrix(
-                                eqn, global, 0, m, global, 0, d_W, *d_matrix);
+                                eqn, global, 0, m, global, 0, d_W, d_matrix);
                         }
                     }
                 } // I
@@ -376,15 +369,13 @@ void Linear_System_FV::build_Matrix()
     }
 
     // complete fill of matrix
-    d_matrix->FillComplete();
-    ENSURE(d_matrix->StorageOptimized());
+    MatrixTraits<T>::finalize_matrix(d_matrix);
 
     // Epetra returns the global number of nonzeros as a 32 bit signed int
     //  which is prone to overflow (this is only used for output and doesn't
     //  represent any fundamental limitation).  We can get around this by
     //  global-summing the local number of nonzeros into a 64 bit int.
-    UTILS_INT8 num_lhs_nonzeros = d_matrix->NumMyNonzeros();
-    profugus::global_sum( num_lhs_nonzeros );
+    UTILS_INT8 num_lhs_nonzeros = MatrixTraits<T>::global_nonzeros(d_matrix);
 
     profugus::pcout << ">>> Built SPN FV Element LHS Matrix with " <<
         num_lhs_nonzeros << " nonzero entries." << profugus::endl;
@@ -394,7 +385,8 @@ void Linear_System_FV::build_Matrix()
 /*!
  * \brief Build the right-hand-side fission matrix.
  */
-void Linear_System_FV::build_fission_matrix()
+template <class T>
+void Linear_System_FV<T>::build_fission_matrix()
 {
     using def::I; using def::J; using def::K;
 
@@ -403,7 +395,7 @@ void Linear_System_FV::build_fission_matrix()
 
     // as for the A matrix, here we build the matrix/graph at the same time
     // (since the coupling is much easier->no spatial coupling)
-    d_fission = Teuchos::rcp(new Epetra_CrsMatrix(Copy, *b_map, d_Ng));
+    d_fission = MatrixTraits<T>::construct_matrix(b_map,d_Ng);
     b_fission = d_fission;
 
     // material id and (local/global) cell index
@@ -434,7 +426,7 @@ void Linear_System_FV::build_fission_matrix()
 
                         // add it to the matrix
                         insert_block_matrix(eqn, global, 0, m, global, 0,
-                                            d_W, *d_fission);
+                                            d_W, d_fission);
                     }
                 }
             }
@@ -442,17 +434,13 @@ void Linear_System_FV::build_fission_matrix()
     }
 
     // finish matrix
-    d_fission->FillComplete();
-
-    ENSURE(d_fission->IndicesAreLocal());
-    ENSURE(d_fission->StorageOptimized());
+    MatrixTraits<T>::finalize_matrix(d_fission);
 
     // Epetra returns the global number of nonzeros as a 32 bit signed int
     //  which is prone to overflow (this is only used for output and doesn't
     //  represent any fundamental limitation).  We can get around this by
     //  global-summing the local number of nonzeros into a 64 bit int.
-    UTILS_INT8 num_rhs_nonzeros = d_fission->NumMyNonzeros();
-    profugus::global_sum( num_rhs_nonzeros );
+    UTILS_INT8 num_rhs_nonzeros = MatrixTraits<T>::global_nonzeros(d_fission);
 
     profugus::pcout << ">>> Built SPN FV Element RHS Matrix with " <<
         num_rhs_nonzeros << " nonzero entries." << profugus::endl;
@@ -466,19 +454,19 @@ void Linear_System_FV::build_fission_matrix()
  *
  * \sa denovo::Source_DB
  */
-void Linear_System_FV::build_RHS(const External_Source &q)
+template <class T>
+void Linear_System_FV<T>::build_RHS(const External_Source &q)
 {
     using def::I; using def::J; using def::K;
 
     REQUIRE(q.num_groups() == d_Ng);
-    REQUIRE(b_rhs->MyLength() == (d_Nv_local + d_Nb_local)
-             * d_block_size);
-
-    // reference to rhs vector
-    Vector_t &rhs = *b_rhs;
+    REQUIRE(VectorTraits<T>::local_length(b_rhs) ==
+            (d_Nv_local + d_Nb_local) * d_block_size);
 
     // set everything to zero
-    rhs.PutScalar(0.0);
+    VectorTraits<T>::put_scalar(b_rhs,0.0);
+
+    Teuchos::ArrayView<double> data = VectorTraits<T>::get_data(b_rhs);
 
     // >>> Add External Sources
     INSIST(q.is_isotropic(),
@@ -493,7 +481,7 @@ void Linear_System_FV::build_RHS(const External_Source &q)
             // loop over groups
             for (int g = 0; g < d_Ng; ++g)
             {
-                rhs[index(g, n, cell)] =
+                data[index(g, n, cell)] =
                     b_src_coefficients[n] * q.q_e(cell, g) *
                     profugus::constants::four_pi;
             }
@@ -505,7 +493,7 @@ void Linear_System_FV::build_RHS(const External_Source &q)
 
     // if the boundaries are vacuum we are also finished (sources are all
     // zero)
-    if (b_db->get<std::string>("boundary") == "vacuum")
+    if (b_db->template get<std::string>("boundary") == "vacuum")
         return;
 
     // >>> Add Boundary Sources
@@ -533,7 +521,8 @@ void Linear_System_FV::build_RHS(const External_Source &q)
 /*!
  * \brief Calculate global and local boundary sizes.
  */
-void Linear_System_FV::calc_bnd_sizes()
+template <class T>
+void Linear_System_FV<T>::calc_bnd_sizes()
 {
     using def::I; using def::J; using def::K;
 
@@ -544,13 +533,14 @@ void Linear_System_FV::calc_bnd_sizes()
     std::fill(d_bc_global, d_bc_global + 6, 0);
     std::fill(d_bc_local, d_bc_local + 6, 0);
 
-    if (b_db->get<std::string>("boundary") == "reflect")
+    if (b_db->template get<std::string>("boundary") == "reflect")
     {
         CHECK(b_db->isSublist("boundary_db"));
 
         // get the reflecting faces indicator
-        const Array_Int &r = b_db->get<Teuchos::ParameterList>("boundary_db").
-                             get<Array_Int>("reflect");
+        const Array_Int &r =
+            b_db->template get<Teuchos::ParameterList>("boundary_db").
+                  template get<Array_Int>("reflect");
         CHECK(r.size() == 6);
 
         // set the number of boundary unknowns on each face
@@ -687,16 +677,19 @@ void Linear_System_FV::calc_bnd_sizes()
 /*!
  * \brief Add boundary sources to the RHS vector
  */
-void Linear_System_FV::add_boundary_sources(int         face_id,
-                                            int        &face,
-                                            const char *phi_d_str,
-                                            int         num_face_cells)
+template <class T>
+void Linear_System_FV<T>::add_boundary_sources(int         face_id,
+                                               int        &face,
+                                               const char *phi_d_str,
+                                               int         num_face_cells)
 {
     REQUIRE(face >= d_Nc);
     REQUIRE(b_db->isSublist("boundary_db"));
 
     // get a reference to the boundary sublist
     const Teuchos::ParameterList &bnd = b_db->sublist("boundary_db");
+
+    Teuchos::ArrayView<double> data = VectorTraits<T>::get_data(b_rhs);
 
     // add sources on each face
     if (!d_bnd_index[face_id].is_null())
@@ -705,9 +698,6 @@ void Linear_System_FV::add_boundary_sources(int         face_id,
         if (bnd.isParameter(phi_d_str))
         {
             CHECK(d_bc_global[face_id]); // better be sources on this face
-
-            // reference to RHS vector
-            Vector_t &rhs = *b_rhs;
 
             // get the boundary sources
             const Array_Dbl &phi_b = bnd.get<Array_Dbl>(phi_d_str);
@@ -722,7 +712,7 @@ void Linear_System_FV::add_boundary_sources(int         face_id,
                     // loop over groups
                     for (int g = 0; g < d_Ng; ++g)
                     {
-                        rhs[index(g, n, face)] =
+                        data[index(g, n, face)] =
                             b_bnd_coefficients[n] * phi_b[g];
                     }
                 }
@@ -745,10 +735,11 @@ void Linear_System_FV::add_boundary_sources(int         face_id,
 /*!
  * \brief Map local-to-global boundary elements on a face.
  */
-void Linear_System_FV::map_bnd_l2g(RCP_Bnd_Indexer  indexer,
-                                   int              N_abscissa,
-                                   int              N_ordinate,
-                                   Vec_Int         &l2g)
+template <class T>
+void Linear_System_FV<T>::map_bnd_l2g(RCP_Bnd_Indexer  indexer,
+                                      int              N_abscissa,
+                                      int              N_ordinate,
+                                      Vec_Int         &l2g)
 {
     REQUIRE(l2g.size() == d_Nv_local + d_Nb_local);
 
@@ -786,16 +777,17 @@ void Linear_System_FV::map_bnd_l2g(RCP_Bnd_Indexer  indexer,
 /*!
  * \brief Insert spatially coupled elements.
  */
-void Linear_System_FV::spatial_coupled_element(int            n,
-                                               int            i,
-                                               int            j,
-                                               int            k,
-                                               int            g_i,
-                                               int            g_j,
-                                               RCP_Face_Field Dx_low,
-                                               RCP_Face_Field Dx_high,
-                                               RCP_Face_Field Dy_low,
-                                               RCP_Face_Field Dy_high)
+template <class T>
+void Linear_System_FV<T>::spatial_coupled_element(int            n,
+                                                  int            i,
+                                                  int            j,
+                                                  int            k,
+                                                  int            g_i,
+                                                  int            g_j,
+                                                  RCP_Face_Field Dx_low,
+                                                  RCP_Face_Field Dx_high,
+                                                  RCP_Face_Field Dy_low,
+                                                  RCP_Face_Field Dy_high)
 {
     using def::I; using def::J; using def::K;
 
@@ -1032,14 +1024,15 @@ void Linear_System_FV::spatial_coupled_element(int            n,
  * \param Dl left-diffusion matrix
  * \param Dr right-diffusion matrix
  */
-void Linear_System_FV::add_spatial_element(int                  eqn,
-                                           int                  row_cell,
-                                           int                  col_cell,
-                                           double               delta_l,
-                                           double               delta_r,
-                                           double               delta_c,
-                                           const Serial_Matrix &Dl,
-                                           const Serial_Matrix &Dr)
+template <class T>
+void Linear_System_FV<T>::add_spatial_element(int                  eqn,
+                                              int                  row_cell,
+                                              int                  col_cell,
+                                              double               delta_l,
+                                              double               delta_r,
+                                              double               delta_c,
+                                              const Serial_Matrix &Dl,
+                                              const Serial_Matrix &Dr)
 {
     REQUIRE(Dl.numRows()    == d_Ng);
     REQUIRE(Dl.numCols()    == d_Ng);
@@ -1084,7 +1077,7 @@ void Linear_System_FV::add_spatial_element(int                  eqn,
     d_C *= -2.0 / delta_c;
 
     // add C to the spatially-coupled column
-    insert_block_matrix(eqn, row_cell, 0,  eqn, col_cell, 0, d_C, *d_matrix);
+    insert_block_matrix(eqn, row_cell, 0,  eqn, col_cell, 0, d_C, d_matrix);
 
     // add (C is negative) to the local (n,i,j,k) contribution to the matrix
     d_C_c -= d_C;
@@ -1099,10 +1092,11 @@ void Linear_System_FV::add_spatial_element(int                  eqn,
  * \param global_col
  * \param delta_c
  */
-void Linear_System_FV::build_bnd_element(int    eqn,
-                                         int    global_row,
-                                         int    global_col,
-                                         double delta_c)
+template <class T>
+void Linear_System_FV<T>::build_bnd_element(int    eqn,
+                                            int    global_row,
+                                            int    global_col,
+                                            double delta_c)
 {
     REQUIRE(d_C.numCols()   == d_Ng);
     REQUIRE(d_C.numRows()   == d_Ng);
@@ -1118,7 +1112,7 @@ void Linear_System_FV::build_bnd_element(int    eqn,
 
     // add C to the boundary-coupled column
     insert_block_matrix(eqn, global_row, 0, eqn, global_col, d_Nv_global, d_C,
-                        *d_matrix);
+                        d_matrix);
 
     // add (C is negative) to the local (n,i,j,k) contribution to the matrix
     d_C_c -= d_C;
@@ -1128,10 +1122,11 @@ void Linear_System_FV::build_bnd_element(int    eqn,
 /*!
  * \brief Add boundary equations to the matrix.
  */
-void Linear_System_FV::add_boundary_equations(int    face,
-                                              int    global_cell,
-                                              int    local_cell,
-                                              double delta_c)
+template <class T>
+void Linear_System_FV<T>::add_boundary_equations(int    face,
+                                                 int    global_cell,
+                                                 int    local_cell,
+                                                 double delta_c)
 {
     // global row index for the current boundary equations
     int row = 0;
@@ -1154,7 +1149,7 @@ void Linear_System_FV::add_boundary_equations(int    face,
 
         // FIRST: add the volume cell term
         insert_block_matrix(n, face, d_Nv_global, n, global_cell, 0, d_C,
-                            *d_matrix);
+                            d_matrix);
 
         // SECOND: add all the moment-coupling terms to the
         // boundary
@@ -1167,13 +1162,13 @@ void Linear_System_FV::add_boundary_equations(int    face,
 
                 // add it to the matrix
                 insert_block_matrix(
-                    n, face, d_Nv_global, m, face, d_Nv_global, d_W, *d_matrix);
+                    n, face, d_Nv_global, m, face, d_Nv_global, d_W, d_matrix);
             }
         }
 
         // LAST: add the within-moment matrix element
         insert_block_matrix(n, face, d_Nv_global, n, face, d_Nv_global, d_C_c,
-                            *d_matrix);
+                            d_matrix);
     }
 }
 
@@ -1190,14 +1185,15 @@ void Linear_System_FV::add_boundary_equations(int    face,
  * \param col_off used if these are boundary conditions that are appended to
  * the end of the matrix (should be d_Nv_global or 0)
  */
-void Linear_System_FV::insert_block_matrix(int                  row_n,
-                                           int                  row_cell,
-                                           int                  row_off,
-                                           int                  col_m,
-                                           int                  col_cell,
-                                           int                  col_off,
-                                           const Serial_Matrix &M,
-                                           Epetra_CrsMatrix    &matrix)
+template <class T>
+void Linear_System_FV<T>::insert_block_matrix(int                  row_n,
+                                              int                  row_cell,
+                                              int                  row_off,
+                                              int                  col_m,
+                                              int                  col_cell,
+                                              int                  col_off,
+                                              const Serial_Matrix &M,
+                                              Teuchos::RCP<Matrix_t> matrix)
 {
     REQUIRE(row_n < d_Ne);
     REQUIRE(col_m < d_Ne);
@@ -1239,12 +1235,14 @@ void Linear_System_FV::insert_block_matrix(int                  row_n,
         }
 
         // insert the row into the matrix
-        matrix.InsertGlobalValues(row, ctr, &d_values[0], &d_indices[0]);
+        MatrixTraits<T>::add_to_matrix(matrix,row,ctr,d_indices,d_values);
     }
 }
 
 } // end namespace profugus
 
+#endif // spn_Linear_System_FV_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Linear_System_FV.cc
+//                 end of Linear_System_FV.t.hh
 //---------------------------------------------------------------------------//

@@ -22,6 +22,7 @@
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "../Linear_System_FV.hh"
 #include "../Dimensions.hh"
 #include "../Energy_Multigrid.hh"
@@ -98,7 +99,8 @@ TEST(MultigridTest, Heuristic)
 
     // Fine level linear system
     RCP<profugus::Linear_System> system = rcp(
-        new profugus::Linear_System_FV(db, dim, mat, mesh, indexer, data) );
+        new profugus::Linear_System_FV<EpetraTypes>(
+            db, dim, mat, mesh, indexer, data) );
     system->build_Matrix();
     RCP<Epetra_Operator> matrix = system->get_Operator();
 

@@ -57,21 +57,21 @@ class Energy_Multigrid : public Epetra_Operator
     //! Typedefs.
     typedef Epetra_Operator                   OP;
     typedef Epetra_MultiVector                MV;
-    typedef LinearSolver<EpetraTypes>              LinearSolver_t;
+    typedef LinearSolver<EpetraTypes>         LinearSolver_t;
     typedef LinearSolver_t::RCP_ParameterList RCP_ParameterList;
     typedef LinearSolver_t::ParameterList     ParameterList;
     //@}
 
   public:
     // Constructor.
-    Energy_Multigrid( RCP_ParameterList              main_db,
-                      RCP_ParameterList              prec_db,
-                      Teuchos::RCP<Dimensions>       dim,
-                      Teuchos::RCP<Mat_DB>           mat_db,
-                      Teuchos::RCP<Mesh>             mesh,
-                      Teuchos::RCP<LG_Indexer>       indexer,
-                      Teuchos::RCP<Global_Mesh_Data> data,
-                      Teuchos::RCP<Linear_System>    fine_system );
+    Energy_Multigrid( RCP_ParameterList                         main_db,
+                      RCP_ParameterList                         prec_db,
+                      Teuchos::RCP<Dimensions>                  dim,
+                      Teuchos::RCP<Mat_DB>                      mat_db,
+                      Teuchos::RCP<Mesh>                        mesh,
+                      Teuchos::RCP<LG_Indexer>                  indexer,
+                      Teuchos::RCP<Global_Mesh_Data>            data,
+                      Teuchos::RCP<Linear_System<EpetraTypes> > fine_system );
 
     int Apply( const Epetra_MultiVector &x,
                      Epetra_MultiVector &y ) const;

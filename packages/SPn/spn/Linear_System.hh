@@ -51,6 +51,7 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class T>
 class Linear_System
 {
   public:
@@ -62,13 +63,14 @@ class Linear_System
     typedef Moment_Coefficients::RCP_ParameterList RCP_ParameterList;
     typedef Moment_Coefficients::RCP_Timestep      RCP_Timestep;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
-    typedef Epetra_Map                             Map_t;
-    typedef Epetra_CrsMatrix                       Matrix_t;
-    typedef Epetra_Vector                          Vector_t;
-    typedef Teuchos::RCP<Epetra_Map>               RCP_Map;
-    typedef Teuchos::RCP<Epetra_CrsMatrix>         RCP_Matrix;
-    typedef Teuchos::RCP<Epetra_Operator>          RCP_Operator;
-    typedef Teuchos::RCP<Epetra_Vector>            RCP_Vector;
+    typedef typename T::MAP                        Map_t;
+    typedef typename T::MATRIX                     Matrix_t;
+    typedef typename T::OP                         Operator_t;
+    typedef typename T::VECTOR                     Vector_t;
+    typedef Teuchos::RCP<Map_t>                    RCP_Map;
+    typedef Teuchos::RCP<Matrix_t>                 RCP_Matrix;
+    typedef Teuchos::RCP<Operator_t>               RCP_Operator;
+    typedef Teuchos::RCP<Vector_t>                 RCP_Vector;
     typedef Isotropic_Source                       External_Source;
     typedef Teuchos::RCP<Mesh>                     RCP_Mesh;
     typedef Teuchos::RCP<LG_Indexer>               RCP_Indexer;
@@ -104,7 +106,7 @@ class Linear_System
     // Moment-coefficient generator.
     RCP_Moment_Coefficients b_mom_coeff;
 
-    // Epetra objects.
+    // Trilinos objects.
     RCP_Map      b_map;
     RCP_Operator b_operator; // SPN matrix
     RCP_Operator b_fission;  // Fission matrix
