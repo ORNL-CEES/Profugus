@@ -31,6 +31,7 @@
 
 using Teuchos::RCP;
 using Teuchos::rcp;
+using profugus::EpetraTypes;
 
 typedef profugus::Energy_Multigrid          Energy_Multigrid;
 typedef Energy_Multigrid::ParameterList     ParameterList;
@@ -98,7 +99,7 @@ TEST(MultigridTest, Heuristic)
     ref[3] = 1;
 
     // Fine level linear system
-    RCP<profugus::Linear_System> system = rcp(
+    RCP<profugus::Linear_System<EpetraTypes> > system = rcp(
         new profugus::Linear_System_FV<EpetraTypes>(
             db, dim, mat, mesh, indexer, data) );
     system->build_Matrix();

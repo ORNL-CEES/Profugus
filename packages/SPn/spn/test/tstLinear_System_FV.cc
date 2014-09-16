@@ -28,6 +28,7 @@
 #include "Test_XS.hh"
 
 using namespace std;
+using profugus::EpetraTypes;
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -37,26 +38,24 @@ using namespace std;
 class MatrixTest : public testing::Test
 {
   protected:
-    typedef profugus::Linear_System_FV<EpetraTypes> Linear_System;
-    typedef Teuchos::RCP<Linear_System>      RCP_Linear_System;
-    typedef profugus::Mat_DB                 Mat_DB_t;
-    typedef Linear_System::RCP_Mat_DB        RCP_Mat_DB;
-    typedef Linear_System::RCP_Dimensions    RCP_Dimensions;
-    typedef profugus::Partitioner            Partitioner;
-    typedef Linear_System::RCP_ParameterList RCP_ParameterList;
-    typedef Linear_System::RCP_Mesh          RCP_Mesh;
-    typedef Linear_System::RCP_Indexer       RCP_Indexer;
-    typedef Linear_System::RCP_Global_Data   RCP_Global_Data;
-    typedef Linear_System::RCP_Graph         RCP_Graph;
-    typedef Linear_System::RCP_Bnd_Indexer   RCP_Bnd_Indexer;
-    typedef Linear_System::Graph_t           Graph_t;
-    typedef Linear_System::Matrix_t          Matrix_t;
-    typedef Linear_System::Vector_t          Vector_t;
-    typedef Epetra_CrsMatrix                 Element_Matrix_t;
-    typedef Partitioner::Array_Dbl           Array_Dbl;
-    typedef Linear_System::External_Source   External_Source;
-    typedef Mat_DB_t::XS_t                   XS;
-    typedef Mat_DB_t::RCP_XS                 RCP_XS;
+    typedef profugus::Linear_System_FV<EpetraTypes>   Linear_System;
+    typedef Teuchos::RCP<Linear_System>               RCP_Linear_System;
+    typedef profugus::Mat_DB                          Mat_DB_t;
+    typedef typename Linear_System::RCP_Mat_DB        RCP_Mat_DB;
+    typedef typename Linear_System::RCP_Dimensions    RCP_Dimensions;
+    typedef profugus::Partitioner                     Partitioner;
+    typedef typename Linear_System::RCP_ParameterList RCP_ParameterList;
+    typedef typename Linear_System::RCP_Mesh          RCP_Mesh;
+    typedef typename Linear_System::RCP_Indexer       RCP_Indexer;
+    typedef typename Linear_System::RCP_Global_Data   RCP_Global_Data;
+    typedef typename Linear_System::RCP_Bnd_Indexer   RCP_Bnd_Indexer;
+    typedef typename Linear_System::Matrix_t          Matrix_t;
+    typedef typename Linear_System::Vector_t          Vector_t;
+    typedef Epetra_CrsMatrix                          Element_Matrix_t;
+    typedef Partitioner::Array_Dbl                    Array_Dbl;
+    typedef typename Linear_System::External_Source   External_Source;
+    typedef Mat_DB_t::XS_t                            XS;
+    typedef Mat_DB_t::RCP_XS                          RCP_XS;
 
   protected:
 
