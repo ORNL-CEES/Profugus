@@ -25,6 +25,7 @@ class Fission_Matrix_ProcessorTest : public ::testing::Test
     // >>> TYPEDEFS
     typedef profugus::Fission_Matrix_Processor Processor;
     typedef Processor::Ordered_Graph           Ordered_Graph;
+    typedef Processor::Ordered_Matrix          Ordered_Matrix;
     typedef Processor::Sparse_Matrix           Sparse_Matrix;
     typedef Processor::Denominator             Denominator;
     typedef Processor::Idx                     Idx;
@@ -55,6 +56,11 @@ class Fission_Matrix_ProcessorTest : public ::testing::Test
             local_matrix[Idx(2, 2)] = 2.0;
 
             local_matrix[Idx(3, 3)] = 8.0;
+
+            local_denominator[0] = 1.0;
+            local_denominator[1] = 2.0;
+            local_denominator[2] = 1.0;
+            local_denominator[3] = 2.0;
         }
         if (node == 1)
         {
@@ -67,6 +73,10 @@ class Fission_Matrix_ProcessorTest : public ::testing::Test
             local_matrix[Idx(2, 2)] = 7.0;
 
             local_matrix[Idx(3, 3)] = 6.0;
+
+            local_denominator[1] = 1.0;
+            local_denominator[2] = 2.0;
+            local_denominator[3] = 3.0;
         }
         if (node == 2)
         {
@@ -75,12 +85,16 @@ class Fission_Matrix_ProcessorTest : public ::testing::Test
             local_matrix[Idx(2, 3)] = 8.0;
             local_matrix[Idx(3, 3)] = 9.0;
 
+            local_denominator[3] = 1.0;
+
         }
         if (node == 3)
         {
             local_matrix[Idx(1, 1)] = 6.0;
             local_matrix[Idx(2, 1)] = 4.0;
             local_matrix[Idx(3, 1)] = 1.0;
+
+            local_denominator[1] = 1.0;
         }
 
         processor.build_matrix(local_matrix, local_denominator);
@@ -108,18 +122,37 @@ TEST_F(Fission_Matrix_ProcessorTest, one_proc)
     if (nodes != 1)
         return;
 
-    const Ordered_Graph &g = processor.graph();
-    EXPECT_EQ(3 + 2 + 1 + 1, g.size());
+    // test graph
+    {
+        const Ordered_Graph &g = processor.graph();
+        EXPECT_EQ(3 + 2 + 1 + 1, g.size());
 
-    Ordered_Graph ref = {Idx(0, 0),
-                         Idx(0, 1),
-                         Idx(1, 0),
-                         Idx(1, 1),
-                         Idx(2, 2),
-                         Idx(3, 0),
-                         Idx(3, 3)};
+        Ordered_Graph ref = {Idx(0, 0),
+                             Idx(0, 1),
+                             Idx(1, 0),
+                             Idx(1, 1),
+                             Idx(2, 2),
+                             Idx(3, 0),
+                             Idx(3, 3)};
 
-    EXPECT_EQ(ref, g);
+        EXPECT_EQ(ref, g);
+    }
+
+    // test matrix
+    {
+        const Ordered_Matrix &m = processor.matrix();
+        EXPECT_EQ(3 + 2 + 1 + 1, m.size());
+
+        Ordered_Matrix ref = {4.0,
+                              1.5,
+                              2.0,
+                              0.5,
+                              2.0,
+                              1.0,
+                              4.0};
+
+        EXPECT_VEC_SOFTEQ(m, ref, 1.0e-14);
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -129,21 +162,43 @@ TEST_F(Fission_Matrix_ProcessorTest, two_proc)
     if (nodes != 2)
         return;
 
-    const Ordered_Graph &g = processor.graph();
-    EXPECT_EQ(3 + 3 + 3 + 1, g.size());
+    // test graph
+    {
+        const Ordered_Graph &g = processor.graph();
+        EXPECT_EQ(3 + 3 + 3 + 1, g.size());
 
-    Ordered_Graph ref = {Idx(0, 0),
-                         Idx(0, 1),
-                         Idx(0, 2),
-                         Idx(1, 0),
-                         Idx(1, 1),
-                         Idx(1, 2),
-                         Idx(2, 1),
-                         Idx(2, 2),
-                         Idx(3, 0),
-                         Idx(3, 3)};
+        Ordered_Graph ref = {Idx(0, 0),
+                             Idx(0, 1),
+                             Idx(0, 2),
+                             Idx(1, 0),
+                             Idx(1, 1),
+                             Idx(1, 2),
+                             Idx(2, 1),
+                             Idx(2, 2),
+                             Idx(3, 0),
+                             Idx(3, 3)};
 
-    EXPECT_EQ(ref, g);
+        EXPECT_EQ(ref, g);
+    }
+
+    // test matrix
+    {
+        const Ordered_Matrix &m = processor.matrix();
+        EXPECT_EQ(3 + 3 + 3 + 1, m.size());
+
+        Ordered_Matrix ref = {4.0/1.0,
+                              7.0/3.0,
+                              3.0/3.0,
+                              2.0/1.0,
+                              3.0/3.0,
+                              1.0/3.0,
+                              1.0/3.0,
+                              9.0/3.0,
+                              1.0/1.0,
+                              14.0/5.0};
+
+        EXPECT_VEC_SOFTEQ(m, ref, 1.0e-14);
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -153,25 +208,64 @@ TEST_F(Fission_Matrix_ProcessorTest, four_proc)
     if (nodes != 4)
         return;
 
-    const Ordered_Graph &g = processor.graph();
-    EXPECT_EQ(3 + 4 + 3 + 4, g.size());
+    // test matrix
+    {
+        const Ordered_Graph &g = processor.graph();
+        EXPECT_EQ(3 + 4 + 3 + 4, g.size());
 
-    Ordered_Graph ref = {Idx(0, 0),
-                         Idx(0, 1),
-                         Idx(0, 2),
-                         Idx(0, 3),
-                         Idx(1, 0),
-                         Idx(1, 1),
-                         Idx(1, 2),
-                         Idx(1, 3),
-                         Idx(2, 1),
-                         Idx(2, 2),
-                         Idx(2, 3),
-                         Idx(3, 0),
-                         Idx(3, 1),
-                         Idx(3, 3)};
+        Ordered_Graph ref = {Idx(0, 0),
+                             Idx(0, 1),
+                             Idx(0, 2),
+                             Idx(0, 3),
+                             Idx(1, 0),
+                             Idx(1, 1),
+                             Idx(1, 2),
+                             Idx(1, 3),
+                             Idx(2, 1),
+                             Idx(2, 2),
+                             Idx(2, 3),
+                             Idx(3, 0),
+                             Idx(3, 1),
+                             Idx(3, 3)};
 
-    EXPECT_EQ(ref, g);
+        EXPECT_EQ(ref, g);
+    }
+
+    // test matrix
+    {
+        const Ordered_Matrix &m = processor.matrix();
+        EXPECT_EQ(3 + 4 + 3 + 4, m.size());
+
+        // 0 = 1.0
+        // 1 = 4.0
+        // 2 = 3.0
+        // 3 = 6.0
+
+        Ordered_Matrix ref = {4.0/1.0,
+                              7.0/4.0,
+                              3.0/3.0,
+                              1.0/6.0,
+                              2.0/1.0,
+                              9.0/4.0,
+                              1.0/3.0,
+                              3.0/6.0,
+                              5.0/4.0,
+                              9.0/3.0,
+                              8.0/6.0,
+                              1.0/1.0,
+                              1.0/4.0,
+                              23.0/6.0};
+
+        EXPECT_VEC_SOFTEQ(m, ref, 1.0e-14);
+    }
+
+    // test reset
+    processor.reset();
+    const auto &g = processor.graph();
+    const auto &m = processor.matrix();
+
+    EXPECT_TRUE(g.empty());
+    EXPECT_TRUE(m.empty());
 }
 
 //---------------------------------------------------------------------------//
