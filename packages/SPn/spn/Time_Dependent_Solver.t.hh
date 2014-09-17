@@ -86,7 +86,7 @@ void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
     if (profugus::to_lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
-            new Linear_System_FV<EpetraTypes>(
+            new Linear_System_FV<T>(
                 b_db, dim, mat, mesh, indexer, data, d_dt));
     }
     else

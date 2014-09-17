@@ -17,9 +17,6 @@
 // Trilinos Includes
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
-#include "Epetra_Map.h"
-#include "Epetra_RowMatrix.h"
-#include "Epetra_Vector.h"
 
 #include "mesh/Mesh.hh"
 #include "mesh/LG_Indexer.hh"
@@ -45,9 +42,6 @@ namespace profugus
  * \f]
  * The operators \b A and \b B along with vectors \b u and \b Q are defined in
  * the SPN technical note and Denovo methods manual.
- *
- * For now this uses Epetra, but it will probably get converted to Thyra at a
- * later date.
  */
 //===========================================================================//
 
@@ -77,15 +71,6 @@ class Linear_System
     typedef Teuchos::RCP<Global_Mesh_Data>         RCP_Global_Data;
     typedef Teuchos::Array<int>                    Array_Int;
     typedef Teuchos::Array<double>                 Array_Dbl;
-    //@}
-
-    //@{
-    //! Epetra communicator type.
-#ifdef COMM_MPI
-    typedef Epetra_MpiComm    Comm;
-#else
-    typedef Epetra_SerialComm Comm;
-#endif
     //@}
 
   protected:

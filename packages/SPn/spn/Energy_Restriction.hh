@@ -14,9 +14,6 @@
 #include <vector>
 
 #include "Teuchos_RCP.hpp"
-#include "AnasaziMultiVecTraits.hpp"
-#include "AnasaziEpetraAdapter.hpp"
-#include "AnasaziTpetraAdapter.hpp"
 
 #include "solvers/LinAlgTypedefs.hh"
 #include "OperatorAdapter.hh"

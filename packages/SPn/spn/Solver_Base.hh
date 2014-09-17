@@ -38,17 +38,11 @@ class Solver_Base
   public:
     //@{
     //! Typedefs.
-    typedef Linear_System<EpetraTypes>         Linear_System_t;
-    typedef Linear_System_t::Matrix_t          Matrix_t;
-    typedef Linear_System_t::Vector_t          Vector_t;
-    typedef Linear_System_t::RCP_ParameterList RCP_ParameterList;
-    typedef Linear_System_t::RCP_Vector        RCP_Vector;
-    typedef Linear_System_t::RCP_Dimensions    RCP_Dimensions;
-    typedef Linear_System_t::RCP_Mat_DB        RCP_Mat_DB;
-    typedef Linear_System_t::RCP_Mesh          RCP_Mesh;
-    typedef Linear_System_t::RCP_Indexer       RCP_Indexer;
-    typedef Linear_System_t::RCP_Global_Data   RCP_Global_Data;
-    typedef Teuchos::RCP<Linear_System_t>      RCP_Linear_System;
+    typedef Teuchos::RCP<Dimensions>           RCP_Dimensions;
+    typedef Teuchos::RCP<Mat_DB>               RCP_Mat_DB;
+    typedef Teuchos::RCP<Mesh>                 RCP_Mesh;
+    typedef Teuchos::RCP<LG_Indexer>           RCP_Indexer;
+    typedef Teuchos::RCP<Global_Mesh_Data>     RCP_Global_Data;
     typedef State::View_Field                  View_Field;
     //@}
 
@@ -79,18 +73,18 @@ class Solver_Base_Tmpl : public Solver_Base
 {
   protected:
 
-    using Solver_Base::Linear_System_t;
-    using Solver_Base::Matrix_t;
-    using Solver_Base::Vector_t;
-    using Solver_Base::RCP_ParameterList;
-    using Solver_Base::RCP_Vector;
     using Solver_Base::RCP_Dimensions;
     using Solver_Base::RCP_Mat_DB;
     using Solver_Base::RCP_Mesh;
     using Solver_Base::RCP_Indexer;
     using Solver_Base::RCP_Global_Data;
-    using Solver_Base::RCP_Linear_System;
     using Solver_Base::View_Field;
+
+    typedef typename T::VECTOR            Vector_t;
+    typedef Teuchos::ParameterList        ParameterList;
+    typedef Teuchos::RCP<ParameterList>   RCP_ParameterList;
+    typedef Linear_System<T>              Linear_System_t;
+    typedef Teuchos::RCP<Linear_System_t> RCP_Linear_System;
 
     // Linear system.
     RCP_Linear_System b_system;

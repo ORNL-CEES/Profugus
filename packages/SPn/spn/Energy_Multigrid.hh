@@ -14,9 +14,6 @@
 #include <vector>
 
 #include "Teuchos_RCP.hpp"
-#include "AnasaziMultiVecTraits.hpp"
-#include "AnasaziOperatorTraits.hpp"
-#include "AnasaziEpetraAdapter.hpp"
 
 #include "harness/DBC.hh"
 #include "xs/Mat_DB.hh"

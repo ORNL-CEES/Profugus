@@ -10,6 +10,10 @@
 
 #include "Energy_Multigrid.t.hh"
 #include "solvers/LinAlgTypedefs.hh"
+#include "AnasaziMultiVecTraits.hpp"
+#include "AnasaziOperatorTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 
 namespace profugus
 {

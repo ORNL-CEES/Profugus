@@ -11,6 +11,10 @@
 #include "Energy_Restriction.t.hh"
 #include "solvers/LinAlgTypedefs.hh"
 
+#include "AnasaziMultiVecTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
+
 namespace profugus
 {
 

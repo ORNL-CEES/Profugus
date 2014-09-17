@@ -23,7 +23,6 @@
 // Additional Trilinos pieces
 #include "Teuchos_SerialDenseMatrix.hpp"
 #include "Teuchos_LAPACK.hpp"
-#include "Epetra_CrsMatrix.h"
 
 namespace profugus
 {
