@@ -216,15 +216,15 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP1)
         new Teuchos::ParameterList("eigenvalue_settings"));
     RCP_ParameterList adb = Teuchos::rcp(
         new Teuchos::ParameterList("anasazi_settings"));
-    adb->set("Orthogonalization", string("DGKS"));
-    adb->set("eigensolver", string("Arnoldi"));
+    adb->set("Orthogonalization", std::string("DGKS"));
+    adb->set("eigensolver", std::string("Arnoldi"));
     edb->set("Anasazi", *adb);
     db->set("eigenvalue_db", *edb);
 
     build(1, 1);
     EXPECT_EQ(1, dim->num_equations());
     EXPECT_EQ("DGKS", db->sublist("eigenvalue_db").
-              sublist("Anasazi").get<string>("Orthogonalization"));
+              sublist("Anasazi").get<std::string>("Orthogonalization"));
 
     solver->solve();
 

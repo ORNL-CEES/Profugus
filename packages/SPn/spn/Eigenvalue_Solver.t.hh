@@ -16,7 +16,6 @@
 
 #include "Ifpack.h"
 #include "Teuchos_XMLParameterListHelpers.hpp"
-#include "Epetra_InvOperator.h"
 
 #include "harness/DBC.hh"
 #include "comm/P_Stream.hh"
@@ -24,6 +23,7 @@
 #include "utils/String_Functions.hh"
 #include "solvers/EigenvalueSolverBuilder.hh"
 #include "solvers/InverseOperator.hh"
+#include "solvers/PreconditionerBuilder.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
@@ -359,85 +359,6 @@ Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
                                     indexer, data, b_system));
         CHECK(prec != Teuchos::null);
     }
-    else if (prec_type == "ifpack")
-    {
-        // Get the matrix from the linear system (may not be full system
-        // matrix)
-        Teuchos::RCP<Epetra_RowMatrix> rcp_rowmat = b_system->get_Matrix();
-        INSIST(!rcp_rowmat.is_null(),
-               "Cannot use Ifpack preconditioner without constructing matrix.");
-
-        // Create Ifpack preconditioner
-        Ifpack ifpack_factory;
-        std::string ifpack_type = edb->template get<std::string>("Ifpack Type");
-        int overlap             = edb->template get<int>("Ifpack Overlap");
-        d_ifpack_prec           = Teuchos::rcp(
-            ifpack_factory.Create(ifpack_type, rcp_rowmat.get(), overlap));
-
-        // Convert "Ifpack Params" database to Teuchos::ParameterList
-        Teuchos::ParameterList &ifpack_db = edb->sublist("Ifpack Params");
-        d_ifpack_prec->SetParameters(ifpack_db);
-
-        // Process preconditioner
-        d_ifpack_prec->Initialize();
-        d_ifpack_prec->Compute();
-        if( edb->template get<std::string>("Output Level") == "high" &&
-            profugus::node() == 0 )
-        {
-            std::cout << "Ifpack Parameter List" << std::endl;
-            d_ifpack_prec->Print(std::cout);
-        }
-
-        // Ifpack preconditioners are applied with "Apply_Inverse"
-        //  but we want it to be used with "Apply", wrap the
-        //  preconditioner into an object that reverses the functionality
-        prec = Teuchos::rcp( new Epetra_InvOperator(d_ifpack_prec.get()) );
-
-        CHECK( prec != Teuchos::null );
-    }
-    else if (prec_type == "ml")
-    {
-#ifdef USE_ML
-        // Create default db
-        RCP_ParameterList ml_db = Teuchos::sublist(edb, "ML Params");
-
-        // Choose default settings
-        std::string default_type =
-            edb->template get("ML Default Type", std::string("DD"));
-
-        // Set default profile, but don't override existing entries
-        std::vector<int> az_options(AZ_OPTIONS_SIZE);
-        std::vector<double> az_params(AZ_PARAMS_SIZE);
-        bool override = false;
-        ML_Epetra::SetDefaults(default_type, *ml_db, &az_options[0],
-                               &az_params[0], override);
-
-        // Get the matrix from the linear system (may not be full system
-        // matrix)
-        Teuchos::RCP<Epetra_RowMatrix> rcp_rowmat = b_system->get_Matrix();
-        INSIST(!rcp_rowmat.is_null(),
-               "Cannot use ML preconditioner without constructing matrix.");
-
-        d_ml_prec = Teuchos::rcp(new ML_Epetra::MultiLevelPreconditioner(
-                                     *rcp_rowmat, *ml_db));
-
-        if (edb->template get<std::string>("Output Level") == "high" &&
-            profugus::node() == 0)
-        {
-            std::cout << "ML Defaults: " << default_type << std::endl;
-            std::cout << "ML Parameter List" << std::endl;
-            ml_db->print(std::cout);
-        }
-
-        // ML preconditioners are applied with "Apply_Inverse"
-        //  but we want it to be used with "Apply", wrap the
-        //  preconditioner into an object that reverses the functionality
-        prec = Teuchos::rcp(new Epetra_InvOperator(d_ml_prec.get()));
-        CHECK(!prec.is_null());
-#else
-        throw profugus::assertion("ML must be enabled at configure.");
-#endif
-    }
     else if (prec_type == "stratimikos" || prec_type == "solver")
     {
         // Create default db
@@ -452,9 +373,10 @@ Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
 
         CHECK(prec != Teuchos::null);
     }
-    else if (prec_type != "none" && prec_type != "internal")
+    else
     {
-        VALIDATE(false, "Unknown preconditioner option: " << prec_type);
+        prec = PreconditionerBuilder<T>::build_preconditioner(
+            b_system->get_Operator(),edb);
     }
 
     return prec;

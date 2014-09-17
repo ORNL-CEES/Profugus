@@ -13,15 +13,6 @@
 
 #include <SPn/config.h>
 
-#include "Ifpack_Preconditioner.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Operator.h"
-
-// ML has to be optional for Windows compatibility
-#ifdef USE_ML
-#include "ml_MultiLevelPreconditioner.h"
-#endif
-
 #include "comm/Timer.hh"
 #include "solvers/EigenvalueSolver.hh"
 #include "Solver_Base.hh"
@@ -91,15 +82,6 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
 
     // Eigensolver.
     RCP_Eigensolver d_eigensolver;
-
-    // Preconditioners.
-    // We have to hold on to these because they are given to
-    // other classes as raw pointers and we need to make sure
-    // they don't get destoyed (until they should)
-    Teuchos::RCP<Ifpack_Preconditioner> d_ifpack_prec;
-#ifdef USE_ML
-    Teuchos::RCP<ML_Epetra::MultiLevelPreconditioner> d_ml_prec;
-#endif
 
   public:
     // Constructor.
