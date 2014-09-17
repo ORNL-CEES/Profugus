@@ -86,7 +86,7 @@ class Fixed_Source_Solver : public Solver_Base_Tmpl<T>
                RCP_Indexer indexer, RCP_Global_Data data);
 
     // Solve the SPN equations.
-    void solve(const External_Source &q);
+    void solve(Teuchos::RCP<const External_Source> q);
 
     // Write the scalar-flux into the state.
     void write_state(State &state);

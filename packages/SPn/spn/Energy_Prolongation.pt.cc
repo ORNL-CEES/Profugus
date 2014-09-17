@@ -19,7 +19,7 @@ namespace profugus
 {
 
 template class Energy_Prolongation<EpetraTypes>;
-//template class Energy_Prolongation<TpetraTypes>;
+template class Energy_Prolongation<TpetraTypes>;
 
 } // end namespace profugus
 

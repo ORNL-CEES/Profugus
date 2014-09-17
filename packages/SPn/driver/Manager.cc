@@ -188,14 +188,14 @@ void Manager::solve()
             {
                 CHECK(d_fixed_solver.is_null());
                 CHECK(d_time_dep_solver.is_null());
-                d_eigen_solver->solve();
+                d_eigen_solver->solve(d_external_source);
             }
             else if (!d_fixed_solver.is_null())
             {
                 CHECK(d_eigen_solver.is_null());
                 CHECK(d_time_dep_solver.is_null());
                 CHECK(!d_external_source.is_null());
-                d_fixed_solver->solve(*d_external_source);
+                d_fixed_solver->solve(d_external_source);
             }
             else
             {
@@ -203,7 +203,7 @@ void Manager::solve()
                 CHECK(d_eigen_solver.is_null());
                 CHECK(!d_time_dep_solver.is_null());
                 CHECK(!d_external_source.is_null());
-                d_time_dep_solver->solve(*d_external_source);
+                d_time_dep_solver->solve(d_external_source);
             }
 
             // write the solution vector into the state

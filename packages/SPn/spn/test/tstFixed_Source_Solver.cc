@@ -164,13 +164,13 @@ TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP1)
     EXPECT_EQ(1, dim->num_equations());
 
     // make the source
-    External_Source q(mesh->num_cells());
+    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(1, 1.2));
         ID_Field srcids(mesh->num_cells(), 0);
         Source_Field source(mesh->num_cells(), 1.0);
 
-        q.set(srcids, shapes, source);
+        q->set(srcids, shapes, source);
     }
 
     solver->solve(q);
@@ -192,13 +192,13 @@ TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP3)
     EXPECT_EQ(2, dim->num_equations());
 
     // make the source
-    External_Source q(mesh->num_cells());
+    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(1, 1.2));
         ID_Field srcids(mesh->num_cells(), 0);
         Source_Field source(mesh->num_cells(), 1.0);
 
-        q.set(srcids, shapes, source);
+        q->set(srcids, shapes, source);
     }
 
     solver->solve(q);
@@ -221,7 +221,7 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP1)
     EXPECT_EQ(1, dim->num_equations());
 
     // make the source
-    External_Source q(mesh->num_cells());
+    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(3, 0.0));
         shapes[0][0] = 1.2;
@@ -231,7 +231,7 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP1)
         ID_Field srcids(mesh->num_cells(), 0);
         Source_Field source(mesh->num_cells(), 1.0);
 
-        q.set(srcids, shapes, source);
+        q->set(srcids, shapes, source);
     }
 
     solver->solve(q);
@@ -267,7 +267,7 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP5)
     EXPECT_EQ(3, dim->num_equations());
 
     // make the source
-    External_Source q(mesh->num_cells());
+    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(3, 0.0));
         shapes[0][0] = 1.2;
@@ -277,7 +277,7 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP5)
         ID_Field srcids(mesh->num_cells(), 0);
         Source_Field source(mesh->num_cells(), 1.0);
 
-        q.set(srcids, shapes, source);
+        q->set(srcids, shapes, source);
     }
 
     solver->solve(q);

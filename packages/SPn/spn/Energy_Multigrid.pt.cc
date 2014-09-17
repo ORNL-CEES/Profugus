@@ -19,7 +19,7 @@ namespace profugus
 {
 
 template class Energy_Multigrid<EpetraTypes>;
-//template class Energy_Multigrid<TpetraTypes>;
+template class Energy_Multigrid<TpetraTypes>;
 
 } // end namespace profugus
 

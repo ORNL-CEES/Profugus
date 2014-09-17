@@ -16,6 +16,7 @@
 #include "State.hh"
 #include "Linear_System.hh"
 #include "VectorTraits.hh"
+#include "Isotropic_Source.hh"
 #include "solvers/LinAlgTypedefs.hh"
 
 namespace profugus
@@ -43,6 +44,7 @@ class Solver_Base
     typedef Teuchos::RCP<Mesh>                 RCP_Mesh;
     typedef Teuchos::RCP<LG_Indexer>           RCP_Indexer;
     typedef Teuchos::RCP<Global_Mesh_Data>     RCP_Global_Data;
+    typedef Isotropic_Source                   External_Source;
     typedef State::View_Field                  View_Field;
     //@}
 
@@ -56,6 +58,9 @@ class Solver_Base
     // Set up the solver.
     virtual void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,
                        RCP_Indexer indexer, RCP_Global_Data data) = 0;
+
+    // Solve problem
+    virtual void solve(Teuchos::RCP<const External_Source> q) = 0;
 
     //! Write results of solve into state.
     virtual void write_state(State &state) = 0;

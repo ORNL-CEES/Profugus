@@ -15,7 +15,7 @@ namespace profugus
 {
 
 template class Time_Dependent_Solver<EpetraTypes>;
-//template class Time_Dependent_Solver<TpetraTypes>;
+template class Time_Dependent_Solver<TpetraTypes>;
 
 } // end namespace profugus
 

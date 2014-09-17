@@ -111,8 +111,9 @@ void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
  * \brief Solve the SPN equations for a given external source.
  */
 template <class T>
-void Time_Dependent_Solver<T>::solve(const External_Source &q)
+void Time_Dependent_Solver<T>::solve(Teuchos::RCP<const External_Source> q)
 {
+    REQUIRE(!q.is_null());
     REQUIRE(!b_system.is_null());
     REQUIRE(!d_lhs.is_null());
 
@@ -120,7 +121,7 @@ void Time_Dependent_Solver<T>::solve(const External_Source &q)
     VectorTraits<T>::put_scalar(d_lhs,0.0);
 
     // make the right-hand side vector based on the source
-    b_system->build_RHS(q);
+    b_system->build_RHS(*q);
     CHECK( VectorTraits<T>::local_length(b_system->get_RHS()) ==
            VectorTraits<T>::local_length(d_lhs) );
 

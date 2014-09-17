@@ -19,6 +19,7 @@
 #include "solvers/LinAlgTypedefs.hh"
 #include "../Dimensions.hh"
 #include "../Eigenvalue_Solver.hh"
+#include "../Isotropic_Source.hh"
 
 #include "Test_XS.hh"
 
@@ -226,7 +227,9 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP1)
     EXPECT_EQ("DGKS", db->sublist("eigenvalue_db").
               sublist("Anasazi").get<std::string>("Orthogonalization"));
 
-    solver->solve();
+    Teuchos::RCP<profugus::Isotropic_Source> q;
+
+    solver->solve(q);
 
     EXPECT_SOFTEQ(0.8333333333333334, solver->get_eigenvalue(), 1.0e-6);
 }
@@ -238,7 +241,8 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP3)
     build(3, 1);
     EXPECT_EQ(2, dim->num_equations());
 
-    solver->solve();
+    Teuchos::RCP<profugus::Isotropic_Source> q;
+    solver->solve(q);
 
     EXPECT_SOFTEQ(0.8333333333333334, solver->get_eigenvalue(), 1.0e-6);
 }
@@ -250,7 +254,8 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
     build(1, 3);
     EXPECT_EQ(1, dim->num_equations());
 
-    solver->solve();
+    Teuchos::RCP<profugus::Isotropic_Source> q;
+    solver->solve(q);
 
     EXPECT_SOFTEQ(3.301149153942720, solver->get_eigenvalue(), 1.0e-6);
 
@@ -292,7 +297,8 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP3)
     build(3, 3);
     EXPECT_EQ(2, dim->num_equations());
 
-    solver->solve();
+    Teuchos::RCP<profugus::Isotropic_Source> q;
+    solver->solve(q);
 
     EXPECT_SOFTEQ(3.301149153942720, solver->get_eigenvalue(), 1.0e-6);
 

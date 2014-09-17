@@ -15,7 +15,7 @@ namespace profugus
 {
 
 template class Solver_Base_Tmpl<EpetraTypes>;
-//template class Solver_Base<TpetraTypes>;
+template class Solver_Base_Tmpl<TpetraTypes>;
 
 } // end namespace profugus
 

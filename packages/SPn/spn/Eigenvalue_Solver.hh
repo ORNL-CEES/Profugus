@@ -92,7 +92,7 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
                RCP_Indexer indexer, RCP_Global_Data data);
 
     // Solve the SPN eigenvalue equations.
-    void solve();
+    void solve(Teuchos::RCP<const External_Source> q);
 
     // Write the scalar-flux (eigenvector) into the state.
     void write_state(State &state);

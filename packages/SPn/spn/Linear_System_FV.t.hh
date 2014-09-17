@@ -176,8 +176,6 @@ Linear_System_FV<T>::Linear_System_FV(RCP_ParameterList db,
 
     // make the map
     b_map = MatrixTraits<T>::build_map(N_local,N_global,l2g);
-    CHECK(b_map->NumMyElements() == N_local);
-    CHECK(b_map->NumGlobalElements() == N_global);
 
     // allocate space for the number of potential non-zero indices per row;
     // the matrix bandwidth (entries per row) is the (number of equations +

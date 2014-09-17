@@ -67,8 +67,6 @@ Energy_Multigrid<T>::Energy_Multigrid(RCP_ParameterList              main_db,
         build_preconditioner(fine_system->get_Matrix(),smoother_db) );
     if (d_preconditioners.back() != Teuchos::null)
     {
-        CHECK(d_preconditioners.back()->OperatorDomainMap().NumMyElements()
-               == d_solutions.back()->MyLength());
         d_smoothers.back()->set_preconditioner(d_preconditioners.back());
     }
     else
@@ -138,8 +136,6 @@ Energy_Multigrid<T>::Energy_Multigrid(RCP_ParameterList              main_db,
             build_preconditioner(system->get_Matrix(),smoother_db) );
         if( d_preconditioners.back() != Teuchos::null )
         {
-            CHECK(d_preconditioners.back()->OperatorDomainMap()
-                   .NumMyElements() == d_solutions.back()->MyLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
         else
@@ -164,8 +160,6 @@ Energy_Multigrid<T>::Energy_Multigrid(RCP_ParameterList              main_db,
         d_smoothers.back()->set_operator(d_operators.back());
         if( d_preconditioners.back() != Teuchos::null )
         {
-            REQUIRE(d_preconditioners.back()->OperatorDomainMap()
-                    .NumMyElements() == d_solutions.back()->MyLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
         else

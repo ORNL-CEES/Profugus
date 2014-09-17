@@ -15,7 +15,7 @@ namespace profugus
 {
 
 template class Eigenvalue_Solver<EpetraTypes>;
-//template class Eigenvalue_Solver<TpetraTypes>;
+template class Eigenvalue_Solver<TpetraTypes>;
 
 } // end namespace profugus
 

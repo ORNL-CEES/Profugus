@@ -15,7 +15,7 @@ namespace profugus
 {
 
 template class Linear_System_FV<EpetraTypes>;
-//template class Linear_System_FV<TpetraTypes>;
+template class Linear_System_FV<TpetraTypes>;
 
 } // end namespace profugus
 

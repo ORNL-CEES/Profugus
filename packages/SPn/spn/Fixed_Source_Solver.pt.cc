@@ -15,7 +15,7 @@ namespace profugus
 {
 
 template class Fixed_Source_Solver<EpetraTypes>;
-//template class Fixed_Source_Solver<TpetraTypes>;
+template class Fixed_Source_Solver<TpetraTypes>;
 
 } // end namespace profugus
 

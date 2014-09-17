@@ -152,8 +152,9 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
  * \brief Solve the SPN eigenvalue equations.
  */
 template <class T>
-void Eigenvalue_Solver<T>::solve()
+void Eigenvalue_Solver<T>::solve(Teuchos::RCP<const External_Source> q)
 {
+    REQUIRE( q == Teuchos::null );
     REQUIRE(!b_system.is_null());
     REQUIRE(!d_u.is_null());
     REQUIRE(!d_eigensolver.is_null());
