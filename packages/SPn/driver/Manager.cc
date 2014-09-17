@@ -303,7 +303,7 @@ void Manager::output()
             f << "group_" << g + g_first;
 
             // get the group fluxes
-            State_t::const_View_Field flux = state.flux(g, g);
+            profugus::State::const_View_Field flux = state.flux(g, g);
             CHECK(!flux.is_null());
             CHECK(flux.size() == d_mesh->num_cells());
 
