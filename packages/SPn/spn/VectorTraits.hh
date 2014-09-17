@@ -50,6 +50,7 @@ class VectorTraits
     //! Typedefs.
     typedef typename T::MAP    Map_t;
     typedef typename T::VECTOR Vector_t;
+    typedef typename T::MV     MV;
     //@}
 
     static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
@@ -58,26 +59,32 @@ class VectorTraits
         return Teuchos::null;
     }
 
-    static int local_length(Teuchos::RCP<const Vector_t> vector)
+    static int local_length(Teuchos::RCP<const MV> vector)
     {
         UndefinedVectorTraits<T>::NotDefined();
         return 0;
     }
 
-    static void put_scalar(Teuchos::RCP<Vector_t> vector, double val)
+    static int local_size(Teuchos::RCP<const Map_t> map)
+    {
+        UndefinedVectorTraits<T>::NotDefined();
+        return 0;
+    }
+
+    static void put_scalar(Teuchos::RCP<MV> vector, double val)
     {
         UndefinedVectorTraits<T>::NotDefined();
     }
 
     static Teuchos::ArrayView<double> get_data_nonconst(
-        Teuchos::RCP<Vector_t> vector)
+        Teuchos::RCP<MV> vector, int ivec=0)
     {
         UndefinedVectorTraits<T>::NotDefined();
         return Teuchos::ArrayView<double>();
     }
 
     static Teuchos::ArrayView<const double> get_data(
-        Teuchos::RCP<const Vector_t> vector)
+        Teuchos::RCP<const MV> vector, int ivec=0)
     {
         UndefinedVectorTraits<T>::NotDefined();
         return Teuchos::ArrayView<double>();
@@ -94,6 +101,7 @@ class VectorTraits<EpetraTypes>
     //! Typedefs.
     typedef typename EpetraTypes::MAP    Map_t;
     typedef typename EpetraTypes::VECTOR Vector_t;
+    typedef typename EpetraTypes::MV     MV;
     //@}
 
     static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
@@ -104,26 +112,33 @@ class VectorTraits<EpetraTypes>
         return x;
     }
 
-    static int local_length(Teuchos::RCP<const Vector_t> vector)
+    static int local_length(Teuchos::RCP<const MV> vector)
     {
         return vector->MyLength();
     }
 
-    static void put_scalar(Teuchos::RCP<Vector_t> vector, double val)
+    static int local_size(Teuchos::RCP<const Map_t> map)
+    {
+        return map->NumMyElements();
+    }
+
+    static void put_scalar(Teuchos::RCP<MV> vector, double val)
     {
         vector->PutScalar(val);
     }
 
     static Teuchos::ArrayView<double> get_data_nonconst(
-        Teuchos::RCP<Vector_t> vector)
+        Teuchos::RCP<MV> vector, int ivec=0)
     {
-        return Teuchos::arrayView<double>(vector->Values(),vector->MyLength());
+        return Teuchos::arrayView<double>((*vector)[ivec],
+                                          vector->MyLength());
     }
 
     static Teuchos::ArrayView<const double> get_data(
-        Teuchos::RCP<const Vector_t> vector)
+        Teuchos::RCP<const MV> vector, int ivec=0)
     {
-        return Teuchos::arrayView<const double>(vector->Values(),vector->MyLength());
+        return Teuchos::arrayView<const double>((*vector)[ivec],
+                                                vector->MyLength());
     }
 
 };
@@ -137,6 +152,7 @@ class VectorTraits<TpetraTypes>
     //! Typedefs.
     typedef typename TpetraTypes::MAP    Map_t;
     typedef typename TpetraTypes::VECTOR Vector_t;
+    typedef typename TpetraTypes::MV     MV;
     //@}
 
     static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
@@ -147,26 +163,31 @@ class VectorTraits<TpetraTypes>
         return x;
     }
 
-    static int local_length(Teuchos::RCP<const Vector_t> vector)
+    static int local_length(Teuchos::RCP<const MV> vector)
     {
         return vector->getLocalLength();
     }
 
-    static void put_scalar(Teuchos::RCP<Vector_t> vector, double val)
+    static int local_size(Teuchos::RCP<const Map_t> map)
+    {
+        return map->getNodeNumElements();
+    }
+
+    static void put_scalar(Teuchos::RCP<MV> vector, double val)
     {
         vector->putScalar(val);
     }
 
     static Teuchos::ArrayView<double> get_data_nonconst(
-        Teuchos::RCP<Vector_t> vector)
+        Teuchos::RCP<MV> vector, int ivec=0)
     {
-        return vector->getDataNonConst()();
+        return vector->getDataNonConst(ivec)();
     }
 
     static Teuchos::ArrayView<const double> get_data(
-        Teuchos::RCP<const Vector_t> vector)
+        Teuchos::RCP<const MV> vector, int ivec=0)
     {
-        return vector->getData()();
+        return vector->getData(ivec)();
     }
 
 };

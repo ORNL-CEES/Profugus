@@ -13,6 +13,7 @@
 #include "xs/Energy_Collapse.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
+#include "VectorTraits.hh"
 
 namespace profugus
 {
@@ -47,17 +48,17 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
     // Fill vectors with fine level objects, don't build new matrix
     d_operators.push_back(fine_system->get_Operator());
-    RCP<Epetra_BlockMap> fine_map = fine_system->get_Map();
-    d_solutions.push_back( rcp( new Epetra_Vector(*fine_map) ) );
-    d_residuals.push_back( rcp( new Epetra_Vector(*fine_map) ) );
-    d_rhss.push_back( rcp( new Epetra_Vector(*fine_map) ) );
+    d_maps.push_back( fine_system->get_Map() );
+    d_solutions.push_back( VectorTraits<T>::build_vector(d_maps[0]) );
+    d_residuals.push_back( VectorTraits<T>::build_vector(d_maps[0]) );
+    d_rhss.push_back( VectorTraits<T>::build_vector(d_maps[0]) );
 
     // Build level 0 smoother
     RCP_ParameterList smoother_db = sublist(prec_db, "Smoother");
     d_smoothers.push_back(
-        LinearSolverBuilder<EpetraTypes>::build_solver(smoother_db));
+        LinearSolverBuilder<T>::build_solver(smoother_db));
     d_smoothers.back()->set_operator(d_operators.back());
-    d_preconditioners.push_back(PreconditionerBuilder<EpetraTypes>::
+    d_preconditioners.push_back(PreconditionerBuilder<T>::
         build_preconditioner(fine_system->get_Matrix(),smoother_db) );
     if (d_preconditioners.back() != Teuchos::null)
     {
@@ -95,8 +96,8 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         CHECK( !new_mat.is_null() );
 
         // Build linear system
-        RCP<Linear_System<EpetraTypes> > system = rcp(
-            new Linear_System_FV<EpetraTypes>(
+        RCP<Linear_System<T> > system = rcp(
+            new Linear_System_FV<T>(
                 main_db, dim, new_mat, mesh, indexer, data));
 
         system->build_Matrix();
@@ -104,30 +105,31 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         CHECK( d_operators.back() != Teuchos::null );
 
         // Allocate Epetra vectors
-        RCP<Epetra_Vector> tmp_vec = system->get_RHS();
-        d_solutions.push_back( rcp( new Epetra_Vector(*tmp_vec) ) );
-        d_rhss.push_back(      rcp( new Epetra_Vector(*tmp_vec) ) );
-        d_residuals.push_back( rcp( new Epetra_Vector(*tmp_vec) ) );
+        RCP<T::VECTOR> tmp_vec = system->get_RHS();
+        d_maps.push_back( system->get_Map() );
+        d_solutions.push_back( VectorTraits<T>::build_vector(d_maps[level]));
+        d_rhss.push_back(      VectorTraits<T>::build_vector(d_maps[level]));
+        d_residuals.push_back( VectorTraits<T>::build_vector(d_maps[level]));
 
         // Build Restriction
         d_restrictions.push_back(
-            rcp(new Energy_Restriction(*d_solutions[level-1],
-                                       *d_solutions[level],
+            rcp(new Energy_Restriction(d_maps[level-1],
+                                       d_maps[level],
                                        collapse)));
 
         // Build Prolongation
         d_prolongations.push_back(
-            rcp(new Energy_Prolongation(*d_solutions[level],
-                                        *d_solutions[level-1],
+            rcp(new Energy_Prolongation(d_maps[level],
+                                        d_maps[level-1],
                                         collapse)));
 
         // Build smoother
         d_smoothers.push_back(
-            LinearSolverBuilder<EpetraTypes>::build_solver(smoother_db));
+            LinearSolverBuilder<T>::build_solver(smoother_db));
         d_smoothers.back()->set_operator(d_operators.back());
 
         // Store and set preconditioner
-        d_preconditioners.push_back(PreconditionerBuilder<EpetraTypes>::
+        d_preconditioners.push_back(PreconditionerBuilder<T>::
             build_preconditioner(system->get_Matrix(),smoother_db) );
         if( d_preconditioners.back() != Teuchos::null )
         {
@@ -153,7 +155,7 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
         // Replace last smoother, don't add a new one
         d_smoothers.push_back(
-            profugus::LinearSolverBuilder<EpetraTypes>::build_solver(coarse_db));
+            profugus::LinearSolverBuilder<T>::build_solver(coarse_db));
         d_smoothers.back()->set_operator(d_operators.back());
         if( d_preconditioners.back() != Teuchos::null )
         {
@@ -175,16 +177,18 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 int Energy_Multigrid::Apply(const Epetra_MultiVector &x,
                                   Epetra_MultiVector &y ) const
 {
-    int num_vectors = x.NumVectors();
-    REQUIRE(y.NumVectors() == num_vectors);
+    int num_vectors = MVT::GetNumberVecs(x);
+    REQUIRE(MVT::GetNumberVecs(y) == num_vectors);
 
     // Process each vector in multivec individually (all of the
     //  multivecs have been allocated for a single vec)
     for( int ivec=0; ivec<num_vectors; ++ivec )
     {
-        d_residuals[0]->Update( 1.0, *x(ivec), 0.0 );
-        d_rhss[0]->Update( 1.0, *x(ivec), 0.0 );
-        d_solutions[0]->PutScalar(0.0);
+        std::vector<int> ind(1,ivec);
+        Teuchos::RCP<const MV> xi = MVT::CloneView(x,ind);
+        MVT::Assign(*xi,*d_residuals[0]);
+        MVT::Assign(*xi,*d_rhss[0]);
+        MVT::MvInit(*d_solutions[0],0.0);
 
         // In a true multigrid V-cycle, the first operation is a
         //  restriction rather than smoothing.  Smoothing on the finest
@@ -195,20 +199,23 @@ int Energy_Multigrid::Apply(const Epetra_MultiVector &x,
         for( int ilevel=1; ilevel<d_num_levels; ++ilevel )
         {
             // Restrict residual from previous level
-            d_restrictions[ilevel-1]->Apply(
-                    *d_residuals[ilevel-1],*d_rhss[ilevel]);
+            OPT::Apply(*d_restrictions[ilevel-1],
+                       *d_residuals[ilevel-1],
+                       *d_rhss[ilevel]);
 
             // Apply smoother
-            d_solutions[ilevel]->PutScalar(0.0);
+            MVT::MvInit(*d_solutions[ilevel],0.0);
             d_smoothers[ilevel]->solve(d_solutions[ilevel],d_rhss[ilevel]);
 
             // Compute residual (except on coarsest level)
             if( ilevel != d_num_levels-1 )
             {
-                d_operators[ilevel]->Apply(
-                        *d_solutions[ilevel],*d_residuals[ilevel]);
+                OPT::Apply(*d_operators[ilevel],
+                           *d_solutions[ilevel],
+                           *d_residuals[ilevel]);
 
-                d_residuals[ilevel]->Update(1.0,*d_rhss[ilevel],-1.0);
+                MVT::MvAddMv(1.0,*d_rhss[ilevel],-1.0,*d_residuals[ilevel],
+                             *d_residuals[ilevel]);
             }
         }
 
@@ -216,16 +223,16 @@ int Energy_Multigrid::Apply(const Epetra_MultiVector &x,
         {
             // Prolong solution vector to next level: x[l] = x[l] + P*x[l-1]
             // Residual is used for tmp storage here
-            d_prolongations[ilevel]->Apply(
-                    *d_solutions[ilevel+1],*d_residuals[ilevel]);
-            d_solutions[ilevel]->Update(1.0,*d_residuals[ilevel],1.0);
+            OPT::Apply(*d_prolongations[ilevel],*d_solutions[ilevel+1],
+                       *d_residuals[ilevel]);
+            MVT::MvAddMv(1.0,*d_residuals[ilevel],1.0,*d_solutions[ilevel],
+                         *d_solutions[ilevel]);
 
             // Apply smoother
             d_smoothers[ilevel]->solve(d_solutions[ilevel],d_rhss[ilevel]);
         }
 
-        y(ivec)->Update( 1.0, *d_solutions[0], 0.0 );
-
+        MVT::SetBlock(*d_solutions[0],ind,y);
     }
 
     // return success
