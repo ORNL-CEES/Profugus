@@ -99,63 +99,28 @@ void Manager::setup(const std::string &xml_file)
     REQUIRE( d_implementation == "epetra" || d_implementation == "tpetra" );
 
     // build the appropriate solver (default is eigenvalue)
-    if( d_implementation == "epetra" )
+    if (prob_type == "eigenvalue")
     {
-        if (prob_type == "eigenvalue")
-        {
-            d_eigen_solver = Teuchos::rcp(new Eigenvalue_Solver_t(d_db));
-            d_solver_base  = d_eigen_solver;
-        }
-        else if (prob_type == "fixed")
-        {
-            d_fixed_solver = Teuchos::rcp(new Fixed_Source_Solver_t(d_db));
-            d_solver_base  = d_fixed_solver;
-        }
-        else if (prob_type == "fixed_tdep")
-        {
-            d_time_dep_solver = Teuchos::rcp(new Time_Dependent_Solver_t(d_db));
-            d_solver_base  = d_time_dep_solver;
-        }
-        else
-        {
-            std::stringstream ss;
-            ss << "Undefined problem type " << prob_type
-                << "; choose eigenvalue, fixed or fixed_tdep" << std::endl;
-            VALIDATE(false,ss.str());
-        }
-
-        // setup the solver
-        d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
+        d_solver_base = Teuchos::rcp(new Eigenvalue_Solver_t(d_db));
+    }
+    else if (prob_type == "fixed")
+    {
+        d_solver_base = Teuchos::rcp(new Fixed_Source_Solver_t(d_db));
+    }
+    else if (prob_type == "fixed_tdep")
+    {
+        d_solver_base = Teuchos::rcp(new Time_Dependent_Solver_t(d_db));
     }
     else
     {
-        if (prob_type == "eigenvalue")
-        {
-            d_eigen_solver_tpetra = Teuchos::rcp(
-                new Eigenvalue_Solver_Tpetra_t(d_db));
-            d_solver_base_tpetra  = d_eigen_solver_tpetra;
-        }
-        else if (prob_type == "fixed")
-        {
-            d_fixed_solver_tpetra = Teuchos::rcp(
-                new Fixed_Source_Solver_Tpetra_t(d_db));
-            d_solver_base_tpetra  = d_fixed_solver_tpetra;
-        }
-        else if (prob_type == "fixed_tdep")
-        {
-            NOT_IMPLEMENTED("Time dependent SPN with Tpetra");
-        }
-        else
-        {
-            std::stringstream ss;
-            ss << "Undefined problem type " << prob_type
-                << "; choose eigenvalue or fixed" << std::endl;
-            VALIDATE(false,ss.str());
-        }
-
-        // setup the solver
-        d_solver_base_tpetra->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
+        std::stringstream ss;
+        ss << "Undefined problem type " << prob_type
+            << "; choose eigenvalue, fixed or fixed_tdep" << std::endl;
+        VALIDATE(false,ss.str());
     }
+
+    // setup the solver
+    d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
 
     // make the state
     d_state = Teuchos::rcp(
@@ -181,52 +146,11 @@ void Manager::solve()
 
         SCREEN_MSG("Executing solver");
 
-        if( d_implementation == "epetra" )
-        {
-            // run the appropriate solver
-            if (!d_eigen_solver.is_null())
-            {
-                CHECK(d_fixed_solver.is_null());
-                CHECK(d_time_dep_solver.is_null());
-                d_eigen_solver->solve(d_external_source);
-            }
-            else if (!d_fixed_solver.is_null())
-            {
-                CHECK(d_eigen_solver.is_null());
-                CHECK(d_time_dep_solver.is_null());
-                CHECK(!d_external_source.is_null());
-                d_fixed_solver->solve(d_external_source);
-            }
-            else
-            {
-                CHECK(d_fixed_solver.is_null());
-                CHECK(d_eigen_solver.is_null());
-                CHECK(!d_time_dep_solver.is_null());
-                CHECK(!d_external_source.is_null());
-                d_time_dep_solver->solve(d_external_source);
-            }
+        // solve problem (source will be null for eigenvalue problems)
+        d_solver_base->solve(d_external_source);
 
-            // write the solution vector into the state
-            d_solver_base->write_state(*d_state);
-        }
-        else
-        {
-            // run the appropriate solver
-            if (!d_eigen_solver_tpetra.is_null())
-            {
-                CHECK(d_fixed_solver_tpetra.is_null());
-                d_eigen_solver_tpetra->solve();
-            }
-            else if (!d_fixed_solver_tpetra.is_null())
-            {
-                CHECK(d_eigen_solver_tpetra.is_null());
-                CHECK(!d_external_source.is_null());
-                d_fixed_solver_tpetra->solve(*d_external_source);
-            }
-
-            // write the solution vector into the state
-            d_solver_base_tpetra->write_state(*d_state);
-        }
+        // write the solution vector into the state
+        d_solver_base->write_state(*d_state);
     }
 }
 
