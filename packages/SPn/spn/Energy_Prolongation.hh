@@ -18,6 +18,7 @@
 #include "AnasaziEpetraAdapter.hpp"
 
 #include "solvers/LinAlgTypedefs.hh"
+#include "OperatorAdapter.hh"
 
 namespace profugus
 {
@@ -39,13 +40,13 @@ namespace profugus
  */
 //===========================================================================//
 
-class Energy_Prolongation : public Epetra_Operator
+template <class T>
+class Energy_Prolongation : public OperatorAdapter<T>
 {
   public:
 
     //@{
     //! Typedefs.
-    typedef EpetraTypes                           T;
     typedef typename T::OP                        OP;
     typedef typename T::MV                        MV;
     typedef typename T::VECTOR                    VECTOR;
@@ -53,33 +54,30 @@ class Energy_Prolongation : public Epetra_Operator
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
     //@}
 
-    Energy_Prolongation( Teuchos::RCP<const MAP> fine_vec,
-                         Teuchos::RCP<const MAP> coarse_vec,
+    Energy_Prolongation( Teuchos::RCP<const MAP> coarse_map,
+                         Teuchos::RCP<const MAP> fine_map,
                          const std::vector<int> &steer_vec );
 
-    int Apply( const Epetra_MultiVector &x,
-                     Epetra_MultiVector &y ) const;
-
-    // Required interface
-    int SetUseTranspose(bool use){return -1;}
-    int ApplyInverse(const Epetra_MultiVector &x,
-                           Epetra_MultiVector &y ) const {return -1;}
-    bool HasNormInf()const {return false;}
-    double NormInf() const {return 0.0;}
-    const char * Label() const {return "Energy_Prolongation";}
-    bool UseTranspose() const {return false;}
-    const Epetra_Comm & Comm() const {return d_fine_map->Comm();}
-    const Epetra_Map & OperatorDomainMap() const
+    int Apply( const MV &x, MV &y ) const
     {
-        return *d_coarse_map;
-    }
-    const Epetra_Map & OperatorRangeMap() const
-    {
-        return *d_fine_map;
+        ApplyImpl(x,y);
+        return 0;
     }
 
+    void apply( const MV &x, MV &y, Teuchos::ETransp mode=Teuchos::NO_TRANS,
+                double alpha=Teuchos::ScalarTraits<double>::one(),
+                double beta=Teuchos::ScalarTraits<double>::zero()) const
+    {
+        REQUIRE( alpha == 1.0 );
+        REQUIRE( beta  == 0.0 );
+        REQUIRE( mode == Teuchos::NO_TRANS );
+
+        ApplyImpl(x,y);
+    }
 
   private:
+
+    void ApplyImpl(const MV &x, MV &y) const;
 
     std::vector<int> d_steer_vec;
 

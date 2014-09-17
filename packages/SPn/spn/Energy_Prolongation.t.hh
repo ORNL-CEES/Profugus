@@ -1,19 +1,20 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Restriction.cc
+ * \file   spn/Energy_Prolongation.t.hh
  * \author Thomas M. Evans, Steven Hamilton
- * \date   Tue Feb 25 12:35:37 2014
- * \brief  Energy_Restriction member definitions.
+ * \date   Tue Feb 25 12:35:44 2014
+ * \brief  Energy_Prolongation template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
+#ifndef spn_Energy_Prolongation_t_hh
+#define spn_Energy_Prolongation_t_hh
+
 #include <algorithm>
 
-#include "Epetra_Vector.h"
-
 #include "harness/DBC.hh"
-#include "Energy_Restriction.hh"
+#include "Energy_Prolongation.hh"
 #include "VectorTraits.hh"
 
 namespace profugus
@@ -23,13 +24,16 @@ namespace profugus
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 
-Energy_Restriction::Energy_Restriction(
-        Teuchos::RCP<const MAP> fine_map,
+template <class T>
+Energy_Prolongation<T>::Energy_Prolongation(
         Teuchos::RCP<const MAP> coarse_map,
+        Teuchos::RCP<const MAP> fine_map,
         const std::vector<int> &steer_vec )
-    : d_steer_vec(steer_vec)
-    , d_fine_map( fine_map )
+
+    : OperatorAdapter<T>(coarse_map,fine_map)
+    , d_steer_vec(steer_vec)
     , d_coarse_map( coarse_map )
+    , d_fine_map( fine_map )
 {
     d_fine_groups = std::accumulate(steer_vec.begin(),steer_vec.end(),0);
     d_coarse_groups = steer_vec.size();
@@ -43,12 +47,12 @@ Energy_Restriction::Energy_Restriction(
 }
 
 //---------------------------------------------------------------------------//
-// RESTRICTION OPERATOR
+// PROLONGATION OPERATOR
 //---------------------------------------------------------------------------//
 
-int Energy_Restriction::Apply(
-        const Epetra_MultiVector &fine_vectors,
-              Epetra_MultiVector &coarse_vectors ) const
+template <class T>
+void Energy_Prolongation<T>::ApplyImpl( const MV &coarse_vectors,
+                                              MV &fine_vectors ) const
 {
     REQUIRE( VectorTraits<T>::local_length(Teuchos::rcpFromRef(fine_vectors))
              == d_fine_groups*d_unks_per_grp );
@@ -58,17 +62,17 @@ int Energy_Restriction::Apply(
     int num_vectors = MVT::GetNumberVecs(fine_vectors);
     CHECK( MVT::GetNumberVecs(coarse_vectors) ==num_vectors );
 
-    MVT::MvInit(coarse_vectors,0.0);
+    MVT::MvInit(fine_vectors,0.0);
 
     // Process each vector in multivector
     int coarse_offset, fine_offset;
     for( int ivec=0; ivec<num_vectors; ++ivec )
     {
-        Teuchos::ArrayView<const double> fine_data =
-            VectorTraits<T>::get_data(Teuchos::rcpFromRef(fine_vectors),ivec);
-        Teuchos::ArrayView<double> coarse_data =
+        Teuchos::ArrayView<double> fine_data =
             VectorTraits<T>::get_data_nonconst(
-                Teuchos::rcpFromRef(coarse_vectors),ivec);
+                Teuchos::rcpFromRef(fine_vectors),ivec);
+        Teuchos::ArrayView<const double> coarse_data =
+            VectorTraits<T>::get_data(Teuchos::rcpFromRef(coarse_vectors),ivec);
 
         // Apply restriction to each component
         for( int i=0; i<d_unks_per_grp; ++i )
@@ -76,26 +80,23 @@ int Energy_Restriction::Apply(
             coarse_offset = i*d_coarse_groups;
             fine_offset   = i*d_fine_groups;
             int grp_ctr = 0;
-
             for( int icg=0; icg<d_coarse_groups; ++icg )
             {
                 int fine_grps = d_steer_vec[icg];
                 for( int ifg=grp_ctr; ifg<grp_ctr+fine_grps; ++ifg )
                 {
-                    coarse_data[coarse_offset+icg] += fine_data[fine_offset+ifg];
+                    fine_data[fine_offset+ifg] = coarse_data[coarse_offset+icg];
                 }
                 grp_ctr += fine_grps;
-                coarse_data[coarse_offset+icg] /=
-                    static_cast<double>(fine_grps);
             }
         }
     }
-
-    return 0;
 }
 
 } // end namespace profugus
 
+#endif // spn_Energy_Prolongation_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Energy_Restriction.cc
+//                 end of Energy_Prolongation.t.hh
 //---------------------------------------------------------------------------//

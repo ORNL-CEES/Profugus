@@ -42,16 +42,16 @@ TEST(RestrictTest, Even)
 
     // Create maps
     Teuchos::RCP<Map_t> map0 =
-        profugus::MatrixTraits<T>::build_map(Nv*Ng*nodes,Nv*Ng);
+        profugus::MatrixTraits<T>::build_map(Nv*Ng,Nv*Ng*nodes);
     Teuchos::RCP<Map_t> map1 =
-        profugus::MatrixTraits<T>::build_map(Nv*Ng*nodes/2,Nv*Ng/2);
+        profugus::MatrixTraits<T>::build_map(Nv*Ng/2,Nv*Ng*nodes/2);
 
     // Create Epetra vectors
     Teuchos::RCP<Vector_t> vec0 = profugus::VectorTraits<T>::build_vector(map0);
     Teuchos::RCP<Vector_t> vec1 = profugus::VectorTraits<T>::build_vector(map1);
 
     std::vector<int> steer(4,2);
-    profugus::Energy_Restriction restrict0( map0, map1, steer );
+    profugus::Energy_Restriction<T> restrict0( map0, map1, steer );
 
     double tol=1.e-12;
 

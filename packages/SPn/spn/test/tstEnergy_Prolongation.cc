@@ -42,16 +42,16 @@ TEST(ProlongTest, Even)
 
     // Create maps
     Teuchos::RCP<Map_t> map0 =
-        profugus::MatrixTraits<T>::build_map(Nv*Ng*nodes,Nv*Ng);
+        profugus::MatrixTraits<T>::build_map(Nv*Ng,Nv*Ng*nodes);
     Teuchos::RCP<Map_t> map1 =
-        profugus::MatrixTraits<T>::build_map(Nv*Ng*nodes/2,Nv*Ng/2);
+        profugus::MatrixTraits<T>::build_map(Nv*Ng/2,Nv*Ng*nodes/2);
 
     // Create Epetra vectors
     Teuchos::RCP<Vector_t> vec0 = profugus::VectorTraits<T>::build_vector(map0);
     Teuchos::RCP<Vector_t> vec1 = profugus::VectorTraits<T>::build_vector(map1);
 
     std::vector<int> steer(4,2);
-    profugus::Energy_Prolongation prolong0( map1, map0, steer );
+    profugus::Energy_Prolongation<T> prolong0( map1, map0, steer );
 
     double tol=1.e-12;
 
@@ -66,7 +66,7 @@ TEST(ProlongTest, Even)
         coarse_data[i] = static_cast<double>(i);
     }
 
-    OPT::Apply(prolong0,*vec0,*vec1);
+    OPT::Apply(prolong0,*vec1,*vec0);
 
     for( int i=0; i<fine_data.size(); ++i )
     {

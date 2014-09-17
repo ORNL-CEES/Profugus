@@ -15,10 +15,9 @@
 #include "gtest/utils_gtest.hh"
 #include <SPn/config.h>
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_Vector.h"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
+#include "AnasaziOperatorTraits.hpp"
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
@@ -26,6 +25,7 @@
 #include "../Linear_System_FV.hh"
 #include "../Dimensions.hh"
 #include "../Energy_Multigrid.hh"
+#include "../VectorTraits.hh"
 
 #include "Test_XS.hh"
 
@@ -33,10 +33,9 @@ using Teuchos::RCP;
 using Teuchos::rcp;
 using profugus::EpetraTypes;
 
-typedef profugus::Energy_Multigrid          Energy_Multigrid;
-typedef Energy_Multigrid::ParameterList     ParameterList;
-typedef Energy_Multigrid::RCP_ParameterList RCP_ParameterList;
-typedef profugus::Partitioner               Partitioner;
+typedef Teuchos::ParameterList      ParameterList;
+typedef Teuchos::RCP<ParameterList> RCP_ParameterList;
+typedef profugus::Partitioner       Partitioner;
 
 using namespace std;
 
@@ -46,6 +45,12 @@ using namespace std;
 
 TEST(MultigridTest, Heuristic)
 {
+    typedef EpetraTypes T;
+    typedef profugus::Energy_Multigrid<T> Energy_Multigrid;
+    typedef typename T::MV MV;
+    typedef typename T::OP OP;
+    typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
+
     int nodes = profugus::nodes();
     int node  = profugus::node();
 
@@ -99,11 +104,11 @@ TEST(MultigridTest, Heuristic)
     ref[3] = 1;
 
     // Fine level linear system
-    RCP<profugus::Linear_System<EpetraTypes> > system = rcp(
-        new profugus::Linear_System_FV<EpetraTypes>(
+    RCP<profugus::Linear_System<T> > system = rcp(
+        new profugus::Linear_System_FV<T>(
             db, dim, mat, mesh, indexer, data) );
     system->build_Matrix();
-    RCP<Epetra_Operator> matrix = system->get_Operator();
+    RCP<typename T::OP> matrix = system->get_Operator();
 
     // Create db for preconditioner
     RCP_ParameterList aztec_settings_db =
@@ -139,17 +144,17 @@ TEST(MultigridTest, Heuristic)
     prec_db->set("Smoother", *smoother_db);
 
     // Create two vectors
-    RCP<Epetra_Vector> tmp_vec = system->get_RHS();
-    RCP<Epetra_MultiVector> x(
-            Teuchos::rcp( new Epetra_MultiVector(*tmp_vec)));
-    RCP<Epetra_MultiVector> y(
-            Teuchos::rcp( new Epetra_MultiVector(*tmp_vec)));
+    RCP<typename T::VECTOR> tmp_vec = system->get_RHS();
+    RCP<typename T::MV> x =
+        profugus::VectorTraits<T>::build_vector(system->get_Map());
+    RCP<typename T::MV> y =
+        profugus::VectorTraits<T>::build_vector(system->get_Map());
 
     // Create preconditioner
     Energy_Multigrid prec(db, prec_db, dim, mat, mesh, indexer, data, system);
 
-    x->PutScalar(1.0);
-    int err = prec.Apply(*x, *y);
+    profugus::VectorTraits<T>::put_scalar(x,1.0);
+    OPT::Apply(prec,*x,*y);
 
     vector<double> norm2(1);
     y->Norm2(&norm2[0]);
@@ -170,10 +175,6 @@ TEST(MultigridTest, Heuristic)
     {
         EXPECT_SOFTEQ(2.726e+02, norm2[0], 1.0e-3);
     }
-
-    // Currently only checking that we got through the apply without errors
-    //  and the answer hasn't changed
-    EXPECT_EQ(0, err);
 }
 
 //---------------------------------------------------------------------------//

@@ -116,7 +116,7 @@ class MatrixTraits<EpetraTypes>
         }
         else
         {
-            map = Teuchos::rcp(new Map_t(-1, num_global, 0, comm));
+            map = Teuchos::rcp(new Map_t(num_global, 0, comm));
         }
 
         CHECK(map->NumMyElements() == num_local);

@@ -137,9 +137,9 @@ FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
   spn/Eigenvalue_Solver.pt.cc
-  spn/Energy_Multigrid.cc
-  spn/Energy_Prolongation.cc
-  spn/Energy_Restriction.cc
+  spn/Energy_Multigrid.pt.cc
+  spn/Energy_Prolongation.pt.cc
+  spn/Energy_Restriction.pt.cc
   spn/FV_Bnd_Indexer.cc
   spn/FV_Gather.cc
   spn/Fixed_Source_Solver.pt.cc

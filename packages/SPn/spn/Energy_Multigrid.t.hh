@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Multigrid.cc
+ * \file   spn/Energy_Multigrid.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 13:04:00 2014
- * \brief  Energy_Multigrid member definitions.
+ * \brief  Energy_Multigrid template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef spn_Energy_Multigrid_t_hh
+#define spn_Energy_Multigrid_t_hh
 
 #include "solvers/PreconditionerBuilder.hh"
 #include "solvers/LinAlgTypedefs.hh"
@@ -22,15 +25,17 @@ namespace profugus
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 
-Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
-                                   RCP_ParameterList              prec_db,
-                                   Teuchos::RCP<Dimensions>       dim,
-                                   Teuchos::RCP<Mat_DB>           mat_db,
-                                   Teuchos::RCP<Mesh>             mesh,
-                                   Teuchos::RCP<LG_Indexer>       indexer,
-                                   Teuchos::RCP<Global_Mesh_Data> data,
-                                   Teuchos::RCP<Linear_System<EpetraTypes> >
-                                       fine_system)
+template <class T>
+Energy_Multigrid<T>::Energy_Multigrid(RCP_ParameterList              main_db,
+                                      RCP_ParameterList              prec_db,
+                                      Teuchos::RCP<Dimensions>       dim,
+                                      Teuchos::RCP<Mat_DB>           mat_db,
+                                      Teuchos::RCP<Mesh>             mesh,
+                                      Teuchos::RCP<LG_Indexer>       indexer,
+                                      Teuchos::RCP<Global_Mesh_Data> data,
+                                      Teuchos::RCP<Linear_System<T> >
+                                          fine_system)
+    : OperatorAdapter<T>(fine_system->get_Map())
 {
     using Teuchos::RCP;
     using Teuchos::rcp;
@@ -104,8 +109,8 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         d_operators.push_back( system->get_Operator() );
         CHECK( d_operators.back() != Teuchos::null );
 
-        // Allocate Epetra vectors
-        RCP<T::VECTOR> tmp_vec = system->get_RHS();
+        // Allocate vectors
+        RCP<VECTOR> tmp_vec = system->get_RHS();
         d_maps.push_back( system->get_Map() );
         d_solutions.push_back( VectorTraits<T>::build_vector(d_maps[level]));
         d_rhss.push_back(      VectorTraits<T>::build_vector(d_maps[level]));
@@ -113,15 +118,15 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
         // Build Restriction
         d_restrictions.push_back(
-            rcp(new Energy_Restriction(d_maps[level-1],
-                                       d_maps[level],
-                                       collapse)));
+            rcp(new Energy_Restriction<T>(d_maps[level-1],
+                                          d_maps[level],
+                                          collapse)));
 
         // Build Prolongation
         d_prolongations.push_back(
-            rcp(new Energy_Prolongation(d_maps[level],
-                                        d_maps[level-1],
-                                        collapse)));
+            rcp(new Energy_Prolongation<T>(d_maps[level],
+                                           d_maps[level-1],
+                                           collapse)));
 
         // Build smoother
         d_smoothers.push_back(
@@ -174,8 +179,9 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 // APPLY MULTIGRID V-CYCLE
 //---------------------------------------------------------------------------//
 
-int Energy_Multigrid::Apply(const Epetra_MultiVector &x,
-                                  Epetra_MultiVector &y ) const
+template <class T>
+void Energy_Multigrid<T>::ApplyImpl(const MV &x,
+                                          MV &y ) const
 {
     int num_vectors = MVT::GetNumberVecs(x);
     REQUIRE(MVT::GetNumberVecs(y) == num_vectors);
@@ -234,13 +240,12 @@ int Energy_Multigrid::Apply(const Epetra_MultiVector &x,
 
         MVT::SetBlock(*d_solutions[0],ind,y);
     }
-
-    // return success
-    return 0;
 }
 
 } // end namespace profugus
 
+#endif // spn_Energy_Multigrid_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Energy_Multigrid.cc
+//                 end of Energy_Multigrid.t.hh
 //---------------------------------------------------------------------------//

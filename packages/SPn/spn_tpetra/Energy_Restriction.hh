@@ -69,8 +69,6 @@ class Energy_Restriction : public TpetraTypes::OP
         return d_coarse_map;
     }
 
-
-
   private:
 
     std::vector<int> d_steer_vec;

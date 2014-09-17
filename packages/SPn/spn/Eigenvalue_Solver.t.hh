@@ -355,8 +355,8 @@ Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
             edb, "Multigrid Preconditioner");
 
         prec = Teuchos::rcp(
-            new Energy_Multigrid(b_db, prec_db, dim, mat, mesh,
-                                 indexer, data, b_system));
+            new Energy_Multigrid<T>(b_db, prec_db, dim, mat, mesh,
+                                    indexer, data, b_system));
         CHECK(prec != Teuchos::null);
     }
     else if (prec_type == "ifpack")
