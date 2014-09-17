@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Eigenvalue_Solver.cc
+ * \file   spn/Eigenvalue_Solver.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Mar 10 14:20:33 2014
- * \brief  Eigenvalue_Solver member definitions.
+ * \brief  Eigenvalue_Solver template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef spn_Eigenvalue_Solver_t_hh
+#define spn_Eigenvalue_Solver_t_hh
 
 #include <cmath>
 #include <string>
@@ -35,7 +38,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Eigenvalue_Solver::Eigenvalue_Solver(RCP_ParameterList db)
+template <class T>
+Eigenvalue_Solver<T>::Eigenvalue_Solver(RCP_ParameterList db)
     : Base(db)
     , d_keff(2.0)
 {
@@ -52,7 +56,8 @@ Eigenvalue_Solver::Eigenvalue_Solver(RCP_ParameterList db)
  *
  * Calls to this function builds the linear SPN system.
  */
-void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
+template <class T>
+void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
                               RCP_Mat_DB      mat,
                               RCP_Mesh        mesh,
                               RCP_Indexer     indexer,
@@ -67,12 +72,13 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     REQUIRE(b_db->isSublist("eigenvalue_db"));
 
     // build the linear system (we only provide finite volume for now)
-    std::string &eqn_type = b_db->get("eqn_type", std::string("fv"));
+    std::string &eqn_type =
+        b_db->template get("eqn_type", std::string("fv"));
 
     if (profugus::to_lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
-            new Linear_System_FV<EpetraTypes>(
+            new Linear_System_FV<T>(
                 b_db, dim, mat, mesh, indexer, data));
     }
     else
@@ -91,10 +97,10 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     if( d_u.is_null() )
     {
         // make the eigenvector
-        d_u = Teuchos::rcp(new Vector_t(*Base::b_system->get_Map()));
+        d_u = VectorTraits<T>::build_vector(Base::b_system->get_Map());
 
         // initialize it to 1.0
-        d_u->PutScalar(1.0);
+        VectorTraits<T>::put_scalar(d_u,1.0);
     }
     else
     {
@@ -107,17 +113,16 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
         RCP_Vector tmp_vec = d_u;
 
         // make the eigenvector
-        d_u = Teuchos::rcp(new Vector_t(*Base::b_system->get_Map()));
+        d_u = VectorTraits<T>::build_vector(Base::b_system->get_Map());
 
         // Assign data from old vector to new one
-        d_u->Update(1.0, *tmp_vec, 0.0);
+        Teuchos::ArrayView<const double> tmp_data =
+            VectorTraits<T>::get_data(tmp_vec);
+        Teuchos::ArrayView<double> u_data =
+            VectorTraits<T>::get_data_nonconst(d_u);
+        u_data.assign(tmp_data);
     }
 
-    // the map is a block map where the block size is the number of groups
-    //  OR a point map
-    CHECK(b_system->get_Map()->NumMyElements() * mat->xs().num_groups()
-           == d_u->MyLength() ||
-           b_system->get_Map()->NumMyElements() == d_u->MyLength() );
     CHECK(!d_u.is_null());
 
     // get the eigenvalue solver settings
@@ -133,10 +138,10 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
     }
 
     // Build a preconditioenr
-    RCP_Epetra_Op prec = build_preconditioner(dim, mat, mesh, indexer, data);
+    RCP_OP prec = build_preconditioner(dim, mat, mesh, indexer, data);
 
     // Build the eigensolver
-    d_eigensolver = EigenvalueSolverBuilder<EpetraTypes>::build_solver(
+    d_eigensolver = EigenvalueSolverBuilder<T>::build_solver(
         edb, b_system->get_Operator(), b_system->get_fission_matrix(), prec);
 
     ENSURE(!d_eigensolver.is_null());
@@ -146,7 +151,8 @@ void Eigenvalue_Solver::setup(RCP_Dimensions  dim,
 /*!
  * \brief Solve the SPN eigenvalue equations.
  */
-void Eigenvalue_Solver::solve()
+template <class T>
+void Eigenvalue_Solver<T>::solve()
 {
     REQUIRE(!b_system.is_null());
     REQUIRE(!d_u.is_null());
@@ -164,13 +170,14 @@ void Eigenvalue_Solver::solve()
 /*!
  * \brief Write scalar flux (eigenvector) into the state.
  */
-void Eigenvalue_Solver::write_state(State_t &state)
+template <class T>
+void Eigenvalue_Solver<T>::write_state(State &state)
 {
     REQUIRE(state.mesh().num_cells() *
              b_system->get_dims()->num_equations() * state.num_groups()
-             <= d_u->MyLength());
+             <= VectorTraits<T>::local_length(d_u) );
 
-    Base::write_u_into_state(*d_u, state);
+    Base::write_u_into_state(d_u, state);
 
     // normalize the eigenvector (over all groups/space)
     double norm[2] = {0.0, 0.0};
@@ -188,7 +195,7 @@ void Eigenvalue_Solver::write_state(State_t &state)
     for (int g = 0; g < Ng; ++g)
     {
         // get moments for this group
-        View_Field moments = state.flux(g, g);
+        State::View_Field moments = state.flux(g, g);
 
         // loop over cells on this domain
         for (int cell = 0; cell < Nc; ++cell)
@@ -215,7 +222,7 @@ void Eigenvalue_Solver::write_state(State_t &state)
     for (int g = 0; g < Ng; ++g)
     {
         // get moments for this group
-        View_Field moments = state.flux(g, g);
+        State::View_Field moments = state.flux(g, g);
 
         // loop over cells on this domain
         for (int cell = 0; cell < Nc; ++cell)
@@ -232,7 +239,8 @@ void Eigenvalue_Solver::write_state(State_t &state)
 /*!
  * \brief Set default db entries for Davidson solver
  */
-void Eigenvalue_Solver::set_default_parameters()
+template <class T>
+void Eigenvalue_Solver<T>::set_default_parameters()
 {
     // Get eigenvalue db
     RCP_ParameterList eig_db = Teuchos::sublist(
@@ -241,15 +249,15 @@ void Eigenvalue_Solver::set_default_parameters()
 
     // Look for user specified tolerance in a few places, set a default if we
     // can't find one
-    double tol = b_db->get("tolerance", 1.0e-6);
-    tol        = eig_db->get("tolerance", tol);
-    eig_db->get("Convergence Tolerance", tol);
+    double tol = b_db->template get("tolerance", 1.0e-6);
+    tol        = eig_db->template get("tolerance", tol);
+    eig_db->template get("Convergence Tolerance", tol);
 
     // look for user specified iteration limit in a few places, set a default
     // if we can't find one
-    int max_itr = b_db->get("max_itr", 500);
-    max_itr     = eig_db->get("max_itr", max_itr);
-    eig_db->get("Maximum Restarts", max_itr);
+    int max_itr = b_db->template get("max_itr", 500);
+    max_itr     = eig_db->template get("max_itr", max_itr);
+    eig_db->template get("Maximum Restarts", max_itr);
 
     // Forgive the formatting, column limits are a bit of an issue
     // If no parameters are provided, the default solver is a
@@ -308,36 +316,37 @@ void Eigenvalue_Solver::set_default_parameters()
     eig_db->setParametersNotAlreadySet(*default_pl);
 
     // propagate stopping criteria for Arnoldi
-    eig_db->sublist("Anasazi").get("Convergence Tolerance", tol);
-    eig_db->sublist("Anasazi").get("Maximum Restarts", max_itr);
+    eig_db->sublist("Anasazi").template get("Convergence Tolerance", tol);
+    eig_db->sublist("Anasazi").template get("Maximum Restarts", max_itr);
 
     // propagate stopping criteria for operators
-    eig_db->sublist("operator_db").get("tolerance", 0.1 * tol);
-    eig_db->sublist("operator_db").get("max_itr", max_itr);
+    eig_db->sublist("operator_db").template get("tolerance", 0.1 * tol);
+    eig_db->sublist("operator_db").template get("max_itr", max_itr);
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Build preconditioner
  */
-Eigenvalue_Solver::RCP_Epetra_Op
-Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
-                                        RCP_Mat_DB      mat,
-                                        RCP_Mesh        mesh,
-                                        RCP_Indexer     indexer,
-                                        RCP_Global_Data data)
+template <class T>
+Teuchos::RCP<typename T::OP>
+Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
+                                           RCP_Mat_DB      mat,
+                                           RCP_Mesh        mesh,
+                                           RCP_Indexer     indexer,
+                                           RCP_Global_Data data)
 {
     REQUIRE(b_db->isSublist("eigenvalue_db"));
 
     // preconditioner operator
-    RCP_Epetra_Op prec;
+    RCP_OP prec;
 
     // get the eigenvalue database
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
 
     // get the preconditioner type
     std::string prec_type = profugus::to_lower(
-        edb->get("Preconditioner", std::string("Multigrid")));
+        edb->template get("Preconditioner", std::string("Multigrid")));
 
     // build the appropriate preconditioners
     if (prec_type=="multigrid" || prec_type=="multilevel")
@@ -360,8 +369,8 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
 
         // Create Ifpack preconditioner
         Ifpack ifpack_factory;
-        std::string ifpack_type = edb->get<std::string>("Ifpack Type");
-        int overlap             = edb->get<int>("Ifpack Overlap");
+        std::string ifpack_type = edb->template get<std::string>("Ifpack Type");
+        int overlap             = edb->template get<int>("Ifpack Overlap");
         d_ifpack_prec           = Teuchos::rcp(
             ifpack_factory.Create(ifpack_type, rcp_rowmat.get(), overlap));
 
@@ -372,7 +381,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         // Process preconditioner
         d_ifpack_prec->Initialize();
         d_ifpack_prec->Compute();
-        if( edb->get<std::string>("Output Level") == "high" &&
+        if( edb->template get<std::string>("Output Level") == "high" &&
             profugus::node() == 0 )
         {
             std::cout << "Ifpack Parameter List" << std::endl;
@@ -394,7 +403,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
 
         // Choose default settings
         std::string default_type =
-            edb->get("ML Default Type", std::string("DD"));
+            edb->template get("ML Default Type", std::string("DD"));
 
         // Set default profile, but don't override existing entries
         std::vector<int> az_options(AZ_OPTIONS_SIZE);
@@ -412,7 +421,7 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         d_ml_prec = Teuchos::rcp(new ML_Epetra::MultiLevelPreconditioner(
                                      *rcp_rowmat, *ml_db));
 
-        if (edb->get<std::string>("Output Level") == "high" &&
+        if (edb->template get<std::string>("Output Level") == "high" &&
             profugus::node() == 0)
         {
             std::cout << "ML Defaults: " << default_type << std::endl;
@@ -435,8 +444,8 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
         RCP_ParameterList op_db = Teuchos::sublist(edb, "operator_db");
 
         // Build Stratimikos Operator
-        Teuchos::RCP<InverseOperator<EpetraTypes> > solver_op = Teuchos::rcp(
-                new InverseOperator<EpetraTypes>(op_db));
+        Teuchos::RCP<InverseOperator<T> > solver_op = Teuchos::rcp(
+                new InverseOperator<T>(op_db));
         solver_op->set_operator(b_system->get_Operator());
 
         prec = solver_op;
@@ -452,6 +461,8 @@ Eigenvalue_Solver::build_preconditioner(RCP_Dimensions  dim,
 }
 
 } // end namespace profugus
+
+#endif // spn_Eigenvalue_Solver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Eigenvalue_Solver.cc

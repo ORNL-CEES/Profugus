@@ -16,10 +16,13 @@
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "../Dimensions.hh"
 #include "../Eigenvalue_Solver.hh"
 
 #include "Test_XS.hh"
+
+using profugus::EpetraTypes;
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -30,23 +33,22 @@ class Inf_Med_Eigenvalue_SolverTest : public testing::Test
   protected:
     // Typedefs usable inside the test fixture
 
-    typedef profugus::Eigenvalue_Solver      Solver;
-    typedef Teuchos::RCP<Solver>             RCP_Solver;
-    typedef Solver::RCP_ParameterList        RCP_ParameterList;
-    typedef Solver::Linear_System_t          Linear_System_t;
-    typedef Linear_System_t::RCP_Mat_DB      RCP_Mat_DB;
-    typedef Linear_System_t::RCP_Dimensions  RCP_Dimensions;
-    typedef profugus::Partitioner            Partitioner;
-    typedef Linear_System_t::RCP_Mesh        RCP_Mesh;
-    typedef Linear_System_t::RCP_Indexer     RCP_Indexer;
-    typedef Linear_System_t::RCP_Global_Data RCP_Global_Data;
-    typedef Linear_System_t::Matrix_t        Matrix_t;
-    typedef Linear_System_t::Vector_t        Vector_t;
-    typedef Solver::State_t                  State;
-    typedef Teuchos::RCP<State>              RCP_State;
-    typedef profugus::Mat_DB                 Mat_DB_t;
-    typedef Mat_DB_t::XS_t                   XS;
-    typedef Mat_DB_t::RCP_XS                 RCP_XS;
+    typedef profugus::Eigenvalue_Solver<EpetraTypes>  Solver;
+    typedef Teuchos::RCP<Solver>                      RCP_Solver;
+    typedef typename Solver::RCP_ParameterList        RCP_ParameterList;
+    typedef typename Solver::Linear_System_t          Linear_System_t;
+    typedef typename Linear_System_t::RCP_Mat_DB      RCP_Mat_DB;
+    typedef typename Linear_System_t::RCP_Dimensions  RCP_Dimensions;
+    typedef typename Linear_System_t::RCP_Mesh        RCP_Mesh;
+    typedef typename Linear_System_t::RCP_Indexer     RCP_Indexer;
+    typedef typename Linear_System_t::RCP_Global_Data RCP_Global_Data;
+    typedef typename Linear_System_t::Matrix_t        Matrix_t;
+    typedef typename Linear_System_t::Vector_t        Vector_t;
+    typedef profugus::Partitioner                     Partitioner;
+    typedef Teuchos::RCP<profugus::State>             RCP_State;
+    typedef profugus::Mat_DB                          Mat_DB_t;
+    typedef Mat_DB_t::XS_t                            XS;
+    typedef Mat_DB_t::RCP_XS                          RCP_XS;
 
   protected:
     // Initialization that are performed for each test
@@ -181,7 +183,7 @@ class Inf_Med_Eigenvalue_SolverTest : public testing::Test
         TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success);
 
         // make a state object
-        state = Teuchos::rcp(new State(mesh, num_groups));
+        state = Teuchos::rcp(new profugus::State(mesh, num_groups));
     }
 
   protected:
@@ -252,8 +254,10 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
 
     EXPECT_SOFTEQ(3.301149153942720, solver->get_eigenvalue(), 1.0e-6);
 
-    Vector_t ev = solver->get_eigenvector();
-    EXPECT_EQ(mesh->num_cells() * 3, ev.MyLength());
+    Teuchos::RCP<const Vector_t> ev = solver->get_eigenvector();
+    Teuchos::ArrayView<const double> ev_data =
+        profugus::VectorTraits<EpetraTypes>::get_data(ev);
+    EXPECT_EQ(mesh->num_cells() * 3, ev_data.size());
 
     const Linear_System_t &system = solver->get_linear_system();
 
@@ -266,7 +270,7 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
         for (int g = 0; g < 3; ++g)
         {
             int index  = system.index(g, 0, cell);
-            norm      += ev[index] * ev[index];
+            norm      += ev_data[index] * ev_data[index];
         }
 
         for (int g = 0; g < 3; ++g)
@@ -275,7 +279,7 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
             // Take absolute value here because eigenvector can be negative
             // It would get normalized during write_state but here we're
             //  accessing the raw eigenvector.
-            double v  = std::fabs( ev[index] / sqrt(norm) );
+            double v  = std::fabs( ev_data[index] / sqrt(norm) );
             EXPECT_SOFTEQ(ref[g], v, 1.0e-6);
         }
     }
@@ -292,8 +296,9 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP3)
 
     EXPECT_SOFTEQ(3.301149153942720, solver->get_eigenvalue(), 1.0e-6);
 
-    Vector_t ev = solver->get_eigenvector();
-    EXPECT_EQ(mesh->num_cells() * 3 * 2, ev.MyLength());
+    Teuchos::RCP<const Vector_t> ev = solver->get_eigenvector();
+    EXPECT_EQ(mesh->num_cells() * 3 * 2,
+              profugus::VectorTraits<EpetraTypes>::local_length(ev));
 
     const Linear_System_t &system = solver->get_linear_system();
 
@@ -303,7 +308,7 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP3)
     EXPECT_EQ(mesh->num_cells() * 3, state->size());
 
     solver->write_state(*state);
-    State::View_Field phi = state->flux();
+    profugus::State::View_Field phi = state->flux();
     EXPECT_EQ(mesh->num_cells() * 3, phi.size());
 
     // normalize the eigenvector on each cell

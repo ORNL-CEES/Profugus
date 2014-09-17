@@ -188,7 +188,7 @@ Linear_System_FV<T>::Linear_System_FV(RCP_ParameterList db,
     d_values.resize(d_Ng);
 
     // make the RHS vector
-    b_rhs = VectorTraits<T>::build_vector(b_map,N_local);
+    b_rhs = VectorTraits<T>::build_vector(b_map);
 }
 
 //---------------------------------------------------------------------------//
@@ -466,7 +466,8 @@ void Linear_System_FV<T>::build_RHS(const External_Source &q)
     // set everything to zero
     VectorTraits<T>::put_scalar(b_rhs,0.0);
 
-    Teuchos::ArrayView<double> data = VectorTraits<T>::get_data(b_rhs);
+    Teuchos::ArrayView<double> data =
+        VectorTraits<T>::get_data_nonconst(b_rhs);
 
     // >>> Add External Sources
     INSIST(q.is_isotropic(),
@@ -689,7 +690,8 @@ void Linear_System_FV<T>::add_boundary_sources(int         face_id,
     // get a reference to the boundary sublist
     const Teuchos::ParameterList &bnd = b_db->sublist("boundary_db");
 
-    Teuchos::ArrayView<double> data = VectorTraits<T>::get_data(b_rhs);
+    Teuchos::ArrayView<double> data =
+        VectorTraits<T>::get_data_nonconst(b_rhs);
 
     // add sources on each face
     if (!d_bnd_index[face_id].is_null())

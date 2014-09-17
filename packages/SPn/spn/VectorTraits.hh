@@ -52,8 +52,7 @@ class VectorTraits
     typedef typename T::VECTOR Vector_t;
     //@}
 
-    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map,
-                                               int num_local)
+    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
     {
         UndefinedVectorTraits<T>::NotDefined();
         return Teuchos::null;
@@ -70,8 +69,15 @@ class VectorTraits
         UndefinedVectorTraits<T>::NotDefined();
     }
 
-    static Teuchos::ArrayView<double> get_data(
+    static Teuchos::ArrayView<double> get_data_nonconst(
         Teuchos::RCP<Vector_t> vector)
+    {
+        UndefinedVectorTraits<T>::NotDefined();
+        return Teuchos::ArrayView<double>();
+    }
+
+    static Teuchos::ArrayView<const double> get_data(
+        Teuchos::RCP<const Vector_t> vector)
     {
         UndefinedVectorTraits<T>::NotDefined();
         return Teuchos::ArrayView<double>();
@@ -90,12 +96,11 @@ class VectorTraits<EpetraTypes>
     typedef typename EpetraTypes::VECTOR Vector_t;
     //@}
 
-    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map,
-                                               int num_local)
+    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
     {
 
         Teuchos::RCP<Vector_t> x(new Vector_t(*map));
-        CHECK(x->MyLength() == num_local);
+        CHECK( x != Teuchos::null );
         return x;
     }
 
@@ -109,10 +114,16 @@ class VectorTraits<EpetraTypes>
         vector->PutScalar(val);
     }
 
-    static Teuchos::ArrayView<double> get_data(
+    static Teuchos::ArrayView<double> get_data_nonconst(
         Teuchos::RCP<Vector_t> vector)
     {
         return Teuchos::arrayView<double>(vector->Values(),vector->MyLength());
+    }
+
+    static Teuchos::ArrayView<const double> get_data(
+        Teuchos::RCP<const Vector_t> vector)
+    {
+        return Teuchos::arrayView<const double>(vector->Values(),vector->MyLength());
     }
 
 };
@@ -128,12 +139,11 @@ class VectorTraits<TpetraTypes>
     typedef typename TpetraTypes::VECTOR Vector_t;
     //@}
 
-    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map,
-                                               int num_local)
+    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
     {
 
         Teuchos::RCP<Vector_t> x(new Vector_t(map));
-        CHECK(x->getLocalLength() == num_local);
+        CHECK( x != Teuchos::null );
         return x;
     }
 
@@ -147,10 +157,16 @@ class VectorTraits<TpetraTypes>
         vector->putScalar(val);
     }
 
-    static Teuchos::ArrayView<double> get_data(
+    static Teuchos::ArrayView<double> get_data_nonconst(
         Teuchos::RCP<Vector_t> vector)
     {
         return vector->getDataNonConst()();
+    }
+
+    static Teuchos::ArrayView<const double> get_data(
+        Teuchos::RCP<const Vector_t> vector)
+    {
+        return vector->getData()();
     }
 
 };

@@ -136,20 +136,20 @@ ENDIF()
 FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
-  spn/Eigenvalue_Solver.cc
+  spn/Eigenvalue_Solver.pt.cc
   spn/Energy_Multigrid.cc
   spn/Energy_Prolongation.cc
   spn/Energy_Restriction.cc
   spn/FV_Bnd_Indexer.cc
   spn/FV_Gather.cc
-  spn/Fixed_Source_Solver.cc
+  spn/Fixed_Source_Solver.pt.cc
   spn/Isotropic_Source.cc
   spn/Linear_System.pt.cc
   spn/Linear_System_FV.pt.cc
   spn/Moment_Coefficients.cc
   spn/SDM_Face_Field.cc
-  spn/Solver_Base.cc
-  spn/Time_Dependent_Solver.cc
+  spn/Solver_Base.pt.cc
+  spn/Time_Dependent_Solver.pt.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})

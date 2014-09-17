@@ -158,7 +158,8 @@ void Manager::setup(const std::string &xml_file)
     }
 
     // make the state
-    d_state = Teuchos::rcp(new State_t(d_mesh, d_mat->xs().num_groups()));
+    d_state = Teuchos::rcp(
+        new profugus::State(d_mesh, d_mat->xs().num_groups()));
 
     ENSURE(!d_mesh.is_null());
     ENSURE(!d_indexer.is_null());
@@ -264,7 +265,7 @@ void Manager::output()
     std::string outfile = m.str();
 
     // get a constant reference to the state
-    const State_t &state = *d_state;
+    const profugus::State &state = *d_state;
 
     // group offset (if doing a truncated range)
     auto g_first = d_db->get<int>("g_first");
@@ -320,6 +321,7 @@ void Manager::output()
     profugus::global_barrier();
 
     // >>> OUTPUT MATRICES
+    /*
     if (d_db->get<bool>("output_matrices", false))
     {
         INSIST(d_implementation == "epetra",
@@ -347,6 +349,7 @@ void Manager::output()
             EpetraExt::RowMatrixToMatrixMarketFile(B.c_str(), *rowmat);
         }
     }
+    */
 }
 
 } // end namespace spn

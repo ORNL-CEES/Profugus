@@ -46,16 +46,18 @@ class Manager
     typedef Problem_Builder::RCP_Mat_DB            RCP_Mat_DB;
     typedef profugus::Solver_Base                  Solver_Base_t;
     typedef Solver_Base_t::RCP_Dimensions          RCP_Dimensions;
-    typedef Solver_Base_t::State_t                 State_t;
-    typedef Teuchos::RCP<State_t>                  RCP_State;
+    typedef Teuchos::RCP<profugus::State>          RCP_State;
     typedef Teuchos::RCP<Solver_Base_t>            RCP_Solver_Base;
-    typedef profugus::Fixed_Source_Solver          Fixed_Source_Solver_t;
-    typedef profugus::Eigenvalue_Solver            Eigenvalue_Solver_t;
-    typedef profugus::Time_Dependent_Solver        Time_Dependent_Solver_t;
+
+    typedef profugus::EpetraTypes                        EpetraTypes;
+    typedef profugus::Fixed_Source_Solver<EpetraTypes>   Fixed_Source_Solver_t;
+    typedef profugus::Eigenvalue_Solver<EpetraTypes>     Eigenvalue_Solver_t;
+    typedef profugus::Time_Dependent_Solver<EpetraTypes> Time_Dependent_Solver_t;
+
     typedef Teuchos::RCP<Fixed_Source_Solver_t>    RCP_Fixed_Source_Solver;
     typedef Teuchos::RCP<Eigenvalue_Solver_t>      RCP_Eigenvalue_Solver;
     typedef Teuchos::RCP<Time_Dependent_Solver_t>  RCP_Time_Dependent_Solver;
-    typedef Fixed_Source_Solver_t::External_Source External_Source_t;
+    typedef typename Fixed_Source_Solver_t::External_Source External_Source_t;
     typedef Teuchos::RCP<External_Source_t>        RCP_External_Source;
 
     // Tpetra variants

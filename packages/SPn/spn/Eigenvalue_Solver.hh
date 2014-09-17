@@ -52,18 +52,33 @@ namespace profugus
  */
 //===========================================================================//
 
-class Eigenvalue_Solver : public Solver_Base
+template <class T>
+class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Solver_Base                        Base;
-    typedef Epetra_MultiVector                 MV;
-    typedef Epetra_Operator                    OP;
-    typedef Teuchos::RCP<OP>                   RCP_Epetra_Op;
-    typedef profugus::EigenvalueSolver<EpetraTypes> Eigensolver;
-    typedef Teuchos::RCP<Eigensolver>          RCP_Eigensolver;
+    typedef Solver_Base_Tmpl<T>                         Base;
+    typedef typename T::MV                              MV;
+    typedef typename T::OP                              OP;
+    typedef Teuchos::RCP<OP>                            RCP_OP;
+    typedef profugus::EigenvalueSolver<T>               Eigensolver;
+    typedef Teuchos::RCP<Eigensolver>                   RCP_Eigensolver;
+    typedef Linear_System<T>                            Linear_System_t;
+    typedef typename Linear_System_t::External_Source   External_Source;
+    typedef typename Linear_System_t::RCP_Timestep      RCP_Timestep;
+    typedef typename Linear_System_t::Vector_t          Vector_t;
+    typedef typename Linear_System_t::RCP_ParameterList RCP_ParameterList;
+    typedef typename Linear_System_t::RCP_Vector        RCP_Vector;
+    typedef typename Linear_System_t::RCP_Dimensions    RCP_Dimensions;
+    typedef typename Linear_System_t::RCP_Mat_DB        RCP_Mat_DB;
+    typedef typename Linear_System_t::RCP_Mesh          RCP_Mesh;
+    typedef typename Linear_System_t::RCP_Indexer       RCP_Indexer;
+    typedef typename Linear_System_t::RCP_Global_Data   RCP_Global_Data;
     //@}
+
+    using Base::b_db;
+    using Base::b_system;
 
   private:
     // >>> DATA
@@ -98,7 +113,7 @@ class Eigenvalue_Solver : public Solver_Base
     void solve();
 
     // Write the scalar-flux (eigenvector) into the state.
-    void write_state(State_t &state);
+    void write_state(State &state);
 
     // >>> ACCESSORS
 
@@ -106,7 +121,7 @@ class Eigenvalue_Solver : public Solver_Base
     double get_eigenvalue() const { return d_keff; }
 
     //! Get eigen-vector (in transformed \e u space).
-    const Vector_t& get_eigenvector() const { return *d_u; }
+    Teuchos::RCP<const Vector_t> get_eigenvector() const { return d_u; }
 
   private:
     // >>> IMPLEMENTATION
@@ -115,9 +130,9 @@ class Eigenvalue_Solver : public Solver_Base
     void set_default_parameters();
 
     // Build the preconditioner.
-    RCP_Epetra_Op build_preconditioner(RCP_Dimensions dim, RCP_Mat_DB mat,
-                                       RCP_Mesh mesh, RCP_Indexer indexer,
-                                       RCP_Global_Data data);
+    RCP_OP build_preconditioner(RCP_Dimensions dim, RCP_Mat_DB mat,
+                                RCP_Mesh mesh, RCP_Indexer indexer,
+                                RCP_Global_Data data);
 
     // Timer.
     profugus::Timer d_timer;
