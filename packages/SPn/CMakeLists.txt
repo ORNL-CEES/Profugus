@@ -149,6 +149,7 @@ SET(SPN_SOURCES
   spn/Moment_Coefficients.cc
   spn/SDM_Face_Field.cc
   spn/Solver_Base.pt.cc
+  spn/SpnSolverBuilder.cc
   spn/Time_Dependent_Solver.pt.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})

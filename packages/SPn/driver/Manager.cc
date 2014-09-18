@@ -19,6 +19,7 @@
 #include "utils/Parallel_HDF5_Writer.hh"
 #include "utils/Definitions.hh"
 #include "spn/Dimensions.hh"
+#include "spn/SpnSolverBuilder.hh"
 #include "Manager.hh"
 
 namespace spn
@@ -93,31 +94,9 @@ void Manager::setup(const std::string &xml_file)
     // default linear solver type (stratimikios)
     d_db->get("solver_type", std::string("stratimikos"));
 
-    // Determine if epetra or tpetra should be used
-    d_implementation = d_db->get("trilinos_implementation",
-        std::string("epetra"));
-    REQUIRE( d_implementation == "epetra" || d_implementation == "tpetra" );
-
-    // build the appropriate solver (default is eigenvalue)
-    if (prob_type == "eigenvalue")
-    {
-        d_solver_base = Teuchos::rcp(new Eigenvalue_Solver_t(d_db));
-    }
-    else if (prob_type == "fixed")
-    {
-        d_solver_base = Teuchos::rcp(new Fixed_Source_Solver_t(d_db));
-    }
-    else if (prob_type == "fixed_tdep")
-    {
-        d_solver_base = Teuchos::rcp(new Time_Dependent_Solver_t(d_db));
-    }
-    else
-    {
-        std::stringstream ss;
-        ss << "Undefined problem type " << prob_type
-            << "; choose eigenvalue, fixed or fixed_tdep" << std::endl;
-        VALIDATE(false,ss.str());
-    }
+    // build the solver
+    d_solver_base =
+        profugus::SpnSolverBuilder::build(prob_type,d_db);
 
     // setup the solver
     d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
