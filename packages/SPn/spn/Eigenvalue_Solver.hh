@@ -83,6 +83,9 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
     // Eigensolver.
     RCP_Eigensolver d_eigensolver;
 
+    // Material database
+    RCP_Mat_DB d_mat;
+
   public:
     // Constructor.
     explicit Eigenvalue_Solver(RCP_ParameterList db);

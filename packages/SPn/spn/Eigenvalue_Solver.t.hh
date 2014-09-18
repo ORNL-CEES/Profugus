@@ -14,7 +14,6 @@
 #include <cmath>
 #include <string>
 
-#include "Ifpack.h"
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
 #include "harness/DBC.hh"
@@ -44,8 +43,6 @@ Eigenvalue_Solver<T>::Eigenvalue_Solver(RCP_ParameterList db)
     , d_keff(2.0)
 {
     REQUIRE(!b_db.is_null());
-
-    set_default_parameters();
 }
 
 //---------------------------------------------------------------------------//
@@ -58,10 +55,10 @@ Eigenvalue_Solver<T>::Eigenvalue_Solver(RCP_ParameterList db)
  */
 template <class T>
 void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
-                              RCP_Mat_DB      mat,
-                              RCP_Mesh        mesh,
-                              RCP_Indexer     indexer,
-                              RCP_Global_Data data)
+                                 RCP_Mat_DB      mat,
+                                 RCP_Mesh        mesh,
+                                 RCP_Indexer     indexer,
+                                 RCP_Global_Data data)
 {
     REQUIRE(!b_db.is_null());
     REQUIRE(!dim.is_null());
@@ -69,6 +66,9 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
     REQUIRE(!mesh.is_null());
     REQUIRE(!indexer.is_null());
     REQUIRE(!data.is_null());
+
+    d_mat = mat;
+    set_default_parameters();
     REQUIRE(b_db->isSublist("eigenvalue_db"));
 
     // build the linear system (we only provide finite volume for now)
@@ -127,15 +127,6 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
 
     // get the eigenvalue solver settings
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
-
-    // The default energy multigrid preconditioner for the Davidson solver
-    // fails on one group.  We could switch to a different preconditioner but
-    // we would have to set up parameters for it.  Instead, we'll just switch
-    // to Arnoldi for that case.
-    if ( mat->xs().num_groups() == 1 )
-    {
-        edb->set("Preconditioner", std::string("Ifpack"));
-    }
 
     // Build a preconditioenr
     RCP_OP prec = build_preconditioner(dim, mat, mesh, indexer, data);
@@ -238,15 +229,26 @@ void Eigenvalue_Solver<T>::write_state(State &state)
 // PRIVATE FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
- * \brief Set default db entries for Davidson solver
+ * \brief Set default db entries for eigenvalue solvers
  */
-template <class T>
-void Eigenvalue_Solver<T>::set_default_parameters()
+template <>
+void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
 {
+    std::cout << "Setting Epetra parameters" << std::endl;
     // Get eigenvalue db
     RCP_ParameterList eig_db = Teuchos::sublist(
         b_db, std::string("eigenvalue_db"));
     CHECK(!eig_db.is_null());
+
+    // The default energy multigrid preconditioner fails on one group.
+    // Switch to something else.
+    std::string prec_type = profugus::to_lower(
+        eig_db->get("Preconditioner",std::string("Multigrid")));
+    if ( d_mat->xs().num_groups() == 1 &&
+         (prec_type=="multigrid" || prec_type=="multilevel") )
+    {
+        eig_db->set("Preconditioner", std::string("Ifpack"));
+    }
 
     // Look for user specified tolerance in a few places, set a default if we
     // can't find one
@@ -325,6 +327,126 @@ void Eigenvalue_Solver<T>::set_default_parameters()
     eig_db->sublist("operator_db").template get("max_itr", max_itr);
 }
 
+template <>
+void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
+{
+    std::cout << "Setting Tpetra parameters" << std::endl;
+    // Get eigenvalue db
+    RCP_ParameterList eig_db = Teuchos::sublist(
+        b_db, std::string("eigenvalue_db"));
+    CHECK(!eig_db.is_null());
+
+    // The default energy multigrid preconditioner fails on one group.
+    // Switch to something else.
+    std::string prec_type = profugus::to_lower(
+        eig_db->get("Preconditioner",std::string("Ifpack2")));
+    if ( d_mat->xs().num_groups() == 1 &&
+         (prec_type=="multigrid" || prec_type=="multilevel") )
+    {
+        eig_db->set("Preconditioner", std::string("Ifpack2"));
+    }
+
+    // Look for user specified tolerance in a few places, set a default if we
+    // can't find one
+    double tol = b_db->get("tolerance", 1.0e-6);
+    tol        = eig_db->get("tolerance", tol);
+    eig_db->get("Convergence Tolerance", tol);
+
+    // look for user specified iteration limit in a few places, set a default
+    // if we can't find one
+    int max_itr = b_db->get("max_itr", 500);
+    max_itr     = eig_db->get("max_itr", max_itr);
+    eig_db->get("Maximum Restarts", max_itr);
+
+    // Forgive the formatting, column limits are a bit of an issue
+    // If no parameters are provided, the default solver is a MueLu
+    //  algebraic multigrid preconditioner.
+    // The goal here is to support "good" default parameters for a variety
+    //  of different solvers and preconditioners so that the user can toggle
+    //  between a small number of options without having to set many
+    //  parameters.  Advanced users can still specify as much detail
+    //  as they want.
+    const std::string plrefstr(
+        "<ParameterList name='eigenvalue_db'>                               \n\
+  <Parameter name='eigensolver' type='string' value='Davidson'/>            \n\
+  <Parameter name='Output Level' type='string' value='low'/>                \n\
+  <Parameter name='verbosity' type='string' value='Low'/>                   \n\
+  <Parameter name='Preconditioner' type='string' value='Ifpack2'/>          \n\
+  <ParameterList name='Multigrid Preconditioner'>                           \n\
+   <ParameterList name='Smoother'>                                          \n\
+    <Parameter name='Preconditioner' type='string' value='Ifpack2'/>        \n\
+    <Parameter name='Ifpack2_Type' type='string' value='ILUT'/>             \n\
+    <Parameter name='verbosity' type='string' value='None'/>                \n\
+    <Parameter name='max_itr' type='int' value='5'/>                        \n\
+    <Parameter name='solver_type' type='string' value='stratimikos'/>       \n\
+    <ParameterList name='Stratimikos'>                                      \n\
+     <Parameter name='Linear Solver Type' type='string' value='Belos'/>     \n\
+     <Parameter name='Preconditioner Type' type='string' value='None'/>     \n\
+    </ParameterList>                                                        \n\
+   <ParameterList name='Ifpack2 Params'>                                    \n\
+    <Parameter name='fact: drop tolerance' type='double' value='1e-1'/>     \n\
+   </ParameterList>                                                         \n\
+   </ParameterList>                                                         \n\
+  </ParameterList>                                                          \n\
+  <ParameterList name='Anasazi'>                                            \n\
+    <Parameter name='Maximum Subspace Dimension' type='int' value='25'/>    \n\
+    <Parameter name='Restart Dimension' type='int' value='5'/>              \n\
+    <Parameter name='Output Level' type='string' value='medium'/>           \n\
+  </ParameterList>                                                          \n\
+  <Parameter name='Ifpack2_Type' type='string' value='ILUT'/>               \n\
+  <ParameterList name='Ifpack2 Params'>                                     \n\
+   <Parameter name='fact: drop tolerance' type='double' value='1e-2'/>      \n\
+   <Parameter name='fact: ilut level-of-fill' type='double' value='1.2'/>   \n\
+  </ParameterList>                                                          \n\
+  <ParameterList name='MueLu Params'>                                       \n\
+   <Parameter name='multigrid algorithm' type='string' value='unsmoothed'/> \n\
+   <Parameter name='max levels' type='int' value='5'/>                      \n\
+   <Parameter name='print initial parameters' type='bool' value='false'/>   \n\
+   <Parameter name='verbosity' type='string' value='low'/>                  \n\
+   <Parameter name='smoother: type' type='string' value='ILUT'/>            \n\
+   <ParameterList name='smoother: params'>                                  \n\
+    <Parameter name='relaxation: type' type='string' value='Gauss-Seidel'/> \n\
+    <Parameter name='relaxation: sweeps' type='int' value='5'/>             \n\
+   </ParameterList>                                                         \n\
+   <Parameter name='coarse: type' type='string' value='ILUT'/>              \n\
+   <ParameterList name='coarse: params'>                                    \n\
+    <Parameter name='relaxation: type' type='string' value='Gauss-Seidel'/> \n\
+    <Parameter name='relaxation: sweeps' type='int' value='5'/>             \n\
+   </ParameterList>                                                         \n\
+  </ParameterList>                                                          \n\
+  <ParameterList name='operator_db'>                                        \n\
+   <Parameter name='verbosity' type='string' value='Low'/>                  \n\
+   <Parameter name='solver_type' type='string' value='stratimikos'/>        \n\
+   <ParameterList name='Stratimikos'>                                       \n\
+    <Parameter name='Linear Solver Type' type='string' value='Belos'/>      \n\
+    <Parameter name='Preconditioner Type' type='string' value='None'/>      \n\
+   </ParameterList>                                                         \n\
+  </ParameterList>                                                          \n\
+ </ParameterList>                                                           \n"
+        );
+
+    // Convert string to a Teuchos PL
+    RCP_ParameterList default_pl =
+        Teuchos::getParametersFromXmlString(plrefstr);
+
+    // Insert defaults into pl, leaving existing values in tact
+    eig_db->setParametersNotAlreadySet(*default_pl);
+
+
+    // If Ifpack is selected, change it to Ifpack2
+    if( eig_db->template get<std::string>("Preconditioner")=="Ifpack" )
+    {
+        eig_db->set("Preconditioner",std::string("Ifpack2"));
+    }
+
+    // propagate stopping criteria for Arnoldi
+    eig_db->sublist("Anasazi").get("Convergence Tolerance", tol);
+    eig_db->sublist("Anasazi").get("Maximum Restarts", max_itr);
+
+    // propagate stopping criteria for operators
+    eig_db->sublist("operator_db").get("tolerance", 0.1 * tol);
+    eig_db->sublist("operator_db").get("max_itr", max_itr);
+}
 //---------------------------------------------------------------------------//
 /*!
  * \brief Build preconditioner
