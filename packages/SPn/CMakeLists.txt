@@ -155,22 +155,6 @@ SET(SPN_SOURCES
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})
 
-# spn_tpetra sources
-
-FILE(GLOB SPN_T_HEADERS spn_tpetra/*.hh)
-SET(SPN_T_SOURCES
-  spn_tpetra/Eigenvalue_Solver.cc
-  spn_tpetra/Energy_Multigrid.cc
-  spn_tpetra/Energy_Prolongation.cc
-  spn_tpetra/Energy_Restriction.cc
-  spn_tpetra/Fixed_Source_Solver.cc
-  spn_tpetra/Linear_System.cc
-  spn_tpetra/Linear_System_FV.cc
-  spn_tpetra/Solver_Base.cc
-  )
-LIST(APPEND HEADERS ${SPN_T_HEADERS})
-LIST(APPEND SOURCES ${SPN_T_SOURCES})
-
 # driver sources
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
@@ -207,8 +191,7 @@ TRIBITS_ADD_EXECUTABLE(
 TRIBITS_ADD_TEST_DIRECTORIES(
   mesh/test
   solvers/test
-  spn/test
-  spn_tpetra/test)
+  spn/test)
 
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP
