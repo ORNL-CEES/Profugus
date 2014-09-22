@@ -27,6 +27,7 @@
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
 #include "Eigenvalue_Solver.hh"
+#include "MatrixTraits.hh"
 
 namespace profugus
 {
@@ -503,6 +504,25 @@ Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
     }
 
     return prec;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Write matrices to file
+ */
+template <class T>
+void Eigenvalue_Solver<T>::write_problem_to_file() const
+{
+    // Write A (LHS operator)
+    Teuchos::RCP<const typename T::MATRIX> matrix =
+        Teuchos::rcp_dynamic_cast<const typename T::MATRIX>(
+            b_system->get_Operator());
+    MatrixTraits<T>::write_matrix_file(matrix,"A.mtx");
+
+    // Write B (RHS operator)
+    matrix = Teuchos::rcp_dynamic_cast<const typename T::MATRIX>(
+        b_system->get_fission_matrix());
+    MatrixTraits<T>::write_matrix_file(matrix,"B.mtx");
 }
 
 } // end namespace profugus

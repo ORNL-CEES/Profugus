@@ -224,35 +224,10 @@ void Manager::output()
     profugus::global_barrier();
 
     // >>> OUTPUT MATRICES
-    /*
     if (d_db->get<bool>("output_matrices", false))
     {
-        INSIST(d_implementation == "epetra",
-               "Matrix file output not yet available for Tpetra");
-
-        std::string A("A.mtx"), B("B.mtx");
-
-        // linear system
-        const auto &linear_system = d_solver_base->get_linear_system();
-
-        // write A operator
-        EpetraExt::RowMatrixToMatrixMarketFile(
-            A.c_str(), *(linear_system.get_Matrix()));
-
-        if (!d_eigen_solver.is_null())
-        {
-            // write F (fission) operator
-
-            // first cast to a row mat (which the fission matrix is)
-            Teuchos::RCP<Epetra_RowMatrix> rowmat =
-                Teuchos::rcp_dynamic_cast<Epetra_RowMatrix>(
-                    linear_system.get_fission_matrix());
-            CHECK(!rowmat.is_null());
-
-            EpetraExt::RowMatrixToMatrixMarketFile(B.c_str(), *rowmat);
-        }
+        d_solver_base->write_problem_to_file();
     }
-    */
 }
 
 } // end namespace spn

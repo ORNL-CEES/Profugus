@@ -86,6 +86,9 @@ class Time_Dependent_Solver : public Solver_Base_Tmpl<T>
     // Write the scalar-flux into the state.
     void write_state(State &state);
 
+    // Write problem to file
+    void write_problem_to_file() const;
+
     // >>> ACCESSORS
 
     //! Get LHS solution vector (in transformed \e u space).

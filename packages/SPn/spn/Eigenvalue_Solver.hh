@@ -108,6 +108,9 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
     //! Get eigen-vector (in transformed \e u space).
     Teuchos::RCP<const Vector_t> get_eigenvector() const { return d_u; }
 
+    //! Write problem matrices to file
+    void write_problem_to_file() const;
+
   private:
     // >>> IMPLEMENTATION
 

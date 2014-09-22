@@ -65,6 +65,9 @@ class Solver_Base
     //! Write results of solve into state.
     virtual void write_state(State &state) = 0;
 
+    //! Write problem matrix (or matrices to file)
+    virtual void write_problem_to_file() const = 0;
+
 };
 
 //===========================================================================//

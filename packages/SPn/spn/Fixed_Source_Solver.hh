@@ -91,6 +91,9 @@ class Fixed_Source_Solver : public Solver_Base_Tmpl<T>
     // Write the scalar-flux into the state.
     void write_state(State &state);
 
+    // Write problem matrix to file
+    void write_problem_to_file() const;
+
     // >>> ACCESSORS
 
     //! Get LHS solution vector (in transformed \e u space).
