@@ -19,8 +19,6 @@
 #include "AnasaziOperatorTraits.hpp"
 #include "AnasaziEpetraAdapter.hpp"
 #include "AnasaziTpetraAdapter.hpp"
-#include "EpetraExt_RowMatrixOut.h"
-#include "MatrixMarket_Tpetra.hpp"
 
 #include "utils/Definitions.hh"
 #include "xs/Mat_DB.hh"
@@ -189,8 +187,7 @@ class MatrixTest : public testing::Test
 //---------------------------------------------------------------------------//
 using profugus::EpetraTypes;
 using profugus::TpetraTypes;
-typedef ::testing::Types<EpetraTypes> MyTypes;
-//typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(MatrixTest, MyTypes);
 
 TYPED_TEST(MatrixTest, SP7_3Grp_Refl_Graph)
@@ -428,9 +425,9 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Refl_Matrix)
 
     using def::I; using def::J; using def::K;
 
-    Array_Dbl cx = this->cx;
-    Array_Dbl cy = this->cy;
-    Array_Dbl cz = this->cz;
+    Array_Dbl &cx = this->cx;
+    Array_Dbl &cy = this->cy;
+    Array_Dbl &cz = this->cz;
 
     // make non-uniform mesh
     cx.resize(5);
@@ -724,10 +721,9 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
     typedef typename TypeParam::OP                  OP;
     typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
 
-    Array_Dbl cx = this->cx;
-    Array_Dbl cy = this->cy;
-    Array_Dbl cz = this->cz;
-    int num_groups = this->num_groups;
+    Array_Dbl &cx = this->cx;
+    Array_Dbl &cy = this->cy;
+    Array_Dbl &cz = this->cz;
 
     using def::I; using def::J; using def::K;
 
@@ -798,6 +794,7 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
     this->make_data(ids, f, matids);
     RCP_Dimensions dim = this->dim;
     RCP_Linear_System system = this->system;
+    int num_groups = this->num_groups;
     EXPECT_EQ(2, dim->num_equations());
 
     // make the matrix
@@ -872,17 +869,6 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
 
         if (nodes == 1)
         {
-            Teuchos::RCP<const Epetra_CrsMatrix> emat =
-                Teuchos::rcp_dynamic_cast<const Epetra_CrsMatrix>(A);
-            if( emat != Teuchos::null )
-            {
-                MatrixTraits::write_matrix_file(A,"Epetra.mtx");
-            }
-            else
-            {
-                MatrixTraits::write_matrix_file(A,"Tpetra.mtx");
-            }
-
             EXPECT_EQ(0,   MatrixTraits::global_col_id(A,indices[0]));
             EXPECT_EQ(2,   MatrixTraits::global_col_id(A,indices[1]));
             EXPECT_EQ(6,   MatrixTraits::global_col_id(A,indices[2]));
