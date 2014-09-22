@@ -235,7 +235,6 @@ void Eigenvalue_Solver<T>::write_state(State &state)
 template <>
 void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
 {
-    std::cout << "Setting Epetra parameters" << std::endl;
     // Get eigenvalue db
     RCP_ParameterList eig_db = Teuchos::sublist(
         b_db, std::string("eigenvalue_db"));
@@ -331,7 +330,6 @@ void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
 template <>
 void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
 {
-    std::cout << "Setting Tpetra parameters" << std::endl;
     // Get eigenvalue db
     RCP_ParameterList eig_db = Teuchos::sublist(
         b_db, std::string("eigenvalue_db"));
