@@ -14,25 +14,36 @@
 
 #include "AnasaziOperatorTraits.hpp"
 #include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 
 #include "solvers/LinAlgTypedefs.hh"
 #include "../Energy_Prolongation.hh"
 #include "../MatrixTraits.hh"
 #include "../VectorTraits.hh"
 
-using profugus::EpetraTypes;
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
-TEST(ProlongTest, Even)
+template <class T>
+class ProlongTest : public testing::Test
 {
-    typedef EpetraTypes T;
-    typedef typename T::MAP    Map_t;
-    typedef typename T::VECTOR Vector_t;
-    typedef typename T::OP     OP;
-    typedef typename T::MV     MV;
+  protected:
+      void SetUp(){};
+};
+
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
+TYPED_TEST_CASE(ProlongTest, MyTypes);
+
+TYPED_TEST(ProlongTest, Even)
+{
+    typedef typename TypeParam::MAP    Map_t;
+    typedef typename TypeParam::VECTOR Vector_t;
+    typedef typename TypeParam::OP     OP;
+    typedef typename TypeParam::MV     MV;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
     int Nv = 50;
@@ -42,24 +53,26 @@ TEST(ProlongTest, Even)
 
     // Create maps
     Teuchos::RCP<Map_t> map0 =
-        profugus::MatrixTraits<T>::build_map(Nv*Ng,Nv*Ng*nodes);
+        profugus::MatrixTraits<TypeParam>::build_map(Nv*Ng,Nv*Ng*nodes);
     Teuchos::RCP<Map_t> map1 =
-        profugus::MatrixTraits<T>::build_map(Nv*Ng/2,Nv*Ng*nodes/2);
+        profugus::MatrixTraits<TypeParam>::build_map(Nv*Ng/2,Nv*Ng*nodes/2);
 
     // Create Epetra vectors
-    Teuchos::RCP<Vector_t> vec0 = profugus::VectorTraits<T>::build_vector(map0);
-    Teuchos::RCP<Vector_t> vec1 = profugus::VectorTraits<T>::build_vector(map1);
+    Teuchos::RCP<Vector_t> vec0 =
+        profugus::VectorTraits<TypeParam>::build_vector(map0);
+    Teuchos::RCP<Vector_t> vec1 =
+        profugus::VectorTraits<TypeParam>::build_vector(map1);
 
     std::vector<int> steer(4,2);
-    profugus::Energy_Prolongation<T> prolong0( map1, map0, steer );
+    profugus::Energy_Prolongation<TypeParam> prolong0( map1, map0, steer );
 
     double tol=1.e-12;
 
     // Test prolongation
     Teuchos::ArrayView<double> fine_data =
-        profugus::VectorTraits<T>::get_data_nonconst(vec0,0);
+        profugus::VectorTraits<TypeParam>::get_data_nonconst(vec0,0);
     Teuchos::ArrayView<double> coarse_data =
-        profugus::VectorTraits<T>::get_data_nonconst(vec1,0);
+        profugus::VectorTraits<TypeParam>::get_data_nonconst(vec1,0);
 
     for( int i=0; i<coarse_data.size(); ++i )
     {

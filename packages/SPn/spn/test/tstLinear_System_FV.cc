@@ -15,8 +15,12 @@
 #include "gtest/utils_gtest.hh"
 
 #include "Teuchos_StandardCatchMacros.hpp"
-#include "Epetra_SerialDenseMatrix.h"
 #include "Teuchos_RCP.hpp"
+#include "AnasaziOperatorTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
+#include "EpetraExt_RowMatrixOut.h"
+#include "MatrixMarket_Tpetra.hpp"
 
 #include "utils/Definitions.hh"
 #include "xs/Mat_DB.hh"
@@ -25,37 +29,41 @@
 #include "../Isotropic_Source.hh"
 #include "../Dimensions.hh"
 #include "../Linear_System_FV.hh"
+#include "../MatrixTraits.hh"
+#include "../VectorTraits.hh"
 #include "Test_XS.hh"
 
 using namespace std;
-using profugus::EpetraTypes;
+
+int node, nodes;
+
+typedef profugus::Isotropic_Source               External_Source;
+typedef profugus::Mat_DB                         Mat_DB_t;
+typedef Teuchos::RCP<Mat_DB_t>                   RCP_Mat_DB;
+typedef Mat_DB_t::XS_t                           XS;
+typedef Mat_DB_t::RCP_XS                         RCP_XS;
+typedef profugus::Partitioner                    Partitioner;
+typedef Partitioner::Array_Dbl                   Array_Dbl;
+typedef Teuchos::RCP<profugus::Dimensions>       RCP_Dimensions;
+typedef Teuchos::RCP<profugus::Mesh>             RCP_Mesh;
+typedef Teuchos::RCP<profugus::Global_Mesh_Data> RCP_Global_Data;
+typedef Teuchos::RCP<profugus::LG_Indexer>       RCP_Indexer;
+typedef Teuchos::RCP<profugus::FV_Bnd_Indexer>   RCP_Bnd_Indexer;
+typedef Teuchos::RCP<Teuchos::ParameterList>     RCP_ParameterList;
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
 // NOTE: the test class name must not contain underscores.
+template <class T>
 class MatrixTest : public testing::Test
 {
   protected:
-    typedef profugus::Linear_System_FV<EpetraTypes>   Linear_System;
+    typedef profugus::Linear_System_FV<T>             Linear_System;
     typedef Teuchos::RCP<Linear_System>               RCP_Linear_System;
-    typedef profugus::Mat_DB                          Mat_DB_t;
-    typedef typename Linear_System::RCP_Mat_DB        RCP_Mat_DB;
-    typedef typename Linear_System::RCP_Dimensions    RCP_Dimensions;
-    typedef profugus::Partitioner                     Partitioner;
-    typedef typename Linear_System::RCP_ParameterList RCP_ParameterList;
-    typedef typename Linear_System::RCP_Mesh          RCP_Mesh;
-    typedef typename Linear_System::RCP_Indexer       RCP_Indexer;
-    typedef typename Linear_System::RCP_Global_Data   RCP_Global_Data;
-    typedef typename Linear_System::RCP_Bnd_Indexer   RCP_Bnd_Indexer;
     typedef typename Linear_System::Matrix_t          Matrix_t;
     typedef typename Linear_System::Vector_t          Vector_t;
-    typedef Epetra_CrsMatrix                          Element_Matrix_t;
-    typedef Partitioner::Array_Dbl                    Array_Dbl;
-    typedef typename Linear_System::External_Source   External_Source;
-    typedef Mat_DB_t::XS_t                            XS;
-    typedef Mat_DB_t::RCP_XS                          RCP_XS;
 
   protected:
 
@@ -173,63 +181,93 @@ class MatrixTest : public testing::Test
 
     int num_groups, eqn_order;
 
-    int node, nodes;
-
     Array_Dbl cx, cy, cz;
 };
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes> MyTypes;
+//typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
+TYPED_TEST_CASE(MatrixTest, MyTypes);
 
-TEST_F(MatrixTest, SP7_3Grp_Refl_Graph)
+TYPED_TEST(MatrixTest, SP7_3Grp_Refl_Graph)
 {
-    build(7, 3);
-    make_data();
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+
+    this->build(7, 3);
+    this->make_data();
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Dimensions dim = this->dim;
+    RCP_Global_Data data = this->data;
+    RCP_Linear_System system = this->system;
     EXPECT_EQ(4, dim->num_equations());
 
     // make the matrix
     system->build_Matrix();
 
     // get the graph
-    const auto &g = system->get_Matrix()->Graph();
-    EXPECT_TRUE(g.StorageOptimized());
+    Teuchos::RCP<const Matrix_t> A = Teuchos::rcp_dynamic_cast<const Matrix_t>(
+        system->get_Operator());
 
-    EXPECT_EQ(4 * 3 * mesh->num_cells(), g.NumMyRows());
-    EXPECT_EQ(4 * 3 * data->num_cells(), g.NumGlobalRows());
-
-    EXPECT_EQ(4 * 3 * mesh->num_cells(), g.NumMyBlockRows());
-    EXPECT_EQ(4 * 3 * data->num_cells(), g.NumGlobalBlockRows());
-
-    EXPECT_EQ(4 * 3 * data->num_cells(), g.NumGlobalCols());
-    EXPECT_EQ(4 * 3 * data->num_cells(), g.NumGlobalBlockCols());
+    EXPECT_EQ(4 * 3 * mesh->num_cells(), MatrixTraits::local_rows(A));
+    EXPECT_EQ(4 * 3 * data->num_cells(), MatrixTraits::global_rows(A));
+    EXPECT_EQ(4 * 3 * data->num_cells(), MatrixTraits::global_columns(A));
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP5_3Grp_Refl_Matrix)
+TYPED_TEST(MatrixTest, SP5_3Grp_Refl_Matrix)
 {
-    build(5, 3);
-    make_data();
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+
+    this->build(5, 3);
+    this->make_data();
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Dimensions dim = this->dim;
+    RCP_Global_Data data = this->data;
+    RCP_Linear_System system = this->system;
     EXPECT_EQ(3, dim->num_equations());
 
     // make the matrix
     system->build_Matrix();
-    const Element_Matrix_t &A = dynamic_cast<Element_Matrix_t&>(
-        *system->get_Operator());
-    EXPECT_TRUE(A.StorageOptimized());
+    Teuchos::RCP<const Matrix_t> A = Teuchos::rcp_dynamic_cast<const Matrix_t>(
+        system->get_Operator());
 
-    EXPECT_EQ(3 * 3 * mesh->num_cells(), A.NumMyRows());
-    EXPECT_EQ(3 * 3 * data->num_cells(), A.NumGlobalRows());
-    EXPECT_EQ(3 * 3 * data->num_cells(), A.NumGlobalCols());
+    EXPECT_EQ(3 * 3 * mesh->num_cells(), MatrixTraits::local_rows(A));
+    EXPECT_EQ(3 * 3 * data->num_cells(), MatrixTraits::global_rows(A));
+    EXPECT_EQ(3 * 3 * data->num_cells(), MatrixTraits::global_columns(A));
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
+TYPED_TEST(MatrixTest, SP1_2Grp_Refl_Matrix)
 {
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef typename TestFixture::Vector_t          Vector_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+    typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+    typedef typename TypeParam::MV                  MV;
+    typedef typename TypeParam::OP                  OP;
+    typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
+
     using def::I; using def::J; using def::K;
-    build(1, 2);
+    this->build(1, 2);
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
 
     // 2 materials
     vector<int>    ids(2, 0);
@@ -261,23 +299,29 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
         }
     }
 
-    make_data(ids, f, matids);
+    this->make_data(ids, f, matids);
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
+    int num_groups = this->num_groups;
+
     EXPECT_EQ(1, dim->num_equations());
 
     // make the matrix
     system->build_Matrix();
-    const Element_Matrix_t &A =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_Operator()));
+    Teuchos::RCP<const Matrix_t> A = Teuchos::rcp_dynamic_cast<const Matrix_t>(
+        system->get_Operator());
 
-    EXPECT_EQ(2 * mesh->num_cells(), A.NumMyRows());
-    EXPECT_EQ(2 * data->num_cells(), A.NumGlobalRows());
-    EXPECT_EQ(2 * data->num_cells(), A.NumGlobalCols());
+    EXPECT_EQ(2 * mesh->num_cells(), MatrixTraits::local_rows(A));
+    EXPECT_EQ(2 * data->num_cells(), MatrixTraits::global_rows(A));
+    EXPECT_EQ(2 * data->num_cells(), MatrixTraits::global_columns(A));
 
     // make a vector
-    Vector_t x(*system->get_Map());
-    Vector_t y(*system->get_Map());
-    EXPECT_EQ(mesh->num_cells() * 2, x.MyLength());
-    EXPECT_EQ(mesh->num_cells() * 2, y.MyLength());
+    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    EXPECT_EQ(mesh->num_cells() * 2, VectorTraits::local_length(x));
+    EXPECT_EQ(mesh->num_cells() * 2, VectorTraits::local_length(y));
+    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
     {
@@ -290,8 +334,8 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
 
                 double gv = static_cast<double>(global);
 
-                x[0 + local * num_groups] = gv + 0.1;
-                x[1 + local * num_groups] = gv + 0.2;
+                x_data[0 + local * num_groups] = gv + 0.1;
+                x_data[1 + local * num_groups] = gv + 0.2;
             }
         }
     }
@@ -299,20 +343,19 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
     // extract some blocks
     if (node == 0)
     {
-        int *indices    = 0;
-        double *values  = 0;
-        int num_entries = 0;
-
-        A.ExtractMyRowView(2, num_entries, values, indices);
-        EXPECT_EQ(5, num_entries);
+        Teuchos::ArrayView<const int>    indices;
+        Teuchos::ArrayView<const double> values;
+        MatrixTraits::get_local_row_view(A,2,indices,values);
+        EXPECT_EQ(5, indices.size());
+        EXPECT_EQ(5, values.size());
 
         if (nodes == 1)
         {
-            EXPECT_EQ(0,  indices[0]);
-            EXPECT_EQ(2,  indices[1]);
-            EXPECT_EQ(4,  indices[2]);
-            EXPECT_EQ(10, indices[3]);
-            EXPECT_EQ(34, indices[4]);
+            EXPECT_EQ(0,  MatrixTraits::global_col_id(A,indices[0]));
+            EXPECT_EQ(2,  MatrixTraits::global_col_id(A,indices[1]));
+            EXPECT_EQ(4,  MatrixTraits::global_col_id(A,indices[2]));
+            EXPECT_EQ(10, MatrixTraits::global_col_id(A,indices[3]));
+            EXPECT_EQ(34, MatrixTraits::global_col_id(A,indices[4]));
 
             EXPECT_SOFTEQ(-0.24691358, values[0], 1.0e-6);
             EXPECT_SOFTEQ( 1.49276094, values[1], 1.0e-6);
@@ -322,7 +365,7 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
         }
     }
 
-    A.Multiply(Teuchos::NO_TRANS, x, y);
+    OPT::Apply(*A,*x,*y);
 
     double v[128] = {
         -5.688882,   -5.007769,   -3.884338,   -4.254782,   -4.541968,
@@ -363,7 +406,7 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
                 {
                     int local  = g + indexer->l2l(i, j, k) * 2;
                     int global = g + indexer->l2g(i, j, k) * 2;
-                    EXPECT_SOFTEQ(v[global], y[local], eps);
+                    EXPECT_SOFTEQ(v[global], y_data[local], eps);
                 }
             }
         }
@@ -372,9 +415,22 @@ TEST_F(MatrixTest, SP1_2Grp_Refl_Matrix)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
+TYPED_TEST(MatrixTest, SP3_2Grp_Refl_Matrix)
 {
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef typename TestFixture::Vector_t          Vector_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+    typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+    typedef typename TypeParam::MV                  MV;
+    typedef typename TypeParam::OP                  OP;
+    typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
+
     using def::I; using def::J; using def::K;
+
+    Array_Dbl cx = this->cx;
+    Array_Dbl cy = this->cy;
+    Array_Dbl cz = this->cz;
 
     // make non-uniform mesh
     cx.resize(5);
@@ -400,7 +456,11 @@ TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
     cz[4] = 3.0;
 
     // build the mesh and data
-    build(3, 2);
+    this->build(3, 2);
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
 
     // 2 materials
     vector<int>    ids(2, 0);
@@ -432,27 +492,30 @@ TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
         }
     }
 
-    make_data(ids, f, matids);
+    this->make_data(ids, f, matids);
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
+    int num_groups = this->num_groups;
+
     EXPECT_EQ(2, dim->num_equations());
     EXPECT_EQ("reflect", db->get<string>("boundary"));
 
     // make the matrix
-    system->build_Matrix();
-    const Element_Matrix_t &A =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_Operator()));
+    this->system->build_Matrix();
+    Teuchos::RCP<const Matrix_t> A = Teuchos::rcp_dynamic_cast<const Matrix_t>(
+        system->get_Operator());
 
-    EXPECT_TRUE(A.StorageOptimized());
-    EXPECT_TRUE(A.IndicesAreLocal());
-
-    EXPECT_EQ(2 * 2 * mesh->num_cells(), A.NumMyRows());
-    EXPECT_EQ(2 * 2 * data->num_cells(), A.NumGlobalRows());
-    EXPECT_EQ(2 * 2 * data->num_cells(), A.NumGlobalCols());
+    EXPECT_EQ(2 * 2 * mesh->num_cells(), MatrixTraits::local_rows(A));
+    EXPECT_EQ(2 * 2 * data->num_cells(), MatrixTraits::global_rows(A));
+    EXPECT_EQ(2 * 2 * data->num_cells(), MatrixTraits::global_columns(A));
 
     // make a vector
-    Vector_t x(*system->get_Map());
-    Vector_t y(*system->get_Map());
-    EXPECT_EQ(mesh->num_cells() * 2 * 2, x.MyLength());
-    EXPECT_EQ(mesh->num_cells() * 2 * 2, y.MyLength());
+    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    EXPECT_EQ(mesh->num_cells() * 2 * 2, VectorTraits::local_length(x));
+    EXPECT_EQ(mesh->num_cells() * 2 * 2, VectorTraits::local_length(y));
+    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
     {
@@ -466,8 +529,8 @@ TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
                 for (int n = 0; n < 2; ++n)
                 {
                     double gv = static_cast<double>(global + n);
-                    x[0 + n * num_groups + local * num_groups * 2] = gv + 0.1;
-                    x[1 + n * num_groups + local * num_groups * 2] = gv + 0.2;
+                    x_data[0 + n * num_groups + local * num_groups * 2] = gv + 0.1;
+                    x_data[1 + n * num_groups + local * num_groups * 2] = gv + 0.2;
                 }
             }
         }
@@ -476,20 +539,19 @@ TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
     // extract some blocks
     if (node == 0)
     {
-        int *indices    = 0;
-        double *values  = 0;
-        int num_entries = 0;
-
-        A.ExtractMyRowView(2, num_entries, values, indices);
-        EXPECT_EQ(5, num_entries);
+        Teuchos::ArrayView<const int>    indices;
+        Teuchos::ArrayView<const double> values;
+        MatrixTraits::get_local_row_view(A,2,indices,values);
+        EXPECT_EQ(5, indices.size());
+        EXPECT_EQ(5, values.size());
 
         if (nodes == 1)
         {
-            EXPECT_EQ(0,  indices[0]);
-            EXPECT_EQ(2,  indices[1]);
-            EXPECT_EQ(6,  indices[2]);
-            EXPECT_EQ(18, indices[3]);
-            EXPECT_EQ(66, indices[4]);
+            EXPECT_EQ(0,  MatrixTraits::global_col_id(A,indices[0]));
+            EXPECT_EQ(2,  MatrixTraits::global_col_id(A,indices[1]));
+            EXPECT_EQ(6,  MatrixTraits::global_col_id(A,indices[2]));
+            EXPECT_EQ(18, MatrixTraits::global_col_id(A,indices[3]));
+            EXPECT_EQ(66, MatrixTraits::global_col_id(A,indices[4]));
 
             EXPECT_SOFTEQ(-0.30000000, values[0], 1.0e-6);
             EXPECT_SOFTEQ( 1.52962520, values[1], 1.0e-6);
@@ -499,7 +561,7 @@ TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
         }
     }
 
-    A.Multiply(Teuchos::NO_TRANS, x, y);
+    OPT::Apply(*A,*x,*y);
 
     double v[256] = {
           -13.9915783590,   -11.7723247232,    -4.4292174299,    -3.8797514745,
@@ -582,7 +644,7 @@ TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
                         int global = g + n * 2 + indexer->l2g(i, j, k) * 4;
                         EXPECT_EQ(local, system->index(
                                       g, n, indexer->l2l(i, j, k)));
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -592,26 +654,36 @@ TEST_F(MatrixTest, SP3_2Grp_Refl_Matrix)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP3_2Grp_Vac_Graph)
+TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Graph)
 {
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+
     using def::I; using def::J; using def::K;
 
     // build the mesh and data
-    build(3, 2);
+    this->build(3, 2);
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
 
     // make vacuum boundary conditions
     db->set("boundary", string("vacuum"));
 
     // make the graph and data
-    make_data();
+    this->make_data();
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
     EXPECT_EQ(2, dim->num_equations());
 
     // make the matrix
     system->build_Matrix();
 
     // get the graph
-    const auto &g = system->get_Matrix()->Graph();
-    EXPECT_TRUE(g.StorageOptimized());
+    Teuchos::RCP<const Matrix_t> A = Teuchos::rcp_dynamic_cast<const Matrix_t>(
+        system->get_Operator());
 
     // number of faces
     int nf = 0;
@@ -634,20 +706,29 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Graph)
              1 * (mesh->num_cells_dim(J) * mesh->num_cells_dim(K));
     }
 
-    EXPECT_EQ(2 * 2 * (mesh->num_cells() + nf), g.NumMyRows());
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), g.NumGlobalRows());
-
-    EXPECT_EQ(2 * 2 * (mesh->num_cells() + nf), g.NumMyBlockRows());
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), g.NumGlobalBlockRows());
-
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), g.NumGlobalCols());
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), g.NumGlobalBlockCols());
+    EXPECT_EQ(2 * 2 * (mesh->num_cells() + nf), MatrixTraits::local_rows(A));
+    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), MatrixTraits::global_rows(A));
+    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), MatrixTraits::global_columns(A));
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
+TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
 {
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef typename TestFixture::Vector_t          Vector_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+    typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+    typedef typename TypeParam::MV                  MV;
+    typedef typename TypeParam::OP                  OP;
+    typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
+
+    Array_Dbl cx = this->cx;
+    Array_Dbl cy = this->cy;
+    Array_Dbl cz = this->cz;
+    int num_groups = this->num_groups;
+
     using def::I; using def::J; using def::K;
 
     // make non-uniform mesh
@@ -674,7 +755,11 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
     cz[4] = 3.0;
 
     // build the mesh and data
-    build(3, 2);
+    this->build(3, 2);
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
 
     // 2 materials
     vector<int>    ids(2, 0);
@@ -710,16 +795,15 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
     db->set("boundary", string("vacuum"));
 
     // make the graph and data
-    make_data(ids, f, matids);
+    this->make_data(ids, f, matids);
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
     EXPECT_EQ(2, dim->num_equations());
 
     // make the matrix
     system->build_Matrix();
-    const Element_Matrix_t &A =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_Operator()));
-
-    EXPECT_TRUE(A.IndicesAreLocal());
-    EXPECT_TRUE(A.StorageOptimized());
+    Teuchos::RCP<const Matrix_t> A = Teuchos::rcp_dynamic_cast<const Matrix_t>(
+        system->get_Operator());
 
     // number of faces
     int nf = 0;
@@ -744,17 +828,19 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
 
     EXPECT_EQ(nf*2*2, system->bnd_unknowns());
 
-    EXPECT_EQ(2 * 2 * (mesh->num_cells() + nf), A.NumMyRows());
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), A.NumGlobalRows());
-    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), A.NumGlobalCols());
+    EXPECT_EQ(2 * 2 * (mesh->num_cells() + nf), MatrixTraits::local_rows(A));
+    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), MatrixTraits::global_rows(A));
+    EXPECT_EQ(2 * 2 * (data->num_cells() + 96), MatrixTraits::global_columns(A));
 
     // make a vector
-    Vector_t x(*system->get_Map());
-    Vector_t y(*system->get_Map());
-    EXPECT_EQ((mesh->num_cells()+nf) * 2 * 2, x.MyLength());
-    EXPECT_EQ((mesh->num_cells()+nf) * 2 * 2, y.MyLength());
+    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    EXPECT_EQ((mesh->num_cells() + nf) * 2 * 2, VectorTraits::local_length(x));
+    EXPECT_EQ((mesh->num_cells() + nf) * 2 * 2, VectorTraits::local_length(y));
+    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
 
-    x.PutScalar(0.4);
+    VectorTraits::put_scalar(x,0.4);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
     {
@@ -768,8 +854,8 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                 for (int n = 0; n < 2; ++n)
                 {
                     double gv = static_cast<double>(global + n);
-                    x[0 + n * num_groups + local * num_groups * 2] = gv + 0.1;
-                    x[1 + n * num_groups + local * num_groups * 2] = gv + 0.2;
+                    x_data[0 + n * num_groups + local * num_groups * 2] = gv + 0.1;
+                    x_data[1 + n * num_groups + local * num_groups * 2] = gv + 0.2;
                 }
             }
         }
@@ -778,23 +864,33 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
     // extract some blocks
     if (node == 0)
     {
-        int *indices    = 0;
-        double *values  = 0;
-        int num_entries = 0;
-
-        A.ExtractMyRowView(2, num_entries, values, indices);
-        EXPECT_EQ(8,  num_entries);
+        Teuchos::ArrayView<const int>    indices;
+        Teuchos::ArrayView<const double> values;
+        MatrixTraits::get_local_row_view(A,2,indices,values);
+        EXPECT_EQ(8, indices.size());
+        EXPECT_EQ(8, values.size());
 
         if (nodes == 1)
         {
-            EXPECT_EQ(0,   indices[0]);
-            EXPECT_EQ(2,   indices[1]);
-            EXPECT_EQ(6,   indices[2]);
-            EXPECT_EQ(18,  indices[3]);
-            EXPECT_EQ(66,  indices[4]);
-            EXPECT_EQ(258, indices[5]);
-            EXPECT_EQ(386, indices[6]);
-            EXPECT_EQ(514, indices[7]);
+            Teuchos::RCP<const Epetra_CrsMatrix> emat =
+                Teuchos::rcp_dynamic_cast<const Epetra_CrsMatrix>(A);
+            if( emat != Teuchos::null )
+            {
+                MatrixTraits::write_matrix_file(A,"Epetra.mtx");
+            }
+            else
+            {
+                MatrixTraits::write_matrix_file(A,"Tpetra.mtx");
+            }
+
+            EXPECT_EQ(0,   MatrixTraits::global_col_id(A,indices[0]));
+            EXPECT_EQ(2,   MatrixTraits::global_col_id(A,indices[1]));
+            EXPECT_EQ(6,   MatrixTraits::global_col_id(A,indices[2]));
+            EXPECT_EQ(18,  MatrixTraits::global_col_id(A,indices[3]));
+            EXPECT_EQ(66,  MatrixTraits::global_col_id(A,indices[4]));
+            EXPECT_EQ(258, MatrixTraits::global_col_id(A,indices[5]));
+            EXPECT_EQ(386, MatrixTraits::global_col_id(A,indices[6]));
+            EXPECT_EQ(514, MatrixTraits::global_col_id(A,indices[7]));
 
             EXPECT_SOFTEQ(-0.30000000, values[0], 1.0e-6);
             EXPECT_SOFTEQ( 2.90768245, values[1], 1.0e-6);
@@ -807,7 +903,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
         }
     }
 
-    A.Multiply(Teuchos::NO_TRANS, x, y);
+    OPT::Apply(*A,*x,*y);
 
     double v[640] = {
           -15.0419642197,   -12.3850498086,    -3.4645773537,    -2.9093003135,
@@ -986,7 +1082,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                         int global = g + n * 2 + indexer->l2g(i, j, k) * 4;
                         EXPECT_EQ(local, system->index(
                                       g, n, indexer->l2l(i, j, k)));
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -1089,7 +1185,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                         int local  = g + n * 2 + lf * 4;
                         int global = g + n * 2 + gf * 4;
 
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -1112,7 +1208,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                         int local  = g + n * 2 + lf * 4;
                         int global = g + n * 2 + gf * 4;
 
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -1135,7 +1231,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                         int local  = g + n * 2 + lf * 4;
                         int global = g + n * 2 + gf * 4;
 
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -1158,7 +1254,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                         int local  = g + n * 2 + lf * 4;
                         int global = g + n * 2 + gf * 4;
 
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -1181,7 +1277,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                         int local  = g + n * 2 + lf * 4;
                         int global = g + n * 2 + gf * 4;
 
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -1204,7 +1300,7 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
                         int local  = g + n * 2 + lf * 4;
                         int global = g + n * 2 + gf * 4;
 
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }
@@ -1214,11 +1310,22 @@ TEST_F(MatrixTest, SP3_2Grp_Vac_Matrix)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP7_3Grp_Refl_RHS)
+TYPED_TEST(MatrixTest, SP7_3Grp_Refl_RHS)
 {
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Vector_t          Vector_t;
+    typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+
     using def::I; using def::J; using def::K;
-    build(7, 3);
-    make_data();
+
+    this->build(7, 3);
+    this->make_data();
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
     EXPECT_EQ(4, dim->num_equations());
 
     // make the source
@@ -1273,8 +1380,9 @@ TEST_F(MatrixTest, SP7_3Grp_Refl_RHS)
     system->build_RHS(q);
 
     // check q
-    const Vector_t &rhs = *system->get_RHS();
-    EXPECT_EQ(mesh->num_cells() * 4 * 3, rhs.MyLength());
+    Teuchos::RCP<const Vector_t> rhs = system->get_RHS();
+    EXPECT_EQ(mesh->num_cells() * 4 * 3, VectorTraits::local_length(rhs));
+    Teuchos::ArrayView<const double> rhs_data = VectorTraits::get_data(rhs,0);
 
     double eps = 1.0e-6;
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
@@ -1289,53 +1397,53 @@ TEST_F(MatrixTest, SP7_3Grp_Refl_RHS)
 
                 if (g_i == 1)
                 {
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 0 + cell * 12], eps);
 
                     f = -2.0/3.0;
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 1 + cell * 12], eps);
 
                     f = 8.0/15.0;
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 2 + cell * 12], eps);
 
                     f = -16.0/35.0;
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 3 + cell * 12], eps);
                 }
                 else if (g_i == 2)
                 {
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 0 + cell * 12], eps);
 
                     f = -2.0/3.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 1 + cell * 12], eps);
 
                     f = 8.0/15.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 2 + cell * 12], eps);
 
                     f = -16.0/35.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 3 + cell * 12], eps);
                 }
                 else
                 {
                     for (int n = 0; n < 4; ++n)
                     {
-                        EXPECT_SOFTEQ(0.0, rhs[0 + 3 * n + cell * 12], eps);
-                        EXPECT_SOFTEQ(0.0, rhs[1 + 3 * n + cell * 12], eps);
-                        EXPECT_SOFTEQ(0.0, rhs[2 + 3 * n + cell * 12], eps);
+                        EXPECT_SOFTEQ(0.0, rhs_data[0 + 3 * n + cell * 12], eps);
+                        EXPECT_SOFTEQ(0.0, rhs_data[1 + 3 * n + cell * 12], eps);
+                        EXPECT_SOFTEQ(0.0, rhs_data[2 + 3 * n + cell * 12], eps);
                     }
                 }
             }
@@ -1345,10 +1453,18 @@ TEST_F(MatrixTest, SP7_3Grp_Refl_RHS)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
+TYPED_TEST(MatrixTest, SP7_3Grp_Isotropic_RHS)
 {
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Vector_t          Vector_t;
+    typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+
     using def::I; using def::J; using def::K;
-    build(7, 3);
+    this->build(7, 3);
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
 
     db->set("boundary", string("isotropic"));
     {
@@ -1370,7 +1486,10 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
         db->set("boundary_db", bdb);
     }
 
-    make_data();
+    this->make_data();
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
+    int num_groups = this->num_groups;
     EXPECT_EQ(4, dim->num_equations());
 
     // make the source
@@ -1425,10 +1544,11 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
     system->build_RHS(q);
 
     // check q
-    const Vector_t &rhs = *system->get_RHS();
+    Teuchos::RCP<const Vector_t> rhs = system->get_RHS();
     EXPECT_EQ(mesh->num_cells() * 4 * 3, system->vol_unknowns());
     EXPECT_EQ((system->vol_unknowns() + system->bnd_unknowns()),
-              rhs.MyLength());
+              VectorTraits::local_length(rhs));
+    Teuchos::ArrayView<const double> rhs_data = VectorTraits::get_data(rhs,0);
 
     double eps = 1.0e-6;
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
@@ -1443,53 +1563,53 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
 
                 if (g_i == 1)
                 {
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 0 + cell * 12], eps);
 
                     f = -2.0/3.0;
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 1 + cell * 12], eps);
 
                     f = 8.0/15.0;
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 2 + cell * 12], eps);
 
                     f = -16.0/35.0;
-                    EXPECT_SOFTEQ(f*0.1, rhs[0 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.2, rhs[1 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*0.3, rhs[2 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.1, rhs_data[0 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.2, rhs_data[1 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*0.3, rhs_data[2 + 3 * 3 + cell * 12], eps);
                 }
                 else if (g_i == 2)
                 {
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 0 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 0 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 0 + cell * 12], eps);
 
                     f = -2.0/3.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 1 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 1 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 1 + cell * 12], eps);
 
                     f = 8.0/15.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 2 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 2 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 2 + cell * 12], eps);
 
                     f = -16.0/35.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[0 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.2, rhs[1 + 3 * 3 + cell * 12], eps);
-                    EXPECT_SOFTEQ(f*1.3, rhs[2 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[0 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[1 + 3 * 3 + cell * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[2 + 3 * 3 + cell * 12], eps);
                 }
                 else
                 {
                     for (int n = 0; n < 4; ++n)
                     {
-                        EXPECT_SOFTEQ(0.0, rhs[0 + 3 * n + cell * 12], eps);
-                        EXPECT_SOFTEQ(0.0, rhs[1 + 3 * n + cell * 12], eps);
-                        EXPECT_SOFTEQ(0.0, rhs[2 + 3 * n + cell * 12], eps);
+                        EXPECT_SOFTEQ(0.0, rhs_data[0 + 3 * n + cell * 12], eps);
+                        EXPECT_SOFTEQ(0.0, rhs_data[1 + 3 * n + cell * 12], eps);
+                        EXPECT_SOFTEQ(0.0, rhs_data[2 + 3 * n + cell * 12], eps);
                     }
                 }
             }
@@ -1519,16 +1639,16 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
                 for (int g = 0; g < num_groups; ++g)
                 {
                     f = 1.0/2.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[g + 3 * 0 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[g + 3 * 0 + lf * 12], eps);
 
                     f = -1.0/8.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[g + 3 * 1 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[g + 3 * 1 + lf * 12], eps);
 
                     f = 1.0/16.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[g + 3 * 2 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[g + 3 * 2 + lf * 12], eps);
 
                     f = -5.0/128.0;
-                    EXPECT_SOFTEQ(f*1.1, rhs[g + 3 * 3 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.1, rhs_data[g + 3 * 3 + lf * 12], eps);
                 }
             }
         }
@@ -1545,16 +1665,16 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
                 for (int g = 0; g < num_groups; ++g)
                 {
                     f = 1.0/2.0;
-                    EXPECT_SOFTEQ(f*1.2, rhs[g + 3 * 0 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[g + 3 * 0 + lf * 12], eps);
 
                     f = -1.0/8.0;
-                    EXPECT_SOFTEQ(f*1.2, rhs[g + 3 * 1 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[g + 3 * 1 + lf * 12], eps);
 
                     f = 1.0/16.0;
-                    EXPECT_SOFTEQ(f*1.2, rhs[g + 3 * 2 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[g + 3 * 2 + lf * 12], eps);
 
                     f = -5.0/128.0;
-                    EXPECT_SOFTEQ(f*1.2, rhs[g + 3 * 3 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.2, rhs_data[g + 3 * 3 + lf * 12], eps);
                 }
             }
         }
@@ -1571,16 +1691,16 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
                 for (int g = 0; g < num_groups; ++g)
                 {
                     f = 1.0/2.0;
-                    EXPECT_SOFTEQ(f*1.3, rhs[g + 3 * 0 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[g + 3 * 0 + lf * 12], eps);
 
                     f = -1.0/8.0;
-                    EXPECT_SOFTEQ(f*1.3, rhs[g + 3 * 1 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[g + 3 * 1 + lf * 12], eps);
 
                     f = 1.0/16.0;
-                    EXPECT_SOFTEQ(f*1.3, rhs[g + 3 * 2 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[g + 3 * 2 + lf * 12], eps);
 
                     f = -5.0/128.0;
-                    EXPECT_SOFTEQ(f*1.3, rhs[g + 3 * 3 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.3, rhs_data[g + 3 * 3 + lf * 12], eps);
                 }
             }
         }
@@ -1597,16 +1717,16 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
                 for (int g = 0; g < num_groups; ++g)
                 {
                     f = 1.0/2.0;
-                    EXPECT_SOFTEQ(f*1.4, rhs[g + 3 * 0 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.4, rhs_data[g + 3 * 0 + lf * 12], eps);
 
                     f = -1.0/8.0;
-                    EXPECT_SOFTEQ(f*1.4, rhs[g + 3 * 1 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.4, rhs_data[g + 3 * 1 + lf * 12], eps);
 
                     f = 1.0/16.0;
-                    EXPECT_SOFTEQ(f*1.4, rhs[g + 3 * 2 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.4, rhs_data[g + 3 * 2 + lf * 12], eps);
 
                     f = -5.0/128.0;
-                    EXPECT_SOFTEQ(f*1.4, rhs[g + 3 * 3 + lf * 12], eps);
+                    EXPECT_SOFTEQ(f*1.4, rhs_data[g + 3 * 3 + lf * 12], eps);
                 }
             }
         }
@@ -1621,16 +1741,16 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
             for (int g = 0; g < num_groups; ++g)
             {
                 f = 1.0/2.0;
-                EXPECT_SOFTEQ(f*1.5, rhs[g + 3 * 0 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.5, rhs_data[g + 3 * 0 + lf * 12], eps);
 
                 f = -1.0/8.0;
-                EXPECT_SOFTEQ(f*1.5, rhs[g + 3 * 1 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.5, rhs_data[g + 3 * 1 + lf * 12], eps);
 
                 f = 1.0/16.0;
-                EXPECT_SOFTEQ(f*1.5, rhs[g + 3 * 2 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.5, rhs_data[g + 3 * 2 + lf * 12], eps);
 
                 f = -5.0/128.0;
-                EXPECT_SOFTEQ(f*1.5, rhs[g + 3 * 3 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.5, rhs_data[g + 3 * 3 + lf * 12], eps);
             }
         }
     }
@@ -1644,16 +1764,16 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
             for (int g = 0; g < num_groups; ++g)
             {
                 f = 1.0/2.0;
-                EXPECT_SOFTEQ(f*1.6, rhs[g + 3 * 0 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.6, rhs_data[g + 3 * 0 + lf * 12], eps);
 
                 f = -1.0/8.0;
-                EXPECT_SOFTEQ(f*1.6, rhs[g + 3 * 1 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.6, rhs_data[g + 3 * 1 + lf * 12], eps);
 
                 f = 1.0/16.0;
-                EXPECT_SOFTEQ(f*1.6, rhs[g + 3 * 2 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.6, rhs_data[g + 3 * 2 + lf * 12], eps);
 
                 f = -5.0/128.0;
-                EXPECT_SOFTEQ(f*1.6, rhs[g + 3 * 3 + lf * 12], eps);
+                EXPECT_SOFTEQ(f*1.6, rhs_data[g + 3 * 3 + lf * 12], eps);
             }
         }
     }
@@ -1661,10 +1781,23 @@ TEST_F(MatrixTest, SP7_3Grp_Isotropic_RHS)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
+TYPED_TEST(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
 {
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef typename TestFixture::Vector_t          Vector_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+    typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+    typedef typename TypeParam::MV                  MV;
+    typedef typename TypeParam::OP                  OP;
+    typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
+
     using def::I; using def::J; using def::K;
-    build(7, 3);
+    this->build(7, 3);
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
 
     // 2 materials-no fission
     vector<int>    ids(2, 0);
@@ -1696,26 +1829,31 @@ TEST_F(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
         }
     }
 
-    make_data(ids, f, matids);
+    this->make_data(ids, f, matids);
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
+    int num_groups = this->num_groups;
     EXPECT_EQ(4, dim->num_equations());
 
     // make the matrix
     system->build_fission_matrix();
-    const Element_Matrix_t &B =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_fission_matrix()));
+    Teuchos::RCP<const Matrix_t> B =
+        Teuchos::rcp_dynamic_cast<const Matrix_t>(system->get_fission_matrix());
 
-    EXPECT_EQ(12 * mesh->num_cells(), B.NumMyRows());
-    EXPECT_EQ(12 * data->num_cells(), B.NumGlobalRows());
-    EXPECT_EQ(12 * data->num_cells(), B.NumGlobalCols());
+    EXPECT_EQ(12 * mesh->num_cells(), MatrixTraits::local_rows(B));
+    EXPECT_EQ(12 * data->num_cells(), MatrixTraits::global_rows(B));
+    EXPECT_EQ(12 * data->num_cells(), MatrixTraits::global_columns(B));
 
     // it should be all zeros
 
     // make a vector
-    Vector_t x(*system->get_Map());
-    Vector_t y(*system->get_Map());
-    EXPECT_EQ(mesh->num_cells() * 12, x.MyLength());
-    EXPECT_EQ(mesh->num_cells() * 12, y.MyLength());
-    y.Random();
+    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(x));
+    EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(y));
+    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
+    VectorTraits::put_scalar(y,-1.0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
     {
@@ -1729,27 +1867,41 @@ TEST_F(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
                 for (int n = 0; n < 2; ++n)
                 {
                     double gv = static_cast<double>(global + n);
-                    x[0 + n * num_groups + local * num_groups * 2] = gv + 0.1;
-                    x[1 + n * num_groups + local * num_groups * 2] = gv + 0.2;
+                    x_data[0 + n * num_groups + local * num_groups * 2] = gv + 0.1;
+                    x_data[1 + n * num_groups + local * num_groups * 2] = gv + 0.2;
                 }
             }
         }
     }
 
-    B.Multiply(Teuchos::NO_TRANS, x, y);
+    OPT::Apply(*B,*x,*y);
 
-    for (int n = 0; n < y.MyLength(); ++n)
+    for (int n = 0; n < y_data.size(); ++n)
     {
-        EXPECT_EQ(0.0, y[n]);
+        EXPECT_EQ(0.0, y_data[n]);
     }
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
+TYPED_TEST(MatrixTest, SP7_3Grp_Fission_Matrix)
 {
+    typedef typename TestFixture::Linear_System     Linear_System;
+    typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
+    typedef typename TestFixture::Matrix_t          Matrix_t;
+    typedef typename TestFixture::Vector_t          Vector_t;
+    typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
+    typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+    typedef typename TypeParam::MV                  MV;
+    typedef typename TypeParam::OP                  OP;
+    typedef Anasazi::OperatorTraits<double,MV,OP>   OPT;
+
     using def::I; using def::J; using def::K;
-    build(7, 3);
+    this->build(7, 3);
+    RCP_ParameterList db = this->db;
+    RCP_Mesh mesh = this->mesh;
+    RCP_Indexer indexer = this->indexer;
+    RCP_Global_Data data = this->data;
 
     // 2 materials (mat 9 has fission)
     vector<int>    ids(2, 0);
@@ -1781,14 +1933,17 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
         }
     }
 
-    make_data(ids, f, matids);
+    this->make_data(ids, f, matids);
+    RCP_Dimensions dim = this->dim;
+    RCP_Linear_System system = this->system;
+    int num_groups = this->num_groups;
     EXPECT_EQ(4, dim->num_equations());
 
     // add fission to mat (we don't need to make the scattering matrices as
     // they don't intrude on the Fission matrix)
     RCP_Mat_DB matf = Teuchos::rcp(new Mat_DB_t);
     {
-        const XS &old = mat->xs();
+        const XS &old = this->mat->xs();
         RCP_XS xs     = Teuchos::rcp(new XS);
 
         xs->set(old.pn_order(), old.num_groups());
@@ -1848,12 +2003,12 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
 
     // make the matrix
     system->build_fission_matrix();
-    const Element_Matrix_t &B =
-        dynamic_cast<Element_Matrix_t &>(*(system->get_fission_matrix()));
+    Teuchos::RCP<const Matrix_t> B =
+        Teuchos::rcp_dynamic_cast<const Matrix_t>(system->get_fission_matrix());
 
-    EXPECT_EQ(12 * mesh->num_cells(), B.NumMyRows());
-    EXPECT_EQ(12 * data->num_cells(), B.NumGlobalRows());
-    EXPECT_EQ(12 * data->num_cells(), B.NumGlobalCols());
+    EXPECT_EQ(12 * mesh->num_cells(), MatrixTraits::local_rows(B));
+    EXPECT_EQ(12 * data->num_cells(), MatrixTraits::global_rows(B));
+    EXPECT_EQ(12 * data->num_cells(), MatrixTraits::global_columns(B));
 
     // extract some blocks
     if (node == 0)
@@ -1861,23 +2016,22 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
         // 2nd equation, 2nd cell
         int row = 28;
 
-        int *indices    = 0;
-        double *values  = 0;
-        int num_entries = 0;
-
-        B.ExtractMyRowView(row, num_entries, values, indices);
-        EXPECT_EQ(8, num_entries);
+        Teuchos::ArrayView<const int>    indices;
+        Teuchos::ArrayView<const double> values;
+        MatrixTraits::get_local_row_view(B,row,indices,values);
+        EXPECT_EQ(8, indices.size());
+        EXPECT_EQ(8, values.size());
 
         if (nodes == 1)
         {
-            EXPECT_EQ(24, B.GCID(indices[0]));
-            EXPECT_EQ(25, B.GCID(indices[1]));
-            EXPECT_EQ(27, B.GCID(indices[2]));
-            EXPECT_EQ(28, B.GCID(indices[3]));
-            EXPECT_EQ(30, B.GCID(indices[4]));
-            EXPECT_EQ(31, B.GCID(indices[5]));
-            EXPECT_EQ(33, B.GCID(indices[6]));
-            EXPECT_EQ(34, B.GCID(indices[7]));
+            EXPECT_EQ(24, MatrixTraits::global_col_id(B,indices[0]));
+            EXPECT_EQ(25, MatrixTraits::global_col_id(B,indices[1]));
+            EXPECT_EQ(27, MatrixTraits::global_col_id(B,indices[2]));
+            EXPECT_EQ(28, MatrixTraits::global_col_id(B,indices[3]));
+            EXPECT_EQ(30, MatrixTraits::global_col_id(B,indices[4]));
+            EXPECT_EQ(31, MatrixTraits::global_col_id(B,indices[5]));
+            EXPECT_EQ(33, MatrixTraits::global_col_id(B,indices[6]));
+            EXPECT_EQ(34, MatrixTraits::global_col_id(B,indices[7]));
 
             EXPECT_SOFTEQ(-0.69333333, values[0], 1.0e-6);
             EXPECT_SOFTEQ(-2.24000000, values[1], 1.0e-6);
@@ -1891,11 +2045,13 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
     }
 
     // make a vector
-    Vector_t x(*system->get_Map());
-    Vector_t y(*system->get_Map());
-    EXPECT_EQ(mesh->num_cells() * 12, x.MyLength());
-    EXPECT_EQ(mesh->num_cells() * 12, y.MyLength());
-    y.Random();
+    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(x));
+    EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(y));
+    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
+    VectorTraits::put_scalar(y,-1.0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
     {
@@ -1909,15 +2065,15 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
                 for (int n = 0; n < 4; ++n)
                 {
                     double gv = static_cast<double>(global + n);
-                    x[0 + n * num_groups + local * num_groups * 4] = gv + 0.1;
-                    x[1 + n * num_groups + local * num_groups * 4] = gv + 0.2;
-                    x[2 + n * num_groups + local * num_groups * 4] = gv + 0.3;
+                    x_data[0 + n * num_groups + local * num_groups * 4] = gv + 0.1;
+                    x_data[1 + n * num_groups + local * num_groups * 4] = gv + 0.2;
+                    x_data[2 + n * num_groups + local * num_groups * 4] = gv + 0.3;
                 }
             }
         }
     }
 
-    B.Multiply(Teuchos::NO_TRANS, x, y);
+    OPT::Apply(*B,*x,*y);
 
     double v[768] = {
         -0.989123810,   -3.956495238,    0.000000000,    0.659415873,
@@ -2129,7 +2285,7 @@ TEST_F(MatrixTest, SP7_3Grp_Fission_Matrix)
                         int global = g + n * 3 + indexer->l2g(i, j, k) * 12;
                         EXPECT_EQ(local, system->index(
                                       g, n, indexer->l2l(i, j, k)));
-                        EXPECT_SOFTEQ(v[global], y[local], eps);
+                        EXPECT_SOFTEQ(v[global], y_data[local], eps);
                     }
                 }
             }

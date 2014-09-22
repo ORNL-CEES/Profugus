@@ -16,6 +16,9 @@
 #include "Teuchos_DefaultComm.hpp"
 #include "Teuchos_OrdinalTraits.hpp"
 
+#include "EpetraExt_RowMatrixOut.h"
+#include "MatrixMarket_Tpetra.hpp"
+
 #include "harness/DBC.hh"
 #include "solvers/LinAlgTypedefs.hh"
 
@@ -65,6 +68,24 @@ class MatrixTraits
         return Teuchos::null;
     }
 
+    static int local_rows( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        UndefinedMatrixTraits<T>::NotDefined();
+        return Teuchos::null;
+    }
+
+    static int global_rows( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        UndefinedMatrixTraits<T>::NotDefined();
+        return Teuchos::null;
+    }
+
+    static int global_columns( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        UndefinedMatrixTraits<T>::NotDefined();
+        return Teuchos::null;
+    }
+
     static void add_to_matrix(Teuchos::RCP<Matrix_t> matrix,
                               int row, int count,
                               Teuchos::ArrayRCP<const int> inds,
@@ -73,12 +94,31 @@ class MatrixTraits
         UndefinedMatrixTraits<T>::NotDefined();
     }
 
+    static void get_local_row_view(Teuchos::RCP<const Matrix_t> matrix, int row,
+                                   Teuchos::ArrayView<const int>    &inds,
+                                   Teuchos::ArrayView<const double> &vals)
+    {
+        UndefinedMatrixTraits<T>::NotDefined();
+    }
+
+    static int global_col_id(Teuchos::RCP<const Matrix_t> matrix, int local_id)
+    {
+        UndefinedMatrixTraits<T>::NotDefined();
+        return -1;
+    }
+
     static void finalize_matrix(Teuchos::RCP<Matrix_t> matrix)
     {
         UndefinedMatrixTraits<T>::NotDefined();
     }
 
-    static UTILS_INT8 global_nonzeros(Teuchos::RCP<Matrix_t> matrix)
+    static void write_matrix_file(Teuchos::RCP<const Matrix_t> matrix,
+                                  std::string filename)
+    {
+        UndefinedMatrixTraits<T>::NotDefined();
+    }
+
+    static UTILS_INT8 global_nonzeros(Teuchos::RCP<const Matrix_t> matrix)
     {
         UndefinedMatrixTraits<T>::NotDefined();
         return -1;
@@ -133,13 +173,50 @@ class MatrixTraits<EpetraTypes>
         return matrix;
     }
 
+    static int local_rows( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        return matrix->NumMyRows();
+    }
+
+    static int global_rows( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        return matrix->NumGlobalRows();
+    }
+
+    static int global_columns( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        return matrix->NumGlobalCols();
+    }
+
     static void add_to_matrix(Teuchos::RCP<Matrix_t> matrix,
                               int row, int count,
                               Teuchos::ArrayRCP<const int> inds,
                               Teuchos::ArrayRCP<const double> vals)
     {
         if( count > 0 )
-            matrix->InsertGlobalValues(row, count, &vals[0], &inds[0]);
+        {
+            int err = matrix->InsertGlobalValues(row, count, &vals[0], &inds[0]);
+            CHECK( 0 <= err );
+        }
+    }
+
+    static void get_local_row_view(Teuchos::RCP<const Matrix_t> matrix, int row,
+                                   Teuchos::ArrayView<const int>    &inds,
+                                   Teuchos::ArrayView<const double> &vals)
+    {
+        REQUIRE( matrix->IndicesAreLocal() );
+        int num_entries;
+        int *ind_ptr;
+        double *val_ptr;
+        int err = matrix->ExtractMyRowView(row,num_entries,val_ptr,ind_ptr);
+        CHECK( 0 == err );
+        inds = Teuchos::ArrayView<const int>(ind_ptr,num_entries);
+        vals = Teuchos::ArrayView<const double>(val_ptr,num_entries);
+    }
+
+    static int global_col_id(Teuchos::RCP<const Matrix_t> matrix, int local_id)
+    {
+        return matrix->GCID(local_id);
     }
 
     static void finalize_matrix(Teuchos::RCP<Matrix_t> matrix)
@@ -148,7 +225,14 @@ class MatrixTraits<EpetraTypes>
         ENSURE(matrix->StorageOptimized());
     }
 
-    static UTILS_INT8 global_nonzeros(Teuchos::RCP<Matrix_t> matrix)
+    static void write_matrix_file(Teuchos::RCP<const Matrix_t> matrix,
+                                  std::string filename)
+    {
+        std::cout << "Writing Epetra matrix to file" << std::endl;
+        EpetraExt::RowMatrixToMatrixMarketFile("Epetra.mtx",*matrix,matrix->Label());
+    }
+
+    static UTILS_INT8 global_nonzeros(Teuchos::RCP<const Matrix_t> matrix)
     {
         UTILS_INT8 num_nonzeros = matrix->NumMyNonzeros();
         profugus::global_sum( num_nonzeros );
@@ -185,9 +269,7 @@ class MatrixTraits<TpetraTypes>
         }
         else
         {
-            map = Teuchos::rcp(
-                new Map_t(Teuchos::OrdinalTraits<int>::invalid(),
-                          num_global,0,comm) );
+            map = Teuchos::rcp(new Map_t(num_global,0,comm) );
         }
 
         CHECK(map->getNodeNumElements() == num_local);
@@ -204,6 +286,21 @@ class MatrixTraits<TpetraTypes>
         return matrix;
     }
 
+    static int local_rows( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        return matrix->getNodeNumRows();
+    }
+
+    static int global_rows( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        return matrix->getGlobalNumRows();
+    }
+
+    static int global_columns( Teuchos::RCP<const Matrix_t> matrix )
+    {
+        return matrix->getGlobalNumCols();
+    }
+
     static void add_to_matrix(Teuchos::RCP<Matrix_t> matrix,
                               int row, int count,
                               Teuchos::ArrayRCP<const int> inds,
@@ -212,13 +309,35 @@ class MatrixTraits<TpetraTypes>
         matrix->insertGlobalValues(row, inds(0,count), vals(0,count) );
     }
 
+    static void get_local_row_view(Teuchos::RCP<const Matrix_t> matrix, int row,
+                                   Teuchos::ArrayView<const int>    &inds,
+                                   Teuchos::ArrayView<const double> &vals)
+    {
+        REQUIRE( matrix->supportsRowViews() );
+        REQUIRE( matrix->isLocallyIndexed() );
+        matrix->getLocalRowView(row,inds,vals);
+    }
+
+    static int global_col_id(Teuchos::RCP<const Matrix_t> matrix, int local_id)
+    {
+        return matrix->getColMap()->getGlobalElement(local_id);
+    }
+
     static void finalize_matrix(Teuchos::RCP<Matrix_t> matrix)
     {
         matrix->fillComplete();
         ENSURE(matrix->isStorageOptimized());
     }
 
-    static UTILS_INT8 global_nonzeros(Teuchos::RCP<Matrix_t> matrix)
+    static void write_matrix_file(Teuchos::RCP<const Matrix_t> matrix,
+                                  std::string filename)
+    {
+        std::cout << "Writing Tpetra matrix to file" << std::endl;
+        Tpetra::MatrixMarket::Writer<Matrix_t>::writeSparseFile(
+            filename,matrix,"tpetra_matrix");
+    }
+
+    static UTILS_INT8 global_nonzeros(Teuchos::RCP<const Matrix_t> matrix)
     {
         UTILS_INT8 num_nonzeros = matrix->getNodeNumEntries();
         profugus::global_sum( num_nonzeros );

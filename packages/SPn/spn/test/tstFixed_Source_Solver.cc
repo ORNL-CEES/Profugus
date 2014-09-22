@@ -25,18 +25,25 @@
 #include "Test_XS.hh"
 
 using namespace std;
-using profugus::EpetraTypes;
 
+typedef profugus::Isotropic_Source             External_Source;
+typedef profugus::Partitioner                  Partitioner;
+typedef Teuchos::RCP<profugus::State>          RCP_State;
+typedef External_Source::Source_Shapes         Source_Shapes;
+typedef External_Source::Shape                 Shape;
+typedef External_Source::Source_Field          Source_Field;
+typedef External_Source::ID_Field              ID_Field;
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
+template <class T>
 class Inf_Med_Solver_FVTest : public testing::Test
 {
   protected:
 
-    typedef profugus::Fixed_Source_Solver<EpetraTypes> Fixed_Source_Solver;
-    typedef Teuchos::RCP<Fixed_Source_Solver>      RCP_Linear_Solver;
+    typedef profugus::Fixed_Source_Solver<T>                Fixed_Source_Solver;
+    typedef Teuchos::RCP<Fixed_Source_Solver>               RCP_Linear_Solver;
     typedef typename Fixed_Source_Solver::RCP_ParameterList RCP_ParameterList;
     typedef typename Fixed_Source_Solver::RCP_Mat_DB        RCP_Mat_DB;
     typedef typename Fixed_Source_Solver::RCP_Dimensions    RCP_Dimensions;
@@ -47,12 +54,6 @@ class Inf_Med_Solver_FVTest : public testing::Test
     typedef typename Fixed_Source_Solver::Linear_System_t   Linear_System_t;
     typedef typename Fixed_Source_Solver::External_Source   External_Source;
     typedef typename Linear_System_t::Array_Dbl             Array_Dbl;
-    typedef profugus::Partitioner                  Partitioner;
-    typedef Teuchos::RCP<profugus::State>          RCP_State;
-    typedef External_Source::Source_Shapes         Source_Shapes;
-    typedef External_Source::Shape                 Shape;
-    typedef External_Source::Source_Field          Source_Field;
-    typedef External_Source::ID_Field              ID_Field;
 
   protected:
 
@@ -157,27 +158,34 @@ class Inf_Med_Solver_FVTest : public testing::Test
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
+TYPED_TEST_CASE(Inf_Med_Solver_FVTest, MyTypes);
 
-TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP1)
+TYPED_TEST(Inf_Med_Solver_FVTest, 1Grp_SP1)
 {
-    build(1, 1);
-    EXPECT_EQ(1, dim->num_equations());
+    typedef typename TestFixture::Vector_t Vector_t;
+
+    this->build(1, 1);
+    EXPECT_EQ(1, this->dim->num_equations());
 
     // make the source
-    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
+    Teuchos::RCP<External_Source> q(
+        new External_Source(this->mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(1, 1.2));
-        ID_Field srcids(mesh->num_cells(), 0);
-        Source_Field source(mesh->num_cells(), 1.0);
+        ID_Field srcids(this->mesh->num_cells(), 0);
+        Source_Field source(this->mesh->num_cells(), 1.0);
 
         q->set(srcids, shapes, source);
     }
 
-    solver->solve(q);
+    this->solver->solve(q);
 
-    Teuchos::RCP<const Vector_t> x = solver->get_LHS();
+    Teuchos::RCP<const Vector_t> x = this->solver->get_LHS();
     Teuchos::ArrayView<const double> x_data =
-        profugus::VectorTraits<EpetraTypes>::get_data(x);
+        profugus::VectorTraits<TypeParam>::get_data(x);
     for (int i = 0; i < x_data.size(); ++i)
     {
         EXPECT_SOFTEQ(2.0, x_data[i], 1.0e-6);
@@ -186,27 +194,30 @@ TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP1)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP3)
+TYPED_TEST(Inf_Med_Solver_FVTest, 1Grp_SP3)
 {
-    build(3, 1);
-    EXPECT_EQ(2, dim->num_equations());
+    typedef typename TestFixture::Vector_t Vector_t;
+
+    this->build(3, 1);
+    EXPECT_EQ(2, this->dim->num_equations());
 
     // make the source
-    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
+    Teuchos::RCP<External_Source> q(
+        new External_Source(this->mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(1, 1.2));
-        ID_Field srcids(mesh->num_cells(), 0);
-        Source_Field source(mesh->num_cells(), 1.0);
+        ID_Field srcids(this->mesh->num_cells(), 0);
+        Source_Field source(this->mesh->num_cells(), 1.0);
 
         q->set(srcids, shapes, source);
     }
 
-    solver->solve(q);
+    this->solver->solve(q);
 
-    Teuchos::RCP<const Vector_t> x = solver->get_LHS();
+    Teuchos::RCP<const Vector_t> x = this->solver->get_LHS();
     Teuchos::ArrayView<const double> x_data =
-        profugus::VectorTraits<EpetraTypes>::get_data(x);
-    for (int cell = 0; cell < mesh->num_cells(); ++cell)
+        profugus::VectorTraits<TypeParam>::get_data(x);
+    for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
         double phi_0 = x_data[cell*2] - 2.0/3.0 * x_data[1 + cell*2];
         EXPECT_SOFTEQ(2.0, phi_0, 1.0e-6);
@@ -215,33 +226,37 @@ TEST_F(Inf_Med_Solver_FVTest, 1Grp_SP3)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP1)
+TYPED_TEST(Inf_Med_Solver_FVTest, 3Grp_SP1)
 {
-    build(1, 3);
-    EXPECT_EQ(1, dim->num_equations());
+    typedef typename TestFixture::Vector_t        Vector_t;
+    typedef typename TestFixture::Linear_System_t Linear_System_t;
+
+    this->build(1, 3);
+    EXPECT_EQ(1, this->dim->num_equations());
 
     // make the source
-    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
+    Teuchos::RCP<External_Source> q(
+        new External_Source(this->mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(3, 0.0));
         shapes[0][0] = 1.2;
         shapes[0][1] = 1.3;
         shapes[0][2] = 1.4;
 
-        ID_Field srcids(mesh->num_cells(), 0);
-        Source_Field source(mesh->num_cells(), 1.0);
+        ID_Field srcids(this->mesh->num_cells(), 0);
+        Source_Field source(this->mesh->num_cells(), 1.0);
 
         q->set(srcids, shapes, source);
     }
 
-    solver->solve(q);
+    this->solver->solve(q);
 
-    const Linear_System_t &system = solver->get_linear_system();
+    const Linear_System_t &system = this->solver->get_linear_system();
 
-    Teuchos::RCP<const Vector_t> x = solver->get_LHS();
+    Teuchos::RCP<const Vector_t> x = this->solver->get_LHS();
     Teuchos::ArrayView<const double> x_data =
-        profugus::VectorTraits<EpetraTypes>::get_data(x);
-    for (int cell = 0; cell < mesh->num_cells(); ++cell)
+        profugus::VectorTraits<TypeParam>::get_data(x);
+    for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
         int g0       = 0 + 0 * 3 + cell * 3 * 1;
         int g1       = 1 + 0 * 3 + cell * 3 * 1;
@@ -261,34 +276,38 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP1)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP5)
+TYPED_TEST(Inf_Med_Solver_FVTest, 3Grp_SP5)
 {
-    build(5, 3);
-    EXPECT_EQ(3, dim->num_equations());
+    typedef typename TestFixture::Vector_t        Vector_t;
+    typedef typename TestFixture::Linear_System_t Linear_System_t;
+
+    this->build(5, 3);
+    EXPECT_EQ(3, this->dim->num_equations());
 
     // make the source
-    Teuchos::RCP<External_Source> q( new External_Source(mesh->num_cells()) );
+    Teuchos::RCP<External_Source> q(
+        new External_Source(this->mesh->num_cells()) );
     {
         Source_Shapes shapes(1, Shape(3, 0.0));
         shapes[0][0] = 1.2;
         shapes[0][1] = 1.3;
         shapes[0][2] = 1.4;
 
-        ID_Field srcids(mesh->num_cells(), 0);
-        Source_Field source(mesh->num_cells(), 1.0);
+        ID_Field srcids(this->mesh->num_cells(), 0);
+        Source_Field source(this->mesh->num_cells(), 1.0);
 
         q->set(srcids, shapes, source);
     }
 
-    solver->solve(q);
+    this->solver->solve(q);
 
-    const Linear_System_t &system = solver->get_linear_system();
+    const Linear_System_t &system = this->solver->get_linear_system();
 
-    Teuchos::RCP<const Vector_t> x = solver->get_LHS();
+    Teuchos::RCP<const Vector_t> x = this->solver->get_LHS();
     Teuchos::ArrayView<const double> x_data =
-        profugus::VectorTraits<EpetraTypes>::get_data(x);
+        profugus::VectorTraits<TypeParam>::get_data(x);
     double eps = 1.0e-4;
-    for (int cell = 0; cell < mesh->num_cells(); ++cell)
+    for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
         int g00 = 0 + 0 * 3 + cell * 3 * 3;
         int g10 = 1 + 0 * 3 + cell * 3 * 3;
@@ -320,15 +339,15 @@ TEST_F(Inf_Med_Solver_FVTest, 3Grp_SP5)
     }
 
     // fill the state
-    solver->write_state(*state);
-    profugus::State::View_Field phi = state->flux();
-    EXPECT_EQ(mesh->num_cells() * 3, phi.size());
+    this->solver->write_state(*(this->state));
+    profugus::State::View_Field phi = this->state->flux();
+    EXPECT_EQ(this->mesh->num_cells() * 3, phi.size());
 
-    for (int cell = 0; cell < mesh->num_cells(); ++cell)
+    for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
-        int g0 = cell + 0 * mesh->num_cells();
-        int g1 = cell + 1 * mesh->num_cells();
-        int g2 = cell + 2 * mesh->num_cells();
+        int g0 = cell + 0 * this->mesh->num_cells();
+        int g1 = cell + 1 * this->mesh->num_cells();
+        int g2 = cell + 2 * this->mesh->num_cells();
 
         EXPECT_SOFTEQ(23.376775173864782, phi[g0], eps);
         EXPECT_SOFTEQ(26.285032257831212, phi[g1], eps);
