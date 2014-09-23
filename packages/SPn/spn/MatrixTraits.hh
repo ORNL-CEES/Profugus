@@ -228,7 +228,6 @@ class MatrixTraits<EpetraTypes>
     static void write_matrix_file(Teuchos::RCP<const Matrix_t> matrix,
                                   std::string filename)
     {
-        std::cout << "Writing Epetra matrix to file" << std::endl;
         EpetraExt::RowMatrixToMatrixMarketFile("Epetra.mtx",*matrix,matrix->Label());
     }
 
@@ -332,7 +331,6 @@ class MatrixTraits<TpetraTypes>
     static void write_matrix_file(Teuchos::RCP<const Matrix_t> matrix,
                                   std::string filename)
     {
-        std::cout << "Writing Tpetra matrix to file" << std::endl;
         Tpetra::MatrixMarket::Writer<Matrix_t>::writeSparseFile(
             filename,matrix,"tpetra_matrix");
     }
