@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "Davidson_Eigensolver.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class Davidson_Eigensolver<Epetra_MultiVector,Epetra_Operator>;
-template class Davidson_Eigensolver<Tpetra_MultiVector,Tpetra_Operator>;
+template class Davidson_Eigensolver<EpetraTypes>;
+template class Davidson_Eigensolver<TpetraTypes>;
 
 } // end namespace profugus
 

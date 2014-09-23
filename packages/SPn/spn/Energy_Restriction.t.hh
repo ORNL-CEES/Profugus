@@ -1,71 +1,77 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn_tpetra/Energy_Restriction.cc
+ * \file   spn/Energy_Restriction.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 12:35:37 2014
- * \brief  Energy_Restriction member definitions.
+ * \brief  Energy_Restriction template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef spn_Energy_Restriction_t_hh
+#define spn_Energy_Restriction_t_hh
 
 #include <algorithm>
 
 #include "harness/DBC.hh"
 #include "Energy_Restriction.hh"
+#include "VectorTraits.hh"
 
 namespace profugus
-{
-namespace tpetra
 {
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 
-Energy_Restriction::Energy_Restriction(
-        Teuchos::RCP<const MV>  fine_vec,
-        Teuchos::RCP<const MV>  coarse_vec,
+template <class T>
+Energy_Restriction<T>::Energy_Restriction(
+        Teuchos::RCP<const MAP> fine_map,
+        Teuchos::RCP<const MAP> coarse_map,
         const std::vector<int> &steer_vec )
-    : d_steer_vec(steer_vec)
-    , d_fine_map( fine_vec->getMap() )
-    , d_coarse_map( coarse_vec->getMap() )
+    : OperatorAdapter<T>(fine_map,coarse_map)
+    , d_steer_vec(steer_vec)
+    , d_fine_map( fine_map )
+    , d_coarse_map( coarse_map )
 {
     d_fine_groups = std::accumulate(steer_vec.begin(),steer_vec.end(),0);
     d_coarse_groups = steer_vec.size();
     CHECK( d_fine_groups > d_coarse_groups );
 
     // Determine energy-independent size of vector
-    CHECK( fine_vec->getLocalLength()%d_fine_groups==0 );
-    d_unks_per_grp   = fine_vec->getLocalLength() / d_fine_groups;
-    ENSURE( coarse_vec->getLocalLength()==d_unks_per_grp*d_coarse_groups );
+    CHECK( VectorTraits<T>::local_size(fine_map)%d_fine_groups==0 );
+    d_unks_per_grp = VectorTraits<T>::local_size(fine_map) / d_fine_groups;
+    CHECK( VectorTraits<T>::local_size(coarse_map) ==
+           d_unks_per_grp*d_coarse_groups );
 }
 
 //---------------------------------------------------------------------------//
 // RESTRICTION OPERATOR
 //---------------------------------------------------------------------------//
 
-void Energy_Restriction::apply( const MV &fine_vectors, MV &coarse_vectors,
-        Teuchos::ETransp mode, double alpha, double beta ) const
+template <class T>
+void Energy_Restriction<T>::ApplyImpl( const MV &fine_vectors,
+                                             MV &coarse_vectors ) const
 {
-    REQUIRE( alpha == 1.0 );
-    REQUIRE( beta  == 0.0 );
-    REQUIRE( fine_vectors.getLocalLength()   == d_fine_groups*d_unks_per_grp );
-    REQUIRE( coarse_vectors.getLocalLength() == d_coarse_groups*d_unks_per_grp );
+    REQUIRE( VectorTraits<T>::local_length(Teuchos::rcpFromRef(fine_vectors))
+             == d_fine_groups*d_unks_per_grp );
+    REQUIRE( VectorTraits<T>::local_length(Teuchos::rcpFromRef(coarse_vectors))
+            == d_coarse_groups*d_unks_per_grp );
 
-    int num_vectors = fine_vectors.getNumVectors();
-    CHECK( coarse_vectors.getNumVectors()==num_vectors );
+    int num_vectors = MVT::GetNumberVecs(fine_vectors);
+    CHECK( MVT::GetNumberVecs(coarse_vectors) ==num_vectors );
 
-    coarse_vectors.putScalar(0.0);
+    MVT::MvInit(coarse_vectors,0.0);
 
     // Process each vector in multivector
     int coarse_offset, fine_offset;
     for( int ivec=0; ivec<num_vectors; ++ivec )
     {
-        // Access current vector data
-        Teuchos::ArrayRCP<const double> fine_data =
-            fine_vectors.getData(ivec);
-        Teuchos::ArrayRCP<double> coarse_data =
-            coarse_vectors.getDataNonConst(ivec);
+        Teuchos::ArrayView<const double> fine_data =
+            VectorTraits<T>::get_data(Teuchos::rcpFromRef(fine_vectors),ivec);
+        Teuchos::ArrayView<double> coarse_data =
+            VectorTraits<T>::get_data_nonconst(
+                Teuchos::rcpFromRef(coarse_vectors),ivec);
 
         // Apply restriction to each component
         for( int i=0; i<d_unks_per_grp; ++i )
@@ -79,8 +85,7 @@ void Energy_Restriction::apply( const MV &fine_vectors, MV &coarse_vectors,
                 int fine_grps = d_steer_vec[icg];
                 for( int ifg=grp_ctr; ifg<grp_ctr+fine_grps; ++ifg )
                 {
-                    coarse_data[coarse_offset+icg] +=
-                        fine_data[fine_offset+ifg];
+                    coarse_data[coarse_offset+icg] += fine_data[fine_offset+ifg];
                 }
                 grp_ctr += fine_grps;
                 coarse_data[coarse_offset+icg] /=
@@ -91,8 +96,9 @@ void Energy_Restriction::apply( const MV &fine_vectors, MV &coarse_vectors,
 }
 
 } // end namespace profugus
-} // end namespace tpetra
+
+#endif // spn_Energy_Restriction_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Energy_Restriction.cc
+//                 end of Energy_Restriction.t.hh
 //---------------------------------------------------------------------------//

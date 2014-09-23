@@ -35,13 +35,13 @@ class PreconditionerBuilderTest : public ::testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV     MV;
-    typedef typename linalg_traits::traits_types<T>::OP     OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
+    typedef typename T::MATRIX                    MATRIX;
 
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
-    typedef profugus::PreconditionerBuilder<OP>   Builder;
+    typedef profugus::PreconditionerBuilder<T>    Builder;
 
   protected:
     // Initialization that are performed for each test
@@ -49,15 +49,15 @@ class PreconditionerBuilderTest : public ::testing::Test
     {
         // Build a map
         d_N = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
+        d_A = linalg_traits::build_matrix<T>("laplacian",d_N);
 
         // Build lhs and rhs vectors
-        d_x = linalg_traits::build_vector<MV>(d_N);
-        d_y = linalg_traits::build_vector<MV>(d_N);
+        d_x = linalg_traits::build_vector<T>(d_N);
+        d_y = linalg_traits::build_vector<T>(d_N);
         std::vector<double> vals(d_N);
         for( int i=0; i<d_N; ++i )
             vals[i] = static_cast<double>(d_N-i);
-        linalg_traits::fill_vector<MV>(d_x,vals);
+        linalg_traits::fill_vector<T>(d_x,vals);
     }
 
     void build_preconditioner( RCP<Teuchos::ParameterList> db )
@@ -69,7 +69,7 @@ class PreconditionerBuilderTest : public ::testing::Test
 
     int d_N;
 
-    Teuchos::RCP<Matrix> d_A;
+    Teuchos::RCP<MATRIX> d_A;
     Teuchos::RCP<OP>     d_P;
     Teuchos::RCP<MV>     d_x;
     Teuchos::RCP<MV>     d_y;
@@ -78,12 +78,13 @@ class PreconditionerBuilderTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(PreconditionerBuilderTest, MyTypes);
 
 TYPED_TEST(PreconditionerBuilderTest, basic)
 {
-    typedef typename TestFixture::MV  MV;
     typedef typename TestFixture::OPT OPT;
     typedef typename TestFixture::MVT MVT;
 
@@ -101,7 +102,7 @@ TYPED_TEST(PreconditionerBuilderTest, basic)
     this->build_preconditioner(db);
     EXPECT_FALSE( this->d_P == Teuchos::null );
     std::vector<double> zero(this->d_N,0.0);
-    linalg_traits::fill_vector<MV>(this->d_y,zero);
+    linalg_traits::fill_vector<TypeParam>(this->d_y,zero);
     OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
     MVT::MvNorm(*this->d_y,y_norm);
     EXPECT_TRUE(y_norm[0] > 1.0);
@@ -119,7 +120,7 @@ TYPED_TEST(PreconditionerBuilderTest, basic)
         db->set("Preconditioner", std::string("Ifpack"));
         this->build_preconditioner(db);
         EXPECT_FALSE( this->d_P == Teuchos::null );
-        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        linalg_traits::fill_vector<TypeParam>(this->d_y,zero);
         OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
         MVT::MvNorm(*this->d_y,y_norm);
         EXPECT_TRUE(y_norm[0] > 1.0);
@@ -133,7 +134,7 @@ TYPED_TEST(PreconditionerBuilderTest, basic)
         db->set("Preconditioner", std::string("ML"));
         this->build_preconditioner(db);
         EXPECT_FALSE( this->d_P == Teuchos::null );
-        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        linalg_traits::fill_vector<TypeParam>(this->d_y,zero);
         OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
         MVT::MvNorm(*this->d_y,y_norm);
         EXPECT_TRUE(y_norm[0] > 1.0);
@@ -147,7 +148,7 @@ TYPED_TEST(PreconditionerBuilderTest, basic)
         db->set("Preconditioner", std::string("Ifpack2"));
         this->build_preconditioner(db);
         EXPECT_FALSE( this->d_P == Teuchos::null );
-        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        linalg_traits::fill_vector<TypeParam>(this->d_y,zero);
         OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
         MVT::MvNorm(*this->d_y,y_norm);
         EXPECT_TRUE(y_norm[0] > 1.0);
@@ -161,7 +162,7 @@ TYPED_TEST(PreconditionerBuilderTest, basic)
         db->set("Preconditioner", std::string("MueLu"));
         this->build_preconditioner(db);
         EXPECT_FALSE( this->d_P == Teuchos::null );
-        linalg_traits::fill_vector<MV>(this->d_y,zero);
+        linalg_traits::fill_vector<TypeParam>(this->d_y,zero);
         OPT::Apply(*this->d_P,*this->d_x,*this->d_y);
         MVT::MvNorm(*this->d_y,y_norm);
         EXPECT_TRUE(y_norm[0] > 1.0);

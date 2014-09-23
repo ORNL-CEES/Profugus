@@ -136,39 +136,24 @@ ENDIF()
 FILE(GLOB SPN_HEADERS spn/*.hh)
 SET(SPN_SOURCES
   spn/Dimensions.cc
-  spn/Eigenvalue_Solver.cc
-  spn/Energy_Multigrid.cc
-  spn/Energy_Prolongation.cc
-  spn/Energy_Restriction.cc
+  spn/Eigenvalue_Solver.pt.cc
+  spn/Energy_Multigrid.pt.cc
+  spn/Energy_Prolongation.pt.cc
+  spn/Energy_Restriction.pt.cc
   spn/FV_Bnd_Indexer.cc
   spn/FV_Gather.cc
-  spn/Fixed_Source_Solver.cc
+  spn/Fixed_Source_Solver.pt.cc
   spn/Isotropic_Source.cc
-  spn/Linear_System.cc
-  spn/Linear_System_FV.cc
+  spn/Linear_System.pt.cc
+  spn/Linear_System_FV.pt.cc
   spn/Moment_Coefficients.cc
   spn/SDM_Face_Field.cc
-  spn/Solver_Base.cc
-  spn/Time_Dependent_Solver.cc
+  spn/Solver_Base.pt.cc
+  spn/SpnSolverBuilder.cc
+  spn/Time_Dependent_Solver.pt.cc
   )
 LIST(APPEND HEADERS ${SPN_HEADERS})
 LIST(APPEND SOURCES ${SPN_SOURCES})
-
-# spn_tpetra sources
-
-FILE(GLOB SPN_T_HEADERS spn_tpetra/*.hh)
-SET(SPN_T_SOURCES
-  spn_tpetra/Eigenvalue_Solver.cc
-  spn_tpetra/Energy_Multigrid.cc
-  spn_tpetra/Energy_Prolongation.cc
-  spn_tpetra/Energy_Restriction.cc
-  spn_tpetra/Fixed_Source_Solver.cc
-  spn_tpetra/Linear_System.cc
-  spn_tpetra/Linear_System_FV.cc
-  spn_tpetra/Solver_Base.cc
-  )
-LIST(APPEND HEADERS ${SPN_T_HEADERS})
-LIST(APPEND SOURCES ${SPN_T_SOURCES})
 
 # driver sources
 
@@ -206,8 +191,7 @@ TRIBITS_ADD_EXECUTABLE(
 TRIBITS_ADD_TEST_DIRECTORIES(
   mesh/test
   solvers/test
-  spn/test
-  spn_tpetra/test)
+  spn/test)
 
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP

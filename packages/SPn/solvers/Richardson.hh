@@ -43,13 +43,15 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
-class Richardson : public LinearSolver<MV,OP>
+template <class T>
+class Richardson : public LinearSolver<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef LinearSolver<MV,OP>                   Base;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
+    typedef LinearSolver<T>                       Base;
     typedef typename Base::ParameterList          ParameterList;
     typedef typename Base::RCP_ParameterList      RCP_ParameterList;
     typedef Teuchos::RCP<MV>                      RCP_MV;
@@ -76,14 +78,14 @@ class Richardson : public LinearSolver<MV,OP>
 
     Teuchos::RCP<OP> d_P;
 
-    using LinearSolver<MV,OP>::b_db;
-    using LinearSolver<MV,OP>::b_A;
-    using LinearSolver<MV,OP>::b_tolerance;
-    using LinearSolver<MV,OP>::b_num_iters;
-    using LinearSolver<MV,OP>::b_max_iters;
-    using LinearSolver<MV,OP>::b_converged;
-    using LinearSolver<MV,OP>::b_label;
-    using LinearSolver<MV,OP>::b_verbosity;
+    using LinearSolver<T>::b_db;
+    using LinearSolver<T>::b_A;
+    using LinearSolver<T>::b_tolerance;
+    using LinearSolver<T>::b_num_iters;
+    using LinearSolver<T>::b_max_iters;
+    using LinearSolver<T>::b_converged;
+    using LinearSolver<T>::b_label;
+    using LinearSolver<T>::b_verbosity;
 
     double d_damping;
 };

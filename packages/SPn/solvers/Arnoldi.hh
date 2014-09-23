@@ -38,12 +38,14 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
-class Arnoldi : public EigenvalueSolver<MV,OP>
+template <class T>
+class Arnoldi : public EigenvalueSolver<T>
 {
   public:
     //@{
     //! Typedefs.
+    typedef typename T::MV                                MV;
+    typedef typename T::OP                                OP;
     typedef Anasazi::BasicEigenproblem<double,MV,OP>      Eigenproblem;
     typedef Anasazi::BlockKrylovSchurSolMgr<double,MV,OP> KrylovSchur;
     typedef Anasazi::Eigensolution<double,MV>             Eigensolution;
@@ -54,7 +56,7 @@ class Arnoldi : public EigenvalueSolver<MV,OP>
     typedef Teuchos::RCP<Eigenproblem>           RCP_Eigenproblem;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
 
-    typedef EigenvalueSolver<MV,OP> Base;
+    typedef EigenvalueSolver<T> Base;
     //@}
 
   private:

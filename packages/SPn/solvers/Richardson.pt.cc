@@ -15,13 +15,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "Richardson.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class Richardson<Epetra_MultiVector,Epetra_Operator>;
-template class Richardson<Tpetra_MultiVector,Tpetra_Operator>;
+template class Richardson<EpetraTypes>;
+template class Richardson<TpetraTypes>;
 
 } // end namespace profugus
 

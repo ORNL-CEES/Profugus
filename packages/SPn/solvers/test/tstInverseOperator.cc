@@ -49,17 +49,17 @@ class Inverse_Operator_Test : public testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV     MV;
-    typedef typename linalg_traits::traits_types<T>::OP     OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix Matrix;
-    typedef profugus::InverseOperator<MV,OP>                InverseOperator;
-    typedef Anasazi::OperatorTraits<double,MV,OP>           OPT;
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
+    typedef typename T::MATRIX                    MATRIX;
+    typedef profugus::InverseOperator<T>          InverseOperator;
+    typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
   protected:
 
     void SetUp()
     {
-        db    = Teuchos::rcp(new Teuchos::ParameterList("test"));
+        db = Teuchos::rcp(new Teuchos::ParameterList("test"));
     }
 
     void std_test(const std::string &xmlfile)
@@ -70,7 +70,7 @@ class Inverse_Operator_Test : public testing::Test
 
         // make the operator
         int N = 4;
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",N);
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<T>("4x4_lhs",N);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -78,17 +78,17 @@ class Inverse_Operator_Test : public testing::Test
         solver_op.set_operator(A);
 
         // wrap rhs into MV
-        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<MV>(N);
-        linalg_traits::fill_vector<MV>(ep_rhs,u1);
+        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<T>(N);
+        linalg_traits::fill_vector<T>(ep_rhs,u1);
 
         // solve
-        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(N);
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<T>(N);
         OPT::Apply(solver_op,*ep_rhs,*ep_x);
-        linalg_traits::test_vector<MV>(ep_x,sol);
+        linalg_traits::test_vector<T>(ep_x,sol);
 
         // solve again and limit iterations
         std::vector<double> zero(N,0.0);
-        linalg_traits::fill_vector<MV>(ep_x,zero);
+        linalg_traits::fill_vector<T>(ep_x,zero);
         OPT::Apply(solver_op,*ep_rhs,*ep_x);
     }
 
@@ -99,8 +99,8 @@ class Inverse_Operator_Test : public testing::Test
 
         // make the operator
         int N = 4;
-        Teuchos::RCP<OP> A = linalg_traits::build_matrix<Matrix>("4x4_lhs",N);
-        Teuchos::RCP<OP> B = linalg_traits::build_matrix<Matrix>("4x4_rhs",N);
+        Teuchos::RCP<OP> A = linalg_traits::build_matrix<T>("4x4_lhs",N);
+        Teuchos::RCP<OP> B = linalg_traits::build_matrix<T>("4x4_rhs",N);
 
         // make the solver
         InverseOperator solver_op(db);
@@ -109,18 +109,18 @@ class Inverse_Operator_Test : public testing::Test
         solver_op.set_rhs_operator(B);
 
         // wrap rhs into MV
-        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<MV>(N);
-        linalg_traits::fill_vector<MV>(ep_rhs,u2);
+        Teuchos::RCP<MV> ep_rhs = linalg_traits::build_vector<T>(N);
+        linalg_traits::fill_vector<T>(ep_rhs,u2);
 
         // solve
-        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<MV>(N);
+        Teuchos::RCP<MV> ep_x = linalg_traits::build_vector<T>(N);
         int ret;
         OPT::Apply(solver_op,*ep_rhs,*ep_x);
-        linalg_traits::test_vector(ep_x,sol);
+        linalg_traits::test_vector<T>(ep_x,sol);
 
         // solve again and limit iterations
         std::vector<double> zero(N,0.0);
-        linalg_traits::fill_vector<MV>(ep_x,zero);
+        linalg_traits::fill_vector<T>(ep_x,zero);
         OPT::Apply(solver_op,*ep_rhs,*ep_x);
     }
 
@@ -132,7 +132,9 @@ class Inverse_Operator_Test : public testing::Test
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(Inverse_Operator_Test, MyTypes);
 
 TYPED_TEST(Inverse_Operator_Test, Aztec)

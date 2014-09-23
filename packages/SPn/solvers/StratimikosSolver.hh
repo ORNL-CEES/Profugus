@@ -48,13 +48,19 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
-class StratimikosSolver : public LinearSolver<MV,OP>
+template <class T>
+class StratimikosSolver : public LinearSolver<T>
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef LinearSolver<MV,OP>                         Base;
+    typedef typename T::ST                              ST;
+    typedef typename T::LO                              LO;
+    typedef typename T::GO                              GO;
+    typedef typename T::NODE                            NODE;
+    typedef typename T::MV                              MV;
+    typedef typename T::OP                              OP;
+    typedef LinearSolver<T>                             Base;
     typedef Teuchos::ParameterList                      ParameterList;
     typedef Teuchos::RCP<ParameterList>                 RCP_ParameterList;
     typedef Thyra::LinearOpBase<double>                 LOp;

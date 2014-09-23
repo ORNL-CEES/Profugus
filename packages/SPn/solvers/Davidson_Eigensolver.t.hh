@@ -25,11 +25,11 @@ namespace profugus
 // Constructor
 //---------------------------------------------------------------------------//
 
-template <class MV,class OP>
-Davidson_Eigensolver<MV,OP>::Davidson_Eigensolver(RCP_ParameterList db,
+template <class T>
+Davidson_Eigensolver<T>::Davidson_Eigensolver(RCP_ParameterList db,
                                                   RCP_OP            LHS,
                                                   RCP_OP            RHS)
-    : EigenvalueSolver<MV,OP>(db)
+    : EigenvalueSolver<T>(db)
     , d_db(db)
     , d_LHS(LHS)
     , d_RHS(RHS)
@@ -76,8 +76,8 @@ Davidson_Eigensolver<MV,OP>::Davidson_Eigensolver(RCP_ParameterList db,
 // SOLVE EIGENPROBLEM
 //---------------------------------------------------------------------------//
 
-template <class MV,class OP>
-void Davidson_Eigensolver<MV,OP>::solve( double &keff, Teuchos::RCP<MV> x)
+template <class T>
+void Davidson_Eigensolver<T>::solve( double &keff, Teuchos::RCP<MV> x)
 {
     REQUIRE(d_db->isSublist("Anasazi"));
 

@@ -19,6 +19,8 @@
 #include "AnasaziOperatorTraits.hpp"
 #include "Teuchos_ScalarTraitsDecl.hpp"
 
+#include "LinAlgTypedefs.hh"
+
 namespace profugus
 {
 
@@ -41,10 +43,12 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
-class RayleighQuotient : public EigenvalueSolver<MV,OP>
+template <class T>
+class RayleighQuotient : public EigenvalueSolver<T>
 {
-    typedef EigenvalueSolver<MV,OP> Base;
+    typedef EigenvalueSolver<T> Base;
+    typedef typename T::MV      MV;
+    typedef typename T::OP      OP;
 
   public:
     //@{
@@ -67,7 +71,7 @@ class RayleighQuotient : public EigenvalueSolver<MV,OP>
     }
 
     // Set shifted inverse operator
-    void set_shifted_operator( Teuchos::RCP<ShiftedInverseOperator<MV,OP> > Op )
+    void set_shifted_operator( Teuchos::RCP<ShiftedInverseOperator<T> > Op )
     {
         REQUIRE( !Op.is_null() );
         d_Op = Op;
@@ -80,7 +84,7 @@ class RayleighQuotient : public EigenvalueSolver<MV,OP>
   private:
 
     // Shifted inverse operator
-    Teuchos::RCP<ShiftedInverseOperator<MV,OP> > d_Op;
+    Teuchos::RCP<ShiftedInverseOperator<T> > d_Op;
     Teuchos::RCP<OP>                     d_B;
 
     // Values for fixed (Wielandt) shift

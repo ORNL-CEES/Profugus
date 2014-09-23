@@ -23,11 +23,10 @@ class RichardsonTest : public testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
+    typedef typename T::MV       MV;
+    typedef typename T::MATRIX   MATRIX;
 
-    typedef profugus::Richardson<MV,OP>   Richardson;
+    typedef profugus::Richardson<T>   Richardson;
 
   protected:
     // Initialization that are performed for each test
@@ -35,15 +34,15 @@ class RichardsonTest : public testing::Test
     {
         // Build a map
         d_N = 8;
-        d_A = linalg_traits::build_matrix<Matrix>("laplacian",d_N);
+        d_A = linalg_traits::build_matrix<T>("laplacian",d_N);
 
         // Build lhs and rhs vectors
-        d_x = linalg_traits::build_vector<MV>(d_N);
-        d_b = linalg_traits::build_vector<MV>(d_N);
+        d_x = linalg_traits::build_vector<T>(d_N);
+        d_b = linalg_traits::build_vector<T>(d_N);
         std::vector<double> vals(d_N);
         for( int i=0; i<d_N; ++i )
             vals[i] = static_cast<double>(4*(8-i));
-        linalg_traits::fill_vector<MV>(d_b,vals);
+        linalg_traits::fill_vector<T>(d_b,vals);
 
         // Create options database
         d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
@@ -68,7 +67,7 @@ class RichardsonTest : public testing::Test
     int d_N;
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
-    Teuchos::RCP<Matrix>                 d_A;
+    Teuchos::RCP<MATRIX>                 d_A;
     Teuchos::RCP<MV>                     d_x;
     Teuchos::RCP<MV>                     d_b;
     Teuchos::RCP<Richardson>             d_solver;
@@ -80,14 +79,13 @@ class RichardsonTest : public testing::Test
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(RichardsonTest, MyTypes);
 
 TYPED_TEST(RichardsonTest, basic)
 {
-    typedef typename TestFixture::MV       MV;
-
     // Run two iterations and stop
     this->solve();
 
@@ -99,7 +97,7 @@ TYPED_TEST(RichardsonTest, basic)
     // Reset initial vector and re-solve
     this->d_solver->set_max_iters(1000);
     std::vector<double> one(this->d_N,1.0);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     this->solve();
 
     EXPECT_EQ( 294, this->d_iters ); // Iteration count from Matlab implementation
@@ -116,7 +114,7 @@ TYPED_TEST(RichardsonTest, basic)
        102.6666666666666,
         53.3333333333333};
 
-    linalg_traits::test_vector<MV>(this->d_x,ref);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref);
 
     // Solve again, should return without iterating
     this->solve();
@@ -125,7 +123,7 @@ TYPED_TEST(RichardsonTest, basic)
     EXPECT_TRUE( this->d_converged );
 
     // Make sure solution didn't change
-    linalg_traits::test_vector<MV>(this->d_x,ref);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref);
 }
 
 //---------------------------------------------------------------------------//

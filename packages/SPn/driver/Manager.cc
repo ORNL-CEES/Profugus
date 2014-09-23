@@ -19,6 +19,7 @@
 #include "utils/Parallel_HDF5_Writer.hh"
 #include "utils/Definitions.hh"
 #include "spn/Dimensions.hh"
+#include "spn/SpnSolverBuilder.hh"
 #include "Manager.hh"
 
 namespace spn
@@ -93,72 +94,16 @@ void Manager::setup(const std::string &xml_file)
     // default linear solver type (stratimikios)
     d_db->get("solver_type", std::string("stratimikos"));
 
-    // Determine if epetra or tpetra should be used
-    d_implementation = d_db->get("trilinos_implementation",
-        std::string("epetra"));
-    REQUIRE( d_implementation == "epetra" || d_implementation == "tpetra" );
+    // build the solver
+    d_solver_base =
+        profugus::SpnSolverBuilder::build(prob_type,d_db);
 
-    // build the appropriate solver (default is eigenvalue)
-    if( d_implementation == "epetra" )
-    {
-        if (prob_type == "eigenvalue")
-        {
-            d_eigen_solver = Teuchos::rcp(new Eigenvalue_Solver_t(d_db));
-            d_solver_base  = d_eigen_solver;
-        }
-        else if (prob_type == "fixed")
-        {
-            d_fixed_solver = Teuchos::rcp(new Fixed_Source_Solver_t(d_db));
-            d_solver_base  = d_fixed_solver;
-        }
-        else if (prob_type == "fixed_tdep")
-        {
-            d_time_dep_solver = Teuchos::rcp(new Time_Dependent_Solver_t(d_db));
-            d_solver_base  = d_time_dep_solver;
-        }
-        else
-        {
-            std::stringstream ss;
-            ss << "Undefined problem type " << prob_type
-                << "; choose eigenvalue, fixed or fixed_tdep" << std::endl;
-            VALIDATE(false,ss.str());
-        }
-
-        // setup the solver
-        d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
-    }
-    else
-    {
-        if (prob_type == "eigenvalue")
-        {
-            d_eigen_solver_tpetra = Teuchos::rcp(
-                new Eigenvalue_Solver_Tpetra_t(d_db));
-            d_solver_base_tpetra  = d_eigen_solver_tpetra;
-        }
-        else if (prob_type == "fixed")
-        {
-            d_fixed_solver_tpetra = Teuchos::rcp(
-                new Fixed_Source_Solver_Tpetra_t(d_db));
-            d_solver_base_tpetra  = d_fixed_solver_tpetra;
-        }
-        else if (prob_type == "fixed_tdep")
-        {
-            NOT_IMPLEMENTED("Time dependent SPN with Tpetra");
-        }
-        else
-        {
-            std::stringstream ss;
-            ss << "Undefined problem type " << prob_type
-                << "; choose eigenvalue or fixed" << std::endl;
-            VALIDATE(false,ss.str());
-        }
-
-        // setup the solver
-        d_solver_base_tpetra->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
-    }
+    // setup the solver
+    d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
 
     // make the state
-    d_state = Teuchos::rcp(new State_t(d_mesh, d_mat->xs().num_groups()));
+    d_state = Teuchos::rcp(
+        new profugus::State(d_mesh, d_mat->xs().num_groups()));
 
     ENSURE(!d_mesh.is_null());
     ENSURE(!d_indexer.is_null());
@@ -180,52 +125,11 @@ void Manager::solve()
 
         SCREEN_MSG("Executing solver");
 
-        if( d_implementation == "epetra" )
-        {
-            // run the appropriate solver
-            if (!d_eigen_solver.is_null())
-            {
-                CHECK(d_fixed_solver.is_null());
-                CHECK(d_time_dep_solver.is_null());
-                d_eigen_solver->solve();
-            }
-            else if (!d_fixed_solver.is_null())
-            {
-                CHECK(d_eigen_solver.is_null());
-                CHECK(d_time_dep_solver.is_null());
-                CHECK(!d_external_source.is_null());
-                d_fixed_solver->solve(*d_external_source);
-            }
-            else
-            {
-                CHECK(d_fixed_solver.is_null());
-                CHECK(d_eigen_solver.is_null());
-                CHECK(!d_time_dep_solver.is_null());
-                CHECK(!d_external_source.is_null());
-                d_time_dep_solver->solve(*d_external_source);
-            }
+        // solve problem (source will be null for eigenvalue problems)
+        d_solver_base->solve(d_external_source);
 
-            // write the solution vector into the state
-            d_solver_base->write_state(*d_state);
-        }
-        else
-        {
-            // run the appropriate solver
-            if (!d_eigen_solver_tpetra.is_null())
-            {
-                CHECK(d_fixed_solver_tpetra.is_null());
-                d_eigen_solver_tpetra->solve();
-            }
-            else if (!d_fixed_solver_tpetra.is_null())
-            {
-                CHECK(d_eigen_solver_tpetra.is_null());
-                CHECK(!d_external_source.is_null());
-                d_fixed_solver_tpetra->solve(*d_external_source);
-            }
-
-            // write the solution vector into the state
-            d_solver_base_tpetra->write_state(*d_state);
-        }
+        // write the solution vector into the state
+        d_solver_base->write_state(*d_state);
     }
 }
 
@@ -264,7 +168,7 @@ void Manager::output()
     std::string outfile = m.str();
 
     // get a constant reference to the state
-    const State_t &state = *d_state;
+    const profugus::State &state = *d_state;
 
     // group offset (if doing a truncated range)
     auto g_first = d_db->get<int>("g_first");
@@ -302,7 +206,7 @@ void Manager::output()
             f << "group_" << g + g_first;
 
             // get the group fluxes
-            State_t::const_View_Field flux = state.flux(g, g);
+            profugus::State::const_View_Field flux = state.flux(g, g);
             CHECK(!flux.is_null());
             CHECK(flux.size() == d_mesh->num_cells());
 
@@ -322,30 +226,7 @@ void Manager::output()
     // >>> OUTPUT MATRICES
     if (d_db->get<bool>("output_matrices", false))
     {
-        INSIST(d_implementation == "epetra",
-               "Matrix file output not yet available for Tpetra");
-
-        std::string A("A.mtx"), B("B.mtx");
-
-        // linear system
-        const auto &linear_system = d_solver_base->get_linear_system();
-
-        // write A operator
-        EpetraExt::RowMatrixToMatrixMarketFile(
-            A.c_str(), *(linear_system.get_Matrix()));
-
-        if (!d_eigen_solver.is_null())
-        {
-            // write F (fission) operator
-
-            // first cast to a row mat (which the fission matrix is)
-            Teuchos::RCP<Epetra_RowMatrix> rowmat =
-                Teuchos::rcp_dynamic_cast<Epetra_RowMatrix>(
-                    linear_system.get_fission_matrix());
-            CHECK(!rowmat.is_null());
-
-            EpetraExt::RowMatrixToMatrixMarketFile(B.c_str(), *rowmat);
-        }
+        d_solver_base->write_problem_to_file();
     }
 }
 

@@ -37,11 +37,10 @@ class RQITest : public ::testing::Test
 {
   protected:
 
-    typedef typename linalg_traits::traits_types<T>::MV       MV;
-    typedef typename linalg_traits::traits_types<T>::OP       OP;
-    typedef typename linalg_traits::traits_types<T>::Matrix   Matrix;
-
-    typedef profugus::RayleighQuotient<MV,OP>   RayleighQuotient;
+    typedef typename T::MV                MV;
+    typedef typename T::OP                OP;
+    typedef typename T::MATRIX            MATRIX;
+    typedef profugus::RayleighQuotient<T> RayleighQuotient;
 
   protected:
 
@@ -52,11 +51,11 @@ class RQITest : public ::testing::Test
 
         // Build an map
         d_N = 20;
-        d_A = linalg_traits::build_matrix<Matrix>("shifted_laplacian",d_N);
-        d_B = linalg_traits::build_matrix<Matrix>("scaled_identity",d_N);
+        d_A = linalg_traits::build_matrix<T>("shifted_laplacian",d_N);
+        d_B = linalg_traits::build_matrix<T>("scaled_identity",d_N);
 
         // Build eigenvector
-        d_x = linalg_traits::build_vector<MV>(d_N);
+        d_x = linalg_traits::build_vector<T>(d_N);
 
         // Create options database
         d_db = rcp(new ParameterList("test"));
@@ -75,8 +74,8 @@ class RQITest : public ::testing::Test
         op_db->set("max_itr",20);
 
         // Create ShiftedInverseOperator
-        Teuchos::RCP<profugus::ShiftedInverseOperator<MV,OP> > shift_op =
-            rcp(new profugus::ShiftedInverseOperator<MV,OP>(op_db));
+        Teuchos::RCP<profugus::ShiftedInverseOperator<T> > shift_op =
+            rcp(new profugus::ShiftedInverseOperator<T>(op_db));
         CHECK(!shift_op.is_null());
         shift_op->set_operator(d_A);
         shift_op->set_rhs_operator(d_B);
@@ -100,8 +99,8 @@ class RQITest : public ::testing::Test
     int d_N;
 
     Teuchos::RCP<Teuchos::ParameterList> d_db;
-    Teuchos::RCP<Matrix>                 d_A;
-    Teuchos::RCP<Matrix>                 d_B;
+    Teuchos::RCP<MATRIX>                 d_A;
+    Teuchos::RCP<MATRIX>                 d_B;
     Teuchos::RCP<MV>                     d_x;
     Teuchos::RCP<RayleighQuotient>       d_solver;
     double                               d_lambda;
@@ -115,13 +114,13 @@ class RQITest : public ::testing::Test
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-typedef ::testing::Types<Epetra_MultiVector,Tpetra_MultiVector> MyTypes;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
 TYPED_TEST_CASE(RQITest, MyTypes);
 
 TYPED_TEST(RQITest, basic)
 {
-    typedef typename TestFixture::MV MV;
-
     double eig_tol = 1e-10;
     double vec_tol = 1e-7;
     this->d_use_fixed_shift = false;
@@ -129,7 +128,7 @@ TYPED_TEST(RQITest, basic)
 
     // Run two iterations and stop
     std::vector<double> one(this->d_N,1.0);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     this->d_lambda = 1.0;
     this->solve();
 
@@ -140,7 +139,7 @@ TYPED_TEST(RQITest, basic)
 
     // Reset initial vector and re-solve
     this->d_solver->set_max_iters(10);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     this->d_lambda = 1.0;
     this->solve();
 
@@ -148,8 +147,8 @@ TYPED_TEST(RQITest, basic)
     EXPECT_TRUE( this->d_converged );
     EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
-    linalg_traits::set_sign<MV>(this->d_x);
-    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
+    linalg_traits::set_sign<TypeParam>(this->d_x);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref_eigenvector);
 
     // Solve again, should return in 1 iteration
     this->solve();
@@ -159,8 +158,8 @@ TYPED_TEST(RQITest, basic)
     EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    linalg_traits::set_sign<MV>(this->d_x);
-    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
+    linalg_traits::set_sign<TypeParam>(this->d_x);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref_eigenvector);
 
     // Now reset and solve with fixed shift
     this->d_use_fixed_shift = true;
@@ -168,7 +167,7 @@ TYPED_TEST(RQITest, basic)
     this->build_solver();
 
     // Run two iterations and stop
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     this->d_lambda = 1.0;
     this->solve();
 
@@ -179,7 +178,7 @@ TYPED_TEST(RQITest, basic)
 
     // Reset initial vector and re-solve
     this->d_solver->set_max_iters(1000);
-    linalg_traits::fill_vector<MV>(this->d_x,one);
+    linalg_traits::fill_vector<TypeParam>(this->d_x,one);
     this->d_lambda = 1.0;
     this->solve();
 
@@ -187,8 +186,8 @@ TYPED_TEST(RQITest, basic)
     EXPECT_TRUE( this->d_converged );
     EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
-    linalg_traits::set_sign<MV>(this->d_x);
-    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
+    linalg_traits::set_sign<TypeParam>(this->d_x);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref_eigenvector);
 
     // Solve again, should return in 1 iteration
     this->solve();
@@ -198,8 +197,8 @@ TYPED_TEST(RQITest, basic)
     EXPECT_SOFTEQ( this->d_lambda, ref_eigenvalue, eig_tol );
 
     // Make sure solution didn't change
-    linalg_traits::set_sign<MV>(this->d_x);
-    linalg_traits::test_vector<MV>(this->d_x,ref_eigenvector);
+    linalg_traits::set_sign<TypeParam>(this->d_x);
+    linalg_traits::test_vector<TypeParam>(this->d_x,ref_eigenvector);
 }
 
 //---------------------------------------------------------------------------//

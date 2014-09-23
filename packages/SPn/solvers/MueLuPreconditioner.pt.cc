@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "MueLuPreconditioner.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class MueLuPreconditioner<Epetra_MultiVector,Epetra_Operator>;
-template class MueLuPreconditioner<Tpetra_MultiVector,Tpetra_Operator>;
+template class MueLuPreconditioner<EpetraTypes>;
+template class MueLuPreconditioner<TpetraTypes>;
 
 } // end namespace profugus
 

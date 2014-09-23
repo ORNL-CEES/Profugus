@@ -9,56 +9,80 @@
 //---------------------------------------------------------------------------//
 
 #include "gtest/utils_gtest.hh"
-#include <SPn/config.h>
 
 #include <vector>
 
-#include "Epetra_MultiVector.h"
-#include "Epetra_Vector.h"
-#include "Epetra_Map.h"
+#include "AnasaziOperatorTraits.hpp"
+#include "AnasaziEpetraAdapter.hpp"
+#include "AnasaziTpetraAdapter.hpp"
 
+#include "solvers/LinAlgTypedefs.hh"
 #include "../Energy_Restriction.hh"
+#include "../MatrixTraits.hh"
+#include "../VectorTraits.hh"
+
+using profugus::EpetraTypes;
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
-TEST(RestrictTest, Even)
+template <class T>
+class RestrictTest : public testing::Test
 {
+  protected:
+    void SetUp(){};
+};
+
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
+TYPED_TEST_CASE(RestrictTest, MyTypes);
+
+TYPED_TEST(RestrictTest, Even)
+{
+    typedef typename TypeParam::MAP    Map_t;
+    typedef typename TypeParam::VECTOR Vector_t;
+    typedef typename TypeParam::OP     OP;
+    typedef typename TypeParam::MV     MV;
+    typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
+
     int Nv = 50;
     int Ng = 8;
 
-    // Define Epetra communicator
-#ifdef COMM_MPI
-    Epetra_MpiComm comm(MPI_COMM_WORLD);
-#else
-    Epetra_SerialComm comm;
-#endif
+    int nodes = profugus::nodes();
 
-    // Create Epetra maps
-    Epetra_Map map0(-1,Nv*Ng  ,0,comm);
-    Epetra_Map map1(-1,Nv*Ng/2,0,comm);
+    // Create maps
+    Teuchos::RCP<Map_t> map0 =
+        profugus::MatrixTraits<TypeParam>::build_map(Nv*Ng,Nv*Ng*nodes);
+    Teuchos::RCP<Map_t> map1 =
+        profugus::MatrixTraits<TypeParam>::build_map(Nv*Ng/2,Nv*Ng*nodes/2);
 
     // Create Epetra vectors
-    Epetra_MultiVector vec0(map0,1);
-    Epetra_MultiVector vec1(map1,1);
+    Teuchos::RCP<Vector_t> vec0 = profugus::VectorTraits<TypeParam>::build_vector(map0);
+    Teuchos::RCP<Vector_t> vec1 = profugus::VectorTraits<TypeParam>::build_vector(map1);
 
     std::vector<int> steer(4,2);
-    profugus::Energy_Restriction restrict0( vec0, vec1, steer );
+    profugus::Energy_Restriction<TypeParam> restrict0( map0, map1, steer );
 
     double tol=1.e-12;
 
     // Test restriction
-    Epetra_Vector &fine_vec   = *(vec0(0));
-    Epetra_Vector &coarse_vec = *(vec1(0));
-    for( int i=0; i<fine_vec.MyLength(); ++i )
+    Teuchos::ArrayView<double> fine_data =
+        profugus::VectorTraits<TypeParam>::get_data_nonconst(vec0,0);
+    Teuchos::ArrayView<double> coarse_data =
+        profugus::VectorTraits<TypeParam>::get_data_nonconst(vec1,0);
+
+    for( int i=0; i<fine_data.size(); ++i )
     {
-        fine_vec[i] = static_cast<double>(2*i);
+        fine_data[i] = static_cast<double>(2*i);
     }
-    int error = restrict0.Apply(fine_vec,coarse_vec);
-    for( int i=0; i<coarse_vec.MyLength(); ++i )
+
+    OPT::Apply(restrict0,*vec0,*vec1);
+
+    for( int i=0; i<coarse_data.size(); ++i )
     {
-        EXPECT_SOFTEQ(static_cast<double>(4*i+1),coarse_vec[i],tol);
+        EXPECT_SOFTEQ(static_cast<double>(4*i+1),coarse_data[i],tol);
     }
 }
 

@@ -32,16 +32,18 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
-class Davidson_Eigensolver : public EigenvalueSolver<MV,OP>
+template <class T>
+class Davidson_Eigensolver : public EigenvalueSolver<T>
 {
   public:
     //@{
     //! Typedefs.
+    typedef typename T::MV                       MV;
+    typedef typename T::OP                       OP;
     typedef Teuchos::RCP<OP>                     RCP_OP;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
     typedef Anasazi::MultiVecTraits<double,MV>   MultiVecTraits;
-    typedef EigenvalueSolver<MV,OP>              Base;
+    typedef EigenvalueSolver<T>                  Base;
     //@}
 
     //! Constructor

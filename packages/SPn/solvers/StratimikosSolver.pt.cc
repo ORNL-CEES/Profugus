@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "StratimikosSolver.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class StratimikosSolver<Epetra_MultiVector,Epetra_Operator>;
-template class StratimikosSolver<Tpetra_MultiVector,Tpetra_Operator>;
+template class StratimikosSolver<EpetraTypes>;
+template class StratimikosSolver<TpetraTypes>;
 
 } // end namespace profugus
 

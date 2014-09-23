@@ -23,8 +23,6 @@
 // Additional Trilinos pieces
 #include "Teuchos_SerialDenseMatrix.hpp"
 #include "Teuchos_LAPACK.hpp"
-#include "Epetra_CrsGraph.h"
-#include "Epetra_CrsMatrix.h"
 
 namespace profugus
 {
@@ -42,21 +40,46 @@ namespace profugus
  */
 //===========================================================================//
 
-class Linear_System_FV : public Linear_System
+template <class T>
+class Linear_System_FV : public Linear_System<T>
 {
   private:
     //! Base class typedef.
-    typedef Linear_System Base;
+    typedef Linear_System<T> Base;
 
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_CrsGraph              Graph_t;
-    typedef Teuchos::RCP<Graph_t>        RCP_Graph;
+    typedef typename T::MATRIX           Matrix_t;
     typedef def::Vec_Int                 Vec_Int;
     typedef def::Vec_Dbl                 Vec_Dbl;
     typedef Teuchos::RCP<FV_Bnd_Indexer> RCP_Bnd_Indexer;
     //@}
+
+    using typename Base::Serial_Matrix;
+    using typename Base::RCP_Mat_DB;
+    using typename Base::RCP_Dimensions;
+    using typename Base::RCP_ParameterList;
+    using typename Base::RCP_Timestep;
+    using typename Base::External_Source;
+    using typename Base::RCP_Mesh;
+    using typename Base::RCP_Indexer;
+    using typename Base::RCP_Global_Data;
+    using typename Base::Array_Int;
+    using typename Base::Array_Dbl;
+
+    using Base::b_db;
+    using Base::b_dim;
+    using Base::b_mat;
+    using Base::b_mom_coeff;
+    using Base::b_map;
+    using Base::b_operator;
+    using Base::b_fission;
+    using Base::b_rhs;
+    using Base::b_src_coefficients;
+    using Base::b_bnd_coefficients;
+    using Base::b_node;
+    using Base::b_nodes;
 
   private:
     // >>> DATA
@@ -68,8 +91,8 @@ class Linear_System_FV : public Linear_System
     RCP_Indexer d_indexer;
 
     // Element SPN and fission matrices.
-    Teuchos::RCP<Epetra_CrsMatrix> d_matrix;
-    Teuchos::RCP<Epetra_CrsMatrix> d_fission;
+    Teuchos::RCP<Matrix_t> d_matrix;
+    Teuchos::RCP<Matrix_t> d_fission;
 
   public:
     // Constructor.
@@ -91,11 +114,8 @@ class Linear_System_FV : public Linear_System
 
     // >>> ACCESSORS
 
-    //! Get the graph.
-    const Graph_t& graph() const { return d_matrix->Graph(); }
-
     //! Get an RCP to the LHS matrix (may not be full matrix)
-    Teuchos::RCP<Epetra_RowMatrix> get_Matrix() const { return d_matrix; }
+    Teuchos::RCP<Matrix_t> get_Matrix() const { return d_matrix; }
 
     // Get the boundary indexer for a face.
     inline RCP_Bnd_Indexer bnd_indexer(int face) const;
@@ -145,7 +165,8 @@ class Linear_System_FV : public Linear_System
     // Insert a block matrix (GXG) into the matrix.
     void insert_block_matrix(int row_n, int row_cell, int row_off,
                              int col_m, int col_cell, int col_off,
-                             const Serial_Matrix &M, Epetra_CrsMatrix &matrix);
+                             const Serial_Matrix &M,
+                             Teuchos::RCP<Matrix_t> matrix);
 
     // Gather object.
     FV_Gather d_gather;
@@ -202,13 +223,14 @@ class Linear_System_FV : public Linear_System
     int          d_info;
 
     // Indices used to make matrix rows.
-    Vec_Int d_indices; // the max will always be (6 (coupled cells) + 4
+    Teuchos::ArrayRCP<int> d_indices;
+                       // the max will always be (6 (coupled cells) + 4
                        // (number of equations)) X number of groups; however
                        // we only insert one G x G block at a time, so this is
                        // set to G
 
     // Values for a matrix row.
-    Vec_Dbl d_values;
+    Teuchos::ArrayRCP<double> d_values;
 };
 
 //---------------------------------------------------------------------------//
@@ -229,7 +251,8 @@ class Linear_System_FV : public Linear_System
  * \param eqn equation index in range \c [0,4)
  * \param cell local or global cell; if it local the index is local
  */
-int Linear_System_FV::index(int g,
+template <class T>
+int Linear_System_FV<T>::index(int g,
                             int eqn,
                             int cell) const
 {
@@ -247,7 +270,9 @@ int Linear_System_FV::index(int g,
  *
  * \return null if no boundary unknowns on the requested face
  */
-Linear_System_FV::RCP_Bnd_Indexer Linear_System_FV::bnd_indexer(int face) const
+template <class T>
+typename Linear_System_FV<T>::RCP_Bnd_Indexer
+Linear_System_FV<T>::bnd_indexer(int face) const
 {
     REQUIRE(face >= 0 && face < 6);
     return d_bnd_index[face];

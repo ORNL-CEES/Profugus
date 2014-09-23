@@ -26,8 +26,8 @@ namespace profugus
 /*!
  * \brief Constructor
  */
-template <class MV, class OP>
-ShiftedOperatorBase<MV,OP>::ShiftedOperatorBase()
+template <class T>
+ShiftedOperatorBase<T>::ShiftedOperatorBase()
     : d_shift(0.0)
 {
 }
@@ -40,8 +40,8 @@ ShiftedOperatorBase<MV,OP>::ShiftedOperatorBase()
  *
  * \param A Epetra_Operator
  */
-template <class MV, class OP>
-void ShiftedOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
+template <class T>
+void ShiftedOperatorBase<T>::set_operator( Teuchos::RCP<OP> A )
 {
     REQUIRE( !A.is_null() );
     d_A = A;
@@ -53,8 +53,8 @@ void ShiftedOperatorBase<MV,OP>::set_operator( Teuchos::RCP<OP> A )
  *
  * \param B Epetra_Operator
  */
-template <class MV, class OP>
-void ShiftedOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
+template <class T>
+void ShiftedOperatorBase<T>::set_rhs_operator( Teuchos::RCP<OP> B )
 {
     REQUIRE( !B.is_null() );
     d_B = B;
@@ -67,8 +67,8 @@ void ShiftedOperatorBase<MV,OP>::set_rhs_operator( Teuchos::RCP<OP> B )
  * \param x Input vector
  * \param y Output vector
  */
-template <class MV, class OP>
-void ShiftedOperatorBase<MV,OP>::ApplyImpl(const MV &x,
+template <class T>
+void ShiftedOperatorBase<T>::ApplyImpl(const MV &x,
                                                  MV &y ) const
 {
     if( !(d_B.is_null()) )

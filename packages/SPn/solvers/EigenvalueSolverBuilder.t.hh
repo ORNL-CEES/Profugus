@@ -33,10 +33,10 @@ namespace profugus
  * determined by the database entry "eigensolver", which can be "Power",
  * "Arnoldi".
  */
-template <class MV, class OP>
-Teuchos::RCP<EigenvalueSolver<MV,OP> >
-EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
-                                              Teuchos::RCP<OP>  A)
+template <class T>
+Teuchos::RCP<EigenvalueSolver<T> >
+EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
+                                          Teuchos::RCP<OP>  A)
 {
     RCP_EigenvalueSolver solver;
 
@@ -46,12 +46,12 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
 
     if( eigensolver=="arnoldi" )
     {
-        solver = Teuchos::rcp(new Arnoldi<MV,OP>(db));
+        solver = Teuchos::rcp(new Arnoldi<T>(db));
         solver->set_operator(A);
     }
     else if( eigensolver=="power" )
     {
-        solver = Teuchos::rcp(new PowerIteration<MV,OP>(db));
+        solver = Teuchos::rcp(new PowerIteration<T>(db));
         solver->set_operator(A);
     }
     else
@@ -92,9 +92,9 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
  * should be given if it is desired to use internal preconditioners
  * (i.e. native Aztec/Stratimikos preconditioning).
  */
-template <class MV, class OP>
-Teuchos::RCP<EigenvalueSolver<MV,OP> >
-EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
+template <class T>
+Teuchos::RCP<EigenvalueSolver<T> >
+EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
                                               Teuchos::RCP<OP>  A,
                                               Teuchos::RCP<OP>  B,
                                               Teuchos::RCP<OP>  P )
@@ -112,8 +112,8 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
         // Build inverse operator for Arnoldi
-        Teuchos::RCP<InverseOperator<MV,OP> > AinvB(
-            new InverseOperator<MV,OP>(odb) );
+        Teuchos::RCP<InverseOperator<T> > AinvB(
+            new InverseOperator<T>(odb) );
         AinvB->set_operator(A);
         if( P != Teuchos::null )
         {
@@ -122,7 +122,7 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         AinvB->set_rhs_operator(B);
 
         // Build the solver
-        solver = Teuchos::rcp(new Arnoldi<MV,OP>(db));
+        solver = Teuchos::rcp(new Arnoldi<T>(db));
         solver->set_operator(AinvB);
     }
     else if( eigensolver=="power" )
@@ -131,8 +131,8 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
         // Build inverse operator for Power Iteration
-        Teuchos::RCP<InverseOperator<MV,OP> > AinvB(
-            new InverseOperator<MV,OP>(odb) );
+        Teuchos::RCP<InverseOperator<T> > AinvB(
+            new InverseOperator<T>(odb) );
         AinvB->set_operator(A);
         if( P != Teuchos::null )
         {
@@ -141,13 +141,13 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         AinvB->set_rhs_operator(B);
 
         // Build the solver
-        solver = Teuchos::rcp(new PowerIteration<MV,OP>(db));
+        solver = Teuchos::rcp(new PowerIteration<T>(db));
         solver->set_operator(AinvB);
     }
     else if( eigensolver=="davidson" )
     {
-        Teuchos::RCP<Davidson_Eigensolver<MV,OP> > davidson =
-            Teuchos::rcp( new Davidson_Eigensolver<MV,OP>(db, A, B) );
+        Teuchos::RCP<Davidson_Eigensolver<T> > davidson =
+            Teuchos::rcp( new Davidson_Eigensolver<T>(db, A, B) );
         if( P != Teuchos::null )
         {
             davidson->set_preconditioner(P);
@@ -162,8 +162,8 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         RCP_ParameterList odb = Teuchos::sublist(db, "operator_db");
 
         // Build ShiftedInverseOperator
-        Teuchos::RCP<ShiftedInverseOperator<MV,OP> > shift_op(
-            new ShiftedInverseOperator<MV,OP> (odb) );
+        Teuchos::RCP<ShiftedInverseOperator<T> > shift_op(
+            new ShiftedInverseOperator<T> (odb) );
         shift_op->set_operator(A);
         if( P != Teuchos::null )
         {
@@ -172,8 +172,8 @@ EigenvalueSolverBuilder<MV,OP>::build_solver( RCP_ParameterList db,
         shift_op->set_rhs_operator(B);
 
         // Build RQI solver and set operators
-        Teuchos::RCP<RayleighQuotient<MV,OP> > rqi_solver =
-            Teuchos::rcp( new RayleighQuotient<MV,OP>(db) );
+        Teuchos::RCP<RayleighQuotient<T> > rqi_solver =
+            Teuchos::rcp( new RayleighQuotient<T>(db) );
         rqi_solver->set_operator(A);
         rqi_solver->set_rhs_operator(B);
         rqi_solver->set_shifted_operator(shift_op);

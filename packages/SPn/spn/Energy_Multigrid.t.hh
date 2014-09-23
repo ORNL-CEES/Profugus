@@ -1,35 +1,41 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn_tpetra/Energy_Multigrid.cc
+ * \file   spn/Energy_Multigrid.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 13:04:00 2014
- * \brief  Energy_Multigrid member definitions.
+ * \brief  Energy_Multigrid template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
+#ifndef spn_Energy_Multigrid_t_hh
+#define spn_Energy_Multigrid_t_hh
+
 #include "solvers/PreconditionerBuilder.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "xs/Energy_Collapse.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
+#include "VectorTraits.hh"
 
 namespace profugus
-{
-namespace tpetra
 {
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 
-Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
-                                   RCP_ParameterList              prec_db,
-                                   Teuchos::RCP<Dimensions>       dim,
-                                   Teuchos::RCP<Mat_DB>           mat_db,
-                                   Teuchos::RCP<Mesh>             mesh,
-                                   Teuchos::RCP<LG_Indexer>       indexer,
-                                   Teuchos::RCP<Global_Mesh_Data> data,
-                                   Teuchos::RCP<Linear_System>    fine_system)
+template <class T>
+Energy_Multigrid<T>::Energy_Multigrid(RCP_ParameterList              main_db,
+                                      RCP_ParameterList              prec_db,
+                                      Teuchos::RCP<Dimensions>       dim,
+                                      Teuchos::RCP<Mat_DB>           mat_db,
+                                      Teuchos::RCP<Mesh>             mesh,
+                                      Teuchos::RCP<LG_Indexer>       indexer,
+                                      Teuchos::RCP<Global_Mesh_Data> data,
+                                      Teuchos::RCP<Linear_System<T> >
+                                          fine_system)
+    : OperatorAdapter<T>(fine_system->get_Map())
 {
     using Teuchos::RCP;
     using Teuchos::rcp;
@@ -47,23 +53,20 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
     // Fill vectors with fine level objects, don't build new matrix
     d_operators.push_back(fine_system->get_Operator());
-    RCP<Map_t> fine_map = fine_system->get_Map();
-    d_solutions.push_back( rcp( new Vector_t(fine_map) ) );
-    d_residuals.push_back( rcp( new Vector_t(fine_map) ) );
-    d_rhss.push_back( rcp( new Vector_t(fine_map) ) );
+    d_maps.push_back( fine_system->get_Map() );
+    d_solutions.push_back( VectorTraits<T>::build_vector(d_maps[0]) );
+    d_residuals.push_back( VectorTraits<T>::build_vector(d_maps[0]) );
+    d_rhss.push_back( VectorTraits<T>::build_vector(d_maps[0]) );
 
     // Build level 0 smoother
     RCP_ParameterList smoother_db = sublist(prec_db, "Smoother");
     d_smoothers.push_back(
-        LinearSolverBuilder<MV,OP>::build_solver(smoother_db));
+        LinearSolverBuilder<T>::build_solver(smoother_db));
     d_smoothers.back()->set_operator(d_operators.back());
-    d_preconditioners.push_back(
-        PreconditionerBuilder<OP>::build_preconditioner(
-            fine_system->get_Matrix(),smoother_db) );
+    d_preconditioners.push_back(PreconditionerBuilder<T>::
+        build_preconditioner(fine_system->get_Matrix(),smoother_db) );
     if (d_preconditioners.back() != Teuchos::null)
     {
-        CHECK(d_preconditioners.back()->getDomainMap()->getNodeNumElements()
-               == d_solutions.back()->getLocalLength());
         d_smoothers.back()->set_preconditioner(d_preconditioners.back());
     }
     else
@@ -96,45 +99,43 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
         CHECK( !new_mat.is_null() );
 
         // Build linear system
-        RCP<Linear_System> system = rcp(
-            new Linear_System_FV(main_db, dim, new_mat, mesh, indexer, data));
+        RCP<Linear_System<T> > system = rcp(
+            new Linear_System_FV<T>(
+                main_db, dim, new_mat, mesh, indexer, data));
 
         system->build_Matrix();
         d_operators.push_back( system->get_Operator() );
         CHECK( d_operators.back() != Teuchos::null );
 
-        // Allocate Tpetra vectors
-        RCP<Vector_t> tmp_vec = system->get_RHS();
-        d_solutions.push_back( rcp( new Vector_t(*tmp_vec) ) );
-        d_rhss.push_back(      rcp( new Vector_t(*tmp_vec) ) );
-        d_residuals.push_back( rcp( new Vector_t(*tmp_vec) ) );
+        // Allocate vectors
+        RCP<VECTOR> tmp_vec = system->get_RHS();
+        d_maps.push_back( system->get_Map() );
+        d_solutions.push_back( VectorTraits<T>::build_vector(d_maps[level]));
+        d_rhss.push_back(      VectorTraits<T>::build_vector(d_maps[level]));
+        d_residuals.push_back( VectorTraits<T>::build_vector(d_maps[level]));
 
         // Build Restriction
         d_restrictions.push_back(
-            rcp(new Energy_Restriction(d_solutions[level-1],
-                                       d_solutions[level],
-                                       collapse)));
+            rcp(new Energy_Restriction<T>(d_maps[level-1],
+                                          d_maps[level],
+                                          collapse)));
 
         // Build Prolongation
         d_prolongations.push_back(
-            rcp(new Energy_Prolongation(d_solutions[level],
-                                        d_solutions[level-1],
-                                        collapse)));
+            rcp(new Energy_Prolongation<T>(d_maps[level],
+                                           d_maps[level-1],
+                                           collapse)));
 
         // Build smoother
         d_smoothers.push_back(
-            LinearSolverBuilder<MV,OP>::build_solver(smoother_db));
+            LinearSolverBuilder<T>::build_solver(smoother_db));
         d_smoothers.back()->set_operator(d_operators.back());
 
         // Store and set preconditioner
-        d_preconditioners.push_back(
-            PreconditionerBuilder<OP>::build_preconditioner(
-                system->get_Matrix(),smoother_db) );
+        d_preconditioners.push_back(PreconditionerBuilder<T>::
+            build_preconditioner(system->get_Matrix(),smoother_db) );
         if( d_preconditioners.back() != Teuchos::null )
         {
-            CHECK(d_preconditioners.back()->getDomainMap()
-                ->getNodeNumElements() ==
-                d_solutions.back()->getLocalLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
         else
@@ -155,13 +156,10 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 
         // Replace last smoother, don't add a new one
         d_smoothers.push_back(
-            profugus::LinearSolverBuilder<MV,OP>::build_solver(coarse_db));
+            profugus::LinearSolverBuilder<T>::build_solver(coarse_db));
         d_smoothers.back()->set_operator(d_operators.back());
         if( d_preconditioners.back() != Teuchos::null )
         {
-            REQUIRE(d_preconditioners.back()->getDomainMap()
-                ->getNodeNumElements() ==
-                d_solutions.back()->getLocalLength() );
             d_smoothers.back()->set_preconditioner(d_preconditioners.back());
         }
         else
@@ -175,19 +173,22 @@ Energy_Multigrid::Energy_Multigrid(RCP_ParameterList              main_db,
 // APPLY MULTIGRID V-CYCLE
 //---------------------------------------------------------------------------//
 
-void Energy_Multigrid::apply(const MV &x, MV &y, Teuchos::ETransp mode,
-                             double alpha, double beta ) const
+template <class T>
+void Energy_Multigrid<T>::ApplyImpl(const MV &x,
+                                          MV &y ) const
 {
-    int num_vectors = x.getNumVectors();
-    REQUIRE(y.getNumVectors() == num_vectors);
+    int num_vectors = MVT::GetNumberVecs(x);
+    REQUIRE(MVT::GetNumberVecs(y) == num_vectors);
 
     // Process each vector in multivec individually (all of the
     //  multivecs have been allocated for a single vec)
     for( int ivec=0; ivec<num_vectors; ++ivec )
     {
-        d_residuals[0]->update( 1.0, *(x.getVector(ivec)), 0.0 );
-        d_rhss[0]->update( 1.0, *(x.getVector(ivec)), 0.0 );
-        d_solutions[0]->putScalar(0.0);
+        std::vector<int> ind(1,ivec);
+        Teuchos::RCP<const MV> xi = MVT::CloneView(x,ind);
+        MVT::Assign(*xi,*d_residuals[0]);
+        MVT::Assign(*xi,*d_rhss[0]);
+        MVT::MvInit(*d_solutions[0],0.0);
 
         // In a true multigrid V-cycle, the first operation is a
         //  restriction rather than smoothing.  Smoothing on the finest
@@ -198,20 +199,23 @@ void Energy_Multigrid::apply(const MV &x, MV &y, Teuchos::ETransp mode,
         for( int ilevel=1; ilevel<d_num_levels; ++ilevel )
         {
             // Restrict residual from previous level
-            d_restrictions[ilevel-1]->apply(
-                    *d_residuals[ilevel-1],*d_rhss[ilevel]);
+            OPT::Apply(*d_restrictions[ilevel-1],
+                       *d_residuals[ilevel-1],
+                       *d_rhss[ilevel]);
 
             // Apply smoother
-            d_solutions[ilevel]->putScalar(0.0);
+            MVT::MvInit(*d_solutions[ilevel],0.0);
             d_smoothers[ilevel]->solve(d_solutions[ilevel],d_rhss[ilevel]);
 
             // Compute residual (except on coarsest level)
             if( ilevel != d_num_levels-1 )
             {
-                d_operators[ilevel]->apply(
-                        *d_solutions[ilevel],*d_residuals[ilevel]);
+                OPT::Apply(*d_operators[ilevel],
+                           *d_solutions[ilevel],
+                           *d_residuals[ilevel]);
 
-                d_residuals[ilevel]->update(1.0,*d_rhss[ilevel],-1.0);
+                MVT::MvAddMv(1.0,*d_rhss[ilevel],-1.0,*d_residuals[ilevel],
+                             *d_residuals[ilevel]);
             }
         }
 
@@ -219,22 +223,23 @@ void Energy_Multigrid::apply(const MV &x, MV &y, Teuchos::ETransp mode,
         {
             // Prolong solution vector to next level: x[l] = x[l] + P*x[l-1]
             // Residual is used for tmp storage here
-            d_prolongations[ilevel]->apply(
-                    *d_solutions[ilevel+1],*d_residuals[ilevel]);
-            d_solutions[ilevel]->update(1.0,*d_residuals[ilevel],1.0);
+            OPT::Apply(*d_prolongations[ilevel],*d_solutions[ilevel+1],
+                       *d_residuals[ilevel]);
+            MVT::MvAddMv(1.0,*d_residuals[ilevel],1.0,*d_solutions[ilevel],
+                         *d_solutions[ilevel]);
 
             // Apply smoother
             d_smoothers[ilevel]->solve(d_solutions[ilevel],d_rhss[ilevel]);
         }
 
-        y.getVectorNonConst(ivec)->update( 1.0, *d_solutions[0], 0.0 );
-
+        MVT::SetBlock(*d_solutions[0],ind,y);
     }
 }
 
 } // end namespace profugus
-} // end namespace tpetra
+
+#endif // spn_Energy_Multigrid_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Energy_Multigrid.cc
+//                 end of Energy_Multigrid.t.hh
 //---------------------------------------------------------------------------//

@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "RayleighQuotient.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class RayleighQuotient<Epetra_MultiVector,Epetra_Operator>;
-template class RayleighQuotient<Tpetra_MultiVector,Tpetra_Operator>;
+template class RayleighQuotient<EpetraTypes>;
+template class RayleighQuotient<TpetraTypes>;
 
 } // end namespace profugus
 

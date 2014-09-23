@@ -21,6 +21,8 @@
 #include "comm/P_Stream.hh"
 #include "utils/String_Functions.hh"
 
+#include "LinAlgTypedefs.hh"
+
 namespace profugus
 {
 
@@ -32,14 +34,16 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class MV, class OP>
+template <class T>
 class LinearSolver
 {
   public:
     //@{
     //! Typedefs.
-    typedef Teuchos::ParameterList      ParameterList;
-    typedef Teuchos::RCP<ParameterList> RCP_ParameterList;
+    typedef typename T::MV                  MV;
+    typedef typename T::OP                  OP;
+    typedef Teuchos::ParameterList          ParameterList;
+    typedef Teuchos::RCP<ParameterList>     RCP_ParameterList;
     //@}
 
   protected:

@@ -13,7 +13,9 @@
 
 #include "comm/Timer.hh"
 #include "solvers/StratimikosSolver.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Solver_Base.hh"
+#include "VectorTraits.hh"
 
 namespace profugus
 {
@@ -32,18 +34,31 @@ namespace profugus
  */
 //===========================================================================//
 
-class Time_Dependent_Solver : public Solver_Base
+template <class T>
+class Time_Dependent_Solver : public Solver_Base_Tmpl<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Solver_Base                      Base;
-    typedef Linear_System_t::External_Source External_Source;
-    typedef Linear_System_t::RCP_Timestep    RCP_Timestep;
-    typedef Epetra_MultiVector               MV;
-    typedef Epetra_Operator                  OP;
-    typedef StratimikosSolver<MV,OP>         Linear_Solver_t;
+    typedef Solver_Base_Tmpl<T>                         Base;
+    typedef typename T::MV                              MV;
+    typedef typename T::OP                              OP;
+    typedef StratimikosSolver<T>                        Linear_Solver_t;
+    typedef Linear_System<T>                            Linear_System_t;
+    typedef typename Linear_System_t::External_Source   External_Source;
+    typedef typename Linear_System_t::RCP_Timestep      RCP_Timestep;
+    typedef typename Linear_System_t::Vector_t          Vector_t;
+    typedef typename Linear_System_t::RCP_ParameterList RCP_ParameterList;
+    typedef typename Linear_System_t::RCP_Vector        RCP_Vector;
+    typedef typename Linear_System_t::RCP_Dimensions    RCP_Dimensions;
+    typedef typename Linear_System_t::RCP_Mat_DB        RCP_Mat_DB;
+    typedef typename Linear_System_t::RCP_Mesh          RCP_Mesh;
+    typedef typename Linear_System_t::RCP_Indexer       RCP_Indexer;
+    typedef typename Linear_System_t::RCP_Global_Data   RCP_Global_Data;
     //@}
+
+    using Base::b_db;
+    using Base::b_system;
 
   private:
     // >>> DATA
@@ -66,15 +81,18 @@ class Time_Dependent_Solver : public Solver_Base
                RCP_Indexer indexer, RCP_Global_Data data);
 
     // Solve the SPN equations.
-    void solve(const External_Source &q);
+    void solve(Teuchos::RCP<const External_Source> q);
 
     // Write the scalar-flux into the state.
-    void write_state(State_t &state);
+    void write_state(State &state);
+
+    // Write problem to file
+    void write_problem_to_file() const;
 
     // >>> ACCESSORS
 
     //! Get LHS solution vector (in transformed \e u space).
-    const Vector_t& get_LHS() const { return *d_lhs; }
+    Teuchos::RCP<const Vector_t> get_LHS() const { return d_lhs; }
 
   private:
     // >>> IMPLEMENTATION

@@ -16,8 +16,10 @@
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Partitioner.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "../Dimensions.hh"
 #include "../Eigenvalue_Solver.hh"
+#include "../Isotropic_Source.hh"
 
 #include "Test_XS.hh"
 
@@ -25,28 +27,28 @@
 // Test fixture
 //---------------------------------------------------------------------------//
 
+template <class T>
 class Inf_Med_Eigenvalue_SolverTest : public testing::Test
 {
   protected:
     // Typedefs usable inside the test fixture
 
-    typedef profugus::Eigenvalue_Solver      Solver;
-    typedef Teuchos::RCP<Solver>             RCP_Solver;
-    typedef Solver::RCP_ParameterList        RCP_ParameterList;
-    typedef Solver::Linear_System_t          Linear_System_t;
-    typedef Linear_System_t::RCP_Mat_DB      RCP_Mat_DB;
-    typedef Linear_System_t::RCP_Dimensions  RCP_Dimensions;
-    typedef profugus::Partitioner            Partitioner;
-    typedef Linear_System_t::RCP_Mesh        RCP_Mesh;
-    typedef Linear_System_t::RCP_Indexer     RCP_Indexer;
-    typedef Linear_System_t::RCP_Global_Data RCP_Global_Data;
-    typedef Linear_System_t::Matrix_t        Matrix_t;
-    typedef Linear_System_t::Vector_t        Vector_t;
-    typedef Solver::State_t                  State;
-    typedef Teuchos::RCP<State>              RCP_State;
-    typedef profugus::Mat_DB                 Mat_DB_t;
-    typedef Mat_DB_t::XS_t                   XS;
-    typedef Mat_DB_t::RCP_XS                 RCP_XS;
+    typedef profugus::Eigenvalue_Solver<T>            Solver;
+    typedef Teuchos::RCP<Solver>                      RCP_Solver;
+    typedef typename Solver::RCP_ParameterList        RCP_ParameterList;
+    typedef typename Solver::Linear_System_t          Linear_System_t;
+    typedef typename Linear_System_t::RCP_Mat_DB      RCP_Mat_DB;
+    typedef typename Linear_System_t::RCP_Dimensions  RCP_Dimensions;
+    typedef typename Linear_System_t::RCP_Mesh        RCP_Mesh;
+    typedef typename Linear_System_t::RCP_Indexer     RCP_Indexer;
+    typedef typename Linear_System_t::RCP_Global_Data RCP_Global_Data;
+    typedef typename Linear_System_t::Matrix_t        Matrix_t;
+    typedef typename Linear_System_t::Vector_t        Vector_t;
+    typedef profugus::Partitioner                     Partitioner;
+    typedef Teuchos::RCP<profugus::State>             RCP_State;
+    typedef profugus::Mat_DB                          Mat_DB_t;
+    typedef Mat_DB_t::XS_t                            XS;
+    typedef Mat_DB_t::RCP_XS                          RCP_XS;
 
   protected:
     // Initialization that are performed for each test
@@ -181,7 +183,7 @@ class Inf_Med_Eigenvalue_SolverTest : public testing::Test
         TEUCHOS_STANDARD_CATCH_STATEMENTS(verbose, std::cerr, success);
 
         // make a state object
-        state = Teuchos::rcp(new State(mesh, num_groups));
+        state = Teuchos::rcp(new profugus::State(mesh, num_groups));
     }
 
   protected:
@@ -205,68 +207,80 @@ class Inf_Med_Eigenvalue_SolverTest : public testing::Test
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
+typedef ::testing::Types<EpetraTypes,TpetraTypes> MyTypes;
+TYPED_TEST_CASE(Inf_Med_Eigenvalue_SolverTest, MyTypes);
 
-TEST_F(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP1)
+TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP1)
 {
+    typedef typename TestFixture::RCP_ParameterList RCP_ParameterList;
+
     // make an Anasazi database and set modified Gram-Schmidt
     // orthogonalization
     RCP_ParameterList edb = Teuchos::rcp(
         new Teuchos::ParameterList("eigenvalue_settings"));
     RCP_ParameterList adb = Teuchos::rcp(
         new Teuchos::ParameterList("anasazi_settings"));
-    adb->set("Orthogonalization", string("DGKS"));
-    adb->set("eigensolver", string("Arnoldi"));
+    adb->set("eigensolver", std::string("Arnoldi"));
     edb->set("Anasazi", *adb);
-    db->set("eigenvalue_db", *edb);
+    this->db->set("eigenvalue_db", *edb);
 
-    build(1, 1);
-    EXPECT_EQ(1, dim->num_equations());
-    EXPECT_EQ("DGKS", db->sublist("eigenvalue_db").
-              sublist("Anasazi").get<string>("Orthogonalization"));
+    this->build(1, 1);
+    EXPECT_EQ(1, this->dim->num_equations());
 
-    solver->solve();
+    Teuchos::RCP<profugus::Isotropic_Source> q;
 
-    EXPECT_SOFTEQ(0.8333333333333334, solver->get_eigenvalue(), 1.0e-6);
+    this->solver->solve(q);
+
+    EXPECT_SOFTEQ(0.8333333333333334, this->solver->get_eigenvalue(), 1.0e-6);
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP3)
+TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP3)
 {
-    build(3, 1);
-    EXPECT_EQ(2, dim->num_equations());
+    this->build(3, 1);
+    EXPECT_EQ(2, this->dim->num_equations());
 
-    solver->solve();
+    Teuchos::RCP<profugus::Isotropic_Source> q;
+    this->solver->solve(q);
 
-    EXPECT_SOFTEQ(0.8333333333333334, solver->get_eigenvalue(), 1.0e-6);
+    EXPECT_SOFTEQ(0.8333333333333334, this->solver->get_eigenvalue(), 1.0e-6);
 }
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
+TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
 {
-    build(1, 3);
-    EXPECT_EQ(1, dim->num_equations());
+    typedef typename TestFixture::Vector_t        Vector_t;
+    typedef typename TestFixture::Linear_System_t Linear_System_t;
 
-    solver->solve();
+    this->build(1, 3);
+    EXPECT_EQ(1, this->dim->num_equations());
 
-    EXPECT_SOFTEQ(3.301149153942720, solver->get_eigenvalue(), 1.0e-6);
+    Teuchos::RCP<profugus::Isotropic_Source> q;
+    this->solver->solve(q);
 
-    Vector_t ev = solver->get_eigenvector();
-    EXPECT_EQ(mesh->num_cells() * 3, ev.MyLength());
+    EXPECT_SOFTEQ(3.301149153942720, this->solver->get_eigenvalue(), 1.0e-6);
 
-    const Linear_System_t &system = solver->get_linear_system();
+    Teuchos::RCP<const Vector_t> ev = this->solver->get_eigenvector();
+    Teuchos::ArrayView<const double> ev_data =
+        profugus::VectorTraits<TypeParam>::get_data(ev);
+    EXPECT_EQ(this->mesh->num_cells() * 3, ev_data.size());
+
+    const Linear_System_t &system = this->solver->get_linear_system();
 
     double ref[] = {0.316914305060293, 0.867219274759711, 0.384052148455639};
 
     // normalization per cell
-    for (int cell = 0; cell < mesh->num_cells(); ++cell)
+    for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
         double norm = 0.0;
         for (int g = 0; g < 3; ++g)
         {
             int index  = system.index(g, 0, cell);
-            norm      += ev[index] * ev[index];
+            norm      += ev_data[index] * ev_data[index];
         }
 
         for (int g = 0; g < 3; ++g)
@@ -275,7 +289,7 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
             // Take absolute value here because eigenvector can be negative
             // It would get normalized during write_state but here we're
             //  accessing the raw eigenvector.
-            double v  = std::fabs( ev[index] / sqrt(norm) );
+            double v  = std::fabs( ev_data[index] / sqrt(norm) );
             EXPECT_SOFTEQ(ref[g], v, 1.0e-6);
         }
     }
@@ -283,36 +297,41 @@ TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP3)
+TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP3)
 {
-    build(3, 3);
-    EXPECT_EQ(2, dim->num_equations());
+    typedef typename TestFixture::Vector_t        Vector_t;
+    typedef typename TestFixture::Linear_System_t Linear_System_t;
 
-    solver->solve();
+    this->build(3, 3);
+    EXPECT_EQ(2, this->dim->num_equations());
 
-    EXPECT_SOFTEQ(3.301149153942720, solver->get_eigenvalue(), 1.0e-6);
+    Teuchos::RCP<profugus::Isotropic_Source> q;
+    this->solver->solve(q);
 
-    Vector_t ev = solver->get_eigenvector();
-    EXPECT_EQ(mesh->num_cells() * 3 * 2, ev.MyLength());
+    EXPECT_SOFTEQ(3.301149153942720, this->solver->get_eigenvalue(), 1.0e-6);
 
-    const Linear_System_t &system = solver->get_linear_system();
+    Teuchos::RCP<const Vector_t> ev = this->solver->get_eigenvector();
+    EXPECT_EQ(this->mesh->num_cells() * 3 * 2,
+              profugus::VectorTraits<TypeParam>::local_length(ev));
+
+    const Linear_System_t &system = this->solver->get_linear_system();
 
     double ref[] = {0.316914305060293, 0.867219274759711, 0.384052148455639};
 
     // fill the state
-    EXPECT_EQ(mesh->num_cells() * 3, state->size());
+    EXPECT_EQ(this->mesh->num_cells() * 3, this->state->size());
 
-    solver->write_state(*state);
-    State::View_Field phi = state->flux();
-    EXPECT_EQ(mesh->num_cells() * 3, phi.size());
+    this->solver->write_state(*this->state);
+    profugus::State::View_Field phi = this->state->flux();
+    EXPECT_EQ(this->mesh->num_cells() * 3, phi.size());
 
     // normalize the eigenvector on each cell
     double eps = 1.0e-4;
-    for (int cell = 0; cell < mesh->num_cells(); ++cell)
+    for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
-        int g0 = cell + 0 * mesh->num_cells();
-        int g1 = cell + 1 * mesh->num_cells();
-        int g2 = cell + 2 * mesh->num_cells();
+        int g0 = cell + 0 * this->mesh->num_cells();
+        int g1 = cell + 1 * this->mesh->num_cells();
+        int g2 = cell + 2 * this->mesh->num_cells();
 
         double norm = phi[g0]*phi[g0] + phi[g1]*phi[g1] + phi[g2]*phi[g2];
         norm        = 1.0 / sqrt(norm);

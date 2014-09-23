@@ -21,47 +21,24 @@
 #include "Epetra_MultiVector.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_Operator.h"
-#include "../TpetraTypedefs.hh"
+#include "../LinAlgTypedefs.hh"
 
-using profugus::Tpetra_CrsMatrix;
-using profugus::Tpetra_MultiVector;
-using profugus::Tpetra_Operator;
-using profugus::Tpetra_Map;
+using profugus::EpetraTypes;
+using profugus::TpetraTypes;
 
 namespace linalg_traits
 {
 
-template <class T>
-struct traits_types
-{
-};
-
-template <>
-struct traits_types<Epetra_MultiVector>
-{
-    typedef Epetra_MultiVector MV;
-    typedef Epetra_Operator    OP;
-    typedef Epetra_CrsMatrix   Matrix;
-};
-
-template <>
-struct traits_types<Tpetra_MultiVector>
-{
-    typedef Tpetra_MultiVector MV;
-    typedef Tpetra_Operator    OP;
-    typedef Tpetra_CrsMatrix   Matrix;
-};
-
 // build_vector
-template <class MV>
-Teuchos::RCP<MV> build_vector(int N)
+template <class T>
+Teuchos::RCP<typename T::MV> build_vector(int N)
 {
     NOT_IMPLEMENTED("build_vector for arbitrary MV type.");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_MultiVector> build_vector<Epetra_MultiVector>(int N)
+Teuchos::RCP<Epetra_MultiVector> build_vector<EpetraTypes>(int N)
 {
 #ifdef COMM_MPI
     Epetra_MpiComm comm(profugus::communicator);
@@ -77,27 +54,28 @@ Teuchos::RCP<Epetra_MultiVector> build_vector<Epetra_MultiVector>(int N)
 }
 
 template <>
-Teuchos::RCP<Tpetra_MultiVector> build_vector<Tpetra_MultiVector>(int N)
+Teuchos::RCP<TpetraTypes::MV> build_vector<TpetraTypes>(int N)
 {
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
         Teuchos::DefaultComm<int>::getComm();
 
     int index_base = 0;
-    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
-    Teuchos::RCP<Tpetra_MultiVector> x( new Tpetra_MultiVector(map,1) );
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(N,index_base,comm) );
+    Teuchos::RCP<TpetraTypes::MV> x( new TpetraTypes::MV(map,1) );
     x->putScalar(0.0);
     return x;
 }
 
 // fill_vector
-template <class MV>
-void fill_vector(Teuchos::RCP<MV> x, std::vector<double> &vals)
+template <class T>
+void fill_vector(Teuchos::RCP<typename T::MV> x, std::vector<double> &vals)
 {
     NOT_IMPLEMENTED("fill_vector for arbitrary MV type.");
 }
 
 template <>
-void fill_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
+void fill_vector<EpetraTypes>(Teuchos::RCP<Epetra_MultiVector> x,
                                      std::vector<double> &vals)
 {
     REQUIRE( vals.size() == x->GlobalLength() );
@@ -110,7 +88,7 @@ void fill_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
 }
 
 template <>
-void fill_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
+void fill_vector<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x,
                                      std::vector<double> &vals)
 {
     Teuchos::ArrayRCP<double> x_data = x->getDataNonConst(0);
@@ -122,14 +100,14 @@ void fill_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
 }
 
 // set_sign
-template <class MV>
-void set_sign(Teuchos::RCP<MV> x)
+template <class T>
+void set_sign(Teuchos::RCP<typename T::MV> x)
 {
     NOT_IMPLEMENTED("set_sign for arbitrary MV type.");
 }
 
 template <>
-void set_sign<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x)
+void set_sign<EpetraTypes>(Teuchos::RCP<Epetra_MultiVector> x)
 {
     double sign = (*x)[0][0] > 0.0 ? 1.0 : -1.0;
 
@@ -140,7 +118,7 @@ void set_sign<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x)
 }
 
 template <>
-void set_sign<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x)
+void set_sign<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x)
 {
     Teuchos::ArrayRCP<double> x_data = x->getDataNonConst(0);
     double sign = x_data[0] > 0.0 ? 1.0 : -1.0;
@@ -151,14 +129,14 @@ void set_sign<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x)
 }
 
 // test_vector
-template <class MV>
-void test_vector(Teuchos::RCP<MV> x, std::vector<double> &vals)
+template <class T>
+void test_vector(Teuchos::RCP<typename T::MV> x, std::vector<double> &vals)
 {
     NOT_IMPLEMENTED("test_vector for arbitrary MV type.");
 }
 
 template <>
-void test_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
+void test_vector<EpetraTypes>(Teuchos::RCP<Epetra_MultiVector> x,
                                      std::vector<double> &vals)
 {
     REQUIRE( vals.size() == x->GlobalLength() );
@@ -171,7 +149,7 @@ void test_vector<Epetra_MultiVector>(Teuchos::RCP<Epetra_MultiVector> x,
 }
 
 template <>
-void test_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
+void test_vector<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x,
                                      std::vector<double> &vals)
 {
     Teuchos::ArrayRCP<const double> x_data = x->getData(0);
@@ -183,15 +161,15 @@ void test_vector<Tpetra_MultiVector>(Teuchos::RCP<Tpetra_MultiVector> x,
 }
 
 // build_laplacian
-template <class Matrix>
-Teuchos::RCP<Matrix> build_laplacian(int N)
+template <class T>
+Teuchos::RCP<typename T::MATRIX> build_laplacian(int N)
 {
     NOT_IMPLEMENTED("build_laplacian for arbitrary matrix type");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_CrsMatrix> build_laplacian<Epetra_CrsMatrix>(int N)
+Teuchos::RCP<Epetra_CrsMatrix> build_laplacian<EpetraTypes>(int N)
 {
 #ifdef COMM_MPI
     Epetra_MpiComm comm(profugus::communicator);
@@ -245,15 +223,16 @@ Teuchos::RCP<Epetra_CrsMatrix> build_laplacian<Epetra_CrsMatrix>(int N)
 }
 
 template <>
-Teuchos::RCP<Tpetra_CrsMatrix> build_laplacian<Tpetra_CrsMatrix>(int N)
+Teuchos::RCP<TpetraTypes::MATRIX> build_laplacian<TpetraTypes>(int N)
 {
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
         Teuchos::DefaultComm<int>::getComm();
 
     int index_base = 0;
-    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals(3);
     Teuchos::ArrayRCP<int> inds(3);
     for( int i=0; i<map->getNodeNumElements(); ++i )
@@ -291,15 +270,15 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_laplacian<Tpetra_CrsMatrix>(int N)
 }
 
 // build_diagonal
-template <class Matrix>
-Teuchos::RCP<Matrix> build_diagonal(int N)
+template <class T>
+Teuchos::RCP<typename T::MATRIX> build_diagonal(int N)
 {
     NOT_IMPLEMENTED("build_diagonal for arbitrary matrix type");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_CrsMatrix> build_diagonal<Epetra_CrsMatrix>(int N)
+Teuchos::RCP<Epetra_CrsMatrix> build_diagonal<EpetraTypes>(int N)
 {
 #ifdef COMM_MPI
     Epetra_MpiComm comm(profugus::communicator);
@@ -328,15 +307,16 @@ Teuchos::RCP<Epetra_CrsMatrix> build_diagonal<Epetra_CrsMatrix>(int N)
 }
 
 template <>
-Teuchos::RCP<Tpetra_CrsMatrix> build_diagonal<Tpetra_CrsMatrix>(int N)
+Teuchos::RCP<TpetraTypes::MATRIX> build_diagonal<TpetraTypes>(int N)
 {
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
         Teuchos::DefaultComm<int>::getComm();
 
     int index_base = 0;
-    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals(1);
     Teuchos::ArrayRCP<int> inds(1);
     for( int i=0; i<map->getNodeNumElements(); ++i )
@@ -351,15 +331,15 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_diagonal<Tpetra_CrsMatrix>(int N)
 }
 
 // build_4x4_lhs
-template <class Matrix>
-Teuchos::RCP<Matrix> build_4x4_lhs()
+template <class T>
+Teuchos::RCP<typename T::MATRIX> build_4x4_lhs()
 {
     NOT_IMPLEMENTED("build_4x4_lhs for arbitrary matrix type");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_CrsMatrix> build_4x4_lhs<Epetra_CrsMatrix>()
+Teuchos::RCP<Epetra_CrsMatrix> build_4x4_lhs<EpetraTypes>()
 {
     std::vector<std::vector<double> > A_vals =
         {{10.0, 1.1, 2.0, 4.0},
@@ -391,7 +371,7 @@ Teuchos::RCP<Epetra_CrsMatrix> build_4x4_lhs<Epetra_CrsMatrix>()
 }
 
 template <>
-Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_lhs<Tpetra_CrsMatrix>()
+Teuchos::RCP<TpetraTypes::MATRIX> build_4x4_lhs<TpetraTypes>()
 {
     std::vector<std::vector<double> > A_vals =
         {{10.0, 1.1, 2.0, 4.0},
@@ -403,9 +383,10 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_lhs<Tpetra_CrsMatrix>()
 
     int N = 4;
     int index_base = 0;
-    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals;
     std::vector<int> inds_vec = {0, 1, 2, 3};
     Teuchos::ArrayRCP<int> inds = Teuchos::arcp( Teuchos::rcpFromRef(inds_vec) );
@@ -420,15 +401,15 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_lhs<Tpetra_CrsMatrix>()
 }
 
 // build_4x4_rhs
-template <class Matrix>
-Teuchos::RCP<Matrix> build_4x4_rhs()
+template <class T>
+Teuchos::RCP<typename T::MATRIX> build_4x4_rhs()
 {
     NOT_IMPLEMENTED("build_4x4_rhs for arbitrary matrix type");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_CrsMatrix> build_4x4_rhs<Epetra_CrsMatrix>()
+Teuchos::RCP<Epetra_CrsMatrix> build_4x4_rhs<EpetraTypes>()
 {
     std::vector<std::vector<double> > A_vals =
         {{0.56, 0.26, 0.51, 0.26},
@@ -459,7 +440,7 @@ Teuchos::RCP<Epetra_CrsMatrix> build_4x4_rhs<Epetra_CrsMatrix>()
 }
 
 template <>
-Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_rhs<Tpetra_CrsMatrix>()
+Teuchos::RCP<TpetraTypes::MATRIX> build_4x4_rhs<TpetraTypes>()
 {
     std::vector<std::vector<double> > A_vals =
         {{0.56, 0.26, 0.51, 0.26},
@@ -471,9 +452,10 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_rhs<Tpetra_CrsMatrix>()
 
     int N = 4;
     int index_base = 0;
-    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals;
     std::vector<int> inds_vec = {0, 1, 2, 3};
     Teuchos::ArrayRCP<int> inds = Teuchos::arcp( Teuchos::rcpFromRef(inds_vec) );
@@ -488,15 +470,15 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_4x4_rhs<Tpetra_CrsMatrix>()
 }
 
 // build_shifted_laplacian
-template <class Matrix>
-Teuchos::RCP<Matrix> build_shifted_laplacian(int N)
+template <class T>
+Teuchos::RCP<typename T::MATRIX> build_shifted_laplacian(int N)
 {
     NOT_IMPLEMENTED("build_shifted_laplacian for arbitrary matrix type");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_CrsMatrix> build_shifted_laplacian<Epetra_CrsMatrix>(int N)
+Teuchos::RCP<Epetra_CrsMatrix> build_shifted_laplacian<EpetraTypes>(int N)
 {
 #ifdef COMM_MPI
     Epetra_MpiComm comm(profugus::communicator);
@@ -550,15 +532,16 @@ Teuchos::RCP<Epetra_CrsMatrix> build_shifted_laplacian<Epetra_CrsMatrix>(int N)
 }
 
 template <>
-Teuchos::RCP<Tpetra_CrsMatrix> build_shifted_laplacian<Tpetra_CrsMatrix>(int N)
+Teuchos::RCP<TpetraTypes::MATRIX> build_shifted_laplacian<TpetraTypes>(int N)
 {
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
         Teuchos::DefaultComm<int>::getComm();
 
     int index_base = 0;
-    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals(3);
     Teuchos::ArrayRCP<int> inds(3);
     for( int i=0; i<map->getNodeNumElements(); ++i )
@@ -596,15 +579,15 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_shifted_laplacian<Tpetra_CrsMatrix>(int N)
 }
 
 // build_scaled_identity
-template <class Matrix>
-Teuchos::RCP<Matrix> build_scaled_identity(int N)
+template <class T>
+Teuchos::RCP<typename T::MATRIX> build_scaled_identity(int N)
 {
     NOT_IMPLEMENTED("build_scaled_identity for arbitrary matrix type");
     return Teuchos::null;
 }
 
 template <>
-Teuchos::RCP<Epetra_CrsMatrix> build_scaled_identity<Epetra_CrsMatrix>(int N)
+Teuchos::RCP<Epetra_CrsMatrix> build_scaled_identity<EpetraTypes>(int N)
 {
 #ifdef COMM_MPI
     Epetra_MpiComm comm(profugus::communicator);
@@ -633,15 +616,16 @@ Teuchos::RCP<Epetra_CrsMatrix> build_scaled_identity<Epetra_CrsMatrix>(int N)
 }
 
 template <>
-Teuchos::RCP<Tpetra_CrsMatrix> build_scaled_identity<Tpetra_CrsMatrix>(int N)
+Teuchos::RCP<TpetraTypes::MATRIX> build_scaled_identity<TpetraTypes>(int N)
 {
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
         Teuchos::DefaultComm<int>::getComm();
 
     int index_base = 0;
-    Teuchos::RCP<const Tpetra_Map> map( new Tpetra_Map(N,index_base,comm) );
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<Tpetra_CrsMatrix> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
     Teuchos::ArrayRCP<double> vals(1);
     Teuchos::ArrayRCP<int> inds(1);
     for( int i=0; i<map->getNodeNumElements(); ++i )
@@ -655,34 +639,34 @@ Teuchos::RCP<Tpetra_CrsMatrix> build_scaled_identity<Tpetra_CrsMatrix>(int N)
     return A;
 }
 
-template <class Matrix>
-Teuchos::RCP<Matrix> build_matrix(std::string mat_name, int N)
+template <class T>
+Teuchos::RCP<typename T::MATRIX> build_matrix(std::string mat_name, int N)
 {
     if( mat_name == "laplacian" )
     {
-        return build_laplacian<Matrix>(N);
+        return build_laplacian<T>(N);
     }
     else if( mat_name == "diagonal" )
     {
-        return build_diagonal<Matrix>(N);
+        return build_diagonal<T>(N);
     }
     else if( mat_name == "4x4_lhs" )
     {
         INSIST( 4 == N, "Matrix only defined for N=4" );
-        return build_4x4_lhs<Matrix>();
+        return build_4x4_lhs<T>();
     }
     else if( mat_name == "4x4_rhs" )
     {
         INSIST( 4 == N, "Matrix only defined for N=4" );
-        return build_4x4_rhs<Matrix>();
+        return build_4x4_rhs<T>();
     }
     else if( mat_name == "shifted_laplacian" )
     {
-        return build_shifted_laplacian<Matrix>(N);
+        return build_shifted_laplacian<T>(N);
     }
     else if( mat_name == "scaled_identity" )
     {
-        return build_scaled_identity<Matrix>(N);
+        return build_scaled_identity<T>(N);
     }
     return Teuchos::null;
 }

@@ -14,10 +14,6 @@
 #include <vector>
 
 #include "Teuchos_RCP.hpp"
-#include "Epetra_Operator.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Vector.h"
-#include "Epetra_RowMatrix.h"
 
 #include "harness/DBC.hh"
 #include "xs/Mat_DB.hh"
@@ -27,10 +23,12 @@
 #include "solvers/StratimikosSolver.hh"
 #include "solvers/LinearSolver.hh"
 #include "solvers/LinearSolverBuilder.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Dimensions.hh"
 #include "Linear_System.hh"
 #include "Energy_Restriction.hh"
 #include "Energy_Prolongation.hh"
+#include "OperatorAdapter.hh"
 
 namespace profugus
 {
@@ -49,67 +47,66 @@ namespace profugus
  */
 //===========================================================================//
 
-class Energy_Multigrid : public Epetra_Operator
+template <class T>
+class Energy_Multigrid : public OperatorAdapter<T>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_Operator                   OP;
-    typedef Epetra_MultiVector                MV;
-    typedef LinearSolver<MV,OP>               LinearSolver_t;
-    typedef LinearSolver_t::RCP_ParameterList RCP_ParameterList;
-    typedef LinearSolver_t::ParameterList     ParameterList;
+    typedef typename T::OP                             OP;
+    typedef typename T::MV                             MV;
+    typedef typename T::VECTOR                         VECTOR;
+    typedef typename T::MAP                            MAP;
+    typedef Anasazi::OperatorTraits<double,MV,OP>      OPT;
+    typedef Anasazi::MultiVecTraits<double,MV>         MVT;
+    typedef LinearSolver<T>                            LinearSolver_t;
+    typedef typename LinearSolver_t::RCP_ParameterList RCP_ParameterList;
+    typedef typename LinearSolver_t::ParameterList     ParameterList;
     //@}
 
   public:
     // Constructor.
-    Energy_Multigrid( RCP_ParameterList              main_db,
-                      RCP_ParameterList              prec_db,
-                      Teuchos::RCP<Dimensions>       dim,
-                      Teuchos::RCP<Mat_DB>           mat_db,
-                      Teuchos::RCP<Mesh>             mesh,
-                      Teuchos::RCP<LG_Indexer>       indexer,
-                      Teuchos::RCP<Global_Mesh_Data> data,
-                      Teuchos::RCP<Linear_System>    fine_system );
+    Energy_Multigrid( RCP_ParameterList               main_db,
+                      RCP_ParameterList               prec_db,
+                      Teuchos::RCP<Dimensions>        dim,
+                      Teuchos::RCP<Mat_DB>            mat_db,
+                      Teuchos::RCP<Mesh>              mesh,
+                      Teuchos::RCP<LG_Indexer>        indexer,
+                      Teuchos::RCP<Global_Mesh_Data>  data,
+                      Teuchos::RCP<Linear_System<T> > fine_system );
 
-    int Apply( const Epetra_MultiVector &x,
-                     Epetra_MultiVector &y ) const;
+    int Apply( const MV &x, MV &y ) const
+    {
+        ApplyImpl(x,y);
+        return 0;
+    }
 
-    // Required interface
-    int SetUseTranspose(bool use){return -1;}
-    int ApplyInverse(const Epetra_MultiVector &x,
-                           Epetra_MultiVector &y ) const
+    void apply( const MV &x, MV &y, Teuchos::ETransp mode=Teuchos::NO_TRANS,
+                double alpha=Teuchos::ScalarTraits<double>::one(),
+                double beta=Teuchos::ScalarTraits<double>::zero()) const
     {
-        INSIST(false,"Energy_Multigrid should use Apply, not ApplyInverse.");
-        return -1;
+        REQUIRE( alpha == 1.0 );
+        REQUIRE( beta  == 0.0 );
+        REQUIRE( mode == Teuchos::NO_TRANS );
+
+        ApplyImpl(x,y);
     }
-    bool HasNormInf()const {return false;}
-    double NormInf() const {return 0.0;}
-    const char * Label() const {return "Energy_Multigrid";}
-    bool UseTranspose() const {return false;}
-    const Epetra_Comm & Comm() const {return d_solutions[0]->Comm();}
-    const Epetra_Map & OperatorDomainMap() const
-    {
-        REQUIRE( d_restrictions[0] != Teuchos::null );
-        return d_operators[0]->OperatorDomainMap();
-    }
-    const Epetra_Map & OperatorRangeMap() const
-    {
-        REQUIRE( d_operators[0] != Teuchos::null );
-        return d_operators[0]->OperatorRangeMap();
-    }
+
 
   private:
 
+    void ApplyImpl(const MV &x, MV &y) const;
+
     int d_num_levels;
-    std::vector< Teuchos::RCP<Epetra_Operator> >  d_operators;
-    std::vector< Teuchos::RCP<Epetra_Operator> >  d_restrictions;
-    std::vector< Teuchos::RCP<Epetra_Operator> >  d_prolongations;
-    std::vector< Teuchos::RCP<Epetra_Operator> >  d_preconditioners;
-    std::vector< Teuchos::RCP<Epetra_Vector> >    d_solutions;
-    std::vector< Teuchos::RCP<Epetra_Vector> >    d_residuals;
-    std::vector< Teuchos::RCP<Epetra_Vector> >    d_rhss;
-    std::vector< Teuchos::RCP<LinearSolver_t> >   d_smoothers;
+    std::vector< Teuchos::RCP<const MAP> >      d_maps;
+    std::vector< Teuchos::RCP<OP> >             d_operators;
+    std::vector< Teuchos::RCP<OP> >             d_restrictions;
+    std::vector< Teuchos::RCP<OP> >             d_prolongations;
+    std::vector< Teuchos::RCP<OP> >             d_preconditioners;
+    std::vector< Teuchos::RCP<VECTOR> >         d_solutions;
+    std::vector< Teuchos::RCP<VECTOR> >         d_residuals;
+    std::vector< Teuchos::RCP<VECTOR> >         d_rhss;
+    std::vector< Teuchos::RCP<LinearSolver_t> > d_smoothers;
 };
 
 } // end namespace profugus

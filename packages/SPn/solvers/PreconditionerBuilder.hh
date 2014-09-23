@@ -15,8 +15,8 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Operator.h"
+
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -33,11 +33,12 @@ namespace profugus
  */
 //===========================================================================//
 
-template <class OP>
+template <class T>
 class PreconditionerBuilder
 {
   public:
 
+    typedef typename T::OP                       OP;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_ParameterList;
 
     static Teuchos::RCP<OP> build_preconditioner(

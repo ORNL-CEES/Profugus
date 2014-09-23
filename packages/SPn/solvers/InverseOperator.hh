@@ -19,16 +19,11 @@
 #include "AnasaziOperatorTraits.hpp"
 #include "AnasaziEpetraAdapter.hpp"
 #include "AnasaziTpetraAdapter.hpp"
-#include "Epetra_Operator.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Map.h"
 #include "Teuchos_RCP.hpp"
-#include "Tpetra_MultiVector.hpp"
-#include "Tpetra_Operator.hpp"
 
 #include "harness/DBC.hh"
 #include "LinearSolver.hh"
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -44,11 +39,13 @@ namespace profugus
  *  additionally implement either the Epetra or Tpetra operator interface.
  */
 //===========================================================================//
-template <class MV, class OP>
+template <class T>
 class InverseOperatorBase
 {
   public:
 
+    typedef typename T::MV                        MV;
+    typedef typename T::OP                        OP;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
 
@@ -62,7 +59,7 @@ class InverseOperatorBase
     void ApplyImpl( const MV &x, MV &y ) const;
 
     Teuchos::RCP<OP> d_A, d_B, d_P;
-    Teuchos::RCP<LinearSolver<MV,OP> > d_solver;
+    Teuchos::RCP<LinearSolver<T> > d_solver;
 };
 
 //===========================================================================//
@@ -94,7 +91,7 @@ class InverseOperatorBase
 
 // Dummy implementation for MV/OP combos lacking a specialization.
 // Attempt to instantiate will cause a compile error.
-template <class MV, class OP>
+template <class T>
 class InverseOperator
 {
   public:
@@ -104,21 +101,21 @@ class InverseOperator
 
 // Implementation for Epetra_MultiVector/Operator
 template <>
-class InverseOperator<Epetra_MultiVector,Epetra_Operator>
+class InverseOperator<EpetraTypes>
     : public Epetra_Operator,
-      public InverseOperatorBase<Epetra_MultiVector,Epetra_Operator>
+      public InverseOperatorBase<EpetraTypes>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Epetra_MultiVector MV;
-    typedef Epetra_Operator    OP;
-    typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef typename EpetraTypes::MV MV;
+    typedef typename EpetraTypes::OP OP;
+    typedef Teuchos::RCP<OP>         RCP_Operator;
     //@}
 
   private:
 
-    typedef InverseOperatorBase<MV,OP> Base;
+    typedef InverseOperatorBase<EpetraTypes> Base;
     using Base::d_A;
     using Base::d_B;
 
@@ -182,23 +179,23 @@ class InverseOperator<Epetra_MultiVector,Epetra_Operator>
 
 // Implementation for Tpetra::MultiVector/Operator
 template <>
-class InverseOperator<Tpetra_MultiVector,Tpetra_Operator>
-    : public Tpetra_Operator,
-      public InverseOperatorBase<Tpetra_MultiVector,Tpetra_Operator>
+class InverseOperator<TpetraTypes>
+    : public TpetraTypes::OP,
+      public InverseOperatorBase<TpetraTypes>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Tpetra_MultiVector MV;
-    typedef Tpetra_Operator    OP;
-    typedef Tpetra_Map         Map;
-    typedef Teuchos::RCP<OP>   RCP_Operator;
+    typedef typename TpetraTypes::MV           MV;
+    typedef typename TpetraTypes::OP           OP;
+    typedef typename TpetraTypes::MAP          MAP;
+    typedef Teuchos::RCP<OP>                   RCP_Operator;
     typedef Anasazi::MultiVecTraits<double,MV> MVT;
     //@}
 
   private:
 
-    typedef InverseOperatorBase<MV,OP> Base;
+    typedef InverseOperatorBase<TpetraTypes> Base;
     using Base::d_A;
     using Base::d_B;
 
@@ -240,7 +237,7 @@ class InverseOperator<Tpetra_MultiVector,Tpetra_Operator>
 
     // Required inherited interface.
     bool hasTranposeApply() const {return false;}
-    Teuchos::RCP<const Map> getDomainMap() const
+    Teuchos::RCP<const MAP> getDomainMap() const
     {
         REQUIRE(d_A != Teuchos::null);
         if( d_B != Teuchos::null )
@@ -253,7 +250,7 @@ class InverseOperator<Tpetra_MultiVector,Tpetra_Operator>
             return d_A->getRangeMap();
         }
     }
-    Teuchos::RCP<const Map> getRangeMap() const
+    Teuchos::RCP<const MAP> getRangeMap() const
     {
         REQUIRE(d_A != Teuchos::null);
         return d_A->getDomainMap();

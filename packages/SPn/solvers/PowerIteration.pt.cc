@@ -14,13 +14,13 @@
 #include "AnasaziTpetraAdapter.hpp"
 #include "PowerIteration.t.hh"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
 
-template class PowerIteration<Epetra_MultiVector,Epetra_Operator>;
-template class PowerIteration<Tpetra_MultiVector,Tpetra_Operator>;
+template class PowerIteration<EpetraTypes>;
+template class PowerIteration<TpetraTypes>;
 
 } // end namespace profugus
 

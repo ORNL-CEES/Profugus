@@ -38,7 +38,7 @@
 #include "Ifpack2_Factory_decl.hpp"
 #include "Ifpack2_Factory_def.hpp"
 
-#include "TpetraTypedefs.hh"
+#include "LinAlgTypedefs.hh"
 
 namespace profugus
 {
@@ -54,7 +54,7 @@ namespace profugus
  */
 template <>
 Teuchos::RCP<Epetra_Operator>
-PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
+PreconditionerBuilder<EpetraTypes>::build_preconditioner(
     Teuchos::RCP<Epetra_Operator> op,
     RCP_ParameterList             db )
 {
@@ -148,18 +148,24 @@ PreconditionerBuilder<Epetra_Operator>::build_preconditioner(
 }
 
 template <>
-Teuchos::RCP<Tpetra_Operator>
-PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
-    Teuchos::RCP<Tpetra_Operator> op,
+Teuchos::RCP<TpetraTypes::OP>
+PreconditionerBuilder<TpetraTypes>::build_preconditioner(
+    Teuchos::RCP<TpetraTypes::OP> op,
     RCP_ParameterList             db )
 {
+    typedef typename TpetraTypes::MATRIX MATRIX;
+    typedef typename TpetraTypes::OP     OP;
+    typedef typename TpetraTypes::ST     ST;
+    typedef typename TpetraTypes::LO     LO;
+    typedef typename TpetraTypes::GO     GO;
+    typedef typename TpetraTypes::NODE   NODE;
+
     string prec_type = to_lower(db->get("Preconditioner", string("Ifpack2")));
-    Teuchos::RCP<Tpetra_Operator> prec;
+    Teuchos::RCP<OP> prec;
     if( prec_type == "ifpack2" )
     {
         // Dynamic cast to CrsMatrix
-        Teuchos::RCP<Tpetra_CrsMatrix> row_mat =
-            Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
+        Teuchos::RCP<MATRIX> row_mat = Teuchos::rcp_dynamic_cast<MATRIX>( op );
         REQUIRE( row_mat != Teuchos::null );
 
         std::string ifpack2_type = db->get("Ifpack2_Type","ILUT");
@@ -168,8 +174,8 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
         Ifpack2::Factory factory;
         Teuchos::RCP<Teuchos::ParameterList> ifpack2_pl =
             Teuchos::sublist(db, "Ifpack2 Params");
-        Teuchos::RCP<Ifpack2::Preconditioner<SCALAR,LO,GO,NODE> >
-            ifpack_prec = factory.create(ifpack2_type,row_mat.getConst(),overlap);
+        Teuchos::RCP<Ifpack2::Preconditioner<ST,LO,GO,NODE> > ifpack_prec =
+            factory.create(ifpack2_type,row_mat.getConst(),overlap);
         ifpack_prec->setParameters(*ifpack2_pl);
         ifpack_prec->initialize();
         ifpack_prec->compute();
@@ -179,8 +185,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
     {
 #ifdef USE_MUELU
         // Dynamic cast to CrsMatrix
-        Teuchos::RCP<Tpetra_CrsMatrix> row_mat =
-            Teuchos::rcp_dynamic_cast<Tpetra_CrsMatrix>( op );
+        Teuchos::RCP<MATRIX> row_mat = Teuchos::rcp_dynamic_cast<MATRIX>( op );
         REQUIRE( row_mat != Teuchos::null );
 
         Teuchos::RCP<Teuchos::ParameterList> muelu_pl =
@@ -190,9 +195,7 @@ PreconditionerBuilder<Tpetra_Operator>::build_preconditioner(
             "incorrect results.  Examine output carefully.");
 
         // Wrap Tpetra objects as Xpetra
-        prec = Teuchos::rcp(new MueLuPreconditioner<Tpetra_MultiVector,
-                                                    Tpetra_Operator>(row_mat,
-                                                                     muelu_pl));
+        prec = Teuchos::rcp(new MueLuPreconditioner<TpetraTypes>(row_mat,muelu_pl));
 #else
         VALIDATE(false,"Muelu must be enabled to use Preconditioner=muelu");
 #endif

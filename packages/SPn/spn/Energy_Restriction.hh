@@ -14,9 +14,9 @@
 #include <vector>
 
 #include "Teuchos_RCP.hpp"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Operator.h"
-#include "Epetra_Map.h"
+
+#include "solvers/LinAlgTypedefs.hh"
+#include "OperatorAdapter.hh"
 
 namespace profugus
 {
@@ -38,41 +38,46 @@ namespace profugus
  */
 //===========================================================================//
 
-class Energy_Restriction : public Epetra_Operator
+template <class T>
+class Energy_Restriction : public OperatorAdapter<T>
 {
   public:
-    Energy_Restriction( const Epetra_MultiVector &fine_vec,
-                        const Epetra_MultiVector &coarse_vec,
-                        const std::vector<int>   &steer_vec );
+    //@{
+    //! Typedefs.
+    typedef typename T::OP                        OP;
+    typedef typename T::MV                        MV;
+    typedef typename T::VECTOR                    VECTOR;
+    typedef typename T::MAP                       MAP;
+    typedef Anasazi::MultiVecTraits<double,MV>    MVT;
+    //@}
 
-    int Apply( const Epetra_MultiVector &x,
-                     Epetra_MultiVector &y ) const;
+    Energy_Restriction( Teuchos::RCP<const MAP>  fine_map,
+                        Teuchos::RCP<const MAP>  coarse_map,
+                        const std::vector<int>  &steer_vec );
 
-    // Required interface
-    int SetUseTranspose(bool use){return -1;}
-    int ApplyInverse(const Epetra_MultiVector &x,
-                           Epetra_MultiVector &y ) const {return -1;}
-    bool HasNormInf()const {return false;}
-    double NormInf() const {return 0.0;}
-    const char * Label() const {return "Energy_Restriction";}
-    bool UseTranspose() const {return false;}
-    const Epetra_Comm & Comm() const {return d_fine_map.Comm();}
-    const Epetra_Map & OperatorDomainMap() const
+    // Implement both the Epetra and Tpetra-style operator applies
+    // Delegate actual computation to private function
+    int Apply( const MV &x,
+                     MV &y ) const
     {
-        const Epetra_BlockMap *fine_blockmap = &d_fine_map;
-        const Epetra_Map *fine_ptr =
-            dynamic_cast<const Epetra_Map *>(fine_blockmap);
-        return *fine_ptr;
+        ApplyImpl(x,y);
+        return 0;
     }
-    const Epetra_Map & OperatorRangeMap() const
+
+    void apply( const MV &x, MV &y, Teuchos::ETransp mode=Teuchos::NO_TRANS,
+                double alpha=Teuchos::ScalarTraits<double>::one(),
+                double beta=Teuchos::ScalarTraits<double>::zero()) const
     {
-        const Epetra_BlockMap *coarse_blockmap = &d_fine_map;
-        const Epetra_Map *coarse_ptr =
-            dynamic_cast<const Epetra_Map *>(coarse_blockmap);
-        return *coarse_ptr;
+        REQUIRE( alpha == 1.0 );
+        REQUIRE( beta  == 0.0 );
+        REQUIRE( mode == Teuchos::NO_TRANS );
+
+        ApplyImpl(x,y);
     }
 
   private:
+
+    void ApplyImpl( const MV &x, MV &y) const;
 
     std::vector<int> d_steer_vec;
 
@@ -80,8 +85,8 @@ class Energy_Restriction : public Epetra_Operator
     int d_fine_groups;
     int d_coarse_groups;
 
-    Epetra_BlockMap d_fine_map;
-    Epetra_BlockMap d_coarse_map;
+    Teuchos::RCP<const MAP> d_fine_map;
+    Teuchos::RCP<const MAP> d_coarse_map;
 };
 
 } // end namespace profugus

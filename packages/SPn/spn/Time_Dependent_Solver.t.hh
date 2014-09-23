@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Time_Dependent_Solver.cc
+ * \file   spn/Time_Dependent_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 04 00:09:50 2014
- * \brief  Time_Dependent_Solver member definitions.
+ * \brief  Time_Dependent_Solver template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef spn_Time_Dependent_Solver_t_hh
+#define spn_Time_Dependent_Solver_t_hh
 
 #include <string>
 
@@ -15,9 +18,11 @@
 
 #include "harness/DBC.hh"
 #include "utils/String_Functions.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Linear_System_FV.hh"
 #include "Timestep.hh"
 #include "Time_Dependent_Solver.hh"
+#include "MatrixTraits.hh"
 
 namespace profugus
 {
@@ -28,21 +33,23 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Time_Dependent_Solver::Time_Dependent_Solver(RCP_ParameterList db)
+template <class T>
+Time_Dependent_Solver<T>::Time_Dependent_Solver(RCP_ParameterList db)
     : Base(db)
     , d_solver(b_db)
 {
     REQUIRE(db->isSublist("timestep control"));
 
     // get the timestep control database
-    const auto &tdb = db->get<Teuchos::ParameterList>("timestep control");
+    const auto &tdb =
+        db->template get<Teuchos::ParameterList>("timestep control");
     CHECK(tdb.isParameter("dt"));
 
     // build the timestep object
     d_dt = Teuchos::rcp(new Timestep);
 
     // set the first timestep
-    d_dt->set(tdb.get<double>("dt"));
+    d_dt->set(tdb.template get<double>("dt"));
 
     ENSURE(!b_db.is_null());
     ENSURE(!d_dt.is_null());
@@ -58,11 +65,12 @@ Time_Dependent_Solver::Time_Dependent_Solver(RCP_ParameterList db)
  *
  * Calls to this function builds the linear SPN system.
  */
-void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
-                                  RCP_Mat_DB      mat,
-                                  RCP_Mesh        mesh,
-                                  RCP_Indexer     indexer,
-                                  RCP_Global_Data data)
+template <class T>
+void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
+                                     RCP_Mat_DB      mat,
+                                     RCP_Mesh        mesh,
+                                     RCP_Indexer     indexer,
+                                     RCP_Global_Data data)
 {
     REQUIRE(!b_db.is_null());
     REQUIRE(!dim.is_null());
@@ -73,12 +81,14 @@ void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
     REQUIRE(!d_dt.is_null());
 
     // build the linear system (we only provide finite volume for now)
-    std::string &eqn_type = b_db->get("eqn_type", std::string("fv"));
+    std::string &eqn_type =
+        b_db->template get("eqn_type", std::string("fv"));
 
     if (profugus::to_lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
-            new Linear_System_FV(b_db, dim, mat, mesh, indexer, data, d_dt));
+            new Linear_System_FV<T>(
+                b_db, dim, mat, mesh, indexer, data, d_dt));
     }
     else
     {
@@ -94,26 +104,27 @@ void Time_Dependent_Solver::setup(RCP_Dimensions  dim,
     d_solver.set_operator(b_system->get_Operator());
 
     // allocate the left-hand side solution vector
-    d_lhs = Teuchos::rcp(new Vector_t(*b_system->get_Map()));
-
-    ENSURE(b_system->get_Map()->NumMyElements() == d_lhs->MyLength());
+    d_lhs = VectorTraits<T>::build_vector(b_system->get_Map());
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Solve the SPN equations for a given external source.
  */
-void Time_Dependent_Solver::solve(const External_Source &q)
+template <class T>
+void Time_Dependent_Solver<T>::solve(Teuchos::RCP<const External_Source> q)
 {
+    REQUIRE(!q.is_null());
     REQUIRE(!b_system.is_null());
     REQUIRE(!d_lhs.is_null());
 
     // null lhs vector
-    d_lhs->PutScalar(0.0);
+    VectorTraits<T>::put_scalar(d_lhs,0.0);
 
     // make the right-hand side vector based on the source
-    b_system->build_RHS(q);
-    CHECK(b_system->get_RHS()->MyLength() == d_lhs->MyLength());
+    b_system->build_RHS(*q);
+    CHECK( VectorTraits<T>::local_length(b_system->get_RHS()) ==
+           VectorTraits<T>::local_length(d_lhs) );
 
     // solve the problem
     d_solver.solve(d_lhs, b_system->get_RHS());
@@ -123,16 +134,33 @@ void Time_Dependent_Solver::solve(const External_Source &q)
 /*!
  * \brief Write scalar flux into the state.
  */
-void Time_Dependent_Solver::write_state(State_t &state)
+template <class T>
+void Time_Dependent_Solver<T>::write_state(State &state)
 {
     REQUIRE(state.mesh().num_cells() *
              b_system->get_dims()->num_equations() * state.num_groups()
-             <= d_lhs->MyLength());
+             <= VectorTraits<T>::local_length(d_lhs) );
 
-    Base::write_u_into_state(*d_lhs, state);
+    Base::write_u_into_state(d_lhs, state);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Write matrices to file
+ */
+template <class T>
+void Time_Dependent_Solver<T>::write_problem_to_file() const
+{
+    // Write A (LHS operator)
+    Teuchos::RCP<const typename T::MATRIX> matrix =
+        Teuchos::rcp_dynamic_cast<const typename T::MATRIX>(
+            b_system->get_Operator());
+    MatrixTraits<T>::write_matrix_file(matrix,"A.mtx");
 }
 
 } // end namespace profugus
+
+#endif // spn_Time_Dependent_Solver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Time_Dependent_Solver.cc

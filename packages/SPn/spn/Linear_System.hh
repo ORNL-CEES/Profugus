@@ -17,9 +17,6 @@
 // Trilinos Includes
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_Array.hpp"
-#include "Epetra_Map.h"
-#include "Epetra_RowMatrix.h"
-#include "Epetra_Vector.h"
 
 #include "mesh/Mesh.hh"
 #include "mesh/LG_Indexer.hh"
@@ -45,12 +42,10 @@ namespace profugus
  * \f]
  * The operators \b A and \b B along with vectors \b u and \b Q are defined in
  * the SPN technical note and Denovo methods manual.
- *
- * For now this uses Epetra, but it will probably get converted to Thyra at a
- * later date.
  */
 //===========================================================================//
 
+template <class T>
 class Linear_System
 {
   public:
@@ -62,28 +57,20 @@ class Linear_System
     typedef Moment_Coefficients::RCP_ParameterList RCP_ParameterList;
     typedef Moment_Coefficients::RCP_Timestep      RCP_Timestep;
     typedef Teuchos::RCP<Moment_Coefficients>      RCP_Moment_Coefficients;
-    typedef Epetra_Map                             Map_t;
-    typedef Epetra_RowMatrix                       Matrix_t;
-    typedef Epetra_Vector                          Vector_t;
-    typedef Teuchos::RCP<Epetra_Map>               RCP_Map;
-    typedef Teuchos::RCP<Epetra_RowMatrix>         RCP_Matrix;
-    typedef Teuchos::RCP<Epetra_Operator>          RCP_Operator;
-    typedef Teuchos::RCP<Epetra_Vector>            RCP_Vector;
+    typedef typename T::MAP                        Map_t;
+    typedef typename T::MATRIX                     Matrix_t;
+    typedef typename T::OP                         Operator_t;
+    typedef typename T::VECTOR                     Vector_t;
+    typedef Teuchos::RCP<Map_t>                    RCP_Map;
+    typedef Teuchos::RCP<Matrix_t>                 RCP_Matrix;
+    typedef Teuchos::RCP<Operator_t>               RCP_Operator;
+    typedef Teuchos::RCP<Vector_t>                 RCP_Vector;
     typedef Isotropic_Source                       External_Source;
     typedef Teuchos::RCP<Mesh>                     RCP_Mesh;
     typedef Teuchos::RCP<LG_Indexer>               RCP_Indexer;
     typedef Teuchos::RCP<Global_Mesh_Data>         RCP_Global_Data;
     typedef Teuchos::Array<int>                    Array_Int;
     typedef Teuchos::Array<double>                 Array_Dbl;
-    //@}
-
-    //@{
-    //! Epetra communicator type.
-#ifdef COMM_MPI
-    typedef Epetra_MpiComm    Comm;
-#else
-    typedef Epetra_SerialComm Comm;
-#endif
     //@}
 
   protected:
@@ -104,7 +91,7 @@ class Linear_System
     // Moment-coefficient generator.
     RCP_Moment_Coefficients b_mom_coeff;
 
-    // Epetra objects.
+    // Trilinos objects.
     RCP_Map      b_map;
     RCP_Operator b_operator; // SPN matrix
     RCP_Operator b_fission;  // Fission matrix
