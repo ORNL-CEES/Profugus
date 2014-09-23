@@ -252,15 +252,15 @@ void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
 
     // Look for user specified tolerance in a few places, set a default if we
     // can't find one
-    double tol = b_db->template get("tolerance", 1.0e-6);
-    tol        = eig_db->template get("tolerance", tol);
-    eig_db->template get("Convergence Tolerance", tol);
+    double tol = b_db->get("tolerance", 1.0e-6);
+    tol = eig_db->get("tolerance", tol);
+    eig_db->get("Convergence Tolerance", tol);
 
     // look for user specified iteration limit in a few places, set a default
     // if we can't find one
-    int max_itr = b_db->template get("max_itr", 500);
-    max_itr     = eig_db->template get("max_itr", max_itr);
-    eig_db->template get("Maximum Restarts", max_itr);
+    int max_itr = b_db->get("max_itr", 500);
+    max_itr     = eig_db->get("max_itr", max_itr);
+    eig_db->get("Maximum Restarts", max_itr);
 
     // Forgive the formatting, column limits are a bit of an issue
     // If no parameters are provided, the default solver is a
@@ -319,12 +319,12 @@ void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
     eig_db->setParametersNotAlreadySet(*default_pl);
 
     // propagate stopping criteria for Arnoldi
-    eig_db->sublist("Anasazi").template get("Convergence Tolerance", tol);
-    eig_db->sublist("Anasazi").template get("Maximum Restarts", max_itr);
+    eig_db->sublist("Anasazi").get("Convergence Tolerance", tol);
+    eig_db->sublist("Anasazi").get("Maximum Restarts", max_itr);
 
     // propagate stopping criteria for operators
-    eig_db->sublist("operator_db").template get("tolerance", 0.1 * tol);
-    eig_db->sublist("operator_db").template get("max_itr", max_itr);
+    eig_db->sublist("operator_db").get("tolerance", 0.1 * tol);
+    eig_db->sublist("operator_db").get("max_itr", max_itr);
 }
 
 template <>
@@ -431,9 +431,8 @@ void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
     // Insert defaults into pl, leaving existing values in tact
     eig_db->setParametersNotAlreadySet(*default_pl);
 
-
     // If Ifpack is selected, change it to Ifpack2
-    if( eig_db->template get<std::string>("Preconditioner")=="Ifpack" )
+    if( eig_db->get<std::string>("Preconditioner")=="Ifpack" )
     {
         eig_db->set("Preconditioner",std::string("Ifpack2"));
     }
