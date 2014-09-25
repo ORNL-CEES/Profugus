@@ -85,12 +85,25 @@ void InverseOperatorBase<T>::set_preconditioner( Teuchos::RCP<OP> P )
 template <class T>
 void InverseOperatorBase<T>::ApplyImpl(const MV &x, MV &y ) const
 {
+    // If y comes in with invalid data, initialize it to zero
+    // Otherwise, leave it as is -- it may have a useful initial
+    //  guess for the linear solve (e.g. if we're using this in
+    //  power iteration)
+    std::vector<double> nrm(1);
+    MVT::MvNorm(y,nrm);
+    if( Teuchos::ScalarTraits<typename T::ST>::isnaninf(nrm[0]) )
+    {
+        MVT::MvInit(y,0.0);
+    }
+
+    // If we have a B, apply it before solving
     if( !(d_B.is_null()) )
     {
         Teuchos::RCP<MV> z = MVT::Clone(x,MVT::GetNumberVecs(x));
         OPT::Apply(*d_B,x,*z);
         d_solver->solve(Teuchos::rcpFromRef(y), z);
     }
+    // Otherwise just solve
     else
     {
         d_solver->solve(Teuchos::rcpFromRef(y), Teuchos::rcpFromRef(x));
