@@ -76,8 +76,10 @@ SET(XS_SOURCES
   )
 LIST(APPEND HEADERS ${XS_HEADERS})
 LIST(APPEND SOURCES ${XS_SOURCES})
+INSTALL(FILES ${XS_HEADERS} DESTINATION include/Matprop/xs)
 
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h DESTINATION include/Matprop)
 
 ##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
