@@ -84,6 +84,12 @@ class Manager
     // Output.
     void output();
 
+    // Access solver
+    Teuchos::RCP<const Solver_Base_t> get_solver() const
+    {
+        return d_solver_base;
+    }
+
   private:
     // >>> IMPLEMENTATION
 
