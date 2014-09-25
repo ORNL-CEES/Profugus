@@ -13,7 +13,7 @@
 
 #include "MueLuPreconditioner.hh"
 
-#include "MueLu_EasyParameterListInterpreter.hpp"
+#include "MueLu_ParameterListInterpreter.hpp"
 
 namespace profugus
 {
@@ -60,7 +60,7 @@ void MueLuPreconditionerBase::setup( Teuchos::RCP<Teuchos::ParameterList> pl )
     // we would need to have this class be templated.
     Teuchos::RCP<MueLu::HierarchyManager<ST,LO,GO,NODE> > mueLuFactory =
         Teuchos::rcp(
-            new MueLu::EasyParameterListInterpreter<ST,LO,GO,NODE>(*pl));
+            new MueLu::ParameterListInterpreter<ST,LO,GO,NODE>(*pl));
 
     d_hierarchy = mueLuFactory->CreateHierarchy();
 
