@@ -65,9 +65,6 @@ class Manager
     // Problem dimensions.
     RCP_Dimensions d_dim;
 
-    // Trilinos implementation (epetra or tpetra)
-    std::string d_implementation;
-
     // Solvers
     RCP_Solver_Base d_solver_base;
 
