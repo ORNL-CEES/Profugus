@@ -96,6 +96,12 @@ class Fission_Matrix_ProcessorTest : public ::testing::Test
 
             local_denominator[1] = 1.0;
         }
+        if (node > 3)
+        {
+            local_matrix[Idx(3, 1)] = 1.0;
+
+            local_denominator[1] = 1.0;
+        }
 
         processor.build_matrix(local_matrix, local_denominator);
     }

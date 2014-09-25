@@ -10,8 +10,10 @@
 
 #include "Fission_Matrix_Tally.hh"
 
+#include <sstream>
 #include <algorithm>
 
+#include "harness/Warnings.hh"
 #include "Particle.hh"
 
 namespace profugus
@@ -44,8 +46,28 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
     // get the number of cycles in the problem
     int num_cycles = db->get<int>("num_cycles");
 
-    // set the cycle output
-    d_cycle_out = opt.get<int>("output_cycle", num_cycles - 1);
+    // set the starting cycle
+    d_cycle_start = opt.get<int>("start_cycle", 0);
+
+    // set the cycle output (by default, we don't output during transport by
+    // setting to 1-past the last cycle)
+    d_cycle_out = opt.get<int>("output_cycle", num_cycles);
+
+    // get the output problem name for the hdf5 diagnostic file
+    if (d_cycle_out < num_cycles)
+    {
+#ifdef USE_HDF5
+        CHECK(db->isParameter("problem_name"));
+        d_filename = db->get<std::string>("problem_name") + "_fm.h5";
+
+        // make the initial file
+        d_writer.open(d_filename);
+        d_writer.close();
+#else
+        ADD_WARNING("HDF5 not available in this build, turning fission "
+                    << "matrix output off.");
+#endif
+    }
 
     // make the sparse matrix using the optimal number of initial buckets and
     // with the correct block size in the hasher
@@ -53,7 +75,9 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
     Sparse_Matrix m(d_numerator.bucket_count(), h);
     std::swap(m, d_numerator);
 
-    ENSURE(d_cycle_out < num_cycles);
+    VALIDATE(d_cycle_out >= d_cycle_start, "Fission matrix tallying starting "
+             << "on cycle " << d_cycle_start << ", but output requested on "
+             << d_cycle_out);
     ENSURE(d_geometry);
     ENSURE(d_fm_mesh);
 }
@@ -62,10 +86,39 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
 // PUBLIC INTERFACE
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Manually build the global fission matrix using the current state of
+ * the tally.
+ *
+ * The client can access (and reset) the global fission matrix through the
+ * processor by accessing the processor() function.
+ */
+void Fission_Matrix_Tally::build_matrix()
+{
+    // return if we haven't started tallying, as we assume that all domains
+    // will have entries in the fission matrix (for replicated) in order for
+    // this to work
+    if (!d_tally_started)
+        return;
+
+    // use the processor to build the global fission matrix
+    d_processor.build_matrix(d_numerator, d_denominator);
+}
+
+//---------------------------------------------------------------------------//
+// DERIVED INTERFACE
+//---------------------------------------------------------------------------//
+/*!
  * \brief Setup fission matrix tallying at birth.
  */
 void Fission_Matrix_Tally::birth(const Particle_t &p)
 {
+    // return if we haven't started tallying yet
+    if (d_cycle_start > d_cycle_ctr)
+        return;
+
+    // set tally started flag
+    d_tally_started = true;
+
     REQUIRE(p.metadata().name(d_birth_idx) == "fm_birth_cell");
 
     // get the particle's geometric state
@@ -94,6 +147,10 @@ void Fission_Matrix_Tally::accumulate(double            step,
                                       const Particle_t &p)
 {
     using geometry::INSIDE;
+
+    // return if we haven't started tallying yet
+    if (d_cycle_start > d_cycle_ctr)
+        return;
 
     REQUIRE(p.metadata().name(d_birth_idx) == "fm_birth_cell");
 
@@ -150,6 +207,64 @@ void Fission_Matrix_Tally::accumulate(double            step,
  */
 void Fission_Matrix_Tally::end_cycle(double num_particles)
 {
+#ifdef USE_HDF5
+    // build the sparse-stored, ordered fission matrix if we are past the
+    // output cycle
+    if (d_cycle_ctr >= d_cycle_out)
+    {
+        // use the processor to build the global fission matrix
+        d_processor.build_matrix(d_numerator, d_denominator);
+
+        // open the file - writing is only on proc 0
+        d_writer.open(d_filename, HDF5_IO::APPEND, 0);
+
+        // make the cycle group
+        std::ostringstream m;
+        m << "cycle_" << d_cycle_ctr;
+        d_writer.begin_group(m.str());
+
+        // write the full matrix dimensions
+        d_writer.write("size", static_cast<int>(d_fm_mesh->num_cells()));
+
+        // get the indices of the matrix and the matrix elements
+        const auto &indices = d_processor.graph();
+        const auto &matrix  = d_processor.matrix();
+        CHECK(indices.size() == matrix.size());
+
+        // write the number of non-zero elements
+        d_writer.write("non_zero", static_cast<int>(indices.size()));
+
+        // get an HDF5 decomposition for the indices
+        HDF5_IO::Decomp d(2);
+        d.global[0] = indices.size();
+        d.global[1] = 2;
+        d.order     = HDF5_IO::ROW_MAJOR;
+
+        // make space for the global data
+        d_writer.create_incremental_dataspace<int>("indices", d);
+
+        // we will do a single write
+        d.local[0] = d.global[0];
+        d.local[1] = d.global[1];
+
+        // write the indices
+        d_writer.write_incremental_data("indices", d, &indices[0].first);
+
+        // write the elements of the fission matrix
+        d_writer.write("matrix", matrix);
+
+        // clear memory in the processor
+        d_processor.reset();
+
+        // close out writing
+        d_writer.end_group();
+        d_writer.close();
+
+        CHECK(indices.empty());
+        CHECK(matrix.empty());
+    }
+#endif
+
     // update internal counter
     ++d_cycle_ctr;
 }
@@ -162,6 +277,12 @@ void Fission_Matrix_Tally::reset()
 {
     // clear all the tallies
     std::fill(d_denominator.begin(), d_denominator.end(), 0.0);
+
+    // reset tally starting
+    d_tally_started = false;
+
+    // reset the processor
+    d_processor.reset();
 
     // make a new sparse mesh
     Sparse_Matrix n;

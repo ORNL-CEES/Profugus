@@ -11,11 +11,13 @@
 #ifndef mc_Fission_Matrix_Tally_hh
 #define mc_Fission_Matrix_Tally_hh
 
+#include <string>
 #include <memory>
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
+#include "utils/Serial_HDF5_Writer.hh"
 #include "geometry/Mesh_Geometry.hh"
 #include "Tally.hh"
 #include "Fission_Matrix_Processor.hh"
@@ -62,10 +64,22 @@ class Fission_Matrix_Tally : public Tally
     Sparse_Matrix d_numerator;
     Denominator   d_denominator;
 
+    // Fission matrix processor.
+    Fission_Matrix_Processor d_processor;
+
   public:
     // Constructor.
     Fission_Matrix_Tally(RCP_Std_DB db, SP_Physics physics,
                          SP_Mesh_Geometry fm_mesh);
+
+    // Manually build the global fission matrix at the current state.
+    void build_matrix();
+
+    // Get the fission matrix processor (results).
+    Fission_Matrix_Processor& processor() { return d_processor; }
+
+    //! Query if fission matrix tallying has started.
+    bool tally_started() const { return d_tally_started; }
 
     // >>> INHERITED INTERFACE
 
@@ -103,8 +117,16 @@ class Fission_Matrix_Tally : public Tally
     const unsigned int d_birth_idx;
 
     // Fission matrix generation options.
+    int d_cycle_start;
     int d_cycle_out;
     int d_cycle_ctr;
+
+    // Output file name and hdf5 writer.
+    std::string        d_filename;
+    Serial_HDF5_Writer d_writer;
+
+    // Tally started flag.
+    bool d_tally_started;
 };
 
 } // end namespace profugus

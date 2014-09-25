@@ -61,6 +61,7 @@ void Fission_Matrix_Processor::build_matrix(
     const Sparse_Matrix &local_matrix,
     const Denominator   &local_denominator)
 {
+    REQUIRE(!local_matrix.empty());
     REQUIRE(local_matrix.size() <= local_denominator.size() *
             local_denominator.size());
 
