@@ -1,0 +1,260 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Building The Code &mdash; Profugus 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="/usr/local/src/MathJax-2.3.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Profugus 1.0 documentation" href="index.html" />
+    <link rel="next" title="Running The Mini-Applications" href="running.html" />
+    <link rel="prev" title="Description" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running The Mini-Applications"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Description"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Profugus 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Description</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="running.html"
+                        title="next chapter">Running The Mini-Applications</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/building.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="building-the-code">
+<h1>Building The Code<a class="headerlink" href="#building-the-code" title="Permalink to this headline">¶</a></h1>
+<p>The most straightforward method for building Profugus is to use the scripts
+in <tt class="file docutils literal"><span class="pre">Profugus/install</span></tt>.  Profugus uses the <a class="reference download internal" href="_downloads/TrilinosBuildQuickRef.pdf"><tt class="xref download docutils literal"><span class="pre">TriBITS</span> <span class="pre">build</span>
+<span class="pre">system</span></tt></a>.  This system is a set of
+package-based extensions to standard <a class="reference external" href="http://www.cmake.org">cmake</a>.  So, first you need to obtain
+<cite>Trilinos</cite> and <cite>TriBITS</cite> and put them in your top-level Profugus directory:</p>
+<div class="highlight-sh"><div class="highlight"><pre>&gt; <span class="nb">cd </span>Profugus
+&gt; git clone https://github.com/TriBITSPub/TriBITS.git
+&gt; ln -s <span class="nv">$PATH_TO_TRILINOS</span> .
+</pre></div>
+</div>
+<p>The preferred mechanism for using the build scripts is to make a <em>target</em>
+directory where the build is to be performed:</p>
+<div class="highlight-sh"><div class="highlight"><pre>&gt; <span class="nb">pwd</span>
+  /home/me
+&gt; mkdir debug
+&gt; <span class="nb">cd </span>debug
+&gt; mkdir target
+&gt; <span class="nb">cd </span>target
+&gt; <span class="nb">pwd</span>
+  /home/me/debug/target
+</pre></div>
+</div>
+<p>The <tt class="file docutils literal"><span class="pre">install</span></tt> directory contains several example build scripts. General
+options for all platforms (which can be overridden at configure time) are
+specified in the <tt class="file docutils literal"><span class="pre">install/base.cmake</span></tt>:</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="c">##---------------------------------------------------------------------------##</span>
+<span class="c">## CMAKE BASE FILE</span>
+<span class="c">##---------------------------------------------------------------------------##</span>
+
+<span class="c"># Default build all packages</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_Utils</span>   <span class="s">ON</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_Matprop</span> <span class="s">ON</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_SPn</span>     <span class="s">ON</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_MC</span>      <span class="s">ON</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c"># Turn on tests</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_TESTS</span> <span class="s">ON</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_TEST_CATEGORIES</span> <span class="s2">&quot;BASIC&quot;</span> <span class="s">CACHE</span> <span class="s">STRING</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c"># Turn on SS code and optional packages by default</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_ALL_FORWARD_DEP_PACKAGES</span> <span class="s">OFF</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_ALL_OPTIONAL_PACKAGES</span>    <span class="s">ON</span>  <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_SECONDARY_STABLE_CODE</span>    <span class="s">ON</span>  <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c"># Up the max num procs</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">MPI_EXEC_MAX_NUMPROCS</span> <span class="s">8</span> <span class="s">CACHE</span> <span class="s">STRING</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c"># Turn off binutils</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Teuchos_ENABLE_BinUtils</span> <span class="s">OFF</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c"># Turn off Zoltan2</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_Zoltan2</span> <span class="s">OFF</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c"># Compiler options</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">BUILD_SHARED_LIBS</span> <span class="s">ON</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">CMAKE_CXX_FLAGS</span> <span class="s2">&quot;-std=c++11 -Wno-deprecated-declarations&quot;</span> <span class="s">CACHE</span> <span class="s">STRING</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_CXX11:BOOL=ON</span><span class="p">)</span>
+
+<span class="c"># TriBITS stuff</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_INSTALL_CMAKE_CONFIG_FILES</span> <span class="s">OFF</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_DEPS_XML_OUTPUT_FILE</span> <span class="s2">&quot;&quot;</span> <span class="s">CACHE</span> <span class="s">FILEPATH</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default, all of the packages inside of Profugus are turned on.
+Furthermore, <cite>C++-11</cite> is <strong>required</strong>.  The default options specify the
+appropriate compiler flags for <a class="reference external" href="http://gcc.gnu.org">gcc</a>.  The tests are also turned on by default;
+to disable tests in any upstream package simply do not explicitly <cite>ENABLE</cite>
+that package.  For example, to build the <cite>SPn</cite> package and all of its tests
+but only include required <em>source</em> from upstream packages, the user would
+specify:</p>
+<div class="highlight-cmake"><div class="highlight"><pre><span class="nb">SET</span><span class="p">(</span><span class="s">Profugus_ENABLE_SPn</span> <span class="s">ON</span> <span class="s">CACHE</span> <span class="s">BOOL</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case, only the pieces of <cite>Utils</cite> needed to build <cite>SPn</cite> are compiled.
+All tests can be turned off by setting <strong class="makevar">Profugus_ENABLE_TESTS</strong> to
+<strong class="makevar">OFF</strong>.</p>
+<p>The <tt class="file docutils literal"><span class="pre">install</span></tt> directory contains several build scripts that are all
+suffixed by the platform name.  For example, to build on a Linux <cite>x86_64</cite>
+system the <tt class="file docutils literal"><span class="pre">install/cmake_x86_64.sh</span></tt> script can be used:</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="c">#!/bin/sh</span>
+<span class="c">##---------------------------------------------------------------------------##</span>
+<span class="c">## CMAKE FOR X86_64</span>
+<span class="c">##---------------------------------------------------------------------------##</span>
+
+<span class="c"># CLEANUP</span>
+rm -rf CMakeCache.txt
+rm -rf CMakeFiles
+
+<span class="c"># SOURCE AND INSTALL</span>
+<span class="nv">SOURCE</span><span class="o">=</span>&lt;SET_SOURCE_DIR&gt;
+<span class="nv">INSTALL</span><span class="o">=</span>&lt;SET_INSTALL_DIR&gt;
+
+<span class="c"># BUILD OPTIONS</span>
+<span class="nv">BUILD</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span>
+<span class="nv">MPI</span><span class="o">=</span><span class="s2">&quot;ON&quot;</span>
+
+<span class="c"># TPL PATHS</span>
+<span class="nv">HDF5_PATH</span><span class="o">=</span><span class="s2">&quot;/vendors/hdf5_parallel&quot;</span>
+<span class="nv">MPI_PATH</span><span class="o">=</span><span class="s2">&quot;/opt/openmpi/gcc/current&quot;</span>
+
+<span class="c">##---------------------------------------------------------------------------##</span>
+
+cmake <span class="se">\</span>
+-DCMAKE_BUILD_TYPE:STRING<span class="o">=</span><span class="s2">&quot;$BUILD&quot;</span> <span class="se">\</span>
+-DTPL_ENABLE_MPI:BOOL<span class="o">=</span><span class="nv">$MPI</span> <span class="se">\</span>
+-DCMAKE_INSTALL_PREFIX:PATH<span class="o">=</span><span class="nv">$INSTALL</span> <span class="se">\</span>
+<span class="se">\</span>
+-DMPI_BASE_DIR:PATH<span class="o">=</span><span class="nv">$MPI_PATH</span> <span class="se">\</span>
+<span class="se">\</span>
+-DTPL_ENABLE_HDF5:BOOL<span class="o">=</span>ON <span class="se">\</span>
+-DHDF5_INCLUDE_DIRS:PATH<span class="o">=</span><span class="nv">$HDF5_PATH</span>/include <span class="se">\</span>
+-DHDF5_LIBRARY_DIRS:PATH<span class="o">=</span><span class="nv">$HDF5_PATH</span>/lib <span class="se">\</span>
+<span class="se">\</span>
+-DBLAS_LIBRARY_DIRS:PATH<span class="o">=</span>/vendors/gcc/atlas/lib <span class="se">\</span>
+-DLAPACK_LIBRARY_DIRS:PATH<span class="o">=</span>/vendors/gcc/atlas/lib <span class="se">\</span>
+-DBLAS_LIBRARY_NAMES:STRING<span class="o">=</span><span class="s2">&quot;f77blas;cblas;atlas&quot;</span> <span class="se">\</span>
+-DLAPACK_LIBRARY_NAMES:STRING<span class="o">=</span><span class="s2">&quot;lapack&quot;</span> <span class="se">\</span>
+<span class="se">\</span>
+-DProfugus_CONFIGURE_OPTIONS_FILE:FILEPATH<span class="o">=</span><span class="s2">&quot;${SOURCE}/install/base.cmake&quot;</span> <span class="se">\</span>
+-DProfugus_ASSERT_MISSING_PACKAGES:BOOL<span class="o">=</span>OFF <span class="se">\</span>
+<span class="se">\</span>
+<span class="k">${</span><span class="nv">SOURCE</span><span class="k">}</span>
+
+<span class="c">##---------------------------------------------------------------------------##</span>
+<span class="c">## end of cmake_x86_64.sh</span>
+<span class="c">##---------------------------------------------------------------------------##</span>
+</pre></div>
+</div>
+<p>The source and install locations must be set. Also, to enable a optimized
+build set <strong class="makevar">BUILD</strong> to <strong class="makevar">RELEASE</strong>.  Adjust the paths and
+libraries for <a class="reference external" href="http://www.netlib.org">LAPACK</a> to fit your platform.  The example assumes that the
+<a class="reference external" href="http://math-atlas.sourceforge.net">ATLAS</a> <a class="reference external" href="http://www.netlib.org">LAPACK</a> is available.  Any standard <a class="reference external" href="http://www.netlib.org">LAPACK</a> distribution will
+work. <a class="reference external" href="http://www.hdfgroup.org/HDF5">HDF5</a> is <strong>not</strong> required, to build/run/test the applications; however,
+problem output will be severely curtailed if a parallel <a class="reference external" href="http://www.hdfgroup.org/HDF5">HDF5</a> option is not
+provided.  If <a class="reference external" href="http://www.hdfgroup.org/HDF5">HDF5</a> is not available, setting:</p>
+<div class="highlight-sh"><div class="highlight"><pre>-DTPL_ENABLE_HDF5:BOOL<span class="o">=</span>OFF <span class="se">\</span>
+</pre></div>
+</div>
+<p>will disable <a class="reference external" href="http://www.hdfgroup.org/HDF5">HDF5</a>.</p>
+<p>To complete the configuration, execute this script inside the <em>target</em>
+directory and then make/test/install:</p>
+<div class="highlight-sh"><div class="highlight"><pre>&gt; <span class="nb">pwd</span>
+  /home/me/debug/target
+&gt; sh /home/me/Profugus/install/cmake_x86_64.sh
+&gt; make -j 8
+&gt; ctest -j 8
+&gt; make -j 8 install
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running The Mini-Applications"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Description"
+             >previous</a> |</li>
+        <li><a href="index.html">Profugus 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Thomas Evans, Steven Hamilton, Stuart Slattery.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
