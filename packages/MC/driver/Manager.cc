@@ -103,9 +103,8 @@ void Manager::setup(const std::string &xml_file)
 
     SCREEN_MSG("Building " << prob_type << " solver");
 
-    // make the tallier
-    SP_Tallier tallier(std::make_shared<Tallier_t>());
-    tallier->set(d_geometry, d_physics);
+    // get the tallier
+    SP_Tallier tallier = builder.get_tallier();
 
     // make the transporter
     SP_Transporter transporter(std::make_shared<Transporter_t>(

@@ -25,6 +25,7 @@
 #include "mc/Physics.hh"
 #include "mc/Shape.hh"
 #include "mc/Variance_Reduction.hh"
+#include "mc/Tallier.hh"
 
 namespace mc
 {
@@ -45,10 +46,13 @@ class Problem_Builder
     typedef Teuchos::RCP<ParameterList>                   RCP_ParameterList;
     typedef profugus::Physics                             Physics_t;
     typedef Physics_t::Geometry_t                         Geometry_t;
+    typedef profugus::Tallier                             Tallier_t;
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
     typedef std::shared_ptr<Geometry_t>                   SP_Geometry;
     typedef std::shared_ptr<profugus::Shape>              SP_Shape;
     typedef std::shared_ptr<profugus::Variance_Reduction> SP_Var_Reduction;
+    typedef std::shared_ptr<profugus::Tallier>            SP_Tallier;
+    typedef Tallier_t::SP_Tally                           SP_Tally;
     //@}
 
   private:
@@ -66,6 +70,9 @@ class Problem_Builder
 
     // External source shape.
     SP_Shape d_shape;
+
+    // Problem talliers.
+    SP_Tallier d_tallier;
 
   public:
     // Constructor.
@@ -90,6 +97,9 @@ class Problem_Builder
 
     //! Get the variance reduction.
     SP_Var_Reduction get_var_reduction() const { return d_var_reduction; }
+
+    //! Get the tallier.
+    SP_Tallier get_tallier() const { return d_tallier; }
 
   private:
     // >>> IMPLEMENTATION
@@ -121,6 +131,7 @@ class Problem_Builder
     void build_physics();
     void build_var_reduction();
     void build_source(const ParameterList &source_db);
+    void build_tallies();
 
     // Number of assemblies and pins per assembly.
     int d_Na[2];

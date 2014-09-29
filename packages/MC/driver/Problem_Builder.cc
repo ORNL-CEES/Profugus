@@ -108,6 +108,9 @@ void Problem_Builder::setup(const std::string &xml_file)
     {
         build_source(master->sublist("SOURCE"));
     }
+
+    // build the tallier
+    build_tallies();
 }
 
 //---------------------------------------------------------------------------//
@@ -482,6 +485,19 @@ void Problem_Builder::build_source(const ParameterList &source_db)
     // add the shape to the main database because the MC source gets the
     // spectral shape from the main db
     d_db->set("spectral_shape", shape);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build the tallies.
+ */
+void Problem_Builder::build_tallies()
+{
+    // make the tallier
+    d_tallier = std::make_shared<Tallier_t>();
+    d_tallier->set(d_geometry, d_physics);
+
+    ENSURE(d_tallier);
 }
 
 } // end namespace mc
