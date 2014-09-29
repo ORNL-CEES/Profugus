@@ -109,12 +109,12 @@ class Solver_Base_Tmpl : public Solver_Base
 
     virtual ~Solver_Base_Tmpl(){};
 
-    const Linear_System_t &get_linear_system(){return *b_system;}
+    const Linear_System_t &get_linear_system() const {return *b_system;}
 
     // >>> INHERITED METHODS
 
     // Write u-vector into the state.
-    void write_u_into_state(Teuchos::RCP<const Vector_t>, State &state);
+    void write_u_into_state(Teuchos::RCP<const Vector_t>, State &state) const;
 
 };
 
@@ -124,7 +124,7 @@ class Solver_Base_Tmpl : public Solver_Base
  */
 template <class T>
 void Solver_Base_Tmpl<T>::write_u_into_state(Teuchos::RCP<const Vector_t>  u,
-                                             State                  &state)
+                                             State &state) const
 {
     REQUIRE(state.num_cells() * b_system->get_dims()->num_equations()
              * state.num_groups() <=
