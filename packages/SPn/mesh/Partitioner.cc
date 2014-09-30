@@ -43,11 +43,33 @@ Partitioner::Partitioner(RCP_ParameterList pl)
     INSIST(d_dimension == 2 || d_dimension == 3, "Dimension must be 2 or 3");
 
     // initialize blocks and sets
-    d_Nb[I]      = pl->get<int>("num_blocks_i");
-    d_Nb[J]      = pl->get<int>("num_blocks_j");
+    d_num_sets  = pl->get<int>("num_sets");
+    if( pl->isType<int>("num_blocks_i") )
+    {
+        d_Nb[I] = pl->get<int>("num_blocks_i");
+        INSIST( pl->isType<int>("num_blocks_j"),
+                "Must specify num_blocks_j if specifying num_blocks_i." );
+        d_Nb[J] = pl->get<int>("num_blocks_j");
+        d_num_blocks = d_Nb[I] * d_Nb[J];
+    }
+    else
+    {
+        // Compute "most square" decomposition
+        REQUIRE( d_nodes % d_num_sets == 0 );
+        d_num_blocks = d_nodes / d_num_sets;
+        int blocks_i, blocks_j;
+        blocks_i = std::sqrt(static_cast<double>(d_num_blocks));
+        blocks_j = d_num_blocks / blocks_i;
+        while( blocks_i * blocks_j != d_num_blocks )
+        {
+            blocks_i++;
+            blocks_j = d_num_blocks / blocks_j;
+        }
+        d_Nb[I] = blocks_i;
+        d_Nb[J] = blocks_j;
+    }
     d_k_blocks   = pl->get<int>("num_z_blocks");
-    d_num_sets   = pl->get<int>("num_sets");
-    d_num_blocks = d_Nb[I] * d_Nb[J];
+    CHECK(d_num_blocks == d_Nb[I] * d_Nb[J]);
     CHECK(d_num_blocks * d_num_sets == d_nodes);
 
     // build global edges of mesh
@@ -245,8 +267,6 @@ void Partitioner::init_pl(RCP_ParameterList pl)
     ParameterList defaults;
 
     // number of blocks
-    defaults.set("num_blocks_i", 1);
-    defaults.set("num_blocks_j", 1);
     defaults.set("num_z_blocks", 1);
 
     // number of sets
