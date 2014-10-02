@@ -62,8 +62,9 @@ Partitioner::Partitioner(RCP_ParameterList pl)
         blocks_j = d_num_blocks / blocks_i;
         while( blocks_i * blocks_j != d_num_blocks )
         {
+            TEUCHOS_ASSERT(blocks_i < d_num_blocks);
             blocks_i++;
-            blocks_j = d_num_blocks / blocks_j;
+            blocks_j = d_num_blocks / blocks_i;
         }
         d_Nb[I] = blocks_i;
         d_Nb[J] = blocks_j;
