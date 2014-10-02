@@ -259,11 +259,38 @@ void KCode_Solver::initialize()
     // Add the keff tally to the ACTIVE cycle tallier and build it
     b_tallier->add_pathlength_tally(d_keff_tally);
     b_tallier->build();
+    CHECK(d_keff_tally->inactive_cycle_tally());
     CHECK(b_tallier->is_built());
     CHECK(b_tallier->num_pathlength_tallies() >= 1);
 
-    // Add the keff tally to the INACTIVE cycle tallier and build it
-    d_inactive_tallier->add_pathlength_tally(d_keff_tally);
+    // get tallies from the active tallier and add them to the inactive
+    // tallier if they are inactive tallies
+    for (auto titr = b_tallier->begin(); titr != b_tallier->end(); ++titr)
+    {
+        CHECK(*titr);
+
+        // get the SP to the tally
+        auto tally = *titr;
+
+        // if this tally should be on during inactive cycles, add it
+        if (tally->inactive_cycle_tally())
+        {
+            if (tally->type() == profugus::tally::PATHLENGTH)
+            {
+                d_inactive_tallier->add_pathlength_tally(tally);
+            }
+            else if (tally->type() == profugus::tally::SOURCE)
+            {
+                d_inactive_tallier->add_source_tally(tally);
+            }
+            else
+            {
+                throw profugus::assertion("Unknown tally type.");
+            }
+        }
+    }
+
+    // build the inactive tallies
     d_inactive_tallier->build();
     CHECK(d_inactive_tallier->is_built());
     CHECK(d_inactive_tallier->num_pathlength_tallies() >= 1);

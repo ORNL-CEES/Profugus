@@ -28,17 +28,21 @@ namespace profugus
 Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
                                            SP_Physics       physics,
                                            SP_Mesh_Geometry fm_mesh)
-    : Base(physics)
+    : Base(physics, true)
     , d_geometry(physics->get_geometry())
     , d_fm_mesh(fm_mesh)
     , d_numerator()
     , d_denominator(d_fm_mesh->num_cells(), 0.0)
     , d_birth_idx(Particle::Metadata::new_pod_member<int>("fm_birth_cell"))
     , d_cycle_ctr(0)
+    , d_tally_started(false)
 {
     REQUIRE(!db.is_null());
     REQUIRE(db->isParameter("num_cycles"));
     REQUIRE(db->isSublist("fission_matrix_db"));
+
+    // set the name
+    set_name("fission_matrix");
 
     // get the fission matrix sublist
     ParameterList_t &opt = db->sublist("fission_matrix_db");

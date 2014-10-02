@@ -25,11 +25,11 @@ namespace profugus
  */
 Keff_Tally::Keff_Tally(double     keff_init,
                        SP_Physics physics)
-    : Base(physics)
+    : Base(physics, true)
     , d_keff_cycle(keff_init)
 {
     // set the tally name
-    b_name = std::string("keff");
+    set_name("keff");
 
     // reset tally
     reset();

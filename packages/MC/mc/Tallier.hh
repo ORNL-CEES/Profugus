@@ -93,6 +93,12 @@ class Tallier
     }
     //@}
 
+    //@{
+    //! Iterate through tallies.
+    auto begin() -> decltype(d_tallies.begin()) { return d_tallies.begin(); }
+    auto end()   -> decltype(d_tallies.end())   { return d_tallies.end(); }
+    //@}
+
     // Initialize internal data structures after adding tallies.
     void build();
 

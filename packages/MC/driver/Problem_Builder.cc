@@ -18,9 +18,11 @@
 #include "utils/Definitions.hh"
 #include "utils/String_Functions.hh"
 #include "xs/XS_Builder.hh"
+#include "geometry/Mesh_Geometry.hh"
 #include "mc/Box_Shape.hh"
 #include "mc/VR_Analog.hh"
 #include "mc/VR_Roulette.hh"
+#include "mc/Fission_Matrix_Tally.hh"
 #include "Problem_Builder.hh"
 
 namespace mc
@@ -493,9 +495,42 @@ void Problem_Builder::build_source(const ParameterList &source_db)
  */
 void Problem_Builder::build_tallies()
 {
+    using profugus::Mesh_Geometry;
+    using profugus::Fission_Matrix_Tally;
+
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
     d_tallier->set(d_geometry, d_physics);
+
+    // check for fission matrix tallies
+    if (d_db->isSublist("fission_matrix_db"))
+    {
+        // get the database
+        const ParameterList &fdb = d_db->sublist("fission_matrix_db");
+
+        // validate that there is a fission matrix mesh defined
+        VALIDATE(fdb.isParameter("x_bounds"), "Failed to define x-boundaries "
+                 << "for fission matrix mesh");
+        VALIDATE(fdb.isParameter("y_bounds"), "Failed to define y-boundaries "
+                 << "for fission matrix mesh");
+        VALIDATE(fdb.isParameter("z_bounds"), "Failed to define z-boundaries "
+                 << "for fission matrix mesh");
+
+        // get the fission matrix mesh boundaries
+        auto xb = fdb.get<OneDArray_dbl>("x_bounds").toVector();
+        auto yb = fdb.get<OneDArray_dbl>("y_bounds").toVector();
+        auto zb = fdb.get<OneDArray_dbl>("z_bounds").toVector();
+        Fission_Matrix_Tally::SP_Mesh_Geometry geo(
+            std::make_shared<Mesh_Geometry>(xb, yb, zb));
+
+        // build the fission matrix
+        SP_Tally fm_tally(std::make_shared<Fission_Matrix_Tally>(
+                              d_db, d_physics, geo));
+        CHECK(fm_tally);
+
+        // add this to the tallier
+        d_tallier->add_pathlength_tally(fm_tally);
+    }
 
     ENSURE(d_tallier);
 }
