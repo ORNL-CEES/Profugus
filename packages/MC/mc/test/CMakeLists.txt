@@ -20,7 +20,7 @@ TRIBITS_ADD_LIBRARY(mc_test_lib
   SourceTestBase.cc
   TransporterTestBase.cc
   TESTONLY
-  DEPLIBS MC Utils_gtest)
+  DEPLIBS MC)
 
 ##---------------------------------------------------------------------------##
 ## TESTING

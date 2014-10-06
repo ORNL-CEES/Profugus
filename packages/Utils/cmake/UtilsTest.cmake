@@ -1,4 +1,4 @@
-#---------------------------------------------------------------------------##
+##---------------------------------------------------------------------------##
 ## Utils/cmake/UtilsTest.cmake
 ## Thomas M. Evans
 ## Wednesday July 11 14:35:42 2012
@@ -77,17 +77,16 @@ FUNCTION(ADD_UTILS_TEST SOURCE_FILE)
 
   # Set googletest/harness options
   IF (PARSE_LEGACY)
-    SET(PASS_RE ${UtilsPass})
-    SET(FAIL_RE ${UtilsFail})
-    SET(DEPLIBS Utils_comm)
+    MESSAGE(ERROR "Legacy testing unavailable in Profugus.")
   ELSE()
     SET(PASS_RE ${UtilsGtestPass})
     SET(FAIL_RE ${UtilsGtestFail})
-    SET(DEPLIBS Utils_gtest)
   ENDIF()
 
-  # Add additional library dependencies
-  LIST(APPEND DEPLIBS ${PARSE_DEPLIBS})
+  # Add additional library dependencies if needed
+  IF(PARSE_DEPLIBS)
+    SET(DEPLIBS_CMD TESTONLYLIBS ${PARSE_DEPLIBS})
+  ENDIF()
 
   # Set number of processors, defaulting to UtilsNP
   SET(NUM_PROCS ${PARSE_NP})
@@ -112,7 +111,7 @@ FUNCTION(ADD_UTILS_TEST SOURCE_FILE)
   TRIBITS_ADD_EXECUTABLE(
     ${EXE_NAME}
     SOURCES ${SOURCE_FILE}
-    DEPLIBS ${DEPLIBS}
+    ${DEPLIBS_CMD}
     COMM ${COMM}
     )
 

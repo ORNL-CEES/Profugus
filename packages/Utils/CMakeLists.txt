@@ -302,6 +302,8 @@ SET(GTEST_SOURCES
   gtest/Gtest_Functions.cc
   gtest/gtest-all.cc)
 
+LIST(APPEND SOURCES ${GTEST_SOURCES})
+
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h DESTINATION include/Utils)
 
@@ -312,13 +314,6 @@ TRIBITS_ADD_LIBRARY(
   Utils
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
-
-TRIBITS_ADD_LIBRARY(
-  Utils_gtest
-  TESTONLY
-  SOURCES ${GTEST_SOURCES}
-  DEPLIBS Utils
-  )
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package
