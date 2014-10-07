@@ -94,7 +94,7 @@ StratimikosSolver<T>::StratimikosSolver(RCP_ParameterList db)
  */
 template <class T>
 void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
-                                     Teuchos::RCP<const MV> b)
+                                 Teuchos::RCP<const MV> b)
 {
     using Teuchos::RCP;
     using Teuchos::rcp;
@@ -117,7 +117,7 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
     // Initialize LOWS
     if( prec != Teuchos::null )
     {
-        Thyra::initializePreconditionedOp<double>(
+        Thyra::initializePreconditionedOp<ST>(
             *d_factory, d_thyraA, prec, d_solver.ptr());
     }
     // If the operator has changed but we are reusing the preconditioner then
@@ -125,23 +125,23 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
     else if ( d_updated_operator )
     {
         // Reuse as much information from previous solve as possible
-        Thyra::initializeAndReuseOp<double>(
+        Thyra::initializeAndReuseOp<ST>(
             *d_factory, d_thyraA, d_solver.ptr());
         d_updated_operator = false;
     }
 
     // make Thyra view into the solution vector
-    RCP<Thyra::MultiVectorBase<double> > thyra_x =
+    RCP<Thyra::MultiVectorBase<ST> > thyra_x =
         buildThyraMV(x,d_thyraA->domain());
 
     // make Thyra view of the right-hand side
-    RCP<const Thyra::MultiVectorBase<double> > thyra_b =
+    RCP<const Thyra::MultiVectorBase<ST> > thyra_b =
         buildThyraConstMV(b,d_thyraA->range());
 
     // solve
-    Thyra::SolveCriteria<double> criteria;
+    Thyra::SolveCriteria<ST> criteria;
 
-    std::vector<double> b_norm(1);
+    std::vector<ST> b_norm(1);
     MVT::MvNorm(*b,b_norm);
 
     // measure convergence against |A*x-b| / |b|
@@ -153,19 +153,19 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
 
     // set maximum iterations
     criteria.extraParameters = Teuchos::parameterList();
-    criteria.extraParameters->set<int>("Maximum Iterations", b_max_iters);
+    criteria.extraParameters->template set<int>("Maximum Iterations", b_max_iters);
 
     // solve
-    Thyra::SolveStatus<double> solveStatus = Thyra::solve<double>(
+    Thyra::SolveStatus<ST> solveStatus = Thyra::solve<ST>(
         *d_solver, Thyra::NOTRANS, *thyra_b, thyra_x.ptr(), ptrInArg(criteria));
 
-    std::vector<double> x_norm(1);
+    std::vector<ST> x_norm(1);
     MVT::MvNorm(*x,x_norm);
 
     // get the number of iterations for the solve
-    b_num_iters = solveStatus.extraParameters->get<int>("Iteration Count");
+    b_num_iters = solveStatus.extraParameters->template get<int>("Iteration Count");
 
-    double final_res = solveStatus.achievedTol;
+    ST final_res = solveStatus.achievedTol;
 
     Thyra::ESolveStatus status = solveStatus.solveStatus;
 
@@ -220,10 +220,10 @@ void StratimikosSolver<EpetraTypes>::set_preconditioner(
  * \brief Wrap MV into a Thyra vector
  */
 template <>
-Teuchos::RCP<Thyra::MultiVectorBase<double> >
+Teuchos::RCP<Thyra::MultiVectorBase<EpetraTypes::ST> >
 StratimikosSolver<EpetraTypes>::buildThyraMV(
     Teuchos::RCP<Epetra_MultiVector> x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const
+    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
 {
     return Thyra::create_MultiVector(x,space);
 }
@@ -233,10 +233,10 @@ StratimikosSolver<EpetraTypes>::buildThyraMV(
  * \brief Wrap const MV into a Thyra vector
  */
 template <>
-Teuchos::RCP<const Thyra::MultiVectorBase<double> >
+Teuchos::RCP<const Thyra::MultiVectorBase<EpetraTypes::ST> >
 StratimikosSolver<EpetraTypes>::buildThyraConstMV(
     Teuchos::RCP<const Epetra_MultiVector> x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const
+    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
 {
     return Thyra::create_MultiVector(x,space);
 }
@@ -251,11 +251,11 @@ void StratimikosSolver<TpetraTypes>::set_operator(
         Teuchos::RCP<TpetraTypes::OP> A)
 {
     // Create thyra operator
-    Teuchos::RCP<Thyra::VectorSpaceBase<double> > rangeSpace =
-        Thyra::tpetraVectorSpace<double>(A->getRangeMap());
-    Teuchos::RCP<Thyra::VectorSpaceBase<double> > domainSpace =
-        Thyra::tpetraVectorSpace<double>(A->getDomainMap());
-    d_thyraA = Thyra::tpetraLinearOp<double,int,int,KokkosClassic::SerialNode>(
+    Teuchos::RCP<Thyra::VectorSpaceBase<ST> > rangeSpace =
+        Thyra::tpetraVectorSpace<ST>(A->getRangeMap());
+    Teuchos::RCP<Thyra::VectorSpaceBase<ST> > domainSpace =
+        Thyra::tpetraVectorSpace<ST>(A->getDomainMap());
+    d_thyraA = Thyra::tpetraLinearOp<ST,LO,GO,NODE>(
         rangeSpace,domainSpace,A);
 
     // Indicate that the operator has been updated.
@@ -290,7 +290,7 @@ void StratimikosSolver<TpetraTypes>::set_preconditioner(
  * \brief Wrap MV into a Thyra vector
  */
 template <>
-Teuchos::RCP<Thyra::MultiVectorBase<double> >
+Teuchos::RCP<Thyra::MultiVectorBase<TpetraTypes::ST> >
 StratimikosSolver<TpetraTypes>::buildThyraMV(
     Teuchos::RCP<TpetraTypes::MV> x,
     Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
@@ -303,7 +303,7 @@ StratimikosSolver<TpetraTypes>::buildThyraMV(
  * \brief Wrap const MV into a Thyra vector
  */
 template <>
-Teuchos::RCP<const Thyra::MultiVectorBase<double> >
+Teuchos::RCP<const Thyra::MultiVectorBase<TpetraTypes::ST> >
 StratimikosSolver<TpetraTypes>::buildThyraConstMV(
     Teuchos::RCP<const TpetraTypes::MV> x,
     Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const

@@ -35,16 +35,16 @@ namespace profugus
 
 struct EpetraTypes
 {
-    typedef double                    ST;
-    typedef int                       LO;
-    typedef int                       GO;
-    typedef KokkosClassic::SerialNode NODE;
-    typedef Epetra_MultiVector        MV;
-    typedef Epetra_Vector             VECTOR;
-    typedef Epetra_Operator           OP;
-    typedef Epetra_Map                MAP;
-    typedef Epetra_CrsMatrix          MATRIX;
-    typedef Epetra_CrsGraph           GRAPH;
+    typedef double                                      ST;
+    typedef int                                         LO;
+    typedef int                                         GO;
+    typedef KokkosClassic::DefaultNode::DefaultNodeType NODE;
+    typedef Epetra_MultiVector                          MV;
+    typedef Epetra_Vector                               VECTOR;
+    typedef Epetra_Operator                             OP;
+    typedef Epetra_Map                                  MAP;
+    typedef Epetra_CrsMatrix                            MATRIX;
+    typedef Epetra_CrsGraph                             GRAPH;
 };
 
 struct TpetraTypes
