@@ -44,13 +44,38 @@ Partitioner::Partitioner(RCP_ParameterList pl)
 
     // initialize blocks and sets
     d_num_sets  = pl->get<int>("num_sets");
+    if( d_nodes % d_num_sets != 0 )
+    {
+        std::stringstream ss;
+        ss << "Number of nodes (" << d_nodes << ") is not divisible "
+           << " by the requested number of sets (" << d_num_sets << ")"
+           << std::endl;
+        VALIDATE(false,ss.str());
+    }
+    d_num_blocks = d_nodes / d_num_sets;
     if( pl->isType<int>("num_blocks_i") )
     {
         d_Nb[I] = pl->get<int>("num_blocks_i");
-        INSIST( pl->isType<int>("num_blocks_j"),
-                "Must specify num_blocks_j if specifying num_blocks_i." );
-        d_Nb[J] = pl->get<int>("num_blocks_j");
-        d_num_blocks = d_Nb[I] * d_Nb[J];
+        if( d_num_blocks % d_Nb[I] != 0 )
+        {
+            std::stringstream ss;
+            ss << "Number of blocks (" << d_num_blocks << ") is not divisible"
+               << " by the requested number of I blocks (" << d_Nb[I] << ")"
+               << std::endl;
+            VALIDATE(false,ss.str());
+        }
+
+        if( pl->isType<int>("num_blocks_j") )
+        {
+            d_Nb[J] = pl->get<int>("num_blocks_j");
+        }
+        else
+        {
+            d_Nb[J] = d_num_blocks / d_Nb[I];
+        }
+        VALIDATE(d_Nb[I]*d_Nb[J]==d_num_blocks,
+                 "Requested number of I and J blocks is not consistent"
+                 " with the total number of blocks.");
     }
     else
     {
