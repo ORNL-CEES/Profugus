@@ -28,8 +28,7 @@ namespace profugus
 Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
                                            SP_Physics       physics,
                                            SP_Mesh_Geometry fm_mesh)
-    : Base(physics, true)
-    , d_geometry(physics->get_geometry())
+    : d_geometry(physics->get_geometry())
     , d_fm_mesh(fm_mesh)
     , d_numerator()
     , d_denominator(d_fm_mesh->num_cells(), 0.0)
@@ -37,12 +36,19 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
     , d_cycle_ctr(0)
     , d_tally_started(false)
 {
+    REQUIRE(physics);
     REQUIRE(!db.is_null());
     REQUIRE(db->isParameter("num_cycles"));
     REQUIRE(db->isSublist("fission_matrix_db"));
 
+    // this is an inactive tally
+    b_inactive = true;
+
+    // assign the physics
+    b_physics = physics;
+
     // set the name
-    set_name("fission_matrix");
+    Base::set_name("fission_matrix");
 
     // get the fission matrix sublist
     ParameterList_t &opt = db->sublist("fission_matrix_db");
@@ -116,6 +122,8 @@ void Fission_Matrix_Tally::build_matrix()
  */
 void Fission_Matrix_Tally::birth(const Particle_t &p)
 {
+    std::cout << "BIRTH: " <<  d_cycle_start << " " << d_cycle_ctr << std::endl;
+
     // return if we haven't started tallying yet
     if (d_cycle_start > d_cycle_ctr)
         return;
@@ -151,6 +159,8 @@ void Fission_Matrix_Tally::accumulate(double            step,
                                       const Particle_t &p)
 {
     using geometry::INSIDE;
+
+    std::cout << "ACCUMULATE: " <<  d_cycle_start << " " << d_cycle_ctr << std::endl;
 
     // return if we haven't started tallying yet
     if (d_cycle_start > d_cycle_ctr)
@@ -212,6 +222,9 @@ void Fission_Matrix_Tally::accumulate(double            step,
 void Fission_Matrix_Tally::end_cycle(double num_particles)
 {
 #ifdef USE_HDF5
+
+    std::cout << "END: " << d_cycle_ctr << " " << d_cycle_out << std::endl;
+
     // build the sparse-stored, ordered fission matrix if we are past the
     // output cycle
     if (d_cycle_ctr >= d_cycle_out)

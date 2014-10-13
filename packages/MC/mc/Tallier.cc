@@ -20,6 +20,51 @@ namespace profugus
 {
 
 //---------------------------------------------------------------------------//
+// PRIVATE TEMPLATE IMPLEMENTATION
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Prune added tallies for doubles.
+ */
+template<class Vec_T>
+void Tallier::prune(Vec_T &tallies)
+{
+    // sort the tally container based on the tally name
+    auto sort_f = [](const SP_Tally &a, const SP_Tally &b)
+                  { return a->name() < b->name(); };
+    std::sort(tallies.begin(), tallies.end(), sort_f);
+
+    // make a new tally container
+    Vec_T new_tallies;
+
+    // define a place-holder for the "previous tally" to use to check for
+    // duplicates
+    typename Vec_T::value_type prev_tally;
+    CHECK(!prev_tally);
+
+    // iterate through tallies and remove duplicates
+    for (const auto &t : tallies)
+    {
+        CHECK(t);
+
+        // if this is a dublicate, continue
+        if (t == prev_tally)
+            continue;
+
+        // add the tally
+        new_tallies.push_back(t);
+
+        // update the previous tally
+        prev_tally = t;
+    }
+    CHECK(new_tallies.size() <= tallies.size());
+    REMEMBER(int size = new_tallies.size());
+
+    // swap the new_tallies with the tallies
+    tallies.swap(new_tallies);
+    ENSURE(tallies.size() == size);
+}
+
+//---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 /*!
@@ -59,7 +104,7 @@ void Tallier::set(SP_Geometry geometry,
 /*!
  * \brief Add a pathlength tally.
  */
-void Tallier::add_pathlength_tally(SP_Tally tally)
+void Tallier::add_pathlength_tally(SP_Pathlength_Tally tally)
 {
     REQUIRE(tally);
     REQUIRE(d_build_phase < BUILT);
@@ -72,7 +117,7 @@ void Tallier::add_pathlength_tally(SP_Tally tally)
 /*!
  * \brief Add a source tally.
  */
-void Tallier::add_source_tally(SP_Tally tally)
+void Tallier::add_source_tally(SP_Source_Tally tally)
 {
     REQUIRE(tally);
     REQUIRE(d_build_phase < BUILT);
@@ -97,7 +142,10 @@ void Tallier::build()
     // add pathlength and source tallies to the "totals"
     d_tallies.insert(d_tallies.end(), d_pl.begin(), d_pl.end());
     d_tallies.insert(d_tallies.end(), d_src.begin(), d_src.end());
-    CHECK(num_tallies() == num_source_tallies() + num_pathlength_tallies());
+
+    // prune tallies that are both source and pathlength tallies
+    prune(d_tallies);
+    CHECK(num_tallies() <= num_source_tallies() + num_pathlength_tallies());
 
     // Set the build phase
     d_build_phase = BUILT;
@@ -306,50 +354,6 @@ void Tallier::swap(Tallier &rhs)
 
     // swap build phase
     std::swap(d_build_phase, rhs.d_build_phase);
-}
-
-//---------------------------------------------------------------------------//
-// IMPLEMENTATION
-//---------------------------------------------------------------------------//
-/*!
- * \brief Prune added tallies for doubles.
- */
-void Tallier::prune(Vec_Tallies &tallies)
-{
-    // sort the tally container based on the tally name
-    auto sort_f = [](const SP_Tally &a, const SP_Tally &b)
-                  { return a->name() < b->name(); };
-    std::sort(tallies.begin(), tallies.end(), sort_f);
-
-    // make a new tally container
-    Vec_Tallies new_tallies;
-
-    // define a place-holder for the "previous tally" to use to check for
-    // duplicates
-    SP_Tally prev_tally;
-    CHECK(!prev_tally);
-
-    // iterate through tallies and remove duplicates
-    for (const auto &t : tallies)
-    {
-        CHECK(t);
-
-        // if this is a dublicate, continue
-        if (t == prev_tally)
-            continue;
-
-        // add the tally
-        new_tallies.push_back(t);
-
-        // update the previous tally
-        prev_tally = t;
-    }
-    CHECK(new_tallies.size() <= tallies.size());
-    REMEMBER(int size = new_tallies.size());
-
-    // swap the new_tallies with the tallies
-    tallies.swap(new_tallies);
-    ENSURE(tallies.size() == size);
 }
 
 } // end namespace profugus

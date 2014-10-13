@@ -25,9 +25,16 @@ namespace profugus
  */
 Keff_Tally::Keff_Tally(double     keff_init,
                        SP_Physics physics)
-    : Base(physics, true)
-    , d_keff_cycle(keff_init)
+    : d_keff_cycle(keff_init)
 {
+    REQUIRE(physics);
+
+    // this is an inactive tally
+    b_inactive = true;
+
+    // assign the physics
+    b_physics = physics;
+
     // set the tally name
     set_name("keff");
 

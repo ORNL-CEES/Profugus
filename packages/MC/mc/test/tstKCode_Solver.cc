@@ -29,7 +29,7 @@
 // Helpers
 //---------------------------------------------------------------------------//
 
-class Dummy_Tally : public profugus::Tally
+class Dummy_Tally : public profugus::Pathlength_Tally
 {
     typedef profugus::Tally     Base;
     typedef std::vector<double> Vec_Dbl;
@@ -43,10 +43,10 @@ class Dummy_Tally : public profugus::Tally
 
     // Constructor
     Dummy_Tally(SP_Physics physics)
-        : Base(physics)
-        , d_pl_counter(1)
+        : d_pl_counter(1)
         , d_finalized_np(-1.)
     {
+        b_physics = physics;
         Base::set_name("dumb_tally");
         ENSURE(d_pl_counter == 1);
     }

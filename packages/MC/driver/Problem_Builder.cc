@@ -524,12 +524,13 @@ void Problem_Builder::build_tallies()
             std::make_shared<Mesh_Geometry>(xb, yb, zb));
 
         // build the fission matrix
-        SP_Tally fm_tally(std::make_shared<Fission_Matrix_Tally>(
-                              d_db, d_physics, geo));
+        auto fm_tally(std::make_shared<Fission_Matrix_Tally>(
+                          d_db, d_physics, geo));
         CHECK(fm_tally);
 
         // add this to the tallier
         d_tallier->add_pathlength_tally(fm_tally);
+        d_tallier->add_source_tally(fm_tally);
     }
 
     ENSURE(d_tallier);

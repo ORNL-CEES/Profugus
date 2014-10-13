@@ -31,7 +31,7 @@ namespace profugus
  */
 //===========================================================================//
 
-class Keff_Tally : public Tally
+class Keff_Tally : public Pathlength_Tally
 {
     typedef Tally Base;
 
@@ -89,9 +89,6 @@ class Keff_Tally : public Tally
     double keff_sum_sq() const { return d_keff_sum_sq; }
 
     // >>> DERIVED INTERFACE
-
-    //! Nothing to do at particle birth.
-    virtual void birth(const Particle_t &p) final { /* * */ }
 
     // Track particle and do tallying.
     virtual void accumulate(double step, const Particle_t &p) override final;

@@ -275,6 +275,7 @@ void KCode_Solver::initialize()
         // if this tally should be on during inactive cycles, add it
         if (tally->inactive_cycle_tally())
         {
+#if 0
             if (tally->type() == profugus::tally::PATHLENGTH)
             {
                 d_inactive_tallier->add_pathlength_tally(tally);
@@ -287,6 +288,7 @@ void KCode_Solver::initialize()
             {
                 throw profugus::assertion("Unknown tally type.");
             }
+#endif
         }
     }
 

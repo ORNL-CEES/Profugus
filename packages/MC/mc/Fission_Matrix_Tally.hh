@@ -37,7 +37,8 @@ namespace profugus
  */
 //===========================================================================//
 
-class Fission_Matrix_Tally : public Tally
+class Fission_Matrix_Tally : public Source_Tally,
+                             public Pathlength_Tally
 {
     typedef Tally Base;
 

@@ -61,20 +61,6 @@ enum Reaction_Type {
 
 } // end namespace physics
 
-//---------------------------------------------------------------------------//
-
-namespace tally
-{
-
-//! Tally types.
-enum Tally_Type {
-    SOURCE,       //!< Source tally
-    PATHLENGTH,   //!< Pathlength tally
-    END_TALLY_TYPE
-};
-
-} // end namespace tally
-
 } // end namespace mc
 
 #endif // mc_Definitions_hh

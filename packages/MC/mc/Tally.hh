@@ -47,20 +47,12 @@ class Tally
     // Tally name.
     std::string b_name;
 
-    // Tally type.
-    tally::Tally_Type b_type;
-
     // Is this on during inactive cycles?
     bool b_inactive;
 
   public:
     //! Constructor.
-    Tally(SP_Physics physics, bool inactive_tally = false)
-        : b_physics(physics), b_name("tally"), b_type(tally::PATHLENGTH),
-          b_inactive(inactive_tally)
-    {
-        ENSURE(b_physics);
-    }
+    Tally() : b_inactive(false) {/*...*/}
 
     // Destructor.
     virtual ~Tally() = 0;
@@ -71,19 +63,10 @@ class Tally
     //! Get the tally name.
     const std::string& name() const { return b_name; }
 
-    //! Return the tally type.
-    const tally::Tally_Type& type() const { return b_type; }
-
     //! Query if this tally is on during inactive cycles.
     bool inactive_cycle_tally() const { return b_inactive; }
 
     // >>> PUBLIC INTERFACE
-
-    //! Tally events at particle birth.
-    virtual void birth(const Particle_t &p) = 0;
-
-    //! Track particle, using pre-calculated physics information (multipliers)
-    virtual void accumulate(double step, const Particle_t &p) = 0;
 
     //! Accumulate first and second moments
     virtual void end_history() = 0;
@@ -102,6 +85,50 @@ class Tally
 
     //! Clear/re-initialize all tally values between solves
     virtual void reset() = 0;
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \class Source_Tally
+ * \brief Defines source tally interfaces.
+ */
+class Source_Tally : public virtual Tally
+{
+    typedef Tally Base;
+
+  public:
+    // Constructor.
+    Source_Tally() {/*...*/}
+
+    // Destructor.
+    virtual ~Source_Tally() = 0;
+
+    // >>> TALLY INTERFACE
+
+    //! Tally events at particle birth.
+    virtual void birth(const Particle_t &p) = 0;
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \class Pathlength_Tally
+ * \brief Defines source tally interfaces.
+ */
+class Pathlength_Tally : public virtual Tally
+{
+    typedef Tally Base;
+
+  public:
+    // Constructor.
+    Pathlength_Tally() {/*...*/}
+
+    // Destructor.
+    virtual ~Pathlength_Tally() = 0;
+
+    // >>> TALLY INTERFACE
+
+    //! Track particle and tally.
+    virtual void accumulate(double step, const Particle_t &p) = 0;
 };
 
 } // end namespace profugus

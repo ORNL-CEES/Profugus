@@ -21,16 +21,15 @@
 // Tally Types
 //---------------------------------------------------------------------------//
 
-class A_Tally : public profugus::Tally
+class A_Tally : public profugus::Pathlength_Tally
 {
   public:
     A_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
     {
+        b_physics = physics;
         set_name("a_pl_tally");
     }
 
-    void birth(const Particle_t &p) { /* * */ }
     void accumulate(double step, const Particle_t &p) { /* * */ }
     void end_history() { /* * */ }
     void finalize(double num_particles) { /* * */ }
@@ -39,16 +38,15 @@ class A_Tally : public profugus::Tally
 
 //---------------------------------------------------------------------------//
 
-class P_Tally : public profugus::Tally
+class P_Tally : public profugus::Pathlength_Tally
 {
   public:
     P_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
     {
+        b_physics = physics;
         set_name("p_pl_tally");
     }
 
-    void birth(const Particle_t &p) { /* * */ }
     void accumulate(double step, const Particle_t &p) { /* * */ }
     void end_history() { /* * */ }
     void finalize(double num_particles) { /* * */ }
@@ -57,17 +55,16 @@ class P_Tally : public profugus::Tally
 
 //---------------------------------------------------------------------------//
 
-class Q_Tally : public profugus::Tally
+class Q_Tally : public profugus::Source_Tally
 {
   public:
     Q_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
     {
+        b_physics = physics;
         set_name("q_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
-    void accumulate(double step, const Particle_t &p) { /* * */ }
     void end_history() { /* * */ }
     void finalize(double num_particles) { /* * */ }
     void reset() { /* * */ }
@@ -75,13 +72,31 @@ class Q_Tally : public profugus::Tally
 
 //---------------------------------------------------------------------------//
 
-class S_Tally : public profugus::Tally
+class S_Tally : public profugus::Source_Tally
 {
   public:
     S_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
     {
+        b_physics = physics;
         set_name("s_src_tally");
+    }
+
+    void birth(const Particle_t &p) { /* * */ }
+    void end_history() { /* * */ }
+    void finalize(double num_particles) { /* * */ }
+    void reset() { /* * */ }
+};
+
+//---------------------------------------------------------------------------//
+
+class B_Tally : public profugus::Pathlength_Tally,
+                public profugus::Source_Tally
+{
+  public:
+    B_Tally(SP_Physics physics)
+    {
+        b_physics = physics;
+        set_name("b_pl_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
@@ -98,16 +113,20 @@ class S_Tally : public profugus::Tally
 class TallierTest : public testing::Test
 {
   protected:
-    typedef profugus::Tallier      Tallier_t;
-    typedef Tallier_t::SP_Tally    SP_Tally;
-    typedef profugus::Physics      Physics_t;
-    typedef Physics_t::Geometry_t  Geometry_t;
-    typedef profugus::Keff_Tally   Keff_Tally_t;
-    typedef Physics_t::Particle_t  Particle_t;
-    typedef Physics_t::XS_t        XS_t;
-    typedef Physics_t::RCP_XS      RCP_XS;
-    typedef Physics_t::SP_Geometry SP_Geometry;
-    typedef Tallier_t::SP_Physics  SP_Physics;
+    typedef profugus::Tallier              Tallier_t;
+    typedef Tallier_t::SP_Tally            SP_Tally;
+    typedef profugus::Physics              Physics_t;
+    typedef Physics_t::Geometry_t          Geometry_t;
+    typedef profugus::Keff_Tally           Keff_Tally_t;
+    typedef Physics_t::Particle_t          Particle_t;
+    typedef Physics_t::XS_t                XS_t;
+    typedef Physics_t::RCP_XS              RCP_XS;
+    typedef Physics_t::SP_Geometry         SP_Geometry;
+    typedef Tallier_t::SP_Physics          SP_Physics;
+    typedef Tallier_t::Pathlength_Tally_t  Pathlength_Tally_t;
+    typedef Tallier_t::Source_Tally_t      Source_Tally_t;
+    typedef Tallier_t::SP_Pathlength_Tally SP_Pathlength_Tally;
+    typedef Tallier_t::SP_Source_Tally     SP_Source_Tally;
 
     typedef Teuchos::ParameterList        ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;
@@ -589,6 +608,7 @@ TEST_F(TallierTest, add)
     auto p(std::make_shared<P_Tally>(physics));
     auto q(std::make_shared<Q_Tally>(physics));
     auto s(std::make_shared<S_Tally>(physics));
+    auto b(std::make_shared<B_Tally>(physics));
 
     // add the tallies
     tallier.add_pathlength_tally(keff);
@@ -628,6 +648,49 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(5, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+
+    tallier.finalize(1);
+    tallier.reset();
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_source_tallies());
+
+    // add both tallies
+    tallier.add_pathlength_tally(b);
+    tallier.add_source_tally(b);
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(4, tallier.num_pathlength_tallies());
+    EXPECT_EQ(3, tallier.num_source_tallies());
+
+    tallier.build();
+
+    EXPECT_EQ(6, tallier.num_tallies());
+    EXPECT_EQ(4, tallier.num_pathlength_tallies());
+    EXPECT_EQ(3, tallier.num_source_tallies());
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(TallierTest, casts)
+{
+    auto a(std::make_shared<A_Tally>(physics));
+    auto p(std::make_shared<P_Tally>(physics));
+    auto q(std::make_shared<Q_Tally>(physics));
+    auto s(std::make_shared<S_Tally>(physics));
+    auto b(std::make_shared<B_Tally>(physics));
+
+    EXPECT_TRUE(static_cast<bool>(
+                    std::dynamic_pointer_cast<Pathlength_Tally_t>(a)));
+    EXPECT_TRUE(static_cast<bool>(
+                    std::dynamic_pointer_cast<Pathlength_Tally_t>(p)));
+    EXPECT_FALSE(static_cast<bool>(
+                     std::dynamic_pointer_cast<Pathlength_Tally_t>(q)));
+    EXPECT_FALSE(static_cast<bool>(
+                     std::dynamic_pointer_cast<Pathlength_Tally_t>(s)));
+    EXPECT_TRUE(static_cast<bool>(
+                    std::dynamic_pointer_cast<Pathlength_Tally_t>(b)));
 }
 
 //---------------------------------------------------------------------------//
