@@ -11,6 +11,8 @@
 #ifndef spn_MatrixTraits_hh
 #define spn_MatrixTraits_hh
 
+#include <SPn/config.h>
+
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayRCP.hpp"
 #include "Teuchos_DefaultComm.hpp"

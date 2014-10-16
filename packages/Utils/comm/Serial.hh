@@ -3,7 +3,7 @@
  * \file   comm/Serial.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 14:32:30 2008
- * \brief
+ * \brief  Serial comm declarations.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
@@ -15,7 +15,7 @@
 #include <cstring>
 #include <algorithm>
 
-#include <comm/config.h>
+#include <Utils/config.h>
 #ifdef COMM_SCALAR
 
 #include "harness/DBC.hh"

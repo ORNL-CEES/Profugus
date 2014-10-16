@@ -20,6 +20,7 @@ autom4te.cache
 *.pdftex_t
 *.out
 *.pyc
+.DS_Store
 /doc/build
 /doc/pykba/build/
 /doc/infobook/INSTALL
