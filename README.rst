@@ -102,7 +102,7 @@ Building The Code
 
 The most straightforward method for building Profugus is to use the
 scripts in `Profugus/install`.  Profugus uses the `TriBITS` build
-system".  This system is a set of package-based extensions to standard
+system.  This system is a set of package-based extensions to standard
 cmake.  So, first you need to obtain *Trilinos* and *TriBITS* and put
 them in your top-level Profugus directory::
 
