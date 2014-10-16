@@ -1,4 +1,3 @@
-
 Description
 ***********
 
@@ -102,17 +101,17 @@ Building The Code
 *****************
 
 The most straightforward method for building Profugus is to use the
-scripts in "Profugus/install".  Profugus uses the "TriBITS build
+scripts in `Profugus/install`.  Profugus uses the `TriBITS` build
 system".  This system is a set of package-based extensions to standard
 cmake.  So, first you need to obtain *Trilinos* and *TriBITS* and put
-them in your top-level Profugus directory:
+them in your top-level Profugus directory::
 
    > cd Profugus
    > git clone https://github.com/TriBITSPub/TriBITS.git
    > ln -s $PATH_TO_TRILINOS .
 
 The preferred mechanism for using the build scripts is to make a
-*target* directory where the build is to be performed:
+*target* directory where the build is to be performed::
 
    > pwd
      /home/me
@@ -123,9 +122,9 @@ The preferred mechanism for using the build scripts is to make a
    > pwd
      /home/me/debug/target
 
-The "install" directory contains several example build scripts.
+The `install` directory contains several example build scripts.
 General options for all platforms (which can be overridden at
-configure time) are specified in the "install/base.cmake":
+configure time) are specified in the `install/base.cmake`::
 
    ##---------------------------------------------------------------------------##
    ## CMAKE BASE FILE
@@ -170,7 +169,7 @@ the appropriate compiler flags for gcc.  The tests are also turned on
 by default; to disable tests in any upstream package simply do not
 explicitly *ENABLE* that package.  For example, to build the *SPn*
 package and all of its tests but only include required *source* from
-upstream packages, the user would specify:
+upstream packages, the user would specify::
 
    SET(Profugus_ENABLE_SPn ON CACHE BOOL "")
 
@@ -178,9 +177,9 @@ In this case, only the pieces of *Utils* needed to build *SPn* are
 compiled. All tests can be turned off by setting
 **Profugus_ENABLE_TESTS** to **OFF**.
 
-The "install" directory contains several build scripts that are all
+The `install` directory contains several build scripts that are all
 suffixed by the platform name.  For example, to build on a Linux
-*x86_64* system the "install/cmake_x86_64.sh" script can be used:
+*x86_64* system the "install/cmake_x86_64.sh" script can be used::
 
    #!/bin/sh
    ##---------------------------------------------------------------------------##
@@ -236,14 +235,14 @@ libraries for LAPACK to fit your platform.  The example assumes that
 the ATLAS LAPACK is available.  Any standard LAPACK distribution will
 work. HDF5 is **not** required, to build/run/test the applications;
 however, problem output will be severely curtailed if a parallel HDF5
-option is not provided.  If HDF5 is not available, setting:
+option is not provided.  If HDF5 is not available, setting::
 
    -DTPL_ENABLE_HDF5:BOOL=OFF \
 
 will disable HDF5.
 
 To complete the configuration, execute this script inside the *target*
-directory and then make/test/install:
+directory and then make/test/install::
 
    > pwd
      /home/me/debug/target
