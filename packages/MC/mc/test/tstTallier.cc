@@ -23,87 +23,103 @@
 
 class A_Tally : public profugus::Pathlength_Tally
 {
+    typedef profugus::Pathlength_Tally Base;
   public:
     A_Tally(SP_Physics physics)
+        : Base(physics, false)
     {
-        b_physics = physics;
         set_name("a_pl_tally");
     }
 
     void accumulate(double step, const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
 
 class P_Tally : public profugus::Pathlength_Tally
 {
+    typedef profugus::Pathlength_Tally Base;
   public:
     P_Tally(SP_Physics physics)
+        : Base(physics, false)
     {
-        b_physics = physics;
         set_name("p_pl_tally");
     }
 
     void accumulate(double step, const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
 
 class Q_Tally : public profugus::Source_Tally
 {
+    typedef profugus::Source_Tally Base;
   public:
     Q_Tally(SP_Physics physics)
+        : Base(physics, false)
     {
-        b_physics = physics;
         set_name("q_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
 
 class S_Tally : public profugus::Source_Tally
 {
+    typedef profugus::Source_Tally Base;
   public:
     S_Tally(SP_Physics physics)
+        : Base(physics, false)
     {
-        b_physics = physics;
         set_name("s_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
 
-class B_Tally : public profugus::Pathlength_Tally,
-                public profugus::Source_Tally
+class C_Tally : public profugus::Compound_Tally
 {
-  public:
-    B_Tally(SP_Physics physics)
-    {
-        b_physics = physics;
-        set_name("b_pl_src_tally");
-    }
+    typedef profugus::Compound_Tally Base;
 
-    void birth(const Particle_t &p) { /* * */ }
-    void accumulate(double step, const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
+  public:
+    class C_PL_Tally : public profugus::Pathlength_Tally
+    {
+      public:
+        C_PL_Tally(SP_Physics physics)
+            : profugus::Pathlength_Tally(physics, false)
+        {
+            set_name("c_tally");
+        }
+
+        void accumulate(double step, const Particle_t &p) { /* * */ }
+    };
+
+    class C_SRC_Tally : public profugus::Source_Tally
+    {
+      public:
+        C_SRC_Tally(SP_Physics physics)
+            : profugus::Source_Tally(physics, false)
+        {
+            set_name("c_tally");
+        }
+
+        void birth(const Particle_t &p) { /* * */ }
+    };
+
+  public:
+    C_Tally(SP_Physics physics)
+        : Base(physics, false)
+    {
+        set_name("c_tally");
+
+        // make compound tallies
+        b_pl_tally  = std::make_shared<C_PL_Tally>(physics);
+        b_src_tally = std::make_shared<C_SRC_Tally>(physics);
+    }
 };
 
 //---------------------------------------------------------------------------//
@@ -608,7 +624,7 @@ TEST_F(TallierTest, add)
     auto p(std::make_shared<P_Tally>(physics));
     auto q(std::make_shared<Q_Tally>(physics));
     auto s(std::make_shared<S_Tally>(physics));
-    auto b(std::make_shared<B_Tally>(physics));
+    auto c(std::make_shared<C_Tally>(physics));
 
     // add the tallies
     tallier.add_pathlength_tally(keff);
@@ -620,12 +636,14 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.build();
 
     EXPECT_EQ(5, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.finalize(1);
     tallier.reset();
@@ -633,6 +651,7 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     // add duplicates
     tallier.add_pathlength_tally(keff);
@@ -642,12 +661,14 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(5, tallier.num_pathlength_tallies());
     EXPECT_EQ(3, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.build();
 
     EXPECT_EQ(5, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.finalize(1);
     tallier.reset();
@@ -655,42 +676,22 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
-    // add both tallies
-    tallier.add_pathlength_tally(b);
-    tallier.add_source_tally(b);
+    // add compound tallies
+    tallier.add_compound_tally(c);
 
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(4, tallier.num_pathlength_tallies());
     EXPECT_EQ(3, tallier.num_source_tallies());
+    EXPECT_EQ(1, tallier.num_compound_tallies());
 
     tallier.build();
 
-    EXPECT_EQ(6, tallier.num_tallies());
+    EXPECT_EQ(8, tallier.num_tallies());
     EXPECT_EQ(4, tallier.num_pathlength_tallies());
     EXPECT_EQ(3, tallier.num_source_tallies());
-}
-
-//---------------------------------------------------------------------------//
-
-TEST_F(TallierTest, casts)
-{
-    auto a(std::make_shared<A_Tally>(physics));
-    auto p(std::make_shared<P_Tally>(physics));
-    auto q(std::make_shared<Q_Tally>(physics));
-    auto s(std::make_shared<S_Tally>(physics));
-    auto b(std::make_shared<B_Tally>(physics));
-
-    EXPECT_TRUE(static_cast<bool>(
-                    std::dynamic_pointer_cast<Pathlength_Tally_t>(a)));
-    EXPECT_TRUE(static_cast<bool>(
-                    std::dynamic_pointer_cast<Pathlength_Tally_t>(p)));
-    EXPECT_FALSE(static_cast<bool>(
-                     std::dynamic_pointer_cast<Pathlength_Tally_t>(q)));
-    EXPECT_FALSE(static_cast<bool>(
-                     std::dynamic_pointer_cast<Pathlength_Tally_t>(s)));
-    EXPECT_TRUE(static_cast<bool>(
-                    std::dynamic_pointer_cast<Pathlength_Tally_t>(b)));
+    EXPECT_EQ(1, tallier.num_compound_tallies());
 }
 
 //---------------------------------------------------------------------------//

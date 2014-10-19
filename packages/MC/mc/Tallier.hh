@@ -43,9 +43,11 @@ class Tallier
     typedef Tally                               Tally_t;
     typedef Pathlength_Tally                    Pathlength_Tally_t;
     typedef Source_Tally                        Source_Tally_t;
+    typedef Compound_Tally                      Compound_Tally_t;
     typedef std::shared_ptr<Tally_t>            SP_Tally;
     typedef std::shared_ptr<Pathlength_Tally_t> SP_Pathlength_Tally;
     typedef std::shared_ptr<Source_Tally_t>     SP_Source_Tally;
+    typedef std::shared_ptr<Compound_Tally_t>   SP_Compound_Tally;
     typedef std::shared_ptr<Geometry_t>         SP_Geometry;
     typedef std::shared_ptr<Physics_t>          SP_Physics;
     typedef std::vector<SP_Tally>               Vec_Tallies;
@@ -64,6 +66,7 @@ class Tallier
     // Persistent source and pathlength tallies.
     std::vector<SP_Pathlength_Tally> d_pl;
     std::vector<SP_Source_Tally>     d_src;
+    std::vector<SP_Compound_Tally>   d_comp;
 
   public:
     // Constructor.
@@ -81,6 +84,7 @@ class Tallier
     // Add tallies.
     void add_pathlength_tally(SP_Pathlength_Tally tally);
     void add_source_tally(SP_Source_Tally tally);
+    void add_compound_tally(SP_Compound_Tally tally);
 
     //@{
     //! Number of tallies.
@@ -95,6 +99,10 @@ class Tallier
     auto num_source_tallies() const -> decltype(d_src.size())
     {
         return d_src.size();
+    }
+    auto num_compound_tallies() const -> decltype(d_comp.size())
+    {
+        return d_comp.size();
     }
     //@}
 

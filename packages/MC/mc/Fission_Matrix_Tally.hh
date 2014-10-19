@@ -37,10 +37,9 @@ namespace profugus
  */
 //===========================================================================//
 
-class Fission_Matrix_Tally : public Source_Tally,
-                             public Pathlength_Tally
+class Fission_Matrix_Tally : public Compound_Tally
 {
-    typedef Tally Base;
+    typedef Compound_Tally Base;
 
   public:
     //@{
@@ -89,18 +88,6 @@ class Fission_Matrix_Tally : public Source_Tally,
 
     //! Track particle, using pre-calculated physics information (multipliers)
     void accumulate(double step, const Particle_t &p);
-
-    //! Accumulate first and second moments
-    void end_history() { /* * */ }
-
-    //! Do post-processing on first and second moments
-    void finalize(double num_particles) { /* * */ }
-
-    //! Begin active cycles in a kcode calculation (no-op)
-    void begin_active_cycles() { /* * */ }
-
-    //! Begin a new cycle in a kcode calculation (no-op)
-    void begin_cycle() { /* * */ }
 
     //! End a cycle in a kcode calculation.
     void end_cycle(double num_particles);

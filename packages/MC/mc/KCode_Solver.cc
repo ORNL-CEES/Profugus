@@ -275,20 +275,31 @@ void KCode_Solver::initialize()
         // if this tally should be on during inactive cycles, add it
         if (tally->inactive_cycle_tally())
         {
-#if 0
-            if (tally->type() == profugus::tally::PATHLENGTH)
+            // create tallies (only 1 can be valid)
+            auto pl_t  = std::dynamic_pointer_cast<Pathlength_Tally>(tally);
+            auto src_t = std::dynamic_pointer_cast<Source_Tally>(tally);
+            auto cpd_t = std::dynamic_pointer_cast<Compound_Tally>(tally);
+
+            // attempt to cast to valid tally types and add the tally
+            if (pl_t)
             {
-                d_inactive_tallier->add_pathlength_tally(tally);
+                CHECK(!src_t && !cpd_t);
+                d_inactive_tallier->add_pathlength_tally(pl_t);
             }
-            else if (tally->type() == profugus::tally::SOURCE)
+            else if (src_t)
             {
-                d_inactive_tallier->add_source_tally(tally);
+                CHECK(!pl_t && !cpd_t);
+                d_inactive_tallier->add_source_tally(src_t);
+            }
+            else if (cpd_t)
+            {
+                CHECK(!pl_t && !src_t);
+                d_inactive_tallier->add_compound_tally(cpd_t);
             }
             else
             {
                 throw profugus::assertion("Unknown tally type.");
             }
-#endif
         }
     }
 

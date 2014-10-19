@@ -39,3 +39,4 @@ autom4te.cache
 /doc/infobook/develop.tp
 /doc/infobook/develop.vr
 cmake/dependencies/
+.DS_Store

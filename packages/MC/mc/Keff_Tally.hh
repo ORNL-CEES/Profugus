@@ -33,7 +33,7 @@ namespace profugus
 
 class Keff_Tally : public Pathlength_Tally
 {
-    typedef Tally Base;
+    typedef Pathlength_Tally Base;
 
   public:
     //@{
@@ -93,12 +93,6 @@ class Keff_Tally : public Pathlength_Tally
     // Track particle and do tallying.
     virtual void accumulate(double step, const Particle_t &p) override final;
 
-    //! Accumulate first and second moments
-    virtual void end_history() final { /* * */ }
-
-    //! Do post-processing on first and second moments
-    virtual void finalize(double num_histories) final { /* * */ }
-
     // Begin active cycles in a kcode calculation.
     virtual void begin_active_cycles() override final;
 
@@ -109,7 +103,7 @@ class Keff_Tally : public Pathlength_Tally
     virtual void end_cycle(double num_particles) override final;
 
     // Clear/re-initialize all tally values between solves.
-    virtual void reset() final;
+    virtual void reset() override final;
 };
 
 } // end namespace profugus

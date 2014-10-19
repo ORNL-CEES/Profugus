@@ -41,6 +41,14 @@ Pathlength_Tally::~Pathlength_Tally()
 {
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Pure virtual destructor definition.
+ */
+Compound_Tally::~Compound_Tally()
+{
+}
+
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//

@@ -128,6 +128,23 @@ void Tallier::add_source_tally(SP_Source_Tally tally)
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Add a compound tally.
+ */
+void Tallier::add_compound_tally(SP_Compound_Tally tally)
+{
+    REQUIRE(tally);
+    REQUIRE(d_build_phase < BUILT);
+
+    // add the compound tally
+    d_comp.push_back(tally);
+
+    // add the source and pathlength tallies owned by the compound tally
+    add_source_tally(tally->get_src_tally());
+    add_pathlength_tally(tally->get_pl_tally());
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Initialize internal data structures after adding tallies.
  */
 void Tallier::build()
@@ -138,14 +155,14 @@ void Tallier::build()
     // prune the tallies for duplicates
     prune(d_pl);
     prune(d_src);
+    prune(d_comp);
 
-    // add pathlength and source tallies to the "totals"
+    // add pathlength, source, and compound tallies to the "totals"
     d_tallies.insert(d_tallies.end(), d_pl.begin(), d_pl.end());
     d_tallies.insert(d_tallies.end(), d_src.begin(), d_src.end());
-
-    // prune tallies that are both source and pathlength tallies
-    prune(d_tallies);
-    CHECK(num_tallies() <= num_source_tallies() + num_pathlength_tallies());
+    d_tallies.insert(d_tallies.end(), d_comp.begin(), d_comp.end());
+    CHECK(num_tallies() == num_source_tallies() + num_pathlength_tallies() +
+          num_compound_tallies());
 
     // Set the build phase
     d_build_phase = BUILT;
@@ -346,6 +363,7 @@ void Tallier::swap(Tallier &rhs)
     // swap vector internals
     d_pl.swap(rhs.d_pl);
     d_src.swap(rhs.d_src);
+    d_comp.swap(rhs.d_comp);
     d_tallies.swap(rhs.d_tallies);
 
     // swap geometry and physics
