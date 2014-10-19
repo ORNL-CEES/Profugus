@@ -529,8 +529,7 @@ void Problem_Builder::build_tallies()
         CHECK(fm_tally);
 
         // add this to the tallier
-        d_tallier->add_pathlength_tally(fm_tally);
-        d_tallier->add_source_tally(fm_tally);
+        d_tallier->add_compound_tally(fm_tally);
     }
 
     ENSURE(d_tallier);
