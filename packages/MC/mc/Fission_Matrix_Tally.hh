@@ -53,19 +53,99 @@ class Fission_Matrix_Tally : public Compound_Tally
     typedef Fission_Matrix_Processor::Denominator   Denominator;
     //@}
 
-  private:
-    // Geometry.
-    SP_Geometry d_geometry;
+    //! Fission matrix tally data struct.
+    struct FM_Data
+    {
+        // Geometry.
+        SP_Geometry d_geometry;
 
-    // Fission matrix mesh.
-    SP_Mesh_Geometry d_fm_mesh;
+        // Fission matrix mesh.
+        SP_Mesh_Geometry d_fm_mesh;
 
-    // Fission matrix tallies.
-    Sparse_Matrix d_numerator;
-    Denominator   d_denominator;
+        // Fission matrix tallies.
+        Sparse_Matrix d_numerator;
+        Denominator   d_denominator;
 
-    // Fission matrix processor.
-    Fission_Matrix_Processor d_processor;
+        // Fission matrix birth cell metadata index.
+        const unsigned int d_birth_idx;
+
+        // Fission matrix generation options.
+        int d_cycle_start;
+        int d_cycle_out;
+        int d_cycle_ctr;
+
+        // Tally started flag.
+        bool d_tally_started;
+
+        // Constructor.
+        FM_Data()
+            : d_birth_idx(
+                Particle::Metadata::new_pod_member<int>("fm_birth_cell"))
+        {/* * */}
+    };
+
+    //! Typedef for the fission matrix data.
+    typedef std::shared_ptr<FM_Data> SP_FM_Data;
+
+    //! Src_Tally class.
+    class Src_Tally : public Source_Tally
+    {
+      private:
+        // >>> DATA
+
+        // Common fission matrix tally data.
+        SP_FM_Data d_data;
+
+        // Geometric state on the fission tally mesh geometry.
+        Mesh_Geometry::Geo_State_t d_fm_state;
+
+      public:
+        // Constructor.
+        Src_Tally(SP_Physics physics, SP_FM_Data data)
+            : Source_Tally(physics, true)
+            , d_data(data)
+        {
+            REQUIRE(d_data);
+
+            // set the name
+            set_name("fission_matrix_source_tally");
+        }
+
+        // >>> INHERITED INTERFACE
+
+        //! Tally events at particle birth.
+        void birth(const Particle_t &p);
+    };
+
+    //! PL_Tally class.
+    class PL_Tally : public Pathlength_Tally
+    {
+      private:
+        // >>> DATA
+
+        // Common fission matrix tally data.
+        SP_FM_Data d_data;
+
+        // Geometric state on the fission tally mesh geometry.
+        Mesh_Geometry::Geo_State_t d_fm_state;
+
+      public:
+        // Constructor.
+        PL_Tally(SP_Physics physics, SP_FM_Data data)
+            : Pathlength_Tally(physics, true)
+            , d_data(data)
+        {
+            REQUIRE(d_data);
+
+            // set the name
+            set_name("fission_matrix_pathlength_tally");
+        }
+
+        // >>> INHERITED INTERFACE
+
+        //! Track particle and accumulate particle data.
+        void accumulate(double step, const Particle_t &p);
+    };
 
   public:
     // Constructor.
@@ -79,15 +159,9 @@ class Fission_Matrix_Tally : public Compound_Tally
     Fission_Matrix_Processor& processor() { return d_processor; }
 
     //! Query if fission matrix tallying has started.
-    bool tally_started() const { return d_tally_started; }
+    bool tally_started() const { return d_data->d_tally_started; }
 
     // >>> INHERITED INTERFACE
-
-    //! Tally events at particle birth.
-    void birth(const Particle_t &p);
-
-    //! Track particle, using pre-calculated physics information (multipliers)
-    void accumulate(double step, const Particle_t &p);
 
     //! End a cycle in a kcode calculation.
     void end_cycle(double num_particles);
@@ -98,23 +172,15 @@ class Fission_Matrix_Tally : public Compound_Tally
   private:
     // >>> IMPLEMENTATION
 
-    // Geometric state on the fission tally mesh geometry.
-    Mesh_Geometry::Geo_State_t d_fm_state;
+    // Common fission matrix data
+    SP_FM_Data d_data;
 
-    // Fission matrix birth cell metadata index.
-    const unsigned int d_birth_idx;
-
-    // Fission matrix generation options.
-    int d_cycle_start;
-    int d_cycle_out;
-    int d_cycle_ctr;
+    // Fission matrix processor.
+    Fission_Matrix_Processor d_processor;
 
     // Output file name and hdf5 writer.
     std::string        d_filename;
     Serial_HDF5_Writer d_writer;
-
-    // Tally started flag.
-    bool d_tally_started;
 };
 
 } // end namespace profugus

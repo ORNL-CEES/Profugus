@@ -29,6 +29,8 @@ class Fission_Matrix_TallyTest : public TransporterTestBase
   protected:
     // >>> TYPEDEFS
     typedef profugus::Fission_Matrix_Tally     Tally;
+    typedef Tally::PL_Tally                    PL_Tally;
+    typedef Tally::Src_Tally                   Src_Tally;
     typedef profugus::Mesh_Geometry            Mesh_Geometry_t;
     typedef std::shared_ptr<Mesh_Geometry_t>   SP_Mesh_Geometry;
     typedef Mesh_Geometry_t::Vec_Dbl           Vec_Dbl;
@@ -69,6 +71,9 @@ TEST_F(Fission_Matrix_TallyTest, construction)
 {
     Tally fm(db, physics, mesh);
 
+    EXPECT_TRUE(static_cast<bool>(fm.get_pl_tally()));
+    EXPECT_TRUE(static_cast<bool>(fm.get_src_tally()));
+
     EXPECT_EQ(0, fis_db->get<int>("start_cycle"));
     EXPECT_EQ(10, fis_db->get<int>("output_cycle"));
 }
@@ -78,6 +83,10 @@ TEST_F(Fission_Matrix_TallyTest, construction)
 TEST_F(Fission_Matrix_TallyTest, transport)
 {
     Tally fm(db, physics, mesh);
+
+    // get the pathlength and source tallies from the compound tally
+    auto pl  = fm.get_pl_tally();
+    auto src = fm.get_src_tally();
 
     Particle_t p;
     p.set_wt(0.5);
@@ -89,23 +98,23 @@ TEST_F(Fission_Matrix_TallyTest, transport)
     state.d_r   = Space_Vector(1.5, 1.5, 1.5);
 
     // step in +x
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
 
     // step in +y
     state.d_dir = Space_Vector(0.0, 1.0, 0.0);
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
 
     // step in -z
     state.d_dir = Space_Vector(0.0, 0.0, -1.0);
-    fm.birth(p);
-    fm.accumulate(1.0, p);
+    src->birth(p);
+    pl->accumulate(1.0, p);
 
     // step in +x
     state.d_dir = Space_Vector(1.0, 0.0, 0.0);
     state.d_r   = Space_Vector(1.5, 1.5, 0.5);
-    fm.accumulate(1.0, p);
+    pl->accumulate(1.0, p);
 
     // build the matrix
     fm.build_matrix();
@@ -148,6 +157,10 @@ TEST_F(Fission_Matrix_TallyTest, end_cycle)
     fis_db->set("start_cycle", 2);
     Tally fm(db, physics, mesh);
 
+    // get the pathlength and source tallies from the compound tally
+    auto pl  = fm.get_pl_tally();
+    auto src = fm.get_src_tally();
+
     Particle_t p;
     p.set_wt(0.5);
     p.set_group(0);
@@ -160,8 +173,8 @@ TEST_F(Fission_Matrix_TallyTest, end_cycle)
     EXPECT_FALSE(fm.tally_started());
 
     // step in +x
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
 
     // we haven't built a matrix on the first 2 cycles
     fm.build_matrix();
@@ -177,8 +190,8 @@ TEST_F(Fission_Matrix_TallyTest, end_cycle)
     EXPECT_FALSE(fm.tally_started());
 
     // step in +x
-    fm.birth(p);
-    fm.accumulate(3.0, p);
+    src->birth(p);
+    pl->accumulate(3.0, p);
 
     fm.build_matrix();
     {
@@ -206,8 +219,8 @@ TEST_F(Fission_Matrix_TallyTest, end_cycle)
 
     // step in +y
     state.d_dir = Space_Vector(0.0, 1.0, 0.0);
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
 
     EXPECT_TRUE(fm.tally_started());
 
@@ -249,6 +262,10 @@ TEST_F(Fission_Matrix_TallyTest, output)
 
     Tally fm(db, physics, mesh);
 
+    // get the pathlength and source tallies from the compound tally
+    auto pl  = fm.get_pl_tally();
+    auto src = fm.get_src_tally();
+
     Particle_t p;
     p.set_wt(0.5);
     p.set_group(0);
@@ -259,24 +276,24 @@ TEST_F(Fission_Matrix_TallyTest, output)
     state.d_r   = Space_Vector(1.5, 1.5, 1.5);
 
     // step in +x
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
     fm.end_cycle(1);
 
     // step in +x
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
     fm.end_cycle(1);
 
     // step in +x
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
     fm.end_cycle(1);
 
     // step in +y
     state.d_dir = Space_Vector(0.0, 1.0, 0.0);
-    fm.birth(p);
-    fm.accumulate(2.0, p);
+    src->birth(p);
+    pl->accumulate(2.0, p);
     fm.end_cycle(1);
 
     profugus::global_barrier();
