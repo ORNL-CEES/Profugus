@@ -82,7 +82,7 @@ void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
 
     // build the linear system (we only provide finite volume for now)
     std::string &eqn_type =
-        b_db->template get("eqn_type", std::string("fv"));
+        b_db->template get<std::string>("eqn_type", std::string("fv"));
 
     if (profugus::to_lower(eqn_type) == "fv")
     {

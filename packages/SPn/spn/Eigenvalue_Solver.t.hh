@@ -74,7 +74,7 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
 
     // build the linear system (we only provide finite volume for now)
     std::string &eqn_type =
-        b_db->template get("eqn_type", std::string("fv"));
+        b_db->template get<std::string>("eqn_type", std::string("fv"));
 
     if (profugus::to_lower(eqn_type) == "fv")
     {
@@ -467,7 +467,8 @@ Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
 
     // get the preconditioner type
     std::string prec_type = profugus::to_lower(
-        edb->template get("Preconditioner", std::string("Multigrid")));
+        edb->template get<std::string>("Preconditioner", 
+                                       std::string("Multigrid")));
 
     // build the appropriate preconditioners
     if (prec_type=="multigrid" || prec_type=="multilevel")
