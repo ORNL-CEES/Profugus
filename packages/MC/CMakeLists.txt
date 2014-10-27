@@ -54,6 +54,13 @@ IF(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
     -Wno-unused-variable)
 ENDIF()
 
+IF(${PROJECT_NAME}_ENABLE_ACC)
+  SET(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -acc -ta=tesla:kepler+,cuda5.5 -Minfo=accel")
+  SET(CMAKE_EXE_LINKER_FLAGS
+    "-acc -ta=tesla:kepler+,cuda5.5 ${CMAKE_EXE_LINKER_FLAGS}")
+ENDIF()
+
 #
 # Resolve min/max conflict on Windows
 #
