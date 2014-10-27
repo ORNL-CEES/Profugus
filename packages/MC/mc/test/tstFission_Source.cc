@@ -454,6 +454,77 @@ TEST_F(FissionSourceTest, Distributions)
         pcout << endl;
 }
 
+
+//---------------------------------------------------------------------------//
+
+TEST_F(FissionSourceTest, FissionSrc_ACC)
+{
+    b_db->set("Np", 12);
+
+    // make fission source
+    Fission_Source source(b_db, b_geometry, b_physics, b_rcon);
+
+    // build the initial source
+    source.build_initial_source();
+    EXPECT_EQ(nodes, source.num_streams());
+    EXPECT_TRUE(profugus::Global_RNG::d_rng.assigned());
+    EXPECT_TRUE(source.is_initial_source());
+
+    // get a fission source container
+    SP_Fission_Sites fsrc = source.create_fission_site_container();
+    EXPECT_TRUE(static_cast<bool>(fsrc));
+    EXPECT_TRUE(fsrc->empty());
+
+    // add 3 sites to the container (6 total fissions)
+    Fission_Site site;
+    site.m = 1;
+    site.r = Space_Vector(0.3, 2.1, 12.3);
+    fsrc->push_back(site);
+    fsrc->push_back(site);
+    fsrc->push_back(site);
+    site.m = 1;
+    site.r = Space_Vector(0.25, 1.9, 12.1);
+    fsrc->push_back(site);
+    site.m = 1;
+    site.r = Space_Vector(0.27, 1.8, 11.1);
+    fsrc->push_back(site);
+    fsrc->push_back(site);
+    EXPECT_EQ(6, fsrc->size());
+    double ref_hsrc = (-1.0 / 3.0 * (log10(1.0 / 3.0) / log10(2.0)))
+                      + (-2.0 / 3.0 * (log10(2.0 / 3.0) / log10(2.0)));
+
+    source.build_source(fsrc);
+    EXPECT_FALSE(source.is_initial_source());
+    EXPECT_TRUE(static_cast<bool>(fsrc));
+    EXPECT_EQ(0, fsrc->size());
+    EXPECT_TRUE(fsrc->empty());
+
+    EXPECT_EQ(6, source.num_to_transport());
+    EXPECT_EQ(6 * nodes, source.total_num_to_transport());
+    EXPECT_EQ(2 * nodes, source.num_streams());
+
+    int ctr       = 0;
+    double tot_wt = 0.0;
+
+#pragma acc kernels
+    for (int s = 0; s < source.total_num_to_transport(); ++s)
+    {
+        Fission_Source::SP_Particle p = source.get_particle();
+        ctr++;
+
+        EXPECT_EQ(1, p->matid());
+        EXPECT_TRUE(soft_equiv(p->wt(), 12.0 / (6 * nodes)));
+        tot_wt += p->wt();
+    }
+
+    profugus::global_sum(tot_wt);
+
+    EXPECT_NEAR(12.0, tot_wt, 1.e-12);
+    EXPECT_EQ(6, ctr);
+    EXPECT_EQ(6, source.num_run());
+    EXPECT_EQ(0, source.num_left());
+}
+
 //---------------------------------------------------------------------------//
 //                 end of tstFission_Source.cc
 //---------------------------------------------------------------------------//
