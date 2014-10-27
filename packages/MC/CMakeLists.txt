@@ -163,6 +163,11 @@ TRIBITS_ADD_TEST_DIRECTORIES(
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP
 
+TRIBITS_PROCESS_SUBPACKAGES()
+
+# add the main sub-packages to the package
+TRIBITS_PACKAGE_DEF()
+
 # Exclude files for source package.
 TRIBITS_EXCLUDE_AUTOTOOLS_FILES()
 

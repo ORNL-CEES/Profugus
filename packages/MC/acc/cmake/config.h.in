@@ -1,0 +1,18 @@
+/*-----------------------------------*-C-*-----------------------------------*/
+/*!
+ * \file   cmake/config.h.in
+ * \author Thomas M. Evans
+ * \date   Tue Jun 28 17:10:34 EDT 2011
+ * \brief  kba_cuda configuration.
+ * \note   Copyright (C) 2011 Oak Ridge National Laboratory, UT-Battelle, LLC
+ */
+/*---------------------------------------------------------------------------*/
+
+#ifndef mc_acc_config_h
+#define mc_acc_config_h
+
+#endif /* mc_acc_config_h */
+
+/*---------------------------------------------------------------------------*/
+/*           end of mc_acc/config.h */
+/*---------------------------------------------------------------------------*/
