@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Sampler.hh
+ * \file   core/mc/Sampler.hh
  * \author Thomas M. Evans
  * \date   Friday May 2 10:26:10 2014
  * \brief  Sampling functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Sampler_hh
-#define mc_Sampler_hh
+#ifndef core_mc_Sampler_hh
+#define core_mc_Sampler_hh
 
 namespace profugus
 {
@@ -79,7 +79,7 @@ T sample_linear(const T xi_lr, const T xi_linear, const T left, const T right);
 #include "Sampler.i.hh"
 
 //---------------------------------------------------------------------------//
-#endif // mc_Sampler_hh
+#endif // core_mc_Sampler_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Sampler.hh

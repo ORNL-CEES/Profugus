@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fixed_Source_Solver.cc
+ * \file   core/mc/Fixed_Source_Solver.cc
  * \author Thomas M. Evans
  * \date   Tue May 13 14:40:06 2014
  * \brief  Fixed_Source_Solver member definitions.

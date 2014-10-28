@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Keff_Tally.hh
+ * \file   core/mc/Keff_Tally.hh
  * \author Thomas M. Evans
  * \date   Wed May 14 13:29:40 2014
  * \brief  Keff_Tally class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Keff_Tally_hh
-#define mc_Keff_Tally_hh
+#ifndef core_mc_Keff_Tally_hh
+#define core_mc_Keff_Tally_hh
 
 #include "Tally.hh"
 #include "utils/Definitions.hh"
@@ -117,7 +117,7 @@ class Keff_Tally : public Tally
 
 } // end namespace profugus
 
-#endif // mc_Keff_Tally_hh
+#endif // core_mc_Keff_Tally_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Keff_Tally.hh

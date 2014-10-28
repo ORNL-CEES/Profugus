@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/VR_Analog.hh
+ * \file   core/mc/VR_Analog.hh
  * \author Thomas M. Evans
  * \date   Fri May 09 13:09:17 2014
  * \brief  VR_Analog class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_VR_Analog_hh
-#define mc_VR_Analog_hh
+#ifndef core_mc_VR_Analog_hh
+#define core_mc_VR_Analog_hh
 
 #include "Variance_Reduction.hh"
 
@@ -51,7 +51,7 @@ class VR_Analog : public Variance_Reduction
 
 } // end namespace profugus
 
-#endif // mc_VR_Analog_hh
+#endif // core_mc_VR_Analog_hh
 
 //---------------------------------------------------------------------------//
 //                 end of VR_Analog.hh

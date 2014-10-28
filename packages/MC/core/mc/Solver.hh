@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Solver.hh
+ * \file   core/mc/Solver.hh
  * \author Thomas M. Evans and Seth Johnson
  * \date   Tue May 13 14:39:00 2014
  * \brief  Solver class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Solver_hh
-#define mc_Solver_hh
+#ifndef core_mc_Solver_hh
+#define core_mc_Solver_hh
 
 #include <memory>
 
@@ -59,7 +59,7 @@ class Solver
 
 } // end namespace profugus
 
-#endif // mc_Solver_hh
+#endif // core_mc_Solver_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Solver.hh

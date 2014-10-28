@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/rect/test/tstMesh_Geometry.cc
+ * \file   core/geometry/test/tstMesh_Geometry.cc
  * \author Seth R Johnson
  * \date   Thu Mar 07 17:27:27 2013
  * \brief  Test for mesh geometry

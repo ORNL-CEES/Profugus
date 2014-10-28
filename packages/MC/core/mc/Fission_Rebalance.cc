@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Rebalance.cc
+ * \file   core/mc/Fission_Rebalance.cc
  * \author Thomas M. Evans
  * \date   Monday May 5 11:37:31 2014
  * \brief  Fission_Rebalance template member definitions.

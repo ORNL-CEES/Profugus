@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Mesh_State.cc
+ * \file   core/geometry/Mesh_State.cc
  * \author Thomas M. Evans and Seth R Johnson
  * \date   Monday July 21 18:23:40 2014
  * \brief  Mesh_State member definitions.

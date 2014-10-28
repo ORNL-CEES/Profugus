@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Geometry.t.hh
+ * \file   core/geometry/Geometry.t.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:43:42 2014
  * \brief  Geometry template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Geometry_t_hh
-#define geometry_Geometry_t_hh
+#ifndef core_geometry_Geometry_t_hh
+#define core_geometry_Geometry_t_hh
 
 #include "Geometry.hh"
 #include "RTK_Functions.hh"
@@ -175,7 +175,7 @@ Geometry<Array>::normal(const Geo_State_t &state) const
 
 } // end namespace profugus
 
-#endif // geometry_Geometry_t_hh
+#endif // core_geometry_Geometry_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of geometry/Geometry.t.hh

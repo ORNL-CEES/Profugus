@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Source.hh
+ * \file   core/mc/Fission_Source.hh
  * \author Thomas M. Evans
  * \date   Mon May 05 14:22:46 2014
  * \brief  Fission_Source class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Source_hh
-#define mc_Fission_Source_hh
+#ifndef core_mc_Fission_Source_hh
+#define core_mc_Fission_Source_hh
 
 #include "Fission_Rebalance.hh"
 #include "Source.hh"
@@ -170,7 +170,7 @@ class Fission_Source : public Source
 
 } // end namespace profugus
 
-#endif // mc_Fission_Source_hh
+#endif // core_mc_Fission_Source_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fission_Source.hh

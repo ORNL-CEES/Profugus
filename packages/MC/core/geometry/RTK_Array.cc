@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Array.cc
+ * \file   core/geometry/RTK_Array.cc
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:46:26 2010
  * \brief  RTK_Array specializations on RTK_Cell.

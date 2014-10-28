@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Global_RNG.hh
+ * \file   core/mc/Global_RNG.hh
  * \author Thomas M. Evans
  * \date   Monday May 5 16:56:6 2014
  * \brief  Global_RNG class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Global_RNG_hh
-#define mc_Global_RNG_hh
+#ifndef core_mc_Global_RNG_hh
+#define core_mc_Global_RNG_hh
 
 #include <memory>
 #include "rng/RNG_Control.hh"
@@ -40,7 +40,7 @@ class Global_RNG
 
 } // end namespace profugus
 
-#endif // mc_Global_RNG_hh
+#endif // core_mc_Global_RNG_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Global_RNG.hh

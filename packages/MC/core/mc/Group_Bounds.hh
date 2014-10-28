@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Group_Bounds.hh
+ * \file   core/mc/Group_Bounds.hh
  * \author Thomas M. Evans
  * \date   Wed Apr 30 14:05:49 2014
  * \brief  Group_Bounds class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Group_Bounds_hh
-#define mc_Group_Bounds_hh
+#ifndef core_mc_Group_Bounds_hh
+#define core_mc_Group_Bounds_hh
 
 #include <vector>
 #include <memory>
@@ -80,7 +80,7 @@ class Group_Bounds
 
 } // end namespace profugus
 
-#endif // mc_Group_Bounds_hh
+#endif // core_mc_Group_Bounds_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Group_Bounds.hh

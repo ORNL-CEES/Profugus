@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Cartesian_Mesh.hh
+ * \file   core/geometry/Cartesian_Mesh.hh
  * \author Thomas M. Evans
  * \date   Mon Jul 21 16:55:00 2014
  * \brief  Cartesian_Mesh class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Cartesian_Mesh_hh
-#define geometry_Cartesian_Mesh_hh
+#ifndef core_geometry_Cartesian_Mesh_hh
+#define core_geometry_Cartesian_Mesh_hh
 
 #include <vector>
 #include <cstddef>
@@ -154,7 +154,7 @@ class Cartesian_Mesh
 
 #include "Cartesian_Mesh.i.hh"
 
-#endif // geometry_Cartesian_Mesh_hh
+#endif // core_geometry_Cartesian_Mesh_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Cartesian_Mesh.hh

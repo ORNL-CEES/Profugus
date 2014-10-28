@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Uniform_Source.hh
+ * \file   core/mc/Uniform_Source.hh
  * \author Thomas M. Evans
  * \date   Tue May 06 16:43:26 2014
  * \brief  Uniform_Source class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Uniform_Source_hh
-#define mc_Uniform_Source_hh
+#ifndef core_mc_Uniform_Source_hh
+#define core_mc_Uniform_Source_hh
 
 #include <vector>
 
@@ -123,7 +123,7 @@ class Uniform_Source : public Source
 
 } // end namespace profugus
 
-#endif // mc_Uniform_Source_hh
+#endif // core_mc_Uniform_Source_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Uniform_Source.hh

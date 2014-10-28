@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Physics.cc
+ * \file   core/mc/Physics.cc
  * \author Thomas M. Evans
  * \date   Thursday May 1 11:14:55 2014
  * \brief  MG_Physics member definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tally.cc
+ * \file   core/mc/Tally.cc
  * \author Thaoms M. Evans
  * \date   Thu May 15 13:27:04 2014
  * \brief  Tally member definitions.

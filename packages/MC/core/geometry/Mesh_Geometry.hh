@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Mesh_Geometry.hh
+ * \file   core/geometry/Mesh_Geometry.hh
  * \author Thomas M. Evans
  * \date   Mon Jul 21 17:56:40 2014
  * \brief  Mesh_Geometry class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Mesh_Geometry_hh
-#define geometry_Mesh_Geometry_hh
+#ifndef core_geometry_Mesh_Geometry_hh
+#define core_geometry_Mesh_Geometry_hh
 
 #include <vector>
 #include <memory>
@@ -218,7 +218,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
 
 } // end namespace profugus
 
-#endif // geometry_Mesh_Geometry_hh
+#endif // core_geometry_Mesh_Geometry_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Mesh_Geometry.hh

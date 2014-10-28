@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Domain_Transporter.cc
+ * \file   core/mc/Domain_Transporter.cc
  * \author Thomas M. Evans
  * \date   Mon May 12 12:02:13 2014
  * \brief  Domain_Transporter member definitions.

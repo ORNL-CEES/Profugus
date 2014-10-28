@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Keff_Tally.cc
+ * \file   core/mc/Keff_Tally.cc
  * \author Thomas M. Evans
  * \date   Wed May 14 13:29:40 2014
  * \brief  Keff_Tally member definitions.

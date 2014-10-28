@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tallier.hh
+ * \file   core/mc/Tallier.hh
  * \author Thomas M. Evans and Seth Johnson
  * \date   Mon May 12 12:15:30 2014
  * \brief  Tallier class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Tallier_hh
-#define mc_Tallier_hh
+#ifndef core_mc_Tallier_hh
+#define core_mc_Tallier_hh
 
 #include <vector>
 #include <memory>
@@ -168,7 +168,7 @@ inline void swap(Tallier &a,
 
 } // end namespace profugus
 
-#endif // mc_Tallier_hh
+#endif // core_mc_Tallier_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Tallier.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/VR_Roulette.cc
+ * \file   core/mc/VR_Roulette.cc
  * \author Thomas M. Evans
  * \date   Fri May 09 13:09:37 2014
  * \brief  VR_Roulette member definitions.

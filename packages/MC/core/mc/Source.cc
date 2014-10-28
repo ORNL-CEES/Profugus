@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source.cc
+ * \file   core/mc/Source.cc
  * \author Thomas M. Evans
  * \date   Mon May 05 14:28:41 2014
  * \brief  Source member definitions.

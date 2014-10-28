@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Array.t.hh
+ * \file   core/geometry/RTK_Array.t.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:46:26 2010
  * \brief  RTK_Array template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_Array_t_hh
-#define geometry_RTK_Array_t_hh
+#ifndef core_geometry_RTK_Array_t_hh
+#define core_geometry_RTK_Array_t_hh
 
 #include <iomanip>
 
@@ -1002,7 +1002,7 @@ void RTK_Array<T>::output(std::ostream &out,
 
 } // end namespace profugus
 
-#endif // geometry_RTK_Array_t_hh
+#endif // core_geometry_RTK_Array_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of geometry/RTK_Array.t.hh

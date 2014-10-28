@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source.hh
+ * \file   core/mc/Source.hh
  * \author Thomas M. Evans
  * \date   Mon May 05 14:22:41 2014
  * \brief  Source class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Source_hh
-#define mc_Source_hh
+#ifndef core_mc_Source_hh
+#define core_mc_Source_hh
 
 #include <memory>
 #include <cmath>
@@ -127,7 +127,7 @@ class Source
 
 } // end namespace profugus
 
-#endif // mc_Source_hh
+#endif // core_mc_Source_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Source.hh

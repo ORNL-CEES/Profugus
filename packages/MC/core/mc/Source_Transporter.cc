@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Transporter.cc
+ * \file   core/mc/Source_Transporter.cc
  * \author Thomas M. Evans
  * \date   Tue May 13 09:20:07 2014
  * \brief  Source_Transporter member definitions.

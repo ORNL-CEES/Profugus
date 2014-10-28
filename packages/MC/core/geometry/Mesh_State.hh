@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Mesh_State.hh
+ * \file   core/geometry/Mesh_State.hh
  * \author Thomas M. Evans and Seth R Johnson
  * \date   Monday July 21 18:16:58 2014
  * \brief  Mesh_State class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Mesh_State_hh
-#define geometry_Mesh_State_hh
+#ifndef core_geometry_Mesh_State_hh
+#define core_geometry_Mesh_State_hh
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
@@ -72,7 +72,7 @@ struct Mesh_State
 
 } // end namespace profugus
 
-#endif // geometry_Mesh_State_hh
+#endif // core_geometry_Mesh_State_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/Mesh_State.hh

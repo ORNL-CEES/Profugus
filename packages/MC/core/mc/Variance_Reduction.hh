@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Variance_Reduction.hh
+ * \file   core/mc/Variance_Reduction.hh
  * \author Thomas M. Evans
  * \date   Thu May 08 11:08:46 2014
  * \brief  Variance_Reduction base class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Variance_Reduction_hh
-#define mc_Variance_Reduction_hh
+#ifndef core_mc_Variance_Reduction_hh
+#define core_mc_Variance_Reduction_hh
 
 #include <memory>
 
@@ -80,7 +80,7 @@ class Variance_Reduction
 
 } // end namespace profugus
 
-#endif // mc_Variance_Reduction_hh
+#endif // core_mc_Variance_Reduction_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Variance_Reduction.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tallier.cc
+ * \file   core/mc/Tallier.cc
  * \author Thomas M. Evans
  * \date   Mon May 12 12:15:30 2014
  * \brief  Tallier member definitions.

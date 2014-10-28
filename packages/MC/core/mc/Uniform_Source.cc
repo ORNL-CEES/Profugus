@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Uniform_Source.cc
+ * \file   core/mc/Uniform_Source.cc
  * \author Thomas M. Evans
  * \date   Tue May 06 16:43:26 2014
  * \brief  Uniform_Source member definitions.

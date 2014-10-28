@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Bank.i.hh
+ * \file   core/mc/Bank.i.hh
  * \author Seth R Johnson and Thomas M. Evans
  * \date   Friday April 25 16:50:47 2014
  * \brief  Member definitions of class Bank.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Bank_i_hh
-#define mc_Bank_i_hh
+#ifndef core_mc_Bank_i_hh
+#define core_mc_Bank_i_hh
 
 namespace profugus
 {
@@ -50,7 +50,7 @@ Bank::SP_Particle Bank::basic_pop()
 
 } // end namespace mc
 
-#endif // mc_Bank_i_hh
+#endif // core_mc_Bank_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Bank.i.hh

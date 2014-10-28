@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tally.hh
+ * \file   core/mc/Tally.hh
  * \author Thomas M. Evans
  * \date   Wed May 14 15:10:09 2014
  * \brief  Tally base class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Tally_hh
-#define mc_Tally_hh
+#ifndef core_mc_Tally_hh
+#define core_mc_Tally_hh
 
 #include <memory>
 #include <string>
@@ -92,7 +92,7 @@ class Tally
 
 } // end namespace profugus
 
-#endif // mc_Tally_hh
+#endif // core_mc_Tally_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Tally.hh

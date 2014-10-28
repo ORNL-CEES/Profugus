@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Cartesian_Mesh.i.hh
+ * \file   core/geometry/Cartesian_Mesh.i.hh
  * \author Thomas M. Evans
  * \date   Mon Jul 21 16:55:00 2014
  * \brief  Member definitions of class Cartesian_Mesh.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Cartesian_Mesh_i_hh
-#define geometry_Cartesian_Mesh_i_hh
+#ifndef core_geometry_Cartesian_Mesh_i_hh
+#define core_geometry_Cartesian_Mesh_i_hh
 
 #include <algorithm>
 
@@ -122,7 +122,7 @@ Cartesian_Mesh::index(dim_type i, dim_type j, dim_type k) const
 
 } // end namespace profugus
 
-#endif // geometry_Cartesian_Mesh_i_hh
+#endif // core_geometry_Cartesian_Mesh_i_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Cartesian_Mesh.i.hh

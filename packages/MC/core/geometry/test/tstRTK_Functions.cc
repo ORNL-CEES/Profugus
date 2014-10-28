@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/test/tstRTK_Functions.cc
+ * \file   core/geometry/test/tstRTK_Functions.cc
  * \author Seth R Johnson
  * \date   Fri Jan 18 20:12:25 2013
  * \brief  RTK_Functions unit test.

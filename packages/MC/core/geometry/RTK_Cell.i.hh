@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Cell.i.hh
+ * \file   core/geometry/RTK_Cell.i.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:47:16 2010
  * \brief  Member definitions of class RTK_Cell.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_Cell_i_hh
-#define geometry_RTK_Cell_i_hh
+#ifndef core_geometry_RTK_Cell_i_hh
+#define core_geometry_RTK_Cell_i_hh
 
 namespace profugus
 {
@@ -172,7 +172,7 @@ void RTK_Cell::get_extents(Space_Vector &lower,
 
 } // end namespace profugus
 
-#endif // geometry_RTK_Cell_i_hh
+#endif // core_geometry_RTK_Cell_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_Cell.i.hh

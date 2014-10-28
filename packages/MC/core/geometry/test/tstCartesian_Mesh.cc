@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/test/tstCartesian_Mesh.cc
+ * \file   core/geometry/test/tstCartesian_Mesh.cc
  * \author Thomas M. Evans
  * \date   Mon Jul 21 17:24:52 2014
  * \brief  Cartesian_Mesh test.

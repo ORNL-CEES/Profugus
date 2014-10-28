@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Step_Selector.hh
+ * \file   core/mc/Step_Selector.hh
  * \author Thomas M. Evans
  * \date   Monday May 12 12:11:34 2014
  * \brief  Step_Selector class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Step_Selector_hh
-#define mc_Step_Selector_hh
+#ifndef core_mc_Step_Selector_hh
+#define core_mc_Step_Selector_hh
 
 namespace profugus
 {
@@ -105,7 +105,7 @@ class Step_Selector
 
 } // end namespace profugus
 
-#endif // mc_Step_Selector_hh
+#endif // core_mc_Step_Selector_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Step_Selector.hh

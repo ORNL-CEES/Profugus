@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Source.cc
+ * \file   core/mc/Fission_Source.cc
  * \author Thomas M. Evans
  * \date   Mon May 05 14:22:46 2014
  * \brief  Fission_Source member definitions.

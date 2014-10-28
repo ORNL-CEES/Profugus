@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Geometry.hh
+ * \file   core/geometry/Geometry.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:43:25 2014
  * \brief  Geometry class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Geometry_hh
-#define geometry_Geometry_hh
+#ifndef core_geometry_Geometry_hh
+#define core_geometry_Geometry_hh
 
 #include <cmath>
 #include <memory>
@@ -259,7 +259,7 @@ typedef Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
 
 } // end namespace profugus
 
-#endif // geometry_Geometry_hh
+#endif // core_geometry_Geometry_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/Geometry.hh

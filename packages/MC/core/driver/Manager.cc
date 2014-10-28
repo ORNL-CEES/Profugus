@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/Manager.cc
+ * \file   core/driver/Manager.cc
  * \author Thomas M. Evans
  * \date   Wed Jun 18 11:21:16 2014
  * \brief  Manager member definitions.

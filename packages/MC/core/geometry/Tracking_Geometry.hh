@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Tracking_Geometry.hh
+ * \file   core/geometry/Tracking_Geometry.hh
  * \author Thomas M. Evans
  * \date   Tue Jul 22 13:03:26 2014
  * \brief  Tracking_Geometry class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Tracking_Geometry_hh
-#define geometry_Tracking_Geometry_hh
+#ifndef core_geometry_Tracking_Geometry_hh
+#define core_geometry_Tracking_Geometry_hh
 
 #include "utils/Definitions.hh"
 #include "Definitions.hh"
@@ -102,7 +102,7 @@ Tracking_Geometry<Geo_State>::~Tracking_Geometry()
 
 } // end namespace profugus
 
-#endif // geometry_Tracking_Geometry_hh
+#endif // core_geometry_Tracking_Geometry_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Tracking_Geometry.hh

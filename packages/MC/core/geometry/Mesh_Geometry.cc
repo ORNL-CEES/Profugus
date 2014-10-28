@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Mesh_Geometry.cc
+ * \file   core/geometry/Mesh_Geometry.cc
  * \author Thomas M. Evans and Seth Johnson
  * \date   Mon Jul 21 17:56:40 2014
  * \brief  Mesh_Geometry member definitions.
