@@ -5,8 +5,8 @@
 ##---------------------------------------------------------------------------##
 
 SET(SUBPACKAGES_DIRS_CLASSIFICATIONS_OPTREQS
-  ACC  acc  SS OPTIONAL
   Core core SS REQUIRED
+  ACC  acc  SS OPTIONAL
   )
 
 SET(LIB_REQUIRED_DEP_PACKAGES)

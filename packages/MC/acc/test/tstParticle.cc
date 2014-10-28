@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "gtest/utils_gtest.hh"
+
 #include <memory>
 #include <vector>
 
@@ -21,8 +23,8 @@
 #include "core/mc/Physics.hh"
 
 #include "../Particle.hh"
+#include "ParticleTest.hh"
 
-#include "gtest/utils_gtest.hh"
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -289,14 +291,19 @@ TEST_F(ParticleTest, load_particles_gpu)
     EXPECT_EQ(100, acc::rnd_numbers.size());
 
     acc::Particle *p_ptr = &particles[0];
+ 
+    loop_over_particles(p_ptr);
 
+#if 0
 #pragma acc kernels
     for (int n = 0; n < 48; ++n)
     {
         // get a particle
-        auto p = p_ptr[n];
+        acc::Particle &p = p_ptr[n];
     }
+#endif 
 }
+
 
 //---------------------------------------------------------------------------//
 //                 end of tstParticle.cc

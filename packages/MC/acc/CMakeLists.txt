@@ -20,17 +20,18 @@ IF(${PROJECT_NAME}_ENABLE_ACC)
 
   # setup compiler flags
   SET(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -acc -ta=tesla:kepler+,cuda5.5 -Minfo=accel")
+    "${CMAKE_CXX_FLAGS} -acc -ta=tesla:kepler+,cuda5.5,nodebug -Minfo=accel")
   SET(CMAKE_EXE_LINKER_FLAGS
-    "-acc -ta=tesla:kepler+,cuda5.5 ${CMAKE_EXE_LINKER_FLAGS}")
+    "-acc -ta=tesla:kepler+,cuda5.5,nodebug ${CMAKE_EXE_LINKER_FLAGS}")
 
   MESSAGE(STATUS "Building ${PACKAGE_NAME} with ACC support")
 ELSE()
 
   # suppress pragma warnings
-  SET(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas"
-)
+  IF(CMAKE_COMPILER_IS_GNUCXX)
+    SET(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas") 
+  ENDIF()
 ENDIF()
 
 ##---------------------------------------------------------------------------##
