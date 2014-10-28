@@ -11,6 +11,8 @@
 #ifndef mc_acc_config_h
 #define mc_acc_config_h
 
+#cmakedefine USE_ACC
+
 #endif /* mc_acc_config_h */
 
 /*---------------------------------------------------------------------------*/
