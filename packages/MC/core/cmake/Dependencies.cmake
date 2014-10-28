@@ -1,16 +1,12 @@
 ##---------------------------------------------------------------------------##
-## MC/cmake/Dependencies.cmake
+## MC/core/cmake/Dependencies.cmake
 ## Thomas M. Evans
 ## Saturday July 14 16:54:41 2012
 ##---------------------------------------------------------------------------##
 
 ##---------------------------------------------------------------------------##
-## Define sub-packages
+## Package requirements
 ##---------------------------------------------------------------------------##
-
-SET(SUBPACKAGES_DIRS_CLASSIFICATIONS_OPTREQS
-  ACC  acc  SS OPTIONAL
-  )
 
 SET(LIB_REQUIRED_DEP_PACKAGES
   Teuchos Epetra Matprop Utils)
@@ -25,5 +21,5 @@ SET(TEST_REQUIRED_DEP_TPLS)
 SET(TEST_OPTIONAL_DEP_TPLS)
 
 ##---------------------------------------------------------------------------##
-##                  end of MC/cmake/Dependencies.cmake
+##                  end of MC/core/cmake/Dependencies.cmake
 ##---------------------------------------------------------------------------##

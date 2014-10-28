@@ -20,7 +20,7 @@ TRIBITS_ADD_LIBRARY(mc_test_lib
   SourceTestBase.cc
   TransporterTestBase.cc
   TESTONLY
-  DEPLIBS MC)
+  DEPLIBS MC_core)
 
 ##---------------------------------------------------------------------------##
 ## TESTING
@@ -48,7 +48,7 @@ ADD_UTILS_TEST(tstFixed_Source_Solver.cc          DEPLIBS mc_test_lib)
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(XS_CROSS_SECTION_XML
   SOURCE_FILES xs_c5g7.xml
-  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../examples
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples
   DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
   EXEDEPS tstKCode_Solver)
 

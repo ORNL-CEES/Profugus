@@ -4,19 +4,13 @@
 ## Saturday July 14 16:54:41 2012
 ##---------------------------------------------------------------------------##
 
-##---------------------------------------------------------------------------##
-## Define sub-packages
-##---------------------------------------------------------------------------##
-
 SET(SUBPACKAGES_DIRS_CLASSIFICATIONS_OPTREQS
   ACC  acc  SS OPTIONAL
+  Core core SS REQUIRED
   )
 
-SET(LIB_REQUIRED_DEP_PACKAGES
-  Teuchos Epetra Matprop Utils)
-
+SET(LIB_REQUIRED_DEP_PACKAGES)
 SET(LIB_OPTIONAL_DEP_PACKAGES)
-
 SET(TEST_REQUIRED_DEP_PACKAGES)
 SET(TEST_OPTIONAL_DEP_PACKAGES)
 SET(LIB_REQUIRED_DEP_TPLS)
