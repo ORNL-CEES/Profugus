@@ -113,7 +113,7 @@ class Source
     const Physics_t& physics() const { return *b_physics; }
 
     //! Get the RNG controller.
-    const RNG_Control_t& rng_control() const { return *b_rng_control; }
+    RNG_Control_t& rng_control() { return *b_rng_control; }
 
     //! Number of random number streams generated so far (inclusive).
     int num_streams() const { return d_rng_stream; }

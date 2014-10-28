@@ -25,6 +25,12 @@ IF(${PROJECT_NAME}_ENABLE_ACC)
     "-acc -ta=tesla:kepler+,cuda5.5 ${CMAKE_EXE_LINKER_FLAGS}")
 
   MESSAGE(STATUS "Building ${PACKAGE_NAME} with ACC support")
+ELSE()
+
+  # suppress pragma warnings
+  SET(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas"
+)
 ENDIF()
 
 ##---------------------------------------------------------------------------##
@@ -42,7 +48,7 @@ LIST(APPEND ROOT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 # C/C++ sources
 SET(SOURCES
-  Test.cc
+  Particle_Functions.cc
   )
 
 ##---------------------------------------------------------------------------##

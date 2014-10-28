@@ -19,7 +19,11 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstACC.cc)
+IF(USE_ACC)
+  ADD_UTILS_TEST(tstACC.cc)
+ENDIF()
+
+ADD_UTILS_TEST(tstParticle.cc NP 1)
 
 ##---------------------------------------------------------------------------##
 ## FILES
