@@ -1,0 +1,38 @@
+/*-----------------------------------*-C-*-----------------------------------*/
+/*!
+ * \file   MC/config.h
+ * \author Thomas M. Evans
+ * \date   Wed Jan  2 11:50:34 2008
+ * \brief  MC configure options
+ * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC
+ */
+/*---------------------------------------------------------------------------*/
+/* $Id: config.h.in,v 1.3 2009/02/03 19:56:50 9te Exp $ */
+/*---------------------------------------------------------------------------*/
+
+#ifndef MC_config_h
+#define MC_config_h
+
+/* TRILINOS BUILD REQUIREMENTS */
+#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#endif
+
+/* PARALLEL MPI ENVIRONMENT VARIABLES */
+#include <Utils/config.h>
+
+#ifdef COMM_MPI
+#include "Epetra_MpiComm.h"
+#else
+#include "Epetra_SerialComm.h"
+#endif
+
+/* FORTRAN WRAPPERS */
+#define FC_FUNC@F77_FUNC@
+#define FC_FUNC_@F77_FUNC_@
+
+#endif /* MC_config_h */
+
+/*---------------------------------------------------------------------------*/
+/*           end of MC/config.h */
+/*---------------------------------------------------------------------------*/
