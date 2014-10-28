@@ -30,7 +30,7 @@ ELSE()
   # suppress pragma warnings
   IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas") 
+        "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
   ENDIF()
 ENDIF()
 
@@ -50,6 +50,7 @@ LIST(APPEND ROOT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 # C/C++ sources
 SET(SOURCES
   Particle_Functions.cc
+  Geometry.cc
   )
 
 ##---------------------------------------------------------------------------##
@@ -60,6 +61,14 @@ SET(SOURCES
 TRIBITS_ADD_LIBRARY(
     MC_acc
     SOURCES ${SOURCES})
+
+# Add OpenACC flags
+IF(USE_ACC)
+  SET_SOURCE_FILES_PROPERTIES(
+    Geometry.cc
+    PROPERTIES COMPILE_FLAGS
+    ${ACC_FLAGS})
+ENDIF()
 
 #
 # Add test directory

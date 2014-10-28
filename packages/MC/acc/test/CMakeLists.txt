@@ -27,16 +27,20 @@ TRIBITS_ADD_LIBRARY(acc_test_lib
 
 IF(USE_ACC)
   ADD_UTILS_TEST(tstACC.cc)
+  ADD_UTILS_TEST(tstParticle.cc NP 1 DEPLIBS acc_test_lib)
 ENDIF()
 
-ADD_UTILS_TEST(tstParticle.cc NP 1 DEPLIBS acc_test_lib)
 
 ##---------------------------------------------------------------------------##
 ## FILES
 ##---------------------------------------------------------------------------##
 
-SET_SOURCE_FILES_PROPERTIES(ParticleTest.cc PROPERTIES COMPILE_FLAGS
-  ${ACC_FLAGS})
+IF(USE_ACC)
+  SET_SOURCE_FILES_PROPERTIES(
+    ParticleTest.cc
+    PROPERTIES COMPILE_FLAGS
+    ${ACC_FLAGS})
+ENDIF()
 
 ##---------------------------------------------------------------------------##
 ##                    end of acc/test/CMakeLists.txt
