@@ -35,6 +35,9 @@ ADD_UTILS_TEST(tstParticle.cc NP 1 DEPLIBS acc_test_lib)
 ## FILES
 ##---------------------------------------------------------------------------##
 
+SET_SOURCE_FILES_PROPERTIES(ParticleTest.cc PROPERTIES COMPILE_FLAGS
+  ${ACC_FLAGS})
+
 ##---------------------------------------------------------------------------##
 ##                    end of acc/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##

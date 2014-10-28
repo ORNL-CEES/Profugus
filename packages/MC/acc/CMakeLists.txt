@@ -18,11 +18,11 @@ SET(USE_ACC OFF)
 IF(${PROJECT_NAME}_ENABLE_ACC)
   SET(USE_ACC ON)
 
+  SET(ACC_FLAGS "-acc -ta=tesla:kepler+,cuda5.5,nodebug -Minfo=accel")
+
   # setup compiler flags
-  SET(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -acc -ta=tesla:kepler+,cuda5.5,nodebug -Minfo=accel")
   SET(CMAKE_EXE_LINKER_FLAGS
-    "-acc -ta=tesla:kepler+,cuda5.5,nodebug ${CMAKE_EXE_LINKER_FLAGS}")
+    "${ACC_FLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
 
   MESSAGE(STATUS "Building ${PACKAGE_NAME} with ACC support")
 ELSE()
