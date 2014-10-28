@@ -457,6 +457,8 @@ TEST_F(FissionSourceTest, Distributions)
 
 //---------------------------------------------------------------------------//
 
+#if 0
+
 TEST_F(FissionSourceTest, FissionSrc_ACC)
 {
     b_db->set("Np", 12);
@@ -524,6 +526,8 @@ TEST_F(FissionSourceTest, FissionSrc_ACC)
     EXPECT_EQ(6, source.num_run());
     EXPECT_EQ(0, source.num_left());
 }
+
+#endif
 
 //---------------------------------------------------------------------------//
 //                 end of tstFission_Source.cc

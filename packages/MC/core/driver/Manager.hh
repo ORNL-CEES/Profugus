@@ -16,10 +16,10 @@
 #include <memory>
 
 #include "comm/P_Stream.hh"
-#include "mc/KCode_Solver.hh"
-#include "mc/Fixed_Source_Solver.hh"
-#include "mc/Global_RNG.hh"
-#include "mc/Source_Transporter.hh"
+#include "core/mc/KCode_Solver.hh"
+#include "core/mc/Fixed_Source_Solver.hh"
+#include "core/mc/Global_RNG.hh"
+#include "core/mc/Source_Transporter.hh"
 #include "Problem_Builder.hh"
 
 namespace mc

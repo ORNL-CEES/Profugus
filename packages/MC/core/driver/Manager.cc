@@ -18,8 +18,8 @@
 #include "comm/global.hh"
 #include "utils/Serial_HDF5_Writer.hh"
 #include "utils/Parallel_HDF5_Writer.hh"
-#include "mc/Fission_Source.hh"
-#include "mc/Uniform_Source.hh"
+#include "core/mc/Fission_Source.hh"
+#include "core/mc/Uniform_Source.hh"
 #include "Manager.hh"
 
 namespace mc

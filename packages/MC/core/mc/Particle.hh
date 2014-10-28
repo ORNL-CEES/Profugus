@@ -13,7 +13,7 @@
 
 #include "utils/Definitions.hh"
 #include "rng/RNG.hh"
-#include "geometry/RTK_State.hh"
+#include "core/geometry/RTK_State.hh"
 #include "Definitions.hh"
 
 namespace profugus

@@ -19,7 +19,7 @@
 
 #include "utils/Definitions.hh"
 #include "utils/Vector_Functions.hh"
-#include "geometry/Definitions.hh"
+#include "../Definitions.hh"
 #include "../RTK_Cell.hh"
 #include "../RTK_Array.hh"
 #include "../Geometry.hh"

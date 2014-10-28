@@ -12,7 +12,7 @@
 
 #include "harness/DBC.hh"
 #include "harness/Diagnostics.hh"
-#include "geometry/Definitions.hh"
+#include "core/geometry/Definitions.hh"
 #include "Definitions.hh"
 #include "Domain_Transporter.hh"
 

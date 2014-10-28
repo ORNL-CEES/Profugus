@@ -18,9 +18,9 @@
 #include "utils/Definitions.hh"
 #include "utils/String_Functions.hh"
 #include "xs/XS_Builder.hh"
-#include "mc/Box_Shape.hh"
-#include "mc/VR_Analog.hh"
-#include "mc/VR_Roulette.hh"
+#include "core/mc/Box_Shape.hh"
+#include "core/mc/VR_Analog.hh"
+#include "core/mc/VR_Roulette.hh"
 #include "Problem_Builder.hh"
 
 namespace mc

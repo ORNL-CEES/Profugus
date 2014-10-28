@@ -22,9 +22,9 @@
 #include "Teuchos_Array.hpp"
 #include "Teuchos_TwoDArray.hpp"
 
-#include "mc/Physics.hh"
-#include "mc/Shape.hh"
-#include "mc/Variance_Reduction.hh"
+#include "core/mc/Physics.hh"
+#include "core/mc/Shape.hh"
+#include "core/mc/Variance_Reduction.hh"
 
 namespace mc
 {
