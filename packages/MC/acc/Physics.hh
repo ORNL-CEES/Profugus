@@ -48,6 +48,9 @@ class Physics
     // Scatter[matid][exiting][incident]
     double *d_scatter;
 
+    // Scattering ratio[matid][group]
+    double *d_scatter_ratio; 
+
     // Fissionable[matid]
     int *d_fissionable;
 
@@ -58,7 +61,7 @@ class Physics
     // >>> CPU
 
     // Memory storage on CPU
-    std::vector<double> dv_total, dv_nusigf, dv_scatter;
+    std::vector<double> dv_total, dv_nusigf, dv_scatter, dv_scatter_ratio;
     std::vector<int> dv_fissionable;
 
   public:
@@ -72,10 +75,10 @@ class Physics
         return d_total[vector_index(matid, group)];
     }
 
-    //! Total scattering
-    double scattering(int matid, int group)
+    //! Scattering ratio
+    double scattering_ratio(int matid, int group)
     {
-        return d_total[vector_index(matid, group)];
+        return d_scatter_ratio[vector_index(matid, group)];
     }
 
     //! Nu fission

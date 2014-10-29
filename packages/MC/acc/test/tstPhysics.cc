@@ -122,27 +122,27 @@ TEST_F(PhysicsTest, Access)
     {
         int g = 0;
         EXPECT_SOFTEQ(5.2, physics.total(0, g), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(2.6 / 5.2, physics.scattering_ratio(0, g), 1.e-12);
         EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
         g = 1;
         EXPECT_SOFTEQ(11.4, physics.total(0, g), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(8.3 / 11.4, physics.scattering_ratio(0, g), 1.e-12);
         EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
         g = 2;
         EXPECT_SOFTEQ(18.2, physics.total(0, g), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(13.7 / 18.2, physics.scattering_ratio(0, g), 1.e-12);
         EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
         g = 3;
         EXPECT_SOFTEQ(29.9, physics.total(0, g), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(17.8 / 29.9, physics.scattering_ratio(0, g), 1.e-12);
         EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
         g = 4;
         EXPECT_SOFTEQ(27.3, physics.total(0, g), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(12.0 / 27.3, physics.scattering_ratio(0, g), 1.e-12);
         EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
     }
@@ -151,28 +151,28 @@ TEST_F(PhysicsTest, Access)
     {
         int g = 0;
         EXPECT_SOFTEQ(5.3, physics.total(1, g), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.scattering(1, g), 1.e-12);
-        EXPECT_SOFTEQ(0.1, physics.nusigf(1, g), 1.e-12);
+        EXPECT_SOFTEQ(2.6 / 5.3, physics.scattering_ratio(1, g), 1.e-12);
+        EXPECT_SOFTEQ(0.24, physics.nusigf(1, g), 1.e-12);
 
         g = 1;
         EXPECT_SOFTEQ(11.8, physics.total(1, g), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.scattering(1, g), 1.e-12);
-        EXPECT_SOFTEQ(0.4, physics.nusigf(1, g), 1.e-12);
+        EXPECT_SOFTEQ(8.3 / 11.8, physics.scattering_ratio(1, g), 1.e-12);
+        EXPECT_SOFTEQ(0.96, physics.nusigf(1, g), 1.e-12);
 
         g = 2;
         EXPECT_SOFTEQ(20.0, physics.total(1, g), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.scattering(1, g), 1.e-12);
-        EXPECT_SOFTEQ(1.8, physics.nusigf(1, g), 1.e-12);
+        EXPECT_SOFTEQ(13.7 / 20.0, physics.scattering_ratio(1, g), 1.e-12);
+        EXPECT_SOFTEQ(4.32, physics.nusigf(1, g), 1.e-12);
 
         g = 3;
         EXPECT_SOFTEQ(35.6, physics.total(1, g), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.scattering(1, g), 1.e-12);
-        EXPECT_SOFTEQ(5.7, physics.nusigf(1, g), 1.e-12);
+        EXPECT_SOFTEQ(17.8 / 35.6, physics.scattering_ratio(1, g), 1.e-12);
+        EXPECT_SOFTEQ(13.68, physics.nusigf(1, g), 1.e-12);
 
         g = 4;
         EXPECT_SOFTEQ(37.1, physics.total(1, g), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.scattering(1, g), 1.e-12);
-        EXPECT_SOFTEQ(9.8, physics.nusigf(1, g), 1.e-12);
+        EXPECT_SOFTEQ(12.0 / 37.1, physics.scattering_ratio(1, g), 1.e-12);
+        EXPECT_SOFTEQ(23.52, physics.nusigf(1, g), 1.e-12);
     }
 }
 

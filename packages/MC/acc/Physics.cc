@@ -24,6 +24,7 @@ Physics::Physics(const XS& xs)
     dv_fissionable.resize(d_num_mats);
     dv_total.resize(num_vector_elements());
     dv_nusigf.resize(num_vector_elements());
+    dv_scatter_ratio.resize(num_vector_elements());
     dv_scatter.resize(num_matrix_elements());
 
     // Copy data for every material into our flattened structures
@@ -46,8 +47,9 @@ Physics::Physics(const XS& xs)
 
             // Check for fissionable
             if (nusigf[g] > 0.0)
-              is_fiss = true;
+               is_fiss = true;
             // Loop over outscattering groups
+            double tot_scat = 0;
             for (int gp = 0; gp < d_num_groups; ++gp)
             {
                 // Index in scattering from g -> g'
@@ -55,7 +57,10 @@ Physics::Physics(const XS& xs)
                 CHECK(mati < dv_scatter.size());
 
                 dv_scatter[mati] = scatter(gp, g);
+                tot_scat += scatter(gp, g);
             }
+            // Compute and set scattering ratio
+            dv_scatter_ratio[veci] = tot_scat / total[g];
         }
         // Set fissionable flag for this material
         dv_fissionable[m] = is_fiss;
@@ -65,6 +70,7 @@ Physics::Physics(const XS& xs)
     d_total = dv_total.data();
     d_nusigf = dv_nusigf.data();
     d_scatter = dv_scatter.data();
+    d_scatter_ratio = dv_scatter_ratio.data();
     d_fissionable = dv_fissionable.data();
 
     // Complete to copy data to GPU
