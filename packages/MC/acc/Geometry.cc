@@ -66,7 +66,7 @@ Geometry::Geometry(int                     N,
  */
 Geometry::~Geometry()
 {
-#pragma acc exit data delete(d_x, d_y, d_z, d_N, d_b, d_m) 
+#pragma acc exit data delete(d_x, d_y, d_z, d_N, d_b, d_m)
 #pragma acc exit data delete(this)
 }
 
@@ -88,7 +88,7 @@ void Geometry::initialize(const double   *r,
 #else
     using std::lower_bound;
 #endif
-   
+
     // Set struct attributes
     state.pos[0] = r[0];
     state.pos[1] = r[1];
@@ -305,7 +305,7 @@ bool Geometry::reflect(Geometry_State& state) const
     {
         n[Z] = 1.0;
     }
-    
+
 
     // calculate the dot-product of the incoming angle and outward normal
     double dot = state.dir[X]*n[X] + state.dir[Y]*n[Y] +
