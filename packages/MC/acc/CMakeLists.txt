@@ -50,7 +50,12 @@ LIST(APPEND ROOT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 # C/C++ sources
 SET(SOURCES
   Particle_Functions.cc
+  )
+
+# C/C++ sources with ACC directives
+SET(ACC_SOURCES
   Geometry.cc
+  Physics.cc
   )
 
 ##---------------------------------------------------------------------------##
@@ -60,14 +65,16 @@ SET(SOURCES
 # Primary C++ library
 TRIBITS_ADD_LIBRARY(
     MC_acc
-    SOURCES ${SOURCES})
+    SOURCES ${SOURCES} ${ACC_SOURCES})
 
 # Add OpenACC flags
 IF(USE_ACC)
-  SET_SOURCE_FILES_PROPERTIES(
-    Geometry.cc
-    PROPERTIES COMPILE_FLAGS
-    ${ACC_FLAGS})
+  FOREACH(src ACC_SOURCES)
+    SET_SOURCE_FILES_PROPERTIES(
+      Geometry.cc
+      PROPERTIES COMPILE_FLAGS
+      ${ACC_FLAGS})
+  ENDFOREACH()
 ENDIF()
 
 #
