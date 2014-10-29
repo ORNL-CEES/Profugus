@@ -27,10 +27,9 @@ TRIBITS_ADD_LIBRARY(acc_test_lib
 
 IF(USE_ACC)
   ADD_UTILS_TEST(tstACC.cc)
-  ADD_UTILS_TEST(tstParticle.cc NP 1 DEPLIBS acc_test_lib)
-  ADD_UTILS_TEST(tstPhysics.cc  NP 1)
 ENDIF()
 
+ADD_UTILS_TEST(tstPhysics.cc  NP 1)
 ADD_UTILS_TEST(tstParticle.cc NP 1 DEPLIBS acc_test_lib)
 ADD_UTILS_TEST(tstGeometry.cc      DEPLIBS acc_test_lib)
 
