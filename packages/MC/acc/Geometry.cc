@@ -10,7 +10,13 @@
 
 #include <algorithm>
 
-#include "core/geometry/Definitions.hh"
+#ifdef _OPENACC
+#include <accelmath.h>
+#include <binary_search.h>
+#else
+#include <cmath>
+#endif
+
 #include "Geometry.hh"
 
 namespace acc
@@ -22,9 +28,12 @@ namespace acc
 /*!
  * \brief Constructor.
  */
-Geometry::Geometry(int    N,
-                   double d)
+Geometry::Geometry(int                     N,
+                   double                  d,
+                   const std::vector<int> &matids,
+                   const int              *bnds)
     : d_edges(3, std::vector<double>(N+1, 0.0))
+    , d_matids(matids)
 {
     // build the grid edges
     for (int n = 1; n < N+1; ++n)
@@ -37,12 +46,18 @@ Geometry::Geometry(int    N,
     d_x = &d_edges[0][0];
     d_y = &d_edges[1][0];
     d_z = &d_edges[2][0];
+    d_m = &d_matids[0];
+
+    int nc = num_cells();
 
     std::fill(std::begin(d_N), std::end(d_N), N);
+    std::copy(bnds, bnds+6, std::begin(d_b));
+    std::copy(bnds, bnds+6, std::begin(d_bnds));
 
 #pragma acc enter data pcopyin(this)
 #pragma acc enter data pcopyin(d_x[0:N+1], d_y[0:N+1], d_z[0:N+1])
 #pragma acc enter data pcopyin(d_N[0:3])
+#pragma acc enter data pcopyin(d_b[0:6], d_m[0:nc])
 }
 
 //---------------------------------------------------------------------------//
@@ -51,12 +66,43 @@ Geometry::Geometry(int    N,
  */
 Geometry::~Geometry()
 {
-#pragma acc exit data delete(d_x, d_y, d_z, d_N)
+#pragma acc exit data delete(d_x, d_y, d_z, d_N, d_b, d_m) 
 #pragma acc exit data delete(this)
 }
 
 //---------------------------------------------------------------------------//
 // GEOMETRY FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Initialize particle
+ *
+ * This finds the closest ijk coords on each axis to the location. A particle
+ * can be born "outside" and have ijk extents that are outside [0,N) .
+ */
+void Geometry::initialize(const double   *r,
+                          const double   *direction,
+                          Geometry_State &state)
+{
+#ifdef _OPENACC
+    using thrust::lower_bound;
+#else
+    using std::lower_bound;
+#endif
+   
+    // Set struct attributes
+    state.pos[0] = r[0];
+    state.pos[1] = r[1];
+    state.pos[2] = r[2];
+
+    state.dir[0] = direction[0];
+    state.dir[1] = direction[1];
+    state.dir[2] = direction[2];
+
+    state.ijk[0] = lower_bound(d_x, d_x + d_N[0] + 1, state.pos[0]) - d_x - 1;
+    state.ijk[1] = lower_bound(d_y, d_y + d_N[1] + 1, state.pos[1]) - d_y - 1;
+    state.ijk[2] = lower_bound(d_z, d_z + d_N[2] + 1, state.pos[2]) - d_z - 1;
+}
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Calculate distance to the next cell.
@@ -144,6 +190,137 @@ double Geometry::distance_to_boundary(Geometry_State& state) const
     }
 
     return state.next_dist;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Change the direction through an angle.
+ */
+void Geometry::change_direction(double          costheta,
+                                double          phi,
+                                Geometry_State& state) const
+{
+#ifndef _OPENACC
+    using std::cos; using std::sin; using std::sqrt;
+#endif
+    using def::X; using def::Y; using def::Z;
+
+     // cos/sin factors
+    const double cosphi   = cos(phi);
+    const double sinphi   = sin(phi);
+    const double sintheta = sqrt(1.0 - costheta * costheta);
+
+    // make a copy of the old direction
+    double old[3] = {state.dir[0], state.dir[1], state.dir[2]};
+
+    // calculate alpha
+    const double alpha = sqrt(1.0 - old[Z] * old[Z]);
+
+    // now transform into new cooordinate direction; degenerate case first
+    if (alpha < 1.e-6)
+    {
+        state.dir[X] = sintheta * cosphi;
+        state.dir[Y] = sintheta * sinphi;
+        state.dir[Z] = (old[Z] < 0.0 ? -1.0 : 1.0) * costheta;
+    }
+
+    // do standard transformation
+    else
+    {
+        // calculate inverse of alpha
+        const double inv_alpha = 1.0 / alpha;
+
+        // calculate new z-direction
+        state.dir[Z] = old[Z] * costheta - alpha * sintheta * cosphi;
+
+        // calculate new x-direction
+        state.dir[X] = old[X] * costheta + inv_alpha * (
+            old[X] * old[Z] * sintheta * cosphi - old[Y] * sintheta * sinphi);
+
+        // calculate new y-direction
+        state.dir[Y] = old[Y] * costheta + inv_alpha * (
+            old[Y] * old[Z] * sintheta * cosphi + old[X] * sintheta * sinphi);
+    }
+
+    // normalize the particle to avoid roundoff errors
+    double norm = 1.0 / sqrt(state.dir[X] * state.dir[X] +
+                             state.dir[Y] * state.dir[Y] +
+                             state.dir[Z] * state.dir[Z]);
+    state.dir[0] *= norm;
+    state.dir[1] *= norm;
+    state.dir[2] *= norm;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the boundary state.
+ */
+profugus::geometry::Boundary_State
+Geometry::boundary_state(const Geometry_State &state) const
+{
+    using def::I; using def::J; using def::K;
+
+    if ((state.ijk[I] == -1)
+        || (state.ijk[J] == -1)
+        || (state.ijk[K] == -1)
+        || (state.ijk[I] == d_N[I])
+        || (state.ijk[J] == d_N[J])
+        || (state.ijk[K] == d_N[K]))
+    {
+        return profugus::geometry::OUTSIDE;
+    }
+    return profugus::geometry::INSIDE;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Reflect a particle.
+ */
+bool Geometry::reflect(Geometry_State& state) const
+{
+    using def::X; using def::Y; using def::Z;
+
+    double n[3] = {0.0, 0.0, 0.0};
+    if (state.next_ijk[X] == -1)
+    {
+        n[X] = -1.0;
+    }
+    else if (state.next_ijk[X] == d_N[X])
+    {
+        n[X] = 1.0;
+    }
+    else if (state.next_ijk[Y] == -1)
+    {
+        n[Y] = -1.0;
+    }
+    else if (state.next_ijk[Y] == d_N[Y])
+    {
+        n[Y] = 1.0;
+    }
+    else if (state.next_ijk[Z] == -1)
+    {
+        n[Z] = -1.0;
+    }
+    else if (state.next_ijk[Z] == d_N[Z])
+    {
+        n[Z] = 1.0;
+    }
+    
+
+    // calculate the dot-product of the incoming angle and outward normal
+    double dot = state.dir[X]*n[X] + state.dir[Y]*n[Y] +
+                 state.dir[Z]*n[Z];
+
+    // if the dot-product != 0 then calculate the reflected angle
+    if (dot != 0.0)
+    {
+        state.dir[X] -= 2.0 * n[X] * dot;
+        state.dir[Y] -= 2.0 * n[Y] * dot;
+        state.dir[Z] -= 2.0 * n[Z] * dot;
+
+        return true;
+    }
+    return false;
 }
 
 } // end namespace acc
