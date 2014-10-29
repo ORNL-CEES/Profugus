@@ -13,7 +13,7 @@
 #include "core/geometry/Definitions.hh"
 #include "Geometry.hh"
 
-namespace gpu
+namespace acc
 {
 
 //---------------------------------------------------------------------------//
@@ -61,7 +61,7 @@ Geometry::~Geometry()
 /*!
  * \brief Calculate distance to the next cell.
  */
-double Geometry::distance_to_boundary(Geo_State_t& state) const
+double Geometry::distance_to_boundary(Geometry_State& state) const
 {
     using def::I; using def::J; using def::K;
 
@@ -74,7 +74,9 @@ double Geometry::distance_to_boundary(Geo_State_t& state) const
     int    test_next = state.ijk[I];
 
     // initialize the next surface
-    state.next_ijk = state.ijk;
+    state.next_ijk[0] = state.ijk[0];
+    state.next_ijk[1] = state.ijk[1];
+    state.next_ijk[2] = state.ijk[2];
 
     // unrolled check
 
@@ -144,7 +146,7 @@ double Geometry::distance_to_boundary(Geo_State_t& state) const
     return state.next_dist;
 }
 
-} // end namespace gpu
+} // end namespace acc
 
 //---------------------------------------------------------------------------//
 //                 end of Geometry.cc

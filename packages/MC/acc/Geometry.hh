@@ -12,11 +12,51 @@
 #define acc_Geometry_hh
 
 #include <vector>
-#include "core/geometry/Mesh_State.hh"
 #include "core/mc/Definitions.hh"
 
-namespace gpu
+namespace acc
 {
+
+//===========================================================================//
+/*!
+ * \struct Mesh_State
+ * \brief Track particle location on a cartesian mesh
+ */
+//===========================================================================//
+
+struct Geometry_State
+{
+  public:
+
+    //! Faces in pin-cell.
+    enum Face {
+        MINUS_X = 0,
+        PLUS_X ,
+        MINUS_Y,
+        PLUS_Y ,
+        MINUS_Z,
+        PLUS_Z,
+        END_FACES
+    };
+
+  public:
+    // >>> PUBLIC DATA
+
+    //! Indices along the mesh grid if inside (invalid if not)
+    int ijk[3];
+
+    //! Position
+    double pos[3];
+
+    //! Direction
+    double dir[3];
+
+    //! Coordinates of next cell (not pickled)
+    int next_ijk[3];
+
+    //! Distance to next cell
+    double next_dist;
+};
 
 //===========================================================================//
 /*!
@@ -28,7 +68,6 @@ namespace gpu
 class Geometry
 {
   public:
-    typedef profugus::Mesh_State    Geo_State_t;
     typedef profugus::events::Event Event_Type;
 
   private:
@@ -56,10 +95,10 @@ class Geometry
 
     // Get distance to boundary.
 #pragma acc routine seq
-    double distance_to_boundary(Geo_State_t &state) const;
+    double distance_to_boundary(Geometry_State &state) const;
 };
 
-} // end namespace gpu
+} // end namespace acc
 
 #endif // acc_Geometry_hh
 

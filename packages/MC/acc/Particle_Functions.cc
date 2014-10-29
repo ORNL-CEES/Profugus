@@ -40,9 +40,8 @@ void set_size(Vec_Particles &particles,
 /*!
  * \brief Load a vector of source particles.
  */
-void load_source(profugus::Mesh_Geometry &geometry,
-                 profugus::Source        &source,
-                 Vec_Particles           &particles)
+void load_source(profugus::Source &source,
+                 Vec_Particles    &particles)
 {
     // determine the number of particles in this work block
     def::size_type num_particles = std::min(source.num_to_transport(),
@@ -61,10 +60,7 @@ void load_source(profugus::Mesh_Geometry &geometry,
         particles[p].alive = particle->alive();
         particles[p].event = particle->event();
 
-        // initialize the particles state in the mesh geometry
-        geometry.initialize(source.geometry().position(particle->geo_state()),
-                            source.geometry().direction(particle->geo_state()),
-                            particles[p].geo_state);
+        // !!!!!!finish state initialization later!!!!!
     }
 
     // get a random number generator from the source
