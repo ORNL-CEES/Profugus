@@ -40,9 +40,9 @@ Geometry::Geometry(int    N,
 
     std::fill(std::begin(d_N), std::end(d_N), N);
 
-#pragma acc enter data copyin(this)
-#pragma acc enter data copyin(d_x[0:N+1], d_y[0:N+1], d_z[0:N+1])
-#pragma acc enter data copyin(d_N[0:3])
+#pragma acc enter data pcopyin(this)
+#pragma acc enter data pcopyin(d_x[0:N+1], d_y[0:N+1], d_z[0:N+1])
+#pragma acc enter data pcopyin(d_N[0:3])
 }
 
 //---------------------------------------------------------------------------//
@@ -51,8 +51,8 @@ Geometry::Geometry(int    N,
  */
 Geometry::~Geometry()
 {
-#pragma acc exit data delete(this)
 #pragma acc exit data delete(d_x, d_y, d_z, d_N)
+#pragma acc exit data delete(this)
 }
 
 //---------------------------------------------------------------------------//

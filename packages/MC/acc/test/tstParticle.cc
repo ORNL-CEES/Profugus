@@ -16,6 +16,7 @@
 #include "Teuchos_RCP.hpp"
 
 #include "harness/DBC.hh"
+#include "core/geometry/Mesh_Geometry.hh"
 #include "core/mc/Uniform_Source.hh"
 #include "core/mc/Box_Shape.hh"
 #include "core/mc/Global_RNG.hh"
@@ -57,6 +58,9 @@ class ParticleTest : public testing::Test
     typedef profugus::Uniform_Source         Source;
     typedef Source::SP_Particle              SP_Particle;
     typedef std::shared_ptr<profugus::Shape> SP_Shape;
+
+    typedef profugus::Mesh_Geometry       ACC_Geometry;
+    typedef std::shared_ptr<ACC_Geometry> SP_ACC_Geometry;
 
   protected:
     void SetUp()
@@ -146,6 +150,12 @@ class ParticleTest : public testing::Test
 
         // make the b_geometry
         b_geometry = std::make_shared<Geometry_t>(core);
+
+        // build a corresponding mesh geometry
+        Vec_Dbl r = {0.0, 1.26, 2.52, 3.78};
+        Vec_Dbl z = {0.0, 14.28};
+
+        b_acc_geo = std::make_shared<ACC_Geometry>(r, r, z);
     }
 
     /*
@@ -175,6 +185,7 @@ class ParticleTest : public testing::Test
     SP_RNG_Control  b_rcon;
     RCP_Std_DB      b_db;
     SP_Geometry     b_geometry;
+    SP_ACC_Geometry b_acc_geo;
     SP_Physics      b_physics;
     SP_Group_Bounds b_group_bounds;
 
@@ -246,7 +257,7 @@ TEST_F(ParticleTest, load_particles)
     acc::set_size(particles, 10);
 
     // load the source
-    acc::load_source(source, particles);
+    acc::load_source(*acc_geometry, source, particles);
 
     // number of particles in grid
     EXPECT_EQ(60*128, particles.size());
@@ -284,26 +295,16 @@ TEST_F(ParticleTest, load_particles_gpu)
     acc::set_size(particles, 10);
 
     // load the source
-    acc::load_source(source, particles);
+    acc::load_source(*acc_geometry, source, particles);
 
     // number of particles in grid
     EXPECT_EQ(60*128, particles.size());
     EXPECT_EQ(100, acc::rnd_numbers.size());
 
     acc::Particle *p_ptr = &particles[0];
- 
+
     loop_over_particles(p_ptr);
-
-#if 0
-#pragma acc kernels
-    for (int n = 0; n < 48; ++n)
-    {
-        // get a particle
-        acc::Particle &p = p_ptr[n];
-    }
-#endif 
 }
-
 
 //---------------------------------------------------------------------------//
 //                 end of tstParticle.cc
