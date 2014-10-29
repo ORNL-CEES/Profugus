@@ -26,14 +26,6 @@ namespace acc
  * \class Physics
  * \brief Flattend GPU physics class
  *
- * Long description or discussion goes here.
- *
- * \sa Physics.cc for detailed descriptions.
- *
- * \par Code Sample:
- * \code
- *     cout << "Hello, world." << endl;
- * \endcode
  */
 /*!
  * \example Physics/test/tstPhysics.cc
@@ -68,6 +60,25 @@ class Physics
   public:
     // Construct with number of matids, number of groups
     explicit Physics(const profugus::XS& xsdb);
+
+  public:
+    //! Total macro XS
+    double total(int matid, int group)
+    {
+        return d_total[vector_index(matid, group)];
+    }
+
+    //! Total scattering
+    double total(int matid, int group)
+    {
+        return d_total[vector_index(matid, group)];
+    }
+
+    //! Nu fission
+    double nusigf(int matid, int group)
+    {
+        return d_nusigf[vector_index(matid, group)];
+    }
 
   public:
     //! Number of elements in total, nusigf
