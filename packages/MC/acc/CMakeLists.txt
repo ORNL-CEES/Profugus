@@ -50,12 +50,13 @@ LIST(APPEND ROOT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 # C/C++ sources
 SET(SOURCES
   Particle_Functions.cc
+  Physics.cc
   )
 
 # C/C++ sources with ACC directives
 SET(ACC_SOURCES
   Geometry.cc
-  Physics.cc
+  Physics.acc.cc
   )
 
 ##---------------------------------------------------------------------------##

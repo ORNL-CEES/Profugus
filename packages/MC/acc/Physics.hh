@@ -11,6 +11,7 @@
 #ifndef acc_Physics_hh
 #define acc_Physics_hh
 
+#include <vector>
 
 namespace profugus
 {
@@ -70,21 +71,21 @@ class Physics
 
   public:
     //! Number of elements in total, nusigf
-    int num_vector_elements() const { return d_num_mat * d_num_groups; }
+    int num_vector_elements() const { return d_num_mats * d_num_groups; }
 
     //! Number of elements in the scattering matrix
-    int num_matrix_elements() const { return d_num_mat * d_num_groups * d_num_groups; }
+    int num_matrix_elements() const { return d_num_mats * d_num_groups * d_num_groups; }
 
     //! Index into vector data
     int vector_index(int mat, int group) const
     {
-        return mat * num_groups + group;
+        return mat * d_num_groups + group;
     }
 
     //! Index into matrix data
     int matrix_index(int mat, int out_group, int in_group) const
     {
-        return (mat * num_groups + out_group) * num_groups + in_group;
+        return (mat * d_num_groups + out_group) * d_num_groups + in_group;
     }
 
   private:
