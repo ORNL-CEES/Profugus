@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "core/geometry/Definitions.hh"
 #include "Geometry.hh"
 
 namespace gpu
@@ -52,6 +53,95 @@ Geometry::~Geometry()
 {
 #pragma acc exit data delete(this)
 #pragma acc exit data delete(d_x, d_y, d_z, d_N)
+}
+
+//---------------------------------------------------------------------------//
+// GEOMETRY FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Calculate distance to the next cell.
+ */
+double Geometry::distance_to_boundary(Geo_State_t& state) const
+{
+    using def::I; using def::J; using def::K;
+
+    // large double for comparisons
+    double max_d = 1.0e24;
+
+    // min distance to boundary; initializing test_dist to a large number before
+    // each surface check implicitly handles the case where omega[dir] == 0.0
+    double test_dist = max_d;
+    int    test_next = state.ijk[I];
+
+    // initialize the next surface
+    state.next_ijk = state.ijk;
+
+    // unrolled check
+
+    // X SURFACE
+    if (state.dir[I] > 0.0 && state.ijk[I] < d_N[I])
+    {
+        test_dist = (d_x[state.ijk[I]+1] - state.pos[I]) / state.dir[I];
+        test_next = state.ijk[I] + 1;
+    }
+    else if (state.dir[I] < 0.0 && state.ijk[I] > -1)
+    {
+        test_dist = (d_x[state.ijk[I]] - state.pos[I]) / state.dir[I];
+        test_next = state.ijk[I] - 1;
+    }
+
+    // initialize to x distance
+    state.next_dist   = test_dist;
+    state.next_ijk[I] = test_next;
+
+    // reset the local dist-to-boundary to a large value to handle dir=0.0
+    test_dist = max_d;
+
+    // Y SURFACE
+    if (state.dir[J] > 0.0 && state.ijk[J] < d_N[J])
+    {
+        test_dist = (d_y[state.ijk[J]+1] - state.pos[J]) / state.dir[J];
+        test_next = state.ijk[J] + 1;
+    }
+    else if (state.dir[J] < 0.0 && state.ijk[J] > -1)
+    {
+        test_dist = (d_y[state.ijk[J]] - state.pos[J]) / state.dir[J];
+        test_next = state.ijk[J] - 1;
+    }
+
+    // update running value of distance to boundary
+    if (test_dist < state.next_dist)
+    {
+        state.next_dist   = test_dist;
+        state.next_ijk[I] = state.ijk[I];
+        state.next_ijk[J] = test_next;
+    }
+
+    // reset the local dist-to-boundary to a large value to handle dir=0.0
+    test_dist = max_d;
+
+    // Z SURFACE
+    if (state.dir[K] > 0.0 && state.ijk[K] < d_N[K])
+    {
+        test_dist = (d_z[state.ijk[K]+1] - state.pos[K]) / state.dir[K];
+        test_next = state.ijk[K] + 1;
+    }
+    else if (state.dir[K] < 0.0 && state.ijk[K] > -1)
+    {
+        test_dist = (d_z[state.ijk[K]] - state.pos[K]) / state.dir[K];
+        test_next = state.ijk[K] - 1;
+    }
+
+    // update running value of distance to boundary
+    if (test_dist < state.next_dist)
+    {
+        state.next_dist   = test_dist;
+        state.next_ijk[I] = state.ijk[I];
+        state.next_ijk[J] = state.ijk[J];
+        state.next_ijk[K] = test_next;
+    }
+
+    return state.next_dist;
 }
 
 } // end namespace gpu

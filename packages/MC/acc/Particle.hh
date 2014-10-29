@@ -13,7 +13,8 @@
 
 #include <vector>
 
-#include "core/geometry/RTK_State.hh"
+#include "core/geometry/Mesh_State.hh"
+#include "core/geometry/Mesh_Geometry.hh"
 #include "core/mc/Definitions.hh"
 #include "core/mc/Source.hh"
 
@@ -29,7 +30,7 @@ namespace acc
 
 struct Particle
 {
-    typedef profugus::RTK_State     Geo_State_t;
+    typedef profugus::Mesh_State    Geo_State_t;
     typedef profugus::events::Event Event_Type;
 
     // >>> DATA
@@ -63,7 +64,8 @@ extern std::vector<double> rnd_numbers;
 void set_size(Vec_Particles &particles, int num_steps);
 
 //! Load particles from a source.
-void load_source(profugus::Source &source, Vec_Particles &particles);
+void load_source(profugus::Mesh_Geometry &geometry, profugus::Source &source,
+                 Vec_Particles &particles);
 
 } // end namespace acc
 

@@ -12,6 +12,8 @@
 #define acc_Geometry_hh
 
 #include <vector>
+#include "core/geometry/Mesh_State.hh"
+#include "core/mc/Definitions.hh"
 
 namespace gpu
 {
@@ -25,6 +27,10 @@ namespace gpu
 
 class Geometry
 {
+  public:
+    typedef profugus::Mesh_State    Geo_State_t;
+    typedef profugus::events::Event Event_Type;
+
   private:
     // >>> CPU DATA
 
@@ -47,6 +53,10 @@ class Geometry
     //! Get number of cells.
 #pragma acc routine seq
     int num_cells() const { return d_N[0]*d_N[1]*d_N[2]; }
+
+    // Get distance to boundary.
+#pragma acc routine seq
+    double distance_to_boundary(Geo_State_t &state) const;
 };
 
 } // end namespace gpu
