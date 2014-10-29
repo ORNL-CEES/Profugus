@@ -63,10 +63,10 @@ class Geometry
 
     // Edges.
     std::vector<std::vector<double>> d_edges;
-    
+
     // Matids.
     std::vector<int> d_matids;
-    
+
     // Boundaries.
     int d_bnds[6];
 

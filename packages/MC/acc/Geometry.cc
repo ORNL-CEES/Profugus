@@ -58,7 +58,6 @@ Geometry::Geometry(int                     N,
 #pragma acc enter data pcopyin(d_x[0:N+1], d_y[0:N+1], d_z[0:N+1])
 #pragma acc enter data pcopyin(d_N[0:3])
 #pragma acc enter data pcopyin(d_b[0:6], d_m[0:nc])
-#pragma acc enter data pcreate(d_work[0:3])
 }
 
 //---------------------------------------------------------------------------//
@@ -67,7 +66,7 @@ Geometry::Geometry(int                     N,
  */
 Geometry::~Geometry()
 {
-#pragma acc exit data delete(d_x, d_y, d_z, d_N, d_b, d_m, d_work)
+#pragma acc exit data delete(d_x, d_y, d_z, d_N, d_b, d_m)
 #pragma acc exit data delete(this)
 }
 
@@ -212,7 +211,7 @@ void Geometry::change_direction(double          costheta,
     const double sintheta = sqrt(1.0 - costheta * costheta);
 
     // make a copy of the d_work direction
-    double o0 = state.dir[0]; 
+    double o0 = state.dir[0];
     double o1 = state.dir[1];
     double o2 = state.dir[2];
 
@@ -283,43 +282,45 @@ bool Geometry::reflect(Geometry_State& state) const
 {
     using def::X; using def::Y; using def::Z;
 
-    double n[3] = {0.0, 0.0, 0.0};
+    double n0 = 0.0;
+    double n1 = 0.0;
+    double n2 = 0.0;
     if (state.next_ijk[X] == -1)
     {
-        n[X] = -1.0;
+        n0 = -1.0;
     }
     else if (state.next_ijk[X] == d_N[X])
     {
-        n[X] = 1.0;
+        n0 = 1.0;
     }
     else if (state.next_ijk[Y] == -1)
     {
-        n[Y] = -1.0;
+        n1 = -1.0;
     }
     else if (state.next_ijk[Y] == d_N[Y])
     {
-        n[Y] = 1.0;
+        n1 = 1.0;
     }
     else if (state.next_ijk[Z] == -1)
     {
-        n[Z] = -1.0;
+        n2 = -1.0;
     }
     else if (state.next_ijk[Z] == d_N[Z])
     {
-        n[Z] = 1.0;
+        n2 = 1.0;
     }
 
 
     // calculate the dot-product of the incoming angle and outward normal
-    double dot = state.dir[X]*n[X] + state.dir[Y]*n[Y] +
-                 state.dir[Z]*n[Z];
+    double dot = state.dir[X]*n0 + state.dir[Y]*n1 +
+                 state.dir[Z]*n2;
 
     // if the dot-product != 0 then calculate the reflected angle
     if (dot != 0.0)
     {
-        state.dir[X] -= 2.0 * n[X] * dot;
-        state.dir[Y] -= 2.0 * n[Y] * dot;
-        state.dir[Z] -= 2.0 * n[Z] * dot;
+        state.dir[X] -= 2.0 * n0 * dot;
+        state.dir[Y] -= 2.0 * n1 * dot;
+        state.dir[Z] -= 2.0 * n2 * dot;
 
         return true;
     }
