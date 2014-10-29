@@ -257,7 +257,7 @@ TEST_F(ParticleTest, load_particles)
     acc::set_size(particles, 10);
 
     // load the source
-    acc::load_source(*acc_geometry, source, particles);
+    acc::load_source(source, particles);
 
     // number of particles in grid
     EXPECT_EQ(60*128, particles.size());
@@ -295,7 +295,7 @@ TEST_F(ParticleTest, load_particles_gpu)
     acc::set_size(particles, 10);
 
     // load the source
-    acc::load_source(*acc_geometry, source, particles);
+    acc::load_source(source, particles);
 
     // number of particles in grid
     EXPECT_EQ(60*128, particles.size());

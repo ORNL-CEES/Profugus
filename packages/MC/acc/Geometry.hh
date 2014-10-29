@@ -90,7 +90,6 @@ class Geometry
     ~Geometry();
 
     //! Get number of cells.
-#pragma acc routine seq
     int num_cells() const { return d_N[0]*d_N[1]*d_N[2]; }
 
     // Get distance to boundary.
