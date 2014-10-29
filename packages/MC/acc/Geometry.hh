@@ -28,19 +28,6 @@ namespace acc
 struct Geometry_State
 {
   public:
-
-    //! Faces in pin-cell.
-    enum Face {
-        MINUS_X = 0,
-        PLUS_X ,
-        MINUS_Y,
-        PLUS_Y ,
-        MINUS_Z,
-        PLUS_Z,
-        END_FACES
-    };
-
-  public:
     // >>> PUBLIC DATA
 
     //! Indices along the mesh grid if inside (invalid if not)
@@ -94,6 +81,9 @@ class Geometry
 
     // Boundaries.
     int d_b[6];
+
+    // Work arrays on the GPU.
+    double d_work[3];
 
   public:
     // Constructor.

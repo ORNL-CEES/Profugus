@@ -12,7 +12,7 @@
 
 #ifdef _OPENACC
 #include <accelmath.h>
-#include <binary_search.h>
+#include <thrust/binary_search.h>
 #else
 #include <cmath>
 #endif
@@ -58,6 +58,7 @@ Geometry::Geometry(int                     N,
 #pragma acc enter data pcopyin(d_x[0:N+1], d_y[0:N+1], d_z[0:N+1])
 #pragma acc enter data pcopyin(d_N[0:3])
 #pragma acc enter data pcopyin(d_b[0:6], d_m[0:nc])
+#pragma acc enter data pcreate(d_work[0:3])
 }
 
 //---------------------------------------------------------------------------//
@@ -66,7 +67,7 @@ Geometry::Geometry(int                     N,
  */
 Geometry::~Geometry()
 {
-#pragma acc exit data delete(d_x, d_y, d_z, d_N, d_b, d_m)
+#pragma acc exit data delete(d_x, d_y, d_z, d_N, d_b, d_m, d_work)
 #pragma acc exit data delete(this)
 }
 
@@ -203,25 +204,27 @@ void Geometry::change_direction(double          costheta,
 #ifndef _OPENACC
     using std::cos; using std::sin; using std::sqrt;
 #endif
-    using def::X; using def::Y; using def::Z;
+    using def::I; using def::J; using def::K;
 
      // cos/sin factors
     const double cosphi   = cos(phi);
     const double sinphi   = sin(phi);
     const double sintheta = sqrt(1.0 - costheta * costheta);
 
-    // make a copy of the old direction
-    double old[3] = {state.dir[0], state.dir[1], state.dir[2]};
+    // make a copy of the d_work direction
+    double o0 = state.dir[0]; 
+    double o1 = state.dir[1];
+    double o2 = state.dir[2];
 
     // calculate alpha
-    const double alpha = sqrt(1.0 - old[Z] * old[Z]);
+    const double alpha = sqrt(1.0 - o2 * o2);
 
     // now transform into new cooordinate direction; degenerate case first
     if (alpha < 1.e-6)
     {
-        state.dir[X] = sintheta * cosphi;
-        state.dir[Y] = sintheta * sinphi;
-        state.dir[Z] = (old[Z] < 0.0 ? -1.0 : 1.0) * costheta;
+        state.dir[I] = sintheta * cosphi;
+        state.dir[J] = sintheta * sinphi;
+        state.dir[K] = (o2 < 0.0 ? -1.0 : 1.0) * costheta;
     }
 
     // do standard transformation
@@ -231,21 +234,21 @@ void Geometry::change_direction(double          costheta,
         const double inv_alpha = 1.0 / alpha;
 
         // calculate new z-direction
-        state.dir[Z] = old[Z] * costheta - alpha * sintheta * cosphi;
+        state.dir[K] = o2 * costheta - alpha * sintheta * cosphi;
 
         // calculate new x-direction
-        state.dir[X] = old[X] * costheta + inv_alpha * (
-            old[X] * old[Z] * sintheta * cosphi - old[Y] * sintheta * sinphi);
+        state.dir[I] = o0 * costheta + inv_alpha * (
+            o0 * o2 * sintheta * cosphi - o1 * sintheta * sinphi);
 
         // calculate new y-direction
-        state.dir[Y] = old[Y] * costheta + inv_alpha * (
-            old[Y] * old[Z] * sintheta * cosphi + old[X] * sintheta * sinphi);
+        state.dir[J] = o1 * costheta + inv_alpha * (
+            o1 * o2 * sintheta * cosphi + o0 * sintheta * sinphi);
     }
 
     // normalize the particle to avoid roundoff errors
-    double norm = 1.0 / sqrt(state.dir[X] * state.dir[X] +
-                             state.dir[Y] * state.dir[Y] +
-                             state.dir[Z] * state.dir[Z]);
+    double norm = 1.0 / sqrt(state.dir[I] * state.dir[I] +
+                             state.dir[J] * state.dir[J] +
+                             state.dir[K] * state.dir[K]);
     state.dir[0] *= norm;
     state.dir[1] *= norm;
     state.dir[2] *= norm;
