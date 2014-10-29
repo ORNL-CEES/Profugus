@@ -48,6 +48,9 @@ class Physics
     // Scatter[matid][exiting][incident]
     double *d_scatter;
 
+    // Fissionable[matid]
+    int *d_fissionable;
+
     // Number of materials/groups
     int d_num_mats;
     int d_num_groups;
@@ -56,6 +59,7 @@ class Physics
 
     // Memory storage on CPU
     std::vector<double> dv_total, dv_nusigf, dv_scatter;
+    std::vector<int> dv_fissionable;
 
   public:
     // Construct with number of matids, number of groups
@@ -69,7 +73,7 @@ class Physics
     }
 
     //! Total scattering
-    double total(int matid, int group)
+    double scattering(int matid, int group)
     {
         return d_total[vector_index(matid, group)];
     }
@@ -97,6 +101,12 @@ class Physics
     int matrix_index(int mat, int out_group, int in_group) const
     {
         return (mat * d_num_groups + out_group) * d_num_groups + in_group;
+    }
+
+    //! Is the material fissionable
+    bool is_fissionable(int mat) const
+    {
+        return d_fissionable[mat];
     }
 
   private:

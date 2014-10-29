@@ -9,8 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "../Physics.hh"
-#include "../Particle.hh"
-
+#include "xs/XS.hh"
 #include "gtest/utils_gtest.hh"
 
 #include <vector>
@@ -29,8 +28,8 @@ using def::X; using def::Y; using def::Z;
 class PhysicsTest : public testing::Test
 {
   protected:
-    typedef profugus::Physics                 Physics_t;
-    typedef profugus::XS                      XS;
+    typedef acc::Physics       Physics;
+    typedef profugus::XS       XS;
 
   protected:
 
@@ -112,79 +111,68 @@ class PhysicsTest : public testing::Test
 //---------------------------------------------------------------------------//
 TEST_F(PhysicsTest, Access)
 {
-    using profugus::physics::TOTAL;
-    using profugus::physics::SCATTERING;
-    using profugus::physics::FISSION;
+    // Make the physics
+    Physics physics(xs);
 
-    // make a particle
-    SP_Particle p(make_shared<Particle>());
-
-    // physics
-    Physics_t physics(db, xs);
-
+    // Check the fissionable data
     EXPECT_FALSE(physics.is_fissionable(0));
     EXPECT_TRUE(physics.is_fissionable(1));
 
-    p.set_matid(0);
-
     // test data access without fission
     {
+        int g = 0;
+        EXPECT_SOFTEQ(5.2, physics.total(0, g), 1.e-12);
+        EXPECT_SOFTEQ(2.6, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
-        p.group = 0;
-        EXPECT_SOFTEQ(5.2, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 1;
+        EXPECT_SOFTEQ(11.4, physics.total(0, g), 1.e-12);
+        EXPECT_SOFTEQ(8.3, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
-        p.group = 1;
-        EXPECT_SOFTEQ(11.4, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 2;
+        EXPECT_SOFTEQ(18.2, physics.total(0, g), 1.e-12);
+        EXPECT_SOFTEQ(13.7, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
-        p.group = 2;
-        EXPECT_SOFTEQ(18.2, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 3;
+        EXPECT_SOFTEQ(29.9, physics.total(0, g), 1.e-12);
+        EXPECT_SOFTEQ(17.8, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
-        p.group = 3;
-        EXPECT_SOFTEQ(29.9, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.nusigf(p.matid, p.group), 1.e-12);
-
-        p.group = 4;
-        EXPECT_SOFTEQ(27.3, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 4;
+        EXPECT_SOFTEQ(27.3, physics.total(0, g), 1.e-12);
+        EXPECT_SOFTEQ(12.0, physics.scattering(0, g), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
     }
-
-    p.set_matid(1);
-
+    
     // test data access with fission
     {
-        p.group = 0;
-        EXPECT_SOFTEQ(5.3, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(0.1, physics.nusigf(p.matid, p.group), 1.e-12);
+        int g = 0;
+        EXPECT_SOFTEQ(5.3, physics.total(1, g), 1.e-12);
+        EXPECT_SOFTEQ(2.6, physics.scattering(1, g), 1.e-12);
+        EXPECT_SOFTEQ(0.1, physics.nusigf(1, g), 1.e-12);
 
-        p.group = 1;
-        EXPECT_SOFTEQ(11.8, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(0.4, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 1;
+        EXPECT_SOFTEQ(11.8, physics.total(1, g), 1.e-12);
+        EXPECT_SOFTEQ(8.3, physics.scattering(1, g), 1.e-12);
+        EXPECT_SOFTEQ(0.4, physics.nusigf(1, g), 1.e-12);
 
-        p.group = 2;
-        EXPECT_SOFTEQ(20.0, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(1.8, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 2;
+        EXPECT_SOFTEQ(20.0, physics.total(1, g), 1.e-12);
+        EXPECT_SOFTEQ(13.7, physics.scattering(1, g), 1.e-12);
+        EXPECT_SOFTEQ(1.8, physics.nusigf(1, g), 1.e-12);
 
-        p.group = 3;
-        EXPECT_SOFTEQ(35.6, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(5.7, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 3;
+        EXPECT_SOFTEQ(35.6, physics.total(1, g), 1.e-12);
+        EXPECT_SOFTEQ(17.8, physics.scattering(1, g), 1.e-12);
+        EXPECT_SOFTEQ(5.7, physics.nusigf(1, g), 1.e-12);
 
-        p.group = 4;
-        EXPECT_SOFTEQ(37.1, physics.total(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.scattering(p.matid, p.group), 1.e-12);
-        EXPECT_SOFTEQ(9.8, physics.nusigf(p.matid, p.group), 1.e-12);
+        g = 4;
+        EXPECT_SOFTEQ(37.1, physics.total(1, g), 1.e-12);
+        EXPECT_SOFTEQ(12.0, physics.scattering(1, g), 1.e-12);
+        EXPECT_SOFTEQ(9.8, physics.nusigf(1, g), 1.e-12);
     }
 }
 

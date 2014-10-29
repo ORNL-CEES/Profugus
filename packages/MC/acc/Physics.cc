@@ -21,6 +21,7 @@ Physics::Physics(const XS& xs)
 {
     d_num_mats = xs.num_mat();
     d_num_groups = xs.num_groups();
+    dv_fissionable.resize(d_num_mats);
     dv_total.resize(num_vector_elements());
     dv_nusigf.resize(num_vector_elements());
     dv_scatter.resize(num_matrix_elements());
@@ -32,6 +33,7 @@ Physics::Physics(const XS& xs)
         const XS::Vector& total   = xs.vector(m, XS::TOTAL);
         const XS::Vector& nusigf  = xs.vector(m, XS::NU_SIG_F);
 
+        bool is_fiss = false;
         for (int g = 0; g < d_num_groups; ++g)
         {
             const int veci = vector_index(m, g);
@@ -42,6 +44,9 @@ Physics::Physics(const XS& xs)
             dv_total[veci]  = total[g];
             dv_nusigf[veci] = nusigf[g];
 
+            // Check for fissionable
+            if (nusigf[g] > 0.0)
+              is_fiss = true;
             // Loop over outscattering groups
             for (int gp = 0; gp < d_num_groups; ++gp)
             {
@@ -52,12 +57,18 @@ Physics::Physics(const XS& xs)
                 dv_scatter[mati] = scatter(gp, g);
             }
         }
+        // Set fissionable flag for this material
+        dv_fissionable[m] = is_fiss;
     }
 
     // Set pointers
     d_total = dv_total.data();
     d_nusigf = dv_nusigf.data();
     d_scatter = dv_scatter.data();
+    d_fissionable = dv_fissionable.data();
+
+    // Complete to copy data to GPU
+    complete();
 }
 
 //---------------------------------------------------------------------------//
