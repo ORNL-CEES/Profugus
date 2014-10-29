@@ -116,8 +116,7 @@ class Geometry
 
     // Return the boundary state.
 #pragma acc routine seq
-    profugus::geometry::Boundary_State boundary_state(
-        const Geometry_State &state) const;
+    int boundary_state(const Geometry_State &state) const;
 
     //! Move to and cross a surface in the current direction.
     void move_to_surface(Geometry_State& state) const
