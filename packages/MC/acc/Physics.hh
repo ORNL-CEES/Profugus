@@ -26,14 +26,6 @@ namespace acc
  * \class Physics
  * \brief Flattend GPU physics class
  *
- * Long description or discussion goes here.
- *
- * \sa Physics.cc for detailed descriptions.
- *
- * \par Code Sample:
- * \code
- *     cout << "Hello, world." << endl;
- * \endcode
  */
 /*!
  * \example Physics/test/tstPhysics.cc
@@ -56,6 +48,12 @@ class Physics
     // Scatter[matid][exiting][incident]
     double *d_scatter;
 
+    // Scattering ratio[matid][group]
+    double *d_scatter_ratio; 
+
+    // Fissionable[matid]
+    int *d_fissionable;
+
     // Number of materials/groups
     int d_num_mats;
     int d_num_groups;
@@ -63,11 +61,31 @@ class Physics
     // >>> CPU
 
     // Memory storage on CPU
-    std::vector<double> dv_total, dv_nusigf, dv_scatter;
+    std::vector<double> dv_total, dv_nusigf, dv_scatter, dv_scatter_ratio;
+    std::vector<int> dv_fissionable;
 
   public:
     // Construct with number of matids, number of groups
     explicit Physics(const profugus::XS& xsdb);
+
+  public:
+    //! Total macro XS
+    double total(int matid, int group)
+    {
+        return d_total[vector_index(matid, group)];
+    }
+
+    //! Scattering ratio
+    double scattering_ratio(int matid, int group)
+    {
+        return d_scatter_ratio[vector_index(matid, group)];
+    }
+
+    //! Nu fission
+    double nusigf(int matid, int group)
+    {
+        return d_nusigf[vector_index(matid, group)];
+    }
 
   public:
     //! Number of elements in total, nusigf
@@ -86,6 +104,12 @@ class Physics
     int matrix_index(int mat, int out_group, int in_group) const
     {
         return (mat * d_num_groups + out_group) * d_num_groups + in_group;
+    }
+
+    //! Is the material fissionable
+    bool is_fissionable(int mat) const
+    {
+        return d_fissionable[mat];
     }
 
   private:
