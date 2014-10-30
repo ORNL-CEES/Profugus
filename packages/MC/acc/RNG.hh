@@ -27,33 +27,29 @@ class RNG
     // >>> DATA
 
     // LCG constants.
-    const long d_a;
-    const long d_c;
-    const long d_m;
+    long d_a;
+    long d_c;
+    long d_m;
 
     // Seed
     long d_seed;
 
   public:
-    RNG(long seed)
-        : d_a(1664525)
-        , d_c(1013904223)
-        , d_m(4294967296)
-        , d_seed(seed)
-    {
-#pragma acc enter data pcopyin(this)
-    }
+    explicit RNG(long seed);
+    ~RNG();
 
-    ~RNG()
-    {
-#pragma acc exit data delete(this)
-    }
-
-    // Get the random number.
+    //! Get the random number.
     double ran()
     {
         d_seed = (d_a * d_seed + d_c) % d_m;
         return d_seed / static_cast<double>(d_m);
+    }
+
+    // Ran with seed.
+    double ran(long &seed)
+    {
+        seed = (d_a * seed + d_c) % d_m;
+        return seed / static_cast<double>(d_m);
     }
 };
 

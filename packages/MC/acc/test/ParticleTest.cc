@@ -31,6 +31,10 @@ void ray_trace(acc::Geometry       &geometry,
 
     acc::RNG rng(32423);
 
+    // seeds
+    int ctr = 0;
+    std::vector<long> seeds(num_rays, 100); 
+
     // make a vector of states
     std::vector<acc::Geometry_State> rays(num_rays);
     for (auto &r : rays)
@@ -57,40 +61,54 @@ void ray_trace(acc::Geometry       &geometry,
         r.dir[0] = sintheta * std::cos(phi);
         r.dir[1] = sintheta * std::sin(phi);
         r.dir[2] = costheta;
+
+	seeds[ctr] += 1;
+	++ctr;
     }
 
     // get pointer to rays
     acc::Geometry_State *ray_ptr = &rays[0];
+    long *seeds_ptr              = &seeds[0];
 
     // get pointer to tallies
     double *tally = &tallies[0];
     int nc        = geometry.num_cells();
+    double keff   = 0.0;
 
 #pragma acc parallel loop present(geometry) copyin(ray_ptr[0:num_rays]) \
-    copy(tally[0:nc])
+    copy(tally[0:nc]) present(rng) pcopyin(seeds_ptr[0:num_rays])
     {
         for (int r = 0; r < num_rays; ++r)
         {
             // get reference reference to ray
             acc::Geometry_State &ray = ray_ptr[r];
 
-            // make a random number generator
-            acc::RNG rng(r + 1);
+            // k-tally
+	    double k = 0.0; 
+
+            // step-length
+	    double step = 0.0;
 
             // loop over steps for each ray
 #pragma acc loop seq
             for (int s = 0; s < num_steps; ++s)
             {
+                // distance to boundary
                 double dbnd = geometry.distance_to_boundary(ray);
 
                 // sample distance to collision
-                double dcol = (-2.0 * log(rng.ran()));
+                double dcol = (-2.0 * log(rng.ran(seeds_ptr[r])));
+
+	        // determine step
+                step = dbnd;
+                if (dcol < dbnd)
+                     step = dcol; 
 
                 // get the cell index
                 int cell = geometry.cell(ray);
 
-                // tally the pathlength
-                tally[cell] += dbnd;
+                // global tally
+                k += step;
 
                 // move the ray to the next surface
                 geometry.move_to_surface(ray);
@@ -101,6 +119,10 @@ void ray_trace(acc::Geometry       &geometry,
                     geometry.reflect(ray);
                 }
             }
+
+            keff += k;
         }
     }
+   
+    tallies[0] = keff;
 }
