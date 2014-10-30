@@ -53,7 +53,7 @@ void ray_trace(acc::Geometry             &geometry,
     // get pointer to rays
     acc::Geometry_State *ray_ptr = &rays[0];
 
-#pragma acc kernels present(geometry) copyin(ray_ptr[0:num_rays])
+#pragma acc parallel loop present(geometry) copyin(ray_ptr[0:num_rays])
     for (int r = 0; r < num_rays; ++r)
     {
         // get reference reference to ray

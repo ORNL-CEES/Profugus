@@ -97,9 +97,9 @@ void Geometry::initialize(const double   *r,
     state.ijk[1] = r[1] / (d_y[1] - d_y[0]);
     state.ijk[2] = r[2] / (d_z[1] - d_z[0]);
 #else
-    state.ijk[0] = lower_bound(d_x, d_x + d_N[0] + 1, state.pos[0]) - d_x - 1;
-    state.ijk[1] = lower_bound(d_y, d_y + d_N[1] + 1, state.pos[1]) - d_y - 1;
-    state.ijk[2] = lower_bound(d_z, d_z + d_N[2] + 1, state.pos[2]) - d_z - 1;
+    state.ijk[0] = std::lower_bound(d_x, d_x + d_N[0] + 1, state.pos[0]) - d_x - 1;
+    state.ijk[1] = std::lower_bound(d_y, d_y + d_N[1] + 1, state.pos[1]) - d_y - 1;
+    state.ijk[2] = std::lower_bound(d_z, d_z + d_N[2] + 1, state.pos[2]) - d_z - 1;
 #endif
 }
 
@@ -261,16 +261,31 @@ int Geometry::boundary_state(const Geometry_State &state) const
 {
     using def::I; using def::J; using def::K;
 
-    for (int d = 0; d < 3; ++d)
+    if (d_b[0] && state.next_ijk[0] == -1)
     {
-        if (d_b[d*2] && state.next_ijk[d] == -1)
-        {
-            return profugus::geometry::REFLECT;
-        }
-        else if (d_b[d*2+1] && state.next_ijk[d] == d_N[d])
-        {
-            return profugus::geometry::REFLECT;
-        }
+        return 2;
+    }
+    else if (d_b[1] && state.next_ijk[0] == d_N[0])
+    {
+        return 2;
+    }
+
+    if (d_b[2] && state.next_ijk[1] == -1)
+    {
+        return 2;
+    }
+    else if (d_b[3] && state.next_ijk[1] == d_N[1])
+    {
+        return 2;
+    }
+
+    if (d_b[4] && state.next_ijk[2] == -1)
+    {
+        return 2;
+    }
+    else if (d_b[5] && state.next_ijk[2] == d_N[2])
+    {
+        return 2;
     }
 
     if ((state.ijk[I] == -1)
@@ -280,9 +295,9 @@ int Geometry::boundary_state(const Geometry_State &state) const
         || (state.ijk[J] == d_N[J])
         || (state.ijk[K] == d_N[K]))
     {
-        return profugus::geometry::OUTSIDE;
+        return 1;
     }
-    return profugus::geometry::INSIDE;
+    return 0;
 }
 
 //---------------------------------------------------------------------------//

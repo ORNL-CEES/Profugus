@@ -59,7 +59,7 @@ TEST_F(GeometryTest, construction)
 
 TEST_F(GeometryTest, ray_tracing)
 {
-    int num_rays = 1;
+    int num_rays = 100000;
 
     // fill a vector with random numbers
     std::vector<double> rnd(num_rays * 5, 0.0);
