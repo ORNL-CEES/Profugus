@@ -8,9 +8,12 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <vector>
 #include <memory>
 
+#include "rng/RNG_Control.hh"
 #include "../Geometry.hh"
+#include "ParticleTest.hh"
 
 #include "gtest/utils_gtest.hh"
 
@@ -49,14 +52,27 @@ class GeometryTest : public ::testing::Test
 
 TEST_F(GeometryTest, construction)
 {
-
+    EXPECT_EQ(1000, geo->num_cells());
 }
 
 //---------------------------------------------------------------------------//
 
 TEST_F(GeometryTest, ray_tracing)
 {
+    int num_rays = 1;
 
+    // fill a vector with random numbers
+    std::vector<double> rnd(num_rays * 5, 0.0);
+
+    // make random numbers
+    profugus::RNG_Control con(235235);
+    auto rng = con.rng();
+    for (auto &r : rnd)
+    {
+        r = rng.ran();
+    }
+
+    ray_trace(*geo, num_rays, rnd);
 }
 
 //---------------------------------------------------------------------------//

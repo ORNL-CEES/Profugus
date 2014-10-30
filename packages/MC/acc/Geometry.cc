@@ -261,6 +261,18 @@ int Geometry::boundary_state(const Geometry_State &state) const
 {
     using def::I; using def::J; using def::K;
 
+    for (int d = 0; d < 3; ++d)
+    {
+        if (d_b[d*2] && state.next_ijk[d] == -1)
+        {
+            return profugus::geometry::REFLECT;
+        }
+        else if (d_b[d*2+1] && state.next_ijk[d] == d_N[d])
+        {
+            return profugus::geometry::REFLECT;
+        }
+    }
+
     if ((state.ijk[I] == -1)
         || (state.ijk[J] == -1)
         || (state.ijk[K] == -1)

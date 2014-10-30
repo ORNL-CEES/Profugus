@@ -96,6 +96,12 @@ class Geometry
     //! Get number of cells.
     int num_cells() const { return d_N[0]*d_N[1]*d_N[2]; }
 
+    //! Number of cells along a given direction.
+    int num_cells(int d) const { return d_N[d]; }
+
+    //! Extents along a given direction.
+    const double * extents(int d) const { return &d_edges[d][0]; }
+
     // Initialize the geometry state.
 #pragma acc routine seq
     void initialize(const double *r, const double *direction,
@@ -125,9 +131,17 @@ class Geometry
         state.pos[1] += state.dir[1] * state.next_dist;
         state.pos[2] += state.dir[2] * state.next_dist;
 
-        state.ijk[0] = state.next_ijk[0];
-        state.ijk[1] = state.next_ijk[1];
-        state.ijk[2] = state.next_ijk[2];
+        // handle reflecting cases
+        for (int d = 0; d < 3; ++d)
+        {
+            // is this a reflecting face
+            bool lo_r = (d_b[2*d] && state.next_ijk[d] == -1);
+            bool hi_r = (d_b[2*d + 1] && state.next_ijk[d] == d_N[d]);
+
+            // only update the state if not reflecting
+            if (!lo_r && !hi_r)
+                state.ijk[d] = state.next_ijk[d];
+        }
     }
 
     //! Move a distance \e d to a point in the current direction.
