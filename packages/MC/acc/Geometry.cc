@@ -12,7 +12,6 @@
 
 #ifdef _OPENACC
 #include <accelmath.h>
-#include <thrust/binary_search.h>
 #else
 #include <cmath>
 #endif
