@@ -18,6 +18,7 @@ void calc_total(
         double*        total)
 {
 #pragma acc parallel loop \
+        present(physics) \
         copyin(groups[0:size], matids[0:size]) \
         copyout(total[0:size])
     for (int i = 0; i < size; ++i)
