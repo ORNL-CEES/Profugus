@@ -102,6 +102,13 @@ class Geometry
     //! Extents along a given direction.
     const double * extents(int d) const { return &d_edges[d][0]; }
 
+    //! Return the current cell index.
+    int cell(const Geometry_State &state) const
+    {
+        return state.pos[0] + d_N[0] * (
+            state.pos[1] + d_N[1] * (state.pos[2]));
+    }
+
     // Initialize the geometry state.
 #pragma acc routine seq
     void initialize(const double *r, const double *direction,

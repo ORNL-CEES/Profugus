@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 #include "rng/RNG_Control.hh"
 #include "../Geometry.hh"
@@ -72,7 +73,18 @@ TEST_F(GeometryTest, ray_tracing)
         r = rng.ran();
     }
 
-    ray_trace(*geo, num_rays, rnd);
+    // make tallies
+    std::vector<double> tallies(geo->num_cells(), 0.0);
+
+    ray_trace(*geo, num_rays, rnd, tallies);
+
+    // print max and min talliese
+    auto maxitr = std::max_element(tallies.begin(), tallies.end());
+    auto minitr = std::min_element(tallies.begin(), tallies.end());
+    cout << "Maximum pathlength = " << *maxitr << " in "
+         << maxitr - tallies.begin() << endl;
+    cout << "Minimum pathlength = " << *minitr << " in "
+         << minitr - tallies.begin() << endl;
 }
 
 //---------------------------------------------------------------------------//

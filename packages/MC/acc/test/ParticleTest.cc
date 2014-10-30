@@ -17,7 +17,8 @@ void loop_over_particles(acc::Particle *particles)
 
 void ray_trace(acc::Geometry             &geometry,
                int                        num_rays,
-               const std::vector<double> &rnd)
+               const std::vector<double> &rnd,
+               std::vector<double>       &tallies)
 {
     const double *rnd_ptr = &rnd[0];
     int rctr = 0;
@@ -53,25 +54,38 @@ void ray_trace(acc::Geometry             &geometry,
     // get pointer to rays
     acc::Geometry_State *ray_ptr = &rays[0];
 
-#pragma acc parallel loop present(geometry) copyin(ray_ptr[0:num_rays])
-    for (int r = 0; r < num_rays; ++r)
+    // get pointer to tallies
+    double *tally = &tallies[0];
+    int nc        = geometry.num_cells();
+
+#pragma acc parallel loop present(geometry) copyin(ray_ptr[0:num_rays]) \
+    copy(tally[0:nc])
     {
-        // get reference reference to ray
-        acc::Geometry_State &ray = ray_ptr[r];
-
-        // loop over steps for each ray
-#pragma acc loop seq
-        for (int s = 0; s < 1000; ++s)
+        for (int r = 0; r < num_rays; ++r)
         {
-            double dbnd = geometry.distance_to_boundary(ray);
+            // get reference reference to ray
+            acc::Geometry_State &ray = ray_ptr[r];
 
-            // move the ray to the next surface
-            geometry.move_to_surface(ray);
-
-            // reflect the particle
-            if (geometry.boundary_state(ray) == profugus::geometry::REFLECT)
+            // loop over steps for each ray
+#pragma acc loop seq
+            for (int s = 0; s < 1000; ++s)
             {
-                geometry.reflect(ray);
+                double dbnd = geometry.distance_to_boundary(ray);
+
+                // get the cell index
+                int cell = geometry.cell(ray);
+
+                // tally the pathlength
+                tally[cell] += dbnd;
+
+                // move the ray to the next surface
+                geometry.move_to_surface(ray);
+
+                // reflect the particle
+                if (geometry.boundary_state(ray) == profugus::geometry::REFLECT)
+                {
+                    geometry.reflect(ray);
+                }
             }
         }
     }
