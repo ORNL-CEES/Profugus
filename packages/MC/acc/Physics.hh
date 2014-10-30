@@ -74,25 +74,26 @@ class Physics
 
   public:
     //! Total macro XS
-    inline double total(int matid, int group) const
-    {
-        return d_total[vector_index(matid, group)];
-    }
+#pragma acc routine seq
+    double total(int matid, int group) const;
 
     //! Scattering ratio
-    inline double scattering_ratio(int matid, int group) const
-    {
-        return d_scatter_ratio[vector_index(matid, group)];
-    }
+#pragma acc routine seq
+    double scattering_ratio(int matid, int group) const;
 
     //! Nu fission
-    inline double nusigf(int matid, int group) const
-    {
-        return d_nusigf[vector_index(matid, group)];
-    }
+#pragma acc routine seq
+    double nusigf(int matid, int group) const;
 
     //! Collision
-    //void collide(Particle& p);
+#pragma acc routine seq
+    void collide(Particle& p) const;
+
+    //! Is the material fissionable?
+    bool is_fissionable(int mat) const
+    {
+        return d_fissionable[mat];
+    }
 
   public:
     //! Number of elements in total, nusigf
@@ -102,23 +103,12 @@ class Physics
     int num_matrix_elements() const { return d_num_mats * d_num_groups * d_num_groups; }
 
     //! Index into vector data
-    int vector_index(int mat, int group) const
-    {
-        return mat * d_num_groups + group;
-    }
+#pragma acc routine seq
+    int vector_index(int mat, int group) const;
 
     //! Index into matrix data
-    int matrix_index(int mat, int out_group, int in_group) const
-    {
-        return (mat * d_num_groups + out_group) * d_num_groups + in_group;
-    }
-
-    //! Is the material fissionable
-    bool is_fissionable(int mat) const
-    {
-        return d_fissionable[mat];
-    }
-
+#pragma acc routine seq
+    int matrix_index(int mat, int out_group, int in_group) const;
   private:
     // Copy data to GPU.
     void complete();
