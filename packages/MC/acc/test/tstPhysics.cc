@@ -9,15 +9,15 @@
 //---------------------------------------------------------------------------//
 
 #include "../Physics.hh"
-#include "xs/XS.hh"
-#include "gtest/utils_gtest.hh"
 
 #include <vector>
 #include <memory>
 
 #include "utils/Definitions.hh"
+#include "gtest/utils_gtest.hh"
+#include "xs/XS.hh"
 
-using namespace std;
+#include "PhysicsTest.hh"
 
 using def::X; using def::Y; using def::Z;
 
@@ -42,7 +42,7 @@ class PhysicsTest : public testing::Test
     {
         xs.set(0, 5);
 
-        vector<double> bnd(6, 0.0);
+        std::vector<double> bnd(6, 0.0);
         bnd[0] = 100.0;
         bnd[1] = 10.0;
         bnd[2] = 1.0;
@@ -57,9 +57,9 @@ class PhysicsTest : public testing::Test
         double f[5] = {0.1, 0.4, 1.8, 5.7, 9.8};
         double c[5] = {0.3770, 0.4421, 0.1809, 0.0, 0.0};
         double n[5] = {2.4*f[0], 2.4*f[1], 2.4*f[2], 2.4*f[3], 2.4*f[4]};
-        XS::OneDArray fission(begin(f), end(f));
-        XS::OneDArray chi(begin(c), end(c));
-        XS::OneDArray nus(begin(n), end(n));
+        XS::OneDArray fission(std::begin(f), std::end(f));
+        XS::OneDArray chi(std::begin(c), std::end(c));
+        XS::OneDArray nus(std::begin(n), std::end(n));
         xs.add(1, XS::SIG_F, fission);
         xs.add(1, XS::NU_SIG_F, nus);
         xs.add(1, XS::CHI, chi);
@@ -146,7 +146,7 @@ TEST_F(PhysicsTest, Access)
         EXPECT_SOFTEQ(0.0, physics.nusigf(0, g), 1.e-12);
 
     }
-    
+
     // test data access with fission
     {
         int g = 0;
@@ -174,6 +174,43 @@ TEST_F(PhysicsTest, Access)
         EXPECT_SOFTEQ(12.0 / 37.1, physics.scattering_ratio(1, g), 1.e-12);
         EXPECT_SOFTEQ(23.52, physics.nusigf(1, g), 1.e-12);
     }
+}
+
+TEST_F(PhysicsTest, gpu_vs_cpu)
+{
+    // Make the physics
+    Physics physics(xs);
+
+    // Space for matids, groups, total xs
+    int num_entries = 2 * 5 * 10;
+    std::vector<double> gpu_total(num_entries);
+    std::vector<double> cpu_total(num_entries);
+    std::vector<int>    matids(num_entries);
+    std::vector<int>    groups(num_entries);
+
+    auto cpu_it = cpu_total.begin();
+    auto matid_it = matids.begin();
+    auto group_it = groups.begin();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        for (int m = 0; m < 2; ++m)
+        {
+            for (int g = 0; g < 5; ++g)
+            {
+                *cpu_it++ = xs.vector(m, XS::TOTAL)[g];
+                *matid_it++ = m;
+                *group_it++ = g;
+            }
+        }
+    }
+
+    calc_total(physics,
+            matids.data(), groups.data(), matids.size(),
+            gpu_total.data());
+
+
+    EXPECT_VEC_SOFT_EQ(cpu_total, gpu_total);
 }
 
 //---------------------------------------------------------------------------//

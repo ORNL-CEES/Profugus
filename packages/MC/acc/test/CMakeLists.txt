@@ -15,9 +15,13 @@ INCLUDE(UtilsTest)
 ## LIBRARIES
 ##---------------------------------------------------------------------------##
 
-TRIBITS_ADD_LIBRARY(acc_test_lib
-  SOURCES
+SET(ACC_SOURCES
   ParticleTest.cc
+  PhysicsTest.cc
+  )
+
+TRIBITS_ADD_LIBRARY(acc_test_lib
+  SOURCES ${ACC_SOURCES}
   TESTONLY
   DEPLIBS MC_acc)
 
@@ -29,7 +33,7 @@ IF(USE_ACC)
   ADD_UTILS_TEST(tstACC.cc)
 ENDIF()
 
-ADD_UTILS_TEST(tstPhysics.cc  NP 1)
+ADD_UTILS_TEST(tstPhysics.cc  NP 1 DEPLIBS acc_test_lib)
 ADD_UTILS_TEST(tstParticle.cc NP 1 DEPLIBS acc_test_lib)
 ADD_UTILS_TEST(tstGeometry.cc      DEPLIBS acc_test_lib)
 
@@ -39,9 +43,10 @@ ADD_UTILS_TEST(tstGeometry.cc      DEPLIBS acc_test_lib)
 
 IF(USE_ACC)
   SET_SOURCE_FILES_PROPERTIES(
-    ParticleTest.cc
-    PROPERTIES COMPILE_FLAGS
-    ${ACC_FLAGS})
+    ${ACC_SOURCES}
+    PROPERTIES
+    COMPILE_FLAGS ${ACC_FLAGS}
+    )
 ENDIF()
 
 ##---------------------------------------------------------------------------##

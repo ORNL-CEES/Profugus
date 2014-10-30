@@ -12,6 +12,7 @@
 #define acc_Physics_hh
 
 #include <vector>
+#include "Particle.hh"
 
 namespace profugus
 {
@@ -49,7 +50,7 @@ class Physics
     double *d_scatter;
 
     // Scattering ratio[matid][group]
-    double *d_scatter_ratio; 
+    double *d_scatter_ratio;
 
     // Fissionable[matid]
     int *d_fissionable;
@@ -68,24 +69,33 @@ class Physics
     // Construct with number of matids, number of groups
     explicit Physics(const profugus::XS& xsdb);
 
+    // Clean up memory
+    ~Physics();
+
   public:
     //! Total macro XS
-    double total(int matid, int group)
+#pragma acc routine seq
+    inline double total(int matid, int group) const
     {
         return d_total[vector_index(matid, group)];
     }
 
     //! Scattering ratio
-    double scattering_ratio(int matid, int group)
+#pragma acc routine seq
+    inline double scattering_ratio(int matid, int group) const
     {
         return d_scatter_ratio[vector_index(matid, group)];
     }
 
     //! Nu fission
-    double nusigf(int matid, int group)
+#pragma acc routine seq
+    inline double nusigf(int matid, int group) const
     {
         return d_nusigf[vector_index(matid, group)];
     }
+
+    //! Collision
+    //void collide(Particle& p);
 
   public:
     //! Number of elements in total, nusigf

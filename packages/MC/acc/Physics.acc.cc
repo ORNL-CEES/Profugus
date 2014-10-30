@@ -26,11 +26,22 @@ void Physics::complete()
     REQUIRE(d_fissionable != 0);
     int ne = dv_total.size();
     int ns = dv_scatter.size();
-#pragma acc enter data copyin(this)
-#pragma acc enter data copyin(d_total[0:ne], d_nusigf[0:ne], d_scatter[0:ns],\
-                              d_scatter_ratio[0:ne], \
-                              d_fissionable[0:d_num_mats])
+#pragma acc enter \
+    data copyin(this)
+#pragma acc enter \
+    data copyin(d_total[0:ne], d_nusigf[0:ne], d_scatter[0:ns],\
+                d_scatter_ratio[0:ne], d_fissionable[0:d_num_mats])
 }
+
+//---------------------------------------------------------------------------//
+Physics::~Physics()
+{
+#pragma acc exit \
+    data delete(d_total, d_nusigf, d_scatter, d_scatter_ratio, d_fissionable)
+#pragma acc exit \
+    data delete(this)
+}
+
 //---------------------------------------------------------------------------//
 } // end namespace acc
 
