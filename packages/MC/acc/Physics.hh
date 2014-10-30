@@ -74,21 +74,18 @@ class Physics
 
   public:
     //! Total macro XS
-#pragma acc routine seq
     inline double total(int matid, int group) const
     {
         return d_total[vector_index(matid, group)];
     }
 
     //! Scattering ratio
-#pragma acc routine seq
     inline double scattering_ratio(int matid, int group) const
     {
         return d_scatter_ratio[vector_index(matid, group)];
     }
 
     //! Nu fission
-#pragma acc routine seq
     inline double nusigf(int matid, int group) const
     {
         return d_nusigf[vector_index(matid, group)];
