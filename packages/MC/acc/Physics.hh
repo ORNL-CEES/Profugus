@@ -46,8 +46,8 @@ class Physics
     // Nusigf[matid][group]
     double *d_nusigf;
 
-    // Scatter[matid][exiting][incident]
-    double *d_scatter;
+    // Scatter[matid][incident][exiting]
+    double *d_outscatter_pdf;
 
     // Scattering ratio[matid][group]
     double *d_scatter_ratio;
@@ -62,7 +62,7 @@ class Physics
     // >>> CPU
 
     // Memory storage on CPU
-    std::vector<double> dv_total, dv_nusigf, dv_scatter, dv_scatter_ratio;
+    std::vector<double> dv_total, dv_nusigf, dv_outscatter_pdf, dv_scatter_ratio;
     std::vector<int> dv_fissionable;
 
   public:
@@ -116,12 +116,6 @@ class Physics
 
 //---------------------------------------------------------------------------//
 } // end namespace acc
-
-//---------------------------------------------------------------------------//
-// INLINE DEFINITIONS
-//---------------------------------------------------------------------------//
-// #include "Physics.i.hh"
-//---------------------------------------------------------------------------//
 #endif // acc_Physics_hh
 
 //---------------------------------------------------------------------------//

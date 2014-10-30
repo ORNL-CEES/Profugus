@@ -23,15 +23,15 @@ void Physics::complete()
     REQUIRE(d_num_groups > 0);
     REQUIRE(d_total != 0);
     REQUIRE(d_nusigf != 0);
-    REQUIRE(d_scatter != 0);
+    REQUIRE(d_outscatter_pdf != 0);
     REQUIRE(d_scatter_ratio != 0);
     REQUIRE(d_fissionable != 0);
     int ne = dv_total.size();
-    int ns = dv_scatter.size();
+    int ns = dv_outscatter_pdf.size();
 #pragma acc enter data \
     copyin(this)
 #pragma acc enter data \
-    copyin(d_total[0:ne], d_nusigf[0:ne], d_scatter[0:ns],\
+    copyin(d_total[0:ne], d_nusigf[0:ne], d_outscatter_pdf[0:ns],\
            d_scatter_ratio[0:ne], d_fissionable[0:d_num_mats])
 }
 
@@ -39,7 +39,7 @@ void Physics::complete()
 Physics::~Physics()
 {
 #pragma acc exit data \
-    delete(d_total, d_nusigf, d_scatter, d_scatter_ratio, d_fissionable)
+    delete(d_total, d_nusigf, d_outscatter_pdf, d_scatter_ratio, d_fissionable)
 #pragma acc exit data \
     delete(this)
 }
@@ -83,22 +83,20 @@ void Physics::collide(Particle& p) const
     p.wt *= c;
 
     // >>> Sample exit group
-    const double* outscatter = d_scatter + matrix_index(matid, 0, group);
-    //CHECK(outscatter + 1 == d_scatter + matrix_index(matid, 1, group));
+    const double* const outscatter_pdf = d_outscatter_pdf + matrix_index(matid, 0, group);
+    //CHECK(outscatter_pdf + 1 == d_outscatter_pdf + matrix_index(matid, 1, group));
 
     const double xi = 0.5;
-    const double threshold = xi * total(matid, group) * c;
+    const double threshold = xi * c;
     double accum = 0;
 
     // Build CDF inline
     int gp = 0;
     for (int gp_end = d_num_groups - 1; gp != gp_end; ++gp)
     {
-        accum += *outscatter;
+        accum += outscatter_pdf[gp];
         if (accum >= threshold)
             break;
-
-        ++outscatter;
     }
 
     // Set the new group

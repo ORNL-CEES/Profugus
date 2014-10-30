@@ -25,7 +25,7 @@ Physics::Physics(const XS& xs)
     dv_total.resize(num_vector_elements());
     dv_nusigf.resize(num_vector_elements());
     dv_scatter_ratio.resize(num_vector_elements());
-    dv_scatter.resize(num_matrix_elements());
+    dv_outscatter_pdf.resize(num_matrix_elements());
 
     // Copy data for every material into our flattened structures
     for (int m = 0; m < d_num_mats; ++m)
@@ -52,12 +52,15 @@ Physics::Physics(const XS& xs)
             double tot_scat = 0;
             for (int gp = 0; gp < d_num_groups; ++gp)
             {
+                tot_scat += scatter(gp, g);
+            }
+            for (int gp = 0; gp < d_num_groups; ++gp)
+            {
                 // Index in scattering from g -> g'
                 const int mati = matrix_index(m, gp, g);
-                CHECK(mati < dv_scatter.size());
+                CHECK(mati < dv_outscatter_pdf.size());
 
-                dv_scatter[mati] = scatter(gp, g);
-                tot_scat += scatter(gp, g);
+                dv_outscatter_pdf[mati] = scatter(gp, g) / tot_scat;
             }
             // Compute and set scattering ratio
             dv_scatter_ratio[veci] = tot_scat / total[g];
@@ -69,7 +72,7 @@ Physics::Physics(const XS& xs)
     // Set pointers
     d_total = dv_total.data();
     d_nusigf = dv_nusigf.data();
-    d_scatter = dv_scatter.data();
+    d_outscatter_pdf = dv_outscatter_pdf.data();
     d_scatter_ratio = dv_scatter_ratio.data();
     d_fissionable = dv_fissionable.data();
 
