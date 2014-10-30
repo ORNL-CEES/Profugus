@@ -14,37 +14,10 @@
 #include <vector>
 #include "core/geometry/Definitions.hh"
 #include "core/mc/Definitions.hh"
+#include "Geometry_State.hh"
 
 namespace acc
 {
-
-//===========================================================================//
-/*!
- * \struct Mesh_State
- * \brief Track particle location on a cartesian mesh
- */
-//===========================================================================//
-
-struct Geometry_State
-{
-  public:
-    // >>> PUBLIC DATA
-
-    //! Indices along the mesh grid if inside (invalid if not)
-    int ijk[3];
-
-    //! Position
-    double pos[3];
-
-    //! Direction
-    double dir[3];
-
-    //! Coordinates of next cell (not pickled)
-    int next_ijk[3];
-
-    //! Distance to next cell
-    double next_dist;
-};
 
 //===========================================================================//
 /*!

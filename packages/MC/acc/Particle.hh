@@ -15,7 +15,7 @@
 
 #include "core/mc/Definitions.hh"
 #include "core/mc/Source.hh"
-#include "Geometry.hh"
+#include "Geometry_State.hh"
 
 namespace acc
 {
