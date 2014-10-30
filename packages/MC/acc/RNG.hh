@@ -40,7 +40,14 @@ class RNG
         , d_c(1013904223)
         , d_m(4294967296)
         , d_seed(seed)
-    {/* * */}
+    {
+#pragma acc enter data pcopyin(this)
+    }
+
+    ~RNG()
+    {
+#pragma acc exit data delete(this)
+    }
 
     // Get the random number.
     double ran()
