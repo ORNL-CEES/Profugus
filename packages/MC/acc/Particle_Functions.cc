@@ -57,7 +57,6 @@ void load_source(profugus::Source &source,
         particles[p].matid = particle->matid();
         particles[p].group = particle->group();
         particles[p].wt    = particle->wt();
-        particles[p].alive = particle->alive();
         particles[p].event = particle->event();
 
         // !!!!!!finish state initialization later!!!!!

@@ -227,7 +227,6 @@ TEST_F(ParticleTest, regular_loop)
 
         ctr++;
 
-        EXPECT_TRUE(p->alive());
         EXPECT_EQ(1.0, p->wt());
         EXPECT_EQ(3, p->matid());
     }
@@ -268,7 +267,6 @@ TEST_F(ParticleTest, load_particles)
         // get a particle
         auto p = particles[n];
 
-        EXPECT_TRUE(p.alive);
         EXPECT_EQ(1.0, p.wt);
         EXPECT_EQ(3, p.matid);
     }

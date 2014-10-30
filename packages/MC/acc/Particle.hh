@@ -42,9 +42,6 @@ struct Particle
     // Particle weight.
     double wt;
 
-    // Alive/dead status.
-    bool alive;
-
     // Latest particle event.
     Event_Type event;
 
