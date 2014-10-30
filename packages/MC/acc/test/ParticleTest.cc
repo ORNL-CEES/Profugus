@@ -1,6 +1,11 @@
 #include <cmath>
 
+#ifdef _OPENACC
+#include <accelmath.h>
+#endif
+
 #include "utils/Constants.hh"
+#include "../RNG.hh"
 #include "ParticleTest.hh"
 
 void loop_over_particles(acc::Particle *particles)
@@ -15,13 +20,16 @@ void loop_over_particles(acc::Particle *particles)
 
 //---------------------------------------------------------------------------//
 
-void ray_trace(acc::Geometry             &geometry,
-               int                        num_rays,
-               const std::vector<double> &rnd,
-               std::vector<double>       &tallies)
+void ray_trace(acc::Geometry       &geometry,
+               int                  num_rays,
+               int                  num_steps,
+               std::vector<double> &tallies)
 {
-    const double *rnd_ptr = &rnd[0];
-    int rctr = 0;
+#ifndef _OPENACC
+    using std::log;
+#endif
+
+    acc::RNG rng(32423);
 
     // make a vector of states
     std::vector<acc::Geometry_State> rays(num_rays);
@@ -35,16 +43,16 @@ void ray_trace(acc::Geometry             &geometry,
             double delta  = extent / N;
 
             // sample position
-            r.pos[d] = extent * rnd[rctr++];
+            r.pos[d] = extent * rng.ran();
 
             // find ijk position
             r.ijk[d] = r.pos[d] / delta;
         }
 
         // sample direction
-        double costheta = 2.0 * rnd[rctr++] - 1.0;
+        double costheta = 2.0 * rng.ran() - 1.0;
         double sintheta = std::sqrt(1.0 - costheta * costheta);
-        double phi      = profugus::constants::two_pi * rnd[rctr++];
+        double phi      = profugus::constants::two_pi * rng.ran();
 
         r.dir[0] = sintheta * std::cos(phi);
         r.dir[1] = sintheta * std::sin(phi);
@@ -66,11 +74,17 @@ void ray_trace(acc::Geometry             &geometry,
             // get reference reference to ray
             acc::Geometry_State &ray = ray_ptr[r];
 
+            // make a random number generator
+            acc::RNG rng(r + 1);
+
             // loop over steps for each ray
 #pragma acc loop seq
-            for (int s = 0; s < 1000; ++s)
+            for (int s = 0; s < num_steps; ++s)
             {
                 double dbnd = geometry.distance_to_boundary(ray);
+
+                // sample distance to collision
+                double dcol = (-2.0 * log(rng.ran()));
 
                 // get the cell index
                 int cell = geometry.cell(ray);

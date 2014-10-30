@@ -12,7 +12,7 @@
 #include <memory>
 #include <algorithm>
 
-#include "rng/RNG_Control.hh"
+#include "../RNG.hh"
 #include "../Geometry.hh"
 #include "ParticleTest.hh"
 
@@ -60,23 +60,13 @@ TEST_F(GeometryTest, construction)
 
 TEST_F(GeometryTest, ray_tracing)
 {
-    int num_rays = 100000;
-
-    // fill a vector with random numbers
-    std::vector<double> rnd(num_rays * 5, 0.0);
-
-    // make random numbers
-    profugus::RNG_Control con(235235);
-    auto rng = con.rng();
-    for (auto &r : rnd)
-    {
-        r = rng.ran();
-    }
+    int num_rays  = 100000;
+    int num_steps = 1000;
 
     // make tallies
     std::vector<double> tallies(geo->num_cells(), 0.0);
 
-    ray_trace(*geo, num_rays, rnd, tallies);
+    ray_trace(*geo, num_rays, num_steps, tallies);
 
     // print max and min talliese
     auto maxitr = std::max_element(tallies.begin(), tallies.end());
@@ -85,6 +75,25 @@ TEST_F(GeometryTest, ray_tracing)
          << maxitr - tallies.begin() << endl;
     cout << "Minimum pathlength = " << *minitr << " in "
          << minitr - tallies.begin() << endl;
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(RNG, randomness)
+{
+    acc::RNG rng(32534);
+
+    for (int i = 0; i < 10; ++i)
+    {
+        double total   = 0.0;
+        int    samples = 100000;
+        for (int i = 0; i < samples; ++i)
+        {
+            total += rng.ran();
+        }
+
+        EXPECT_SOFTEQ(0.5, total / samples, 1.0e-2);
+    }
 }
 
 //---------------------------------------------------------------------------//

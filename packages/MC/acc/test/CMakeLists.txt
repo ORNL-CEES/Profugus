@@ -35,7 +35,7 @@ ENDIF()
 
 ADD_UTILS_TEST(tstPhysics.cc  NP 1 DEPLIBS acc_test_lib)
 ADD_UTILS_TEST(tstParticle.cc NP 1 DEPLIBS acc_test_lib)
-ADD_UTILS_TEST(tstGeometry.cc      DEPLIBS acc_test_lib)
+ADD_UTILS_TEST(tstGeometry.cc NP 1 DEPLIBS acc_test_lib)
 
 ##---------------------------------------------------------------------------##
 ## FILES
