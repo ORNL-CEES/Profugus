@@ -35,7 +35,7 @@ void ray_trace(acc::Geometry       &geometry,
 
     // seeds
     int ctr = 0;
-    std::vector<long> seeds(num_rays, 100); 
+    std::vector<long> seeds(num_rays, 200);
 
     // make a vector of states
     std::vector<acc::Geometry_State> rays(num_rays);
@@ -64,8 +64,8 @@ void ray_trace(acc::Geometry       &geometry,
         r.dir[1] = sintheta * std::sin(phi);
         r.dir[2] = costheta;
 
-	seeds[ctr] += 1;
-	++ctr;
+        seeds[ctr] += ctr;
+        ++ctr;
     }
 
     // get pointer to rays
@@ -91,30 +91,33 @@ void ray_trace(acc::Geometry       &geometry,
             acc::Geometry_State &ray = ray_ptr[r];
 
             // k-tally
-	    double k = 0.0; 
+            double k = 0.0;
 
             // step-length
-	    double step = 0.0;
+            double step = 0.0;
             int type    = 0;
 
             // loop over steps for each ray
 #pragma acc loop seq
             for (int s = 0; s < num_steps; ++s)
             {
+                // sample distance to collision
+                double dcol = (-5.0 * log(rng.ran(seeds_ptr[r])));
+
                 // distance to boundary
                 double dbnd = geometry.distance_to_boundary(ray);
 
-                // sample distance to collision
-                double dcol = (-10.0 * log(rng.ran(seeds_ptr[r])));
-
-	        // determine step
+                // determine step
                 step = dbnd;
                 type = 0;
                 if (dcol < dbnd)
                 {
-                     step = dcol; 
+                     step = dcol;
                      type = 1;
                 }
+
+                // update distance to collision
+                //dcol -= step;
 
                 // global tally
                 k += step * wts_ptr[r];
@@ -134,9 +137,12 @@ void ray_trace(acc::Geometry       &geometry,
                 }
             }
 
+            if (wts_ptr[r] != 0.0)
+                std::cout << "BAD BAD BAD" << std::endl;
+
             keff += k;
         }
     }
-   
+
     tallies[0] = keff;
 }
