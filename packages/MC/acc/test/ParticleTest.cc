@@ -8,8 +8,6 @@
 #include "../RNG.hh"
 #include "ParticleTest.hh"
 
-#include <iostream>
-
 void loop_over_particles(acc::Particle *particles)
 {
 #pragma acc kernels copyout(particles[0:48])
@@ -136,9 +134,6 @@ void ray_trace(acc::Geometry       &geometry,
                     geometry.reflect(ray);
                 }
             }
-
-            if (wts_ptr[r] != 0.0)
-                std::cout << "BAD BAD BAD" << std::endl;
 
             keff += k;
         }

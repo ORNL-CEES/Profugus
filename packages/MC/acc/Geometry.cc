@@ -87,9 +87,9 @@ void Geometry::initialize(const double   *r,
     state.dir[1] = direction[1];
     state.dir[2] = direction[2];
 
-    state.ijk[0] = std::lower_bound(d_x, d_x + d_N[0] + 1, state.pos[0]) - d_x - 1;
-    state.ijk[1] = std::lower_bound(d_y, d_y + d_N[1] + 1, state.pos[1]) - d_y - 1;
-    state.ijk[2] = std::lower_bound(d_z, d_z + d_N[2] + 1, state.pos[2]) - d_z - 1;
+    state.ijk[0] = state.pos[0] / (d_x[1] - d_x[0]);
+    state.ijk[1] = state.pos[1] / (d_y[1] - d_y[0]);
+    state.ijk[2] = state.pos[2] / (d_z[1] - d_z[0]);
 }
 
 //---------------------------------------------------------------------------//
