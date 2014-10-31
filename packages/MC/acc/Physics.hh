@@ -96,6 +96,9 @@ class Physics
     }
 
   public:
+    //! Number of groups
+    int num_groups() const { return d_num_groups; }
+
     //! Number of elements in total, nusigf
     int num_vector_elements() const { return d_num_mats * d_num_groups; }
 

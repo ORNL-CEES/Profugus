@@ -20,6 +20,15 @@ void calc_total(
         int                  size,
         double*              total);
 
+void multi_scatter(
+        const acc::Physics&  physics,
+        const int*           matids,
+        const int*           start_groups,
+        int                  num_particles,
+        int                  num_steps,
+        int*                 end_group,
+        double*              end_wt);
+
 #endif // acc_test_PhysicsTest_hh
 
 //---------------------------------------------------------------------------//

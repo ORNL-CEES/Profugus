@@ -176,7 +176,7 @@ TEST_F(PhysicsTest, Access)
     }
 }
 
-TEST_F(PhysicsTest, gpu_vs_cpu)
+TEST_F(PhysicsTest, xs_gpu_vs_cpu)
 {
     // Make the physics
     Physics physics(xs);
@@ -211,6 +211,44 @@ TEST_F(PhysicsTest, gpu_vs_cpu)
 
 
     EXPECT_VEC_SOFT_EQ(cpu_total, gpu_total);
+}
+
+TEST_F(PhysicsTest, collision)
+{
+    // Make the physics
+    Physics physics(xs);
+
+    // Space for matids, groups, total xs
+    int num_dupes = 10;
+    int num_entries = 2 * 5 * num_dupes;
+    std::vector<int>    matids(num_entries);
+    std::vector<int>    groups(num_entries);
+
+    std::vector<int> end_group(num_entries);
+    std::vector<double> end_wt(num_entries);
+
+    auto matid_it = matids.begin();
+    auto group_it = groups.begin();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        for (int m = 0; m < 2; ++m)
+        {
+            for (int g = 0; g < 5; ++g)
+            {
+                *matid_it++ = m;
+                *group_it++ = g;
+            }
+        }
+    }
+
+    int num_steps = 4;
+    multi_scatter(physics,
+            matids.data(), groups.data(), groups.size(),
+            num_steps, end_group.data(), end_wt.data());
+
+    PRINT_EXPECTED(end_group);
+    PRINT_EXPECTED(end_wt);
 }
 
 //---------------------------------------------------------------------------//
