@@ -60,7 +60,7 @@ TEST_F(GeometryTest, construction)
 
 TEST_F(GeometryTest, ray_tracing)
 {
-    int num_rays  = 100000;
+    int num_rays  = 10000;
     int num_steps = 1000;
 
     // make tallies

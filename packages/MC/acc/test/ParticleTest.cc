@@ -8,6 +8,8 @@
 #include "../RNG.hh"
 #include "ParticleTest.hh"
 
+#include <iostream>
+
 void loop_over_particles(acc::Particle *particles)
 {
 #pragma acc kernels copyout(particles[0:48])
@@ -71,12 +73,17 @@ void ray_trace(acc::Geometry       &geometry,
     long *seeds_ptr              = &seeds[0];
 
     // get pointer to tallies
-    double *tally = &tallies[0];
-    int nc        = geometry.num_cells();
-    double keff   = 0.0;
+    double *tally  = &tallies[0];
+    int nc         = geometry.num_cells();
+    double keff    = 0.0;
+
+    // weights
+    std::vector<double> wts(num_rays, 1.0);
+    double *wts_ptr = &wts[0];
 
 #pragma acc parallel loop present(geometry) copyin(ray_ptr[0:num_rays]) \
-    copy(tally[0:nc]) present(rng) pcopyin(seeds_ptr[0:num_rays])
+    copy(tally[0:nc]) present(rng) pcopyin(seeds_ptr[0:num_rays])       \
+    pcopyin(wts_ptr[0:num_rays])
     {
         for (int r = 0; r < num_rays; ++r)
         {
@@ -88,6 +95,7 @@ void ray_trace(acc::Geometry       &geometry,
 
             // step-length
 	    double step = 0.0;
+            int type    = 0;
 
             // loop over steps for each ray
 #pragma acc loop seq
@@ -97,18 +105,24 @@ void ray_trace(acc::Geometry       &geometry,
                 double dbnd = geometry.distance_to_boundary(ray);
 
                 // sample distance to collision
-                double dcol = (-2.0 * log(rng.ran(seeds_ptr[r])));
+                double dcol = (-10.0 * log(rng.ran(seeds_ptr[r])));
 
 	        // determine step
                 step = dbnd;
+                type = 0;
                 if (dcol < dbnd)
+                {
                      step = dcol; 
-
-                // get the cell index
-                int cell = geometry.cell(ray);
+                     type = 1;
+                }
 
                 // global tally
-                k += step;
+                k += step * wts_ptr[r];
+
+                if (type == 1)
+                {
+                    wts_ptr[r] = 0.0;
+                }
 
                 // move the ray to the next surface
                 geometry.move_to_surface(ray);
