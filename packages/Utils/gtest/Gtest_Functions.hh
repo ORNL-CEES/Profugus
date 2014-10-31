@@ -210,6 +210,26 @@ inline ::testing::AssertionResult IsVecEq(
             actual_begin, actual_end);
 }
 
+//---------------------------------------------------------------------------//
+// Print values of a container to cout
+template<typename T>
+void print_expected(const T* begin, const T* end, const char* label);
+
+template<class Container>
+inline void print_expected(const Container& data, const char* label)
+{
+    typedef const typename Container::value_type* const_ptr;
+
+    // Get pointers using bracket operator
+    const_ptr begin = &data[0];
+    const_ptr end   = &data[data.size() - 1] + 1;
+
+    INSIST(end - begin == static_cast<int>(data.size()),
+            "Noncontiguous data container was given!");
+
+    print_expected(begin, end, label);
+}
+
 //===========================================================================//
 } // end namespace profugus
 

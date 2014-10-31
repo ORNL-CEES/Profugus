@@ -46,8 +46,22 @@ unsigned int calc_num_digits(std::size_t number)
     ENSURE(num_digits > 0);
     return num_digits;
 }
-}
+
 //---------------------------------------------------------------------------//
+template<class T>
+struct NiceTypeName
+{
+    static std::string name() { return "UNKNOWN"; }
+};
+
+template<> struct NiceTypeName<int> { static std::string name() { return "int"; } };
+template<> struct NiceTypeName<float> { static std::string name() { return "float"; } };
+template<> struct NiceTypeName<double> { static std::string name() { return "double"; } };
+template<> struct NiceTypeName<unsigned int> { static std::string name() { return "unsigned int"; } };
+template<> struct NiceTypeName<unsigned long long> { static std::string name() { return "unsigned long long"; } };
+template<> struct NiceTypeName<std::string> { static std::string name() { return "std::string"; } };
+
+} // end anonymous namespace
 
 namespace profugus
 {
@@ -474,6 +488,29 @@ template ::testing::AssertionResult IsIterEq<double>(
         const char*, const char*,
         const double*, const double*,
         const double*, const double*);
+
+//---------------------------------------------------------------------------//
+template<typename T>
+void print_expected(const T* begin, const T* end, const char* label)
+{
+    using std::cout;
+    using std::endl;
+
+    cout << "const " << NiceTypeName<T>::name()
+         << " expected_" << label << "[] = {";
+    std::copy(begin, end, std::ostream_iterator<T>(cout, ", "));
+    cout << "};" << endl;
+}
+
+template void print_expected<int>(const int*, const int*, const char*);
+template void print_expected<float>(const float*, const float*, const char*);
+template void print_expected<double>(const double*, const double*, const char*);
+template void print_expected<unsigned int>(const unsigned int*,
+        const unsigned int*, const char*);
+template void print_expected<unsigned long long>(const unsigned long long*,
+        const unsigned long long*, const char*);
+template void print_expected<std::string>(const std::string*, const std::string*,
+        const char*);
 
 //---------------------------------------------------------------------------//
 } // end namespace profugus

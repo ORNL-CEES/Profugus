@@ -62,6 +62,9 @@ using profugus::soft_equiv;
         return; \
     } while (0)
 
+//! Print the given container as an array for regression testing
+#define PRINT_EXPECTED(data) ::profugus::print_expected(data, #data)
+
 //---------------------------------------------------------------------------//
 // MAIN FUNCTION
 //---------------------------------------------------------------------------//
