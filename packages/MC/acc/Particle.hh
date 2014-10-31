@@ -42,9 +42,6 @@ struct Particle
     // Particle weight.
     double wt;
 
-    // Latest particle event.
-    Event_Type event;
-
     // Particle geometric state.
     Geometry_State geo_state;
 };
