@@ -155,12 +155,10 @@ TEST_F(GeometryTest, inf_med)
     ray_trace(*geo, num_rays, num_steps, tallies);
 
     // print max and min talliese
-    auto maxitr = std::max_element(tallies.begin(), tallies.end());
-    auto minitr = std::min_element(tallies.begin(), tallies.end());
-    cout << "Maximum pathlength = " << *maxitr << " in "
-         << maxitr - tallies.begin() << endl;
-    cout << "Minimum pathlength = " << *minitr << " in "
-         << minitr - tallies.begin() << endl;
+
+    // the resulting tally is in element 0:
+    double phi = tallies[0] / num_rays;
+    EXPECT_SOFTEQ(5.0, phi, 1.0e-3);
 }
 
 //---------------------------------------------------------------------------//
@@ -186,7 +184,8 @@ TEST(RNG, randomness)
     {
         xl += -std::log(rng.ran());
     }
-    std::cout << "Average log = " << xl / 1000000.0 << std::endl;
+
+    EXPECT_SOFTEQ(1.0, xl / 1000000.0, 1.0e-3);
 }
 
 //---------------------------------------------------------------------------//

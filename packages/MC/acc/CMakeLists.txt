@@ -56,8 +56,8 @@ SET(SOURCES
 # C/C++ sources with ACC directives
 SET(ACC_SOURCES
   Change_Direction.acc.cc
-  Geometry.cc
-  RNG.cc
+  Geometry.acc.cc
+  RNG.acc.cc
   Physics.acc.cc
   )
 
