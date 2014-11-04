@@ -296,22 +296,25 @@ void Fission_Matrix_Tally::PL_Tally::accumulate(double            step,
 
     // track through the fission matrix and accumulate the fission matrix
     // elements
-    while (remaining > 0.0 &&
-           d_data->d_fm_mesh->boundary_state(d_fm_state) == INSIDE)
+    while (remaining > 0.0)
     {
         // calculate next step
         d = d_data->d_fm_mesh->distance_to_boundary(d_fm_state);
         if (d > remaining)
             d = remaining;
 
-        // get the current cell
-        i = d_data->d_fm_mesh->cell(d_fm_state);
-        CHECK(i >= 0 && i < d_data->d_fm_mesh->num_cells());
+        // only accumulate tallies while inside the mesh
+        if (d_data->d_fm_mesh->boundary_state(d_fm_state) == INSIDE)
+        {
+            // get the current cell
+            i = d_data->d_fm_mesh->cell(d_fm_state);
+            CHECK(i >= 0 && i < d_data->d_fm_mesh->num_cells());
 
-        // tally the fission matrix contribution to the (i,j) element
-        d_data->d_numerator[Idx(i, j)] += d * keff;
+            // tally the fission matrix contribution to the (i,j) element
+            d_data->d_numerator[Idx(i, j)] += d * keff;
+        }
 
-        // subtract this step from the reaming distance
+        // subtract this step from the remaining distance
         remaining -= d;
 
         // move the particle to the next cell boundary
