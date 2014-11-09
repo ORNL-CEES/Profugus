@@ -13,8 +13,10 @@
 
 #include <SPn/config.h>
 
+#include "harness/DBC.hh"
 #include "comm/Timer.hh"
 #include "solvers/EigenvalueSolver.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Solver_Base.hh"
 
 namespace profugus
@@ -91,7 +93,7 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
 
     // Set up the solver.
     void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,
-               RCP_Indexer indexer, RCP_Global_Data data);
+               RCP_Indexer indexer, RCP_Global_Data data, bool adjoint = false);
 
     // Solve the SPN eigenvalue equations.
     void solve(Teuchos::RCP<const External_Source> q);
@@ -121,9 +123,30 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
                                 RCP_Mesh mesh, RCP_Indexer indexer,
                                 RCP_Global_Data data);
 
+    // Apply adjoint (transpose) to the operators.
+    void apply_transpose(bool adjoint)
+    {
+        NOT_IMPLEMENTED(
+            "Failed to apply transpose on non-Epetra implementations.");
+    }
+
     // Timer.
     profugus::Timer d_timer;
 };
+
+//---------------------------------------------------------------------------//
+// INLINE FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Apply transpose on Epetra operators.
+ */
+template<>
+inline void Eigenvalue_Solver<EpetraTypes>::apply_transpose(bool adjoint)
+{
+    // set transpose for adjoint calculations
+    b_system->get_Operator()->SetUseTranspose(adjoint);
+    b_system->get_fission_matrix()->SetUseTranspose(adjoint);
+}
 
 } // end namespace profugus
 

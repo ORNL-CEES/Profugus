@@ -57,7 +57,8 @@ class Solver_Base
 
     // Set up the solver.
     virtual void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,
-                       RCP_Indexer indexer, RCP_Global_Data data) = 0;
+                       RCP_Indexer indexer, RCP_Global_Data data,
+                       bool adjoint) = 0;
 
     // Solve problem
     virtual void solve(Teuchos::RCP<const External_Source> q) = 0;
@@ -67,7 +68,6 @@ class Solver_Base
 
     //! Write problem matrix (or matrices to file)
     virtual void write_problem_to_file() const = 0;
-
 };
 
 //===========================================================================//
@@ -76,6 +76,7 @@ class Solver_Base
  * \brief Templated base class for SPN solvers (fixed-source and eigenvalue).
  */
 //===========================================================================//
+
 template <class T>
 class Solver_Base_Tmpl : public Solver_Base
 {
@@ -114,8 +115,7 @@ class Solver_Base_Tmpl : public Solver_Base
     // >>> INHERITED METHODS
 
     // Write u-vector into the state.
-    void write_u_into_state(Teuchos::RCP<const MV>, State &state) const;
-
+    void write_u_into_state(Teuchos::RCP<const Vector_t>, State &state) const;
 };
 
 //===========================================================================//

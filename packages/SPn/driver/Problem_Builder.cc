@@ -463,8 +463,8 @@ void Problem_Builder::build_source(const ParameterList &source_db)
             // if the src_id >= 0 then there is a source defined here
             if (src_id >= 0)
             {
-		CHECK(src_map(aj, ai) < source_list.size());
-		CHECK(source_db.isSublist(source_list[src_map(aj, ai)]));
+                CHECK(src_map(aj, ai) < source_list.size());
+                CHECK(source_db.isSublist(source_list[src_map(aj, ai)]));
 
                 // get the source map for this assembly
                 const auto &a_src_map = source_db.sublist(

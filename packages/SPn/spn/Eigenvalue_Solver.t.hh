@@ -16,14 +16,12 @@
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
-#include "harness/DBC.hh"
 #include "comm/P_Stream.hh"
 #include "comm/global.hh"
 #include "utils/String_Functions.hh"
 #include "solvers/EigenvalueSolverBuilder.hh"
 #include "solvers/InverseOperator.hh"
 #include "solvers/PreconditionerBuilder.hh"
-#include "solvers/LinAlgTypedefs.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
 #include "Eigenvalue_Solver.hh"
@@ -59,7 +57,8 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
                                  RCP_Mat_DB      mat,
                                  RCP_Mesh        mesh,
                                  RCP_Indexer     indexer,
-                                 RCP_Global_Data data)
+                                 RCP_Global_Data data,
+                                 bool            adjoint)
 {
     REQUIRE(!b_db.is_null());
     REQUIRE(!dim.is_null());
@@ -125,6 +124,9 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
     }
 
     CHECK(!d_u.is_null());
+
+    // apply transpose
+    apply_transpose(adjoint);
 
     // get the eigenvalue solver settings
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
@@ -327,6 +329,8 @@ void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
     eig_db->sublist("operator_db").get("max_itr", max_itr);
 }
 
+//---------------------------------------------------------------------------//
+
 template <>
 void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
 {
@@ -445,6 +449,7 @@ void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
     eig_db->sublist("operator_db").get("tolerance", 0.1 * tol);
     eig_db->sublist("operator_db").get("max_itr", max_itr);
 }
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Build preconditioner

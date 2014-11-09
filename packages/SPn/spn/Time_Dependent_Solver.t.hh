@@ -70,7 +70,8 @@ void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
                                      RCP_Mat_DB      mat,
                                      RCP_Mesh        mesh,
                                      RCP_Indexer     indexer,
-                                     RCP_Global_Data data)
+                                     RCP_Global_Data data,
+                                     bool            adjoint)
 {
     REQUIRE(!b_db.is_null());
     REQUIRE(!dim.is_null());
@@ -79,6 +80,7 @@ void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
     REQUIRE(!indexer.is_null());
     REQUIRE(!data.is_null());
     REQUIRE(!d_dt.is_null());
+    INSIST(!adjoint, "Adjoint not supported in time-dependent SPn.");
 
     // build the linear system (we only provide finite volume for now)
     std::string &eqn_type =
