@@ -27,6 +27,8 @@
 #include "mc/Variance_Reduction.hh"
 #include "mc/Tallier.hh"
 
+#include "spn_driver/Problem_Builder.hh"
+
 namespace mc
 {
 
@@ -47,11 +49,13 @@ class Problem_Builder
     typedef profugus::Physics                             Physics_t;
     typedef Physics_t::Geometry_t                         Geometry_t;
     typedef profugus::Tallier                             Tallier_t;
+    typedef spn::Problem_Builder                          SPN_Builder;
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
     typedef std::shared_ptr<Geometry_t>                   SP_Geometry;
     typedef std::shared_ptr<profugus::Shape>              SP_Shape;
     typedef std::shared_ptr<profugus::Variance_Reduction> SP_Var_Reduction;
     typedef std::shared_ptr<profugus::Tallier>            SP_Tallier;
+    typedef std::shared_ptr<SPN_Builder>                  SP_SPN_Builder;
     typedef Tallier_t::SP_Tally                           SP_Tally;
     //@}
 
@@ -73,6 +77,9 @@ class Problem_Builder
 
     // Problem talliers.
     SP_Tallier d_tallier;
+
+    // SPN Problem builder.
+    SP_SPN_Builder d_spn_builder;
 
   public:
     // Constructor.
@@ -100,6 +107,9 @@ class Problem_Builder
 
     //! Get the tallier.
     SP_Tallier get_tallier() const { return d_tallier; }
+
+    //! Get the SPn problem builder.
+    SP_SPN_Builder get_spn_builder() const { return d_spn_builder; }
 
   private:
     // >>> IMPLEMENTATION
@@ -132,6 +142,7 @@ class Problem_Builder
     void build_var_reduction();
     void build_source(const ParameterList &source_db);
     void build_tallies();
+    void build_spn_problem();
 
     // Number of assemblies and pins per assembly.
     int d_Na[2];

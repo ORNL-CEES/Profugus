@@ -120,9 +120,9 @@ LIST(APPEND SOURCES ${MC_SOURCES})
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
-  driver/Manager.cc
-  driver/Problem_Builder.cc
-  driver/mc.cc
+  mc_driver/Manager.cc
+  mc_driver/Problem_Builder.cc
+  mc_driver/mc.cc
   )
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
@@ -141,7 +141,7 @@ TRIBITS_ADD_EXECUTABLE(
   xmc
   NOEXESUFFIX
   NOEXEPREFIX
-  SOURCES driver/mc.cc
+  SOURCES mc_driver/mc.cc
   INSTALLABLE
   )
 

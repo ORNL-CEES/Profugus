@@ -47,6 +47,8 @@ Problem_Builder::Problem_Builder()
  */
 void Problem_Builder::setup(const std::string &xml_file)
 {
+    REQUIRE(d_spn_builder.is_null());
+
     // make the master parameterlist
     auto master = Teuchos::rcp(new ParameterList(""));
 
@@ -103,6 +105,9 @@ void Problem_Builder::setup(const std::string &xml_file)
 
     // build the variance reduction
     build_var_reduction();
+
+    // build the SPN problem for fission matrix acceleration
+    build_spn_problem();
 
     // build the external source (there won't be one for k-eigenvalue
     // problems)
@@ -508,31 +513,73 @@ void Problem_Builder::build_tallies()
         // get the database
         const ParameterList &fdb = d_db->sublist("fission_matrix_db");
 
-        // validate that there is a fission matrix mesh defined
-        VALIDATE(fdb.isParameter("x_bounds"), "Failed to define x-boundaries "
-                 << "for fission matrix mesh");
-        VALIDATE(fdb.isParameter("y_bounds"), "Failed to define y-boundaries "
-                 << "for fission matrix mesh");
-        VALIDATE(fdb.isParameter("z_bounds"), "Failed to define z-boundaries "
-                 << "for fission matrix mesh");
+        // if this is a tally then add it
+        if (fdb.isSublist("tally"))
+        {
+            // get the database
+            const ParameterList &tdb = fdb.sublist("tally");
 
-        // get the fission matrix mesh boundaries
-        auto xb = fdb.get<OneDArray_dbl>("x_bounds").toVector();
-        auto yb = fdb.get<OneDArray_dbl>("y_bounds").toVector();
-        auto zb = fdb.get<OneDArray_dbl>("z_bounds").toVector();
-        Fission_Matrix_Tally::SP_Mesh_Geometry geo(
-            std::make_shared<Mesh_Geometry>(xb, yb, zb));
+            // validate that there is a fission matrix mesh defined
+            VALIDATE(tdb.isParameter("x_bounds"),
+                     "Failed to define x-boundaries for fission matrix mesh");
+            VALIDATE(tdb.isParameter("y_bounds"),
+                     "Failed to define y-boundaries for fission matrix mesh");
+            VALIDATE(tdb.isParameter("z_bounds"),
+                     "Failed to define z-boundaries for fission matrix mesh");
 
-        // build the fission matrix
-        auto fm_tally(std::make_shared<Fission_Matrix_Tally>(
-                          d_db, d_physics, geo));
-        CHECK(fm_tally);
+            // get the fission matrix mesh boundaries
+            auto xb = tdb.get<OneDArray_dbl>("x_bounds").toVector();
+            auto yb = tdb.get<OneDArray_dbl>("y_bounds").toVector();
+            auto zb = tdb.get<OneDArray_dbl>("z_bounds").toVector();
+            Fission_Matrix_Tally::SP_Mesh_Geometry geo(
+                std::make_shared<Mesh_Geometry>(xb, yb, zb));
 
-        // add this to the tallier
-        d_tallier->add_compound_tally(fm_tally);
+            // build the fission matrix
+            auto fm_tally(std::make_shared<Fission_Matrix_Tally>(
+                              d_db, d_physics, geo));
+            CHECK(fm_tally);
+
+            // add this to the tallier
+            d_tallier->add_compound_tally(fm_tally);
+        }
     }
 
     ENSURE(d_tallier);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \build the SPN problem
+ */
+void Problem_Builder::build_spn_problem()
+{
+    // check for fission matrix acceleration
+    if (d_db->isSublist("fission_matrix_db"))
+    {
+        // get the database
+        const ParameterList &fdb = d_db->sublist("fission_matrix_db");
+
+        // if this is an acceleration, then build the SPN problem builder
+        if (fdb.isSublist("acceleration"))
+        {
+            // get the database
+            const ParameterList &adb = fdb.sublist("acceleration");
+
+            // validate parameters
+            VALIDATE(adb.isParameter("spn_problem"),
+                     "Failed to define the equivalent SPN problem for "
+                     << "fission matrix acceleration.");
+
+            // get the xml-file for the SPN problem
+            auto spn_input = adb.get<std::string>("spn_problem");
+
+            // make the SPN problem builder
+            d_spn_builder = std::make_shared<SPN_Builder>();
+
+            // setup the SPN problem
+            d_spn_builder->setup(spn_input);
+        }
+    }
 }
 
 } // end namespace mc
