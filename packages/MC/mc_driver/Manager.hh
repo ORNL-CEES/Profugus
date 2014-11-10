@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/Manager.hh
+ * \file   mc_driver/Manager.hh
  * \author Thomas M>. Evans
  * \date   Wed Jun 18 11:21:16 2014
  * \brief  Manager class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef driver_Manager_hh
-#define driver_Manager_hh
+#ifndef mc_driver_Manager_hh
+#define mc_driver_Manager_hh
 
 #include <sstream>
 #include <string>
@@ -105,7 +105,7 @@ class Manager
 
 } // end namespace mc
 
-#endif // driver_Manager_hh
+#endif // mc_driver_Manager_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Manager.hh

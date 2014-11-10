@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/spn.cc
+ * \file   spn_driver/spn.cc
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:24:55 2014
  * \brief  SPn Mini-App executable.

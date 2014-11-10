@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/Problem_Builder.cc
+ * \file   mc_driver/Problem_Builder.cc
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder member definitions.
@@ -47,7 +47,7 @@ Problem_Builder::Problem_Builder()
  */
 void Problem_Builder::setup(const std::string &xml_file)
 {
-    REQUIRE(d_spn_builder.is_null());
+    REQUIRE(!d_spn_builder);
 
     // make the master parameterlist
     auto master = Teuchos::rcp(new ParameterList(""));
