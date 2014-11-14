@@ -92,6 +92,7 @@ FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
   mc/Box_Shape.cc
   mc/Domain_Transporter.cc
+  mc/Fission_Matrix_Acceleration.pt.cc
   mc/Fission_Matrix_Processor.cc
   mc/Fission_Matrix_Tally.cc
   mc/Fission_Rebalance.cc

@@ -1,25 +1,24 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Solver_Base.pt.cc
+ * \file   mc/Fission_Matrix_Acceleration.pt.cc
  * \author Thomas M. Evans
- * \date   Fri Feb 21 14:41:20 2014
- * \brief  Solver_Base explicit instantiation.
+ * \date   Wed Nov 12 14:54:34 2014
+ * \brief  Fission_Matrix_Acceleration member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "Solver_Base.hh"
 #include "solvers/LinAlgTypedefs.hh"
+#include "Fission_Matrix_Acceleration.t.hh"
 
 namespace profugus
 {
 
-
-template class Solver_Base_Tmpl<EpetraTypes>;
-template class Solver_Base_Tmpl<TpetraTypes>;
+template class Fission_Matrix_Acceleration_Impl<EpetraTypes>;
+template class Fission_Matrix_Acceleration_Impl<TpetraTypes>;
 
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//
-//                 end of Solver_Base.pt.cc
+//                 end of Fission_Matrix_Acceleration.pt.cc
 //---------------------------------------------------------------------------//
