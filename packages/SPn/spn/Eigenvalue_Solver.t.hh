@@ -174,7 +174,6 @@ void Eigenvalue_Solver<T>::setup(RCP_Mat_DB        mat,
     Base::b_system = system;
 
     // If we haven't built an eigenvector yet, build one and initialize it
-    // If we already have one, copy its data into new vector
     if( d_u.is_null() )
     {
         // make the eigenvector
@@ -182,26 +181,6 @@ void Eigenvalue_Solver<T>::setup(RCP_Mat_DB        mat,
 
         // initialize it to 1.0
         VectorTraits<T>::put_scalar(d_u,1.0);
-    }
-    else
-    {
-        // If we already have a vector, we need to temporarily store it
-        //  get the new vector, then copy the data from the old vector
-        //  into the new one.  We can't just use the old vector because
-        //  its internal map was destroyed when the new matrices were built,
-        //  which leads to problems when something downstream of here needs
-        //  access to the map.
-        RCP_Vector tmp_vec = d_u;
-
-        // make the eigenvector
-        d_u = VectorTraits<T>::build_vector(Base::b_system->get_Map());
-
-        // Assign data from old vector to new one
-        Teuchos::ArrayView<const double> tmp_data =
-            VectorTraits<T>::get_data(tmp_vec);
-        Teuchos::ArrayView<double> u_data =
-            VectorTraits<T>::get_data_nonconst(d_u);
-        u_data.assign(tmp_data);
     }
 
     CHECK(!d_u.is_null());

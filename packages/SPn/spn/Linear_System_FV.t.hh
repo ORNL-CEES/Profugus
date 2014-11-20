@@ -375,7 +375,7 @@ void Linear_System_FV<T>::build_Matrix()
     //  global-summing the local number of nonzeros into a 64 bit int.
     UTILS_INT8 num_lhs_nonzeros = MatrixTraits<T>::global_nonzeros(d_matrix);
 
-    profugus::pcout << ">>> Built SPN FV Element LHS Matrix with " <<
+    profugus::pout << ">>> Built SPN FV Element LHS Matrix with " <<
         num_lhs_nonzeros << " nonzero entries." << profugus::endl;
 }
 
@@ -469,7 +469,7 @@ void Linear_System_FV<T>::build_RHS(const External_Source &q)
 
     // >>> Add External Sources
     INSIST(q.is_isotropic(),
-            "Only isotropic sources are allowed in the SPN solver.");
+           "Only isotropic sources are allowed in the SPN solver.");
 
     // loop through cells
     for (int cell = 0; cell < d_Nc; ++cell)

@@ -56,6 +56,12 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(XS_CROSS_SECTION_XML
   DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
   EXEDEPS tstKCode_Solver)
 
+TRIBITS_COPY_FILES_TO_BINARY_DIR(SPN_XML
+  SOURCE_FILES xs_7g.xml inf_med_k.xml
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../SPn/examples
+  DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
+  EXEDEPS tstFission_Matrix_Acceleration)
+
 ##---------------------------------------------------------------------------##
 ##                    end of mc/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##

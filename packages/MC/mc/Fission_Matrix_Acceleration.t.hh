@@ -11,6 +11,7 @@
 #ifndef mc_Fission_Matrix_Acceleration_t_hh
 #define mc_Fission_Matrix_Acceleration_t_hh
 
+#include "harness/Soft_Equivalence.hh"
 #include "spn/Dimensions.hh"
 #include "spn/SpnSolverBuilder.hh"
 #include "spn/Linear_System_FV.hh"
@@ -60,15 +61,12 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     // default linear solver type (stratimikios)
     b_db->get("solver_type", std::string("stratimikos"));
 
-    // make the forward and adjoint states
-    b_forward = Teuchos::rcp(new profugus::State(
-                                 b_mesh, b_mat->xs().num_groups()));
-    b_adjoint = Teuchos::rcp(new profugus::State(
-                                 b_mesh, b_mat->xs().num_groups()));
-
     // make the linear system for this problem
     d_system = Teuchos::rcp(
         new Linear_System_FV<T>(b_db, d_dim, b_mat, b_mesh, b_indexer, b_gdata));
+
+    // make the forward and adjoint states
+    d_adjoint = VectorTraits<T>::build_vector(d_system->get_Map());
 
     // make the matrices (A,B) for the SPN problem, Ap = (1/k)Bp
     d_system->build_Matrix();
@@ -79,8 +77,7 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     ENSURE(!b_gdata.is_null());
     ENSURE(!b_mat.is_null());
     ENSURE(!d_dim.is_null());
-    ENSURE(!b_adjoint.is_null());
-    ENSURE(!b_forward.is_null());
+    ENSURE(!d_adjoint.is_null());
     ENSURE(!d_system.is_null());
 }
 
@@ -124,19 +121,46 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize()
     // solve the adjoint problem
     eigensolver->solve(null_source);
 
-    // write the results into the adjoint state
-    eigensolver->write_state(*b_adjoint);
+    // store the eigenvalue
+    d_keff = eigensolver->get_eigenvalue();
 
-    // >>> FORWARD SOLVE
+    // get the eigenvaector
+    auto eigenvector =
+        VectorTraits<T>::get_data(eigensolver->get_eigenvector());
+    auto adjoint =
+        VectorTraits<T>::get_data_nonconst(d_adjoint);
+    CHECK(eigenvector.size() == adjoint.size());
 
-    // setup the solver for the forward solve
-    eigensolver->setup(b_mat, b_mesh, b_indexer, b_gdata, d_system, false);
+    // copy local storage
+    adjoint.assign(eigenvector);
 
-    // solve the forward problem
-    eigensolver->solve(null_source);
+    // transpose the operators back to forward
+    transpose_operators(false);
+}
 
-    // write the results into the forward state
-    eigensolver->write_state(*b_forward);
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Start cycle initialization with fission container at \f$l\f$.
+ *
+ * Calculate beginning of cycle fission density for use in acceleration at end
+ * of cycle.
+ */
+template<class T>
+void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
+    const Fission_Site_Container &f)
+{
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief End cycle acceleration to create fission container at \f$l+1\f$.
+ *
+ * Build new fission source based on SPN acceleration.
+ */
+template<class T>
+void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
+    Fission_Site_Container &f)
+{
 }
 
 } // end namespace profugus

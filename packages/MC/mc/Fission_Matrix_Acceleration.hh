@@ -12,10 +12,14 @@
 #define mc_Fission_Matrix_Acceleration_hh
 
 #include "Teuchos_RCP.hpp"
+#include "Teuchos_ArrayView.hpp"
 
-#include "spn/State.hh"
+#include "harness/DBC.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "spn/Linear_System.hh"
 #include "spn_driver/Problem_Builder.hh"
+#include "spn/VectorTraits.hh"
+#include "Physics.hh"
 
 namespace profugus
 {
@@ -42,7 +46,8 @@ class Fission_Matrix_Acceleration
     typedef Problem_Builder_t::RCP_Indexer       RCP_Indexer;
     typedef Problem_Builder_t::RCP_Global_Data   RCP_Global_Data;
     typedef Problem_Builder_t::RCP_Mat_DB        RCP_Mat_DB;
-    typedef Teuchos::RCP<State>                  RCP_State;
+    typedef Physics::Fission_Site                Fission_Site;
+    typedef Physics::Fission_Site_Container      Fission_Site_Container;
 
   protected:
     // >>> DATA
@@ -58,10 +63,6 @@ class Fission_Matrix_Acceleration
     // Material database.
     RCP_Mat_DB b_mat;
 
-    // Forward and adjoint solutions to the SPN problem.
-    RCP_State b_forward;
-    RCP_State b_adjoint;
-
   public:
     // Constructor.
     Fission_Matrix_Acceleration() { /* ... */ }
@@ -75,13 +76,19 @@ class Fission_Matrix_Acceleration
     //! Initialize the acceleration.
     virtual void initialize() = 0;
 
+    //! Start cycle initialization with fission container at \f$l\f$.
+    virtual void start_cycle(const Fission_Site_Container &f) = 0;
+
+    //! End cycle acceleration to create fission container at \f$l+1\f$.
+    virtual void end_cycle(Fission_Site_Container &f) = 0;
+
     // >>> ACCESSORS
 
-    //@{
-    //! Get the forward and adjoint states.
-    const State& forward() const { return *b_forward; }
-    const State& adjoint() const { return *b_adjoint; }
-    //@}
+    //! Get SPN mesh.
+    auto mesh() const -> decltype(*b_mesh) { return *b_mesh; }
+
+    //! Get SPN materials.
+    auto mat() const -> decltype(*b_mat) { return *b_mat; }
 };
 
 //===========================================================================//
@@ -99,6 +106,9 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     typedef profugus::Linear_System<T>               Linear_System_t;
     typedef typename Linear_System_t::RCP_Dimensions RCP_Dimensions;
     typedef Teuchos::RCP<Linear_System_t>            RCP_Linear_System;
+    typedef typename Linear_System_t::Vector_t       Vector_t;
+    typedef typename Linear_System_t::RCP_Vector     RCP_Vector;
+    typedef Teuchos::ArrayView<const double>         Const_Array_View;
 
   private:
     // >>> DATA
@@ -109,6 +119,12 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // Original SPN linear system.
     RCP_Linear_System d_system;
 
+    // djoint solutions to the SPN problem.
+    RCP_Vector d_adjoint;
+
+    // Keff from the SPN solve.
+    double d_keff;
+
   public:
     // Constructor.
     Fission_Matrix_Acceleration_Impl();
@@ -118,7 +134,56 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
 
     // Initialize the acceleration.
     void initialize();
+
+    // Start cycle initialization.
+    void start_cycle(const Fission_Site_Container &f);
+
+    // End cycle acceleration.
+    void end_cycle(Fission_Site_Container &f);
+
+    // >>> ACCESSORS
+
+    //! Get the linear system of SPN equations.
+    const Linear_System_t& spn_system() const { return *d_system; }
+
+    //! Get the eigenvalue of the SPN system.
+    double keff() const { return d_keff; }
+
+    //! Get the adjoint eigenvector of the SPN system.
+    Const_Array_View adjoint() const
+    {
+        return VectorTraits<T>::get_data(d_adjoint);
+    }
+
+  private:
+    // >>> IMPLEMENTATION
+
+    // Check for transpose operators.
+    void transpose_operators(bool transpose) const
+    {
+        NOT_IMPLEMENTED(
+            "Failed to apply transpose on non-Epetra implementations.");
+    }
 };
+
+//---------------------------------------------------------------------------//
+// INLINE FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Check for transpose on Epetra operators.
+ */
+template<>
+inline
+void Fission_Matrix_Acceleration_Impl<EpetraTypes>::transpose_operators(
+    bool transpose) const
+{
+    REQUIRE(d_system->get_Operator()->UseTranspose() ==
+            d_system->get_fission_matrix()->UseTranspose());
+    d_system->get_Operator()->SetUseTranspose(transpose);
+    d_system->get_fission_matrix()->SetUseTranspose(transpose);
+    ENSURE(!transpose ? !d_system->get_Operator()->UseTranspose() :
+           d_system->get_Operator()->UseTranspose());
+}
 
 } // end namespace profugus
 
