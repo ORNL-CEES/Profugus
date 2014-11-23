@@ -16,6 +16,8 @@
 
 #include "harness/DBC.hh"
 #include "solvers/LinAlgTypedefs.hh"
+#include "solvers/ShiftedOperator.hh"
+#include "solvers/LinearSolver.hh"
 #include "spn/Linear_System.hh"
 #include "spn_driver/Problem_Builder.hh"
 #include "spn/VectorTraits.hh"
@@ -41,6 +43,7 @@ class Fission_Matrix_Acceleration
   public:
     // Typedefs.
     typedef spn::Problem_Builder                 Problem_Builder_t;
+    typedef Problem_Builder_t::ParameterList     ParameterList;
     typedef Problem_Builder_t::RCP_ParameterList RCP_ParameterList;
     typedef Problem_Builder_t::RCP_Mesh          RCP_Mesh;
     typedef Problem_Builder_t::RCP_Indexer       RCP_Indexer;
@@ -74,7 +77,7 @@ class Fission_Matrix_Acceleration
     virtual void build_problem(const Problem_Builder_t &builder) = 0;
 
     //! Initialize the acceleration.
-    virtual void initialize() = 0;
+    virtual void initialize(RCP_ParameterList mc_db) = 0;
 
     //! Start cycle initialization with fission container at \f$l\f$.
     virtual void start_cycle(const Fission_Site_Container &f) = 0;
@@ -106,9 +109,14 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     typedef profugus::Linear_System<T>               Linear_System_t;
     typedef typename Linear_System_t::RCP_Dimensions RCP_Dimensions;
     typedef Teuchos::RCP<Linear_System_t>            RCP_Linear_System;
+    typedef typename Linear_System_t::RCP_Operator   RCP_Operator;
+    typedef typename Linear_System_t::RCP_Matrix     RCP_Matrix;
     typedef typename Linear_System_t::Vector_t       Vector_t;
     typedef typename Linear_System_t::RCP_Vector     RCP_Vector;
     typedef Teuchos::ArrayView<const double>         Const_Array_View;
+    typedef ShiftedOperator<T>                       ShiftedOperator_t;
+    typedef Teuchos::RCP<ShiftedOperator_t>          RCP_ShiftedOperator;
+    typedef Teuchos::RCP<LinearSolver<T>>            RCP_LinearSolver;
 
   private:
     // >>> DATA
@@ -125,6 +133,12 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // Keff from the SPN solve.
     double d_keff;
 
+    // Acceleration equation operator.
+    RCP_ShiftedOperator d_operator;
+
+    // Linear solver for the acceleration equations.
+    RCP_LinearSolver d_solver;
+
   public:
     // Constructor.
     Fission_Matrix_Acceleration_Impl();
@@ -133,7 +147,7 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     void build_problem(const Problem_Builder_t &builder);
 
     // Initialize the acceleration.
-    void initialize();
+    void initialize(RCP_ParameterList mc_db);
 
     // Start cycle initialization.
     void start_cycle(const Fission_Site_Container &f);
@@ -158,32 +172,9 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
   private:
     // >>> IMPLEMENTATION
 
-    // Check for transpose operators.
-    void transpose_operators(bool transpose) const
-    {
-        NOT_IMPLEMENTED(
-            "Failed to apply transpose on non-Epetra implementations.");
-    }
+    // Setup the solver options.
+    void solver_db(RCP_ParameterList mc_db);
 };
-
-//---------------------------------------------------------------------------//
-// INLINE FUNCTIONS
-//---------------------------------------------------------------------------//
-/*!
- * \brief Check for transpose on Epetra operators.
- */
-template<>
-inline
-void Fission_Matrix_Acceleration_Impl<EpetraTypes>::transpose_operators(
-    bool transpose) const
-{
-    REQUIRE(d_system->get_Operator()->UseTranspose() ==
-            d_system->get_fission_matrix()->UseTranspose());
-    d_system->get_Operator()->SetUseTranspose(transpose);
-    d_system->get_fission_matrix()->SetUseTranspose(transpose);
-    ENSURE(!transpose ? !d_system->get_Operator()->UseTranspose() :
-           d_system->get_Operator()->UseTranspose());
-}
 
 } // end namespace profugus
 

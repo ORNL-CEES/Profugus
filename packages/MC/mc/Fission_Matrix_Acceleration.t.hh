@@ -11,9 +11,13 @@
 #ifndef mc_Fission_Matrix_Acceleration_t_hh
 #define mc_Fission_Matrix_Acceleration_t_hh
 
+#include <string>
+
 #include "harness/Soft_Equivalence.hh"
 #include "spn/Dimensions.hh"
 #include "spn/SpnSolverBuilder.hh"
+#include "solvers/LinearSolverBuilder.hh"
+#include "solvers/PreconditionerBuilder.hh"
 #include "spn/Linear_System_FV.hh"
 #include "spn/Eigenvalue_Solver.hh"
 #include "Fission_Matrix_Acceleration.hh"
@@ -65,7 +69,7 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     d_system = Teuchos::rcp(
         new Linear_System_FV<T>(b_db, d_dim, b_mat, b_mesh, b_indexer, b_gdata));
 
-    // make the forward and adjoint states
+    // make the adjoint state
     d_adjoint = VectorTraits<T>::build_vector(d_system->get_Map());
 
     // make the matrices (A,B) for the SPN problem, Ap = (1/k)Bp
@@ -85,21 +89,22 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
 /*!
  * \brief Initialize the acceleration at the beginning of the K-code solve.
  *
- * This call invokes two eigenvalue solves:
- * \f[
-   \mathbf{A}\phi = \frac{1}{k}\mathbf{B}\phi\:,
- * \f]
- * and
+ * This call invokes one eigenvalue solve:
  * \f[
    \mathbf{A}^{\dagger}\phi^{\dagger} =
    \frac{1}{k}\mathbf{B}^{\dagger}\phi^{\dagger}\:,
  * \f]
  */
 template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::initialize()
+void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
 {
     typedef Eigenvalue_Solver<T>               Solver_t;
     typedef typename Solver_t::External_Source Source_t;
+
+    REQUIRE(mc_db->isSublist("fission_matrix_db"));
+
+    // setup linear solver settings
+    solver_db(Teuchos::sublist(mc_db, "fission_matrix_db"));
 
     // make a "null" external source to pass to the solver
     Teuchos::RCP<const Source_t> null_source;
@@ -123,8 +128,9 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize()
 
     // store the eigenvalue
     d_keff = eigensolver->get_eigenvalue();
+    CHECK(d_keff > 0.0);
 
-    // get the eigenvaector
+    // get the eigenvector
     auto eigenvector =
         VectorTraits<T>::get_data(eigensolver->get_eigenvector());
     auto adjoint =
@@ -134,8 +140,25 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize()
     // copy local storage
     adjoint.assign(eigenvector);
 
-    // transpose the operators back to forward
-    transpose_operators(false);
+    // set the system back to forward
+    d_system->set_adjoint(false);
+
+    // make the ShiftedOperator
+    d_operator = Teuchos::rcp(new ShiftedOperator_t);
+    d_operator->set_operator(d_system->get_Operator());
+    d_operator->set_rhs_operator(d_system->get_fission_matrix());
+    d_operator->set_shift(1.0 / d_keff);
+
+    // build the linear solver
+    d_solver = LinearSolverBuilder<T>::build_solver(mc_db);
+    d_solver->set_operator(d_operator);
+
+    // build the preconditioner
+    auto preconditioner = PreconditionerBuilder<T>::build_preconditioner(
+        d_system->get_Operator(), mc_db);
+
+    // set the preconditioner
+    d_solver->set_preconditioner(preconditioner);
 }
 
 //---------------------------------------------------------------------------//
@@ -161,6 +184,42 @@ template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     Fission_Site_Container &f)
 {
+}
+
+//---------------------------------------------------------------------------//
+// PRIVATE FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Default solver functions.
+ *
+ * The default settings for the solver is
+ *
+ * \verbatim
+
+   solver_type: "stratimikos"
+   Preconditioner: "ml"
+   Stratimikos:
+        Linear Solver Type: "Belos"
+        Preconditioner Type: "None"
+
+   \endverbatim
+ *
+ * The Stratimikos solver should \b not define a preconditioner.
+ */
+template<class T>
+void Fission_Matrix_Acceleration_Impl<T>::solver_db(
+    RCP_ParameterList mc_db)
+{
+    using std::string;
+
+    // set the default solver type
+    mc_db->get("solver_type", string("stratimikos"));
+
+    // set the default preconditioner
+    mc_db->get("Preconditioner", string("ml"));
+
+    // setup the stratimikos sublist
+
 }
 
 } // end namespace profugus

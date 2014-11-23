@@ -125,11 +125,11 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
 
     CHECK(!d_u.is_null());
 
-    // apply transpose
-    apply_transpose(adjoint);
-
     // get the eigenvalue solver settings
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
+
+    // set adjoint
+    b_system->set_adjoint(adjoint);
 
     // Build a preconditioenr
     RCP_OP prec = build_preconditioner(dim, mat, mesh, indexer, data);
@@ -185,11 +185,11 @@ void Eigenvalue_Solver<T>::setup(RCP_Mat_DB        mat,
 
     CHECK(!d_u.is_null());
 
-    // apply transpose
-    apply_transpose(adjoint);
-
     // get the eigenvalue solver settings
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
+
+    // set adjoint
+    b_system->set_adjoint(adjoint);
 
     // Build a preconditioenr
     RCP_OP prec = build_preconditioner(

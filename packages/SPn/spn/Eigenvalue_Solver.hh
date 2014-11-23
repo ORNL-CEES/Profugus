@@ -16,7 +16,6 @@
 #include "harness/DBC.hh"
 #include "comm/Timer.hh"
 #include "solvers/EigenvalueSolver.hh"
-#include "solvers/LinAlgTypedefs.hh"
 #include "Solver_Base.hh"
 
 namespace profugus
@@ -129,30 +128,9 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
                                 RCP_Mesh mesh, RCP_Indexer indexer,
                                 RCP_Global_Data data);
 
-    // Apply adjoint (transpose) to the operators.
-    void apply_transpose(bool adjoint)
-    {
-        NOT_IMPLEMENTED(
-            "Failed to apply transpose on non-Epetra implementations.");
-    }
-
     // Timer.
     profugus::Timer d_timer;
 };
-
-//---------------------------------------------------------------------------//
-// INLINE FUNCTIONS
-//---------------------------------------------------------------------------//
-/*!
- * \brief Apply transpose on Epetra operators.
- */
-template<>
-inline void Eigenvalue_Solver<EpetraTypes>::apply_transpose(bool adjoint)
-{
-    // set transpose for adjoint calculations
-    b_system->get_Operator()->SetUseTranspose(adjoint);
-    b_system->get_fission_matrix()->SetUseTranspose(adjoint);
-}
 
 } // end namespace profugus
 
