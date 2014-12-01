@@ -122,6 +122,8 @@ TYPED_TEST_CASE(FM_AccelerationTest, Test_Types);
 
 TYPED_TEST(FM_AccelerationTest, initialization)
 {
+    using std::string;
+
     // setup the spn problem
     this->builder.setup("inf_med_k.xml");
 
@@ -130,6 +132,12 @@ TYPED_TEST(FM_AccelerationTest, initialization)
 
     // initialize the spn problem
     this->acceleration->initialize(this->mc_db);
+
+    const auto &fmdb = this->mc_db->sublist("fission_matrix_db");
+    EXPECT_EQ("stratimikos", fmdb.template get<string>("solver_type"));
+    EXPECT_EQ("ml", fmdb.template get<string>("Preconditioner"));
+    EXPECT_EQ("Belos", fmdb.sublist(
+                  "Stratimikos").template get<string>("Linear Solver Type"));
 
     // check the reference
     typename TestFixture::Vec_Dbl adjoint;

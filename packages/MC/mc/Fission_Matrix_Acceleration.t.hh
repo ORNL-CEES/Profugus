@@ -12,6 +12,9 @@
 #define mc_Fission_Matrix_Acceleration_t_hh
 
 #include <string>
+#include <sstream>
+
+#include "Teuchos_XMLParameterListHelpers.hpp"
 
 #include "harness/Soft_Equivalence.hh"
 #include "spn/Dimensions.hh"
@@ -62,9 +65,6 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     // build the problem dimensions
     d_dim = Teuchos::rcp(new profugus::Dimensions(b_db->get("SPn_order", 1)));
 
-    // default linear solver type (stratimikios)
-    b_db->get("solver_type", std::string("stratimikos"));
-
     // make the linear system for this problem
     d_system = Teuchos::rcp(
         new Linear_System_FV<T>(b_db, d_dim, b_mat, b_mesh, b_indexer, b_gdata));
@@ -103,8 +103,11 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
 
     REQUIRE(mc_db->isSublist("fission_matrix_db"));
 
+    // get the fission matrix db
+    RCP_ParameterList fmdb = Teuchos::sublist(mc_db, "fission_matrix_db");
+
     // setup linear solver settings
-    solver_db(Teuchos::sublist(mc_db, "fission_matrix_db"));
+    solver_db(fmdb);
 
     // make a "null" external source to pass to the solver
     Teuchos::RCP<const Source_t> null_source;
@@ -114,9 +117,6 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     Teuchos::RCP<Solver_t> eigensolver =
         Teuchos::rcp_dynamic_cast<Solver_t>(
             SpnSolverBuilder::build("eigenvalue", b_db));
-
-    // do the adjoint solve first so that the operators in the linear system
-    // are set back to forward (not transposed) when the solves are complete
 
     // >>> ADJOINT SOLVE
 
@@ -150,12 +150,12 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     d_operator->set_shift(1.0 / d_keff);
 
     // build the linear solver
-    d_solver = LinearSolverBuilder<T>::build_solver(mc_db);
+    d_solver = LinearSolverBuilder<T>::build_solver(fmdb);
     d_solver->set_operator(d_operator);
 
     // build the preconditioner
     auto preconditioner = PreconditionerBuilder<T>::build_preconditioner(
-        d_system->get_Operator(), mc_db);
+        d_system->get_Operator(), fmdb);
 
     // set the preconditioner
     d_solver->set_preconditioner(preconditioner);
@@ -212,14 +212,29 @@ void Fission_Matrix_Acceleration_Impl<T>::solver_db(
 {
     using std::string;
 
-    // set the default solver type
-    mc_db->get("solver_type", string("stratimikos"));
+    // get user-specified tolerances and iterations that we will over-ride
+    // later
+    double tol     = mc_db->get("tolerance", 1.0e-6);
+    double max_itr = mc_db->get("max_itr", 500);
 
-    // set the default preconditioner
-    mc_db->get("Preconditioner", string("ml"));
+    // set the defaults for the linear solver
+    std::ostringstream m;
+    m << "<ParameterList name='fission_matrix_db'>\n"
+      << "<Parameter name='Preconditioner' type='string' value='ml'/>\n"
+      << "<Parameter name='solver_type' type='string' value='stratimikos'/>\n"
+      << "<ParameterList name='Stratimikos'>\n"
+      << " <Parameter name='Linear Solver Type' type='string' value='Belos'/>\n"
+      << " <Parameter name='Preconditioner Type' type='string' value='None'/>\n"
+      << "</ParameterList>\n"
+      << "</ParameterList>";
+    const string pldefault(m.str());
 
-    // setup the stratimikos sublist
+    // Convert string to a Teuchos PL
+    RCP_ParameterList default_pl =
+        Teuchos::getParametersFromXmlString(pldefault);
 
+    // Insert defaults into pl, leaving existing values in tact
+    mc_db->setParametersNotAlreadySet(*default_pl);
 }
 
 } // end namespace profugus
