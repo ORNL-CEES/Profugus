@@ -108,6 +108,7 @@ INSTALL(FILES ${MESH_HEADERS} DESTINATION include/SPn/mesh)
 FILE(GLOB SOLVERS_HEADERS solvers/*.hh)
 SET(SOLVERS_SOURCES
   solvers/Arnoldi.pt.cc
+  solvers/BelosSolver.pt.cc
   solvers/Davidson_Eigensolver.pt.cc
   solvers/Decomposition.cc
   solvers/EigenvalueSolverBuilder.pt.cc
