@@ -65,15 +65,23 @@ BelosSolver<T>::BelosSolver( Teuchos::RCP<Teuchos::ParameterList> pl )
     if( b_verbosity >= LinearSolver<T>::HIGH )
     {
         verb += Belos::StatusTestDetails;
+        belos_pl->set("Output Frequency",1);
     }
     belos_pl->set("Verbosity",verb);
 
-    // Build Belos solver
-    std::string belos_type = belos_pl->get("belos_type","Block GMRES");
-    Belos::SolverFactory<ST,MV,OP> factory;
-    d_belos_solver = factory.create(belos_type,belos_pl);
+    d_belos_type = b_db->get("belos_type","Pseudo Block GMRES");
+    d_belos_pl = belos_pl;
 
-    b_label = "Belos" + belos_type;
+    // Set residual scaling based on RHS rather than initial
+    // residual, which is the default behavior
+    d_belos_pl->set("Implicit Residual Scaling","Norm of RHS");
+    d_belos_pl->set("Explicit Residual Scaling","Norm of RHS");
+
+    // Build Belos solver
+    Belos::SolverFactory<ST,MV,OP> factory;
+    d_belos_solver = factory.create(d_belos_type,d_belos_pl);
+
+    b_label = "Belos " + d_belos_type;
 }
 
 //---------------------------------------------------------------------------//
@@ -85,6 +93,9 @@ template <class T>
 void BelosSolver<T>::solve(Teuchos::RCP<MV> x, Teuchos::RCP<const MV> b)
 {
     INSIST( b_A != Teuchos::null, "set_operator has not been called");
+
+    // Make sure solver has latest parameters
+    d_belos_solver->setParameters(d_belos_pl);
 
     // Create linear problem
     Teuchos::RCP<Belos::LinearProblem<ST,MV,OP> > problem(
@@ -102,11 +113,12 @@ void BelosSolver<T>::solve(Teuchos::RCP<MV> x, Teuchos::RCP<const MV> b)
     Belos::ReturnType result = d_belos_solver->solve();
 
     b_num_iters = d_belos_solver->getNumIters();
+    b_converged = (result == Belos::Converged);
     if( b_verbosity >= LinearSolver<T>::LOW )
     {
         std::cout << b_label
-                  << (result == Belos::Converged ? " converged "
-                                                 : " did not converge ")
+                  << (b_converged ? " converged "
+                                  : " did not converge ")
                   << "after " << b_num_iters << " iterations." << std::endl;
     }
 }

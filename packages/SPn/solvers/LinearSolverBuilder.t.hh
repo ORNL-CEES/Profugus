@@ -16,6 +16,7 @@
 #include "utils/String_Functions.hh"
 #include "LinearSolverBuilder.hh"
 
+#include "BelosSolver.hh"
 #include "StratimikosSolver.hh"
 #include "Richardson.hh"
 
@@ -29,9 +30,10 @@ namespace profugus
  * This function creates a LinearSolver object from a given database.  The
  * logic of selecting a particular solver is designed to maintain backwards
  * compatibility with previous functionality.  First we look for a database
- * entry "solver_type", which can be "profugus" or "stratimikos".  If that
- * entry exists, the corresponding solver type will be built.  If not, we look
- * for database entries "profugus_solver" and build the appropriate class.
+ * entry "solver_type", which can be "profugus", "stratimikos", or "belos".
+ * If that entry exists, the corresponding solver type will be built.
+ * If not, we look for database entries "profugus_solver" and build the
+ * appropriate class.
  * Current valid "profugus_solver" options are "Richardson".
  *
  */
@@ -70,6 +72,11 @@ LinearSolverBuilder<T>::build_solver( RCP_ParameterList db )
     {
         // Just build the stratimikos solver, let validation be handled there
         solver = Teuchos::rcp(new StratimikosSolver<T>(db));
+    }
+    else if (solver_type == "belos")
+    {
+        // Just build the stratimikos solver, let validation be handled there
+        solver = Teuchos::rcp(new BelosSolver<T>(db));
     }
     else
     {

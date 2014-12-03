@@ -27,6 +27,7 @@ ADD_UTILS_TEST(tstPreconditionerBuilder.cc   )
 ADD_UTILS_TEST(tstLinearSolverBuilder.cc     )
 ADD_UTILS_TEST(tstEigenvalueSolverBuilder.cc )
 ADD_UTILS_TEST(tstStratimikosSolver.cc       )
+ADD_UTILS_TEST(tstBelosSolver.cc             )
 ADD_UTILS_TEST(tstArnoldi.cc                 )
 ADD_UTILS_TEST(tstInverseOperator.cc         )
 

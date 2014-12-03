@@ -1,6 +1,5 @@
 //----------------------------------*-C++-*----------------------------------//
-/*!
- * \file   BelosSolver.hh
+/*!\file   BelosSolver.hh
  * \author Steven Hamilton
  * \brief  BelosSolver class declaration.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -63,6 +62,20 @@ class BelosSolver : public LinearSolver<T>
     void solve(Teuchos::RCP<MV>       x,
                Teuchos::RCP<const MV> b);
 
+    void set_tolerance(double tol)
+    {
+        REQUIRE( tol > 0.0 );
+        b_tolerance = tol;
+        Teuchos::sublist(b_db,"Belos")->set("Convergence Tolerance",tol);
+    }
+
+    void set_max_iters(int max_iters)
+    {
+        REQUIRE( max_iters > 0 );
+        b_max_iters = max_iters;
+        Teuchos::sublist(b_db,"Belos")->set("Maximum Iterations",max_iters);
+    }
+
   private:
 
     using LinearSolver<T>::b_db;
@@ -76,6 +89,12 @@ class BelosSolver : public LinearSolver<T>
 
     // Preconditioner
     Teuchos::RCP<OP> d_P;
+
+    // Type of solver (e.g. "Block GMRES")
+    std::string d_belos_type;
+
+    // List of Belos-specific entries
+    Teuchos::RCP<Teuchos::ParameterList> d_belos_pl;
 
     // Belos solver
     Teuchos::RCP<Belos::SolverManager<ST,MV,OP> > d_belos_solver;
