@@ -13,6 +13,7 @@
 
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
@@ -75,6 +76,37 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     // make the matrices (A,B) for the SPN problem, Ap = (1/k)Bp
     d_system->build_Matrix();
     d_system->build_fission_matrix();
+
+    // make the external source that will be used to calculate B\phi for the
+    // acceleration equation
+    d_q = std::make_shared<Isotropic_Source>(b_mesh->num_cells());
+
+    // allocate space for the external source shapes, ids, and fields
+    d_q_field.resize(b_mesh->num_cells());
+    d_q_shapes.resize(b_mesh->num_cells());
+
+    // number of groups
+    int num_groups = b_mat->xs().num_groups();
+
+    // build the source shapes (chi) [The SPN problem is setup so that the
+    // material ids go from [0,N)]
+    const auto &xs = b_mat->xs();
+    for (int mid = 0; mid < xs.num_mat(); ++mid)
+    {
+        CHECK(xs.has(mid));
+
+        // get chi (they can be zero)
+        const auto &chi = xs.vector(mid, XS::CHI);
+        CHECK(chi.length() == num_groups);
+        CHECK(d_q_shapes[mid].empty());
+
+        // get the pointer to the underlying data
+        const auto *chi_p = chi.values();
+
+        // store chi
+        d_q_shapes[mid].insert(d_q_shapes[mid].end(),
+                               chi_p, chi_p + num_groups);
+    }
 
     ENSURE(!b_mesh.is_null());
     ENSURE(!b_indexer.is_null());
@@ -172,6 +204,19 @@ template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
     const Fission_Site_Container &f)
 {
+    // build a source field from the fission sites
+    build_source_field(f);
+
+    // setup the source
+    d_q->set(b_mat->matids(), d_q_shapes, d_q_field);
+
+    // use the linear system to calculate a right-hand side vector from this
+    // source, which is B\phi in SPN space
+    d_system->build_RHS(*d_q);
+
+    // store B\phi^l (beginning of cycle)
+    d_Bphi_l = d_system->get_RHS();
+    ENSURE(!d_Bphi_l.is_null());
 }
 
 //---------------------------------------------------------------------------//
@@ -235,6 +280,42 @@ void Fission_Matrix_Acceleration_Impl<T>::solver_db(
 
     // Insert defaults into pl, leaving existing values in tact
     mc_db->setParametersNotAlreadySet(*default_pl);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build the fission source from the fission sites.
+ */
+template<class T>
+void Fission_Matrix_Acceleration_Impl<T>::build_source_field(
+    const Fission_Site_Container &f)
+{
+    REQUIRE(d_q_field.size() == b_mesh->num_cells());
+
+    // initialize the source field
+    std::fill(d_q_field.begin(), d_q_field.end(), 0.0);
+
+    // dimension vector for each cell
+    Mesh::Dim_Vector ijk;
+
+    // loop through the fission sites and add them up in each mesh cell
+    for (const auto &site : f)
+    {
+        CHECK(b_mesh->find_cell(site.r, ijk));
+
+        // find the cell containing the site
+        b_mesh->find_cell(site.r, ijk);
+        CHECK(b_mesh->convert(ijk[0], ijk[1], ijk[2]) < d_q_field.size());
+
+        // add the site to the field
+        ++d_q_field[b_mesh->convert(ijk[0], ijk[1], ijk[2])];
+    }
+
+    // normalize by volume
+    for (int cell = 0; cell < b_mesh->num_cells(); ++cell)
+    {
+        d_q_field[cell] /= b_mesh->volume(cell);
+    }
 }
 
 } // end namespace profugus

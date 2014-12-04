@@ -11,16 +11,21 @@
 #ifndef mc_Fission_Matrix_Acceleration_hh
 #define mc_Fission_Matrix_Acceleration_hh
 
+#include <memory>
+
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayView.hpp"
 
 #include "harness/DBC.hh"
+#include "xs/Mat_DB.hh"
+#include "mesh/Mesh.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "solvers/ShiftedOperator.hh"
 #include "solvers/LinearSolver.hh"
 #include "spn/Linear_System.hh"
-#include "spn_driver/Problem_Builder.hh"
 #include "spn/VectorTraits.hh"
+#include "spn/Isotropic_Source.hh"
+#include "spn_driver/Problem_Builder.hh"
 #include "Physics.hh"
 
 namespace profugus
@@ -88,10 +93,10 @@ class Fission_Matrix_Acceleration
     // >>> ACCESSORS
 
     //! Get SPN mesh.
-    auto mesh() const -> decltype(*b_mesh) { return *b_mesh; }
+    const Mesh& mesh() const { return *b_mesh; }
 
     //! Get SPN materials.
-    auto mat() const -> decltype(*b_mat) { return *b_mat; }
+    const Mat_DB &mat() const { return *b_mat; }
 };
 
 //===========================================================================//
@@ -117,6 +122,7 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     typedef ShiftedOperator<T>                       ShiftedOperator_t;
     typedef Teuchos::RCP<ShiftedOperator_t>          RCP_ShiftedOperator;
     typedef Teuchos::RCP<LinearSolver<T>>            RCP_LinearSolver;
+    typedef Teuchos::RCP<const Vector_t>             RCP_Const_Vector;
 
   private:
     // >>> DATA
@@ -138,6 +144,9 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
 
     // Linear solver for the acceleration equations.
     RCP_LinearSolver d_solver;
+
+    // B\phi (in SPN space) at l and l+1.
+    RCP_Vector d_Bphi_l, d_Bphi_lp1;
 
   public:
     // Constructor.
@@ -169,11 +178,26 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
         return VectorTraits<T>::get_data(d_adjoint);
     }
 
+    //@{
+    //! Get the vector at \f$ l\f$ and \f$ l+1\f$.
+    RCP_Const_Vector get_Bpsi_l() const { return d_Bphi_l; }
+    RCP_Const_Vector get_Bpsi_lp1() const { return d_Bphi_lp1; }
+
   private:
     // >>> IMPLEMENTATION
 
     // Setup the solver options.
     void solver_db(RCP_ParameterList mc_db);
+
+    // Build the source field from the fission sites.
+    void build_source_field(const Fission_Site_Container &f);
+
+    // External source used to build the action of B\phi.
+    std::shared_ptr<Isotropic_Source> d_q;
+
+    // Source shapes (chi), and field.
+    Isotropic_Source::Source_Shapes d_q_shapes;
+    Isotropic_Source::Source_Field  d_q_field;
 };
 
 } // end namespace profugus

@@ -17,11 +17,14 @@
 #include "Epetra_Vector.h"
 #include "Epetra_RowMatrixTransposer.h"
 #include "Epetra_Export.h"
+#include "Teuchos_RCP.hpp"
 
 #include <SPn/config.h>
 
+#include "rng/RNG_Control.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "spn/Moment_Coefficients.hh"
+#include "spn/VectorTraits.hh"
 #include "../Fission_Matrix_Acceleration.hh"
 
 #include "gtest/utils_gtest.hh"
@@ -42,7 +45,11 @@ class FM_AccelerationTest : public ::testing::Test
     typedef profugus::Fission_Matrix_Acceleration_Impl<T> Implementation;
     typedef std::shared_ptr<Implementation>               SP_Implementation;
     typedef typename Implementation::Linear_System_t      Linear_System_t;
+    typedef typename Linear_System_t::RCP_Vector          RCP_Vector;
     typedef std::vector<double>                           Vec_Dbl;
+    typedef Acceleration::Fission_Site                    Fission_Site;
+    typedef Acceleration::Fission_Site_Container          Fission_Site_Container;
+    typedef profugus::VectorTraits<T>                     Traits;
 
   protected:
     void SetUp()
@@ -55,6 +62,8 @@ class FM_AccelerationTest : public ::testing::Test
         mc_db = Teuchos::rcp(new Acceleration::ParameterList());
         mc_db->set("fission_matrix_db",
                    Acceleration::ParameterList("fission_matrix"));
+
+        seed = 12134;
     }
 
     void get_adjoint(Vec_Dbl &phi)
@@ -82,7 +91,7 @@ class FM_AccelerationTest : public ::testing::Test
                 // loop over moments
                 for (int n = 0; n < N; ++n)
                 {
-                    EXPECT_GT(u.size(), system.index(g, n, cell));
+                     EXPECT_GT(u.size(), system.index(g, n, cell));
 
                     // get the moment from the solution vector
                     u_m[n] = u[system.index(g, n, cell)];
@@ -95,6 +104,41 @@ class FM_AccelerationTest : public ::testing::Test
         }
     }
 
+    void build_fs()
+    {
+        // we need 13 total sites to match the reference from the Acceleration
+        // Tests notebook
+        fs.resize(13);
+
+        // 2 in cell 5
+        // 4 in cell 6
+        // 5 in cell 9
+        // 2 in cell 10
+
+        profugus::RNG_Control rcon(seed);
+        auto rng = rcon.rng();
+
+        double z = 0.125;
+        double a[] = {1.0, 2.0};
+        double b[] = {2.0, 3.0};
+
+        double x[][2] = {{1., 2.}, {1., 2.},
+                         {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
+                         {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.},
+                         {2., 3.}, {2., 3.}};
+        double y[][2] = {{1., 2.}, {1., 2.},
+                         {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.},
+                         {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
+                         {2., 3.}, {2., 3.}};
+
+        for (int n = 0; n < 13; ++n)
+        {
+            fs[n].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
+            fs[n].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
+            fs[n].r[2] = z;
+        }
+    }
+
   protected:
     // >>> DATA
 
@@ -104,7 +148,11 @@ class FM_AccelerationTest : public ::testing::Test
     SP_Acceleration   acceleration;
     SPN_Builder       builder;
 
+    Fission_Site_Container fs;
+
     int N, Ng, Nc;
+
+    int seed;
 };
 
 //---------------------------------------------------------------------------//
@@ -168,6 +216,79 @@ TYPED_TEST(FM_AccelerationTest, initialization)
     EXPECT_VEC_SOFTEQ(ref, inf_med_vec, 1.0e-5);
 
     EXPECT_SOFTEQ(1.1889633277246718, this->implementation->keff(), 1.0e-6);
+}
+
+//---------------------------------------------------------------------------//
+
+TYPED_TEST(FM_AccelerationTest, setup)
+{
+    using std::string;
+    typedef typename TestFixture::Traits Traits;
+
+    // setup the spn problem
+    this->builder.setup("mesh4x4.xml");
+
+    // build the spn problem
+    this->acceleration->build_problem(this->builder);
+    EXPECT_EQ(16, this->acceleration->mesh().num_cells());
+
+    // initialize the spn problem
+    this->acceleration->initialize(this->mc_db);
+
+    // build fission source
+    this->build_fs();
+
+    // starting cycle
+    this->acceleration->start_cycle(this->fs);
+
+    // check the vector Bpsi
+    auto Bpsi_l = this->implementation->get_Bpsi_l();
+
+    EXPECT_EQ(16*2*3, Traits::local_length(Bpsi_l));
+
+    // make the reference
+    const auto &system = this->implementation->spn_system();
+
+    // get the fission matrix
+    auto B = system.get_fission_matrix();
+
+    // see "Acceleration Tests" notebook for u vector that is equivalent to
+    // the fission source in this test
+    auto y = Traits::build_vector(Teuchos::rcpFromRef(B->OperatorRangeMap()));
+    auto u = Traits::build_vector(Teuchos::rcpFromRef(B->OperatorDomainMap()));
+    EXPECT_EQ(16*2*3, Traits::local_length(y));
+    EXPECT_EQ(16*2*3, Traits::local_length(u));
+    {
+        double ref_u[] = {
+            3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382,
+            9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382, 9.64797,
+            4.00988, 3.17858, 2.81054, 2.48293, 3.34382, 9.64797, 4.00988,
+            3.17858, 2.81054, 2.48293, 3.34382, 9.64797, 4.00988, 3.17858,
+            2.81054, 2.48293, 3.68000, 13.54000, 16.40000, 4.02000, 19.56000,
+            24.30000, 8.78000, 6.49000, 17.80000, 8.67000, 9.36000, 22.20000,
+            3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382,
+            9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.12000, 17.42000,
+            16.80000, 1.68000, 21.63000, 10.20000, 3.68000, 13.54000, 16.40000,
+            4.02000, 19.56000, 24.30000, 3.34382, 9.64797, 4.00988, 3.17858,
+            2.81054, 2.48293, 3.34382, 9.64797, 4.00988, 3.17858, 2.81054,
+            2.48293, 3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293,
+            3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382,
+            9.64797, 4.00988, 3.17858, 2.81054, 2.48293};
+
+        auto v = Traits::get_data_nonconst(u);
+        std::copy(std::begin(ref_u), std::end(ref_u), v.begin());
+    }
+
+    // manually calculate Bphi from the equivalent reference u
+    B->Apply(*u, *y);
+
+    // test y versus Bphi at l calculated from the fission sites
+    {
+        auto ref = Traits::get_data(y);
+        auto v   = Traits::get_data(Bpsi_l);
+
+        EXPECT_VEC_SOFTEQ(ref, v, 1.0e-5);
+    }
 }
 
 //---------------------------------------------------------------------------//

@@ -62,6 +62,12 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(SPN_XML
   DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
   EXEDEPS tstFission_Matrix_Acceleration)
 
+TRIBITS_COPY_FILES_TO_BINARY_DIR(SPN_LOCAL_XML
+  SOURCE_FILES xs_3g.xml mesh4x4.xml
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+  DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
+  EXEDEPS tstFission_Matrix_Acceleration)
+
 ##---------------------------------------------------------------------------##
 ##                    end of mc/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##
