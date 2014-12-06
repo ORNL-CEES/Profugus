@@ -14,6 +14,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <vector>
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
@@ -71,7 +72,11 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
         new Linear_System_FV<T>(b_db, d_dim, b_mat, b_mesh, b_indexer, b_gdata));
 
     // make the adjoint state
-    d_adjoint = VectorTraits<T>::build_vector(d_system->get_Map());
+    d_adjoint = VTraits::build_vector(d_system->get_Map());
+
+    // build the work vector and solution vectors
+    d_work = VTraits::build_vector(d_system->get_Map());
+    d_g    = VTraits::build_vector(d_system->get_Map());
 
     // make the matrices (A,B) for the SPN problem, Ap = (1/k)Bp
     d_system->build_Matrix();
@@ -163,10 +168,8 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     CHECK(d_keff > 0.0);
 
     // get the eigenvector
-    auto eigenvector =
-        VectorTraits<T>::get_data(eigensolver->get_eigenvector());
-    auto adjoint =
-        VectorTraits<T>::get_data_nonconst(d_adjoint);
+    auto eigenvector = VTraits::get_data(eigensolver->get_eigenvector());
+    auto adjoint     = VTraits::get_data_nonconst(d_adjoint);
     CHECK(eigenvector.size() == adjoint.size());
 
     // copy local storage
@@ -202,21 +205,20 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
  */
 template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
+    double                        k_l,
     const Fission_Site_Container &f)
 {
-    // build a source field from the fission sites
-    build_source_field(f);
+    REQUIRE(k_l > 0.0);
 
-    // setup the source
-    d_q->set(b_mat->matids(), d_q_shapes, d_q_field);
+    // store the beginning-of-cycle eigenvalue
+    d_k_l = k_l;
 
-    // use the linear system to calculate a right-hand side vector from this
-    // source, which is B\phi in SPN space
-    d_system->build_RHS(*d_q);
+    // store B\phi^l at the beginning of the cycle
+    auto Bphi_l = build_Bphi(f);
+    CHECK(VTraits::local_length(Bphi_l) == VTraits::local_length(d_work));
 
-    // store B\phi^l (beginning of cycle)
-    d_Bphi_l = d_system->get_RHS();
-    ENSURE(!d_Bphi_l.is_null());
+    // now deep copy into local space
+    ATraits::MvAddMv(1.0, *Bphi_l, 0.0, *Bphi_l, *d_work);
 }
 
 //---------------------------------------------------------------------------//
@@ -229,6 +231,30 @@ template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     Fission_Site_Container &f)
 {
+    // calculate B\phi^l at l+1/2 (end of MC cycle)
+    auto Bphi = build_Bphi(f);
+    CHECK(VTraits::local_length(Bphi) == VTraits::local_length(d_work));
+
+    // make some useful name references
+    RCP_Vector Bphi_l = d_work;
+    RCP_Vector rhs    = Bphi;
+
+    // now calculate k for the solvability condition to the correction
+    // equation
+    std::vector<double> numerator(1, 0.0), denominator(1, 0.0);
+    ATraits::MvDot(*Bphi,   *d_adjoint, numerator);
+    ATraits::MvDot(*Bphi_l, *d_adjoint, denominator);
+    CHECK(denominator[0] != 0.0);
+
+    // calculate the solvability k
+    double k = d_k_l * numerator[0] / denominator[0];
+    CHECK(k != 0.0);
+
+    // build the RHS vector
+    ATraits::MvAddMv(1.0/k, *Bphi, -1.0/d_k_l, *Bphi_l, *rhs);
+
+    // solve the system
+    d_solver->solve(d_g, rhs);
 }
 
 //---------------------------------------------------------------------------//
@@ -284,11 +310,11 @@ void Fission_Matrix_Acceleration_Impl<T>::solver_db(
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build the fission source from the fission sites.
+ * \brief Build the Bphi mat-vec product from the fission sites.
  */
 template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::build_source_field(
-    const Fission_Site_Container &f)
+auto Fission_Matrix_Acceleration_Impl<T>::build_Bphi(
+    const Fission_Site_Container &f) -> RCP_Vector
 {
     REQUIRE(d_q_field.size() == b_mesh->num_cells());
 
@@ -316,6 +342,17 @@ void Fission_Matrix_Acceleration_Impl<T>::build_source_field(
     {
         d_q_field[cell] /= b_mesh->volume(cell);
     }
+
+    // setup the source
+    d_q->set(b_mat->matids(), d_q_shapes, d_q_field);
+
+    // use the linear system to calculate a right-hand side vector from this
+    // source, which is B\phi in SPN space
+    d_system->build_RHS(*d_q);
+
+    // return the RHS vector
+    ENSURE(!d_system->get_RHS().is_null());
+    return d_system->get_RHS();
 }
 
 } // end namespace profugus

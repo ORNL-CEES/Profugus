@@ -24,6 +24,7 @@
 #include "rng/RNG_Control.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "spn/Moment_Coefficients.hh"
+#include "spn/MatrixTraits.hh"
 #include "spn/VectorTraits.hh"
 #include "../Fission_Matrix_Acceleration.hh"
 
@@ -50,6 +51,7 @@ class FM_AccelerationTest : public ::testing::Test
     typedef Acceleration::Fission_Site                    Fission_Site;
     typedef Acceleration::Fission_Site_Container          Fission_Site_Container;
     typedef profugus::VectorTraits<T>                     Traits;
+    typedef profugus::MatrixTraits<T>                     MTraits;
 
   protected:
     void SetUp()
@@ -104,39 +106,68 @@ class FM_AccelerationTest : public ::testing::Test
         }
     }
 
-    void build_fs()
+    void build_fs(bool random = false)
     {
-        // we need 13 total sites to match the reference from the Acceleration
-        // Tests notebook
-        fs.resize(13);
-
-        // 2 in cell 5
-        // 4 in cell 6
-        // 5 in cell 9
-        // 2 in cell 10
-
         profugus::RNG_Control rcon(seed);
         auto rng = rcon.rng();
 
-        double z = 0.125;
-        double a[] = {1.0, 2.0};
-        double b[] = {2.0, 3.0};
+        fs.clear();
 
-        double x[][2] = {{1., 2.}, {1., 2.},
-                         {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
-                         {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.},
-                         {2., 3.}, {2., 3.}};
-        double y[][2] = {{1., 2.}, {1., 2.},
-                         {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.},
-                         {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
-                         {2., 3.}, {2., 3.}};
-
-        for (int n = 0; n < 13; ++n)
+        if (!random)
         {
-            fs[n].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
-            fs[n].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
-            fs[n].r[2] = z;
+            // we need 13 total sites to match the reference from the
+            // Acceleration Tests notebook
+            fs.resize(13);
+
+            // 2 in cell 5
+            // 4 in cell 6
+            // 5 in cell 9
+            // 2 in cell 10
+
+            double z = 0.125;
+            double a[] = {1.0, 2.0};
+            double b[] = {2.0, 3.0};
+
+            double x[][2] = {{1., 2.}, {1., 2.},
+                             {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
+                             {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.},
+                             {2., 3.}, {2., 3.}};
+            double y[][2] = {{1., 2.}, {1., 2.},
+                             {1., 2.}, {1., 2.}, {1., 2.}, {1., 2.},
+                             {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
+                             {2., 3.}, {2., 3.}};
+
+            for (int n = 0; n < 13; ++n)
+            {
+                fs[n].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
+                fs[n].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
+                fs[n].r[2] = z;
+            }
         }
+        else
+        {
+            // randomly sample 20 sites in the fuel regions
+            fs.resize(20);
+
+            double z = 0.125;
+
+            for (int n = 0; n < 20; ++n)
+            {
+                // sample the cell
+                fs[n].r[0] = 2.0 * rng.ran() + 1.0;
+                fs[n].r[1] = 2.0 * rng.ran() + 1.0;
+                fs[n].r[2] = z;
+            }
+        }
+    }
+
+    void print_matrices()
+    {
+        auto A = implementation->spn_system().get_Matrix();
+        auto B = Teuchos::rcp_dynamic_cast<typename T::MATRIX>(
+            implementation->spn_system().get_fission_matrix());
+        MTraits::write_matrix_file(A, "A.mtx");
+        MTraits::write_matrix_file(B, "B.mtx");
     }
 
   protected:
@@ -239,7 +270,7 @@ TYPED_TEST(FM_AccelerationTest, setup)
     this->build_fs();
 
     // starting cycle
-    this->acceleration->start_cycle(this->fs);
+    this->acceleration->start_cycle(1.0, this->fs);
 
     // check the vector Bpsi
     auto Bpsi_l = this->implementation->get_Bpsi_l();
@@ -289,6 +320,36 @@ TYPED_TEST(FM_AccelerationTest, setup)
 
         EXPECT_VEC_SOFTEQ(ref, v, 1.0e-5);
     }
+}
+
+//---------------------------------------------------------------------------//
+
+TYPED_TEST(FM_AccelerationTest, solve)
+{
+    using std::string;
+
+    // setup the spn problem
+    this->builder.setup("mesh4x4.xml");
+
+    // build the spn problem
+    this->acceleration->build_problem(this->builder);
+    EXPECT_EQ(16, this->acceleration->mesh().num_cells());
+    this->print_matrices();
+
+    // initialize the spn problem
+    this->acceleration->initialize(this->mc_db);
+
+    // build fission source
+    this->build_fs();
+
+    // starting cycle
+    this->acceleration->start_cycle(1.0, this->fs);
+
+    // build l+1/2 fission source
+    this->build_fs(true);
+
+    // ending cycle
+    this->acceleration->end_cycle(this->fs);
 }
 
 //---------------------------------------------------------------------------//

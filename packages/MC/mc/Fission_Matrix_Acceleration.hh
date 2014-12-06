@@ -15,6 +15,7 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayView.hpp"
+#include "AnasaziMultiVecTraits.hpp"
 
 #include "harness/DBC.hh"
 #include "xs/Mat_DB.hh"
@@ -85,7 +86,7 @@ class Fission_Matrix_Acceleration
     virtual void initialize(RCP_ParameterList mc_db) = 0;
 
     //! Start cycle initialization with fission container at \f$l\f$.
-    virtual void start_cycle(const Fission_Site_Container &f) = 0;
+    virtual void start_cycle(double k_l, const Fission_Site_Container &f) = 0;
 
     //! End cycle acceleration to create fission container at \f$l+1\f$.
     virtual void end_cycle(Fission_Site_Container &f) = 0;
@@ -145,8 +146,11 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // Linear solver for the acceleration equations.
     RCP_LinearSolver d_solver;
 
-    // B\phi (in SPN space) at l and l+1.
-    RCP_Vector d_Bphi_l, d_Bphi_lp1;
+    // Work vectors for rhs.
+    RCP_Vector d_g, d_work;
+
+    // MC eigenvalue at the beginning of cycle (l).
+    double d_k_l;
 
   public:
     // Constructor.
@@ -159,7 +163,7 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     void initialize(RCP_ParameterList mc_db);
 
     // Start cycle initialization.
-    void start_cycle(const Fission_Site_Container &f);
+    void start_cycle(double k_l, const Fission_Site_Container &f);
 
     // End cycle acceleration.
     void end_cycle(Fission_Site_Container &f);
@@ -178,19 +182,24 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
         return VectorTraits<T>::get_data(d_adjoint);
     }
 
-    //@{
-    //! Get the vector at \f$ l\f$ and \f$ l+1\f$.
-    RCP_Const_Vector get_Bpsi_l() const { return d_Bphi_l; }
-    RCP_Const_Vector get_Bpsi_lp1() const { return d_Bphi_lp1; }
+    //! Get the vector at \f$ l\f$.
+    RCP_Const_Vector get_Bpsi_l() const { return d_work; }
+
+    //! Get the correction vector.
+    RCP_Const_Vector get_g() const { return d_g; }
 
   private:
     // >>> IMPLEMENTATION
 
+    typedef VectorTraits<T>                                VTraits;
+    typedef typename T::MV                                 MultiVector_t;
+    typedef Anasazi::MultiVecTraits<double, MultiVector_t> ATraits;
+
     // Setup the solver options.
     void solver_db(RCP_ParameterList mc_db);
 
-    // Build the source field from the fission sites.
-    void build_source_field(const Fission_Site_Container &f);
+    // Build the Bphi mat-vec product from the fission sites.
+    RCP_Vector build_Bphi(const Fission_Site_Container &f);
 
     // External source used to build the action of B\phi.
     std::shared_ptr<Isotropic_Source> d_q;
