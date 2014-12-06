@@ -34,8 +34,6 @@ ELSE()
 ENDIF()
 
 INCLUDE(CMakeParseArguments)
-INCLUDE(TribitsAddExecutableAndTest)
-INCLUDE(TribitsAddAdvancedTest)
 
 ##---------------------------------------------------------------------------##
 ## ADDING UNIT TEST

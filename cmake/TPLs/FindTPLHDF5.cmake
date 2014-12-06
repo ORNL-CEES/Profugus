@@ -1,4 +1,3 @@
-INCLUDE(TribitsTplDeclareLibraries)
 
 SET(LIBS_NAMES hdf5_hl hdf5)
 

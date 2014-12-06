@@ -8,8 +8,6 @@
 ## TriBITS package file for Utils package
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsPackageMacros)
-INCLUDE(TribitsLibraryMacros)
 INCLUDE(CheckTypeSize)
 INCLUDE(ProfugusAddCFlags)
 INCLUDE(TestBigEndian)

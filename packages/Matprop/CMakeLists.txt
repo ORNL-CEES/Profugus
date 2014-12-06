@@ -8,9 +8,6 @@
 ## TriBITS package file for Matprop package
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsPackageMacros)
-INCLUDE(TribitsLibraryMacros)
-INCLUDE(TribitsAddOptionAndDefine)
 INCLUDE(AppendSet)
 INCLUDE(ProfugusAddCFlags)
 

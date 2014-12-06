@@ -8,9 +8,6 @@
 ## CMAKE for geometry/rtk/test
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsAddExecutableAndTest)
-INCLUDE(TribitsCopyFilesToBinaryDir)
-INCLUDE(TribitsAddAdvancedTest)
 INCLUDE(UtilsTest)
 
 ##---------------------------------------------------------------------------##

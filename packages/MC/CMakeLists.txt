@@ -8,10 +8,6 @@
 ## TriBITS package file for MC package
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsPackageMacros)
-INCLUDE(TribitsLibraryMacros)
-INCLUDE(TribitsAddOptionAndDefine)
-INCLUDE(TribitsAddExecutable)
 INCLUDE(AppendSet)
 INCLUDE(ProfugusAddCFlags)
 

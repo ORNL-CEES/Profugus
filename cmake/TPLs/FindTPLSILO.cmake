@@ -1,4 +1,3 @@
-INCLUDE(TribitsTplDeclareLibraries)
 
 IF(NOT TPL_ENABLE_HDF5)
   MESSAGE(FATAL_ERROR "\nSILO TPL requires that HDF5 support is enabled.\n\n")

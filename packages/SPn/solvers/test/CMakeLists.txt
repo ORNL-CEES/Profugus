@@ -8,8 +8,6 @@
 ## CMAKE for spn
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsCopyFilesToBinaryDir)
-INCLUDE(TribitsAddExecutableAndTest)
 INCLUDE(UtilsTest)
 
 ##---------------------------------------------------------------------------##

@@ -8,10 +8,6 @@
 ## TriBITS package file for SPn package
 ##---------------------------------------------------------------------------##
 
-INCLUDE(TribitsPackageMacros)
-INCLUDE(TribitsLibraryMacros)
-INCLUDE(TribitsAddOptionAndDefine)
-INCLUDE(TribitsAddExecutable)
 INCLUDE(AppendSet)
 INCLUDE(ProfugusAddCFlags)
 
