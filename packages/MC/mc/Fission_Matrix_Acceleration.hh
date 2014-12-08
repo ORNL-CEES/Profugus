@@ -193,6 +193,7 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
 
     typedef VectorTraits<T>                                VTraits;
     typedef typename T::MV                                 MultiVector_t;
+    typedef typename T::OP                                 Operator_t;
     typedef Anasazi::MultiVecTraits<double, MultiVector_t> ATraits;
 
     // Setup the solver options.

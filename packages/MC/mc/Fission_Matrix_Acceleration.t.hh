@@ -15,8 +15,10 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
+#include <cmath>
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
+#include "AnasaziOperatorTraits.hpp"
 
 #include "harness/Soft_Equivalence.hh"
 #include "spn/Dimensions.hh"
@@ -193,7 +195,10 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
         d_system->get_Operator(), fmdb);
 
     // set the preconditioner
-    d_solver->set_preconditioner(preconditioner);
+    if (!preconditioner.is_null())
+    {
+        d_solver->set_preconditioner(preconditioner);
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -231,6 +236,8 @@ template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     Fission_Site_Container &f)
 {
+    typedef Anasazi::OperatorTraits<double, MultiVector_t, Operator_t> OT;
+
     // calculate B\phi^l at l+1/2 (end of MC cycle)
     auto Bphi = build_Bphi(f);
     CHECK(VTraits::local_length(Bphi) == VTraits::local_length(d_work));
@@ -255,6 +262,30 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
 
     // solve the system
     d_solver->solve(d_g, rhs);
+
+    // ensure orthagonality with adjoint vector, (x*, g) = 0 by applying a
+    // correction (the preconditioned solve may not preserve this)
+    ATraits::MvDot(*d_adjoint, *d_g, numerator);
+    ATraits::MvDot(*d_adjoint, *d_adjoint, denominator);
+    CHECK(denominator[0] != 0.0);
+
+    // do the correction
+    // ATraits::MvAddMv(1.0, *d_g, -numerator[0]/denominator[0], *d_adjoint, *d_g);
+
+    // calculate the residual
+    OT::Apply(*d_operator, *d_g, *d_work);
+    ATraits::MvAddMv(1.0, *rhs, -1.0, *d_work, *d_work);
+    ATraits::MvNorm(*d_work, numerator);
+    std::cout << numerator[0] << std::endl;
+
+#ifdef REMEMBER_ON
+    std::vector<double> ortho(1, 0.0);
+    ATraits::MvDot(*d_adjoint, *d_g, ortho);
+    // VALIDATE(std::fabs(ortho[0] < 1.0e-8),
+    //         "Orthogonality of correction fails versus adjoint eigenvector, "
+    //         "(x*,g) = " << ortho[0] << " which is > 1.0e-8");
+    std::cout << ortho[0] << std::endl;
+#endif
 }
 
 //---------------------------------------------------------------------------//

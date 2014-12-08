@@ -106,14 +106,14 @@ class FM_AccelerationTest : public ::testing::Test
         }
     }
 
-    void build_fs(bool random = false)
+    void build_fs(bool begin)
     {
         profugus::RNG_Control rcon(seed);
         auto rng = rcon.rng();
 
         fs.clear();
 
-        if (!random)
+        if (begin)
         {
             // we need 13 total sites to match the reference from the
             // Acceleration Tests notebook
@@ -125,8 +125,6 @@ class FM_AccelerationTest : public ::testing::Test
             // 2 in cell 10
 
             double z = 0.125;
-            double a[] = {1.0, 2.0};
-            double b[] = {2.0, 3.0};
 
             double x[][2] = {{1., 2.}, {1., 2.},
                              {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
@@ -146,16 +144,42 @@ class FM_AccelerationTest : public ::testing::Test
         }
         else
         {
-            // randomly sample 20 sites in the fuel regions
-            fs.resize(20);
+            // we need 23 total sites to match the reference from the
+            // Acceleration Tests notebook
+            fs.resize(23);
+
+            // 6 in cell 5
+            // 4 in cell 6
+            // 7 in cell 9
+            // 6 in cell 10
 
             double z = 0.125;
 
-            for (int n = 0; n < 20; ++n)
+            double x[][2] = {{1., 2.}, {1., 2.}, {1., 2.},
+                             {1., 2.}, {1., 2.}, {1., 2.}, // cell 5
+                             {2., 3.}, {2., 3.}, {2., 3.},
+                             {2., 3.},                     // cell 6
+                             {1., 2.}, {1., 2.}, {1., 2.},
+                             {1., 2.}, {1., 2.}, {1., 2.},
+                             {1., 2.},                     // cell 9
+                             {2., 3.}, {2., 3.}, {2., 3.},
+                             {2., 3.}, {2., 3.}, {2., 3.}  // cell 10
+            };
+            double y[][2] = {{1., 2.}, {1., 2.}, {1., 2.},
+                             {1., 2.}, {1., 2.}, {1., 2.}, // cell 5
+                             {1., 2.}, {1., 2.}, {1., 2.},
+                             {1., 2.},                     // cell 6
+                             {2., 3.}, {2., 3.}, {2., 3.},
+                             {2., 3.}, {2., 3.}, {2., 3.},
+                             {2., 3.},                     // cell 9
+                             {2., 3.}, {2., 3.}, {2., 3.},
+                             {2., 3.}, {2., 3.}, {2., 3.}  // cell 10
+            };
+
+            for (int n = 0; n < 23; ++n)
             {
-                // sample the cell
-                fs[n].r[0] = 2.0 * rng.ran() + 1.0;
-                fs[n].r[1] = 2.0 * rng.ran() + 1.0;
+                fs[n].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
+                fs[n].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
                 fs[n].r[2] = z;
             }
         }
@@ -267,7 +291,7 @@ TYPED_TEST(FM_AccelerationTest, setup)
     this->acceleration->initialize(this->mc_db);
 
     // build fission source
-    this->build_fs();
+    this->build_fs(true);
 
     // starting cycle
     this->acceleration->start_cycle(1.0, this->fs);
@@ -327,6 +351,19 @@ TYPED_TEST(FM_AccelerationTest, setup)
 TYPED_TEST(FM_AccelerationTest, solve)
 {
     using std::string;
+    typedef typename TestFixture::Traits Traits;
+
+    // set debug verbosity in solver
+    //this->mc_db->sublist(
+    //    "fission_matrix_db").set("verbosity", string("debug"));
+    this->mc_db->sublist(
+        "fission_matrix_db").set("solver_type", string("belos"));
+    //this->mc_db->sublist(
+    //    "fission_matrix_db").set("Preconditioner", string("None"));
+    this->mc_db->sublist(
+        "fission_matrix_db").set("tolerance", 1.0e-8);
+    this->mc_db->sublist(
+        "fission_matrix_db").set("belos_type", string("Block GMRES"));
 
     // setup the spn problem
     this->builder.setup("mesh4x4.xml");
@@ -340,16 +377,62 @@ TYPED_TEST(FM_AccelerationTest, solve)
     this->acceleration->initialize(this->mc_db);
 
     // build fission source
-    this->build_fs();
+    this->build_fs(true);
 
     // starting cycle
     this->acceleration->start_cycle(1.0, this->fs);
 
     // build l+1/2 fission source
-    this->build_fs(true);
+    this->build_fs(false);
 
     // ending cycle
     this->acceleration->end_cycle(this->fs);
+
+    // get the correction vector
+    auto g = this->implementation->get_g();
+
+    // check with reference from "Acceleration Tests" notebook
+    {
+        double ref[] = {
+            7.57008985e-03,   2.67292408e-04,   2.66863876e-05,
+            5.09430605e-03,   2.26557731e-05,   7.22391049e-07,
+            4.72759863e-02,   2.22906004e-03,   2.12652730e-04,
+            2.46891386e-02,   3.22258782e-04,   5.20622731e-06,
+            -9.23615920e-02,  -6.08221718e-03,  -1.01165451e-03,
+            -4.85904622e-02,  -1.77127509e-03,  -2.52177521e-04,
+            -1.37525834e-02,  -5.17449495e-04,  -5.47312342e-05,
+            -9.23627758e-03,  -6.57899603e-05,  -3.96992084e-06,
+            5.42636920e-02,   2.48822871e-03,   2.40066169e-04,
+            2.94011395e-02,   3.53369040e-04,   7.13020289e-06,
+            1.81797585e+00,   1.27415459e-01,   7.04210828e-03,
+            -5.17919032e-02,  -1.26412483e-03,  -1.01603176e-04,
+            -2.28173665e+00,  -4.07013151e-01,  -1.31788967e-01,
+            1.27911579e-01,   6.15818181e-03,   1.07991068e-03,
+            -9.23615920e-02,  -6.08221718e-03,  -1.01165451e-03,
+            -4.85904622e-02,  -1.77127509e-03,  -2.52177521e-04,
+            4.45897252e-03,  -1.05302978e-04,  -1.19767498e-05,
+            4.07512743e-03,  -1.31010632e-04,  -4.90912051e-06,
+            -5.54088615e-03,  -3.06348864e-02,  -3.07544833e-03,
+            6.88192139e-02,   1.25172280e-03,   3.45766640e-05,
+            1.81797585e+00,   1.27415459e-01,   7.04210828e-03,
+            -5.17919033e-02,  -1.26412476e-03,  -1.01603178e-04,
+            4.72759863e-02,   2.22906004e-03,   2.12652730e-04,
+            2.46891386e-02,   3.22258782e-04,   5.20622732e-06,
+            7.18012744e-04,   1.79442374e-05,   1.82200757e-06,
+            5.34843433e-04,  -2.03617941e-06,  -6.03023257e-08,
+            4.45897252e-03,  -1.05302978e-04,  -1.19767498e-05,
+            4.07512743e-03,  -1.31010632e-04,  -4.90912051e-06,
+            5.42636920e-02,   2.48822871e-03,   2.40066169e-04,
+            2.94011395e-02,   3.53369039e-04,   7.13020290e-06,
+            7.57008985e-03,   2.67292408e-04,   2.66863876e-05,
+            5.09430605e-03,   2.26557731e-05,   7.22391049e-07
+        };
+
+        auto v = Traits::get_data(g);
+        EXPECT_VEC_SOFTEQ(ref, v, 1.0e-2);
+    }
+
+    cout << *this->mc_db;
 }
 
 //---------------------------------------------------------------------------//
