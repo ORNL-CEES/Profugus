@@ -187,6 +187,12 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     }
     //@}
 
+    //! Get the current fission density.
+    Const_Array_View multiplicative_correction() const
+    {
+        return Teuchos::arrayViewFromVector(d_nu);
+    }
+
   private:
     // >>> IMPLEMENTATION
 

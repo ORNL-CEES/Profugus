@@ -21,6 +21,7 @@
 
 #include <SPn/config.h>
 
+#include "mesh/Mesh.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "spn/Moment_Coefficients.hh"
 #include "spn/MatrixTraits.hh"
@@ -189,6 +190,27 @@ class FM_AccelerationTest : public ::testing::Test
         }
     }
 
+    void accelerate()
+    {
+        // build the spn problem
+        acceleration->build_problem(builder);
+
+        // initialize the spn problem
+        acceleration->initialize(mc_db);
+
+        // build fission source
+        build_fs(true);
+
+        // starting cycle
+        acceleration->start_cycle(1.0, fs);
+
+        // build l+1/2 fission source
+        build_fs(false);
+
+        // ending cycle
+        acceleration->end_cycle(fs);
+    }
+
     void print_matrices()
     {
         auto A = implementation->spn_system().get_Matrix();
@@ -281,6 +303,29 @@ TYPED_TEST(FM_AccelerationTest, initialization)
 
 //---------------------------------------------------------------------------//
 
+TYPED_TEST(FM_AccelerationTest, defaults)
+{
+    // setup the spn problem
+    this->builder.setup("mesh4x4.xml");
+
+    // accelerate the problem
+    this->accelerate();
+
+    // check the multiplicative correction
+    {
+        double ref[] = {0.0,  0.0       ,  0.0       ,  0.0,
+                        0.0,  1.3422964 ,  0.57649855,  0.0,
+                        0.0,  0.99142012,  1.3422964 ,  0.0,
+                        0.0,  0.0       ,  0.0       ,  0.0
+        };
+
+        auto v = this->implementation->multiplicative_correction();
+        EXPECT_VEC_SOFTEQ(ref, v, 1.0e-6);
+    }
+}
+
+//---------------------------------------------------------------------------//
+
 TYPED_TEST(FM_AccelerationTest, solve)
 {
     using std::string;
@@ -289,33 +334,17 @@ TYPED_TEST(FM_AccelerationTest, solve)
     // set solver options
     this->mc_db->sublist(
         "fission_matrix_db").set("solver_type", string("belos"));
-    //this->mc_db->sublist(
-    //    "fission_matrix_db").set("Preconditioner", string("None"));
     this->mc_db->sublist(
         "fission_matrix_db").set("tolerance", 1.0e-8);
 
     // setup the spn problem
     this->builder.setup("mesh4x4.xml");
 
-    // build the spn problem
-    this->acceleration->build_problem(this->builder);
+    // accelerate the problem
+    this->accelerate();
+
     EXPECT_EQ(16, this->acceleration->mesh().num_cells());
     this->print_matrices();
-
-    // initialize the spn problem
-    this->acceleration->initialize(this->mc_db);
-
-    // build fission source
-    this->build_fs(true);
-
-    // starting cycle
-    this->acceleration->start_cycle(1.0, this->fs);
-
-    // build l+1/2 fission source
-    this->build_fs(false);
-
-    // ending cycle
-    this->acceleration->end_cycle(this->fs);
 
     // get the correction vector
     auto g = this->implementation->solver().get_g();
@@ -360,6 +389,50 @@ TYPED_TEST(FM_AccelerationTest, solve)
         auto v = Traits::get_data(g);
         EXPECT_VEC_SOFTEQ(ref, v, 1.0e-2);
     }
+
+    // check the multiplicative correction
+    {
+        double ref[] = {0.0,  0.0       ,  0.0       ,  0.0,
+                        0.0,  1.3422964 ,  0.57649855,  0.0,
+                        0.0,  0.99142012,  1.3422964 ,  0.0,
+                        0.0,  0.0       ,  0.0       ,  0.0
+        };
+
+        auto v = this->implementation->multiplicative_correction();
+        EXPECT_VEC_SOFTEQ(ref, v, 1.0e-6);
+    }
+
+    // check the location of the sites
+    auto mesh = this->builder.mesh();
+    profugus::Mesh::Dim_Vector ijk;
+
+    EXPECT_EQ(22, this->fs.size());
+    std::vector<int> bins(16, 0);
+    for (const auto &s : this->fs)
+    {
+        mesh->find_cell(s.r, ijk);
+        int cell = mesh->convert(ijk[0], ijk[1], ijk[2]);
+
+        ++bins[cell];
+    }
+
+    EXPECT_GE(bins[5],  6);
+    EXPECT_LE(bins[6],  4);
+    EXPECT_LE(bins[9],  7);
+    EXPECT_GE(bins[10], 6);
+
+    EXPECT_EQ(0, bins[0]);
+    EXPECT_EQ(0, bins[1]);
+    EXPECT_EQ(0, bins[2]);
+    EXPECT_EQ(0, bins[3]);
+    EXPECT_EQ(0, bins[4]);
+    EXPECT_EQ(0, bins[7]);
+    EXPECT_EQ(0, bins[8]);
+    EXPECT_EQ(0, bins[11]);
+    EXPECT_EQ(0, bins[12]);
+    EXPECT_EQ(0, bins[13]);
+    EXPECT_EQ(0, bins[14]);
+    EXPECT_EQ(0, bins[15]);
 }
 
 //---------------------------------------------------------------------------//
