@@ -94,6 +94,7 @@ SET(MC_SOURCES
   mc/Domain_Transporter.cc
   mc/Fission_Matrix_Acceleration.pt.cc
   mc/Fission_Matrix_Processor.cc
+  mc/Fission_Matrix_Solver.pt.cc
   mc/Fission_Matrix_Tally.cc
   mc/Fission_Rebalance.cc
   mc/Fission_Source.cc

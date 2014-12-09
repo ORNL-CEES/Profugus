@@ -11,21 +11,12 @@
 #ifndef mc_Fission_Matrix_Acceleration_t_hh
 #define mc_Fission_Matrix_Acceleration_t_hh
 
-#include <string>
-#include <sstream>
-#include <algorithm>
-#include <vector>
-#include <cmath>
-
-#include "Teuchos_XMLParameterListHelpers.hpp"
-#include "AnasaziOperatorTraits.hpp"
-
+#include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
 #include "spn/Dimensions.hh"
 #include "spn/SpnSolverBuilder.hh"
-#include "solvers/LinearSolverBuilder.hh"
-#include "solvers/PreconditionerBuilder.hh"
 #include "spn/Linear_System_FV.hh"
+#include "spn/Moment_Coefficients.hh"
 #include "spn/Eigenvalue_Solver.hh"
 #include "Fission_Matrix_Acceleration.hh"
 
@@ -73,47 +64,16 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     d_system = Teuchos::rcp(
         new Linear_System_FV<T>(b_db, d_dim, b_mat, b_mesh, b_indexer, b_gdata));
 
-    // make the adjoint state
+    // make the forward and adjoint eigenvectors
+    d_forward = VTraits::build_vector(d_system->get_Map());
     d_adjoint = VTraits::build_vector(d_system->get_Map());
-
-    // build the work vector and solution vectors
-    d_work = VTraits::build_vector(d_system->get_Map());
-    d_g    = VTraits::build_vector(d_system->get_Map());
 
     // make the matrices (A,B) for the SPN problem, Ap = (1/k)Bp
     d_system->build_Matrix();
     d_system->build_fission_matrix();
 
-    // make the external source that will be used to calculate B\phi for the
-    // acceleration equation
-    d_q = std::make_shared<Isotropic_Source>(b_mesh->num_cells());
-
-    // allocate space for the external source shapes, ids, and fields
-    d_q_field.resize(b_mesh->num_cells());
-    d_q_shapes.resize(b_mesh->num_cells());
-
-    // number of groups
-    int num_groups = b_mat->xs().num_groups();
-
-    // build the source shapes (chi) [The SPN problem is setup so that the
-    // material ids go from [0,N)]
-    const auto &xs = b_mat->xs();
-    for (int mid = 0; mid < xs.num_mat(); ++mid)
-    {
-        CHECK(xs.has(mid));
-
-        // get chi (they can be zero)
-        const auto &chi = xs.vector(mid, XS::CHI);
-        CHECK(chi.length() == num_groups);
-        CHECK(d_q_shapes[mid].empty());
-
-        // get the pointer to the underlying data
-        const auto *chi_p = chi.values();
-
-        // store chi
-        d_q_shapes[mid].insert(d_q_shapes[mid].end(),
-                               chi_p, chi_p + num_groups);
-    }
+    // build the weight corrections in the FM mesh
+    d_nu.resize(b_mesh->num_cells());
 
     ENSURE(!b_mesh.is_null());
     ENSURE(!b_indexer.is_null());
@@ -121,6 +81,7 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     ENSURE(!b_mat.is_null());
     ENSURE(!d_dim.is_null());
     ENSURE(!d_adjoint.is_null());
+    ENSURE(!d_forward.is_null());
     ENSURE(!d_system.is_null());
 }
 
@@ -145,14 +106,14 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     // get the fission matrix db
     RCP_ParameterList fmdb = Teuchos::sublist(mc_db, "fission_matrix_db");
 
-    // setup linear solver settings
-    solver_db(fmdb);
+    // set the damping (defaults to 1.0)
+    d_beta = fmdb->get("damping", 1.0);
 
     // make a "null" external source to pass to the solver
     Teuchos::RCP<const Source_t> null_source;
     CHECK(null_source.is_null());
 
-    // make an eigenvalue solver
+    // make an eigenvalue solver, use the database from the SPN problem
     Teuchos::RCP<Solver_t> eigensolver =
         Teuchos::rcp_dynamic_cast<Solver_t>(
             SpnSolverBuilder::build("eigenvalue", b_db));
@@ -169,36 +130,29 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     d_keff = eigensolver->get_eigenvalue();
     CHECK(d_keff > 0.0);
 
-    // get the eigenvector
-    auto eigenvector = VTraits::get_data(eigensolver->get_eigenvector());
-    auto adjoint     = VTraits::get_data_nonconst(d_adjoint);
-    CHECK(eigenvector.size() == adjoint.size());
+    // get the eigenvector and assign it
+    std::vector<int> index(1, 0);
+    ATraits::SetBlock(*eigensolver->get_eigenvector(), index, *d_adjoint);
 
-    // copy local storage
-    adjoint.assign(eigenvector);
+    // >>> FORWARD SOLVE
 
-    // set the system back to forward
-    d_system->set_adjoint(false);
+    // setup the solver for the forward solve (puts the operators back to
+    // forward)
+    eigensolver->setup(b_mat, b_mesh, b_indexer, b_gdata, d_system, false);
 
-    // make the ShiftedOperator
-    d_operator = Teuchos::rcp(new ShiftedOperator_t);
-    d_operator->set_operator(d_system->get_Operator());
-    d_operator->set_rhs_operator(d_system->get_fission_matrix());
-    d_operator->set_shift(1.0 / d_keff);
+    // solve the adjoint problem
+    eigensolver->solve(null_source);
+    CHECK(profugus::soft_equiv(eigensolver->get_eigenvalue(), d_keff, 1.0e-3));
 
-    // build the linear solver
-    d_solver = LinearSolverBuilder<T>::build_solver(fmdb);
-    d_solver->set_operator(d_operator);
+    // assign the forward eigenvector
+    ATraits::SetBlock(*eigensolver->get_eigenvector(), index, *d_forward);
 
-    // build the preconditioner
-    auto preconditioner = PreconditionerBuilder<T>::build_preconditioner(
-        d_system->get_Operator(), fmdb);
+    // >>> BUILD THE FISSION_MATRIX_SOLVER
 
-    // set the preconditioner
-    if (!preconditioner.is_null())
-    {
-        d_solver->set_preconditioner(preconditioner);
-    }
+    // build and set the fission matrix solver
+    d_fm_solver = Teuchos::rcp(
+        new Fission_Matrix_Solver<T>(fmdb, b_mesh, b_mat, d_system, d_keff));
+    d_fm_solver->set_eigenvectors(d_forward, d_adjoint);
 }
 
 //---------------------------------------------------------------------------//
@@ -213,17 +167,8 @@ void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
     double                        k_l,
     const Fission_Site_Container &f)
 {
-    REQUIRE(k_l > 0.0);
-
-    // store the beginning-of-cycle eigenvalue
-    d_k_l = k_l;
-
-    // store B\phi^l at the beginning of the cycle
-    auto Bphi_l = build_Bphi(f);
-    CHECK(VTraits::local_length(Bphi_l) == VTraits::local_length(d_work));
-
-    // now deep copy into local space
-    ATraits::MvAddMv(1.0, *Bphi_l, 0.0, *Bphi_l, *d_work);
+    REQUIRE(!d_fm_solver.is_null());
+    d_fm_solver->set_u_begin(f, k_l);
 }
 
 //---------------------------------------------------------------------------//
@@ -236,154 +181,77 @@ template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     Fission_Site_Container &f)
 {
-    typedef Anasazi::OperatorTraits<double, MultiVector_t, Operator_t> OT;
+    REQUIRE(!d_fm_solver.is_null());
 
-    // calculate B\phi^l at l+1/2 (end of MC cycle)
-    auto Bphi = build_Bphi(f);
-    CHECK(VTraits::local_length(Bphi) == VTraits::local_length(d_work));
+    // solve the acceleration equation
+    d_fm_solver->solve(f);
+    CHECK(VTraits::local_length(d_fm_solver->get_g()) ==
+          VTraits::local_length(d_forward));
 
-    // make some useful name references
-    RCP_Vector Bphi_l = d_work;
-    RCP_Vector rhs    = Bphi;
-
-    // now calculate k for the solvability condition to the correction
-    // equation
-    std::vector<double> numerator(1, 0.0), denominator(1, 0.0);
-    ATraits::MvDot(*Bphi,   *d_adjoint, numerator);
-    ATraits::MvDot(*Bphi_l, *d_adjoint, denominator);
-    CHECK(denominator[0] != 0.0);
-
-    // calculate the solvability k
-    double k = d_k_l * numerator[0] / denominator[0];
-    CHECK(k != 0.0);
-
-    // build the RHS vector
-    ATraits::MvAddMv(1.0/k, *Bphi, -1.0/d_k_l, *Bphi_l, *rhs);
-
-    // solve the system
-    d_solver->solve(d_g, rhs);
-
-    // ensure orthagonality with adjoint vector, (x*, g) = 0 by applying a
-    // correction (the preconditioned solve may not preserve this)
-    ATraits::MvDot(*d_adjoint, *d_g, numerator);
-    ATraits::MvDot(*d_adjoint, *d_adjoint, denominator);
-    CHECK(denominator[0] != 0.0);
-
-    // do the correction
-    // ATraits::MvAddMv(1.0, *d_g, -numerator[0]/denominator[0], *d_adjoint, *d_g);
-
-    // calculate the residual
-    OT::Apply(*d_operator, *d_g, *d_work);
-    ATraits::MvAddMv(1.0, *rhs, -1.0, *d_work, *d_work);
-    ATraits::MvNorm(*d_work, numerator);
-    std::cout << numerator[0] << std::endl;
-
-#ifdef REMEMBER_ON
-    std::vector<double> ortho(1, 0.0);
-    ATraits::MvDot(*d_adjoint, *d_g, ortho);
-    // VALIDATE(std::fabs(ortho[0] < 1.0e-8),
-    //         "Orthogonality of correction fails versus adjoint eigenvector, "
-    //         "(x*,g) = " << ortho[0] << " which is > 1.0e-8");
-    std::cout << ortho[0] << std::endl;
-#endif
+    // convert the correction vector from SPN space to fission sites
+    convert_g(d_fm_solver->get_g());
 }
 
 //---------------------------------------------------------------------------//
 // PRIVATE FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
- * \brief Default solver functions.
- *
- * The default settings for the solver is
- *
- * \verbatim
-
-   solver_type: "stratimikos"
-   Preconditioner: "ml"
-   Stratimikos:
-        Linear Solver Type: "Belos"
-        Preconditioner Type: "None"
-
-   \endverbatim
- *
- * The Stratimikos solver should \b not define a preconditioner.
+ * \brief Convert g to fission density.
  */
 template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::solver_db(
-    RCP_ParameterList mc_db)
+void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
 {
-    using std::string;
+    REQUIRE(b_mesh->num_cells() * d_system->get_dims()->num_equations()
+            * b_mat->xs().num_groups() <=
+            VectorTraits<T>::local_length(gc));
+    REQUIRE(d_nu.size() == b_mesh->num_cells());
 
-    // get user-specified tolerances and iterations that we will over-ride
-    // later
-    double tol     = mc_db->get("tolerance", 1.0e-6);
-    double max_itr = mc_db->get("max_itr", 500);
+    // SPN moments
+    double u_m[4] = {0.0, 0.0, 0.0, 0.0};
 
-    // set the defaults for the linear solver
-    std::ostringstream m;
-    m << "<ParameterList name='fission_matrix_db'>\n"
-      << "<Parameter name='Preconditioner' type='string' value='ml'/>\n"
-      << "<Parameter name='solver_type' type='string' value='stratimikos'/>\n"
-      << "<ParameterList name='Stratimikos'>\n"
-      << " <Parameter name='Linear Solver Type' type='string' value='Belos'/>\n"
-      << " <Parameter name='Preconditioner Type' type='string' value='None'/>\n"
-      << "</ParameterList>\n"
-      << "</ParameterList>";
-    const string pldefault(m.str());
+    // get cross sections from the database
+    const auto &xs = b_mat->xs();
 
-    // Convert string to a Teuchos PL
-    RCP_ParameterList default_pl =
-        Teuchos::getParametersFromXmlString(pldefault);
+    // number of equations (moments) in the SPN solution
+    int N = d_system->get_dims()->num_equations();
 
-    // Insert defaults into pl, leaving existing values in tact
-    mc_db->setParametersNotAlreadySet(*default_pl);
-}
+    // number of groups
+    int Ng = xs.num_groups();
 
-//---------------------------------------------------------------------------//
-/*!
- * \brief Build the Bphi mat-vec product from the fission sites.
- */
-template<class T>
-auto Fission_Matrix_Acceleration_Impl<T>::build_Bphi(
-    const Fission_Site_Container &f) -> RCP_Vector
-{
-    REQUIRE(d_q_field.size() == b_mesh->num_cells());
+    // number of local cells
+    int Nc = b_mesh->num_cells();
 
-    // initialize the source field
-    std::fill(d_q_field.begin(), d_q_field.end(), 0.0);
+    // the state field is ordered group->cell whereas the u vector is
+    // ordered cell->moments->group
+    Teuchos::ArrayView<const double> gcv = VectorTraits<T>::get_data(gc);
 
-    // dimension vector for each cell
-    Mesh::Dim_Vector ijk;
-
-    // loop through the fission sites and add them up in each mesh cell
-    for (const auto &site : f)
+    // loop over cells on this domain
+    for (int cell = 0; cell < Nc; ++cell)
     {
-        CHECK(b_mesh->find_cell(site.r, ijk));
+        // get nu-sigma_f for this cell
+        const auto &nu_sigf = xs.vector(b_mat->matid(cell), XS::NU_SIG_F);
+        CHECK(nu_sigf.length() == Ng);
 
-        // find the cell containing the site
-        b_mesh->find_cell(site.r, ijk);
-        CHECK(b_mesh->convert(ijk[0], ijk[1], ijk[2]) < d_q_field.size());
+        // volume of this cell
+        double V = b_mesh->volume(cell);
 
-        // add the site to the field
-        ++d_q_field[b_mesh->convert(ijk[0], ijk[1], ijk[2])];
+        // loop over groups
+        for (int g = 0; g < Ng; ++g)
+        {
+            // loop over moments
+            for (int n = 0; n < N; ++n)
+            {
+                CHECK(d_system->index(g, n, cell) < gcv.size());
+
+                // get the moment from the solution vector
+                u_m[n] = gcv[d_system->index(g, n, cell)];
+            }
+
+            // do f^T * phi_0
+            d_nu[cell] +=  Moment_Coefficients::u_to_phi(
+                u_m[0], u_m[1], u_m[2], u_m[3]) * nu_sigf[g] * V;
+        }
     }
-
-    // normalize by volume
-    for (int cell = 0; cell < b_mesh->num_cells(); ++cell)
-    {
-        d_q_field[cell] /= b_mesh->volume(cell);
-    }
-
-    // setup the source
-    d_q->set(b_mat->matids(), d_q_shapes, d_q_field);
-
-    // use the linear system to calculate a right-hand side vector from this
-    // source, which is B\phi in SPN space
-    d_system->build_RHS(*d_q);
-
-    // return the RHS vector
-    ENSURE(!d_system->get_RHS().is_null());
-    return d_system->get_RHS();
 }
 
 } // end namespace profugus

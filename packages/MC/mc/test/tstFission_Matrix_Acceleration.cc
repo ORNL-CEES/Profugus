@@ -275,95 +275,18 @@ TYPED_TEST(FM_AccelerationTest, initialization)
 
 //---------------------------------------------------------------------------//
 
-TYPED_TEST(FM_AccelerationTest, setup)
-{
-    using std::string;
-    typedef typename TestFixture::Traits Traits;
-
-    // setup the spn problem
-    this->builder.setup("mesh4x4.xml");
-
-    // build the spn problem
-    this->acceleration->build_problem(this->builder);
-    EXPECT_EQ(16, this->acceleration->mesh().num_cells());
-
-    // initialize the spn problem
-    this->acceleration->initialize(this->mc_db);
-
-    // build fission source
-    this->build_fs(true);
-
-    // starting cycle
-    this->acceleration->start_cycle(1.0, this->fs);
-
-    // check the vector Bpsi
-    auto Bpsi_l = this->implementation->get_Bpsi_l();
-
-    EXPECT_EQ(16*2*3, Traits::local_length(Bpsi_l));
-
-    // make the reference
-    const auto &system = this->implementation->spn_system();
-
-    // get the fission matrix
-    auto B = system.get_fission_matrix();
-
-    // see "Acceleration Tests" notebook for u vector that is equivalent to
-    // the fission source in this test
-    auto y = Traits::build_vector(Teuchos::rcpFromRef(B->OperatorRangeMap()));
-    auto u = Traits::build_vector(Teuchos::rcpFromRef(B->OperatorDomainMap()));
-    EXPECT_EQ(16*2*3, Traits::local_length(y));
-    EXPECT_EQ(16*2*3, Traits::local_length(u));
-    {
-        double ref_u[] = {
-            3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382,
-            9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382, 9.64797,
-            4.00988, 3.17858, 2.81054, 2.48293, 3.34382, 9.64797, 4.00988,
-            3.17858, 2.81054, 2.48293, 3.34382, 9.64797, 4.00988, 3.17858,
-            2.81054, 2.48293, 3.68000, 13.54000, 16.40000, 4.02000, 19.56000,
-            24.30000, 8.78000, 6.49000, 17.80000, 8.67000, 9.36000, 22.20000,
-            3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382,
-            9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.12000, 17.42000,
-            16.80000, 1.68000, 21.63000, 10.20000, 3.68000, 13.54000, 16.40000,
-            4.02000, 19.56000, 24.30000, 3.34382, 9.64797, 4.00988, 3.17858,
-            2.81054, 2.48293, 3.34382, 9.64797, 4.00988, 3.17858, 2.81054,
-            2.48293, 3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293,
-            3.34382, 9.64797, 4.00988, 3.17858, 2.81054, 2.48293, 3.34382,
-            9.64797, 4.00988, 3.17858, 2.81054, 2.48293};
-
-        auto v = Traits::get_data_nonconst(u);
-        std::copy(std::begin(ref_u), std::end(ref_u), v.begin());
-    }
-
-    // manually calculate Bphi from the equivalent reference u
-    B->Apply(*u, *y);
-
-    // test y versus Bphi at l calculated from the fission sites
-    {
-        auto ref = Traits::get_data(y);
-        auto v   = Traits::get_data(Bpsi_l);
-
-        EXPECT_VEC_SOFTEQ(ref, v, 1.0e-5);
-    }
-}
-
-//---------------------------------------------------------------------------//
-
 TYPED_TEST(FM_AccelerationTest, solve)
 {
     using std::string;
     typedef typename TestFixture::Traits Traits;
 
-    // set debug verbosity in solver
-    //this->mc_db->sublist(
-    //    "fission_matrix_db").set("verbosity", string("debug"));
+    // set solver options
     this->mc_db->sublist(
         "fission_matrix_db").set("solver_type", string("belos"));
     //this->mc_db->sublist(
     //    "fission_matrix_db").set("Preconditioner", string("None"));
     this->mc_db->sublist(
         "fission_matrix_db").set("tolerance", 1.0e-8);
-    this->mc_db->sublist(
-        "fission_matrix_db").set("belos_type", string("Block GMRES"));
 
     // setup the spn problem
     this->builder.setup("mesh4x4.xml");
@@ -389,7 +312,7 @@ TYPED_TEST(FM_AccelerationTest, solve)
     this->acceleration->end_cycle(this->fs);
 
     // get the correction vector
-    auto g = this->implementation->get_g();
+    auto g = this->implementation->solver().get_g();
 
     // check with reference from "Acceleration Tests" notebook
     {
@@ -431,8 +354,6 @@ TYPED_TEST(FM_AccelerationTest, solve)
         auto v = Traits::get_data(g);
         EXPECT_VEC_SOFTEQ(ref, v, 1.0e-2);
     }
-
-    cout << *this->mc_db;
 }
 
 //---------------------------------------------------------------------------//

@@ -12,21 +12,18 @@
 #define mc_Fission_Matrix_Acceleration_hh
 
 #include <memory>
+#include <vector>
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayView.hpp"
 #include "AnasaziMultiVecTraits.hpp"
 
-#include "harness/DBC.hh"
 #include "xs/Mat_DB.hh"
 #include "mesh/Mesh.hh"
-#include "solvers/LinAlgTypedefs.hh"
-#include "solvers/ShiftedOperator.hh"
-#include "solvers/LinearSolver.hh"
 #include "spn/Linear_System.hh"
 #include "spn/VectorTraits.hh"
-#include "spn/Isotropic_Source.hh"
 #include "spn_driver/Problem_Builder.hh"
+#include "Fission_Matrix_Solver.hh"
 #include "Physics.hh"
 
 namespace profugus
@@ -120,10 +117,8 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     typedef typename Linear_System_t::Vector_t       Vector_t;
     typedef typename Linear_System_t::RCP_Vector     RCP_Vector;
     typedef Teuchos::ArrayView<const double>         Const_Array_View;
-    typedef ShiftedOperator<T>                       ShiftedOperator_t;
-    typedef Teuchos::RCP<ShiftedOperator_t>          RCP_ShiftedOperator;
-    typedef Teuchos::RCP<LinearSolver<T>>            RCP_LinearSolver;
     typedef Teuchos::RCP<const Vector_t>             RCP_Const_Vector;
+    typedef Teuchos::RCP<Fission_Matrix_Solver<T>>   RCP_Fission_Matrix_Solver;
 
   private:
     // >>> DATA
@@ -134,23 +129,24 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // Original SPN linear system.
     RCP_Linear_System d_system;
 
-    // djoint solutions to the SPN problem.
+    // Fission matrix acceleration equation solver.
+    RCP_Fission_Matrix_Solver d_fm_solver;
+
+    // Forward and adjoint solutions to the SPN problem.
     RCP_Vector d_adjoint;
+    RCP_Vector d_forward;
 
-    // Keff from the SPN solve.
+    // Eigenvalue of the SPN system.
     double d_keff;
-
-    // Acceleration equation operator.
-    RCP_ShiftedOperator d_operator;
-
-    // Linear solver for the acceleration equations.
-    RCP_LinearSolver d_solver;
-
-    // Work vectors for rhs.
-    RCP_Vector d_g, d_work;
 
     // MC eigenvalue at the beginning of cycle (l).
     double d_k_l;
+
+    // Damping.
+    double d_beta;
+
+    // Multiplicative corrections.
+    std::vector<double> d_nu;
 
   public:
     // Constructor.
@@ -173,20 +169,23 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     //! Get the linear system of SPN equations.
     const Linear_System_t& spn_system() const { return *d_system; }
 
+    //! Get the fission matrix solver.
+    const Fission_Matrix_Solver<T>& solver() const { return *d_fm_solver; }
+
     //! Get the eigenvalue of the SPN system.
     double keff() const { return d_keff; }
 
-    //! Get the adjoint eigenvector of the SPN system.
+    //@{
+    //! Get the eigenvectors of the SPN system.
     Const_Array_View adjoint() const
     {
         return VectorTraits<T>::get_data(d_adjoint);
     }
-
-    //! Get the vector at \f$ l\f$.
-    RCP_Const_Vector get_Bpsi_l() const { return d_work; }
-
-    //! Get the correction vector.
-    RCP_Const_Vector get_g() const { return d_g; }
+    Const_Array_View forward() const
+    {
+        return VectorTraits<T>::get_data(d_forward);
+    }
+    //@}
 
   private:
     // >>> IMPLEMENTATION
@@ -196,18 +195,8 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     typedef typename T::OP                                 Operator_t;
     typedef Anasazi::MultiVecTraits<double, MultiVector_t> ATraits;
 
-    // Setup the solver options.
-    void solver_db(RCP_ParameterList mc_db);
-
-    // Build the Bphi mat-vec product from the fission sites.
-    RCP_Vector build_Bphi(const Fission_Site_Container &f);
-
-    // External source used to build the action of B\phi.
-    std::shared_ptr<Isotropic_Source> d_q;
-
-    // Source shapes (chi), and field.
-    Isotropic_Source::Source_Shapes d_q_shapes;
-    Isotropic_Source::Source_Field  d_q_field;
+    // Convert g to fissions.
+    void convert_g(RCP_Const_Vector g);
 };
 
 } // end namespace profugus
