@@ -18,6 +18,7 @@
 #include "Epetra_RowMatrixTransposer.h"
 #include "Epetra_Export.h"
 #include "Teuchos_RCP.hpp"
+#include "Teuchos_ParameterList.hpp"
 
 #include <SPn/config.h>
 
@@ -68,6 +69,9 @@ class FM_AccelerationTest : public ::testing::Test
         mc_db = Teuchos::rcp(new Acceleration::ParameterList());
         mc_db->set("fission_matrix_db",
                    Acceleration::ParameterList("fission_matrix"));
+        auto fmdb = Teuchos::sublist(mc_db, "fission_matrix_db");
+        fmdb->set("acceleration",
+                  Acceleration::ParameterList("acceleration"));
 
         seed = 12134;
         profugus::Global_RNG::RNG_Control_t rcon(seed + node);
@@ -264,7 +268,8 @@ TYPED_TEST(FM_AccelerationTest, initialization)
     // initialize the spn problem
     this->acceleration->initialize(this->mc_db);
 
-    const auto &fmdb = this->mc_db->sublist("fission_matrix_db");
+    const auto &fmdb = this->mc_db->sublist("fission_matrix_db").sublist(
+        "acceleration");
     EXPECT_EQ("stratimikos", fmdb.template get<string>("solver_type"));
     EXPECT_EQ("ml", fmdb.template get<string>("Preconditioner"));
     EXPECT_EQ("Belos", fmdb.sublist(
@@ -333,9 +338,11 @@ TYPED_TEST(FM_AccelerationTest, solve)
 
     // set solver options
     this->mc_db->sublist(
-        "fission_matrix_db").set("solver_type", string("belos"));
+        "fission_matrix_db").sublist("acceleration").set(
+            "solver_type", string("belos"));
     this->mc_db->sublist(
-        "fission_matrix_db").set("tolerance", 1.0e-8);
+        "fission_matrix_db").sublist("acceleration").set(
+            "tolerance", 1.0e-8);
 
     // setup the spn problem
     this->builder.setup("mesh4x4.xml");

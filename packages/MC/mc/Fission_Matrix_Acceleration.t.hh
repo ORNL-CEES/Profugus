@@ -103,9 +103,11 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     typedef typename Solver_t::External_Source Source_t;
 
     REQUIRE(mc_db->isSublist("fission_matrix_db"));
+    REQUIRE(mc_db->sublist("fission_matrix_db").isSublist("acceleration"));
 
-    // get the fission matrix db
-    RCP_ParameterList fmdb = Teuchos::sublist(mc_db, "fission_matrix_db");
+    // get the fission matrix db->acceleration
+    RCP_ParameterList fmdb = Teuchos::sublist(
+        Teuchos::sublist(mc_db, "fission_matrix_db"), "acceleration");
 
     // set the damping (defaults to 1.0)
     d_beta = fmdb->get("damping", 1.0);

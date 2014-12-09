@@ -51,7 +51,8 @@ class Fission_Matrix_TallyTest : public TransporterTestBase
         mesh = std::make_shared<Mesh_Geometry_t>(r, r, r);
 
         // make fission matrix db
-        fis_db = Teuchos::sublist(db, "fission_matrix_db");
+        auto fis_db = Teuchos::sublist(db, "fission_matrix_db");
+        tally_db    = Teuchos::sublist(fis_db, "tally");
 
         db->set("num_cycles", 10);
     }
@@ -60,7 +61,7 @@ class Fission_Matrix_TallyTest : public TransporterTestBase
     // >>> DATA
 
     SP_Mesh_Geometry mesh;
-    RCP_Std_DB fis_db;
+    RCP_Std_DB fis_db, tally_db;
 };
 
 //---------------------------------------------------------------------------//
@@ -74,8 +75,8 @@ TEST_F(Fission_Matrix_TallyTest, construction)
     EXPECT_TRUE(static_cast<bool>(fm.get_pl_tally()));
     EXPECT_TRUE(static_cast<bool>(fm.get_src_tally()));
 
-    EXPECT_EQ(0, fis_db->get<int>("start_cycle"));
-    EXPECT_EQ(10, fis_db->get<int>("output_cycle"));
+    EXPECT_EQ(0, tally_db->get<int>("start_cycle"));
+    EXPECT_EQ(10, tally_db->get<int>("output_cycle"));
 }
 
 //---------------------------------------------------------------------------//
@@ -154,7 +155,7 @@ TEST_F(Fission_Matrix_TallyTest, transport)
 
 TEST_F(Fission_Matrix_TallyTest, end_cycle)
 {
-    fis_db->set("start_cycle", 2);
+    tally_db->set("start_cycle", 2);
     Tally fm(db, physics, mesh);
 
     // get the pathlength and source tallies from the compound tally
@@ -256,8 +257,8 @@ TEST_F(Fission_Matrix_TallyTest, output)
     std::ostringstream m;
     m << "out" << nodes;
 
-    fis_db->set("start_cycle", 1);
-    fis_db->set("output_cycle", 2);
+    tally_db->set("start_cycle", 1);
+    tally_db->set("output_cycle", 2);
     db->set("problem_name", m.str());
 
     Tally fm(db, physics, mesh);

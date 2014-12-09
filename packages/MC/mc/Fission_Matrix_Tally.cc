@@ -34,6 +34,7 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
     REQUIRE(!db.is_null());
     REQUIRE(db->isParameter("num_cycles"));
     REQUIRE(db->isSublist("fission_matrix_db"));
+    REQUIRE(db->sublist("fission_matrix_db").isSublist("tally"));
     REQUIRE(fm_mesh);
     REQUIRE(physics->get_geometry());
     REQUIRE(d_data);
@@ -51,8 +52,8 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
     d_data->d_denominator.resize(d_data->d_fm_mesh->num_cells());
     std::fill(d_data->d_denominator.begin(), d_data->d_denominator.end(), 0.0);
 
-    // get the fission matrix sublist
-    ParameterList_t &opt = db->sublist("fission_matrix_db");
+    // get the fission matrix tally sublist
+    ParameterList_t &opt = db->sublist("fission_matrix_db").sublist("tally");
 
     // get the number of cycles in the problem
     int num_cycles = db->get<int>("num_cycles");

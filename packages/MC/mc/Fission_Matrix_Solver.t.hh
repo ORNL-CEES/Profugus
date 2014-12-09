@@ -243,7 +243,7 @@ void Fission_Matrix_Solver<T>::solver_db(RCP_ParameterList fm_db)
 
     // set the defaults for the linear solver
     std::ostringstream m;
-    m << "<ParameterList name='fission_matrix_db'>\n"
+    m << "<ParameterList name='acceleration'>\n"
       << "<Parameter name='Preconditioner' type='string' value='ml'/>\n"
       << "<Parameter name='solver_type' type='string' value='stratimikos'/>\n"
       << "<ParameterList name='Stratimikos'>\n"
