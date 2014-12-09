@@ -16,6 +16,7 @@
 #include "Teuchos_RCP.hpp"
 #include "AnasaziMultiVecTraits.hpp"
 #include "Teuchos_ParameterList.hpp"
+#include "Teuchos_ArrayView.hpp"
 
 #include "solvers/LinAlgTypedefs.hh"
 #include "solvers/ShiftedOperator.hh"
@@ -57,6 +58,7 @@ class Fission_Matrix_Solver
     typedef Teuchos::RCP<ParameterList_t>        RCP_ParameterList;
     typedef typename Linear_System_t::RCP_Mesh   RCP_Mesh;
     typedef typename Linear_System_t::RCP_Mat_DB RCP_Mat_DB;
+    typedef Teuchos::ArrayView<const double>     Const_Array_View;
     //@}
 
   private:
@@ -98,6 +100,12 @@ class Fission_Matrix_Solver
 
     //! Get the correction vector.
     RCP_Const_Vector get_g() const { return d_g; }
+
+    //! Get the current fission density.
+    Const_Array_View current_f() const
+    {
+        return Teuchos::arrayViewFromVector(d_q_field);
+    }
 
   private:
     // >>> IMPLEMENTATION

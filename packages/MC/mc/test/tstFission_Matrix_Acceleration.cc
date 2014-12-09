@@ -21,11 +21,11 @@
 
 #include <SPn/config.h>
 
-#include "rng/RNG_Control.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "spn/Moment_Coefficients.hh"
 #include "spn/MatrixTraits.hh"
 #include "spn/VectorTraits.hh"
+#include "../Global_RNG.hh"
 #include "../Fission_Matrix_Acceleration.hh"
 
 #include "gtest/utils_gtest.hh"
@@ -56,6 +56,9 @@ class FM_AccelerationTest : public ::testing::Test
   protected:
     void SetUp()
     {
+        node  = profugus::node();
+        nodes = profugus::nodes();
+
         // make the acceleration
         implementation =
             std::make_shared<profugus::Fission_Matrix_Acceleration_Impl<T>>();
@@ -66,6 +69,8 @@ class FM_AccelerationTest : public ::testing::Test
                    Acceleration::ParameterList("fission_matrix"));
 
         seed = 12134;
+        profugus::Global_RNG::RNG_Control_t rcon(seed + node);
+        profugus::Global_RNG::d_rng = rcon.rng();
     }
 
     void get_adjoint(Vec_Dbl &phi)
@@ -108,8 +113,7 @@ class FM_AccelerationTest : public ::testing::Test
 
     void build_fs(bool begin)
     {
-        profugus::RNG_Control rcon(seed);
-        auto rng = rcon.rng();
+        auto rng = profugus::Global_RNG::d_rng;
 
         fs.clear();
 
@@ -208,6 +212,8 @@ class FM_AccelerationTest : public ::testing::Test
     int N, Ng, Nc;
 
     int seed;
+
+    int node, nodes;
 };
 
 //---------------------------------------------------------------------------//

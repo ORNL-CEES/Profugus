@@ -18,6 +18,7 @@
 #include "spn/Linear_System_FV.hh"
 #include "spn/Moment_Coefficients.hh"
 #include "spn/Eigenvalue_Solver.hh"
+#include "Global_RNG.hh"
 #include "Fission_Matrix_Acceleration.hh"
 
 namespace profugus
@@ -182,6 +183,7 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     Fission_Site_Container &f)
 {
     REQUIRE(!d_fm_solver.is_null());
+    REQUIRE(Global_RNG::d_rng.assigned());
 
     // solve the acceleration equation
     d_fm_solver->solve(f);
@@ -190,6 +192,79 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
 
     // convert the correction vector from SPN space to fission sites
     convert_g(d_fm_solver->get_g());
+
+    // get the fission density at l+1/2
+    auto fis_den = d_fm_solver->current_f();
+    CHECK(fis_den.size() == b_mesh->num_cells());
+
+    // build the multiplicative correction
+    for (int cell = 0; cell < b_mesh->num_cells(); ++cell)
+    {
+        CHECK(fis_den[cell] >= 0.0);
+
+        // only make multiplicative correction in cells with fission density
+
+        // NOTE: because the correction is multiplicative, there could be no
+        // fission sites in a cell due to sampling, but a nonzero correction,
+        // there should only be a zero correction in regions with no
+        // fissionable material, of course there will be no MC fission sites
+        // there.  For now, we do not correct in cells that have no MC fission
+        // sites, even if there is a correction [we will look at this later]
+        if (fis_den[cell] > 0.0)
+        {
+            // d_nu is currently in neutrons/cc so we don't need to multiply
+            // the fission density by volume->the volumes cancel out
+            d_nu[cell] = 1.0 + d_beta * d_nu[cell] / fis_den[cell];
+        }
+    }
+
+    // make a new fission site container
+    Fission_Site_Container nf;
+    CHECK(nf.empty());
+
+    // dimension vector for each cell
+    Mesh::Dim_Vector ijk;
+
+    // get the global RNG (by reference)
+    auto rng = Global_RNG::d_rng;
+
+    // correct the fission sites
+    while (!f.empty())
+    {
+        // get the fission site of the back
+        const auto &site = f.back();
+        CHECK(b_mesh->find_cell(site.r, ijk));
+
+        // find the cell containing the site
+        b_mesh->find_cell(site.r, ijk);
+        int cell = b_mesh->convert(ijk[0], ijk[1], ijk[2]);
+        CHECK(cell < d_nu.size());
+        CHECK(d_nu[cell] >= 0.0);
+
+        // sample to determine the number of sites at this location
+        int n = d_nu[cell];
+        CHECK(static_cast<double>(n) + 1.0 - d_nu[cell] >= 0.0 &&
+              static_cast<double>(n) + 1.0 - d_nu[cell] <= 1.0);
+
+        // with probability n+1-nu there will be n sites; with propability
+        // nu-n there will be n+1 sites
+        if (rng.ran() < d_nu[cell] - static_cast<double>(n))
+        {
+            ++n;
+        }
+
+        // add n sites to the new fission bank
+        for (int m = 0; m < n; ++m)
+        {
+            nf.push_back(site);
+        }
+
+        // pop the fission site from the container
+        f.pop_back();
+    }
+
+    // swap the new and old containers
+    std::swap(nf, f);
 }
 
 //---------------------------------------------------------------------------//
@@ -232,9 +307,6 @@ void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
         const auto &nu_sigf = xs.vector(b_mat->matid(cell), XS::NU_SIG_F);
         CHECK(nu_sigf.length() == Ng);
 
-        // volume of this cell
-        double V = b_mesh->volume(cell);
-
         // loop over groups
         for (int g = 0; g < Ng; ++g)
         {
@@ -249,7 +321,7 @@ void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
 
             // do f^T * phi_0
             d_nu[cell] +=  Moment_Coefficients::u_to_phi(
-                u_m[0], u_m[1], u_m[2], u_m[3]) * nu_sigf[g] * V;
+                u_m[0], u_m[1], u_m[2], u_m[3]) * nu_sigf[g];
         }
     }
 }
