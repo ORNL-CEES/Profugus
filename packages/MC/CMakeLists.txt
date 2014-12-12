@@ -109,6 +109,7 @@ SET(MC_SOURCES
   mc/Sampler.cc
   mc/Solver.cc
   mc/Source.cc
+  mc/Source_Diagnostic_Tally.cc
   mc/Source_Transporter.cc
   mc/Tallier.cc
   mc/Tally.cc
