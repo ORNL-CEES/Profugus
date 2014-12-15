@@ -18,6 +18,7 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_ArrayView.hpp"
 
+#include "geometry/Cartesian_Mesh.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "solvers/ShiftedOperator.hh"
 #include "solvers/LinearSolver.hh"
@@ -44,28 +45,31 @@ class Fission_Matrix_Solver
   public:
     //@{
     //! Typedefs.
-    typedef ShiftedOperator<T>                   ShiftedOperator_t;
-    typedef Teuchos::RCP<ShiftedOperator_t>      RCP_ShiftedOperator;
-    typedef Teuchos::RCP<LinearSolver<T>>        RCP_LinearSolver;
-    typedef Physics::Fission_Site                Fission_Site;
-    typedef Physics::Fission_Site_Container      Fission_Site_Container;
-    typedef profugus::Linear_System<T>           Linear_System_t;
-    typedef Teuchos::RCP<Linear_System_t>        RCP_Linear_System;
-    typedef typename Linear_System_t::Vector_t   Vector_t;
-    typedef typename Linear_System_t::RCP_Vector RCP_Vector;
-    typedef Teuchos::RCP<const Vector_t>         RCP_Const_Vector;
-    typedef Teuchos::ParameterList               ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t>        RCP_ParameterList;
-    typedef typename Linear_System_t::RCP_Mesh   RCP_Mesh;
-    typedef typename Linear_System_t::RCP_Mat_DB RCP_Mat_DB;
-    typedef Teuchos::ArrayView<const double>     Const_Array_View;
+    typedef ShiftedOperator<T>                    ShiftedOperator_t;
+    typedef Teuchos::RCP<ShiftedOperator_t>       RCP_ShiftedOperator;
+    typedef Teuchos::RCP<LinearSolver<T>>         RCP_LinearSolver;
+    typedef Physics::Fission_Site                 Fission_Site;
+    typedef Physics::Fission_Site_Container       Fission_Site_Container;
+    typedef profugus::Linear_System<T>            Linear_System_t;
+    typedef Teuchos::RCP<Linear_System_t>         RCP_Linear_System;
+    typedef typename Linear_System_t::Vector_t    Vector_t;
+    typedef typename Linear_System_t::RCP_Vector  RCP_Vector;
+    typedef Teuchos::RCP<const Vector_t>          RCP_Const_Vector;
+    typedef Teuchos::ParameterList                ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>         RCP_ParameterList;
+    typedef typename Linear_System_t::RCP_Mesh    RCP_Mesh;
+    typedef typename Linear_System_t::RCP_Mat_DB  RCP_Mat_DB;
+    typedef typename Linear_System_t::RCP_Indexer RCP_Indexer;
+    typedef Teuchos::ArrayView<const double>      Const_Array_View;
+    typedef std::shared_ptr<Cartesian_Mesh>       SP_Cart_Mesh;
     //@}
 
   private:
     // >>> DATA
 
     // SPN mesh.
-    RCP_Mesh d_mesh;
+    RCP_Mesh    d_mesh;
+    RCP_Indexer d_indexer;
 
     // SPN materials.
     RCP_Mat_DB d_mat;
@@ -79,13 +83,19 @@ class Fission_Matrix_Solver
     // Linear solver for the acceleration equations.
     RCP_LinearSolver d_solver;
 
-    // Correction vector.
+    // Global SPN mesh (needed to map partitioned SPN mesh back to domain
+    // replicated fission site locations).
+    SP_Cart_Mesh d_global_mesh;
+
+    // Correction vector (dimensioned on the partitioned mesh)
     RCP_Vector d_g;
 
   public:
     //! Constructor.
-    Fission_Matrix_Solver(RCP_ParameterList fm_db, RCP_Mesh mesh, RCP_Mat_DB mat,
-                          RCP_Linear_System system, double keff);
+    Fission_Matrix_Solver(RCP_ParameterList fm_db, RCP_Mesh mesh,
+                          RCP_Indexer indexer, RCP_Mat_DB mat,
+                          RCP_Linear_System system, SP_Cart_Mesh global_mesh,
+                          double keff);
 
     // Set the eigenvectors of the SPN system.
     void set_eigenvectors(RCP_Vector forward, RCP_Vector adjoint);
@@ -127,6 +137,9 @@ class Fission_Matrix_Solver
     // Source shapes (chi), and field.
     Isotropic_Source::Source_Shapes d_q_shapes;
     Isotropic_Source::Source_Field  d_q_field;
+
+    // Global fission source.
+    Isotropic_Source::Source_Field d_global_q_field;
 
     // Forward and adjoint eigenvectors.
     RCP_Vector d_forward, d_adjoint;

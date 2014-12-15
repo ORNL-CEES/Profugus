@@ -54,6 +54,8 @@ class FM_AccelerationTest : public ::testing::Test
     typedef Acceleration::Fission_Site_Container          Fission_Site_Container;
     typedef profugus::VectorTraits<T>                     Traits;
     typedef profugus::MatrixTraits<T>                     MTraits;
+    typedef typename Implementation::RCP_Indexer          RCP_Indexer;
+    typedef typename Implementation::RCP_Global_Data      RCP_Global_Data;
 
   protected:
     void SetUp()
@@ -126,7 +128,6 @@ class FM_AccelerationTest : public ::testing::Test
         {
             // we need 13 total sites to match the reference from the
             // Acceleration Tests notebook
-            fs.resize(13);
 
             // 2 in cell 5
             // 4 in cell 6
@@ -144,18 +145,58 @@ class FM_AccelerationTest : public ::testing::Test
                              {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.}, {2., 3.},
                              {2., 3.}, {2., 3.}};
 
-            for (int n = 0; n < 13; ++n)
+            int c = 0;
+            int b = 0;
+            int e = 13;
+
+            if (nodes == 2)
             {
-                fs[n].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
-                fs[n].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
-                fs[n].r[2] = z;
+                if (node == 0)
+                {
+                    e = 6;
+                }
+                if (node == 1)
+                {
+                    b = 6;
+                }
+            }
+
+            if (nodes == 4)
+            {
+                if (node == 0)
+                {
+                    e = 5;
+                }
+                if (node == 1)
+                {
+                    b = 5;
+                    e = 8;
+                }
+                if (node == 2)
+                {
+                    b = 8;
+                    e = 10;
+                }
+                if (node == 3)
+                {
+                    b = 10;
+                }
+            }
+
+            fs.resize(e-b);
+
+            for (int n = b; n < e; ++n)
+            {
+                fs[c].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
+                fs[c].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
+                fs[c].r[2] = z;
+                ++c;
             }
         }
         else
         {
             // we need 23 total sites to match the reference from the
             // Acceleration Tests notebook
-            fs.resize(23);
 
             // 6 in cell 5
             // 4 in cell 6
@@ -185,11 +226,53 @@ class FM_AccelerationTest : public ::testing::Test
                              {2., 3.}, {2., 3.}, {2., 3.}  // cell 10
             };
 
-            for (int n = 0; n < 23; ++n)
+            int c = 0;
+            int b = 0;
+            int e = 23;
+
+            if (nodes == 2)
             {
-                fs[n].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
-                fs[n].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
-                fs[n].r[2] = z;
+                if (node == 0)
+                {
+                    e = 14;
+                }
+                if (node == 1)
+                {
+                    b = 14;
+                }
+            }
+
+            if (nodes == 4)
+            {
+                if (node == 0)
+                {
+                    e = 9;
+                }
+                if (node == 1)
+                {
+                    b = 9;
+                    e = 15;
+                }
+                if (node == 2)
+                {
+                    b = 15;
+                    e = 19;
+                }
+                if (node == 3)
+                {
+                    b = 19;
+                }
+            }
+
+
+            fs.resize(e-b);
+
+            for (int n = b; n < e; ++n)
+            {
+                fs[c].r[0] = rng.ran() * (x[n][1] - x[n][0]) + x[n][0];
+                fs[c].r[1] = rng.ran() * (y[n][1] - y[n][0]) + y[n][0];
+                fs[c].r[2] = z;
+                ++c;
             }
         }
     }
@@ -275,19 +358,53 @@ TYPED_TEST(FM_AccelerationTest, initialization)
     EXPECT_EQ("Belos", fmdb.sublist(
                   "Stratimikos").template get<string>("Linear Solver Type"));
 
-    // check the reference
+    // global cells
+    int ref_global = this->acceleration->global_mesh().num_cells();
+
+    // check the reference (this test function flips the indices)
     typename TestFixture::Vec_Dbl adjoint;
     this->get_adjoint(adjoint);
+
+    // check global cells
+    int num_global = this->Nc;
+    profugus::global_sum(&num_global, 1);
+    EXPECT_EQ(ref_global, num_global);
+    EXPECT_EQ(this->Nc * this->Ng, adjoint.size());
+
+    const auto &mesh = this->acceleration->mesh();
+    auto indexer     = this->builder.indexer();
+
+    // check the reference
+    typename TestFixture::Vec_Dbl gadjoint(ref_global * this->Ng, 0.0);
+    for (int k = 0; k < mesh.num_cells_dim(2); ++k)
+    {
+        for (int j = 0; j < mesh.num_cells_dim(1); ++j)
+        {
+            for (int i = 0; i < mesh.num_cells_dim(0); ++i)
+            {
+                int global = indexer->l2g(i, j, k);
+                int local  = indexer->l2l(i, j, k);
+
+                for (int g = 0; g < this->Ng; ++g)
+                {
+                    gadjoint[global + ref_global * g] =
+                        adjoint[local + this->Nc * g];
+                }
+            }
+        }
+    }
+
+    profugus::global_sum(gadjoint.data(), gadjoint.size());
 
     typename TestFixture::Vec_Dbl inf_med_vec(this->Ng, 0.0);
     double norm = 0.0;
     for (int g = 0; g < this->Ng; ++g)
     {
-        for (int cell = 0; cell < this->Nc; ++cell)
+        for (int cell = 0; cell < ref_global; ++cell)
         {
-            inf_med_vec[g] += adjoint[cell + this->Nc * g];
+            inf_med_vec[g] += gadjoint[cell + ref_global * g];
         }
-        inf_med_vec[g] /= static_cast<double>(this->Nc);
+        inf_med_vec[g] /= static_cast<double>(ref_global);
         norm           += inf_med_vec[g] * inf_med_vec[g];
     }
     norm = 1.0 / std::sqrt(norm);
@@ -310,6 +427,11 @@ TYPED_TEST(FM_AccelerationTest, initialization)
 
 TYPED_TEST(FM_AccelerationTest, defaults)
 {
+    if (this->nodes != 1 && this->nodes != 2 && this->nodes != 4)
+    {
+        SKIP_TEST("Test only runs on 1, 2, 4 processors.");
+    }
+
     // setup the spn problem
     this->builder.setup("mesh4x4.xml");
 
@@ -333,6 +455,11 @@ TYPED_TEST(FM_AccelerationTest, defaults)
 
 TYPED_TEST(FM_AccelerationTest, solve)
 {
+    if (this->nodes != 1 && this->nodes != 2 && this->nodes != 4)
+    {
+        SKIP_TEST("Test only runs on 1, 2, 4 processors.");
+    }
+
     using std::string;
     typedef typename TestFixture::Traits Traits;
 
@@ -350,11 +477,43 @@ TYPED_TEST(FM_AccelerationTest, solve)
     // accelerate the problem
     this->accelerate();
 
-    EXPECT_EQ(16, this->acceleration->mesh().num_cells());
-    this->print_matrices();
+    int Nc = this->acceleration->mesh().num_cells();
+    if (this->nodes == 1)
+    {
+        this->print_matrices();
+    }
 
     // get the correction vector
-    auto g = this->implementation->solver().get_g();
+    auto g = Traits::get_data(this->implementation->solver().get_g());
+    EXPECT_EQ(Nc*6, g.size());
+
+    auto mesh    = this->builder.mesh();
+    auto indexer = this->builder.indexer();
+
+    // make a global vector
+    typename TestFixture::Vec_Dbl gg(96, 0.0);
+    for (int k = 0; k < mesh->num_cells_dim(2); ++k)
+    {
+        for (int j = 0; j < mesh->num_cells_dim(1); ++j)
+        {
+            for (int i = 0; i < mesh->num_cells_dim(0); ++i)
+            {
+                int global = indexer->l2g(i, j, k);
+                int local  = indexer->l2l(i, j, k);
+
+                for (int m = 0; m < 2; ++m)
+                {
+                    for (int n = 0; n < 3; ++n)
+                    {
+                        gg[n + 3 * (m + 2 * (global))] =
+                            g[n + 3 * (m + 2 * (local))];
+                    }
+                }
+            }
+        }
+    }
+
+    profugus::global_sum(gg.data(), gg.size());
 
     // check with reference from "Acceleration Tests" notebook
     {
@@ -393,8 +552,7 @@ TYPED_TEST(FM_AccelerationTest, solve)
             5.09430605e-03,   2.26557731e-05,   7.22391049e-07
         };
 
-        auto v = Traits::get_data(g);
-        EXPECT_VEC_SOFTEQ(ref, v, 1.0e-2);
+        EXPECT_VEC_SOFTEQ(ref, gg, 1.0e-2);
     }
 
     // check the multiplicative correction
@@ -410,18 +568,31 @@ TYPED_TEST(FM_AccelerationTest, solve)
     }
 
     // check the location of the sites
-    auto mesh = this->builder.mesh();
+    const auto &gmesh = this->acceleration->global_mesh();
     profugus::Mesh::Dim_Vector ijk;
 
-    EXPECT_EQ(22, this->fs.size());
+    int size = this->fs.size();
+    profugus::global_sum(&size, 1);
+
+    if (this->nodes == 1)
+    {
+        EXPECT_EQ(22, size);
+    }
+    else
+    {
+        EXPECT_EQ(25, size);
+    }
+
     std::vector<int> bins(16, 0);
     for (const auto &s : this->fs)
     {
-        mesh->find_cell(s.r, ijk);
-        int cell = mesh->convert(ijk[0], ijk[1], ijk[2]);
+        gmesh.find(s.r, ijk);
+        int cell = gmesh.index(ijk[0], ijk[1], ijk[2]);
 
         ++bins[cell];
     }
+
+    profugus::global_sum(bins.data(), bins.size());
 
     EXPECT_GE(bins[5],  6);
     EXPECT_LE(bins[6],  4);

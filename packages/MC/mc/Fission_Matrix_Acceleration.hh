@@ -20,6 +20,8 @@
 
 #include "xs/Mat_DB.hh"
 #include "mesh/Mesh.hh"
+#include "mesh/Global_Mesh_Data.hh"
+#include "geometry/Cartesian_Mesh.hh"
 #include "spn/Linear_System.hh"
 #include "spn/VectorTraits.hh"
 #include "spn_driver/Problem_Builder.hh"
@@ -54,6 +56,7 @@ class Fission_Matrix_Acceleration
     typedef Problem_Builder_t::RCP_Mat_DB        RCP_Mat_DB;
     typedef Physics::Fission_Site                Fission_Site;
     typedef Physics::Fission_Site_Container      Fission_Site_Container;
+    typedef std::shared_ptr<Cartesian_Mesh>      SP_Cart_Mesh;
 
   protected:
     // >>> DATA
@@ -65,6 +68,10 @@ class Fission_Matrix_Acceleration
     RCP_Mesh        b_mesh;
     RCP_Indexer     b_indexer;
     RCP_Global_Data b_gdata;
+
+    // Global SPN mesh (needed to map partitioned SPN mesh back to domain
+    // replicated fission site locations).
+    SP_Cart_Mesh b_global_mesh;
 
     // Material database.
     RCP_Mat_DB b_mat;
@@ -92,6 +99,9 @@ class Fission_Matrix_Acceleration
 
     //! Get SPN mesh.
     const Mesh& mesh() const { return *b_mesh; }
+
+    //! Get global mesh.
+    const Cartesian_Mesh& global_mesh() const { return *b_global_mesh; }
 
     //! Get SPN materials.
     const Mat_DB &mat() const { return *b_mat; }

@@ -21,6 +21,8 @@
 #include "AnasaziOperatorTraits.hpp"
 
 #include "harness/DBC.hh"
+#include "comm/global.hh"
+#include "utils/Definitions.hh"
 #include "solvers/LinearSolverBuilder.hh"
 #include "solvers/PreconditionerBuilder.hh"
 #include "Fission_Matrix_Solver.hh"
@@ -37,17 +39,24 @@ namespace profugus
 template<class T>
 Fission_Matrix_Solver<T>::Fission_Matrix_Solver(RCP_ParameterList fm_db,
                                                 RCP_Mesh          mesh,
+                                                RCP_Indexer       indexer,
                                                 RCP_Mat_DB        mat,
                                                 RCP_Linear_System system,
+                                                SP_Cart_Mesh      global_mesh,
                                                 double            keff)
     : d_mesh(mesh)
+    , d_indexer(indexer)
     , d_mat(mat)
     , d_system(system)
+    , d_global_mesh(global_mesh)
 {
     REQUIRE(!d_mesh.is_null());
+    REQUIRE(!d_indexer.is_null());
     REQUIRE(!d_mat.is_null());
     REQUIRE(!d_system.is_null());
+    REQUIRE(d_global_mesh);
     REQUIRE(keff > 0.0);
+    REQUIRE(d_global_mesh->num_cells() >= d_mesh->num_cells());
 
     // setup linear solver settings and defaults
     solver_db(fm_db);
@@ -63,6 +72,10 @@ Fission_Matrix_Solver<T>::Fission_Matrix_Solver(RCP_ParameterList fm_db,
     // allocate space for the external source shapes, ids, and fields
     d_q_field.resize(d_mesh->num_cells());
     d_q_shapes.resize(d_mesh->num_cells());
+
+    // make a global q field for calculating the fission density on each
+    // domain
+    d_global_q_field.resize(d_global_mesh->num_cells());
 
     // number of groups
     int num_groups = d_mat->xs().num_groups();
@@ -269,31 +282,57 @@ template<class T>
 auto Fission_Matrix_Solver<T>::build_Bphi(
     const Fission_Site_Container &f) -> RCP_Vector
 {
-    REQUIRE(d_q_field.size() == d_mesh->num_cells());
+    using def::I; using def::J; using def::K;
 
-    // initialize the source field
-    std::fill(d_q_field.begin(), d_q_field.end(), 0.0);
+    REQUIRE(d_q_field.size() == d_mesh->num_cells());
+    REQUIRE(d_global_q_field.size() == d_global_mesh->num_cells());
+
+    // initialize the source fields
+    std::fill(d_global_q_field.begin(), d_global_q_field.end(), 0.0);
 
     // dimension vector for each cell
     Mesh::Dim_Vector ijk;
 
-    // loop through the fission sites and add them up in each mesh cell
+    // loop through the global fission sites and add them up in each global
+    // mesh cell
     for (const auto &site : f)
     {
-        CHECK(d_mesh->find_cell(site.r, ijk));
+        CHECK(d_global_mesh->find(site.r, ijk));
 
         // find the cell containing the site
-        d_mesh->find_cell(site.r, ijk);
-        CHECK(d_mesh->convert(ijk[0], ijk[1], ijk[2]) < d_q_field.size());
+        d_global_mesh->find(site.r, ijk);
+        CHECK(d_global_mesh->index(ijk[0], ijk[1], ijk[2]) <
+              d_global_q_field.size());
 
-        // add the site to the field
-        ++d_q_field[d_mesh->convert(ijk[0], ijk[1], ijk[2])];
+        // add the site to the global field
+        ++d_global_q_field[d_global_mesh->index(ijk[0], ijk[1], ijk[2])];
     }
 
-    // normalize by volume
-    for (int cell = 0; cell < d_mesh->num_cells(); ++cell)
+    // reduce the global field
+    profugus::global_sum(d_global_q_field.data(), d_global_mesh->num_cells());
+
+    // map the global field to the local field and normalize by volume
+    for (int k = 0; k < d_mesh->num_cells_dim(K); ++k)
     {
-        d_q_field[cell] /= d_mesh->volume(cell);
+        for (int j = 0; j < d_mesh->num_cells_dim(J); ++j)
+        {
+            for (int i = 0; i < d_mesh->num_cells_dim(I); ++i)
+            {
+                // get the global index for this cell
+                int global = d_indexer->l2g(i, j, k);
+                int local  = d_indexer->l2l(i, j, k);
+                CHECK(local == d_mesh->convert(i, j, k));
+                CHECK(global < d_global_q_field.size());
+
+                // get the volume
+                double vol = d_mesh->volume(local);
+                CHECK(vol == d_global_mesh->volume(global));
+                CHECK(vol > 0.0);
+
+                // make the local fission source density
+                d_q_field[local] = d_global_q_field[global] / vol;
+            }
+        }
     }
 
     // setup the source

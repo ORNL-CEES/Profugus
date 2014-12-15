@@ -13,6 +13,7 @@
 
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
+#include "comm/global.hh"
 #include "spn/Dimensions.hh"
 #include "spn/SpnSolverBuilder.hh"
 #include "spn/Linear_System_FV.hh"
@@ -55,6 +56,12 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     b_indexer = builder.indexer();
     b_gdata   = builder.global_data();
 
+    // build a global SPN mesh (for mapping fission sites to partitioned SPN
+    // fields)
+    b_global_mesh = std::make_shared<Cartesian_Mesh>(
+        b_gdata->edges(0), b_gdata->edges(1), b_gdata->edges(2));
+    CHECK(b_global_mesh->num_cells() == b_gdata->num_cells());
+
     // get the material database from the problem builder
     b_mat = builder.mat_db();
 
@@ -74,7 +81,7 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
     d_system->build_fission_matrix();
 
     // build the weight corrections in the FM mesh
-    d_nu.resize(b_mesh->num_cells());
+    d_nu.resize(b_global_mesh->num_cells());
 
     ENSURE(!b_mesh.is_null());
     ENSURE(!b_indexer.is_null());
@@ -154,7 +161,8 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
 
     // build and set the fission matrix solver
     d_fm_solver = Teuchos::rcp(
-        new Fission_Matrix_Solver<T>(fmdb, b_mesh, b_mat, d_system, d_keff));
+        new Fission_Matrix_Solver<T>(fmdb, b_mesh, b_indexer,  b_mat, d_system,
+                                     b_global_mesh, d_keff));
     d_fm_solver->set_eigenvectors(d_forward, d_adjoint);
 }
 
@@ -186,6 +194,10 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
 {
     REQUIRE(!d_fm_solver.is_null());
     REQUIRE(Global_RNG::d_rng.assigned());
+    REQUIRE(d_nu.size() == b_global_mesh->num_cells());
+
+    // initialize d_nu multiplication
+    std::fill(d_nu.begin(), d_nu.end(), 0.0);
 
     // solve the acceleration equation
     d_fm_solver->solve(f);
@@ -195,30 +207,53 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     // convert the correction vector from SPN space to fission sites
     convert_g(d_fm_solver->get_g());
 
-    // get the fission density at l+1/2
+    // get the local fission density at l+1/2
     auto fis_den = d_fm_solver->current_f();
     CHECK(fis_den.size() == b_mesh->num_cells());
 
+    // number of local cells
+    int Nc[3] = {b_mesh->num_cells_dim(0),
+                 b_mesh->num_cells_dim(1),
+                 b_mesh->num_cells_dim(2)};
+    CHECK(Nc[0]*Nc[1]*Nc[2] == b_mesh->num_cells());
+
     // build the multiplicative correction
-    for (int cell = 0; cell < b_mesh->num_cells(); ++cell)
+    for (int k = 0; k < Nc[2]; ++k)
     {
-        CHECK(fis_den[cell] >= 0.0);
-
-        // only make multiplicative correction in cells with fission density
-
-        // NOTE: because the correction is multiplicative, there could be no
-        // fission sites in a cell due to sampling, but a nonzero correction,
-        // there should only be a zero correction in regions with no
-        // fissionable material, of course there will be no MC fission sites
-        // there.  For now, we do not correct in cells that have no MC fission
-        // sites, even if there is a correction [we will look at this later]
-        if (fis_den[cell] > 0.0)
+        for (int j = 0; j < Nc[1]; ++j)
         {
-            // d_nu is currently in neutrons/cc so we don't need to multiply
-            // the fission density by volume->the volumes cancel out
-            d_nu[cell] = 1.0 + d_beta * d_nu[cell] / fis_den[cell];
+            for (int i = 0; i < Nc[0]; ++i)
+            {
+                // get the local and global cell indices
+                int global = b_indexer->l2g(i, j, k);
+                int local  = b_indexer->l2l(i, j, k);
+                CHECK(global < d_nu.size());
+                CHECK(local == b_mesh->convert(i, j, k));
+                CHECK(fis_den[local] >= 0.0);
+
+                // only make multiplicative correction in cells with fission
+                // density
+
+                // NOTE: because the correction is multiplicative, there could
+                // be no fission sites in a cell due to sampling, but a
+                // nonzero correction, there should only be a zero correction
+                // in regions with no fissionable material, of course there
+                // will be no MC fission sites there.  For now, we do not
+                // correct in cells that have no MC fission sites, even if
+                // there is a correction [we will look at this later]
+                if (fis_den[local] > 0.0)
+                {
+                    // d_nu is currently in neutrons/cc so we don't need to
+                    // multiply the fission density by volume->the volumes
+                    // cancel out
+                    d_nu[global] = 1.0 + d_beta * d_nu[global] / fis_den[local];
+                }
+            }
         }
     }
+
+    // reduce d_nu so that every domain has the correction
+    profugus::global_sum(d_nu.data(), d_nu.size());
 
     // make a new fission site container
     Fission_Site_Container nf;
@@ -235,13 +270,14 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     {
         // get the fission site of the back
         const auto &site = f.back();
-        CHECK(b_mesh->find_cell(site.r, ijk));
+        CHECK(b_global_mesh->find(site.r, ijk));
 
         // find the cell containing the site
-        b_mesh->find_cell(site.r, ijk);
-        int cell = b_mesh->convert(ijk[0], ijk[1], ijk[2]);
+        b_global_mesh->find(site.r, ijk);
+        int cell = b_global_mesh->index(ijk[0], ijk[1], ijk[2]);
         CHECK(cell < d_nu.size());
         CHECK(d_nu[cell] >= 0.0);
+        CHECK(cell == b_indexer->g2g(ijk[0], ijk[1], ijk[2]));
 
         // sample to determine the number of sites at this location
         int n = d_nu[cell];
@@ -281,7 +317,7 @@ void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
     REQUIRE(b_mesh->num_cells() * d_system->get_dims()->num_equations()
             * b_mat->xs().num_groups() <=
             VectorTraits<T>::local_length(gc));
-    REQUIRE(d_nu.size() == b_mesh->num_cells());
+    REQUIRE(d_nu.size() == b_global_mesh->num_cells());
 
     // SPN moments
     double u_m[4] = {0.0, 0.0, 0.0, 0.0};
@@ -296,34 +332,49 @@ void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
     int Ng = xs.num_groups();
 
     // number of local cells
-    int Nc = b_mesh->num_cells();
+    int Nc[3] = {b_mesh->num_cells_dim(0),
+                 b_mesh->num_cells_dim(1),
+                 b_mesh->num_cells_dim(2)};
+    CHECK(Nc[0]*Nc[1]*Nc[2] == b_mesh->num_cells());
 
-    // the state field is ordered group->cell whereas the u vector is
-    // ordered cell->moments->group
+    // the u vector is ordered cell->moments->group
     Teuchos::ArrayView<const double> gcv = VectorTraits<T>::get_data(gc);
 
     // loop over cells on this domain
-    for (int cell = 0; cell < Nc; ++cell)
+    for (int k = 0; k < Nc[2]; ++k)
     {
-        // get nu-sigma_f for this cell
-        const auto &nu_sigf = xs.vector(b_mat->matid(cell), XS::NU_SIG_F);
-        CHECK(nu_sigf.length() == Ng);
-
-        // loop over groups
-        for (int g = 0; g < Ng; ++g)
+        for (int j = 0; j < Nc[1]; ++j)
         {
-            // loop over moments
-            for (int n = 0; n < N; ++n)
+            for (int i = 0; i < Nc[0]; ++i)
             {
-                CHECK(d_system->index(g, n, cell) < gcv.size());
+                // get the local and global cell indices
+                int global = b_indexer->l2g(i, j, k);
+                int local  = b_indexer->l2l(i, j, k);
+                CHECK(global < d_nu.size());
+                CHECK(local == b_mesh->convert(i, j, k));
 
-                // get the moment from the solution vector
-                u_m[n] = gcv[d_system->index(g, n, cell)];
+                // get nu-sigma_f for this cell
+                const auto &nu_sigf = xs.vector(b_mat->matid(local),
+                                                XS::NU_SIG_F);
+                CHECK(nu_sigf.length() == Ng);
+
+                // loop over groups
+                for (int g = 0; g < Ng; ++g)
+                {
+                    // loop over moments
+                    for (int n = 0; n < N; ++n)
+                    {
+                        CHECK(d_system->index(g, n, local) < gcv.size());
+
+                        // get the moment from the solution vector
+                        u_m[n] = gcv[d_system->index(g, n, local)];
+                    }
+
+                    // do f^T * phi_0
+                    d_nu[global] +=  Moment_Coefficients::u_to_phi(
+                        u_m[0], u_m[1], u_m[2], u_m[3]) * nu_sigf[g];
+                }
             }
-
-            // do f^T * phi_0
-            d_nu[cell] +=  Moment_Coefficients::u_to_phi(
-                u_m[0], u_m[1], u_m[2], u_m[3]) * nu_sigf[g];
         }
     }
 }
