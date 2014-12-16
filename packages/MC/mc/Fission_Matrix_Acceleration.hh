@@ -18,6 +18,7 @@
 #include "Teuchos_ArrayView.hpp"
 #include "AnasaziMultiVecTraits.hpp"
 
+#include "utils/Serial_HDF5_Writer.hh"
 #include "xs/Mat_DB.hh"
 #include "mesh/Mesh.hh"
 #include "mesh/Global_Mesh_Data.hh"
@@ -105,6 +106,12 @@ class Fission_Matrix_Acceleration
 
     //! Get SPN materials.
     const Mat_DB &mat() const { return *b_mat; }
+
+    // >>> DIAGNOSTICS
+#ifdef USE_HDF5
+    //! Add diagnostics to HDF5 output.
+    virtual void diagnostics(Serial_HDF5_Writer &writer) const = 0;
+#endif
 };
 
 //===========================================================================//
@@ -203,6 +210,12 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
         return Teuchos::arrayViewFromVector(d_nu);
     }
 
+    // >>> DIAGNOSTICS
+#ifdef USE_HDF5
+    //! Add diagnostics to HDF5 output.
+    void diagnostics(Serial_HDF5_Writer &writer) const;
+#endif
+
   private:
     // >>> IMPLEMENTATION
 
@@ -213,6 +226,12 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
 
     // Convert g to fissions.
     void convert_g(RCP_Const_Vector g);
+
+    // L2 norm of correction.
+    std::vector<double> d_norms;
+
+    // Iteration record of solves.
+    std::vector<int> d_iterations;
 };
 
 } // end namespace profugus

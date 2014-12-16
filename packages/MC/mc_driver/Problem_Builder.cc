@@ -18,11 +18,13 @@
 #include "utils/Definitions.hh"
 #include "utils/String_Functions.hh"
 #include "xs/XS_Builder.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "geometry/Mesh_Geometry.hh"
 #include "mc/Box_Shape.hh"
 #include "mc/VR_Analog.hh"
 #include "mc/VR_Roulette.hh"
 #include "mc/Fission_Matrix_Tally.hh"
+#include "mc/Source_Diagnostic_Tally.hh"
 #include "Problem_Builder.hh"
 
 namespace mc
@@ -47,8 +49,6 @@ Problem_Builder::Problem_Builder()
  */
 void Problem_Builder::setup(const std::string &xml_file)
 {
-    REQUIRE(!d_spn_builder);
-
     // make the master parameterlist
     auto master = Teuchos::rcp(new ParameterList(""));
 
@@ -106,15 +106,15 @@ void Problem_Builder::setup(const std::string &xml_file)
     // build the variance reduction
     build_var_reduction();
 
-    // build the SPN problem for fission matrix acceleration
-    build_spn_problem();
-
     // build the external source (there won't be one for k-eigenvalue
     // problems)
     if (master->isSublist("SOURCE"))
     {
         build_source(master->sublist("SOURCE"));
     }
+
+    // build the SPN problem for fission matrix acceleration
+    build_spn_problem();
 
     // build the tallier
     build_tallies();
@@ -502,6 +502,7 @@ void Problem_Builder::build_tallies()
 {
     using profugus::Mesh_Geometry;
     using profugus::Fission_Matrix_Tally;
+    using profugus::Source_Diagnostic_Tally;
 
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
@@ -516,6 +517,9 @@ void Problem_Builder::build_tallies()
         // if this is a tally then add it
         if (fdb.isSublist("tally"))
         {
+            INSIST(!d_shape,
+                   "Cannot run fission matrix on fixed-source problems.");
+
             // get the database
             const ParameterList &tdb = fdb.sublist("tally");
 
@@ -544,6 +548,41 @@ void Problem_Builder::build_tallies()
         }
     }
 
+    // check for source tallies
+    if (d_db->isSublist("source_diagnostic_db"))
+    {
+        INSIST(!d_shape,
+               "Cannot run source diagnostic on fixed-source problems.");
+
+        // get the database
+        const ParameterList &sdb = d_db->sublist("source_diagnostic_db");
+
+        // validate that there is a source diagnostic mesh defined
+        VALIDATE(sdb.isParameter("x_bounds"),
+                 "Failed to define x-boundaries for source diagnostic mesh");
+        VALIDATE(sdb.isParameter("y_bounds"),
+                 "Failed to define y-boundaries for source diagnostic mesh");
+        VALIDATE(sdb.isParameter("z_bounds"),
+                 "Failed to define z-boundaries for source diagnostic mesh");
+
+        // get the fission matrix mesh boundaries
+        auto xb = sdb.get<OneDArray_dbl>("x_bounds").toVector();
+        auto yb = sdb.get<OneDArray_dbl>("y_bounds").toVector();
+        auto zb = sdb.get<OneDArray_dbl>("z_bounds").toVector();
+        Source_Diagnostic_Tally::SP_Mesh_Geometry geo(
+            std::make_shared<Mesh_Geometry>(xb, yb, zb));
+
+        // the default is to tally during inactive cycles
+
+        // build the source tally
+        auto src_tally(std::make_shared<Source_Diagnostic_Tally>(
+                           d_db, d_physics, geo, true));
+        CHECK(src_tally);
+
+        // add this to the tallier
+        d_tallier->add_source_tally(src_tally);
+    }
+
     ENSURE(d_tallier);
 }
 
@@ -553,6 +592,11 @@ void Problem_Builder::build_tallies()
  */
 void Problem_Builder::build_spn_problem()
 {
+    typedef profugus::EpetraTypes                          ET;
+    typedef profugus::TpetraTypes                          TT;
+    typedef profugus::Fission_Matrix_Acceleration_Impl<ET> FM_ET;
+    typedef profugus::Fission_Matrix_Acceleration_Impl<TT> FM_TT;
+
     // check for fission matrix acceleration
     if (d_db->isSublist("fission_matrix_db"))
     {
@@ -562,6 +606,9 @@ void Problem_Builder::build_spn_problem()
         // if this is an acceleration, then build the SPN problem builder
         if (fdb.isSublist("acceleration"))
         {
+            INSIST(!d_shape,
+                   "Cannot run fission matrix on fixed-source problems.");
+
             // get the database
             const ParameterList &adb = fdb.sublist("acceleration");
 
@@ -574,10 +621,51 @@ void Problem_Builder::build_spn_problem()
             auto spn_input = adb.get<std::string>("spn_problem");
 
             // make the SPN problem builder
-            d_spn_builder = std::make_shared<SPN_Builder>();
+            SPN_Builder spn_builder;
 
             // setup the SPN problem
-            d_spn_builder->setup(spn_input);
+            spn_builder.setup(spn_input);
+
+            // get the SPN problem database
+            auto spn_db = spn_builder.problem_db();
+
+            // get the linear algebra type
+            std::string type = spn_db->get("trilinos_implementation",
+                                           std::string("epetra"));
+
+            // build the fission matrix acceleration
+            if (type == "epetra")
+            {
+                d_fm_acceleration = std::make_shared<FM_ET>();
+            }
+            else if (type == "tpetra")
+            {
+                d_fm_acceleration = std::make_shared<FM_TT>();
+            }
+
+            // build the problem
+            d_fm_acceleration->build_problem(spn_builder);
+
+            // get the global mesh
+            const auto &mesh = d_fm_acceleration->global_mesh();
+
+            // make the bounds
+            OneDArray_dbl x(mesh.edges(0));
+            OneDArray_dbl y(mesh.edges(1));
+            OneDArray_dbl z(mesh.edges(2));
+
+            // make a source tally that defaults to the acceleration mesh if a
+            // source tally hasn't been defined
+            ParameterList &sdb = d_db->sublist("source_diagnostic_db");
+
+            // make a default parameterlist
+            ParameterList def;
+            def.set("x_bounds", x);
+            def.set("y_bounds", y);
+            def.set("z_bounds", z);
+
+            // add these to the source diagnosic tally
+            sdb.setParametersNotAlreadySet(def);
         }
     }
 }

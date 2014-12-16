@@ -123,12 +123,14 @@ void Manager::setup(const std::string &xml_file)
         // make the solver
         d_kcode_solver = std::make_shared<KCode_Solver_t>(d_db);
 
-        // set it
+        // set the solver
         d_kcode_solver->set(transporter, source);
+
+        // set hybrid acceleration
+        d_kcode_solver->set(builder.get_acceleration());
 
         // assign the base solver
         d_solver = d_kcode_solver;
-
     }
     else if (prob_type == "fixed")
     {
@@ -220,7 +222,7 @@ void Manager::output()
     m << d_problem_name << "_output.h5";
     string outfile = m.str();
 
-    // scalar outputn for kcode
+    // scalar output for kcode
     if (d_kcode_solver)
     {
         // get the kcode tally
@@ -240,7 +242,14 @@ void Manager::output()
                      static_cast<int>(keff->cycle_count()));
         writer.write(string("cycle_estimates"), keff->all_keff());
 
+        // do diagnostics on acceleration if it exists
+        if (d_kcode_solver->acceleration())
+        {
+            d_kcode_solver->acceleration()->diagnostics(writer);
+        }
+
         writer.end_group();
+
         writer.close();
     }
 

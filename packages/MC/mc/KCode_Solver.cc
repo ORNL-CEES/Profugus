@@ -90,6 +90,15 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
 }
 
 //---------------------------------------------------------------------------//
+/*!
+ * \brief Set the acceleration method.
+ */
+void KCode_Solver::set(SP_FM_Acceleration acceleration)
+{
+    d_acceleration = acceleration;
+}
+
+//---------------------------------------------------------------------------//
 // INHERITED INTERFACE
 //---------------------------------------------------------------------------//
 /*!
@@ -319,6 +328,12 @@ void KCode_Solver::initialize()
     // b_tallier is always the one actively getting called by transporter
     swap(*d_inactive_tallier, *b_tallier);
 
+    // initialize the acceleration
+    if (d_acceleration)
+    {
+        d_acceleration->initialize(d_db);
+    }
+
     d_build_phase = INACTIVE_SOLVE;
 
     ENSURE(b_tallier->num_pathlength_tallies() >= 1);
@@ -354,6 +369,12 @@ void KCode_Solver::iterate()
     // initialize keff tally to the beginning of the cycle
     b_tallier->begin_cycle();
 
+    // inititalize the acceleration at the beginning of the cycle
+    if (d_acceleration)
+    {
+        d_acceleration->start_cycle(d_keff_tally->latest(), *d_fission_sites);
+    }
+
     // solve the fixed source problem using the transporter
     d_transporter->solve();
 
@@ -362,6 +383,12 @@ void KCode_Solver::iterate()
     // histories. Each processor adjusts the particle weights so that the
     // total weight emitted, summed over all processors, is d_Np.
     b_tallier->end_cycle(d_Np);
+
+    // process acceleration at the end of the cycle
+    if (d_acceleration)
+    {
+        d_acceleration->end_cycle(*d_fission_sites);
+    }
 
     // build a new source from the fission site distribution
     d_source->build_source(d_fission_sites);

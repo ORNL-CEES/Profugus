@@ -17,6 +17,7 @@
 #include "Source_Transporter.hh"
 #include "Keff_Tally.hh"
 #include "Fission_Source.hh"
+#include "Fission_Matrix_Acceleration.hh"
 
 namespace profugus
 {
@@ -61,11 +62,13 @@ class KCode_Solver : public Solver
     //@{
     //! Typedefs.
     typedef Source_Transporter                    Source_Transporter_t;
+    typedef Fission_Matrix_Acceleration           FM_Acceleration_t;
     typedef Source_Transporter_t::RCP_Std_DB      RCP_Std_DB;
     typedef std::shared_ptr<Source_Transporter_t> SP_Source_Transporter;
     typedef std::shared_ptr<Keff_Tally>           SP_Keff_Tally;
     typedef std::shared_ptr<Fission_Source>       SP_Fission_Source;
     typedef Fission_Source::SP_Fission_Sites      SP_Fission_Sites;
+    typedef std::shared_ptr<FM_Acceleration_t>    SP_FM_Acceleration;
 
   private:
     // >>> DATA
@@ -86,12 +89,18 @@ class KCode_Solver : public Solver
     // Inactive tallier
     SP_Tallier d_inactive_tallier;
 
+    // Acceleration.
+    SP_FM_Acceleration d_acceleration;
+
   public:
     // Constructor.
     KCode_Solver(RCP_Std_DB db);
 
     // Set the underlying fixed-source transporter and fission source.
     void set(SP_Source_Transporter transporter, SP_Fission_Source source);
+
+    // Set acceleration.
+    void set(SP_FM_Acceleration acceleration);
 
     // >>> ACCESSORS
 
@@ -103,6 +112,9 @@ class KCode_Solver : public Solver
     {
         return d_keff_tally->cycle_count();
     }
+
+    //! Get acceleration.
+    SP_FM_Acceleration acceleration() const { return d_acceleration; }
 
     /*
      * \brief Access inactive tallier

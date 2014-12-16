@@ -11,6 +11,8 @@
 #ifndef mc_Fission_Matrix_Acceleration_t_hh
 #define mc_Fission_Matrix_Acceleration_t_hh
 
+#include <cmath>
+
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
 #include "comm/global.hh"
@@ -196,13 +198,17 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     REQUIRE(Global_RNG::d_rng.assigned());
     REQUIRE(d_nu.size() == b_global_mesh->num_cells());
 
-    // initialize d_nu multiplication
+    // initialize d_nu multiplication and norm
     std::fill(d_nu.begin(), d_nu.end(), 0.0);
+    double l2_norm = 0.0;
 
     // solve the acceleration equation
     d_fm_solver->solve(f);
     CHECK(VTraits::local_length(d_fm_solver->get_g()) ==
           VTraits::local_length(d_forward));
+
+    // push back the latest solve iteration count
+    d_iterations.push_back(d_fm_solver->iterations());
 
     // convert the correction vector from SPN space to fission sites
     convert_g(d_fm_solver->get_g());
@@ -231,6 +237,9 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
                 CHECK(local == b_mesh->convert(i, j, k));
                 CHECK(fis_den[local] >= 0.0);
 
+                // get the l2 norm of the correction (locally)
+                l2_norm += d_nu[global] * d_nu[global];
+
                 // only make multiplicative correction in cells with fission
                 // density
 
@@ -251,6 +260,13 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
             }
         }
     }
+
+    // add up the norm over every domain
+    profugus::global_sum(&l2_norm, 1);
+
+    // calculate the l2 norm and push it back onto the stack
+    l2_norm = std::sqrt(l2_norm);
+    d_norms.push_back(l2_norm);
 
     // reduce d_nu so that every domain has the correction
     profugus::global_sum(d_nu.data(), d_nu.size());
@@ -304,6 +320,30 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     // swap the new and old containers
     std::swap(nf, f);
 }
+
+//---------------------------------------------------------------------------//
+#ifdef USE_HDF5
+/*!
+ * \brief Write diagnostics to HDF5 file.
+ */
+template<class T>
+void Fission_Matrix_Acceleration_Impl<T>::diagnostics(
+    Serial_HDF5_Writer &writer) const
+{
+    writer.begin_group("fission_mat_acceleration");
+
+    // write the eigenvalue of the SPN problem
+    writer.write("SPn_k", d_keff);
+
+    // write the iteration history
+    writer.write("iterations", d_iterations);
+
+    // write the correction l2 norm
+    writer.write("correction_L2", d_norms);
+
+    writer.end_group();
+}
+#endif
 
 //---------------------------------------------------------------------------//
 // PRIVATE FUNCTIONS

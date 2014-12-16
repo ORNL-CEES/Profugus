@@ -99,6 +99,9 @@ class Source_Diagnostic_Tally : public Source_Tally
 
     // Cycle counter.
     int d_cycle_ctr;
+
+    // Number of particles per cycle.
+    int d_num_per_cycle;
 };
 
 } // end namespace profugus

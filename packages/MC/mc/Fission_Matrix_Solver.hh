@@ -117,6 +117,9 @@ class Fission_Matrix_Solver
         return Teuchos::arrayViewFromVector(d_q_field);
     }
 
+    //! Number of iterations of last solve.
+    int iterations() const { return d_solver->num_iters(); }
+
   private:
     // >>> IMPLEMENTATION
 

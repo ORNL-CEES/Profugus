@@ -36,6 +36,7 @@ Source_Diagnostic_Tally::Source_Diagnostic_Tally(RCP_Std_DB       db,
     , d_geometry(b_physics->get_geometry())
     , d_source_density(d_mesh->num_cells(), 0.0)
     , d_cycle_ctr(0)
+    , d_num_per_cycle(0)
 {
     REQUIRE(d_mesh);
     REQUIRE(!db.is_null());
@@ -98,6 +99,9 @@ void Source_Diagnostic_Tally::birth(const Particle_t &p)
 
     // tally the source (particle) density
     d_source_density[mesh_idx] += p.wt();
+
+    // count up the particles in this cycle
+    ++d_num_per_cycle;
 #endif
 }
 
@@ -142,6 +146,10 @@ void Source_Diagnostic_Tally::end_cycle(double num_particles)
     m << "cycle_" << d_cycle_ctr;
     d_writer.begin_group(m.str());
 
+    // write the number of particles
+    profugus::global_sum(&d_num_per_cycle, 1);
+    d_writer.write("num_particles", d_num_per_cycle);
+
     // write the normalized source
     d_writer.write("source_density", d_source_density);
 
@@ -164,6 +172,7 @@ void Source_Diagnostic_Tally::end_cycle(double num_particles)
 void Source_Diagnostic_Tally::reset()
 {
     std::fill(d_source_density.begin(), d_source_density.end(), 0.0);
+    d_num_per_cycle = 0;
 }
 
 } // end namespace profugus
