@@ -363,17 +363,19 @@ void KCode_Solver::iterate()
     d_transporter->assign_source(d_source);
 
     // set the solver to sample fission sites
-    d_transporter->sample_fission_sites(
-        d_fission_sites, d_keff_tally->latest());
+    d_transporter->sample_fission_sites(d_fission_sites,
+                                        d_keff_tally->latest());
+
+    // inititalize the acceleration at the beginning of the cycle with the
+    // rebalanced fission sites owned by the source
+    if (d_acceleration)
+    {
+        d_acceleration->start_cycle(d_keff_tally->latest(),
+                                    d_source->fission_sites());
+    }
 
     // initialize keff tally to the beginning of the cycle
     b_tallier->begin_cycle();
-
-    // inititalize the acceleration at the beginning of the cycle
-    if (d_acceleration)
-    {
-        d_acceleration->start_cycle(d_keff_tally->latest(), *d_fission_sites);
-    }
 
     // solve the fixed source problem using the transporter
     d_transporter->solve();

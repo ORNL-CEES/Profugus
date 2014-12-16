@@ -35,6 +35,7 @@ namespace profugus
  */
 template<class T>
 Fission_Matrix_Acceleration_Impl<T>::Fission_Matrix_Acceleration_Impl()
+    : d_cycle_ctr(0)
 {
 }
 
@@ -121,6 +122,13 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     // set the damping (defaults to 1.0)
     d_beta = fmdb->get("damping", 1.0);
 
+    // set the begin/end cycle
+    d_cycle_ctr   = 0;
+    d_cycle_begin = fmdb->get("begin_cycle", 1);
+    d_cycle_end   = fmdb->get("end_cycle",
+                              mc_db->template get<int>("num_cycles"));
+    d_accelerate  = false;
+
     // make a "null" external source to pass to the solver
     Teuchos::RCP<const Source_t> null_source;
     CHECK(null_source.is_null());
@@ -181,7 +189,12 @@ void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
     const Fission_Site_Container &f)
 {
     REQUIRE(!d_fm_solver.is_null());
-    d_fm_solver->set_u_begin(f, k_l);
+
+    if (d_cycle_ctr >= d_cycle_begin && d_cycle_ctr < d_cycle_end)
+    {
+        d_fm_solver->set_u_begin(f, k_l);
+        d_accelerate = true;
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -194,6 +207,12 @@ template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     Fission_Site_Container &f)
 {
+    // increment
+    ++d_cycle_ctr;
+
+    // return if not accelerating
+    if (!d_accelerate) return;
+
     REQUIRE(!d_fm_solver.is_null());
     REQUIRE(Global_RNG::d_rng.assigned());
     REQUIRE(d_nu.size() == b_global_mesh->num_cells());
@@ -292,8 +311,10 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
         b_global_mesh->find(site.r, ijk);
         int cell = b_global_mesh->index(ijk[0], ijk[1], ijk[2]);
         CHECK(cell < d_nu.size());
-        CHECK(d_nu[cell] >= 0.0);
         CHECK(cell == b_indexer->g2g(ijk[0], ijk[1], ijk[2]));
+
+        // set d_nu[cell] to 0.0 if it is negative (we should count these)!
+        if (d_nu[cell] < 0.0) d_nu[cell] = 0.0;
 
         // sample to determine the number of sites at this location
         int n = d_nu[cell];

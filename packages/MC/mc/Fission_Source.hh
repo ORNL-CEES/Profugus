@@ -116,6 +116,14 @@ class Fission_Source : public Source
 
     // >>> CLASS ACCESSORS
 
+    //! Get the current fission site container.
+    const Fission_Site_Container& fission_sites() const
+    {
+        if (!d_fission_sites)
+            return d_dummy_container;
+        return *d_fission_sites;
+    }
+
     //! Total number of requested particles per cycle.
     size_type Np() const { return d_np_requested; }
 
@@ -166,6 +174,9 @@ class Fission_Source : public Source
 
     // Number of particles run on the current domain.
     size_type d_num_run;
+
+    // Dummy fission site container.
+    Fission_Site_Container d_dummy_container;
 };
 
 } // end namespace profugus

@@ -232,6 +232,10 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
 
     // Iteration record of solves.
     std::vector<int> d_iterations;
+
+    // Cycle counters.
+    int  d_cycle_ctr, d_cycle_begin, d_cycle_end;
+    bool d_accelerate;
 };
 
 } // end namespace profugus

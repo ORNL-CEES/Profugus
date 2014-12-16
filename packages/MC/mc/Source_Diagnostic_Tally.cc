@@ -153,8 +153,9 @@ void Source_Diagnostic_Tally::end_cycle(double num_particles)
     // write the normalized source
     d_writer.write("source_density", d_source_density);
 
-    // end the group
+    // end the group and close
     d_writer.end_group();
+    d_writer.close();
 
     // reset the source tally for the next cycle
     reset();
