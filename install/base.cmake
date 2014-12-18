@@ -17,8 +17,6 @@ SET(Profugus_ENABLE_ALL_FORWARD_DEP_PACKAGES OFF CACHE BOOL "")
 SET(Profugus_ENABLE_ALL_OPTIONAL_PACKAGES    ON  CACHE BOOL "")
 SET(Profugus_ENABLE_SECONDARY_STABLE_CODE    ON  CACHE BOOL "")
 
-<<<<<<< Updated upstream
-=======
 # Set explicit instantiation options
 SET(Profugus_ENABLE_EXPLICIT_INSTANTIATION ON CACHE BOOL "")
 SET(Teuchos_ENABLE_FLOAT OFF  CACHE BOOL "")
@@ -30,7 +28,6 @@ SET(Tpetra_INST_COMPLEX_DOUBLE OFF CACHE BOOL "")
 # Up the max num procs
 SET(MPI_EXEC_MAX_NUMPROCS 8 CACHE STRING "")
 
->>>>>>> Stashed changes
 # Turn off binutils
 SET(Teuchos_ENABLE_BinUtils OFF CACHE BOOL "")
 
