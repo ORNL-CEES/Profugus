@@ -17,6 +17,16 @@ ELSE()
   MESSAGE(STATUS "MCLS repository is not available")
 ENDIF()
 
+# Search to see if ParaSails exists in the Profugus source tree
+FIND_PATH(ParaSails_EXISTS
+  NAMES ParaSails/PackagesList.cmake
+  PATHS ${CMAKE_CURRENT_SOURCE_DIR})
+IF (ParaSails_EXISTS)
+  SET(NATIVE_REPOS ParaSails ${NATIVE_REPOS})
+ELSE()
+  MESSAGE(STATUS "ParaSails repository is not available")
+ENDIF()
+
 # Assume the user has already symlinked Trilinos into the current dir
 SET(NATIVE_REPOS Trilinos ${NATIVE_REPOS})
 
