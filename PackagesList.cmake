@@ -10,8 +10,6 @@
 ##---------------------------------------------------------------------------##
 
 TRIBITS_REPOSITORY_DEFINE_PACKAGES(
-  ParaSails ParaSails          SS
-  MCLS      MCLS               SS
   Utils     packages/Utils     SS
   Matprop   packages/Matprop   SS
   SPn       packages/SPn       SS

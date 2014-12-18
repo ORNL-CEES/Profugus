@@ -78,21 +78,21 @@ class StratimikosSolverTest : public testing::Test
         solver.set_tolerance(1.0e-8);
         solver.solve(ep_x, ep_rhs);
         linalg_traits::test_vector<T>(ep_x,sol);
-        EXPECT_TRUE( 10 >  solver.num_iters() );
+        EXPECT_TRUE( 15 >  solver.num_iters() );
 
         // solve again and limit iterations
         linalg_traits::fill_vector<T>(ep_x,zero);
         solver.set_max_iters(1);
         solver.set_tolerance(1.0e-12);
         solver.solve(ep_x, ep_rhs);
-        EXPECT_TRUE( 10 >  solver.num_iters() );
+        EXPECT_TRUE( 15 >  solver.num_iters() );
 
         // solve again and limit tolerance
         linalg_traits::fill_vector<T>(ep_x,zero);
         solver.set_max_iters(1000);
         solver.set_tolerance(0.1);
         solver.solve(ep_x, ep_rhs);
-        EXPECT_TRUE( 10 >  solver.num_iters() );
+        EXPECT_TRUE( 15 >  solver.num_iters() );
     }
 
   protected:
