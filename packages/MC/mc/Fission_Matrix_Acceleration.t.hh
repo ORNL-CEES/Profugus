@@ -12,6 +12,7 @@
 #define mc_Fission_Matrix_Acceleration_t_hh
 
 #include <cmath>
+#include <algorithm>
 
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
@@ -211,7 +212,13 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     ++d_cycle_ctr;
 
     // return if not accelerating
-    if (!d_accelerate) return;
+    if (!d_accelerate)
+    {
+        // calculate and store the number of fission sites
+        b_current_Np = f.size();
+        profugus::global_sum(&b_current_Np, 1);
+        return;
+    }
 
     REQUIRE(!d_fm_solver.is_null());
     REQUIRE(Global_RNG::d_rng.assigned());
@@ -220,6 +227,7 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     // initialize d_nu multiplication and norm
     std::fill(d_nu.begin(), d_nu.end(), 0.0);
     double l2_norm = 0.0;
+    double max_c   = 0.0;
 
     // solve the acceleration equation
     d_fm_solver->solve(f);
@@ -275,6 +283,9 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
                     // multiply the fission density by volume->the volumes
                     // cancel out
                     d_nu[global] = 1.0 + d_beta * d_nu[global] / fis_den[local];
+
+                    // calculate the maximum correction
+                    max_c = std::max(max_c, d_nu[global]);
                 }
             }
         }
@@ -283,9 +294,15 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
     // add up the norm over every domain
     profugus::global_sum(&l2_norm, 1);
 
+    // get the maximum correction across all domains
+    profugus::global_max(&max_c, 1);
+
     // calculate the l2 norm and push it back onto the stack
     l2_norm = std::sqrt(l2_norm);
     d_norms.push_back(l2_norm);
+
+    // push the maxium correction onto the stack
+    d_correction.push_back(max_c);
 
     // reduce d_nu so that every domain has the correction
     profugus::global_sum(d_nu.data(), d_nu.size());
@@ -340,6 +357,11 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
 
     // swap the new and old containers
     std::swap(nf, f);
+
+    // calculate and store the number of fission sites
+    b_current_Np = f.size();
+    profugus::global_sum(&b_current_Np, 1);
+    d_Np.push_back(b_current_Np);
 }
 
 //---------------------------------------------------------------------------//
@@ -361,6 +383,12 @@ void Fission_Matrix_Acceleration_Impl<T>::diagnostics(
 
     // write the correction l2 norm
     writer.write("correction_L2", d_norms);
+
+    // write the L_inf norm of the multiplicative correction
+    writer.write("mult_correction_Linf", d_correction);
+
+    // write the history of post-corrected fission site numbers
+    writer.write("num_fission_sites", d_Np);
 
     writer.end_group();
 }

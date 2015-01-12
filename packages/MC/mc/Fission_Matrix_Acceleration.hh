@@ -77,9 +77,12 @@ class Fission_Matrix_Acceleration
     // Material database.
     RCP_Mat_DB b_mat;
 
+    // Number of global sites after the latest correction.
+    int b_current_Np;
+
   public:
     // Constructor.
-    Fission_Matrix_Acceleration() { /* ... */ }
+    Fission_Matrix_Acceleration() : b_current_Np(0) { /* ... */ }
 
     // Destructor.
     virtual ~Fission_Matrix_Acceleration() { /* ... */ }
@@ -97,6 +100,9 @@ class Fission_Matrix_Acceleration
     virtual void end_cycle(Fission_Site_Container &f) = 0;
 
     // >>> ACCESSORS
+
+    //! Return the number of fission sites after acceleration.
+    int num_sites() const { return b_current_Np; }
 
     //! Get SPN mesh.
     const Mesh& mesh() const { return *b_mesh; }
@@ -230,8 +236,14 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // L2 norm of correction.
     std::vector<double> d_norms;
 
+    // Maximum correction.
+    std::vector<double> d_correction;
+
     // Iteration record of solves.
     std::vector<int> d_iterations;
+
+    // Number of global fission sites after each correction.
+    std::vector<int> d_Np;
 
     // Cycle counters.
     int  d_cycle_ctr, d_cycle_begin, d_cycle_end;

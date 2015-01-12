@@ -390,6 +390,12 @@ void KCode_Solver::iterate()
     if (d_acceleration)
     {
         d_acceleration->end_cycle(*d_fission_sites);
+
+        // update the number of fission sites (source particles) per cycle
+        d_Np = d_acceleration->num_sites();
+
+        // update the source
+        d_source->update_Np(d_Np);
     }
 
     // build a new source from the fission site distribution

@@ -139,6 +139,9 @@ class Fission_Source : public Source
     //! Get fission source width for testing purposes
     const Space_Vector& width() const { return d_width; }
 
+    //! Set a new number per cycle.
+    void update_Np(size_type np) { d_np_requested = np; }
+
   private:
     // >>> IMPLEMENTATION
 
