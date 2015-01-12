@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "harness/DBC.hh"
 #include "Geometry.hh"
 #include "Change_Direction.hh"
 
@@ -52,6 +53,63 @@ Geometry::Geometry(int                     N,
 #pragma acc enter data pcopyin(d_x[0:N+1], d_y[0:N+1], d_z[0:N+1])
 #pragma acc enter data pcopyin(d_N[0:3])
 #pragma acc enter data pcopyin(d_b[0:6], d_m[0:nc])
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Constructor from a standard RTK geometry.
+ *
+ * This assumes that the RTK "pin-cells" are all homogeneous.  This also only
+ * accepts an RTK core geometry (2-levels) that is structured as a regular
+ * grid.
+ */
+Geometry::Geometry(const profugus::Core &geometry)
+{
+    // get the underlying array
+    const auto &array = geometry.array();
+
+    // this should only have 1 array radially
+    VALIDATE(array.size(0) * array.size(1) == 1, "Radial core-level array "
+             << " has dimensions " << array.size(0) << " by " << array.size(1)
+             << " when it needs to be 1 by 1");
+
+    // number of axial levels
+    int num_axial = array.size(2);
+
+    // every axial array should be the same, so build the edges using the
+    // lowest level
+    const auto &radial = array.object(0, 0, 0);
+
+    // we expect the number of (x,y) cells to be the same at every axial level
+    int num_x = radial.size(0);
+    int num_y = radial.size(1);
+
+    // get the lower corner
+    const auto &corner = array.corner();
+
+    // make the edges
+    d_edges[0].resize(num_x + 1, corner[0]);
+    d_edges[1].resize(num_y + 1, corner[1]);
+    d_edges[2].resize(num_axial + 1, corner[2]);
+
+    // build the radial mesh edges
+    for (int i = 0; i < num_x; ++i)
+    {
+        d_edges[0][i+1] = d_edges[0][i] + radial.object(i, 0, 0).pitch(0);
+    }
+    for (int j = 0; j < num_y; ++j)
+    {
+        d_edges[1][j+1] = d_edges[1][j] + radial.object(0, j, 0).pitch(1);
+    }
+
+    // loop through axial levels and get radial array at each axial level
+    for (int k = 0; k < num_axial; ++k)
+    {
+        // get the radial array at this level
+        const auto &level = array.object(0, 0, k);
+    }
+
+#pragma acc enter data pcopyin(this)
 }
 
 //---------------------------------------------------------------------------//

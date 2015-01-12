@@ -51,6 +51,7 @@ LIST(APPEND ROOT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 SET(SOURCES
   Particle_Functions.cc
   Physics.cc
+  Domain_Transporter.cc
   )
 
 # C/C++ sources with ACC directives
@@ -59,6 +60,7 @@ SET(ACC_SOURCES
   Geometry.acc.cc
   RNG.acc.cc
   Physics.acc.cc
+  Domain_Transporter.acc.cc
   )
 
 ##---------------------------------------------------------------------------##

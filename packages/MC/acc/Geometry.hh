@@ -13,6 +13,7 @@
 
 #include <vector>
 #include "core/geometry/Definitions.hh"
+#include "core/geometry/Geometry.hh"
 #include "core/mc/Definitions.hh"
 #include "Geometry_State.hh"
 
@@ -59,9 +60,10 @@ class Geometry
     double d_work[3];
 
   public:
-    // Constructor.
+    // Constructors.
     Geometry(int N, double d, const std::vector<int> &matids,
              const int *bnds);
+    explicit Geometry(const profugus::Core &geometry);
 
     // Destructor.
     ~Geometry();
