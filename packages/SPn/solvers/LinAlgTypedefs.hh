@@ -11,6 +11,8 @@
 #ifndef solvers_LinAlgTypedefs_hh
 #define solvers_LinAlgTypedefs_hh
 
+#include <SPn/config.h>
+
 #include "Teuchos_RCP.hpp"
 
 #include "Epetra_MultiVector.h"
@@ -26,9 +28,11 @@
 #include "Tpetra_CrsGraph.hpp"
 #include "Kokkos_DefaultNode.hpp"
 
+#ifdef USE_MUELU
 #include "Xpetra_MultiVector.hpp"
 #include "Xpetra_CrsMatrix.hpp"
 #include "Xpetra_Matrix.hpp"
+#endif
 
 namespace profugus
 {
@@ -61,6 +65,7 @@ struct TpetraTypes
     typedef Tpetra::CrsGraph<LO,GO,NODE>                GRAPH;
 };
 
+#ifdef USE_MUELU
 struct XpetraTypes
 {
     typedef double                                      ST;
@@ -71,6 +76,7 @@ struct XpetraTypes
     typedef Xpetra::CrsMatrix<ST,LO,GO,NODE>            CRS_MATRIX;
     typedef Xpetra::Matrix<ST,LO,GO,NODE>               MATRIX;
 };
+#endif
 
 } // end namespace profugus
 
