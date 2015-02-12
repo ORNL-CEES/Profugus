@@ -106,7 +106,7 @@ class OperatorAdapter<TpetraTypes> : public TpetraTypes::OP
         double beta=Teuchos::ScalarTraits<double>::zero()) const = 0;
 
     // Required interface
-    bool hasTransposeApply(){return false;}
+    bool hasTransposeApply() const {return false;}
     Teuchos::RCP<const Map_t> getDomainMap() const
     {
         REQUIRE( d_domain_map!= Teuchos::null );

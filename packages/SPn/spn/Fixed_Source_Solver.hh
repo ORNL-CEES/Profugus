@@ -55,9 +55,8 @@ class Fixed_Source_Solver : public Solver_Base_Tmpl<T>
     typedef Linear_System<T>                            Linear_System_t;
     typedef typename Linear_System_t::External_Source   External_Source;
     typedef typename Linear_System_t::RCP_Timestep      RCP_Timestep;
-    typedef typename Linear_System_t::Vector_t          Vector_t;
     typedef typename Linear_System_t::RCP_ParameterList RCP_ParameterList;
-    typedef typename Linear_System_t::RCP_Vector        RCP_Vector;
+    typedef typename Linear_System_t::RCP_MV            RCP_MV;
     typedef typename Linear_System_t::RCP_Dimensions    RCP_Dimensions;
     typedef typename Linear_System_t::RCP_Mat_DB        RCP_Mat_DB;
     typedef typename Linear_System_t::RCP_Mesh          RCP_Mesh;
@@ -75,7 +74,7 @@ class Fixed_Source_Solver : public Solver_Base_Tmpl<T>
     Linear_Solver_t d_solver;
 
     // Solution vector.
-    RCP_Vector d_lhs;
+    RCP_MV d_lhs;
 
   public:
     // Constructor.
@@ -97,7 +96,7 @@ class Fixed_Source_Solver : public Solver_Base_Tmpl<T>
     // >>> ACCESSORS
 
     //! Get LHS solution vector (in transformed \e u space).
-    Teuchos::RCP<const Vector_t> get_LHS() const { return d_lhs; }
+    Teuchos::RCP<const MV> get_LHS() const { return d_lhs; }
 
   private:
     // >>> IMPLEMENTATION

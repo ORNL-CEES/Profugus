@@ -88,7 +88,7 @@ class Solver_Base_Tmpl : public Solver_Base
     using Solver_Base::RCP_Global_Data;
     using Solver_Base::View_Field;
 
-    typedef typename T::VECTOR            Vector_t;
+    typedef typename T::MV                MV;
     typedef Teuchos::ParameterList        ParameterList;
     typedef Teuchos::RCP<ParameterList>   RCP_ParameterList;
     typedef Linear_System<T>              Linear_System_t;
@@ -114,7 +114,7 @@ class Solver_Base_Tmpl : public Solver_Base
     // >>> INHERITED METHODS
 
     // Write u-vector into the state.
-    void write_u_into_state(Teuchos::RCP<const Vector_t>, State &state) const;
+    void write_u_into_state(Teuchos::RCP<const MV>, State &state) const;
 
 };
 
@@ -123,7 +123,7 @@ class Solver_Base_Tmpl : public Solver_Base
  * \brief Write a u-vector into the state.
  */
 template <class T>
-void Solver_Base_Tmpl<T>::write_u_into_state(Teuchos::RCP<const Vector_t>  u,
+void Solver_Base_Tmpl<T>::write_u_into_state(Teuchos::RCP<const MV>  u,
                                              State &state) const
 {
     REQUIRE(state.num_cells() * b_system->get_dims()->num_equations()

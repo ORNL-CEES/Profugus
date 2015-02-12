@@ -111,7 +111,7 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
         //  its internal map was destroyed when the new matrices were built,
         //  which leads to problems when something downstream of here needs
         //  access to the map.
-        RCP_Vector tmp_vec = d_u;
+        RCP_MV tmp_vec = d_u;
 
         // make the eigenvector
         d_u = VectorTraits<T>::build_vector(Base::b_system->get_Map());
@@ -467,7 +467,7 @@ Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
 
     // get the preconditioner type
     std::string prec_type = profugus::to_lower(
-        edb->template get<std::string>("Preconditioner", 
+        edb->template get<std::string>("Preconditioner",
                                        std::string("Multigrid")));
 
     // build the appropriate preconditioners

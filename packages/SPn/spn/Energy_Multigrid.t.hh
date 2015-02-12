@@ -108,7 +108,7 @@ Energy_Multigrid<T>::Energy_Multigrid(RCP_ParameterList              main_db,
         CHECK( d_operators.back() != Teuchos::null );
 
         // Allocate vectors
-        RCP<VECTOR> tmp_vec = system->get_RHS();
+        RCP<MV> tmp_vec = system->get_RHS();
         d_maps.push_back( system->get_Map() );
         d_solutions.push_back( VectorTraits<T>::build_vector(d_maps[level]));
         d_rhss.push_back(      VectorTraits<T>::build_vector(d_maps[level]));

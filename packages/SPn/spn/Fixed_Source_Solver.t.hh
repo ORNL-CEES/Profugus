@@ -105,7 +105,7 @@ void Fixed_Source_Solver<T>::solve(Teuchos::RCP<const External_Source> q)
            VectorTraits<T>::local_length(d_lhs) );
 
     // solve the problem
-    d_solver.solve(d_lhs, b_system->get_RHS());
+    //d_solver.solve(d_lhs, b_system->get_RHS());
 }
 
 //---------------------------------------------------------------------------//

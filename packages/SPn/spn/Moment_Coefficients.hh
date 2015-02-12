@@ -55,6 +55,7 @@ class Moment_Coefficients
     typedef Teuchos::RCP<Dimensions>                      RCP_Dimensions;
     typedef Teuchos::RCP<Timestep>                        RCP_Timestep;
     typedef Teuchos::SerialDenseMatrix<int, double>       Serial_Matrix;
+    typedef Teuchos::SerialDenseVector<int, double>       Serial_Vector;
     typedef Teuchos::RCP<Serial_Matrix>                   RCP_Serial_Matrix;
     typedef Static_Map<def::size_type, RCP_Serial_Matrix> Hash_Table;
     typedef Teuchos::RCP<Hash_Table>                      RCP_Hash_Table;

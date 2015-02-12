@@ -60,11 +60,11 @@ class Linear_System
     typedef typename T::MAP                        Map_t;
     typedef typename T::MATRIX                     Matrix_t;
     typedef typename T::OP                         Operator_t;
-    typedef typename T::VECTOR                     Vector_t;
+    typedef typename T::MV                         MV;
     typedef Teuchos::RCP<Map_t>                    RCP_Map;
     typedef Teuchos::RCP<Matrix_t>                 RCP_Matrix;
     typedef Teuchos::RCP<Operator_t>               RCP_Operator;
-    typedef Teuchos::RCP<Vector_t>                 RCP_Vector;
+    typedef Teuchos::RCP<MV>                       RCP_MV;
     typedef Isotropic_Source                       External_Source;
     typedef Teuchos::RCP<Mesh>                     RCP_Mesh;
     typedef Teuchos::RCP<LG_Indexer>               RCP_Indexer;
@@ -95,7 +95,7 @@ class Linear_System
     RCP_Map      b_map;
     RCP_Operator b_operator; // SPN matrix
     RCP_Operator b_fission;  // Fission matrix
-    RCP_Vector   b_rhs;
+    RCP_MV       b_rhs;
 
     // Isotropic source coefficients.
     double b_src_coefficients[4];
@@ -135,7 +135,7 @@ class Linear_System
     virtual RCP_Matrix get_Matrix() const { return Teuchos::null; }
 
     //! Get an RCP to the Right-Hand-Side vector.
-    RCP_Vector get_RHS() const { return b_rhs; }
+    RCP_MV get_RHS() const { return b_rhs; }
 
     //! Get an RCP to the Right-Hand-Side vector.
     RCP_Operator get_fission_matrix() const { return b_fission; }

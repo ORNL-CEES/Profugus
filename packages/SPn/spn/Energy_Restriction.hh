@@ -46,7 +46,6 @@ class Energy_Restriction : public OperatorAdapter<T>
     //! Typedefs.
     typedef typename T::OP                        OP;
     typedef typename T::MV                        MV;
-    typedef typename T::VECTOR                    VECTOR;
     typedef typename T::MAP                       MAP;
     typedef Anasazi::MultiVecTraits<double,MV>    MVT;
     //@}

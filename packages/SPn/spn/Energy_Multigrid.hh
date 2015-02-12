@@ -55,7 +55,6 @@ class Energy_Multigrid : public OperatorAdapter<T>
     //! Typedefs.
     typedef typename T::OP                             OP;
     typedef typename T::MV                             MV;
-    typedef typename T::VECTOR                         VECTOR;
     typedef typename T::MAP                            MAP;
     typedef Anasazi::OperatorTraits<double,MV,OP>      OPT;
     typedef Anasazi::MultiVecTraits<double,MV>         MVT;
@@ -103,9 +102,9 @@ class Energy_Multigrid : public OperatorAdapter<T>
     std::vector< Teuchos::RCP<OP> >             d_restrictions;
     std::vector< Teuchos::RCP<OP> >             d_prolongations;
     std::vector< Teuchos::RCP<OP> >             d_preconditioners;
-    std::vector< Teuchos::RCP<VECTOR> >         d_solutions;
-    std::vector< Teuchos::RCP<VECTOR> >         d_residuals;
-    std::vector< Teuchos::RCP<VECTOR> >         d_rhss;
+    std::vector< Teuchos::RCP<MV> >             d_solutions;
+    std::vector< Teuchos::RCP<MV> >             d_residuals;
+    std::vector< Teuchos::RCP<MV> >             d_rhss;
     std::vector< Teuchos::RCP<LinearSolver_t> > d_smoothers;
 };
 

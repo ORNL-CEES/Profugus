@@ -61,7 +61,7 @@ class MatrixTest : public testing::Test
     typedef profugus::Linear_System_FV<T>             Linear_System;
     typedef Teuchos::RCP<Linear_System>               RCP_Linear_System;
     typedef typename Linear_System::Matrix_t          Matrix_t;
-    typedef typename Linear_System::Vector_t          Vector_t;
+    typedef typename Linear_System::MV                MV;
 
   protected:
 
@@ -252,7 +252,6 @@ TYPED_TEST(MatrixTest, SP1_2Grp_Refl_Matrix)
 {
     typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
     typedef typename TestFixture::Matrix_t          Matrix_t;
-    typedef typename TestFixture::Vector_t          Vector_t;
     typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
     typedef profugus::VectorTraits<TypeParam>       VectorTraits;
     typedef typename TypeParam::MV                  MV;
@@ -313,8 +312,8 @@ TYPED_TEST(MatrixTest, SP1_2Grp_Refl_Matrix)
     EXPECT_EQ(2 * data->num_cells(), MatrixTraits::global_columns(A));
 
     // make a vector
-    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
-    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 2, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 2, VectorTraits::local_length(y));
     Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
@@ -416,7 +415,6 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Refl_Matrix)
 {
     typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
     typedef typename TestFixture::Matrix_t          Matrix_t;
-    typedef typename TestFixture::Vector_t          Vector_t;
     typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
     typedef profugus::VectorTraits<TypeParam>       VectorTraits;
     typedef typename TypeParam::MV                  MV;
@@ -507,8 +505,8 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Refl_Matrix)
     EXPECT_EQ(2 * 2 * data->num_cells(), MatrixTraits::global_columns(A));
 
     // make a vector
-    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
-    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 2 * 2, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 2 * 2, VectorTraits::local_length(y));
     Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
@@ -714,7 +712,6 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
 {
     typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
     typedef typename TestFixture::Matrix_t          Matrix_t;
-    typedef typename TestFixture::Vector_t          Vector_t;
     typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
     typedef profugus::VectorTraits<TypeParam>       VectorTraits;
     typedef typename TypeParam::MV                  MV;
@@ -830,8 +827,8 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
     EXPECT_EQ(2 * 2 * (data->num_cells() + 96), MatrixTraits::global_columns(A));
 
     // make a vector
-    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
-    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ((mesh->num_cells() + nf) * 2 * 2, VectorTraits::local_length(x));
     EXPECT_EQ((mesh->num_cells() + nf) * 2 * 2, VectorTraits::local_length(y));
     Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
@@ -1299,8 +1296,8 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
 TYPED_TEST(MatrixTest, SP7_3Grp_Refl_RHS)
 {
     typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
-    typedef typename TestFixture::Vector_t          Vector_t;
     typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+    typedef typename TypeParam::MV                  MV;
 
     using def::I; using def::J; using def::K;
 
@@ -1366,7 +1363,7 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Refl_RHS)
     system->build_RHS(q);
 
     // check q
-    Teuchos::RCP<const Vector_t> rhs = system->get_RHS();
+    Teuchos::RCP<const MV> rhs = system->get_RHS();
     EXPECT_EQ(mesh->num_cells() * 4 * 3, VectorTraits::local_length(rhs));
     Teuchos::ArrayView<const double> rhs_data = VectorTraits::get_data(rhs,0);
 
@@ -1442,8 +1439,8 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Refl_RHS)
 TYPED_TEST(MatrixTest, SP7_3Grp_Isotropic_RHS)
 {
     typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
-    typedef typename TestFixture::Vector_t          Vector_t;
     typedef profugus::VectorTraits<TypeParam>       VectorTraits;
+    typedef typename TypeParam::MV                  MV;
 
     using def::I; using def::J; using def::K;
     this->build(7, 3);
@@ -1530,7 +1527,7 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Isotropic_RHS)
     system->build_RHS(q);
 
     // check q
-    Teuchos::RCP<const Vector_t> rhs = system->get_RHS();
+    Teuchos::RCP<const MV> rhs = system->get_RHS();
     EXPECT_EQ(mesh->num_cells() * 4 * 3, system->vol_unknowns());
     EXPECT_EQ((system->vol_unknowns() + system->bnd_unknowns()),
               VectorTraits::local_length(rhs));
@@ -1771,7 +1768,6 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
 {
     typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
     typedef typename TestFixture::Matrix_t          Matrix_t;
-    typedef typename TestFixture::Vector_t          Vector_t;
     typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
     typedef profugus::VectorTraits<TypeParam>       VectorTraits;
     typedef typename TypeParam::MV                  MV;
@@ -1833,8 +1829,8 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
     // it should be all zeros
 
     // make a vector
-    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
-    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(y));
     Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
@@ -1875,7 +1871,6 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Fission_Matrix)
     typedef typename TestFixture::Linear_System     Linear_System;
     typedef typename TestFixture::RCP_Linear_System RCP_Linear_System;
     typedef typename TestFixture::Matrix_t          Matrix_t;
-    typedef typename TestFixture::Vector_t          Vector_t;
     typedef profugus::MatrixTraits<TypeParam>       MatrixTraits;
     typedef profugus::VectorTraits<TypeParam>       VectorTraits;
     typedef typename TypeParam::MV                  MV;
@@ -2031,8 +2026,8 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Fission_Matrix)
     }
 
     // make a vector
-    Teuchos::RCP<Vector_t> x = VectorTraits::build_vector(system->get_Map());
-    Teuchos::RCP<Vector_t> y = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> x = VectorTraits::build_vector(system->get_Map());
+    Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(y));
     Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);

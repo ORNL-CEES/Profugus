@@ -49,11 +49,11 @@ class VectorTraits
     //@{
     //! Typedefs.
     typedef typename T::MAP    Map_t;
-    typedef typename T::VECTOR Vector_t;
     typedef typename T::MV     MV;
     //@}
 
-    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
+    static Teuchos::RCP<MV> build_vector(Teuchos::RCP<const Map_t> map,
+                                         int num_vecs=1)
     {
         UndefinedVectorTraits<T>::NotDefined();
         return Teuchos::null;
@@ -90,6 +90,14 @@ class VectorTraits
         return Teuchos::ArrayView<double>();
     }
 
+    static double dot_product(Teuchos::RCP<const MV> x,
+                              Teuchos::RCP<const MV> y)
+    {
+        UndefinedVectorTraits<T>::NotDefined();
+        return Teuchos::ScalarTraits<double>::nan();
+    }
+
+
 };
 
 // Specialization on EpetraTypes
@@ -100,14 +108,14 @@ class VectorTraits<EpetraTypes>
     //@{
     //! Typedefs.
     typedef typename EpetraTypes::MAP    Map_t;
-    typedef typename EpetraTypes::VECTOR Vector_t;
     typedef typename EpetraTypes::MV     MV;
     //@}
 
-    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
+    static Teuchos::RCP<MV> build_vector(Teuchos::RCP<const Map_t> map,
+                                         int num_vecs=1)
     {
 
-        Teuchos::RCP<Vector_t> x(new Vector_t(*map));
+        Teuchos::RCP<MV> x(new MV(*map,num_vecs));
         CHECK( x != Teuchos::null );
         return x;
     }
@@ -141,6 +149,16 @@ class VectorTraits<EpetraTypes>
                                                 vector->MyLength());
     }
 
+    static double dot_product(Teuchos::RCP<const MV> x,
+                              Teuchos::RCP<const MV> y)
+    {
+        double dot;
+        int err;
+        err = x->Dot(*y,&dot);
+        CHECK( err == 0 );
+        return dot;
+    }
+
 };
 
 // Specialization on TpetraTypes
@@ -151,14 +169,14 @@ class VectorTraits<TpetraTypes>
     //@{
     //! Typedefs.
     typedef typename TpetraTypes::MAP    Map_t;
-    typedef typename TpetraTypes::VECTOR Vector_t;
     typedef typename TpetraTypes::MV     MV;
     //@}
 
-    static Teuchos::RCP<Vector_t> build_vector(Teuchos::RCP<const Map_t> map)
+    static Teuchos::RCP<MV> build_vector(Teuchos::RCP<const Map_t> map,
+                                         int num_vecs=1)
     {
 
-        Teuchos::RCP<Vector_t> x(new Vector_t(map));
+        Teuchos::RCP<MV> x(new MV(map,num_vecs));
         CHECK( x != Teuchos::null );
         return x;
     }
@@ -189,6 +207,15 @@ class VectorTraits<TpetraTypes>
     {
         return vector->getData(ivec)();
     }
+
+    static double dot_product(Teuchos::RCP<const MV> x,
+                              Teuchos::RCP<const MV> y)
+    {
+        Teuchos::ArrayRCP<double> dots(1,0.0);
+        x->dot(*y,dots());
+        return dots[0];
+    }
+
 
 };
 

@@ -41,7 +41,6 @@ TYPED_TEST_CASE(ProlongTest, MyTypes);
 TYPED_TEST(ProlongTest, Even)
 {
     typedef typename TypeParam::MAP    Map_t;
-    typedef typename TypeParam::VECTOR Vector_t;
     typedef typename TypeParam::OP     OP;
     typedef typename TypeParam::MV     MV;
     typedef Anasazi::OperatorTraits<double,MV,OP> OPT;
@@ -58,9 +57,9 @@ TYPED_TEST(ProlongTest, Even)
         profugus::MatrixTraits<TypeParam>::build_map(Nv*Ng/2,Nv*Ng*nodes/2);
 
     // Create Epetra vectors
-    Teuchos::RCP<Vector_t> vec0 =
+    Teuchos::RCP<MV> vec0 =
         profugus::VectorTraits<TypeParam>::build_vector(map0);
-    Teuchos::RCP<Vector_t> vec1 =
+    Teuchos::RCP<MV> vec1 =
         profugus::VectorTraits<TypeParam>::build_vector(map1);
 
     std::vector<int> steer(4,2);

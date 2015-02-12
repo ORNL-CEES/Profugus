@@ -43,7 +43,6 @@ class Inf_Med_Eigenvalue_SolverTest : public testing::Test
     typedef typename Linear_System_t::RCP_Indexer     RCP_Indexer;
     typedef typename Linear_System_t::RCP_Global_Data RCP_Global_Data;
     typedef typename Linear_System_t::Matrix_t        Matrix_t;
-    typedef typename Linear_System_t::Vector_t        Vector_t;
     typedef profugus::Partitioner                     Partitioner;
     typedef Teuchos::RCP<profugus::State>             RCP_State;
     typedef profugus::Mat_DB                          Mat_DB_t;
@@ -253,8 +252,8 @@ TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 1Grp_SP3)
 
 TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
 {
-    typedef typename TestFixture::Vector_t        Vector_t;
     typedef typename TestFixture::Linear_System_t Linear_System_t;
+    typedef typename TypeParam::MV                MV;
 
     this->build(1, 3);
     EXPECT_EQ(1, this->dim->num_equations());
@@ -264,7 +263,7 @@ TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
 
     EXPECT_SOFTEQ(3.301149153942720, this->solver->get_eigenvalue(), 1.0e-6);
 
-    Teuchos::RCP<const Vector_t> ev = this->solver->get_eigenvector();
+    Teuchos::RCP<const MV> ev = this->solver->get_eigenvector();
     Teuchos::ArrayView<const double> ev_data =
         profugus::VectorTraits<TypeParam>::get_data(ev);
     EXPECT_EQ(this->mesh->num_cells() * 3, ev_data.size());
@@ -299,8 +298,8 @@ TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
 
 TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP3)
 {
-    typedef typename TestFixture::Vector_t        Vector_t;
     typedef typename TestFixture::Linear_System_t Linear_System_t;
+    typedef typename TypeParam::MV                MV;
 
     this->build(3, 3);
     EXPECT_EQ(2, this->dim->num_equations());
@@ -310,7 +309,7 @@ TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP3)
 
     EXPECT_SOFTEQ(3.301149153942720, this->solver->get_eigenvalue(), 1.0e-6);
 
-    Teuchos::RCP<const Vector_t> ev = this->solver->get_eigenvector();
+    Teuchos::RCP<const MV> ev = this->solver->get_eigenvector();
     EXPECT_EQ(this->mesh->num_cells() * 3 * 2,
               profugus::VectorTraits<TypeParam>::local_length(ev));
 

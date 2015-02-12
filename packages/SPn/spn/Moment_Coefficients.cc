@@ -251,7 +251,7 @@ void Moment_Coefficients::make_Sigma(int            n,
     if (!d_dt.is_null())
     {
         // get group velocities
-        const auto &v = d_mat->xs().velocities();
+        const Serial_Vector &v = d_mat->xs().velocities();
         CHECK(v.length() == d_Ng);
 
         double inv_dt = 1.0 / d_dt->dt();
