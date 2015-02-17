@@ -47,7 +47,7 @@ class StratimikosSolverTest : public testing::Test
     // Initialization that are performed for each test
     void SetUp()
     {
-        d_db = Teuchos::rcp(new ParameterList("test"));
+        d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
     }
 
     void strat_test(const std::string &which,

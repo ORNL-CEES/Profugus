@@ -47,8 +47,6 @@ class RQITest : public ::testing::Test
     // Initialization that are performed for each test
     void build_solver()
     {
-        using Teuchos::rcp;
-
         // Build an map
         d_N = 20;
         d_A = linalg_traits::build_matrix<T>("shifted_laplacian",d_N);
@@ -58,7 +56,7 @@ class RQITest : public ::testing::Test
         d_x = linalg_traits::build_vector<T>(d_N);
 
         // Create options database
-        d_db = rcp(new ParameterList("test"));
+        d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
         d_db->set("tolerance",1e-8);
         d_db->set("max_itr",2);
         d_db->set("verbosity",std::string("high"));
@@ -75,13 +73,13 @@ class RQITest : public ::testing::Test
 
         // Create ShiftedInverseOperator
         Teuchos::RCP<profugus::ShiftedInverseOperator<T> > shift_op =
-            rcp(new profugus::ShiftedInverseOperator<T>(op_db));
+            Teuchos::rcp(new profugus::ShiftedInverseOperator<T>(op_db));
         CHECK(!shift_op.is_null());
         shift_op->set_operator(d_A);
         shift_op->set_rhs_operator(d_B);
 
         // Build solver
-        d_solver = rcp(new RayleighQuotient(d_db));
+        d_solver = Teuchos::rcp(new RayleighQuotient(d_db));
         CHECK(!d_solver.is_null());
         d_solver->set_operator(d_A);
         d_solver->set_rhs_operator(d_B);

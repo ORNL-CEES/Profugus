@@ -45,7 +45,7 @@ class PowerIterationTest : public ::testing::Test
         linalg_traits::fill_vector<T>(d_x,one);
 
         // Create options database
-        d_db = Teuchos::rcp(new ParameterList("test"));
+        d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
         d_db->set("tolerance",1e-8);
         d_db->set("max_itr",2);
 

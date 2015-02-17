@@ -73,7 +73,7 @@ TYPED_TEST(Arnoldi_Test, Eigensolver)
     // database settings
     {
         // make anasazi settings
-        ParameterList adb("anasazi");
+        Teuchos::ParameterList adb("anasazi");
         adb.set("Convergence Tolerance", 1.0e-10);
         adb.set("Maximum Restarts", 50);
         db->set("Anasazi", adb);

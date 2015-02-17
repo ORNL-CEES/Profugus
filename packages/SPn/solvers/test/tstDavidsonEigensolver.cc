@@ -58,11 +58,11 @@ class DavidsonTest : public ::testing::Test
         d_x = linalg_traits::build_vector<T>(d_N);
 
         // Create options database
-        d_db = rcp(new ParameterList("test"));
+        d_db = Teuchos::rcp(new Teuchos::ParameterList("test"));
         d_db->set("tolerance",1e-8);
 
         // Build solver
-        d_solver = rcp(new Davidson_Eigensolver(d_db,d_A,d_B));
+        d_solver = Teuchos::rcp(new Davidson_Eigensolver(d_db,d_A,d_B));
         CHECK(!d_solver.is_null());
     }
 
