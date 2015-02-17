@@ -207,9 +207,9 @@ class Static_Map
     // Remove all entries from the hash table and set to "incomplete"
     void swap(This& rhs)
     {
-        swap(d_hash   , rhs.d_hash);
-        swap(d_items  , rhs.d_items);
-        swap(d_buckets, rhs.d_buckets);
+        std::swap(d_hash   , rhs.d_hash);
+        std::swap(d_items  , rhs.d_items);
+        std::swap(d_buckets, rhs.d_buckets);
     }
 
     // >>> ACCESSORS
