@@ -67,9 +67,9 @@ TYPED_TEST(RestrictTest, Even)
     double tol=1.e-12;
 
     // Test restriction
-    Teuchos::ArrayView<double> fine_data =
+    Teuchos::ArrayRCP<double> fine_data =
         profugus::VectorTraits<TypeParam>::get_data_nonconst(vec0,0);
-    Teuchos::ArrayView<double> coarse_data =
+    Teuchos::ArrayRCP<double> coarse_data =
         profugus::VectorTraits<TypeParam>::get_data_nonconst(vec1,0);
 
     for( int i=0; i<fine_data.size(); ++i )

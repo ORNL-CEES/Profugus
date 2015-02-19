@@ -76,18 +76,18 @@ class VectorTraits
         UndefinedVectorTraits<T>::NotDefined();
     }
 
-    static Teuchos::ArrayView<double> get_data_nonconst(
+    static Teuchos::ArrayRCP<double> get_data_nonconst(
         Teuchos::RCP<MV> vector, int ivec=0)
     {
         UndefinedVectorTraits<T>::NotDefined();
-        return Teuchos::ArrayView<double>();
+        return Teuchos::ArrayRCP<double>();
     }
 
-    static Teuchos::ArrayView<const double> get_data(
+    static Teuchos::ArrayRCP<const double> get_data(
         Teuchos::RCP<const MV> vector, int ivec=0)
     {
         UndefinedVectorTraits<T>::NotDefined();
-        return Teuchos::ArrayView<double>();
+        return Teuchos::ArrayRCP<double>();
     }
 
     static double dot_product(Teuchos::RCP<const MV> x,
@@ -135,18 +135,20 @@ class VectorTraits<EpetraTypes>
         vector->PutScalar(val);
     }
 
-    static Teuchos::ArrayView<double> get_data_nonconst(
+    static Teuchos::ArrayRCP<double> get_data_nonconst(
         Teuchos::RCP<MV> vector, int ivec=0)
     {
-        return Teuchos::arrayView<double>((*vector)[ivec],
-                                          vector->MyLength());
+        bool has_ownership = false;
+        return Teuchos::ArrayRCP<double>((*vector)[ivec],0,
+            vector->MyLength(), has_ownership);
     }
 
-    static Teuchos::ArrayView<const double> get_data(
+    static Teuchos::ArrayRCP<const double> get_data(
         Teuchos::RCP<const MV> vector, int ivec=0)
     {
-        return Teuchos::arrayView<const double>((*vector)[ivec],
-                                                vector->MyLength());
+        bool has_ownership = false;
+        return Teuchos::ArrayRCP<const double>(
+            (*vector)[ivec],0,vector->MyLength(),has_ownership);
     }
 
     static double dot_product(Teuchos::RCP<const MV> x,
@@ -196,16 +198,16 @@ class VectorTraits<TpetraTypes>
         vector->putScalar(val);
     }
 
-    static Teuchos::ArrayView<double> get_data_nonconst(
+    static Teuchos::ArrayRCP<double> get_data_nonconst(
         Teuchos::RCP<MV> vector, int ivec=0)
     {
-        return vector->getDataNonConst(ivec)();
+        return vector->getDataNonConst(ivec);
     }
 
-    static Teuchos::ArrayView<const double> get_data(
+    static Teuchos::ArrayRCP<const double> get_data(
         Teuchos::RCP<const MV> vector, int ivec=0)
     {
-        return vector->getData(ivec)();
+        return vector->getData(ivec);
     }
 
     static double dot_product(Teuchos::RCP<const MV> x,

@@ -316,8 +316,8 @@ TYPED_TEST(MatrixTest, SP1_2Grp_Refl_Matrix)
     Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 2, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 2, VectorTraits::local_length(y));
-    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
-    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
+    Teuchos::ArrayRCP<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayRCP<double> y_data = VectorTraits::get_data_nonconst(y,0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
     {
@@ -509,8 +509,8 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Refl_Matrix)
     Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 2 * 2, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 2 * 2, VectorTraits::local_length(y));
-    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
-    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
+    Teuchos::ArrayRCP<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayRCP<double> y_data = VectorTraits::get_data_nonconst(y,0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
     {
@@ -831,8 +831,8 @@ TYPED_TEST(MatrixTest, SP3_2Grp_Vac_Matrix)
     Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ((mesh->num_cells() + nf) * 2 * 2, VectorTraits::local_length(x));
     EXPECT_EQ((mesh->num_cells() + nf) * 2 * 2, VectorTraits::local_length(y));
-    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
-    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
+    Teuchos::ArrayRCP<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayRCP<double> y_data = VectorTraits::get_data_nonconst(y,0);
 
     VectorTraits::put_scalar(x,0.4);
 
@@ -1365,7 +1365,7 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Refl_RHS)
     // check q
     Teuchos::RCP<const MV> rhs = system->get_RHS();
     EXPECT_EQ(mesh->num_cells() * 4 * 3, VectorTraits::local_length(rhs));
-    Teuchos::ArrayView<const double> rhs_data = VectorTraits::get_data(rhs,0);
+    Teuchos::ArrayRCP<const double> rhs_data = VectorTraits::get_data(rhs,0);
 
     double eps = 1.0e-6;
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
@@ -1531,7 +1531,7 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Isotropic_RHS)
     EXPECT_EQ(mesh->num_cells() * 4 * 3, system->vol_unknowns());
     EXPECT_EQ((system->vol_unknowns() + system->bnd_unknowns()),
               VectorTraits::local_length(rhs));
-    Teuchos::ArrayView<const double> rhs_data = VectorTraits::get_data(rhs,0);
+    Teuchos::ArrayRCP<const double> rhs_data = VectorTraits::get_data(rhs,0);
 
     double eps = 1.0e-6;
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
@@ -1833,8 +1833,8 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Null_Fission_Matrix)
     Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(y));
-    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
-    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
+    Teuchos::ArrayRCP<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayRCP<double> y_data = VectorTraits::get_data_nonconst(y,0);
     VectorTraits::put_scalar(y,-1.0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)
@@ -2030,8 +2030,8 @@ TYPED_TEST(MatrixTest, SP7_3Grp_Fission_Matrix)
     Teuchos::RCP<MV> y = VectorTraits::build_vector(system->get_Map());
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(x));
     EXPECT_EQ(mesh->num_cells() * 12, VectorTraits::local_length(y));
-    Teuchos::ArrayView<double> x_data = VectorTraits::get_data_nonconst(x,0);
-    Teuchos::ArrayView<double> y_data = VectorTraits::get_data_nonconst(y,0);
+    Teuchos::ArrayRCP<double> x_data = VectorTraits::get_data_nonconst(x,0);
+    Teuchos::ArrayRCP<double> y_data = VectorTraits::get_data_nonconst(y,0);
     VectorTraits::put_scalar(y,-1.0);
 
     for (int k = 0; k < mesh->num_cells_dim(K); ++k)

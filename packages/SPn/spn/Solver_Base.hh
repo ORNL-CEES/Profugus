@@ -146,7 +146,7 @@ void Solver_Base_Tmpl<T>::write_u_into_state(Teuchos::RCP<const MV>  u,
     // the state field is ordered group->cell whereas the u vector is
     // ordered cell->moments->group
 
-    Teuchos::ArrayView<const double> data = VectorTraits<T>::get_data(u);
+    Teuchos::ArrayRCP<const double> data = VectorTraits<T>::get_data(u);
 
     // loop over groups
     for (int g = 0; g < Ng; ++g)

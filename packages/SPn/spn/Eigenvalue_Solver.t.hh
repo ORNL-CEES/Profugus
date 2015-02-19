@@ -117,11 +117,11 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
         d_u = VectorTraits<T>::build_vector(Base::b_system->get_Map());
 
         // Assign data from old vector to new one
-        Teuchos::ArrayView<const double> tmp_data =
+        Teuchos::ArrayRCP<const double> tmp_data =
             VectorTraits<T>::get_data(tmp_vec);
-        Teuchos::ArrayView<double> u_data =
+        Teuchos::ArrayRCP<double> u_data =
             VectorTraits<T>::get_data_nonconst(d_u);
-        u_data.assign(tmp_data);
+        u_data.deepCopy(tmp_data());
     }
 
     CHECK(!d_u.is_null());

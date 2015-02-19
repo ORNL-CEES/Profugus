@@ -68,11 +68,12 @@ void Energy_Prolongation<T>::ApplyImpl( const MV &coarse_vectors,
     int coarse_offset, fine_offset;
     for( int ivec=0; ivec<num_vectors; ++ivec )
     {
-        Teuchos::ArrayView<double> fine_data =
+        Teuchos::ArrayRCP<double> fine_data =
             VectorTraits<T>::get_data_nonconst(
                 Teuchos::rcpFromRef(fine_vectors),ivec);
-        Teuchos::ArrayView<const double> coarse_data =
-            VectorTraits<T>::get_data(Teuchos::rcpFromRef(coarse_vectors),ivec);
+        Teuchos::ArrayRCP<const double> coarse_data =
+            VectorTraits<T>::get_data(
+                Teuchos::rcpFromRef(coarse_vectors),ivec);
 
         // Apply restriction to each component
         for( int i=0; i<d_unks_per_grp; ++i )

@@ -183,7 +183,7 @@ TYPED_TEST(Inf_Med_Solver_FVTest, 1Grp_SP1)
     this->solver->solve(q);
 
     Teuchos::RCP<const MV> x = this->solver->get_LHS();
-    Teuchos::ArrayView<const double> x_data =
+    Teuchos::ArrayRCP<const double> x_data =
         profugus::VectorTraits<TypeParam>::get_data(x);
     for (int i = 0; i < x_data.size(); ++i)
     {
@@ -214,7 +214,7 @@ TYPED_TEST(Inf_Med_Solver_FVTest, 1Grp_SP3)
     this->solver->solve(q);
 
     Teuchos::RCP<const MV> x = this->solver->get_LHS();
-    Teuchos::ArrayView<const double> x_data =
+    Teuchos::ArrayRCP<const double> x_data =
         profugus::VectorTraits<TypeParam>::get_data(x);
     for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
@@ -253,7 +253,7 @@ TYPED_TEST(Inf_Med_Solver_FVTest, 3Grp_SP1)
     const Linear_System_t &system = this->solver->get_linear_system();
 
     Teuchos::RCP<const MV> x = this->solver->get_LHS();
-    Teuchos::ArrayView<const double> x_data =
+    Teuchos::ArrayRCP<const double> x_data =
         profugus::VectorTraits<TypeParam>::get_data(x);
     for (int cell = 0; cell < this->mesh->num_cells(); ++cell)
     {
@@ -303,7 +303,7 @@ TYPED_TEST(Inf_Med_Solver_FVTest, 3Grp_SP5)
     const Linear_System_t &system = this->solver->get_linear_system();
 
     Teuchos::RCP<const MV> x = this->solver->get_LHS();
-    Teuchos::ArrayView<const double> x_data =
+    Teuchos::ArrayRCP<const double> x_data =
         profugus::VectorTraits<TypeParam>::get_data(x);
     double eps = 1.0e-4;
     for (int cell = 0; cell < this->mesh->num_cells(); ++cell)

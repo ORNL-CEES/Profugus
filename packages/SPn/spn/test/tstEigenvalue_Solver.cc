@@ -264,7 +264,7 @@ TYPED_TEST(Inf_Med_Eigenvalue_SolverTest, 3Grp_SP1)
     EXPECT_SOFTEQ(3.301149153942720, this->solver->get_eigenvalue(), 1.0e-6);
 
     Teuchos::RCP<const MV> ev = this->solver->get_eigenvector();
-    Teuchos::ArrayView<const double> ev_data =
+    Teuchos::ArrayRCP<const double> ev_data =
         profugus::VectorTraits<TypeParam>::get_data(ev);
     EXPECT_EQ(this->mesh->num_cells() * 3, ev_data.size());
 

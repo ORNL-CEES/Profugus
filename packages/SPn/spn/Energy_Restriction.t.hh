@@ -67,9 +67,9 @@ void Energy_Restriction<T>::ApplyImpl( const MV &fine_vectors,
     int coarse_offset, fine_offset;
     for( int ivec=0; ivec<num_vectors; ++ivec )
     {
-        Teuchos::ArrayView<const double> fine_data =
+        Teuchos::ArrayRCP<const double> fine_data =
             VectorTraits<T>::get_data(Teuchos::rcpFromRef(fine_vectors),ivec);
-        Teuchos::ArrayView<double> coarse_data =
+        Teuchos::ArrayRCP<double> coarse_data =
             VectorTraits<T>::get_data_nonconst(
                 Teuchos::rcpFromRef(coarse_vectors),ivec);
 
@@ -85,7 +85,8 @@ void Energy_Restriction<T>::ApplyImpl( const MV &fine_vectors,
                 int fine_grps = d_steer_vec[icg];
                 for( int ifg=grp_ctr; ifg<grp_ctr+fine_grps; ++ifg )
                 {
-                    coarse_data[coarse_offset+icg] += fine_data[fine_offset+ifg];
+                    coarse_data[coarse_offset+icg] +=
+                        fine_data[fine_offset+ifg];
                 }
                 grp_ctr += fine_grps;
                 coarse_data[coarse_offset+icg] /=
