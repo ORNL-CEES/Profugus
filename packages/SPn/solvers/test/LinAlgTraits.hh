@@ -232,7 +232,7 @@ Teuchos::RCP<TpetraTypes::MATRIX> build_laplacian<TpetraTypes>(int N)
     Teuchos::RCP<const TpetraTypes::MAP> map(
         new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,3);
     Teuchos::ArrayRCP<double> vals(3);
     Teuchos::ArrayRCP<int> inds(3);
     for( int i=0; i<map->getNodeNumElements(); ++i )
@@ -386,7 +386,7 @@ Teuchos::RCP<TpetraTypes::MATRIX> build_4x4_lhs<TpetraTypes>()
     Teuchos::RCP<const TpetraTypes::MAP> map(
         new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,4);
     Teuchos::ArrayRCP<double> vals;
     std::vector<int> inds_vec = {0, 1, 2, 3};
     Teuchos::ArrayRCP<int> inds = Teuchos::arcp( Teuchos::rcpFromRef(inds_vec) );
@@ -455,7 +455,7 @@ Teuchos::RCP<TpetraTypes::MATRIX> build_4x4_rhs<TpetraTypes>()
     Teuchos::RCP<const TpetraTypes::MAP> map(
         new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,4);
     Teuchos::ArrayRCP<double> vals;
     std::vector<int> inds_vec = {0, 1, 2, 3};
     Teuchos::ArrayRCP<int> inds = Teuchos::arcp( Teuchos::rcpFromRef(inds_vec) );
@@ -541,7 +541,7 @@ Teuchos::RCP<TpetraTypes::MATRIX> build_shifted_laplacian<TpetraTypes>(int N)
     Teuchos::RCP<const TpetraTypes::MAP> map(
         new TpetraTypes::MAP(N,index_base,comm) );
 
-    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,1);
+    Teuchos::RCP<TpetraTypes::MATRIX> A = Tpetra::createCrsMatrix<double>(map,3);
     Teuchos::ArrayRCP<double> vals(3);
     Teuchos::ArrayRCP<int> inds(3);
     for( int i=0; i<map->getNodeNumElements(); ++i )
