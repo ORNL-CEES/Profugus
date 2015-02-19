@@ -1,28 +1,23 @@
 ##---------------------------------------------------------------------------##
-## Profugus/PackagesList.cmake
+## alea/test/CMakeLists.txt
 ## Thomas M. Evans
-## Monday December 2 21:24:6 2013
+## Wednesday July 11 14:35:42 2012
+##---------------------------------------------------------------------------##
+## Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
+##---------------------------------------------------------------------------##
+## CMAKE for spn
 ##---------------------------------------------------------------------------##
 
+INCLUDE(UtilsTest)
 
 ##---------------------------------------------------------------------------##
-## PACKAGES PROVIDED
+## TESTING
 ##---------------------------------------------------------------------------##
 
-TRIBITS_REPOSITORY_DEFINE_PACKAGES(
-  Utils     packages/Utils     SS
-  Matprop   packages/Matprop   SS
-  SPn       packages/SPn       SS
-  MC        packages/MC        SS
-  Alea      packages/Alea      SS
-  )
+#ADD_UTILS_TEST(tstPolynomial)
+ADD_UTILS_TEST(tstPolynomialBasis)
+ADD_UTILS_TEST(tstPolynomialUtils)
 
 ##---------------------------------------------------------------------------##
-## PLATFORM SUPPORT
-##---------------------------------------------------------------------------##
-
-TRIBITS_DISABLE_PACKAGE_ON_PLATFORMS(Profugus Windows)
-
-##---------------------------------------------------------------------------##
-## end of PackagesList.cmake
+##                    end of alea/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##
