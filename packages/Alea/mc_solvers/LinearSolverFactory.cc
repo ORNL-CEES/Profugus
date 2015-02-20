@@ -13,7 +13,7 @@
 #include "AdditiveSchwarzWrapper.hh"
 #include "BelosSolver.hh"
 #include "ChebyshevIteration.hh"
-//#include "MonteCarloSolver.hh"
+#include "MonteCarloSolver.hh"
 #include "PolynomialPreconditioner.hh"
 #include "RichardsonIteration.hh"
 #include "SyntheticAcceleration.hh"
@@ -71,14 +71,11 @@ LinearSolverFactory::buildSolver(std::string solver_type,
     }
     else if( solver_type == "monte_carlo" )
     {
-        /*
         // The Monte Carlo solver is a local domain solver only
         // We wrap it into an AdditiveSchwarz to give a global solver
         Teuchos::RCP<MonteCarloSolver> mc_solver( new MonteCarloSolver(A,pl) );
 
         return Teuchos::rcp( new AdditiveSchwarzWrapper(A,mc_solver,pl) );
-        */
-        TEUCHOS_ASSERT(false);
     }
     else if( solver_type == "synthetic_acceleration" )
     {

@@ -75,6 +75,8 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/LinearSolverFactory.cc
   mc_solvers/LinearSystem.cc
   mc_solvers/LinearSystemFactory.cc
+  mc_solvers/MC_Data.cc
+  mc_solvers/MonteCarloSolver.cc
   mc_solvers/NeumannPolynomial.cc
   mc_solvers/Polynomial.cc
   mc_solvers/PolynomialBasis.cc
