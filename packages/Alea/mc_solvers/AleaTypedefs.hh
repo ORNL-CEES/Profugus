@@ -28,6 +28,7 @@
 
 namespace alea
 {
+// These should all be replaced with equivalents in SPn/solvers
 
 //! Type for scalar data
 typedef double                                  SCALAR;
@@ -38,7 +39,9 @@ typedef int                                     GO;
 //! Type for Kokkos "Classic" nodes used by Tpetra objects
 typedef KokkosClassic::DefaultNode::DefaultNodeType NODE;
 //! Device type for Kokkos kernels
-typedef Kokkos::Threads                         DEVICE;
+typedef Kokkos::DefaultExecutionSpace           DEVICE;
+//! Device type for host execution of Kokkos
+typedef Kokkos::Serial                          HOST;
 //! Map type for data distribution
 typedef Tpetra::Map<LO,GO,NODE>                 MAP;
 //! Multivector type

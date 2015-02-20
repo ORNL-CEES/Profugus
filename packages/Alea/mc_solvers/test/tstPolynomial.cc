@@ -10,30 +10,31 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include "LinearSystem.hh"
-#include "LinearSystemFactory.hh"
-#include "Polynomial.hh"
-#include "PolynomialBasis.hh"
-#include "PolynomialFactory.hh"
-#include "NeumannPolynomial.hh"
-#include "ChebyshevPolynomial.hh"
-#include "GmresPolynomial.hh"
+#include "../LinearSystem.hh"
+#include "../LinearSystemFactory.hh"
+#include "../Polynomial.hh"
+#include "../PolynomialBasis.hh"
+#include "../PolynomialFactory.hh"
+#include "../NeumannPolynomial.hh"
+#include "../ChebyshevPolynomial.hh"
+#include "../GmresPolynomial.hh"
+#include "../AleaTypedefs.hh"
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
-#include "AleaTypedefs.hh"
-
 using namespace alea;
 
 TEST(Polynomial, Basic)
-
+{
     // Set problem parameters
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
         Teuchos::sublist(pl,"Problem");
     Teuchos::RCP<Teuchos::ParameterList> poly_pl =
         Teuchos::sublist(pl,"Polynomial");
+    poly_pl->set("reproducible_random",true);
+    poly_pl->set("random_seed",54321);
 
     // Construct Map
     LO N = 50;
@@ -171,10 +172,6 @@ TEST(Polynomial, Basic)
     poly_pl->set("polynomial_order",4);
     poly_pl->set("gmres_type","fom");
 
-    // GMRES polynomial uses Teuchos::ScalarTraits to select
-    // random values for initial Krylov vector
-    // Set particular seed here for reproducibility in test
-    SCALAR_TRAITS::seedrandom(10101);
     poly = PolynomialFactory::buildPolynomial(A,pl);
     EXPECT_TRUE( poly != Teuchos::null );
 
@@ -198,6 +195,10 @@ TEST(Polynomial, Basic)
     expected = 26.0855267874441;
     EXPECT_NEAR( expected, coeffs[4], 1e-10 );
 
+    std::cout << "GMRES power coefficients: " << std::endl;
+    for( int i=0; i<coeffs.size(); ++i )
+        std::cout << i << " " << coeffs[i] << std::endl;
+
     //
     // GMRES coefficients for matrix with complex eigenvalues
     //
@@ -216,10 +217,6 @@ TEST(Polynomial, Basic)
     poly_pl->set("polynomial_order",10);
     poly_pl->set("gmres_type","fom");
 
-    // GMRES polynomial uses Teuchos::ScalarTraits to select
-    // random values for initial Krylov vector
-    // Set particular seed here for reproducibility in test
-    SCALAR_TRAITS::seedrandom(10101);
     poly = PolynomialFactory::buildPolynomial(A,pl);
     EXPECT_TRUE( poly != Teuchos::null );
 
@@ -264,9 +261,6 @@ TEST(Polynomial, Basic)
 
     poly_pl->set("gmres_type","normal");
 
-    // GMRES polynomial uses Teuchos::ScalarTraits to select
-    // random values for initial Krylov vector
-    // Set particular seed here for reproducibility in test
     SCALAR_TRAITS::seedrandom(10101);
     poly = PolynomialFactory::buildPolynomial(A,pl);
     EXPECT_TRUE( poly != Teuchos::null );
@@ -317,7 +311,6 @@ TEST(Polynomial, Basic)
     // GMRES polynomial uses Teuchos::ScalarTraits to select
     // random values for initial Krylov vector
     // Set particular seed here for reproducibility in test
-    SCALAR_TRAITS::seedrandom(10101);
     poly = PolynomialFactory::buildPolynomial(A,pl);
     EXPECT_TRUE( poly != Teuchos::null );
 
@@ -367,7 +360,6 @@ TEST(Polynomial, Basic)
     // GMRES polynomial uses Teuchos::ScalarTraits to select
     // random values for initial Krylov vector
     // Set particular seed here for reproducibility in test
-    SCALAR_TRAITS::seedrandom(10101);
     poly = PolynomialFactory::buildPolynomial(A,pl);
     EXPECT_TRUE( poly != Teuchos::null );
 

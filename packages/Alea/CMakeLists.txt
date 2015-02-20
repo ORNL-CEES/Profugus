@@ -68,6 +68,8 @@ FILE(GLOB MC_SOLVERS_HEADERS mc_solvers/*.hh)
 SET(MC_SOLVERS_SOURCES
   mc_solvers/ChebyshevPolynomial.cc
   mc_solvers/GmresPolynomial.cc
+  mc_solvers/LinearSystem.cc
+  mc_solvers/LinearSystemFactory.cc
   mc_solvers/NeumannPolynomial.cc
   mc_solvers/Polynomial.cc
   mc_solvers/PolynomialBasis.cc

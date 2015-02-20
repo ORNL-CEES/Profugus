@@ -7,6 +7,7 @@
 //---------------------------------------------------------------------------//
 
 #include <chrono>
+#include <random>
 
 #include "GmresPolynomial.hh"
 #include "AleaTypedefs.hh"
@@ -216,19 +217,44 @@ Teuchos::RCP<const MV> GmresPolynomial::computeInitialKrylovVector() const
     // convergence behavior, consistent with observations in
     // Joubert, SISC Vol. 15 (1994).
     std::vector<SCALAR> vec_norm(1);
-    MVT::MvRandom(*v);
+    {
+        std::mt19937_64 engine;
+        bool reproducible = b_poly_pl->get("reproducible_random",false);
+        if( reproducible )
+        {
+            // Ensure reproducibility in parallel by using same seed on
+            // every process and discarding as many numbers as the global
+            // index of the first local element
+            // This is expensive and should only be done for small problems
+            int seed = b_poly_pl->get("random_seed",12345);
+            engine.seed(seed);
+
+            int discard = v->getMap()->getGlobalElement(0);
+            engine.discard(discard);
+        }
+        else
+        {
+            std::random_device rd;
+            engine.seed(rd());
+        }
+
+        Teuchos::ArrayRCP<double> v_data = v->getDataNonConst(0);
+        std::uniform_real_distribution<SCALAR> dist(0.0,1.0);
+        for( int i=0; i<v_data.size(); ++i )
+        {
+            v_data[i] = dist(engine);
+        }
+    }
     MVT::MvNorm(*v,vec_norm);
     MVT::MvScale(*v,1.0/vec_norm[0]);
 
     // Use this for getting initial vector for MATLAB calculation of test data
-    /*
     Teuchos::ArrayRCP<const SCALAR> data = v->getData(0);
     std::cout << "Initial Krylov vector" << std::endl;
     for( int i=0; i<data.size(); ++i )
     {
         std::cout << i << " " << std::setprecision(14) << data[i] << std::endl;
     }
-    */
 
     return v;
 }

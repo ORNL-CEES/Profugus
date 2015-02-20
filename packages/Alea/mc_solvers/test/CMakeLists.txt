@@ -14,7 +14,8 @@ INCLUDE(UtilsTest)
 ## TESTING
 ##---------------------------------------------------------------------------##
 
-#ADD_UTILS_TEST(tstPolynomial)
+ADD_UTILS_TEST(tstLinearSystemFactory)
+ADD_UTILS_TEST(tstPolynomial)
 ADD_UTILS_TEST(tstPolynomialBasis)
 ADD_UTILS_TEST(tstPolynomialUtils)
 
