@@ -95,12 +95,11 @@ TEST(Polynomial, Basic)
     coeffs = poly->getCoeffs(power_basis);
     expected_size = 3;
     EXPECT_EQ( expected_size, coeffs.size() );
-    expected = 3.0;
-    EXPECT_DOUBLE_EQ( expected, coeffs[0] );
-    expected = -3.0;
-    EXPECT_DOUBLE_EQ( expected, coeffs[1] );
-    expected = 1.0;
-    EXPECT_DOUBLE_EQ( expected, coeffs[2] );
+    {
+        std::vector<double> exp_vec = {3.0, -3.0, 1.0};
+        for( int i=0; i<expected_size; ++i )
+            EXPECT_DOUBLE_EQ(exp_vec[i],coeffs[i]);
+    }
 
     //
     // Chebyshev coefficients in power basis
@@ -129,13 +128,13 @@ TEST(Polynomial, Basic)
     // Test coefficients against analytic values
     coeffs = poly->getCoeffs(power_basis);
     expected_size = 3;
-    EXPECT_EQ( expected_size, coeffs.size() );
-    expected = 70.0/33.0;
-    EXPECT_DOUBLE_EQ( expected, coeffs[0] );
-    expected = -48.0/33.0;
-    EXPECT_DOUBLE_EQ( expected, coeffs[1] );
-    expected = 32.0/99.0;
-    EXPECT_DOUBLE_EQ( expected, coeffs[2] );
+    EXPECT_EQ(expected_size,coeffs.size());
+    {
+        std::vector<double> exp_vec =
+            {70.0/33.0, -48.0/33.0, 32.0/99.0};
+        for( int i=0; i<expected_size; ++i )
+            EXPECT_DOUBLE_EQ(exp_vec[i],coeffs[i]);
+    }
 
     //
     // Check eigenvalue calculation in Chebyshev construction
@@ -157,10 +156,10 @@ TEST(Polynomial, Basic)
     // Compuare against MATLAB-computed values
     SCALAR lambda_min = cheby_poly->getLambdaMin();
     expected = 1.9731936e-3;
-    EXPECT_NEAR( expected, lambda_min, 1e-6);
+    EXPECT_SOFTEQ( expected, lambda_min, 1e-6);
     SCALAR lambda_max = cheby_poly->getLambdaMax();
     expected = 1.99802681;
-    EXPECT_NEAR( expected, lambda_max, 1e-6);
+    EXPECT_SOFTEQ( expected, lambda_max, 1e-6);
 
     //
     // GMRES coefficients in power basis
@@ -184,16 +183,14 @@ TEST(Polynomial, Basic)
     expected_size = 5;
     EXPECT_EQ( expected_size, coeffs.size() );
     // Compare against MATLAB-computed values
-    expected = 36.2463717933919;
-    EXPECT_NEAR( expected, coeffs[0], 1e-10 );
-    expected = -156.7745506438811;
-    EXPECT_NEAR( expected, coeffs[1], 1e-10 );
-    expected = 225.4189277423314;
-    EXPECT_NEAR( expected, coeffs[2], 1e-10 );
-    expected = -130.0547044559239;
-    EXPECT_NEAR( expected, coeffs[3], 1e-10 );
-    expected = 26.0855267874441;
-    EXPECT_NEAR( expected, coeffs[4], 1e-10 );
+    {
+        std::vector<double> exp_vec =
+            { 120.3590920202, -588.4594349692, 915.9793178951,
+             -562.3764435696,  118.7150058831};
+        double tol = 1e-12;
+        for( int i=0; i<expected_size; ++i )
+            EXPECT_SOFTEQ(exp_vec[i],coeffs[i],tol);
+    }
 
     std::cout << "GMRES power coefficients: " << std::endl;
     for( int i=0; i<coeffs.size(); ++i )
@@ -228,28 +225,16 @@ TEST(Polynomial, Basic)
     expected_size = 11;
     EXPECT_EQ( expected_size, coeffs.size() );
     // Compuare against MATLAB-computed values
-    expected = 41.85651066835;
-    EXPECT_NEAR( expected, coeffs[0], 1e-8 );
-    expected = -615.66330986050;
-    EXPECT_NEAR( expected, coeffs[1], 1e-8 );
-    expected = 4136.94716550727;
-    EXPECT_NEAR( expected, coeffs[2], 1e-8 );
-    expected = -15242.13854812877;
-    EXPECT_NEAR( expected, coeffs[3], 1e-8 );
-    expected = 33939.59056325329;
-    EXPECT_NEAR( expected, coeffs[4], 1e-8 );
-    expected = -48059.76677361113;
-    EXPECT_NEAR( expected, coeffs[5], 1e-8 );
-    expected = 44223.10325663088;
-    EXPECT_NEAR( expected, coeffs[6], 1e-8 );
-    expected = -26333.51323537354;
-    EXPECT_NEAR( expected, coeffs[7], 1e-8 );
-    expected = 9784.04803444970;
-    EXPECT_NEAR( expected, coeffs[8], 1e-8 );
-    expected = -2061.15848172241;
-    EXPECT_NEAR( expected, coeffs[9], 1e-8 );
-    expected = 187.95599017072;
-    EXPECT_NEAR( expected, coeffs[10], 1e-8 );
+    {
+        std::vector<double> exp_vec =
+            {317.3737917360, -6113.3991897250, 47858.3199791513,
+             -194604.3988303378, 462323.7282052612, -684480.9307913361,
+             650672.6102197397, -397405.5220882442, 150778.4680632685,
+             -32345.3651561241, 2997.9784441415};
+        double tol = 1e-12;
+        for( int i=0; i<expected_size; ++i )
+            EXPECT_SOFTEQ(exp_vec[i],coeffs[i],tol);
+    }
 
     std::cout << "FOM coefficients: " << std::endl;
     for( int i=0; i<coeffs.size(); ++i )
@@ -261,7 +246,6 @@ TEST(Polynomial, Basic)
 
     poly_pl->set("gmres_type","normal");
 
-    SCALAR_TRAITS::seedrandom(10101);
     poly = PolynomialFactory::buildPolynomial(A,pl);
     EXPECT_TRUE( poly != Teuchos::null );
 
@@ -275,28 +259,16 @@ TEST(Polynomial, Basic)
 
     // Due to poor conditioning of linear system,
     //  only first few digits can be expected to match
-    expected =  18.01626600611;
-    EXPECT_NEAR( expected, coeffs[0], 1e-2*std::abs(expected) );
-    expected = -159.07098510860;
-    EXPECT_NEAR( expected, coeffs[1], 1e-2*std::abs(expected) );
-    expected =  777.60948752050;
-    EXPECT_NEAR( expected, coeffs[2], 1e-2*std::abs(expected) );
-    expected = -2294.89032307120;
-    EXPECT_NEAR( expected, coeffs[3], 1e-2*std::abs(expected) );
-    expected =  4324.66928714378;
-    EXPECT_NEAR( expected, coeffs[4], 1e-2*std::abs(expected) );
-    expected = -5370.64743029258;
-    EXPECT_NEAR( expected, coeffs[5], 1e-2*std::abs(expected) );
-    expected =  4443.23962490253;
-    EXPECT_NEAR( expected, coeffs[6], 1e-2*std::abs(expected) );
-    expected = -2422.62831424262;
-    EXPECT_NEAR( expected, coeffs[7], 1e-2*std::abs(expected) );
-    expected =  835.66183653430;
-    EXPECT_NEAR( expected, coeffs[8], 1e-2*std::abs(expected) );
-    expected = -165.20776507683;
-    EXPECT_NEAR( expected, coeffs[9], 1e-2*std::abs(expected) );
-    expected =  14.25915717817;
-    EXPECT_NEAR( expected, coeffs[10], 1e-2*std::abs(expected) );
+    {
+        std::vector<double> exp_vec =
+            {25.9658833933, -270.5756373551, 1466.4374282468,
+             -4625.0162185862, 9110.8784873964, -11675.6152179777,
+             9892.8402157345, -5499.6550235381, 1929.0035351178,
+             -387.1279225560, 33.8812574180};
+        double tol = 1e-2;
+        for( int i=0; i<expected_size; ++i )
+            EXPECT_SOFTEQ(exp_vec[i],coeffs[i],tol);
+    }
 
     std::cout << "GMRES/NE coefficients: " << std::endl;
     for( int i=0; i<coeffs.size(); ++i )
@@ -322,30 +294,16 @@ TEST(Polynomial, Basic)
     expected_size = 11;
     EXPECT_EQ( expected_size, coeffs.size() );
 
-    // Due to poor conditioning of linear system,
-    //  only first few digits can be expected to match
-    expected =  18.01626600611;
-    EXPECT_NEAR( expected, coeffs[0], 1e-3*std::abs(expected) );
-    expected = -159.07098510860;
-    EXPECT_NEAR( expected, coeffs[1], 1e-3*std::abs(expected) );
-    expected =  777.60948752050;
-    EXPECT_NEAR( expected, coeffs[2], 1e-3*std::abs(expected) );
-    expected = -2294.89032307120;
-    EXPECT_NEAR( expected, coeffs[3], 1e-3*std::abs(expected) );
-    expected =  4324.66928714378;
-    EXPECT_NEAR( expected, coeffs[4], 1e-3*std::abs(expected) );
-    expected = -5370.64743029258;
-    EXPECT_NEAR( expected, coeffs[5], 1e-3*std::abs(expected) );
-    expected =  4443.23962490253;
-    EXPECT_NEAR( expected, coeffs[6], 1e-3*std::abs(expected) );
-    expected = -2422.62831424262;
-    EXPECT_NEAR( expected, coeffs[7], 1e-3*std::abs(expected) );
-    expected =  835.66183653430;
-    EXPECT_NEAR( expected, coeffs[8], 1e-3*std::abs(expected) );
-    expected = -165.20776507683;
-    EXPECT_NEAR( expected, coeffs[9], 1e-3*std::abs(expected) );
-    expected =  14.25915717817;
-    EXPECT_NEAR( expected, coeffs[10], 1e-3*std::abs(expected) );
+    {
+        std::vector<double> exp_vec =
+            {25.9715826978, -270.6862126003, 1467.2872852538,
+             -4628.3926873274, 9118.7195336468, -11686.9826673866,
+             9903.4421648398, -5506.0197798736, 1931.3811134933,
+             -387.6308375889, 33.9272789271};
+        double tol = 1e-9;
+        for( int i=0; i<expected_size; ++i )
+            EXPECT_SOFTEQ(exp_vec[i],coeffs[i],tol);
+    }
 
     std::cout << "GMRES/QR coefficients: " << std::endl;
     for( int i=0; i<coeffs.size(); ++i )
@@ -371,30 +329,17 @@ TEST(Polynomial, Basic)
     expected_size = 11;
     EXPECT_EQ( expected_size, coeffs.size() );
 
-    // Due to poor conditioning of linear system,
-    //  only first few digits can be expected to match
-    expected =  18.01626600611;
-    EXPECT_NEAR( expected, coeffs[0], 1e-3*std::abs(expected) );
-    expected = -159.07098510860;
-    EXPECT_NEAR( expected, coeffs[1], 1e-3*std::abs(expected) );
-    expected =  777.60948752050;
-    EXPECT_NEAR( expected, coeffs[2], 1e-3*std::abs(expected) );
-    expected = -2294.89032307120;
-    EXPECT_NEAR( expected, coeffs[3], 1e-3*std::abs(expected) );
-    expected =  4324.66928714378;
-    EXPECT_NEAR( expected, coeffs[4], 1e-3*std::abs(expected) );
-    expected = -5370.64743029258;
-    EXPECT_NEAR( expected, coeffs[5], 1e-3*std::abs(expected) );
-    expected =  4443.23962490253;
-    EXPECT_NEAR( expected, coeffs[6], 1e-3*std::abs(expected) );
-    expected = -2422.62831424262;
-    EXPECT_NEAR( expected, coeffs[7], 1e-3*std::abs(expected) );
-    expected =  835.66183653430;
-    EXPECT_NEAR( expected, coeffs[8], 1e-3*std::abs(expected) );
-    expected = -165.20776507683;
-    EXPECT_NEAR( expected, coeffs[9], 1e-3*std::abs(expected) );
-    expected =  14.25915717817;
-    EXPECT_NEAR( expected, coeffs[10], 1e-3*std::abs(expected) );
+    {
+        std::vector<double> exp_vec =
+            {25.9715826978, -270.6862125900, 1467.2872851571,
+             -4628.3926869256, 9118.7195327064, -11686.9826660298,
+             9903.4421635866, -5506.0197791297, 1931.3811132186,
+             -387.6308375315, 33.9272789218};
+
+        double tol = 1e-10;
+        for( int i=0; i<expected_size; ++i )
+            EXPECT_SOFTEQ(exp_vec[i],coeffs[i],tol);
+    }
 
     std::cout << "GMRES/Arnoldi coefficients: " << std::endl;
     for( int i=0; i<coeffs.size(); ++i )

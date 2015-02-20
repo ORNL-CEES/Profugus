@@ -248,6 +248,7 @@ Teuchos::RCP<const MV> GmresPolynomial::computeInitialKrylovVector() const
     MVT::MvNorm(*v,vec_norm);
     MVT::MvScale(*v,1.0/vec_norm[0]);
 
+    /*
     // Use this for getting initial vector for MATLAB calculation of test data
     Teuchos::ArrayRCP<const SCALAR> data = v->getData(0);
     std::cout << "Initial Krylov vector" << std::endl;
@@ -255,6 +256,7 @@ Teuchos::RCP<const MV> GmresPolynomial::computeInitialKrylovVector() const
     {
         std::cout << i << " " << std::setprecision(14) << data[i] << std::endl;
     }
+    */
 
     return v;
 }
