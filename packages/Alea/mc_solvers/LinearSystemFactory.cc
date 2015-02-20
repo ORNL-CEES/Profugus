@@ -99,16 +99,13 @@ void LinearSystemFactory::buildDiffusionSystem(
     // Sinusoidal source with homogeneous Dirichlet boundaries
     b = Teuchos::rcp( new MV(A->getDomainMap(),1) );
     const double pi = 4.0*std::atan(1.0);
-    for( GO i=0; i<N; ++i )
+    Teuchos::ArrayRCP<double> b_data = b->getDataNonConst(0);
+    LO Nlocal = b_data.size();
+    for( LO i=0; i<Nlocal; ++i )
     {
-        if( A->getDomainMap()->isNodeLocalElement(i) )
-        {
-            double val = std::sin(pi*static_cast<double>(i)/
-                                       static_cast<double>(N-1));
-            //double val = std::exp(-100.0*std::abs(static_cast<double>(i-N/2)/
-            //                                      static_cast<double>(N)));
-            b->replaceLocalValue(i,0,val);
-        }
+        double gid = static_cast<double>(b->getMap()->getGlobalElement(i));
+        double val = std::sin(pi*gid / static_cast<double>(N-1));
+        b->replaceLocalValue(i,0,std::sin(val));
     }
 }
 
@@ -131,13 +128,13 @@ void LinearSystemFactory::buildConvectionDiffusionSystem(
     // Sinusoidal source with homogeneous Dirichlet boundaries
     b = Teuchos::rcp( new MV(A->getDomainMap(),1) );
     const double pi = 4.0*std::atan(1.0);
-    for( LO i=0; i<N; ++i )
+    Teuchos::ArrayRCP<double> b_data = b->getDataNonConst(0);
+    LO Nlocal = b_data.size();
+    for( LO i=0; i<Nlocal; ++i )
     {
-        if( A->getDomainMap()->isNodeLocalElement(i) )
-        {
-            double val = 2*pi*static_cast<double>(i)/static_cast<double>(N-1);
-            b->replaceLocalValue(i,0,std::sin(val));
-        }
+        double gid = static_cast<double>(b->getMap()->getGlobalElement(i));
+        double val = std::sin(2*pi*gid/static_cast<double>(N-1));
+        b->replaceLocalValue(i,0,std::sin(val));
     }
 }
 

@@ -66,15 +66,23 @@ SET(HEADERS "")
 
 FILE(GLOB MC_SOLVERS_HEADERS mc_solvers/*.hh)
 SET(MC_SOLVERS_SOURCES
+  mc_solvers/AdditiveSchwarzWrapper.cc
+  mc_solvers/AleaSolver.cc
+  mc_solvers/BelosSolver.cc
+  mc_solvers/ChebyshevIteration.cc
   mc_solvers/ChebyshevPolynomial.cc
   mc_solvers/GmresPolynomial.cc
+  mc_solvers/LinearSolverFactory.cc
   mc_solvers/LinearSystem.cc
   mc_solvers/LinearSystemFactory.cc
   mc_solvers/NeumannPolynomial.cc
   mc_solvers/Polynomial.cc
   mc_solvers/PolynomialBasis.cc
   mc_solvers/PolynomialFactory.cc
+  mc_solvers/PolynomialPreconditioner.cc
   mc_solvers/PolynomialUtils.cc
+  mc_solvers/RichardsonIteration.cc
+  mc_solvers/SyntheticAcceleration.cc
   )
 LIST(APPEND HEADERS ${MC_SOLVERS_HEADERS})
 LIST(APPEND SOURCES ${MC_SOLVERS_SOURCES})
