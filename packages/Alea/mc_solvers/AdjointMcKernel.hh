@@ -53,21 +53,21 @@ class AdjointMcKernel
     typedef Kokkos::View<      SCALAR *, DEVICE> view_type;
     typedef Kokkos::View<const SCALAR *, DEVICE> const_view_type;
     typedef Kokkos::View<const LO     *, DEVICE> const_ord_view;
+    typedef view_type::HostMirror                host_view_type;
 
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
-    AdjointMcKernel(const const_view_type H,
-                    const const_view_type P,
-                    const const_view_type W,
-                    const const_ord_view  inds,
-                    const const_ord_view  offsets,
-                    const const_view_type coeffs,
-                    const view_type       start_cdf,
-                    const view_type       start_wt,
-                          int             histories_per_team,
-                          bool            use_expected_value,
-                          bool            print);
+    AdjointMcKernel(const const_view_type                H,
+                    const const_view_type                P,
+                    const const_view_type                W,
+                    const const_ord_view                 inds,
+                    const const_ord_view                 offsets,
+                    const const_view_type                coeffs,
+                    Teuchos::RCP<Teuchos::ParameterList> pl);
+
+    // Solve problem (this is a host function)
+    void solve(const MV &x, MV &y);
 
     // Kokkos "parallel_reduce" API functions
 
@@ -85,6 +85,9 @@ class AdjointMcKernel
               const volatile SCALAR *input) const;
 
   private:
+
+    // Build the initial CDF and weights (host function)
+    void build_initial_distribution(const MV &x);
 
     KOKKOS_INLINE_FUNCTION
     void getNewRow(const LO        state,
@@ -114,17 +117,19 @@ class AdjointMcKernel
     const const_ord_view  d_inds;
     const const_ord_view  d_offsets;
     const const_view_type d_coeffs;
-    const const_view_type d_start_cdf;
-    const const_view_type d_start_wt;
+    const view_type d_start_cdf;
+    const view_type d_start_wt;
 
     // Kokkos random generator pool
     generator_pool d_rand_pool;
 
     // Problem parameters
-    const int d_histories_per_team;
-    const bool d_use_expected_value;
-    const bool d_print;
-    const int d_max_history_length;
+    int    d_max_history_length;
+    bool   d_use_expected_value;
+    bool   d_print;
+    int    d_num_histories;
+    int    d_histories_per_team;
+    SCALAR d_start_wt_factor;
 
 };
 

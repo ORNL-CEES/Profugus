@@ -39,34 +39,19 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
   : AleaSolver(A,pl)
 {
     // Get Monte Carlo sublist
-    Teuchos::RCP<Teuchos::ParameterList> mc_pl =
-        Teuchos::sublist(pl,"Monte Carlo");
+    d_mc_pl = Teuchos::sublist(pl,"Monte Carlo");
 
     // Override verbosity if present on sublist
-    AleaSolver::setParameters(mc_pl);
+    AleaSolver::setParameters(d_mc_pl);
 
     // Determine forward or adjoint
-    std::string type = mc_pl->get("mc_type","adjoint");
+    std::string type = d_mc_pl->get("mc_type","adjoint");
     if( type == "forward" )
         d_type = FORWARD;
     else
         d_type = ADJOINT;
 
-    // Get parameters off of PL
-    std::string estimator = mc_pl->get<std::string>("estimator","expected_value");
-    TEUCHOS_TEST_FOR_EXCEPT( estimator != "collision" &&
-                             estimator != "expected_value" );
-    d_use_expected_value = (estimator == "expected_value");
-
-    if( d_type == FORWARD )
-        d_use_expected_value = false;
-
-    // Get number of requested threads
-    d_num_threads = mc_pl->get<int>("num_threads",1);
-
-    d_num_histories      = mc_pl->get<int>("num_histories",1000);
-    d_weight_cutoff      = mc_pl->get<SCALAR>("weight_cutoff",1.0e-6);
-    d_start_wt_factor    = mc_pl->get<SCALAR>("start_weight_factor",1.0);
+    d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
     d_initialized = false;
 }
@@ -110,26 +95,12 @@ void MonteCarloSolver::initialize()
     std::copy(coeffs.begin(),coeffs.end(),&coeffs_host(0));
     Kokkos::deep_copy(d_coeffs,coeffs_host);
 
-    // Get Monte Carlo sublist
-    Teuchos::RCP<Teuchos::ParameterList> mc_pl =
-        Teuchos::sublist(b_pl,"Monte Carlo");
-
     // Create Monte Carlo data
     d_mc_data = Teuchos::rcp(
         new MC_Data(b_A,basis,b_pl) );
     convertMatrices(d_mc_data->getIterationMatrix(),
                     d_mc_data->getProbabilityMatrix(),
                     d_mc_data->getWeightMatrix());
-
-    if( d_num_histories%d_num_threads!= 0  && b_verbosity>=LOW )
-    {
-        std::cout << "WARNING: Requested number of histories ("
-            << d_num_histories << ") is not divisible by the number "
-            << "of threads (" << d_num_threads << "), ";
-        d_num_histories = (d_num_histories/d_num_threads+1)*d_num_threads;
-        std::cout << d_num_histories << " histories will be performed."
-            << std::endl;
-    }
 
     b_label = "MonteCarloSolver";
     d_initialized = true;
@@ -161,14 +132,6 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 
     LO N = x.getLocalLength();
 
-    // Cache data components of x and y, on-the-fly access is SLOW
-    const Teuchos::ArrayRCP<const SCALAR> x_data = x.getData(0);
-    const Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-
-    int league_size = d_num_threads;
-    int team_size = 1;
-    Kokkos::TeamPolicy<DEVICE> exec_policy(league_size,team_size);
-
     if( d_type == FORWARD )
     {
         /*
@@ -195,58 +158,10 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     }
     else if( d_type == ADJOINT )
     {
-        // Build initial probability and weight distributions
-        // Should probably switch to doing this in a Kernel
-        view_type start_cdf("starting_cdf",N);
-        view_type start_wt("starting_wt",N);
-        view_type::HostMirror start_cdf_host = Kokkos::create_mirror_view(start_cdf);
-        view_type::HostMirror start_wt_host  = Kokkos::create_mirror_view(start_wt);
-        for( LO i=0; i<N; ++i )
-        {
-            start_cdf_host(i) =
-                SCALAR_TRAITS::pow(SCALAR_TRAITS::magnitude(x_data[i]),
-                                   d_start_wt_factor);
-        }
-        SCALAR pdf_sum = std::accumulate(&start_cdf_host(0),&start_cdf_host(N-1)+1,0.0);
-        TEUCHOS_ASSERT( pdf_sum > 0.0 );
-        std::transform(&start_cdf_host(0),&start_cdf_host(N-1)+1,&start_cdf_host(0),
-                       [pdf_sum](SCALAR x){return x/pdf_sum;});
-        std::transform(x_data.begin(),x_data.end(),&start_cdf_host(0),
-                       &start_wt_host(0),
-                       [](SCALAR x, SCALAR y){return y==0.0 ? 0.0 : x/y;});
-        std::partial_sum(&start_cdf_host(0),&start_cdf_host(N-1)+1,&start_cdf_host(0));
-        Kokkos::deep_copy(start_cdf,start_cdf_host);
-        Kokkos::deep_copy(start_wt,start_wt_host);
-
-        int histories_per_thread = d_num_histories / d_num_threads;
-
-        // Create temporary storage on device and mirror it on the host
-        const view_type y_device("result",N);
-        const view_type::HostMirror y_mirror =
-            Kokkos::create_mirror_view(y_device);
-
         // Create kernel for performing group of MC histories
-        AdjointMcKernel kernel(d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,
-                               start_cdf,start_wt,histories_per_thread,
-                               d_use_expected_value,b_verbosity>=HIGH);
+        AdjointMcKernel kernel(d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
-        // Execute Kokkos kernel on device
-        Kokkos::parallel_reduce( exec_policy, kernel, y_mirror);
-
-        SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
-
-        Kokkos::deep_copy(y_mirror,y_device);
-
-        for( LO i=0; i<N; ++i )
-        {
-            y_data[i] = scale_factor*y_mirror(i);
-        }
-
-        // For expected value estimator, need to add C_0*x
-        if( d_use_expected_value )
-        {
-            y.update(d_coeffs[0],x,1.0);
-        }
+        kernel.solve(x,y);
     }
 
     if( b_verbosity >= LOW )

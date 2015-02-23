@@ -135,6 +135,7 @@ class MonteCarloSolver : public AleaSolver,
                          Teuchos::RCP<const MATRIX> W);
 
     Teuchos::RCP<MC_Data> d_mc_data;
+    Teuchos::RCP<Teuchos::ParameterList> d_mc_pl;
 
     view_type d_H;
     view_type d_P;

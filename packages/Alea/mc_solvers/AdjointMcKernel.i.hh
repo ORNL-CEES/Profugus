@@ -14,6 +14,8 @@
 #include <cmath>
 
 #include "AdjointMcKernel.hh"
+#include "utils/String_Functions.hh"
+#include "harness/Warnings.hh"
 
 namespace alea
 {
@@ -35,33 +37,96 @@ namespace alea
  * \param print Should debug info be printed?
  */
 //---------------------------------------------------------------------------//
-AdjointMcKernel::AdjointMcKernel(const const_view_type H,
-                                 const const_view_type P,
-                                 const const_view_type W,
-                                 const const_ord_view  inds,
-                                 const const_ord_view  offsets,
-                                 const const_view_type coeffs,
-                                 const view_type       start_cdf,
-                                 const view_type       start_wt,
-                                       int             histories_per_team,
-                                       bool            use_expected_value,
-                                       bool            print)
+AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
+                                 const const_view_type                P,
+                                 const const_view_type                W,
+                                 const const_ord_view                 inds,
+                                 const const_ord_view                 offsets,
+                                 const const_view_type                coeffs,
+                                 Teuchos::RCP<Teuchos::ParameterList> pl)
 
-  : value_count(start_cdf.size())
+  : value_count(offsets.size()-1)
   , d_H(H)
   , d_P(P)
   , d_W(W)
   , d_inds(inds)
   , d_offsets(offsets)
   , d_coeffs(coeffs)
-  , d_start_cdf(start_cdf)
-  , d_start_wt(start_wt)
-  , d_rand_pool(31891)
-  , d_histories_per_team(histories_per_team)
-  , d_use_expected_value(use_expected_value)
-  , d_print(print)
+  , d_start_cdf("start_cdf",value_count)
+  , d_start_wt("start_wt",value_count)
   , d_max_history_length(d_coeffs.size()-1)
 {
+    d_num_histories = pl->get("num_histories",1000);
+
+    // Set up RNG
+    int rand_seed = pl->get("random_seed",31891);
+    d_rand_pool.init(rand_seed,DEVICE::max_hardware_threads());
+
+    // Determine type of tally
+    std::string estimator = pl->get<std::string>("estimator",
+                                                 "expected_value");
+    TEUCHOS_TEST_FOR_EXCEPT( estimator != "collision" &&
+                             estimator != "expected_value" );
+    d_use_expected_value = (estimator == "expected_value");
+
+    // Power factor for initial probability distribution
+    d_start_wt_factor = pl->get<SCALAR>("start_weight_factor",1.0);
+
+    // Should we print anything to screen
+    std::string verb = profugus::to_lower(pl->get("verbosity","low"));
+    d_print = (verb == "high");
+}
+
+//---------------------------------------------------------------------------//
+// Solve problem using Monte Carlo
+//---------------------------------------------------------------------------//
+void AdjointMcKernel::solve(const MV &x, MV &y)
+{
+    // Determine number of histories needed per team
+    int rec_team_size = team_policy::team_size_recommended(*this);
+    int league_size_req = d_num_histories / rec_team_size;
+    team_policy policy(league_size_req,rec_team_size);
+    int num_teams = policy.league_size();
+    int team_size = policy.team_size();
+    int num_threads = num_teams * team_size;
+    int total_histories = d_num_histories;
+    if( d_num_histories % num_threads != 0 )
+    {
+        total_histories = (total_histories/num_threads + 1)*num_threads;
+        ADD_WARNING("Requested number of histories (" << d_num_histories
+           << ") is not divisible by number of threads ("
+           << num_threads << "), number of histories is being increased to "
+           << total_histories << std::endl);
+    }
+    d_histories_per_team = total_histories / num_teams;
+
+    // Build initial probability and weight distributions
+    build_initial_distribution(x);
+
+    // Need to get Kokkos view directly, this is silly
+    Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
+    const view_type y_device("result",value_count);
+    const view_type::HostMirror y_mirror =
+        Kokkos::create_mirror_view(y_device);
+
+    // Execute functor
+    Kokkos::parallel_reduce(policy,*this,y_mirror);
+
+    // Copy data back to host, this shouldn't need to happen
+    Kokkos::deep_copy(y_mirror,y_device);
+
+    // Apply scale factor
+    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(total_histories);
+    for( LO i=0; i<value_count; ++i )
+    {
+        y_data[i] = scale_factor*y_mirror(i);
+    }
+
+    // Add rhs for expected value
+    if( d_use_expected_value )
+    {
+        y.update(d_coeffs(0),x,1.0);
+    }
 }
 
 
@@ -95,9 +160,6 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
     int histories_per_thread = d_histories_per_team / team_size;
 
     generator_type rand_gen = d_rand_pool.get_state();
-
-    // What if number of histories per team isn't divisible by team size?
-    // Need to adjust history count accordingly
 
     for( int ihist=0; ihist<histories_per_thread; ++ihist )
     {
@@ -245,6 +307,38 @@ LO AdjointMcKernel::getNewState(const SCALAR * const  cdf,
 
     return elem - cdf;
 }
+
+// Build initial cdf and weights
+void AdjointMcKernel::build_initial_distribution(const MV &x)
+{
+    // Build data on host, then explicitly copy to device
+    // In future, convert this to a new Kernel to allow building
+    //  distributions directly on device if x is allocated there
+    host_view_type start_cdf_host = Kokkos::create_mirror_view(d_start_cdf);
+    host_view_type start_wt_host  = Kokkos::create_mirror_view(d_start_wt);
+
+    Teuchos::ArrayRCP<const SCALAR> x_data = x.getData(0);
+
+    int N = value_count;
+
+    for( LO i=0; i<N; ++i )
+    {
+        start_cdf_host(i) =
+            SCALAR_TRAITS::pow(SCALAR_TRAITS::magnitude(x_data[i]),
+                               d_start_wt_factor);
+    }
+    SCALAR pdf_sum = std::accumulate(&start_cdf_host(0),&start_cdf_host(N-1)+1,0.0);
+    TEUCHOS_ASSERT( pdf_sum > 0.0 );
+    std::transform(&start_cdf_host(0),&start_cdf_host(N-1)+1,&start_cdf_host(0),
+                   [pdf_sum](SCALAR x){return x/pdf_sum;});
+    std::transform(x_data.begin(),x_data.end(),&start_cdf_host(0),
+                   &start_wt_host(0),
+                   [](SCALAR x, SCALAR y){return y==0.0 ? 0.0 : x/y;});
+    std::partial_sum(&start_cdf_host(0),&start_cdf_host(N-1)+1,&start_cdf_host(0));
+    Kokkos::deep_copy(d_start_cdf,start_cdf_host);
+    Kokkos::deep_copy(d_start_wt, start_wt_host);
+}
+
 
 } // namespace alea
 
