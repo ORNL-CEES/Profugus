@@ -66,7 +66,7 @@ class AdjointMcKernel
                     const const_view_type                coeffs,
                     Teuchos::RCP<Teuchos::ParameterList> pl);
 
-    // Solve problem (this is a host function)
+    //! Solve problem (this is a host function)
     void solve(const MV &x, MV &y);
 
     // Kokkos "parallel_reduce" API functions

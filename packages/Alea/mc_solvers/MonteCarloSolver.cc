@@ -30,7 +30,6 @@ namespace alea
  *  - mc_type(string)         : "forward" or ("adjoint")
  *  - estimator(string)       : "collision" or ("expected_value")
  *  - num_histories(int)      : >0 (1000)
- *  - weight_cutoff(SCALAR)   : >0.0 (1.0e-6)
  *  - verbosity(string)       : "none", ("low"), "medium", "high"
  */
 //---------------------------------------------------------------------------//
