@@ -101,13 +101,21 @@ TRIBITS_ADD_LIBRARY(
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
 
-#TRIBITS_ADD_EXECUTABLE(
-#  xalea
-#  NOEXESUFFIX
-#  NOEXEPREFIX
-#  SOURCES mc_solvers/alea.cc
-#  INSTALLABLE
-#  )
+TRIBITS_ADD_EXECUTABLE(
+  xalea
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES mc_solvers/alea.cc
+  INSTALLABLE
+  )
+
+TRIBITS_ADD_EXECUTABLE(
+  xaleae_multae
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES mc_solvers/aleae_multae.cc
+  INSTALLABLE
+  )
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package
