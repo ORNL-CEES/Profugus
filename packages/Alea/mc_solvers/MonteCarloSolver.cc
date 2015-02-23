@@ -226,13 +226,11 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
             Kokkos::create_mirror_view(y_device);
 
         // Create kernel for performing group of MC histories
-        std::cout << "Building AdjointMcKernel" << std::endl;
         AdjointMcKernel kernel(d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,
                                start_cdf,start_wt,histories_per_thread,
                                d_use_expected_value,b_verbosity>=HIGH);
 
         // Execute Kokkos kernel on device
-        std::cout << "Executing parallel_reduce" << std::endl;
         Kokkos::parallel_reduce( exec_policy, kernel, y_mirror);
 
         SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
