@@ -7,7 +7,7 @@
 #include "LinearSystemFactory.hh"
 #include "LinearSolverFactory.hh"
 #include "AleaTypedefs.hh"
-
+#include "DeviceTraits.hh"
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -21,6 +21,8 @@ using std::chrono::milliseconds;
 
 int main( int argc, char *argv[] )
 {
+    profugus::initialize(argc,argv);
+
     high_resolution_clock::time_point time_start =
         high_resolution_clock::now();
 
@@ -29,6 +31,9 @@ int main( int argc, char *argv[] )
     TEUCHOS_ASSERT( argc > 1 );
     pl = Teuchos::getParametersFromXmlFile(argv[1]);
     TEUCHOS_ASSERT( pl != Teuchos::null );
+
+    // Initialize Kokkos device
+    DeviceTraits<DEVICE>::initialize(pl);
 
     Teuchos::RCP<LinearSystem> system =
         alea::LinearSystemFactory::buildLinearSystem(pl);
@@ -167,6 +172,10 @@ int main( int argc, char *argv[] )
             std::cout << lineend << std::endl;
     }
 
+    // Initialize Kokkos device
+    DeviceTraits<DEVICE>::finalize();
+
+    profugus::finalize();
     return 0;
 }
 

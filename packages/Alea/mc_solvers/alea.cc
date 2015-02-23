@@ -7,6 +7,7 @@
 #include "LinearSystemFactory.hh"
 #include "LinearSolverFactory.hh"
 #include "AleaTypedefs.hh"
+#include "DeviceTraits.hh"
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -30,6 +31,9 @@ int main( int argc, char *argv[] )
     TEUCHOS_ASSERT( argc > 1 );
     pl = Teuchos::getParametersFromXmlFile(argv[1]);
     TEUCHOS_ASSERT( pl != Teuchos::null );
+
+    // Initialize Kokkos device
+    DeviceTraits<DEVICE>::initialize(pl);
 
     Teuchos::RCP<LinearSystem> system =
         alea::LinearSystemFactory::buildLinearSystem(pl);
@@ -82,6 +86,9 @@ int main( int argc, char *argv[] )
         std::cout << "Final relative residual norm: "
                   << res_norm[0]/b_norm[0] << std::endl;
     }
+
+    // Finalize Kokkos device
+    DeviceTraits<DEVICE>::finalize();
 
     profugus::finalize();
     return 0;

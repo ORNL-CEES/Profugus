@@ -22,6 +22,9 @@
 #include "Kokkos_OpenMP.hpp"
 #include "Kokkos_Threads.hpp"
 
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_ParameterList.hpp"
+
 namespace alea
 {
 
@@ -40,13 +43,13 @@ class DeviceTraits
   public:
 
     //! \brief Initialize device on specified number of threads.
-    static inline void initializeDevice(int threads)
+    static inline void initialize(
+        Teuchos::RCP<Teuchos::ParameterList> pl)
     {
-        TEUCHOS_ASSERT(threads==1);
     }
 
     //! \brief Finalize device.
-    static inline void finalizeDevice(){}
+    static inline void finalize(){}
 };
 
 //---------------------------------------------------------------------------//
@@ -62,16 +65,22 @@ class DeviceTraits<Kokkos::OpenMP>
   public:
 
     //! \brief Initialize device on specified number of threads.
-    static inline void initializeDevice(int threads)
+    static inline void initialize(
+        Teuchos::RCP<Teuchos::ParameterList> pl)
     {
+        int threads = pl->get("num_threads",1);
+        bool print_config = pl->get("print_config",false);
         if( !Kokkos::OpenMP::is_initialized() )
             Kokkos::OpenMP::initialize( threads );
+        if( print_config )
+            Kokkos::OpenMP::print_configuration(std::cout,true);
     }
 
     //! \brief Finalize device.
-    static inline void finalizeDevice()
+    static inline void finalize()
     {
-        Kokkos::OpenMP::finalize();
+        if( Kokkos::OpenMP::is_initialized() )
+            Kokkos::OpenMP::finalize();
     }
 };
 #endif
@@ -88,17 +97,22 @@ class DeviceTraits<Kokkos::Threads>
   public:
 
     //! \brief Initialize device on specified number of threads.
-    static inline void initializeDevice(int threads)
+    static inline void initialize(
+        Teuchos::RCP<Teuchos::ParameterList> pl)
     {
+        int threads = pl->get("num_threads",1);
+        bool print_config = pl->get("print_config",false);
         if( !Kokkos::Threads::is_initialized() )
             Kokkos::Threads::initialize( threads );
-        //Kokkos::Threads::print_configuration(std::cout,true);
+        if( print_config )
+            Kokkos::Threads::print_configuration(std::cout,true);
     }
 
     //! \brief Finalize device.
-    static inline void finalizeDevice()
+    static inline void finalize()
     {
-        Kokkos::Threads::finalize();
+        if( Kokkos::Threads::is_initialized() )
+            Kokkos::Threads::finalize();
     }
 };
 

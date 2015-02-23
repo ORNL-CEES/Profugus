@@ -61,9 +61,8 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
     if( d_type == FORWARD )
         d_use_expected_value = false;
 
-    // Initialize device node with number of threads
+    // Get number of requested threads
     d_num_threads = mc_pl->get<int>("num_threads",1);
-    DeviceTraits<DEVICE>::initializeDevice(d_num_threads);
 
     d_num_histories      = mc_pl->get<int>("num_histories",1000);
     d_weight_cutoff      = mc_pl->get<SCALAR>("weight_cutoff",1.0e-6);

@@ -28,8 +28,6 @@ class MonteCarlo : public ::testing::Test
 
     void SetUp()
     {
-        DeviceTraits<DEVICE>::initializeDevice(1);
-
         // Create ParameterList
         d_pl = Teuchos::rcp( new Teuchos::ParameterList() );
         Teuchos::RCP<Teuchos::ParameterList> mat_pl =
@@ -38,6 +36,8 @@ class MonteCarlo : public ::testing::Test
             Teuchos::sublist(d_pl,"Monte Carlo");
         Teuchos::RCP<Teuchos::ParameterList> poly_pl =
             Teuchos::sublist(d_pl,"Polynomial");
+
+        DeviceTraits<DEVICE>::initialize(d_pl);
 
         mat_pl->set("matrix_type","laplacian");
         mat_pl->set("matrix_size",10);
@@ -56,7 +56,7 @@ class MonteCarlo : public ::testing::Test
 
     void TearDown()
     {
-        DeviceTraits<DEVICE>::finalizeDevice();
+        DeviceTraits<DEVICE>::finalize();
     }
 
     void Solve(double expected_tol)

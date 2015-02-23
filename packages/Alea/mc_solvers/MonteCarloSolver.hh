@@ -21,7 +21,6 @@
 #include "AleaSolver.hh"
 #include "AleaTypedefs.hh"
 #include "MC_Data.hh"
-#include "DeviceTraits.hh"
 
 namespace alea
 {
