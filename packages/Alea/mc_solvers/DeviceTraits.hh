@@ -116,6 +116,56 @@ class DeviceTraits<Kokkos::Threads>
     }
 };
 
+//---------------------------------------------------------------------------//
+/*!
+ * \class DeviceTraits<Kokkos::Cuda>
+ * \brief Specialization of DeviceTraits for Kokkos::Cuda.
+ */
+//---------------------------------------------------------------------------//
+template <>
+class DeviceTraits<Kokkos::Cuda>
+{
+  public:
+
+    //! \brief Initialize device
+    static inline void initialize(
+        Teuchos::RCP<Teuchos::ParameterList> pl)
+    {
+        int threads = pl->get("num_threads",1);
+        bool print_config = pl->get("print_config",false);
+        if( !HOST::is_initialized() )
+        {
+            HOST::initialize( threads );
+        }
+
+        if( !Kokkos::Cuda::is_initialized() )
+        {
+            Kokkos::Cuda::initialize();
+        }
+
+        if( print_config )
+        {
+            std::cout << "Host configuration:" << std::endl;
+            HOST::print_configuration(std::cout,true);
+            std::cout << "Device configuration:" << std::endl;
+            Kokkos::Cuda::print_configuration(std::cout,true);
+        }
+    }
+
+    //! \brief Finalize device.
+    static inline void finalize()
+    {
+        if( HOST::is_initialized() )
+        {
+            HOST::finalize();
+        }
+        if( Kokkos::Cuda::is_initialized() )
+        {
+            Kokkos::Cuda::finalize();
+        }
+    }
+};
+
 } // namespace alea
 
 #endif // mc_solvers_DeviceTraits_hh

@@ -41,7 +41,7 @@ typedef KokkosClassic::DefaultNode::DefaultNodeType NODE;
 //! Device type for Kokkos kernels
 typedef Kokkos::DefaultExecutionSpace           DEVICE;
 //! Device type for host execution of Kokkos
-typedef Kokkos::Serial                          HOST;
+typedef Kokkos::HostSpace::execution_space      HOST;
 //! Map type for data distribution
 typedef Tpetra::Map<LO,GO,NODE>                 MAP;
 //! Multivector type
