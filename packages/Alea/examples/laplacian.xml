@@ -1,0 +1,28 @@
+<ParameterList name="main">
+  <Parameter name="solver_type"              type="string"  value="mcsa"/>
+  <Parameter name="preconditioner"           type="string"  value="none"/>
+  <ParameterList name="Problem">
+    <Parameter name="matrix_type"            type="string"  value="laplacian"/>
+    <Parameter name="matrix_size"            type="int"     value="1000"/>
+    <Parameter name="laplacian_shift"        type="double"  value="0.1"/>
+    <Parameter name="scaling_type"           type="string"  value="diagonal"/>
+  </ParameterList>
+  <ParameterList name="Synthetic Acceleration">
+    <Parameter name="max_iterations"         type="int"     value="5000"/>
+    <Parameter name="tolerance"              type="double"  value="1.0e-6"/>
+    <Parameter name="damping_factor"         type="double"  value="1.0"/>
+    <Parameter name="divergence_tolerance"   type="double"  value="1.0e4"/>
+    <Parameter name="verbosity"              type="string"  value="high"/>
+  </ParameterList>
+  <ParameterList name="Monte Carlo">
+    <Parameter name="mc_type"                type="string"  value="adjoint"/>
+    <Parameter name="estimator"              type="string"  value="expected_value"/>
+    <Parameter name="num_histories"          type="int"     value="25000"/>
+    <Parameter name="verbosity"              type="string"  value="none"/>
+  </ParameterList>
+  <ParameterList name="Polynomial">
+    <Parameter name="polynomial_type"        type="string"  value="gmres"/>
+    <Parameter name="polynomial_order"       type="int"     value="5"/>
+  </ParameterList>
+</ParameterList>
+

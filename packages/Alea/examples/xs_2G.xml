@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='ASCII'?>
+<ParameterList name="cross sections">
+  <Parameter name="num groups" type="int" value="2"/>
+  <Parameter name="pn order" type="int" value="3"/>
+  <Parameter name="group v" type="Array(double)" value="{ 4.37394e+09, 2.18697e+06}"/>
+  <ParameterList name="Fuel Pin">
+    <Parameter name="sigma_t" type="Array(double)" value="{ 5.24840e-01, 1.20167e+00}"/>
+    <Parameter name="nu_sigma_f" type="Array(double)" value="{ 6.48829e-03, 1.23678e-01}"/>
+    <Parameter name="sigma_f" type="Array(double)" value="{ 2.52348e-03, 5.07562e-02}"/>
+    <Parameter name="chi" type="Array(double)" value="{ 1.00000e+00, 0.00000e+00}"/>
+    <Parameter name="sigma_s0" type="TwoDArray(double)" value="2x2:{ 4.96641e-01, 0.00000e+00, 1.84721e-02, 1.11717e+00}"/>
+    <Parameter name="sigma_s1" type="TwoDArray(double)" value="2x2:{ 2.20248e-01, 0.00000e+00, 7.61713e-03, 3.23168e-01}"/>
+    <Parameter name="sigma_s2" type="TwoDArray(double)" value="2x2:{ 9.21780e-02, 0.00000e+00,-2.67054e-03, 9.47696e-02}"/>
+    <Parameter name="sigma_s3" type="TwoDArray(double)" value="2x2:{ 1.03589e-02, 0.00000e+00,-4.93479e-03, 2.08931e-02}"/>
+  </ParameterList>
+  <ParameterList name="Guide Tube">
+    <Parameter name="sigma_t" type="Array(double)" value="{ 6.04359e-01, 1.66779e+00}"/>
+    <Parameter name="sigma_s0" type="TwoDArray(double)" value="2x2:{ 5.72336e-01, 0.00000e+00, 3.15044e-02, 1.64016e+00}"/>
+    <Parameter name="sigma_s1" type="TwoDArray(double)" value="2x2:{ 3.29287e-01, 0.00000e+00, 1.33551e-02, 4.99673e-01}"/>
+    <Parameter name="sigma_s2" type="TwoDArray(double)" value="2x2:{ 1.35295e-01, 0.00000e+00,-4.45774e-03, 1.37960e-01}"/>
+    <Parameter name="sigma_s3" type="TwoDArray(double)" value="2x2:{ 9.80266e-03, 0.00000e+00,-8.48500e-03, 2.99882e-02}"/>
+  </ParameterList>
+  <ParameterList name="Pyrex Insert">
+    <Parameter name="sigma_t" type="Array(double)" value="{ 4.58079e-01, 1.29630e+00}"/>
+    <Parameter name="sigma_s0" type="TwoDArray(double)" value="2x2:{ 4.35902e-01, 0.00000e+00, 1.73222e-02, 1.04049e+00}"/>
+    <Parameter name="sigma_s1" type="TwoDArray(double)" value="2x2:{ 2.03522e-01, 0.00000e+00, 7.05117e-03, 3.47824e-01}"/>
+    <Parameter name="sigma_s2" type="TwoDArray(double)" value="2x2:{ 8.50436e-02, 0.00000e+00,-2.57475e-03, 1.10745e-01}"/>
+    <Parameter name="sigma_s3" type="TwoDArray(double)" value="2x2:{ 6.79654e-03, 0.00000e+00,-4.63072e-03, 2.51285e-02}"/>
+  </ParameterList>
+  <ParameterList name="AIC Control Rod">
+    <Parameter name="sigma_t" type="Array(double)" value="{ 5.54822e-01, 1.76620e+00}"/>
+    <Parameter name="sigma_s0" type="TwoDArray(double)" value="2x2:{ 5.19343e-01, 0.00000e+00, 1.48903e-02, 1.24113e+00}"/>
+    <Parameter name="sigma_s1" type="TwoDArray(double)" value="2x2:{ 2.23701e-01, 0.00000e+00, 6.00697e-03, 4.14006e-01}"/>
+    <Parameter name="sigma_s2" type="TwoDArray(double)" value="2x2:{ 9.29707e-02, 0.00000e+00,-2.46949e-03, 1.35127e-01}"/>
+    <Parameter name="sigma_s3" type="TwoDArray(double)" value="2x2:{ 9.22645e-03, 0.00000e+00,-4.10869e-03, 3.06036e-02}"/>
+  </ParameterList>
+  <ParameterList name="B4C Control Rod">
+    <Parameter name="sigma_t" type="Array(double)" value="{ 5.48387e-01, 1.95417e+00}"/>
+    <Parameter name="sigma_s0" type="TwoDArray(double)" value="2x2:{ 4.96804e-01, 0.00000e+00, 1.13330e-02, 1.30875e+00}"/>
+    <Parameter name="sigma_s1" type="TwoDArray(double)" value="2x2:{ 2.05206e-01, 0.00000e+00, 4.40148e-03, 4.46201e-01}"/>
+    <Parameter name="sigma_s2" type="TwoDArray(double)" value="2x2:{ 8.41731e-02, 0.00000e+00,-1.95427e-03, 1.45827e-01}"/>
+    <Parameter name="sigma_s3" type="TwoDArray(double)" value="2x2:{ 6.22701e-03, 0.00000e+00,-3.03600e-03, 3.29063e-02}"/>
+  </ParameterList>
+  <ParameterList name="Moderator">
+    <Parameter name="sigma_t" type="Array(double)" value="{ 6.06040e-01, 2.14608e+00}"/>
+    <Parameter name="sigma_s0" type="TwoDArray(double)" value="2x2:{ 5.66356e-01, 0.00000e+00, 3.92572e-02, 2.10498e+00}"/>
+    <Parameter name="sigma_s1" type="TwoDArray(double)" value="2x2:{ 3.39223e-01, 0.00000e+00, 1.71577e-02, 5.16097e-01}"/>
+    <Parameter name="sigma_s2" type="TwoDArray(double)" value="2x2:{ 1.40873e-01, 0.00000e+00,-4.84452e-03, 1.15230e-01}"/>
+    <Parameter name="sigma_s3" type="TwoDArray(double)" value="2x2:{ 1.13982e-02, 0.00000e+00,-1.04053e-02, 2.21960e-02}"/>
+  </ParameterList>
+</ParameterList>

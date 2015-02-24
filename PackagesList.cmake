@@ -14,6 +14,7 @@ TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   Matprop   packages/Matprop   SS
   SPn       packages/SPn       SS
   MC        packages/MC        SS
+  Alea      packages/Alea      SS
   )
 
 ##---------------------------------------------------------------------------##
