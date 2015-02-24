@@ -78,13 +78,10 @@ AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
   , d_coeffs(coeffs)
   , d_start_cdf("start_cdf",value_count)
   , d_start_wt("start_wt",value_count)
+  , d_rand_pool(pl->get("random_seed",31891))
   , d_max_history_length(d_coeffs.size()-1)
 {
     d_num_histories = pl->get("num_histories",1000);
-
-    // Set up RNG
-    int rand_seed = pl->get("random_seed",31891);
-    d_rand_pool.init(rand_seed,DEVICE::max_hardware_threads());
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
