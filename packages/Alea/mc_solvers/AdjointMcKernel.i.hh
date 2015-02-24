@@ -65,8 +65,9 @@ AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
                                                  "expected_value");
-    TEUCHOS_TEST_FOR_EXCEPT( estimator != "collision" &&
-                             estimator != "expected_value" );
+    VALIDATE(estimator == "collision" ||
+             estimator == "expected_value",
+             "Only collision and expected_value estimators are available.");
     d_use_expected_value = (estimator == "expected_value");
 
     // Power factor for initial probability distribution
@@ -328,7 +329,7 @@ void AdjointMcKernel::build_initial_distribution(const MV &x)
                                d_start_wt_factor);
     }
     SCALAR pdf_sum = std::accumulate(&start_cdf_host(0),&start_cdf_host(N-1)+1,0.0);
-    TEUCHOS_ASSERT( pdf_sum > 0.0 );
+    ENSURE( pdf_sum > 0.0 );
     std::transform(&start_cdf_host(0),&start_cdf_host(N-1)+1,&start_cdf_host(0),
                    [pdf_sum](SCALAR x){return x/pdf_sum;});
     std::transform(x_data.begin(),x_data.end(),&start_cdf_host(0),

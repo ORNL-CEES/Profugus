@@ -15,6 +15,7 @@
 #include "NeumannPolynomial.hh"
 #include "ChebyshevPolynomial.hh"
 #include "GmresPolynomial.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -33,19 +34,20 @@ Teuchos::RCP<Polynomial>
 PolynomialFactory::buildPolynomial(Teuchos::RCP<const MATRIX> A,
                                    Teuchos::RCP<Teuchos::ParameterList> pl )
 {
-    TEUCHOS_ASSERT( pl != Teuchos::null );
+    REQUIRE( pl != Teuchos::null );
 
     // A can be null for some polynomial types
     // Defer checking A to individual classes
 
     Teuchos::RCP<Teuchos::ParameterList> poly_pl =
         Teuchos::sublist(pl,"Polynomial");
-    TEUCHOS_ASSERT( poly_pl != Teuchos::null );
+    REQUIRE( poly_pl != Teuchos::null );
 
     std::string poly_type = poly_pl->get("polynomial_type","neumann");
-    TEUCHOS_ASSERT( poly_type == "neumann"   ||
-                    poly_type == "chebyshev" ||
-                    poly_type == "gmres" );
+    VALIDATE( poly_type == "neumann"   ||
+              poly_type == "chebyshev" ||
+              poly_type == "gmres",
+              "Invalid polynomial_type.");
 
     Teuchos::RCP<Polynomial> poly;
     if( poly_type == "neumann" )

@@ -11,6 +11,7 @@
 
 #include "PolynomialPreconditioner.hh"
 #include "PolynomialFactory.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -32,10 +33,10 @@ PolynomialPreconditioner::PolynomialPreconditioner(
 {
     // Build polynomial and extract coefficients
     Teuchos::RCP<Polynomial> poly = PolynomialFactory::buildPolynomial(A,pl);
-    TEUCHOS_ASSERT( poly != Teuchos::null );
+    REQUIRE( poly != Teuchos::null );
     d_coeffs = poly->getCoeffs();
-    TEUCHOS_ASSERT( d_coeffs != Teuchos::null );
-    TEUCHOS_ASSERT( d_coeffs.size() > 0 );
+    REQUIRE( d_coeffs != Teuchos::null );
+    REQUIRE( d_coeffs.size() > 0 );
 }
 
 //---------------------------------------------------------------------------//
@@ -50,7 +51,7 @@ PolynomialPreconditioner::PolynomialPreconditioner(
 void PolynomialPreconditioner::applyImpl(const MV &x, MV &y) const
 {
     // For now we only support operating on a single vector
-    TEUCHOS_TEST_FOR_EXCEPT( x.getNumVectors() != 1 );
+    REQUIRE( x.getNumVectors() == 1 );
 
     bool init_to_zero = true;
     MV tmp_result(y.getMap(),y.getNumVectors(),init_to_zero);

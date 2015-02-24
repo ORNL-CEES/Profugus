@@ -62,7 +62,7 @@ TEST(Polynomial, Basic)
     // Make sure correct object was built
     Teuchos::RCP<NeumannPolynomial> neumann_poly =
         Teuchos::rcp_dynamic_cast<NeumannPolynomial>(poly);
-    TEUCHOS_ASSERT( neumann_poly != Teuchos::null );
+    EXPECT_TRUE( neumann_poly != Teuchos::null );
 
     PolynomialBasis neumann_basis("neumann");
     Teuchos::ArrayRCP<const SCALAR> coeffs = poly->getCoeffs(neumann_basis);
@@ -88,7 +88,7 @@ TEST(Polynomial, Basic)
 
     // Make sure correct object was built
     neumann_poly = Teuchos::rcp_dynamic_cast<NeumannPolynomial>(poly);
-    TEUCHOS_ASSERT( neumann_poly != Teuchos::null );
+    EXPECT_TRUE( neumann_poly != Teuchos::null );
 
     // Test coefficients against analytic values
     PolynomialBasis power_basis("power");
@@ -123,7 +123,7 @@ TEST(Polynomial, Basic)
     // Make sure correct object was built
     Teuchos::RCP<ChebyshevPolynomial> cheby_poly =
         Teuchos::rcp_dynamic_cast<ChebyshevPolynomial>(poly);
-    TEUCHOS_ASSERT( cheby_poly != Teuchos::null );
+    EXPECT_TRUE( cheby_poly != Teuchos::null );
 
     // Test coefficients against analytic values
     coeffs = poly->getCoeffs(power_basis);
@@ -151,7 +151,7 @@ TEST(Polynomial, Basic)
 
     // Make sure correct object was built
     cheby_poly = Teuchos::rcp_dynamic_cast<ChebyshevPolynomial>(poly);
-    TEUCHOS_ASSERT( cheby_poly != Teuchos::null );
+    EXPECT_TRUE( cheby_poly != Teuchos::null );
 
     // Compuare against MATLAB-computed values
     SCALAR lambda_min = cheby_poly->getLambdaMin();
@@ -177,7 +177,7 @@ TEST(Polynomial, Basic)
     // Make sure correct object was built
     Teuchos::RCP<GmresPolynomial> gmres_poly =
         Teuchos::rcp_dynamic_cast<GmresPolynomial>(poly);
-    TEUCHOS_ASSERT( gmres_poly != Teuchos::null );
+    EXPECT_TRUE( gmres_poly != Teuchos::null );
 
     coeffs = poly->getCoeffs(power_basis);
     expected_size = 5;
@@ -219,7 +219,7 @@ TEST(Polynomial, Basic)
 
     // Make sure correct object was built
     gmres_poly = Teuchos::rcp_dynamic_cast<GmresPolynomial>(poly);
-    TEUCHOS_ASSERT( gmres_poly != Teuchos::null );
+    EXPECT_TRUE( gmres_poly != Teuchos::null );
 
     coeffs = poly->getCoeffs(power_basis);
     expected_size = 11;
@@ -251,7 +251,7 @@ TEST(Polynomial, Basic)
 
     // Make sure correct object was built
     gmres_poly = Teuchos::rcp_dynamic_cast<GmresPolynomial>(poly);
-    TEUCHOS_ASSERT( gmres_poly != Teuchos::null );
+    EXPECT_TRUE( gmres_poly != Teuchos::null );
 
     coeffs = poly->getCoeffs(power_basis);
     expected_size = 11;
@@ -288,7 +288,7 @@ TEST(Polynomial, Basic)
 
     // Make sure correct object was built
     gmres_poly = Teuchos::rcp_dynamic_cast<GmresPolynomial>(poly);
-    TEUCHOS_ASSERT( gmres_poly != Teuchos::null );
+    EXPECT_TRUE( gmres_poly != Teuchos::null );
 
     coeffs = poly->getCoeffs(power_basis);
     expected_size = 11;
@@ -323,7 +323,7 @@ TEST(Polynomial, Basic)
 
     // Make sure correct object was built
     gmres_poly = Teuchos::rcp_dynamic_cast<GmresPolynomial>(poly);
-    TEUCHOS_ASSERT( gmres_poly != Teuchos::null );
+    EXPECT_TRUE( gmres_poly != Teuchos::null );
 
     coeffs = poly->getCoeffs(power_basis);
     expected_size = 11;

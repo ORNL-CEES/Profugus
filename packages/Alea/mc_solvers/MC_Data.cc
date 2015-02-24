@@ -37,9 +37,9 @@ MC_Data::MC_Data(Teuchos::RCP<const MATRIX> A,
   : d_A(A)
   , d_pl(pl)
 {
-    TEUCHOS_ASSERT( d_A   != Teuchos::null );
-    TEUCHOS_ASSERT( basis != Teuchos::null );
-    TEUCHOS_ASSERT( d_pl  != Teuchos::null );
+    REQUIRE( d_A   != Teuchos::null );
+    REQUIRE( basis != Teuchos::null );
+    REQUIRE( d_pl  != Teuchos::null );
 
     buildIterationMatrix(basis);
     buildMonteCarloMatrices();
@@ -55,13 +55,13 @@ MC_Data::MC_Data(Teuchos::RCP<const MATRIX> A,
 //---------------------------------------------------------------------------//
 void MC_Data::buildIterationMatrix(Teuchos::RCP<const PolynomialBasis> basis)
 {
-    TEUCHOS_ASSERT( basis != Teuchos::null );
+    REQUIRE( basis != Teuchos::null );
 
     // Get parameters for conversion from A to H
     SCALAR alpha, beta;
     basis->getBasisCoefficients(alpha,beta);
-    TEUCHOS_ASSERT( alpha != SCALAR_TRAITS::nan() );
-    TEUCHOS_ASSERT( beta  != SCALAR_TRAITS::nan() );
+    REQUIRE( alpha != SCALAR_TRAITS::nan() );
+    REQUIRE( beta  != SCALAR_TRAITS::nan() );
 
     // Create H
     size_t N = d_A->getNodeNumRows();
@@ -98,8 +98,8 @@ void MC_Data::buildIterationMatrix(Teuchos::RCP<const PolynomialBasis> basis)
 
     // Complete construction of H
     d_H->fillComplete();
-    TEUCHOS_ASSERT(d_H->isFillComplete());
-    TEUCHOS_ASSERT(d_H->isStorageOptimized());
+    CHECK(d_H->isFillComplete());
+    CHECK(d_H->isStorageOptimized());
 }
 
 //---------------------------------------------------------------------------//
@@ -107,7 +107,7 @@ void MC_Data::buildIterationMatrix(Teuchos::RCP<const PolynomialBasis> basis)
 //---------------------------------------------------------------------------//
 void MC_Data::buildMonteCarloMatrices()
 {
-    TEUCHOS_ASSERT( d_H != Teuchos::null );
+    REQUIRE( d_H != Teuchos::null );
 
     Teuchos::RCP<Teuchos::ParameterList> mc_pl =
         Teuchos::sublist(d_pl,"Monte Carlo");
@@ -117,9 +117,10 @@ void MC_Data::buildMonteCarloMatrices()
     SCALAR trans_factor = mc_pl->get("transition_factor",1.0);
 
     // Determine if we want forward or adjoint MC
-    TEUCHOS_ASSERT(mc_pl->isType<std::string>("mc_type"));
+    VALIDATE(mc_pl->isType<std::string>("mc_type"),"Must specify mc_type.");
     std::string type = mc_pl->get<std::string>("mc_type");
-    TEUCHOS_ASSERT( type == "forward" || type == "adjoint" );
+    INSIST( type == "forward" || type == "adjoint",
+            "mc_type must be forward or adjoint." );
 
     // Determine "Base" matrix B, such that B = P \circ W
     // Forward MC -> B=H
@@ -130,7 +131,7 @@ void MC_Data::buildMonteCarloMatrices()
         Tpetra::RowMatrixTransposer<SCALAR,LO,GO,NODE> transposer(d_H);
         d_H = transposer.createTranspose();
     }
-    TEUCHOS_ASSERT( d_H != Teuchos::null );
+    CHECK( d_H != Teuchos::null );
 
     // Now loop over rows in B to build probability/weight matrices
     LO N = d_H->getNodeNumRows();

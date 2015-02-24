@@ -16,6 +16,7 @@
 #include "AleaTypedefs.hh"
 
 #include "PolynomialBasis.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -37,7 +38,7 @@ class Polynomial
     //! \brief Access PolynomialBasis object used internally.
     virtual Teuchos::RCP<const PolynomialBasis> getNativeBasis() const
     {
-        TEUCHOS_ASSERT( !b_native_basis.is_null() );
+        REQUIRE( !b_native_basis.is_null() );
         return b_native_basis;
     }
 

@@ -28,9 +28,9 @@ int main( int argc, char *argv[] )
 
     // Read ParameterList from file
     Teuchos::RCP<Teuchos::ParameterList> pl;
-    TEUCHOS_ASSERT( argc > 1 );
+    VALIDATE(argc>1,"USAGE: xaleae_multae input_file.xml");
     pl = Teuchos::getParametersFromXmlFile(argv[1]);
-    TEUCHOS_ASSERT( pl != Teuchos::null );
+    CHECK( pl != Teuchos::null );
 
     // Initialize Kokkos device
     DeviceTraits<DEVICE>::initialize(pl);
@@ -81,13 +81,16 @@ int main( int argc, char *argv[] )
     {
         if( length_type == "Multiplicative" )
         {
-            TEUCHOS_ASSERT( length_factor > 1 );
+            VALIDATE( length_factor > 1,
+                    "Multiplicative length increase factor must be >1.");
             max_length[i] = max_length[i-1] * length_factor;
         }
         else if( length_type == "Additive" )
         {
-            TEUCHOS_ASSERT( length_factor > 0 );
+            VALIDATE( length_factor > 0,
+                    "Additive length increase factor must be positive.");
             max_length[i] = max_length[i-1] + length_factor;
+
         }
     }
 

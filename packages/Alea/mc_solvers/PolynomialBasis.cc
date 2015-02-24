@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "PolynomialBasis.hh"
+#include "harness/DBC.hh"
 
 #include "Teuchos_Assert.hpp"
 #include "Teuchos_SerialDenseMatrix.hpp"
@@ -38,6 +39,8 @@ namespace alea
 //---------------------------------------------------------------------------//
 PolynomialBasis::PolynomialBasis(std::string type)
 {
+    VALIDATE(type=="power" || type=="neumann" || type=="arbitrary",
+            "Invalid polynomial basis type.");
     if( type == "power" )
     {
         d_alpha = 0.0;
@@ -55,10 +58,6 @@ PolynomialBasis::PolynomialBasis(std::string type)
         d_alpha = SCALAR_TRAITS::nan();
         d_beta  = SCALAR_TRAITS::nan();
         d_type  = ARBITRARY;
-    }
-    else
-    {
-        TEUCHOS_ASSERT(false);
     }
 }
 
@@ -91,7 +90,7 @@ Teuchos::ArrayRCP<SCALAR> PolynomialBasis::operator()(
 //---------------------------------------------------------------------------//
 void PolynomialBasis::setBasisCoefficients(SCALAR alpha, SCALAR beta)
 {
-    TEUCHOS_ASSERT(d_type==ARBITRARY);
+    REQUIRE(d_type==ARBITRARY);
     d_alpha = alpha;
     d_beta  = beta;
 }
@@ -131,13 +130,13 @@ Teuchos::ArrayRCP<SCALAR> PolynomialBasis::transformBasis(
         const Teuchos::ArrayRCP<const SCALAR> other_coeffs,
         const PolynomialBasis &other_basis ) const
 {
-    TEUCHOS_ASSERT( d_alpha != SCALAR_TRAITS::nan() );
-    TEUCHOS_ASSERT( d_beta  != SCALAR_TRAITS::nan() );
+    REQUIRE( d_alpha != SCALAR_TRAITS::nan() );
+    REQUIRE( d_beta  != SCALAR_TRAITS::nan() );
 
     SCALAR other_alpha, other_beta;
     other_basis.getBasisCoefficients(other_alpha,other_beta);
-    TEUCHOS_ASSERT( other_alpha != SCALAR_TRAITS::nan() );
-    TEUCHOS_ASSERT( other_beta  != SCALAR_TRAITS::nan() );
+    REQUIRE( other_alpha != SCALAR_TRAITS::nan() );
+    REQUIRE( other_beta  != SCALAR_TRAITS::nan() );
 
     // If this basis is equal to other basis, coefficients are unchanged
     if( (other_alpha==d_alpha) && (other_beta==d_beta) )

@@ -14,6 +14,7 @@
 #include "ForwardMcKernel.hh"
 #include "PolynomialFactory.hh"
 #include "Kokkos_ExecPolicy.hpp"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -66,11 +67,11 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
 //---------------------------------------------------------------------------//
 void MonteCarloSolver::initialize()
 {
-    TEUCHOS_ASSERT( b_A != Teuchos::null );
+    REQUIRE( b_A != Teuchos::null );
 
     // Create Polynomial
     Teuchos::RCP<Polynomial> poly = PolynomialFactory::buildPolynomial(b_A,b_pl);
-    TEUCHOS_ASSERT( poly != Teuchos::null );
+    REQUIRE( poly != Teuchos::null );
 
     // Determine basis
     Teuchos::RCP<Teuchos::ParameterList> poly_pl =
@@ -79,8 +80,8 @@ void MonteCarloSolver::initialize()
     Teuchos::RCP<PolynomialBasis> basis( new PolynomialBasis(basis_type) );
     if( basis_type == "arbitrary" )
     {
-        TEUCHOS_ASSERT( poly_pl->isType<SCALAR>("polynomial_basis_alpha") );
-        TEUCHOS_ASSERT( poly_pl->isType<SCALAR>("polynomial_basis_beta") );
+        CHECK( poly_pl->isType<SCALAR>("polynomial_basis_alpha") );
+        CHECK( poly_pl->isType<SCALAR>("polynomial_basis_beta") );
         SCALAR alpha = poly_pl->get<SCALAR>("polynomial_basis_alpha");
         SCALAR beta  = poly_pl->get<SCALAR>("polynomial_basis_beta");
         basis->setBasisCoefficients(alpha,beta);
@@ -88,7 +89,7 @@ void MonteCarloSolver::initialize()
 
     // Get coefficients of polynomial in desired basis
     Teuchos::ArrayRCP<const SCALAR> coeffs = poly->getCoeffs(*basis);
-    TEUCHOS_ASSERT( !coeffs.is_null() );
+    CHECK( !coeffs.is_null() );
     Kokkos::resize(d_coeffs,coeffs.size());
     view_type::HostMirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
     std::copy(coeffs.begin(),coeffs.end(),&coeffs_host(0));
@@ -113,12 +114,12 @@ void MonteCarloSolver::initialize()
 //---------------------------------------------------------------------------//
 void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 {
-    TEUCHOS_ASSERT( d_initialized );
+    REQUIRE( d_initialized );
 
     d_apply_count++;
 
     // For now we only support operating on a single vector
-    TEUCHOS_ASSERT( x.getNumVectors() == 1 );
+    REQUIRE( x.getNumVectors() == 1 );
 
     // Check for early exit if x==0
     Teuchos::ArrayRCP<double> xnorm(1);
@@ -138,7 +139,7 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 
         if( d_num_histories % N != 0 )
             histories_per_state++;
-        TEUCHOS_ASSERT( histories_per_state > 0 );
+        CHECK( histories_per_state > 0 );
 
         // Construct and execute Kokkos kernel
         ForwardMcKernel kernel(d_P(),d_W(),d_inds(),d_coeffs(),N,x_data(),
@@ -190,12 +191,12 @@ void MonteCarloSolver::convertMatrices(Teuchos::RCP<const MATRIX> H,
                                        Teuchos::RCP<const MATRIX> P,
                                        Teuchos::RCP<const MATRIX> W)
 {
-    TEUCHOS_ASSERT( H->isLocallyIndexed() );
-    TEUCHOS_ASSERT( P->isLocallyIndexed() );
-    TEUCHOS_ASSERT( W->isLocallyIndexed() );
-    TEUCHOS_ASSERT( H->supportsRowViews() );
-    TEUCHOS_ASSERT( P->supportsRowViews() );
-    TEUCHOS_ASSERT( W->supportsRowViews() );
+    REQUIRE( H->isLocallyIndexed() );
+    REQUIRE( P->isLocallyIndexed() );
+    REQUIRE( W->isLocallyIndexed() );
+    REQUIRE( H->supportsRowViews() );
+    REQUIRE( P->supportsRowViews() );
+    REQUIRE( W->supportsRowViews() );
 
     LO numRows     = H->getNodeNumRows();
     GO numNonZeros = H->getNodeNumEntries();

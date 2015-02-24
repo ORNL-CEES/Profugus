@@ -11,6 +11,7 @@
 
 #include "GmresPolynomial.hh"
 #include "AleaTypedefs.hh"
+#include "harness/DBC.hh"
 
 #include "Teuchos_LAPACK.hpp"
 #include "Teuchos_SerialDenseMatrix.hpp"
@@ -38,15 +39,16 @@ GmresPolynomial::GmresPolynomial(Teuchos::RCP<const MATRIX> A,
                  Teuchos::RCP<Teuchos::ParameterList> pl)
   : Polynomial(A,pl)
 {
-    TEUCHOS_ASSERT( b_A != Teuchos::null );
+    REQUIRE( b_A != Teuchos::null );
 
     std::string gmres_type =
         b_poly_pl->get<std::string>("gmres_type","qr");
 
-    TEUCHOS_ASSERT( gmres_type == "arnoldi" ||
-                    gmres_type == "fom"     ||
-                    gmres_type == "normal"  ||
-                    gmres_type == "qr" );
+    VALIDATE(gmres_type == "arnoldi" ||
+             gmres_type == "fom"     ||
+             gmres_type == "normal"  ||
+             gmres_type == "qr",
+             "Invalid gmres_type specified.");
 
     // All GMRES polynomials are constructed in power basis
     b_native_basis = Teuchos::rcp( new PolynomialBasis("power") );
@@ -82,12 +84,12 @@ void GmresPolynomial::buildGmresPolyFromArnoldi()
     Teuchos::RCP<Teuchos::SerialDenseMatrix<LO,SCALAR> > arnoldi_mat =
         computeArnoldiMatrix(b_m+1);
 
-    TEUCHOS_ASSERT( arnoldi_mat != Teuchos::null );
+    CHECK( arnoldi_mat != Teuchos::null );
 
     Teuchos::ArrayRCP<const Anasazi::Value<SCALAR> > gmres_roots =
         computeGmresRoots(arnoldi_mat);
 
-    TEUCHOS_ASSERT( gmres_roots.size() == b_m+1 );
+    CHECK( gmres_roots.size() == b_m+1 );
 
     b_coeffs = computeCoeffsFromRoots(gmres_roots);
 
@@ -113,12 +115,12 @@ void GmresPolynomial::buildFomPolyFromArnoldi()
     Teuchos::RCP<Teuchos::SerialDenseMatrix<LO,SCALAR> > arnoldi_mat =
         computeArnoldiMatrix(b_m+1);
 
-    TEUCHOS_ASSERT( arnoldi_mat != Teuchos::null );
+    CHECK( arnoldi_mat != Teuchos::null );
 
     Teuchos::ArrayRCP<const Anasazi::Value<SCALAR> > fom_roots =
         computeFomRoots(arnoldi_mat);
 
-    TEUCHOS_ASSERT( fom_roots.size() == b_m+1 );
+    CHECK( fom_roots.size() == b_m+1 );
 
     b_coeffs = computeCoeffsFromRoots(fom_roots);
 }
@@ -158,7 +160,7 @@ void GmresPolynomial::buildGmresPolyFromNormalEqns()
     int info;
     lapack.POSV('L',b_m+1,1,AK_trans_AK->values(),AK_trans_AK->stride(),
         coeffs->values(),coeffs->stride(),&info);
-    TEUCHOS_ASSERT( info == 0 );
+    CHECK( info == 0 );
 
     // Copy coefficients into array in base class
     b_coeffs.resize(b_m+1);
@@ -185,7 +187,7 @@ void GmresPolynomial::buildGmresPolyFromQrDecomp()
     Anasazi::BasicOrthoManager<SCALAR,MV,OP> orthoman;
     Teuchos::RCP<SDM> R( new SDM(b_m+1,b_m+1) );
     int rank = orthoman.normalizeMat(*AK,R);
-    TEUCHOS_ASSERT( rank == b_m+1 );
+    CHECK( rank == b_m+1 );
 
     // Compute Q^T * b
     SDM Q_trans_b(b_m+1,1);
@@ -197,7 +199,7 @@ void GmresPolynomial::buildGmresPolyFromQrDecomp()
     int info;
     lapack.TRTRS('U','N','N',b_m+1,1,R->values(),R->stride(),
         Q_trans_b.values(),Q_trans_b.stride(),&info);
-    TEUCHOS_ASSERT( info == 0 );
+    CHECK( info == 0 );
 
     // Copy coefficients into array in base class
     b_coeffs.resize(b_m+1);
@@ -267,8 +269,8 @@ Teuchos::RCP<const MV> GmresPolynomial::computeInitialKrylovVector() const
 Teuchos::RCP<Teuchos::SerialDenseMatrix<LO,SCALAR> >
 GmresPolynomial::computeArnoldiMatrix(int order) const
 {
-    TEUCHOS_ASSERT( b_A  != Teuchos::null );
-    TEUCHOS_ASSERT( order > 0 );
+    REQUIRE( b_A  != Teuchos::null );
+    REQUIRE( order > 0 );
 
     if( b_verbosity >= HIGH )
         std::cout << "Computing GMRES roots" << std::endl;
@@ -336,7 +338,7 @@ GmresPolynomial::computeGmresRoots(
     Teuchos::RCP<Teuchos::SerialDenseMatrix<LO,SCALAR> > H ) const
 {
     LO order = H->numCols();
-    TEUCHOS_ASSERT( H->numRows() == order+1 );
+    REQUIRE( H->numRows() == order+1 );
 
     // Compute eigenvalues of leading NxN block of H
     Teuchos::SerialDenseMatrix<LO,SCALAR> H_square(
@@ -345,7 +347,7 @@ GmresPolynomial::computeGmresRoots(
     // Matrix to hold (H^T * H)
     Teuchos::SerialDenseMatrix<LO,SCALAR> HtransH(order,order);
     int err = HtransH.multiply(Teuchos::TRANS,Teuchos::NO_TRANS,1.0,*H,*H,0.0);
-    TEUCHOS_ASSERT( err == 0 );
+    CHECK( err == 0 );
 
     Teuchos::ArrayRCP<SCALAR> alpha_r(order), alpha_i(order), beta_r(order);
     LO worksize = 8*order;
@@ -355,7 +357,7 @@ GmresPolynomial::computeGmresRoots(
     lapack.GGEV('N','N',order,HtransH.values(),HtransH.stride(),
         H_square.values(),H_square.stride(), alpha_r.get(),alpha_i.get(),
         beta_r.get(),0,order,0,order,work.get(),worksize,&info);
-    TEUCHOS_ASSERT( info == 0 );
+    CHECK( info == 0 );
 
     Teuchos::ArrayRCP<Anasazi::Value<SCALAR> > roots(order);
     for( int i=0; i<order; ++i )
@@ -386,7 +388,7 @@ GmresPolynomial::computeFomRoots(
     Teuchos::RCP<Teuchos::SerialDenseMatrix<LO,SCALAR> > H ) const
 {
     LO order = H->numCols();
-    TEUCHOS_ASSERT( H->numRows() == order+1 );
+    REQUIRE( H->numRows() == order+1 );
 
     // Compute eigenvalues of leading NxN block of H
     Teuchos::SerialDenseMatrix<LO,SCALAR> H_square(Teuchos::View,*H,order,order);
@@ -399,7 +401,7 @@ GmresPolynomial::computeFomRoots(
     lapack.HSEQR('E','N',order,1,order,H_square.values(),H_square.stride(),
         real_parts.get(),imag_parts.get(),0,order,work.get(),worksize,&info);
 
-    TEUCHOS_ASSERT( info == 0 );
+    CHECK( info == 0 );
 
     Teuchos::ArrayRCP<Anasazi::Value<SCALAR> > roots(order);
     for( int i=0; i<order; ++i )
@@ -477,7 +479,7 @@ Teuchos::ArrayRCP<SCALAR> GmresPolynomial::computeCoeffsFromRoots(
         }
 
     }
-    TEUCHOS_ASSERT( c.size() == coeffs.size()+1 );
+    CHECK( c.size() == coeffs.size()+1 );
 
     for( int i=0; i<coeffs.size(); ++i )
     {

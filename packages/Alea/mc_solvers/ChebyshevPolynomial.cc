@@ -30,7 +30,7 @@ ChebyshevPolynomial::ChebyshevPolynomial(Teuchos::RCP<const MATRIX> A,
         Teuchos::RCP<Teuchos::ParameterList> pl)
   : Polynomial(A,pl)
 {
-    TEUCHOS_ASSERT( b_A != Teuchos::null );
+    REQUIRE( b_A != Teuchos::null );
 
     if( b_verbosity >= LOW )
         std::cout << "Creating Chebyshev polynomial coefficients"
@@ -46,8 +46,8 @@ ChebyshevPolynomial::ChebyshevPolynomial(Teuchos::RCP<const MATRIX> A,
     // Otherwise read values from input pl
     else
     {
-        TEUCHOS_ASSERT( b_poly_pl->isType<SCALAR>("lambda_min") );
-        TEUCHOS_ASSERT( b_poly_pl->isType<SCALAR>("lambda_max") );
+        REQUIRE( b_poly_pl->isType<SCALAR>("lambda_min") );
+        REQUIRE( b_poly_pl->isType<SCALAR>("lambda_max") );
         d_lambda_min = b_poly_pl->get<SCALAR>("lambda_min");
         d_lambda_max = b_poly_pl->get<SCALAR>("lambda_max");
     }
@@ -80,7 +80,7 @@ ChebyshevPolynomial::ChebyshevPolynomial(Teuchos::RCP<const MATRIX> A,
     // w.r.t. the basis (alpha + beta*x)
     Teuchos::ArrayRCP<const SCALAR> cheby_coeffs =
         PolynomialUtils::getChebyshevCoefficients(b_m+1);
-    TEUCHOS_ASSERT( cheby_coeffs.size() == (b_m+2) );
+    ENSURE( cheby_coeffs.size() == (b_m+2) );
 
     // Compute the coefficients of Tn(alpha+beta*x)
     // This is accomplished by performing a change of basis from
@@ -89,7 +89,7 @@ ChebyshevPolynomial::ChebyshevPolynomial(Teuchos::RCP<const MATRIX> A,
     cheby_basis.setBasisCoefficients(alpha,beta);
     Teuchos::ArrayRCP<const SCALAR> tmp_coeffs =
         b_native_basis->transformBasis(cheby_coeffs,cheby_basis);
-    TEUCHOS_ASSERT( tmp_coeffs.size() == (b_m+2) );
+    ENSURE( tmp_coeffs.size() == (b_m+2) );
 
     // Coefficients of preconditioner are c[i] = -tmp[i+1]/tmp[0]
     b_coeffs.resize(b_m+1);

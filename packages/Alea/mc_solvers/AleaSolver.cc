@@ -11,6 +11,7 @@
 
 #include "AleaSolver.hh"
 #include "comm/global.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -66,9 +67,9 @@ AleaSolver::AleaSolver(Teuchos::RCP<const MATRIX> A,
 void AleaSolver::apply(const MV &x, MV &y, Teuchos::ETransp mode,
                          SCALAR alpha, SCALAR beta) const
 {
-    TEUCHOS_ASSERT( mode == Teuchos::NO_TRANS || this->hasTransposeApply() );
-    TEUCHOS_ASSERT( x.getNumVectors()  == y.getNumVectors() );
-    TEUCHOS_ASSERT( x.getLocalLength() == y.getLocalLength() );
+    REQUIRE( mode == Teuchos::NO_TRANS || this->hasTransposeApply() );
+    REQUIRE( x.getNumVectors()  == y.getNumVectors() );
+    REQUIRE( x.getLocalLength() == y.getLocalLength() );
 
     if( beta == SCALAR_TRAITS::zero() )
     {
@@ -114,11 +115,10 @@ void AleaSolver::setParameters( Teuchos::RCP<Teuchos::ParameterList> pl )
     if( pl->isType<std::string>("verbosity") )
     {
         std::string verbosity = pl->get<std::string>("verbosity");
-        TEUCHOS_TEST_FOR_EXCEPT( verbosity!="none"   &&
-                                 verbosity!="low"    &&
-                                 verbosity!="medium" &&
-                                 verbosity!="high"   &&
-                                 verbosity!="debug" );
+        VALIDATE(verbosity=="none"   || verbosity=="low"  ||
+                 verbosity=="medium" || verbosity=="high" ||
+                 verbosity=="debug",
+                 "Invalid verbosity specified.");
         if( verbosity == "none")
         {
             b_verbosity = NONE;

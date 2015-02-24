@@ -17,6 +17,7 @@
 #include "PolynomialPreconditioner.hh"
 #include "RichardsonIteration.hh"
 #include "SyntheticAcceleration.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -48,14 +49,15 @@ LinearSolverFactory::buildSolver(std::string solver_type,
                                  Teuchos::RCP<const MATRIX> A,
                                  Teuchos::RCP<Teuchos::ParameterList> pl)
 {
-    TEUCHOS_ASSERT( solver_type=="belos"                  ||
-                    solver_type=="chebyshev"              ||
-                    solver_type=="mcsa"                   ||
-                    solver_type=="monte_carlo"            ||
-                    solver_type=="polynomial"             ||
-                    solver_type=="richardson"             ||
-                    solver_type=="synthetic_acceleration" ||
-                    solver_type=="none" );
+    VALIDATE(solver_type=="belos"                  ||
+             solver_type=="chebyshev"              ||
+             solver_type=="mcsa"                   ||
+             solver_type=="monte_carlo"            ||
+             solver_type=="polynomial"             ||
+             solver_type=="richardson"             ||
+             solver_type=="synthetic_acceleration" ||
+             solver_type=="none",
+            "Invalid solver_type.");
 
     // "mcsa" is shorthand for solver_type="synthetic_acceleration"
     //  with preconditioner="monte_carlo"

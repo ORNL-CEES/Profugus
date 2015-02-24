@@ -24,6 +24,7 @@
 #include "spn/Fixed_Source_Solver.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "driver/Manager.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -36,8 +37,8 @@ namespace alea
  *
  *  Matrix construction is controlled by the following PL entries on the
  *  nested "Problem" sublist:
- *   - matrix_type(string): laplacian, convection-diffusion, matrix_market
- *                          (no default)
+ *   - matrix_type(string): laplacian, convection-diffusion, matrix_market,
+ *                          profugus (no default)
  *   - matrix_size(int):    N>0 (25) (only used if "matrix_type"="laplacian"
  *                          or "convection-diffusion")
  *   - matrix_file(string): valid matrix market filename
@@ -53,12 +54,14 @@ LinearSystemFactory::buildLinearSystem( Teuchos::RCP<Teuchos::ParameterList> pl 
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
         Teuchos::sublist(pl,"Problem");
 
-    TEUCHOS_ASSERT( mat_pl->isType<std::string>("matrix_type") );
+    VALIDATE( mat_pl->isType<std::string>("matrix_type"),
+            "Must specify matrix_type." );
     std::string matrix_type = mat_pl->get<std::string>("matrix_type");
-    TEUCHOS_TEST_FOR_EXCEPT( matrix_type!="laplacian" &&
-                             matrix_type!="convection-diffusion" &&
-                             matrix_type!="matrix_market" &&
-                             matrix_type!="profugus");
+    VALIDATE(matrix_type=="laplacian"            ||
+             matrix_type=="convection-diffusion" ||
+             matrix_type=="matrix_market"        ||
+             matrix_type=="profugus",
+             "Invalid matrix_type specified.");
 
     Teuchos::RCP<CRS_MATRIX> A = Teuchos::null;
     Teuchos::RCP<MV>     b = Teuchos::null;
@@ -123,7 +126,7 @@ void LinearSystemFactory::buildConvectionDiffusionSystem(
     Teuchos::RCP<CRS_MATRIX> Ac = buildConvectionMatrix(N,pl);
     A = Teuchos::rcp_dynamic_cast<CRS_MATRIX>(
         Ad->add(1.0,*Ac,nu,Ad->getDomainMap(),Ad->getRangeMap(),pl),true);
-    TEUCHOS_ASSERT( A != Teuchos::null );
+    CHECK( A != Teuchos::null );
 
     // Sinusoidal source with homogeneous Dirichlet boundaries
     b = Teuchos::rcp( new MV(A->getDomainMap(),1) );
@@ -148,7 +151,7 @@ LinearSystemFactory::buildLaplacianMatrix(
     SCALAR h = 1.0 / static_cast<SCALAR>(N);
 
     SCALAR laplacian_shift = pl->get("laplacian_shift",0.0);
-    TEUCHOS_ASSERT( laplacian_shift >= 0.0 );
+    VALIDATE( laplacian_shift >= 0.0, "laplacian shift must be non-negative");
 
     // Build comm and map
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
@@ -281,7 +284,8 @@ void LinearSystemFactory::buildMatrixMarketSystem(
         Teuchos::RCP<CRS_MATRIX>                 &A,
         Teuchos::RCP<MV>                     &b )
 {
-    TEUCHOS_ASSERT( pl->isType<std::string>("matrix_filename") );
+    VALIDATE( pl->isType<std::string>("matrix_filename"),
+            "Must specify matrix_filename to build matrix market system.");
 
     std::string filename = pl->get<std::string>("matrix_filename");
 
@@ -328,7 +332,8 @@ void LinearSystemFactory::buildProfugusSystem(
         Teuchos::RCP<MV>                     &b )
 {
     // Get name of profugus SPN input file
-    TEUCHOS_ASSERT( pl->isType<std::string>("profugus_input") );
+    VALIDATE( pl->isType<std::string>("profugus_input"),
+            "Must specify profugus_input to build Profugus system.");
     std::string profugus_file = pl->get<std::string>("profugus_input");
 
     // Build manager
@@ -349,15 +354,15 @@ void LinearSystemFactory::buildProfugusSystem(
         const profugus::Linear_System<TpetraTypes> &system =
             eig_solver->get_linear_system();
         A = system.get_Matrix();
-        TEUCHOS_ASSERT( A != Teuchos::null );
+        CHECK( A != Teuchos::null );
 
         // Eigenvalue problem doesn't have an rhs, so build one based on
         //  B*x, where x = [1,1,1,...]^T
         b = system.get_RHS();
-        TEUCHOS_ASSERT( b != Teuchos::null );
+        CHECK( b != Teuchos::null );
         b->putScalar(1.0);
         Teuchos::RCP<OP> B = system.get_fission_matrix();
-        TEUCHOS_ASSERT( B != Teuchos::null );
+        CHECK( B != Teuchos::null );
         B->apply(*b,*b);
     }
     else
@@ -371,16 +376,16 @@ void LinearSystemFactory::buildProfugusSystem(
             const profugus::Linear_System<TpetraTypes> &system =
                 fixed_solver->get_linear_system();
             A = system.get_Matrix();
-            TEUCHOS_ASSERT( A != Teuchos::null );
+            CHECK( A != Teuchos::null );
 
             // Get RHS vector
             b = system.get_RHS();
-            TEUCHOS_ASSERT( b != Teuchos::null );
+            CHECK( b != Teuchos::null );
         }
         else
         {
-            TEUCHOS_TEST_FOR_EXCEPT_MSG(true,"Unable to determine profugus"
-                " solver type.  Is trilinos_implementation=tpetra?");
+            INSIST(false,"Unable to determine profugus solver type.  "
+                "Is trilinos_implementation=tpetra?");
         }
     }
 }
@@ -399,16 +404,13 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
     A->getLocalDiagCopy(diag);
 
     std::string scale_type = pl->get<std::string>("scaling_type","diagonal");
-    TEUCHOS_ASSERT( scale_type=="diagonal" ||
-                    scale_type=="block"    ||
-                    scale_type=="row"      ||
-                    scale_type=="column"   ||
-                    scale_type=="sign"     ||
-                    scale_type=="none" );
-
-    // Temporarily disable row and column scaling
-    TEUCHOS_ASSERT( scale_type!="row" );
-    TEUCHOS_ASSERT( scale_type!="column" );
+    VALIDATE( scale_type=="diagonal" ||
+              scale_type=="block"    ||
+              scale_type=="row"      ||
+              scale_type=="column"   ||
+              scale_type=="sign"     ||
+              scale_type=="none",
+              "scale_type must be one of: none, diagonal, block, row, sign.");
 
     if( scale_type == "diagonal" )
     {
@@ -429,7 +431,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
         for( LO i=0; i<b_data.size(); ++i )
         {
             b_data[i] = b_data[i] * diag_data[i];
-            TEUCHOS_ASSERT( !SCALAR_TRAITS::isnaninf(b_data[i]) );
+            CHECK( !SCALAR_TRAITS::isnaninf(b_data[i]) );
         }
     }
     else if( scale_type == "block" )
@@ -438,43 +440,48 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
     }
     else if( scale_type == "row" )
     {
-        /*
         VECTOR inv_row_sums(A->getDomainMap());
-        A->invRowSums(inv_row_sums);
+        Teuchos::ArrayRCP<SCALAR> row_sum_data = inv_row_sums.getDataNonConst();
+
+        int max_row_size = A->getNodeMaxNumRowEntries();
+        Teuchos::ArrayRCP<SCALAR> row_copy(max_row_size);
+        Teuchos::ArrayRCP<LO>     ind_copy(max_row_size);
+        size_t num_entries;
+        for( LO irow=0; irow<A->getNodeNumRows(); ++irow )
+        {
+            // Add absolute value of row entries
+            A->getLocalRowCopy(irow,ind_copy(),row_copy(),num_entries);
+            for( size_t i=0; i<num_entries; ++i )
+            {
+                row_sum_data[irow] += SCALAR_TRAITS::magnitude(row_copy[i]);
+            }
+
+            // Invert row sums
+            if( row_sum_data[irow] > 0.0 )
+            {
+                row_sum_data[irow] = 1.0 / row_sum_data[irow];
+            }
+            else
+            {
+                row_sum_data[irow] = 1.0;
+            }
+        }
 
         // Modify scaling by sign of diagonal
-        for( int i=0; i<inv_row_sums.getLocalLength(); ++i )
+        Teuchos::ArrayRCP<const SCALAR> diag_data = diag.getData();
+        for( int i=0; i<row_sum_data.size(); ++i )
         {
-            if( diag[i] < 0.0 )
+            if( diag_data[i] < 0.0 )
             {
-                inv_row_sums[i] *= -1.0;
+                row_sum_data[i] *= -1.0;
             }
         }
 
         A->leftScale(inv_row_sums);
         for( size_t i=0; i<b->getLocalLength(); ++i )
         {
-            b->replaceLocalValue(i,0,b->getData(0)[i]*inv_row_sums.getData()[i]);
+            b->replaceLocalValue(i,0,b->getData(0)[i]*row_sum_data[i]);
         }
-        */
-    }
-    else if( scale_type == "column" )
-    {
-        /*
-        VECTOR inv_col_sums(A->getDomainMap());
-        A->invColSums(inv_col_sums);
-
-        // Modify scaling by sign of diagonal
-        for( int i=0; i<inv_col_sums.getLocalLength(); ++i )
-        {
-            if( diag[i] < 0.0 )
-            {
-                inv_col_sums[i] *= -1.0;
-            }
-        }
-
-         A->rightScale(inv_col_sums);
-        */
     }
     else if( scale_type == "sign" )
     {
@@ -507,7 +514,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyBlockDiagScaling(
 {
     int block_size = pl->get("block_size",1);
 
-    TEUCHOS_ASSERT( A->getNodeNumRows() % block_size == 0 );
+    REQUIRE( A->getNodeNumRows() % block_size == 0 );
     LO num_blocks = A->getNodeNumRows() / block_size;
 
     // Create matrix to hold block inverses
@@ -546,7 +553,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyBlockDiagScaling(
         // Invert block
         solver.setMatrix(diag_block);
         err = solver.invert();
-        TEUCHOS_ASSERT( 0 == err );
+        CHECK( 0 == err );
 
         // Set values in invD
         for( int i=0; i<block_size; ++i )
@@ -574,7 +581,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyBlockDiagScaling(
     Teuchos::RCP<CRS_MATRIX> DA = Tpetra::createCrsMatrix<SCALAR>(
         A->getDomainMap());
     Tpetra::MatrixMatrix::Multiply(*invD,false,*A,false,*DA,true);
-    TEUCHOS_ASSERT( DA->isFillComplete() );
+    CHECK( DA->isFillComplete() );
     return DA;
 }
 

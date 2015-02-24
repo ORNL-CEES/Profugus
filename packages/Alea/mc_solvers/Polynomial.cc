@@ -24,7 +24,7 @@ Polynomial::Polynomial(Teuchos::RCP<const MATRIX> A,
   : b_A(A)
   , b_pl(pl)
 {
-    TEUCHOS_ASSERT( b_pl != Teuchos::null );
+    REQUIRE( b_pl != Teuchos::null );
 
     b_poly_pl = Teuchos::sublist(b_pl,"Polynomial");
 
@@ -66,14 +66,14 @@ Polynomial::Polynomial(Teuchos::RCP<const MATRIX> A,
 Teuchos::ArrayRCP<const SCALAR>
 Polynomial::getCoeffs(const PolynomialBasis &target) const
 {
-    TEUCHOS_ASSERT( b_native_basis != Teuchos::null );
-    TEUCHOS_ASSERT( b_coeffs != Teuchos::null );
-    TEUCHOS_ASSERT( b_coeffs.size() == (b_m+1) );
+    REQUIRE( b_native_basis != Teuchos::null );
+    REQUIRE( b_coeffs != Teuchos::null );
+    REQUIRE( b_coeffs.size() == (b_m+1) );
 
     // Convert coefficients from native basis to target
     Teuchos::ArrayRCP<SCALAR> target_coeffs;
     target_coeffs = target.transformBasis(b_coeffs,*b_native_basis);
-    TEUCHOS_ASSERT( target_coeffs.size() == (b_m+1) );
+    REQUIRE( target_coeffs.size() == (b_m+1) );
 
     if( b_verbosity >= MEDIUM )
     {

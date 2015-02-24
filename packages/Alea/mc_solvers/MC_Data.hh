@@ -8,6 +8,7 @@
 #include "AleaTypedefs.hh"
 
 #include "PolynomialBasis.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -44,25 +45,25 @@ class MC_Data
     //! Access original matrix, \f$\textbf{A}\f$
     Teuchos::RCP<const MATRIX> getMatrix() const
     {
-        TEUCHOS_TEST_FOR_EXCEPT( d_A == Teuchos::null );
+        REQUIRE( d_A != Teuchos::null );
         return d_A;
     }
     //! Access iteration matrix, \f$\textbf{H}\f$
     Teuchos::RCP<const MATRIX> getIterationMatrix() const
     {
-        TEUCHOS_TEST_FOR_EXCEPT( d_H == Teuchos::null );
+        REQUIRE( d_H != Teuchos::null );
         return d_H;
     }
     //! Access probability transition matrix, \f$\textbf{P}\f$
     Teuchos::RCP<const MATRIX> getProbabilityMatrix() const
     {
-        TEUCHOS_TEST_FOR_EXCEPT( d_P == Teuchos::null );
+        REQUIRE( d_P != Teuchos::null );
         return d_P;
     }
     //! Access weight transition matrix, \f$\textbf{W}\f$
     Teuchos::RCP<const MATRIX> getWeightMatrix() const
     {
-        TEUCHOS_TEST_FOR_EXCEPT( d_W == Teuchos::null );
+        REQUIRE( d_W != Teuchos::null );
         return d_W;
     }
 

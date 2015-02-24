@@ -11,6 +11,7 @@
 
 #include "ChebyshevIteration.hh"
 #include "ChebyshevPolynomial.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -49,8 +50,10 @@ ChebyshevIteration::ChebyshevIteration(
     Teuchos::RCP<ChebyshevPolynomial> poly( new ChebyshevPolynomial(A,pl) );
     SCALAR lambda_min = poly->getLambdaMin();
     SCALAR lambda_max = poly->getLambdaMax();
-    TEUCHOS_ASSERT( !SCALAR_TRAITS::isnaninf(lambda_min) );
-    TEUCHOS_ASSERT( !SCALAR_TRAITS::isnaninf(lambda_max) );
+    INSIST( !SCALAR_TRAITS::isnaninf(lambda_min),
+            "Minimum eigenvalue is NaN or inf" );
+    INSIST( !SCALAR_TRAITS::isnaninf(lambda_max),
+            "Maximum eigenvalue is NaN or inf" );
 
     d_c = (lambda_max+lambda_min)/2.0;
     d_d  = (lambda_max-lambda_min)/2.0;
@@ -70,7 +73,7 @@ ChebyshevIteration::ChebyshevIteration(
 void ChebyshevIteration::applyImpl(const MV &x, MV &y) const
 {
     // For now we only support operating on a single vector
-    TEUCHOS_TEST_FOR_EXCEPT( x.getNumVectors() != 1 );
+    REQUIRE( x.getNumVectors() == 1 );
 
     // Compute initial residual
     MV r(y.getMap(),1);

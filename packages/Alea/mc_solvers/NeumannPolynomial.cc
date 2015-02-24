@@ -42,7 +42,7 @@ NeumannPolynomial::NeumannPolynomial(Teuchos::RCP<const MATRIX> A,
         b_native_basis = Teuchos::rcp( new PolynomialBasis("arbitrary") );
         b_native_basis->setBasisCoefficients(1.0,-damp);
     }
-    TEUCHOS_ASSERT( b_native_basis != Teuchos::null );
+    CHECK( b_native_basis != Teuchos::null );
 
     b_coeffs.resize(b_m+1);
     std::fill( b_coeffs.begin(), b_coeffs.end(), damp );

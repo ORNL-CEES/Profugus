@@ -28,9 +28,9 @@ int main( int argc, char *argv[] )
 
     // Read ParameterList from file
     Teuchos::RCP<Teuchos::ParameterList> pl;
-    TEUCHOS_ASSERT( argc > 1 );
+    VALIDATE( argc > 1, "USAGE: xalea input_file.xml");
     pl = Teuchos::getParametersFromXmlFile(argv[1]);
-    TEUCHOS_ASSERT( pl != Teuchos::null );
+    CHECK( pl != Teuchos::null );
 
     // Initialize Kokkos device
     DeviceTraits<DEVICE>::initialize(pl);

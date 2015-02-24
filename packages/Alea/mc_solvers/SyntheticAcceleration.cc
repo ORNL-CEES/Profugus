@@ -13,6 +13,7 @@
 
 #include "SyntheticAcceleration.hh"
 #include "LinearSolverFactory.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -69,7 +70,7 @@ SyntheticAcceleration::SyntheticAcceleration(Teuchos::RCP<const MATRIX> A,
 void SyntheticAcceleration::applyImpl(const MV &x, MV &y) const
 {
     // For now we only support operating on a single vector
-    TEUCHOS_TEST_FOR_EXCEPT( x.getNumVectors() != 1 );
+    REQUIRE( x.getNumVectors() == 1 );
 
     // Compute initial residual
     MV r(y.getMap(),1);

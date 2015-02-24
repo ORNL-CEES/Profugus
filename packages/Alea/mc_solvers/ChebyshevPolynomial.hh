@@ -16,6 +16,7 @@
 
 #include "PolynomialBasis.hh"
 #include "Polynomial.hh"
+#include "harness/DBC.hh"
 
 namespace alea
 {
@@ -38,14 +39,14 @@ class ChebyshevPolynomial : public Polynomial
     //! \brief Access minimum eigenvalue.
     SCALAR getLambdaMin() const
     {
-        TEUCHOS_ASSERT( !SCALAR_TRAITS::isnaninf(d_lambda_min) );
+        REQUIRE( !SCALAR_TRAITS::isnaninf(d_lambda_min) );
         return d_lambda_min;
     }
 
     //! \brief Access maximum eigenvalue.
     SCALAR getLambdaMax() const
     {
-        TEUCHOS_ASSERT( !SCALAR_TRAITS::isnaninf(d_lambda_max) );
+        REQUIRE( !SCALAR_TRAITS::isnaninf(d_lambda_max) );
         return d_lambda_max;
     }
 
