@@ -9,8 +9,8 @@
 ##---------------------------------------------------------------------------##
 
 SET(LIB_REQUIRED_DEP_PACKAGES
-  Matprop Utils Teuchos Epetra Thyra Stratimikos AztecOO Belos
-  Ifpack Anasazi Tpetra Ifpack2)
+    Matprop Utils Teuchos Epetra Thyra ThyraTpetraAdapters Stratimikos AztecOO
+    Belos Ifpack Anasazi Tpetra Ifpack2 EpetraExt)
 
 SET(LIB_OPTIONAL_DEP_PACKAGES
     ML MCLS MueLu)
