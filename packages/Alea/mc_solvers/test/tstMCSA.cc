@@ -13,6 +13,7 @@
 #include "../LinearSystemFactory.hh"
 #include "../SyntheticAcceleration.hh"
 #include "../AleaTypedefs.hh"
+#include "../DeviceTraits.hh"
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -43,6 +44,8 @@ TEST(MCSA, Basic)
     pl->set("max_iterations",1000);
     pl->set("tolerance",1.0e-6);
 
+    DeviceTraits<DEVICE>::initialize(pl);
+
     Teuchos::RCP<LinearSystem> system =
         alea::LinearSystemFactory::buildLinearSystem(pl);
     Teuchos::RCP<const MATRIX> A = system->getMatrix();
@@ -68,5 +71,7 @@ TEST(MCSA, Basic)
 
     // Should meet convergence criteria
     EXPECT_TRUE( res_norm[0]/b_norm[0] < 1.0e-6 );
+
+    DeviceTraits<DEVICE>::finalize();
 }
 
