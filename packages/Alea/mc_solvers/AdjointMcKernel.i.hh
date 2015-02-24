@@ -20,6 +20,35 @@
 namespace alea
 {
 
+namespace
+{
+    // lower_bound implementation that can be called from device
+    KOKKOS_INLINE_FUNCTION
+    const SCALAR * lower_bound(const SCALAR * first,
+                               const SCALAR * last,
+                               SCALAR val)
+    {
+        const SCALAR *it;
+        int count, step;
+        count = last - first;
+        while( count > 0 )
+        {
+            step = count / 2;
+            it = first+step;
+            if( *it < val )
+            {
+                first = ++it;
+                count -= step+1;
+            }
+            else
+            {
+                count = step;
+            }
+        }
+        return first;
+    }
+}
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Constructor
@@ -27,14 +56,9 @@ namespace alea
  * \param P Views into entries of probability matrix
  * \param W Views into entries of weight matrix
  * \param inds Views into nonzeros indices
+ * \param offsets Starting indices for each matrix row
  * \param coeffs Polynomial coefficients
- * \param local_length Number of local elements in vector
- * \param start_cdf CDF corresponding to random walk starting locations.
- * \param start_wt  Weights corresponding to random walk starting locations.
- * \param rng ThreadedRNG object for generating local random values
- * \param histories_per_thread Number of histories to be computed
- * \param use_expected_value Should expected value estimator be used?
- * \param print Should debug info be printed?
+ * \param pl Problem parameters
  */
 //---------------------------------------------------------------------------//
 AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
@@ -297,11 +321,12 @@ LO AdjointMcKernel::getNewState(const SCALAR * const  cdf,
                                       generator_type &gen) const
 {
     // Generate random number
-    //SCALAR rand = d_rng.getRandom(thread);
     SCALAR rand = Kokkos::rand<generator_type,SCALAR>::draw(gen);
 
     // Sample cdf to get new state
-    const SCALAR * const elem = std::lower_bound(cdf,cdf+cdf_length,rand);
+    // Use local lower_bound implementation, not std library version
+    // This allows calling from device
+    const SCALAR * const elem = lower_bound(cdf,cdf+cdf_length,rand);
 
     if( elem == cdf+cdf_length )
         return -1;
@@ -309,7 +334,9 @@ LO AdjointMcKernel::getNewState(const SCALAR * const  cdf,
     return elem - cdf;
 }
 
+//---------------------------------------------------------------------------//
 // Build initial cdf and weights
+//---------------------------------------------------------------------------//
 void AdjointMcKernel::build_initial_distribution(const MV &x)
 {
     // Build data on host, then explicitly copy to device
