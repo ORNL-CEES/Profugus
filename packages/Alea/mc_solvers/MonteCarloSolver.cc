@@ -11,7 +11,7 @@
 
 #include "MonteCarloSolver.hh"
 #include "AdjointMcKernel.hh"
-#include "ForwardMcKernel.hh"
+//#include "ForwardMcKernel.hh"
 #include "PolynomialFactory.hh"
 #include "Kokkos_ExecPolicy.hpp"
 #include "harness/DBC.hh"
@@ -159,8 +159,10 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     else if( d_type == ADJOINT )
     {
         // Create kernel for performing group of MC histories
+        std::cout << "Building Adjoint kernel" << std::endl;
         AdjointMcKernel kernel(d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
+        std::cout << "Executing solve" << std::endl;
         kernel.solve(x,y);
     }
 
