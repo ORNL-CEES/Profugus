@@ -105,8 +105,13 @@ AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
 void AdjointMcKernel::solve(const MV &x, MV &y)
 {
     // Determine number of histories needed per team
+    /*
     int rec_team_size = team_policy::team_size_recommended(*this);
+    std::cout << "Recommended team size: " << rec_team_size << std::endl;
+    CHECK( rec_team_size > 0 );
     int league_size_req = d_num_histories / rec_team_size;
+    std::cout << "Requested league size: " << league_size_req << std::endl;
+    CHECK( league_size_req > 0 );
     team_policy policy(league_size_req,rec_team_size);
     int num_teams = policy.league_size();
     int team_size = policy.team_size();
@@ -122,6 +127,15 @@ void AdjointMcKernel::solve(const MV &x, MV &y)
     }
     d_histories_per_team = total_histories / num_teams;
 
+
+    std::cout << "Using team policy with " << num_teams << " teams, "
+        << team_size << " threads per team" << std::endl;
+    std::cout << "Performing " << total_histories << " total histories, "
+        << d_histories_per_team << " per team" << std::endl;
+        */
+
+    range_policy policy(0,d_num_histories);
+
     // Build initial probability and weight distributions
     build_initial_distribution(x);
 
@@ -134,11 +148,8 @@ void AdjointMcKernel::solve(const MV &x, MV &y)
     // Execute functor
     Kokkos::parallel_reduce(policy,*this,y_mirror);
 
-    // Copy data back to host, this shouldn't need to happen
-    Kokkos::deep_copy(y_mirror,y_device);
-
     // Apply scale factor
-    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(total_histories);
+    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
     for( LO i=0; i<value_count; ++i )
     {
         y_data[i] = scale_factor*y_mirror(i);
@@ -168,8 +179,13 @@ void AdjointMcKernel::init( SCALAR *update ) const
  * \brief Perform adjoint Monte Carlo process
  */
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
+void AdjointMcKernel::operator()(const policy_member &member, SCALAR *y) const
 {
+    //printf("Executing kernel on team %i of %i, thread %i of %i\n",
+    //        member.league_rank(),member.league_size(),member.team_rank(),
+    //        member.team_size());
+    //printf("Vector address is %p on team %i, thread %i\n",
+    //        y,member.league_rank(),member.team_rank());
     LO new_ind;
     LO state;
     const SCALAR * row_h;
@@ -178,13 +194,24 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
     const LO     * row_inds;
     int row_length;
 
-    int team_size = member.team_size();
-    int histories_per_thread = d_histories_per_team / team_size;
+    //int team_size = member.team_size();
+    //int histories_per_thread = d_histories_per_team / team_size;
 
+    //printf("Getting random number generator on team %i, thread %i\n",
+    //        member.league_rank(),member.team_rank());
     generator_type rand_gen = d_rand_pool.get_state();
 
+    int histories_per_thread = 1;
     for( int ihist=0; ihist<histories_per_thread; ++ihist )
     {
+        /*
+        if( d_print )
+        {
+            printf("Getting new state on team %i, thread %i\n",
+                    member.league_rank(),member.team_rank());
+        }
+        */
+
         // Get starting position and weight
         state = getNewState(&d_start_cdf(0),value_count,rand_gen);
         if( state == -1 )
@@ -212,14 +239,42 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
         while(true)
         {
             // Get data and add to tally
+            /*
+            if( d_print )
+            {
+                printf("Getting new row on team %i, thread %i\n",
+                       member.league_rank(),member.team_rank());
+            }
+            */
             getNewRow(state,row_h,row_cdf,row_wts,row_inds,row_length);
+            /*
+            if( d_print )
+            {
+                printf("Tallying contribution to state %i on team %i, thread %i\n",
+                       state,member.league_rank(),member.team_rank());
+            }
+            */
             tallyContribution(state,d_coeffs(stage)*weight,
                               row_h,row_inds,row_length,y);
 
+            /*
+            if( d_print )
+            {
+                printf("Checking length cutoff on team %i, thread %i\n",
+                       member.league_rank(),member.team_rank());
+            }
+            */
             if( stage >= d_max_history_length )
                 break;
 
             // Get new state index
+            /*
+            if( d_print )
+            {
+                printf("Getting new state on team %i, thread %i\n",
+                       member.league_rank(),member.team_rank());
+            }
+            */
             new_ind = getNewState(row_cdf,row_length,rand_gen);
             if( new_ind == -1 )
                 break;
@@ -231,7 +286,7 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
 
             if( d_print )
             {
-                printf("Transitioning to state %i with new weight %6.2e\n",
+                printf("Transitioning to state %i with new weight %6.2e",
                        state,weight);
             }
 

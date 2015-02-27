@@ -42,8 +42,10 @@ class AdjointMcKernel
     typedef SCALAR value_type[];
 
     // Execution policy and team member types
-    typedef Kokkos::TeamPolicy<DEVICE> team_policy;
-    typedef team_policy::member_type   team_member;
+    //typedef Kokkos::TeamPolicy<DEVICE> team_policy;
+    //typedef team_policy::member_type    policy_member;
+    typedef Kokkos::RangePolicy<DEVICE> range_policy;
+    typedef range_policy::member_type   policy_member;
 
     // Required public member variable for Kokkos array functor API
     //! Number of entries in a value_type array
@@ -77,7 +79,7 @@ class AdjointMcKernel
 
     //! \brief Compute kernel
     KOKKOS_INLINE_FUNCTION
-    void operator()(team_member member, SCALAR *y) const;
+    void operator()(const policy_member &member, SCALAR *y) const;
 
     //! \brief Join threads together via a reduce
     KOKKOS_INLINE_FUNCTION
