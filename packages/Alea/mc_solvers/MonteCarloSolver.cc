@@ -10,7 +10,8 @@
 #include <string>
 
 #include "MonteCarloSolver.hh"
-#include "AdjointMcKernel.hh"
+#include "AdjointMcParallelFor.hh"
+#include "AdjointMcParallelReduce.hh"
 //#include "ForwardMcKernel.hh"
 #include "PolynomialFactory.hh"
 #include "Kokkos_ExecPolicy.hpp"
@@ -45,11 +46,23 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
     AleaSolver::setParameters(d_mc_pl);
 
     // Determine forward or adjoint
-    std::string type = d_mc_pl->get("mc_type","adjoint");
-    if( type == "forward" )
-        d_type = FORWARD;
+    std::string mc_type = d_mc_pl->get("mc_type","adjoint");
+    VALIDATE(mc_type == "adjoint" || mc_type == "forward",
+             "Invalid mc_type.");
+    if( mc_type == "forward" )
+        d_mc_type = FORWARD;
     else
-        d_type = ADJOINT;
+        d_mc_type = ADJOINT;
+
+    // Type of Kokkos kernel
+    std::string kernel_type = d_mc_pl->get("kernel_type","parallel_reduce");
+    VALIDATE(kernel_type == "parallel_reduce" || kernel_type == "parallel_for",
+             "Invalid kernel_type.");
+    if( kernel_type == "parallel_for" )
+        d_kernel_type = PARALLEL_FOR;
+    else
+        d_kernel_type = PARALLEL_REDUCE;
+
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
@@ -132,7 +145,7 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 
     LO N = x.getLocalLength();
 
-    if( d_type == FORWARD )
+    if( d_mc_type == FORWARD )
     {
         /*
         int histories_per_state = d_num_histories / N;
@@ -156,11 +169,22 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
                        */
 
     }
-    else if( d_type == ADJOINT )
+    else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_REDUCE )
     {
         // Create kernel for performing group of MC histories
         std::cout << "Building Adjoint kernel" << std::endl;
-        AdjointMcKernel kernel(d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
+        AdjointMcParallelReduce kernel(
+            d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
+
+        std::cout << "Executing solve" << std::endl;
+        kernel.solve(x,y);
+    }
+    else /* ADJOINT, PARALLEL_FOR */
+    {
+        // Create kernel for performing group of MC histories
+        std::cout << "Building Adjoint kernel" << std::endl;
+        AdjointMcParallelFor kernel(
+            d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
         std::cout << "Executing solve" << std::endl;
         kernel.solve(x,y);

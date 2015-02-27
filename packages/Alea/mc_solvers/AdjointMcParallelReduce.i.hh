@@ -1,19 +1,19 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdjointMcKernel.cc
+ * \file   AdjointMcParallelReduce.cc
  * \author Steven Hamilton
  * \brief  Perform single history of adjoint MC
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_AdjointMcKernel_i_hh
-#define mc_solver_AdjointMcKernel_i_hh
+#ifndef mc_solver_AdjointMcParallelReduce_i_hh
+#define mc_solver_AdjointMcParallelReduce_i_hh
 
 #include <iterator>
 #include <random>
 #include <cmath>
 
-#include "AdjointMcKernel.hh"
+#include "AdjointMcParallelReduce.hh"
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
@@ -61,7 +61,7 @@ namespace
  * \param pl Problem parameters
  */
 //---------------------------------------------------------------------------//
-AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
+AdjointMcParallelReduce::AdjointMcParallelReduce(const const_view_type                H,
                                  const const_view_type                P,
                                  const const_view_type                W,
                                  const const_ord_view                 inds,
@@ -102,7 +102,7 @@ AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
 //---------------------------------------------------------------------------//
 // Solve problem using Monte Carlo
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::solve(const MV &x, MV &y)
+void AdjointMcParallelReduce::solve(const MV &x, MV &y)
 {
     // Determine number of histories needed per team
     /*
@@ -166,7 +166,7 @@ void AdjointMcKernel::solve(const MV &x, MV &y)
 //---------------------------------------------------------------------------//
 // Kokkos init
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::init( SCALAR *update ) const
+void AdjointMcParallelReduce::init( SCALAR *update ) const
 {
     for( LO i=0; i<value_count; ++i )
     {
@@ -179,7 +179,7 @@ void AdjointMcKernel::init( SCALAR *update ) const
  * \brief Perform adjoint Monte Carlo process
  */
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::operator()(const policy_member &member, SCALAR *y) const
+void AdjointMcParallelReduce::operator()(const policy_member &member, SCALAR *y) const
 {
     //printf("Executing kernel on team %i of %i, thread %i of %i\n",
     //        member.league_rank(),member.league_size(),member.team_rank(),
@@ -299,7 +299,7 @@ void AdjointMcKernel::operator()(const policy_member &member, SCALAR *y) const
 //---------------------------------------------------------------------------//
 // Kokkos join
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::join(      volatile SCALAR *update,
+void AdjointMcParallelReduce::join(      volatile SCALAR *update,
                            const volatile SCALAR *input) const
 {
     for( LO i=0; i<value_count; ++i )
@@ -317,7 +317,7 @@ void AdjointMcKernel::join(      volatile SCALAR *update,
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::getNewRow( const LO        state,
+void AdjointMcParallelReduce::getNewRow( const LO        state,
                                  const SCALAR * &h_vals,
                                  const SCALAR * &p_vals,
                                  const SCALAR * &w_vals,
@@ -337,7 +337,7 @@ void AdjointMcKernel::getNewRow( const LO        state,
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::tallyContribution(
+void AdjointMcParallelReduce::tallyContribution(
         const LO             state,
         const SCALAR         wt,
         const SCALAR * const h_vals,
@@ -368,7 +368,7 @@ void AdjointMcKernel::tallyContribution(
  * \brief Get new state by sampling from cdf
  */
 //---------------------------------------------------------------------------//
-LO AdjointMcKernel::getNewState(const SCALAR * const  cdf,
+LO AdjointMcParallelReduce::getNewState(const SCALAR * const  cdf,
                                 const LO              cdf_length,
                                       generator_type &gen) const
 {
@@ -389,7 +389,7 @@ LO AdjointMcKernel::getNewState(const SCALAR * const  cdf,
 //---------------------------------------------------------------------------//
 // Build initial cdf and weights
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::build_initial_distribution(const MV &x)
+void AdjointMcParallelReduce::build_initial_distribution(const MV &x)
 {
     // Build data on host, then explicitly copy to device
     // In future, convert this to a new Kernel to allow building
@@ -422,4 +422,4 @@ void AdjointMcKernel::build_initial_distribution(const MV &x)
 
 } // namespace alea
 
-#endif // mc_solver_AdjointMcKernel_i_hh
+#endif // mc_solver_AdjointMcParallelReduce_i_hh
