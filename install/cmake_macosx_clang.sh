@@ -16,8 +16,8 @@ BUILD="DEBUG"
 MPI="ON"
 
 # TPL PATHS
-HDF5_PATH="/tpls/gcc/parallel/hdf5"
-MPI_PATH="/opt/mpi/current"
+HDF5_PATH="/tpls/clang/parallel/hdf5"
+MPI_PATH="/opt/mpi/clang"
 
 ##---------------------------------------------------------------------------##
 
