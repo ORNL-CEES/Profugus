@@ -48,7 +48,7 @@ class FM_AccelerationTest : public ::testing::Test
     typedef profugus::Fission_Matrix_Acceleration_Impl<T> Implementation;
     typedef std::shared_ptr<Implementation>               SP_Implementation;
     typedef typename Implementation::Linear_System_t      Linear_System_t;
-    typedef typename Linear_System_t::RCP_Vector          RCP_Vector;
+    typedef typename Linear_System_t::RCP_MV              RCP_Vector;
     typedef std::vector<double>                           Vec_Dbl;
     typedef Acceleration::Fission_Site                    Fission_Site;
     typedef Acceleration::Fission_Site_Container          Fission_Site_Container;
@@ -284,6 +284,10 @@ class FM_AccelerationTest : public ::testing::Test
 
         // initialize the spn problem
         acceleration->initialize(mc_db);
+
+        // run through 1 "cycle" before acceleration becomes active
+        acceleration->start_cycle(1.0, fs);
+        acceleration->end_cycle(fs);
 
         // build fission source
         build_fs(true);

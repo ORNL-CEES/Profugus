@@ -16,6 +16,7 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayView.hpp"
+#include "Teuchos_ArrayRCP.hpp"
 #include "AnasaziMultiVecTraits.hpp"
 
 #include "utils/Serial_HDF5_Writer.hh"
@@ -137,9 +138,10 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     typedef Teuchos::RCP<Linear_System_t>            RCP_Linear_System;
     typedef typename Linear_System_t::RCP_Operator   RCP_Operator;
     typedef typename Linear_System_t::RCP_Matrix     RCP_Matrix;
-    typedef typename Linear_System_t::Vector_t       Vector_t;
-    typedef typename Linear_System_t::RCP_Vector     RCP_Vector;
+    typedef typename Linear_System_t::MV             Vector_t;
+    typedef typename Linear_System_t::RCP_MV         RCP_Vector;
     typedef Teuchos::ArrayView<const double>         Const_Array_View;
+    typedef Teuchos::ArrayRCP<const double>          Const_ArrayRCP;
     typedef Teuchos::RCP<const Vector_t>             RCP_Const_Vector;
     typedef Teuchos::RCP<Fission_Matrix_Solver<T>>   RCP_Fission_Matrix_Solver;
 
@@ -200,11 +202,11 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
 
     //@{
     //! Get the eigenvectors of the SPN system.
-    Const_Array_View adjoint() const
+    Const_ArrayRCP adjoint() const
     {
         return VectorTraits<T>::get_data(d_adjoint);
     }
-    Const_Array_View forward() const
+    Const_ArrayRCP forward() const
     {
         return VectorTraits<T>::get_data(d_forward);
     }

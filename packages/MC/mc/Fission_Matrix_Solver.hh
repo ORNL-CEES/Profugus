@@ -52,8 +52,8 @@ class Fission_Matrix_Solver
     typedef Physics::Fission_Site_Container       Fission_Site_Container;
     typedef profugus::Linear_System<T>            Linear_System_t;
     typedef Teuchos::RCP<Linear_System_t>         RCP_Linear_System;
-    typedef typename Linear_System_t::Vector_t    Vector_t;
-    typedef typename Linear_System_t::RCP_Vector  RCP_Vector;
+    typedef typename Linear_System_t::MV          Vector_t;
+    typedef typename Linear_System_t::RCP_MV      RCP_Vector;
     typedef Teuchos::RCP<const Vector_t>          RCP_Const_Vector;
     typedef Teuchos::ParameterList                ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>         RCP_ParameterList;

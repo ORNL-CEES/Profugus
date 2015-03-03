@@ -126,8 +126,8 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
     // set the begin/end cycle
     d_cycle_ctr   = 0;
     d_cycle_begin = fmdb->get("begin_cycle", 1);
-    d_cycle_end   = fmdb->get("end_cycle",
-                              mc_db->template get<int>("num_cycles"));
+    d_cycle_end   = fmdb->get(
+        "end_cycle", mc_db->template get<int>("num_inactive_cycles", 10));
     d_accelerate  = false;
 
     // make a "null" external source to pass to the solver
@@ -427,7 +427,7 @@ void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
     CHECK(Nc[0]*Nc[1]*Nc[2] == b_mesh->num_cells());
 
     // the u vector is ordered cell->moments->group
-    Teuchos::ArrayView<const double> gcv = VectorTraits<T>::get_data(gc);
+    Teuchos::ArrayRCP<const double> gcv = VectorTraits<T>::get_data(gc);
 
     // loop over cells on this domain
     for (int k = 0; k < Nc[2]; ++k)

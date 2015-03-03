@@ -115,7 +115,7 @@ class Solver_Base_Tmpl : public Solver_Base
     // >>> INHERITED METHODS
 
     // Write u-vector into the state.
-    void write_u_into_state(Teuchos::RCP<const Vector_t>, State &state) const;
+    void write_u_into_state(Teuchos::RCP<const MV>, State &state) const;
 };
 
 //===========================================================================//
@@ -123,8 +123,9 @@ class Solver_Base_Tmpl : public Solver_Base
  * \brief Write a u-vector into the state.
  */
 template <class T>
-void Solver_Base_Tmpl<T>::write_u_into_state(Teuchos::RCP<const MV>  u,
-                                             State &state) const
+void Solver_Base_Tmpl<T>::write_u_into_state(
+    Teuchos::RCP<const MV>  u,
+    State                  &state) const
 {
     REQUIRE(state.num_cells() * b_system->get_dims()->num_equations()
              * state.num_groups() <=
