@@ -14,40 +14,12 @@
 #include <cmath>
 
 #include "AdjointMcParallelReduce.hh"
+#include "MC_Components.hh"
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
 namespace alea
 {
-
-namespace
-{
-    // lower_bound implementation that can be called from device
-    KOKKOS_INLINE_FUNCTION
-    const SCALAR * lower_bound(const SCALAR * first,
-                               const SCALAR * last,
-                               SCALAR val)
-    {
-        const SCALAR *it;
-        int count, step;
-        count = last - first;
-        while( count > 0 )
-        {
-            step = count / 2;
-            it = first+step;
-            if( *it < val )
-            {
-                first = ++it;
-                count -= step+1;
-            }
-            else
-            {
-                count = step;
-            }
-        }
-        return first;
-    }
-}
 
 //---------------------------------------------------------------------------//
 /*!
