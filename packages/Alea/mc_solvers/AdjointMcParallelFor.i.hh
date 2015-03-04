@@ -14,40 +14,12 @@
 #include <cmath>
 
 #include "AdjointMcParallelFor.hh"
+#include "MC_Components.hh"
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
 namespace alea
 {
-
-namespace
-{
-    // lower_bound implementation that can be called from device
-    KOKKOS_INLINE_FUNCTION
-    const SCALAR * lower_bound2(const SCALAR * first,
-                               const SCALAR * last,
-                               SCALAR val)
-    {
-        const SCALAR *it;
-        int count, step;
-        count = last - first;
-        while( count > 0 )
-        {
-            step = count / 2;
-            it = first+step;
-            if( *it < val )
-            {
-                first = ++it;
-                count -= step+1;
-            }
-            else
-            {
-                count = step;
-            }
-        }
-        return first;
-    }
-}
 
 //---------------------------------------------------------------------------//
 /*!
@@ -333,7 +305,7 @@ LO AdjointMcParallelFor::getNewState(const SCALAR * const  cdf,
     // Sample cdf to get new state
     // Use local lower_bound implementation, not std library version
     // This allows calling from device
-    const SCALAR * const elem = lower_bound2(cdf,cdf+cdf_length,rand);
+    const SCALAR * const elem = lower_bound(cdf,cdf+cdf_length,rand);
 
     if( elem == cdf+cdf_length )
         return -1;

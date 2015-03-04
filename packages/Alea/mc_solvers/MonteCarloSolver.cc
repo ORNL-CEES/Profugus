@@ -12,6 +12,7 @@
 #include "MonteCarloSolver.hh"
 #include "AdjointMcParallelFor.hh"
 #include "AdjointMcParallelReduce.hh"
+#include "AdjointMcEventKernel.hh"
 //#include "ForwardMcKernel.hh"
 #include "PolynomialFactory.hh"
 #include "Kokkos_ExecPolicy.hpp"
@@ -56,12 +57,16 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
 
     // Type of Kokkos kernel
     std::string kernel_type = d_mc_pl->get("kernel_type","parallel_reduce");
-    VALIDATE(kernel_type == "parallel_reduce" || kernel_type == "parallel_for",
+    VALIDATE(kernel_type == "parallel_reduce" ||
+             kernel_type == "parallel_for"    ||
+             kernel_type == "event",
              "Invalid kernel_type.");
     if( kernel_type == "parallel_for" )
         d_kernel_type = PARALLEL_FOR;
-    else
+    else if( kernel_type == "parallel_reduce" )
         d_kernel_type = PARALLEL_REDUCE;
+    else if( kernel_type == "event" )
+        d_kernel_type = EVENT;
 
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
@@ -172,18 +177,28 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_REDUCE )
     {
         // Create kernel for performing group of MC histories
-        std::cout << "Building Adjoint kernel" << std::endl;
+        std::cout << "Building Adjoint parallel_reduce kernel" << std::endl;
         AdjointMcParallelReduce kernel(
             d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
         std::cout << "Executing solve" << std::endl;
         kernel.solve(x,y);
     }
-    else /* ADJOINT, PARALLEL_FOR */
+    else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_FOR )
     {
         // Create kernel for performing group of MC histories
-        std::cout << "Building Adjoint kernel" << std::endl;
+        std::cout << "Building Adjoint parallel_for kernel" << std::endl;
         AdjointMcParallelFor kernel(
+            d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
+
+        std::cout << "Executing solve" << std::endl;
+        kernel.solve(x,y);
+    }
+    else if( d_mc_type == ADJOINT && d_kernel_type == EVENT )
+    {
+        // Create kernel for performing group of MC histories
+        std::cout << "Building Adjoint event kernel" << std::endl;
+        AdjointMcEventKernel kernel(
             d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
         std::cout << "Executing solve" << std::endl;
