@@ -177,31 +177,25 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_REDUCE )
     {
         // Create kernel for performing group of MC histories
-        std::cout << "Building Adjoint parallel_reduce kernel" << std::endl;
         AdjointMcParallelReduce kernel(
             d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
-        std::cout << "Executing solve" << std::endl;
         kernel.solve(x,y);
     }
     else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_FOR )
     {
         // Create kernel for performing group of MC histories
-        std::cout << "Building Adjoint parallel_for kernel" << std::endl;
         AdjointMcParallelFor kernel(
             d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
-        std::cout << "Executing solve" << std::endl;
         kernel.solve(x,y);
     }
     else if( d_mc_type == ADJOINT && d_kernel_type == EVENT )
     {
         // Create kernel for performing group of MC histories
-        std::cout << "Building Adjoint event kernel" << std::endl;
         AdjointMcEventKernel kernel(
             d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
 
-        std::cout << "Executing solve" << std::endl;
         kernel.solve(x,y);
     }
 
