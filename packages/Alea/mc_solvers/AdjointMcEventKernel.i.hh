@@ -82,11 +82,7 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     build_initial_distribution(x);
 
     // Need to get Kokkos view directly, this is silly
-    Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-    const view_type y_device("result",d_N);
-    const view_type::HostMirror y_mirror =
-        Kokkos::create_mirror_view(y_device);
-
+    const view_type    y_device( "result",    d_N);
     const history_view histories("histories", d_num_histories);
 
     // Build kernels
@@ -110,6 +106,9 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     }
 
     // Copy data back to host
+    Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
+    const view_type::HostMirror y_mirror =
+        Kokkos::create_mirror_view(y_device);
     Kokkos::deep_copy(y_mirror,y_device);
 
     // Apply scale factor
