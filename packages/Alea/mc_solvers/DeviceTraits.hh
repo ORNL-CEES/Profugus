@@ -122,6 +122,7 @@ class DeviceTraits<Kokkos::Threads>
  * \brief Specialization of DeviceTraits for Kokkos::Cuda.
  */
 //---------------------------------------------------------------------------//
+#ifdef KOKKOS_HAVE_CUDA
 template <>
 class DeviceTraits<Kokkos::Cuda>
 {
@@ -165,6 +166,7 @@ class DeviceTraits<Kokkos::Cuda>
         }
     }
 };
+#endif // KOKKOS_HAVE_CUDA
 
 } // namespace alea
 
