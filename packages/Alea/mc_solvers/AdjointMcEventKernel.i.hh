@@ -99,22 +99,17 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     range_policy policy(0,d_num_histories);
 
     // Get initial state and tally
-    std::cout << "Initializing histories" << std::endl;
     Kokkos::parallel_for(policy,init_history);
-    std::cout << "Initial tally" << std::endl;
     Kokkos::parallel_for(policy,coll_tally);
 
     // Loop over history length (start at 1)
     for( int i=1; i<d_max_history_length; ++i )
     {
-        std::cout << "Transitioning" << std::endl;
         Kokkos::parallel_for(policy,transition);
-        std::cout << "Tallying" << std::endl;
         Kokkos::parallel_for(policy,coll_tally);
     }
 
     // Copy data back to host
-    std::cout << "Copying data back to host" << std::endl;
     Kokkos::deep_copy(y_mirror,y_device);
 
     // Apply scale factor
@@ -145,7 +140,6 @@ void AdjointMcEventKernel::build_initial_distribution(const MV &x)
     Teuchos::ArrayRCP<const SCALAR> x_data = x.getData(0);
 
 
-    std::cout << "Starting cdf:" << std::endl;
     for( LO i=0; i<d_N; ++i )
     {
         start_cdf_host(i) =
@@ -160,11 +154,6 @@ void AdjointMcEventKernel::build_initial_distribution(const MV &x)
                    &start_wt_host(0),
                    [](SCALAR x, SCALAR y){return y==0.0 ? 0.0 : x/y;});
     std::partial_sum(&start_cdf_host(0),&start_cdf_host(d_N-1)+1,&start_cdf_host(0));
-    std::cout << "Initial cdf/weights:" << std::endl;
-    for(LO i=0; i<d_N; ++i )
-    {
-        std::cout << i << " " << start_cdf_host(i) << " " << start_wt_host(i) << std::endl;
-    }
 
     Kokkos::deep_copy(d_start_cdf,start_cdf_host);
     Kokkos::deep_copy(d_start_wt, start_wt_host);
