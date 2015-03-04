@@ -189,7 +189,6 @@ class StateTransition
         const SCALAR * const row_start = &d_P(d_histories(member).starting_ind);
         const SCALAR * const row_end   = row_start +
             d_histories(member).row_length;
-        //const SCALAR * const elem = lower_bound(row_start,row_end,rand);
         int row_index = lower_bound(row_start,row_end,rand) - row_start;
 
         // Update state
@@ -256,7 +255,6 @@ class CollisionTally
     KOKKOS_INLINE_FUNCTION
     void operator()(policy_member member) const
     {
-        //d_y(d_histories(member).state += d_histories(member).weight;
         Kokkos::atomic_add(&d_y(d_histories(member).state),
             d_histories(member).weight);
         //d_coeffs(d_histories(member).stage)*d_histories(member).weight);
