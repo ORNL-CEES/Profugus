@@ -86,10 +86,8 @@ class InitHistory
     typedef Kokkos::View<      LO         *, DEVICE> ord_view;
     typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
 
-    typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
-    typedef typename generator_pool::generator_type generator_type;
-
-    InitHistory(const_view_type init_cdf,
+    InitHistory(view_type       randoms,
+                const_view_type init_cdf,
                 const_view_type init_wts,
                 view_type       weights,
                 ord_view        states,
@@ -98,7 +96,8 @@ class InitHistory
                 ord_view        stages,
                 const_ord_view  indices,
                 const_ord_view  offsets)
-        : d_init_cdf(init_cdf)
+        : d_randoms(randoms)
+        , d_init_cdf(init_cdf)
         , d_init_wts(init_wts)
         , d_weights(weights)
         , d_states(states)
@@ -107,23 +106,17 @@ class InitHistory
         , d_stages(stages)
         , d_indices(indices)
         , d_offsets(offsets)
-        , d_rand_pool(31890)
     {
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(policy_member member) const
     {
-        // Get random number
-        // Is this the best way to use the Kokkos RNG?
-        generator_type rand_gen = d_rand_pool.get_state();
-        SCALAR rand = Kokkos::rand<generator_type,SCALAR>::draw(rand_gen);
-        d_rand_pool.free_state(rand_gen);
-
         // Perform lower_bound search to get new state
         const SCALAR * const cdf_start = &d_init_cdf(0);
         const SCALAR * const cdf_end   = cdf_start + d_init_cdf.size();
-        int state = lower_bound(cdf_start,cdf_end,rand) - cdf_start;
+        int state = lower_bound(cdf_start,cdf_end,d_randoms(member))
+                    - cdf_start;
 
         d_weights(member)       = d_init_wts(state);
         d_states(member)        = state;
@@ -134,6 +127,7 @@ class InitHistory
 
   private:
 
+    const view_type       d_randoms;
     const const_view_type d_init_cdf;
     const const_view_type d_init_wts;
     const view_type       d_weights;
@@ -143,7 +137,6 @@ class InitHistory
     const ord_view        d_stages;
     const const_ord_view  d_indices;
     const const_ord_view  d_offsets;
-    generator_pool        d_rand_pool;
 };
 
 //===========================================================================//
@@ -168,10 +161,8 @@ class StateTransition
     typedef Kokkos::View<      LO         *, DEVICE> ord_view;
     typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
 
-    typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
-    typedef typename generator_pool::generator_type generator_type;
-
-    StateTransition(view_type       weights,
+    StateTransition(const_view_type randoms,
+                    view_type       weights,
                     ord_view        states,
                     ord_view        starting_inds,
                     ord_view        row_lengths,
@@ -180,7 +171,8 @@ class StateTransition
                     const_view_type W,
                     const_ord_view  indices,
                     const_ord_view  offsets)
-        : d_weights(weights)
+        : d_randoms(randoms)
+        , d_weights(weights)
         , d_states(states)
         , d_starting_inds(starting_inds)
         , d_row_lengths(row_lengths)
@@ -189,23 +181,17 @@ class StateTransition
         , d_W(W)
         , d_indices(indices)
         , d_offsets(offsets)
-        , d_rand_pool(31891)
     {
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(policy_member member) const
     {
-        // Get random number
-        // Is this the best way to use the Kokkos RNG?
-        generator_type rand_gen = d_rand_pool.get_state();
-        SCALAR rand = Kokkos::rand<generator_type,SCALAR>::draw(rand_gen);
-        d_rand_pool.free_state(rand_gen);
-
         // Perform lower_bound search to get new state
         const SCALAR * const row_start = &d_P(d_starting_inds(member));
         const SCALAR * const row_end   = row_start + d_row_lengths(member);
-        int row_index = lower_bound(row_start,row_end,rand) - row_start;
+        int row_index = lower_bound(row_start,row_end,d_randoms(member))
+                        - row_start;
 
         // Update state
         if( row_index == d_row_lengths(member) )
@@ -228,6 +214,7 @@ class StateTransition
 
   private:
 
+    const const_view_type d_randoms;
     const view_type       d_weights;
     const ord_view        d_states;
     const ord_view        d_starting_inds;
@@ -237,7 +224,6 @@ class StateTransition
     const const_view_type d_W;
     const const_ord_view  d_indices;
     const const_ord_view  d_offsets;
-    generator_pool        d_rand_pool;
 };
 
 //===========================================================================//
