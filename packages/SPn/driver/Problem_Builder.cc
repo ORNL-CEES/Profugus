@@ -13,12 +13,18 @@
 #include <utility>
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
+#ifdef COMM_MPI
+#include "Teuchos_DefaultMpiComm.hpp"
+#else
+#include "Teuchos_DefaultSerialComm.hpp"
+#endif
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "xs/XS_Builder.hh"
 #include "mesh/Partitioner.hh"
 #include "Problem_Builder.hh"
+#include "comm/global.hh"
 
 namespace spn
 {
@@ -30,8 +36,12 @@ namespace spn
  * \brief Constructor.
  */
 Problem_Builder::Problem_Builder()
-    : d_comm(Teuchos::DefaultComm<int>::getComm())
 {
+#ifdef COMM_MPI
+    d_comm = Teuchos::rcp( new Teuchos::MpiComm<int>(profugus::communicator) );
+#else
+    d_comm = Teuchos::rcp( new Teuchos::SerialComm<int>() );
+#endif
 }
 
 //---------------------------------------------------------------------------//

@@ -14,7 +14,6 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayRCP.hpp"
 #include "Teuchos_ArrayView.hpp"
-#include "Teuchos_DefaultComm.hpp"
 #include "Teuchos_OrdinalTraits.hpp"
 
 #include "harness/DBC.hh"

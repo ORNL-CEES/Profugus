@@ -15,8 +15,12 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayRCP.hpp"
-#include "Teuchos_DefaultComm.hpp"
 #include "Teuchos_OrdinalTraits.hpp"
+#ifdef COMM_MPI
+#include "Teuchos_DefaultMpiComm.hpp"
+#else
+#include "Teuchos_DefaultSerialComm.hpp"
+#endif
 
 #include "EpetraExt_RowMatrixOut.h"
 #include "MatrixMarket_Tpetra.hpp"
@@ -256,8 +260,13 @@ class MatrixTraits<TpetraTypes>
         std::vector<int> indexer=std::vector<int>() )
     {
         // make the communicator
-        Teuchos::RCP<const Teuchos::Comm<int> > comm =
-            Teuchos::DefaultComm<int>::getComm();
+#ifdef COMM_MPI
+	Teuchos::RCP<const Teuchos::Comm<int> > comm =
+	    Teuchos::rcp( new Teuchos::MpiComm<int>(profugus::communicator) );
+#else
+	Teuchos::RCP<const Teuchos::Comm<int> > comm =
+	    Teuchos::rcp( new Teuchos::SerialComm<int>() );
+#endif
 
         // If we have an indexer, use it to construct map, otherwise
         // generate a uniform map.
