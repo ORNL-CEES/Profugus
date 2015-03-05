@@ -31,12 +31,6 @@ IF (${PROJECT_NAME}_ENABLE_ML)
   SET(USE_ML 1)
 ENDIF()
 
-## MCLS options
-IF (${PROJECT_NAME}_ENABLE_MCLS)
-   MESSAGE(STATUS "Building Profugus with MCLS support")
-   SET(USE_MCLS 1)
-ENDIF()
-
 ## MueLu
 IF (${PROJECT_NAME}_ENABLE_MueLu)
     MESSAGE(STATUS "Building Profugus with MueLu support")

@@ -24,10 +24,6 @@
 #include "StratimikosSolver.hh"
 #include "LinAlgTypedefs.hh"
 
-#ifdef USE_MCLS
-#include <MCLS_StratimikosAdapter.hpp>
-#endif
-
 namespace profugus
 {
 
@@ -69,12 +65,6 @@ StratimikosSolver<T>::StratimikosSolver(RCP_ParameterList db)
     }
 
     Stratimikos::DefaultLinearSolverBuilder builder;
-#ifdef USE_MCLS
-    MCLS::StratimikosAdapter<double>::setMCLSLinearSolveStrategyFactory(
-        Teuchos::ptrFromRef(builder) );
-    MCLS::StratimikosAdapter<double>::setMCLSPreconditioningStrategyFactory(
-        Teuchos::ptrFromRef(builder) );
-#endif
     builder.setParameterList(builderplist);
     b_label   = "Stratimikos " + builder.getLinearSolveStrategyName();
     d_factory = Thyra::createLinearSolveStrategy(builder);

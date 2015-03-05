@@ -34,9 +34,6 @@
 #define FC_FUNC@F77_FUNC@
 #define FC_FUNC_@F77_FUNC_@
 
-/* MCLS Linear Solvers */
-#cmakedefine USE_MCLS
-
 // Turn on MueLu
 #cmakedefine USE_MUELU
 
