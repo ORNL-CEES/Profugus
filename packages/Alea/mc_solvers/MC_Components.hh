@@ -85,19 +85,26 @@ class InitHistory
     typedef Kokkos::View<const SCALAR     *, DEVICE> const_view_type;
     typedef Kokkos::View<      LO         *, DEVICE> ord_view;
     typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
-    typedef Kokkos::View<      MC_History *, DEVICE> history_view;
 
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
     InitHistory(const_view_type init_cdf,
                 const_view_type init_wts,
-                history_view    histories,
+                view_type       weights,
+                ord_view        states,
+                ord_view        starting_inds,
+                ord_view        row_lengths,
+                ord_view        stages,
                 const_ord_view  indices,
                 const_ord_view  offsets)
         : d_init_cdf(init_cdf)
         , d_init_wts(init_wts)
-        , d_histories(histories)
+        , d_weights(weights)
+        , d_states(states)
+        , d_starting_inds(starting_inds)
+        , d_row_lengths(row_lengths)
+        , d_stages(stages)
         , d_indices(indices)
         , d_offsets(offsets)
         , d_rand_pool(31890)
@@ -116,21 +123,24 @@ class InitHistory
         // Perform lower_bound search to get new state
         const SCALAR * const cdf_start = &d_init_cdf(0);
         const SCALAR * const cdf_end   = cdf_start + d_init_cdf.size();
-        int init_state = lower_bound(cdf_start,cdf_end,rand) - cdf_start;
+        int state = lower_bound(cdf_start,cdf_end,rand) - cdf_start;
 
-        d_histories(member).weight        = d_init_wts(init_state);
-        d_histories(member).state         = init_state;
-        d_histories(member).starting_ind  = d_offsets(init_state);
-        d_histories(member).row_length    = d_offsets(init_state+1) -
-                                            d_offsets(init_state);
-        d_histories(member).stage         = 0;
+        d_weights(member)       = d_init_wts(state);
+        d_states(member)        = state;
+        d_starting_inds(member) = d_offsets(state);
+        d_row_lengths(member)   = d_offsets(state+1)-d_offsets(state);
+        d_stages(member)        = 0;
     }
 
   private:
 
     const const_view_type d_init_cdf;
     const const_view_type d_init_wts;
-    const history_view    d_histories;
+    const view_type       d_weights;
+    const ord_view        d_states;
+    const ord_view        d_starting_inds;
+    const ord_view        d_row_lengths;
+    const ord_view        d_stages;
     const const_ord_view  d_indices;
     const const_ord_view  d_offsets;
     generator_pool        d_rand_pool;
@@ -157,17 +167,24 @@ class StateTransition
     typedef Kokkos::View<const SCALAR     *, DEVICE> const_view_type;
     typedef Kokkos::View<      LO         *, DEVICE> ord_view;
     typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
-    typedef Kokkos::View<      MC_History *, DEVICE> history_view;
 
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
-    StateTransition(history_view    histories,
+    StateTransition(view_type       weights,
+                    ord_view        states,
+                    ord_view        starting_inds,
+                    ord_view        row_lengths,
+                    ord_view        stages,
                     const_view_type P,
                     const_view_type W,
                     const_ord_view  indices,
                     const_ord_view  offsets)
-        : d_histories(histories)
+        : d_weights(weights)
+        , d_states(states)
+        , d_starting_inds(starting_inds)
+        , d_row_lengths(row_lengths)
+        , d_stages(stages)
         , d_P(P)
         , d_W(W)
         , d_indices(indices)
@@ -186,33 +203,36 @@ class StateTransition
         d_rand_pool.free_state(rand_gen);
 
         // Perform lower_bound search to get new state
-        const SCALAR * const row_start = &d_P(d_histories(member).starting_ind);
-        const SCALAR * const row_end   = row_start +
-            d_histories(member).row_length;
+        const SCALAR * const row_start = &d_P(d_starting_inds(member));
+        const SCALAR * const row_end   = row_start + d_row_lengths(member);
         int row_index = lower_bound(row_start,row_end,rand) - row_start;
 
         // Update state
-        if( row_index == d_histories(member).row_length )
+        if( row_index == d_row_lengths(member) )
         {
-            d_histories(member).weight = 0.0;
-            d_histories(member).state = -1;
+            d_weights(member) = 0.0;
+            d_states(member)  = -1;
         }
         else
         {
-            int new_ind   = d_histories(member).starting_ind + row_index;
+            int new_ind   = d_starting_inds(member) + row_index;
             int new_state = d_indices(new_ind);
-            d_histories(member).weight       *= d_W(new_ind);
-            d_histories(member).state         = new_state;
-            d_histories(member).starting_ind  = d_offsets(new_state);
-            d_histories(member).row_length    = d_offsets(new_state+1) -
-                                                d_offsets(new_state);
-            d_histories(member).stage++;
+            d_weights(member)       *= d_W(new_ind);
+            d_states(member)         = new_state;
+            d_starting_inds(member)  = d_offsets(new_state);
+            d_row_lengths(member)    = d_offsets(new_state+1) -
+                                       d_offsets(new_state);
+            d_stages(member)++;
         }
     }
 
   private:
 
-    const history_view    d_histories;
+    const view_type       d_weights;
+    const ord_view        d_states;
+    const ord_view        d_starting_inds;
+    const ord_view        d_row_lengths;
+    const ord_view        d_stages;
     const const_view_type d_P;
     const const_view_type d_W;
     const const_ord_view  d_indices;
@@ -241,12 +261,13 @@ class CollisionTally
     typedef Kokkos::View<const SCALAR     *, DEVICE> const_view_type;
     typedef Kokkos::View<      LO         *, DEVICE> ord_view;
     typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
-    typedef Kokkos::View<      MC_History *, DEVICE> history_view;
 
-    CollisionTally(history_view     histories,
+    CollisionTally(const_view_type  weights,
+                   const_ord_view   states,
                    const_view_type  coeffs,
                    view_type        y)
-        : d_histories(histories)
+        : d_weights(weights)
+        , d_states(states)
         , d_coeffs(coeffs)
         , d_y(y)
     {
@@ -255,14 +276,14 @@ class CollisionTally
     KOKKOS_INLINE_FUNCTION
     void operator()(policy_member member) const
     {
-        Kokkos::atomic_add(&d_y(d_histories(member).state),
-            d_histories(member).weight);
+        Kokkos::atomic_add(&d_y(d_states(member)),d_weights(member));
         //d_coeffs(d_histories(member).stage)*d_histories(member).weight);
     }
 
   private:
 
-    const history_view    d_histories;
+    const const_view_type d_weights;
+    const const_ord_view  d_states;
     const const_view_type d_coeffs;
     const view_type       d_y;
 };
