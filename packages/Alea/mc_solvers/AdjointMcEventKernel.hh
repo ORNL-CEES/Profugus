@@ -49,6 +49,7 @@ class AdjointMcEventKernel
     // Convenience typedefs
     typedef Kokkos::View<      SCALAR *,     DEVICE> view_type;
     typedef Kokkos::View<const SCALAR *,     DEVICE> const_view_type;
+    typedef Kokkos::View<      LO     *,     DEVICE> ord_view;
     typedef Kokkos::View<const LO     *,     DEVICE> const_ord_view;
     typedef Kokkos::View<      MC_History *, DEVICE> history_view;
     typedef view_type::HostMirror                    host_view_type;
