@@ -84,29 +84,32 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     // Need to get Kokkos view directly, this is silly
     const view_type    y_device(      "result",        d_N);
     const view_type    weights(       "weights",       d_num_histories);
+    const view_type    randoms(       "randoms",       d_num_histories);
     const ord_view     states(        "states",        d_num_histories);
     const ord_view     starting_inds( "starting_inds", d_num_histories);
     const ord_view     row_lengths(   "row_lengths",   d_num_histories);
     const ord_view     stages(        "stages",        d_num_histories);
 
     // Build kernels
-    InitHistory     init_history(d_start_cdf,d_start_wt,weights,states,
-                                 starting_inds,row_lengths,stages,d_inds,
-                                 d_offsets);
-    StateTransition transition(weights,states,starting_inds,row_lengths,stages,
-                               d_P,d_W,d_inds,d_offsets);
+    InitHistory     init_history(randoms,d_start_cdf,d_start_wt,weights,
+                                 states,starting_inds,row_lengths,stages,
+                                 d_inds,d_offsets);
+    StateTransition transition(randoms,weights,states,starting_inds,
+                               row_lengths,stages,d_P,d_W,d_inds,d_offsets);
     CollisionTally  coll_tally(weights,states,d_coeffs,y_device);
 
     // Create policy
     range_policy policy(0,d_num_histories);
 
     // Get initial state and tally
+    Kokkos::fill_random(randoms,d_rand_pool,1.0);
     Kokkos::parallel_for(policy,init_history);
     Kokkos::parallel_for(policy,coll_tally);
 
     // Loop over history length (start at 1)
     for( int i=1; i<d_max_history_length; ++i )
     {
+        Kokkos::fill_random(randoms,d_rand_pool,1.0);
         Kokkos::parallel_for(policy,transition);
         Kokkos::parallel_for(policy,coll_tally);
     }
