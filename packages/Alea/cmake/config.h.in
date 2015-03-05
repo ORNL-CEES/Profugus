@@ -18,6 +18,9 @@
 #define HAVE_CONFIG_H
 #endif
 
+/* MCLS Linear Solvers */
+#cmakedefine USE_MCLS
+
 /* PARALLEL MPI ENVIRONMENT VARIABLES */
 #include <Utils/config.h>
 

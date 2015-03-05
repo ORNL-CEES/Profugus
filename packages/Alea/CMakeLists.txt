@@ -24,6 +24,12 @@ TRIBITS_PACKAGE(Alea)
 ## B) Set up package-specific options
 ##---------------------------------------------------------------------------##
 
+## MCLS options
+IF (${PROJECT_NAME}_ENABLE_MCLS)
+   MESSAGE(STATUS "Building Profugus with MCLS support")
+   SET(USE_MCLS 1)
+ENDIF()
+
 # Setup M4 for FORTRAN processing
 APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -116,6 +122,17 @@ TRIBITS_ADD_EXECUTABLE(
   SOURCES mc_solvers/aleae_multae.cc
   INSTALLABLE
   )
+
+# MCLS executable
+IF (${PROJECT_NAME}_ENABLE_MCLS)
+  TRIBITS_ADD_EXECUTABLE(
+    xalea_mcls
+    NOEXESUFFIX
+    NOEXEPREFIX
+    SOURCES mc_solvers/alea_mcls.cc
+    INSTALLABLE
+    )
+ENDIF()
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package
