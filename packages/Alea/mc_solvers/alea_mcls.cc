@@ -18,6 +18,10 @@
 #include "Teuchos_Time.hpp"
 #include "Teuchos_TimeMonitor.hpp"
 
+#include "BelosPseudoBlockGmresSolMgr.hpp"
+#include <BelosTpetraAdapter.hpp>
+#include "BelosLinearProblem.hpp"
+
 #include <MCLS_MCSASolverManager.hpp>
 #include <MCLS_MultiSetLinearProblem.hpp>
 #include <MCLS_TpetraAdapter.hpp>
@@ -56,6 +60,8 @@ int main( int argc, char *argv[] )
 	    xml_input_filename, Teuchos::inoutArg(*plist) );
 	Teuchos::RCP<Teuchos::ParameterList> mcls_list = 
 	    Teuchos::rcpFromRef( plist->sublist("MCLS",true) );
+	Teuchos::RCP<Teuchos::ParameterList> belos_list = 
+	    Teuchos::rcpFromRef( plist->sublist("Belos",true) );
 
 	// Build a communicator for the sets.
 	int num_sets = mcls_list->get<int>("Number of Sets");
@@ -89,21 +95,49 @@ int main( int argc, char *argv[] )
 	Teuchos::RCP<const MV> pb = system->getRhs();
 	Teuchos::RCP<MV> px( new MV(pA->getDomainMap(),1) );
 
-	// Extract the linear problem.
-	Teuchos::RCP<const CRS_MATRIX> A =
-	    Teuchos::rcp_dynamic_cast<const CRS_MATRIX>( pA );
-	Teuchos::RCP<const VECTOR> b = pb->getVector( 0 );
-	Teuchos::RCP<VECTOR> x = px->getVectorNonConst( 0 );
-	Teuchos::RCP<MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX> > problem =
-	    Teuchos::rcp( 
-		new MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX>(
-		    comm, num_sets, set_id, A, x, b) );
-
-	// Build the MCLS solver.
-	MCLS::MCSASolverManager<VECTOR,CRS_MATRIX> solver_manager( problem, mcls_list );
-
+	// Output problem details.
+	long global_size = pb->getGlobalLength();
+	out << "GLOBAL PROBLEM SIZE: " << global_size << std::endl;
+	
 	// Solve the problem.
-	solver_manager.solve();
+	std::string solver_type = plist->get<std::string>("Solver Type");
+
+	// Solve the problem with MCLS.
+	if ( "MCLS" == solver_type )
+	{
+	    // Extract the linear problem.
+	    Teuchos::RCP<const CRS_MATRIX> A =
+		Teuchos::rcp_dynamic_cast<const CRS_MATRIX>( pA );
+	    Teuchos::RCP<const VECTOR> b = pb->getVector( 0 );
+	    Teuchos::RCP<VECTOR> x = px->getVectorNonConst( 0 );
+	    Teuchos::RCP<MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX> > problem =
+		Teuchos::rcp( 
+		    new MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX>(
+			comm, num_sets, set_id, A, x, b) );
+
+	    // Build the MCLS solver.
+	    MCLS::MCSASolverManager<VECTOR,CRS_MATRIX> solver_manager( problem, mcls_list );
+
+	    // Solve the problem.
+	    solver_manager.solve();
+	}
+
+	// Solve the problem with Belos.
+	else if ( "Belos" == solver_type )
+	{
+	    int verbosity_level = Belos::IterationDetails | 
+				  Belos::OrthoDetails |
+				  Belos::FinalSummary |
+				  Belos::StatusTestDetails |
+				  Belos::Warnings | 
+				  Belos::Errors;
+	    belos_list->set("Verbosity", verbosity_level);
+	    Belos::LinearProblem<SCALAR,MV,OP> problem( pA, px, pb );
+	    problem.setProblem();
+	    Belos::PseudoBlockGmresSolMgr<SCALAR,MV,OP> solver(
+		Teuchos::rcpFromRef(problem), belos_list );
+	    solver.solve();
+	}
     }
     
     // Output final timing.
