@@ -23,6 +23,7 @@
 #include "BelosLinearProblem.hpp"
 
 #include <MCLS_MCSASolverManager.hpp>
+#include <MCLS_AndersonSolverManager.hpp>
 #include <MCLS_MultiSetLinearProblem.hpp>
 #include <MCLS_TpetraAdapter.hpp>
 
@@ -102,8 +103,8 @@ int main( int argc, char *argv[] )
 	// Solve the problem.
 	std::string solver_type = plist->get<std::string>("Solver Type");
 
-	// Solve the problem with MCLS.
-	if ( "MCLS" == solver_type )
+	// Solve the problem with MCLS MCSA.
+	if ( "MCSA" == solver_type )
 	{
 	    // Extract the linear problem.
 	    Teuchos::RCP<const CRS_MATRIX> A =
@@ -122,8 +123,28 @@ int main( int argc, char *argv[] )
 	    solver_manager.solve();
 	}
 
-	// Solve the problem with Belos.
-	else if ( "Belos" == solver_type )
+	// Solve the problem with MCLS Anderson.
+	else if ( "Anderson" == solver_type )
+	{
+	    // Extract the linear problem.
+	    Teuchos::RCP<const CRS_MATRIX> A =
+		Teuchos::rcp_dynamic_cast<const CRS_MATRIX>( pA );
+	    Teuchos::RCP<const VECTOR> b = pb->getVector( 0 );
+	    Teuchos::RCP<VECTOR> x = px->getVectorNonConst( 0 );
+	    Teuchos::RCP<MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX> > problem =
+		Teuchos::rcp( 
+		    new MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX>(
+			comm, num_sets, set_id, A, x, b) );
+
+	    // Build the MCLS solver.
+	    MCLS::AndersonSolverManager<VECTOR,CRS_MATRIX> solver_manager( problem, mcls_list );
+
+	    // Solve the problem.
+	    solver_manager.solve();
+	}
+
+	// Solve the problem with Belos GMRES.
+	else if ( "GMRES" == solver_type )
 	{
 	    int verbosity_level = Belos::IterationDetails | 
 				  Belos::OrthoDetails |
