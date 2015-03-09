@@ -22,6 +22,7 @@
 #include <BelosTpetraAdapter.hpp>
 #include "BelosLinearProblem.hpp"
 
+#include <MCLS_TemereSolverManager.hpp>
 #include <MCLS_MCSASolverManager.hpp>
 #include <MCLS_AndersonSolverManager.hpp>
 #include <MCLS_MultiSetLinearProblem.hpp>
@@ -118,6 +119,26 @@ int main( int argc, char *argv[] )
 
 	    // Build the MCLS solver.
 	    MCLS::MCSASolverManager<VECTOR,CRS_MATRIX> solver_manager( problem, mcls_list );
+
+	    // Solve the problem.
+	    solver_manager.solve();
+	}
+
+	// Solve the problem with MCLS Temere MCSA.
+	else if ( "Temere" == solver_type )
+	{
+	    // Extract the linear problem.
+	    Teuchos::RCP<const CRS_MATRIX> A =
+		Teuchos::rcp_dynamic_cast<const CRS_MATRIX>( pA );
+	    Teuchos::RCP<const VECTOR> b = pb->getVector( 0 );
+	    Teuchos::RCP<VECTOR> x = px->getVectorNonConst( 0 );
+	    Teuchos::RCP<MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX> > problem =
+		Teuchos::rcp( 
+		    new MCLS::MultiSetLinearProblem<VECTOR,CRS_MATRIX>(
+			comm, num_sets, set_id, A, x, b) );
+
+	    // Build the MCLS solver.
+	    MCLS::TemereSolverManager<VECTOR,CRS_MATRIX> solver_manager( problem, mcls_list );
 
 	    // Solve the problem.
 	    solver_manager.solve();
