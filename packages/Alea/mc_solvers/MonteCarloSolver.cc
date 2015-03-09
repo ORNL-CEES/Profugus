@@ -15,7 +15,8 @@
 #include "AdjointMcEventKernel.hh"
 //#include "ForwardMcKernel.hh"
 #include "PolynomialFactory.hh"
-#include "Kokkos_ExecPolicy.hpp"
+#include "Kokkos_Core.hpp"
+#include "Kokkos_Random.hpp"
 #include "harness/DBC.hh"
 
 namespace alea
@@ -39,6 +40,7 @@ namespace alea
 MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
                                    Teuchos::RCP<Teuchos::ParameterList> pl )
   : AleaSolver(A,pl)
+  , d_rand_pool(pl->get("random_seed",31891))
 {
     // Get Monte Carlo sublist
     d_mc_pl = Teuchos::sublist(pl,"Monte Carlo");
@@ -67,7 +69,6 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
         d_kernel_type = PARALLEL_REDUCE;
     else if( kernel_type == "event" )
         d_kernel_type = EVENT;
-
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
@@ -109,7 +110,7 @@ void MonteCarloSolver::initialize()
     Teuchos::ArrayRCP<const SCALAR> coeffs = poly->getCoeffs(*basis);
     CHECK( !coeffs.is_null() );
     Kokkos::resize(d_coeffs,coeffs.size());
-    view_type::HostMirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
+    scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
     std::copy(coeffs.begin(),coeffs.end(),&coeffs_host(0));
     Kokkos::deep_copy(d_coeffs,coeffs_host);
 
@@ -194,7 +195,7 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     {
         // Create kernel for performing group of MC histories
         AdjointMcEventKernel kernel(
-            d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
+            d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl,d_rand_pool);
 
         kernel.solve(x,y);
     }
@@ -243,11 +244,11 @@ void MonteCarloSolver::convertMatrices(Teuchos::RCP<const MATRIX> H,
     Kokkos::resize(d_offsets,numRows+1);
 
     // Mirror views on host
-    view_type::HostMirror H_host      = Kokkos::create_mirror_view(d_H);
-    view_type::HostMirror P_host      = Kokkos::create_mirror_view(d_P);
-    view_type::HostMirror W_host      = Kokkos::create_mirror_view(d_W);
-    ord_view::HostMirror inds_host    = Kokkos::create_mirror_view(d_inds);
-    ord_view::HostMirror offsets_host = Kokkos::create_mirror_view(d_offsets);
+    scalar_view::HostMirror H_host       = Kokkos::create_mirror_view(d_H);
+    scalar_view::HostMirror P_host       = Kokkos::create_mirror_view(d_P);
+    scalar_view::HostMirror W_host       = Kokkos::create_mirror_view(d_W);
+    ord_view::HostMirror    inds_host    = Kokkos::create_mirror_view(d_inds);
+    ord_view::HostMirror    offsets_host = Kokkos::create_mirror_view(d_offsets);
 
     Teuchos::ArrayView<const double> H_row, P_row, W_row;
     Teuchos::ArrayView<const int> ind_row;

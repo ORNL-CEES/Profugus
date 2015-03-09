@@ -63,6 +63,17 @@ typedef Teuchos::OrdinalTraits<GO>              GO_TRAITS;
 //! Type specifying magnitude corresponding to specified scalar
 typedef SCALAR_TRAITS::magnitudeType            MAGNITUDE;
 
+// Kokkos View types
+using Kokkos::View;
+typedef Kokkos::MemoryTraits<Kokkos::RandomAccess> RandomMemory;
+typedef View<      SCALAR *,DEVICE>                scalar_view;
+typedef View<const SCALAR *,DEVICE>                const_scalar_view;
+typedef View<      LO     *,DEVICE>                ord_view;
+typedef View<const LO     *,DEVICE>                const_ord_view;
+typedef View<const SCALAR *,DEVICE,RandomMemory>   random_scalar_view;
+typedef View<const LO     *,DEVICE,RandomMemory>   random_ord_view;
+typedef scalar_view::HostMirror                    scalar_host_mirror;
+typedef ord_view::HostMirror                       ord_host_mirror;
 }
 
 #endif // AleaTypedefs_hh

@@ -33,13 +33,15 @@ namespace alea
  * \param pl Problem parameters
  */
 //---------------------------------------------------------------------------//
-AdjointMcEventKernel::AdjointMcEventKernel(const const_view_type                H,
-                                 const const_view_type                P,
-                                 const const_view_type                W,
-                                 const const_ord_view                 inds,
-                                 const const_ord_view                 offsets,
-                                 const const_view_type                coeffs,
-                                 Teuchos::RCP<Teuchos::ParameterList> pl)
+AdjointMcEventKernel::AdjointMcEventKernel(
+        const random_scalar_view             H,
+        const random_scalar_view             P,
+        const random_scalar_view             W,
+        const random_ord_view                inds,
+        const random_ord_view                offsets,
+        const const_scalar_view              coeffs,
+        Teuchos::RCP<Teuchos::ParameterList> pl,
+        generator_pool                       pool)
 
   : d_N(offsets.size()-1)
   , d_H(H)
@@ -50,7 +52,7 @@ AdjointMcEventKernel::AdjointMcEventKernel(const const_view_type                
   , d_coeffs(coeffs)
   , d_start_cdf("start_cdf",d_N)
   , d_start_wt("start_wt",d_N)
-  , d_rand_pool(pl->get("random_seed",31891))
+  , d_rand_pool(pool)
   , d_max_history_length(d_coeffs.size()-1)
 {
     d_num_histories = pl->get("num_histories",1000);
@@ -82,9 +84,9 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     build_initial_distribution(x);
 
     // Need to get Kokkos view directly, this is silly
-    const view_type    y_device(      "result",        d_N);
-    const view_type    weights(       "weights",       d_num_histories);
-    const view_type    randoms(       "randoms",       d_num_histories);
+    const scalar_view  y_device(      "result",        d_N);
+    const scalar_view  weights(       "weights",       d_num_histories);
+    const scalar_view  randoms(       "randoms",       d_num_histories);
     const ord_view     states(        "states",        d_num_histories);
     const ord_view     starting_inds( "starting_inds", d_num_histories);
     const ord_view     row_lengths(   "row_lengths",   d_num_histories);
@@ -116,7 +118,7 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
 
     // Copy data back to host
     Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-    const view_type::HostMirror y_mirror =
+    const scalar_host_mirror y_mirror =
         Kokkos::create_mirror_view(y_device);
     Kokkos::deep_copy(y_mirror,y_device);
 
@@ -142,11 +144,10 @@ void AdjointMcEventKernel::build_initial_distribution(const MV &x)
     // Build data on host, then explicitly copy to device
     // In future, convert this to a new Kernel to allow building
     //  distributions directly on device if x is allocated there
-    host_view_type start_cdf_host = Kokkos::create_mirror_view(d_start_cdf);
-    host_view_type start_wt_host  = Kokkos::create_mirror_view(d_start_wt);
+    scalar_host_mirror start_cdf_host = Kokkos::create_mirror_view(d_start_cdf);
+    scalar_host_mirror start_wt_host  = Kokkos::create_mirror_view(d_start_wt);
 
     Teuchos::ArrayRCP<const SCALAR> x_data = x.getData(0);
-
 
     for( LO i=0; i<d_N; ++i )
     {

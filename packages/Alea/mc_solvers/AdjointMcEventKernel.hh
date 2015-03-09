@@ -46,24 +46,17 @@ class AdjointMcEventKernel
     typedef Kokkos::RangePolicy<DEVICE> range_policy;
     typedef range_policy::member_type   policy_member;
 
-    // Convenience typedefs
-    typedef Kokkos::View<      SCALAR *,     DEVICE> view_type;
-    typedef Kokkos::View<const SCALAR *,     DEVICE> const_view_type;
-    typedef Kokkos::View<      LO     *,     DEVICE> ord_view;
-    typedef Kokkos::View<const LO     *,     DEVICE> const_ord_view;
-    typedef Kokkos::View<      MC_History *, DEVICE> history_view;
-    typedef view_type::HostMirror                    host_view_type;
-
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
-    AdjointMcEventKernel(const const_view_type                H,
-                         const const_view_type                P,
-                         const const_view_type                W,
-                         const const_ord_view                 inds,
-                         const const_ord_view                 offsets,
-                         const const_view_type                coeffs,
-                         Teuchos::RCP<Teuchos::ParameterList> pl);
+    AdjointMcEventKernel(const random_scalar_view             H,
+                         const random_scalar_view             P,
+                         const random_scalar_view             W,
+                         const random_ord_view                inds,
+                         const random_ord_view                offsets,
+                         const const_scalar_view              coeffs,
+                         Teuchos::RCP<Teuchos::ParameterList> pl,
+                         generator_pool                       pool);
 
     //! Solve problem (this is a host function)
     void solve(const MV &x, MV &y);
@@ -77,16 +70,14 @@ class AdjointMcEventKernel
     int d_N;
 
     // Data for Monte Carlo
-    const const_view_type d_H;
-    const const_view_type d_P;
-    const const_view_type d_W;
-    const const_ord_view  d_inds;
-    const const_ord_view  d_offsets;
-    const const_view_type d_coeffs;
-    const view_type d_start_cdf;
-    const view_type d_start_wt;
-
-    view_type d_y;
+    const random_scalar_view d_H;
+    const random_scalar_view d_P;
+    const random_scalar_view d_W;
+    const random_ord_view    d_inds;
+    const random_ord_view    d_offsets;
+    const random_scalar_view d_coeffs;
+    const scalar_view        d_start_cdf;
+    const scalar_view        d_start_wt;
 
     // Kokkos random generator pool
     generator_pool d_rand_pool;

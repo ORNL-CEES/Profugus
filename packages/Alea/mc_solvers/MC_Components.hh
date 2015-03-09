@@ -46,6 +46,33 @@ namespace
         }
         return first;
     }
+
+    // lower_bound implementation that can be called from device
+    // binary search occurs over range of elements in a Kokkos::View
+    template <class view_type>
+    KOKKOS_INLINE_FUNCTION
+    LO lower_bound(const view_type &v,
+                         LO         first,
+                         LO         count,
+                         SCALAR     val)
+    {
+        LO current, step;
+        while( count > 0 )
+        {
+            step = count / 2;
+            current = first+step;
+            if( v(current) < val )
+            {
+                first = ++current;
+                count -= step+1;
+            }
+            else
+            {
+                count = step;
+            }
+        }
+        return first;
+    }
 }
 
 //===========================================================================//
@@ -81,21 +108,16 @@ class InitHistory
     typedef Kokkos::RangePolicy<DEVICE> policy_type;
     typedef policy_type::member_type    policy_member;
 
-    typedef Kokkos::View<      SCALAR     *, DEVICE> view_type;
-    typedef Kokkos::View<const SCALAR     *, DEVICE> const_view_type;
-    typedef Kokkos::View<      LO         *, DEVICE> ord_view;
-    typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
-
-    InitHistory(view_type       randoms,
-                const_view_type init_cdf,
-                const_view_type init_wts,
-                view_type       weights,
-                ord_view        states,
-                ord_view        starting_inds,
-                ord_view        row_lengths,
-                ord_view        stages,
-                const_ord_view  indices,
-                const_ord_view  offsets)
+    InitHistory(scalar_view      randoms,
+                const_scalar_view init_cdf,
+                const_scalar_view init_wts,
+                scalar_view       weights,
+                ord_view          states,
+                ord_view          starting_inds,
+                ord_view          row_lengths,
+                ord_view          stages,
+                random_ord_view   indices,
+                random_ord_view   offsets)
         : d_randoms(randoms)
         , d_init_cdf(init_cdf)
         , d_init_wts(init_wts)
@@ -113,10 +135,8 @@ class InitHistory
     void operator()(policy_member member) const
     {
         // Perform lower_bound search to get new state
-        const SCALAR * const cdf_start = &d_init_cdf(0);
-        const SCALAR * const cdf_end   = cdf_start + d_init_cdf.size();
-        int state = lower_bound(cdf_start,cdf_end,d_randoms(member))
-                    - cdf_start;
+        int state = lower_bound(d_init_cdf,0,d_init_cdf.size(),
+                                d_randoms(member));
 
         d_weights(member)       = d_init_wts(state);
         d_states(member)        = state;
@@ -127,16 +147,16 @@ class InitHistory
 
   private:
 
-    const view_type       d_randoms;
-    const const_view_type d_init_cdf;
-    const const_view_type d_init_wts;
-    const view_type       d_weights;
-    const ord_view        d_states;
-    const ord_view        d_starting_inds;
-    const ord_view        d_row_lengths;
-    const ord_view        d_stages;
-    const const_ord_view  d_indices;
-    const const_ord_view  d_offsets;
+    const scalar_view       d_randoms;
+    const const_scalar_view d_init_cdf;
+    const const_scalar_view d_init_wts;
+    const scalar_view       d_weights;
+    const ord_view          d_states;
+    const ord_view          d_starting_inds;
+    const ord_view          d_row_lengths;
+    const ord_view          d_stages;
+    const random_ord_view   d_indices;
+    const random_ord_view   d_offsets;
 };
 
 //===========================================================================//
@@ -156,21 +176,16 @@ class StateTransition
     typedef Kokkos::RangePolicy<DEVICE> policy_type;
     typedef policy_type::member_type    policy_member;
 
-    typedef Kokkos::View<      SCALAR     *, DEVICE> view_type;
-    typedef Kokkos::View<const SCALAR     *, DEVICE> const_view_type;
-    typedef Kokkos::View<      LO         *, DEVICE> ord_view;
-    typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
-
-    StateTransition(const_view_type randoms,
-                    view_type       weights,
-                    ord_view        states,
-                    ord_view        starting_inds,
-                    ord_view        row_lengths,
-                    ord_view        stages,
-                    const_view_type P,
-                    const_view_type W,
-                    const_ord_view  indices,
-                    const_ord_view  offsets)
+    StateTransition(scalar_view        randoms,
+                    scalar_view        weights,
+                    ord_view           states,
+                    ord_view           starting_inds,
+                    ord_view           row_lengths,
+                    ord_view           stages,
+                    random_scalar_view P,
+                    random_scalar_view W,
+                    random_ord_view    indices,
+                    random_ord_view    offsets)
         : d_randoms(randoms)
         , d_weights(weights)
         , d_states(states)
@@ -188,21 +203,18 @@ class StateTransition
     void operator()(policy_member member) const
     {
         // Perform lower_bound search to get new state
-        const SCALAR * const row_start = &d_P(d_starting_inds(member));
-        const SCALAR * const row_end   = row_start + d_row_lengths(member);
-        int row_index = lower_bound(row_start,row_end,d_randoms(member))
-                        - row_start;
+        int new_ind = lower_bound(d_P,d_starting_inds(member),
+            d_row_lengths(member),d_randoms(member));
 
         // Update state
-        if( row_index == d_row_lengths(member) )
+        if( new_ind == d_starting_inds(member)+d_row_lengths(member) )
         {
             d_weights(member) = 0.0;
             d_states(member)  = -1;
         }
         else
         {
-            int new_ind   = d_starting_inds(member) + row_index;
-            int new_state = d_indices(new_ind);
+            int new_state            = d_indices(new_ind);
             d_weights(member)       *= d_W(new_ind);
             d_states(member)         = new_state;
             d_starting_inds(member)  = d_offsets(new_state);
@@ -214,16 +226,16 @@ class StateTransition
 
   private:
 
-    const const_view_type d_randoms;
-    const view_type       d_weights;
-    const ord_view        d_states;
-    const ord_view        d_starting_inds;
-    const ord_view        d_row_lengths;
-    const ord_view        d_stages;
-    const const_view_type d_P;
-    const const_view_type d_W;
-    const const_ord_view  d_indices;
-    const const_ord_view  d_offsets;
+    const scalar_view        d_randoms;
+    const scalar_view        d_weights;
+    const ord_view           d_states;
+    const ord_view           d_starting_inds;
+    const ord_view           d_row_lengths;
+    const ord_view           d_stages;
+    const random_scalar_view d_P;
+    const random_scalar_view d_W;
+    const random_ord_view    d_indices;
+    const random_ord_view    d_offsets;
 };
 
 //===========================================================================//
@@ -243,15 +255,10 @@ class CollisionTally
     typedef Kokkos::RangePolicy<DEVICE> policy_type;
     typedef policy_type::member_type    policy_member;
 
-    typedef Kokkos::View<      SCALAR     *, DEVICE> view_type;
-    typedef Kokkos::View<const SCALAR     *, DEVICE> const_view_type;
-    typedef Kokkos::View<      LO         *, DEVICE> ord_view;
-    typedef Kokkos::View<const LO         *, DEVICE> const_ord_view;
-
-    CollisionTally(const_view_type  weights,
-                   const_ord_view   states,
-                   const_view_type  coeffs,
-                   view_type        y)
+    CollisionTally(scalar_view        weights,
+                   ord_view           states,
+                   random_scalar_view coeffs,
+                   scalar_view        y)
         : d_weights(weights)
         , d_states(states)
         , d_coeffs(coeffs)
@@ -268,10 +275,10 @@ class CollisionTally
 
   private:
 
-    const const_view_type d_weights;
-    const const_ord_view  d_states;
-    const const_view_type d_coeffs;
-    const view_type       d_y;
+    const scalar_view        d_weights;
+    const ord_view           d_states;
+    const random_scalar_view d_coeffs;
+    const scalar_view        d_y;
 };
 
 } // end namespace alea
