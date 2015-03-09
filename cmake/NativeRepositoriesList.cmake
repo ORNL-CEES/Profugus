@@ -17,6 +17,16 @@ ELSE()
   MESSAGE(STATUS "MCLS repository is not available")
 ENDIF()
 
+# Search to see if Temere exists in the Profugus source tree
+FIND_PATH(Temere_EXISTS
+  NAMES Temere/PackagesList.cmake
+  PATHS ${CMAKE_CURRENT_SOURCE_DIR})
+IF (Temere_EXISTS)
+  SET(NATIVE_REPOS Temere ${NATIVE_REPOS})
+ELSE()
+  MESSAGE(STATUS "Temere repository is not available")
+ENDIF()
+
 # Search to see if ParaSails exists in the Profugus source tree
 FIND_PATH(ParaSails_EXISTS
   NAMES ParaSails/PackagesList.cmake
