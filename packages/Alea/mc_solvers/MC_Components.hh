@@ -108,16 +108,15 @@ class InitHistory
     typedef Kokkos::RangePolicy<DEVICE> policy_type;
     typedef policy_type::member_type    policy_member;
 
-    InitHistory(scalar_view      randoms,
-                const_scalar_view init_cdf,
-                const_scalar_view init_wts,
-                scalar_view       weights,
-                ord_view          states,
-                ord_view          starting_inds,
-                ord_view          row_lengths,
-                ord_view          stages,
-                random_ord_view   indices,
-                random_ord_view   offsets)
+    InitHistory(scalar_view         randoms,
+                const_scalar_view   init_cdf,
+                const_scalar_view   init_wts,
+                scalar_view         weights,
+                ord_view            states,
+                ord_view            starting_inds,
+                ord_view            row_lengths,
+                ord_view            stages,
+                const MC_Data_View &mc_data)
         : d_randoms(randoms)
         , d_init_cdf(init_cdf)
         , d_init_wts(init_wts)
@@ -126,8 +125,7 @@ class InitHistory
         , d_starting_inds(starting_inds)
         , d_row_lengths(row_lengths)
         , d_stages(stages)
-        , d_indices(indices)
-        , d_offsets(offsets)
+        , d_mc_data(mc_data)
     {
     }
 
@@ -140,8 +138,9 @@ class InitHistory
 
         d_weights(member)       = d_init_wts(state);
         d_states(member)        = state;
-        d_starting_inds(member) = d_offsets(state);
-        d_row_lengths(member)   = d_offsets(state+1)-d_offsets(state);
+        d_starting_inds(member) = d_mc_data.offsets(state);
+        d_row_lengths(member)   = d_mc_data.offsets(state+1) -
+                                  d_mc_data.offsets(state);
         d_stages(member)        = 0;
     }
 
@@ -155,8 +154,7 @@ class InitHistory
     const ord_view          d_starting_inds;
     const ord_view          d_row_lengths;
     const ord_view          d_stages;
-    const random_ord_view   d_indices;
-    const random_ord_view   d_offsets;
+    const MC_Data_View      d_mc_data;
 };
 
 //===========================================================================//
@@ -176,26 +174,20 @@ class StateTransition
     typedef Kokkos::RangePolicy<DEVICE> policy_type;
     typedef policy_type::member_type    policy_member;
 
-    StateTransition(scalar_view        randoms,
-                    scalar_view        weights,
-                    ord_view           states,
-                    ord_view           starting_inds,
-                    ord_view           row_lengths,
-                    ord_view           stages,
-                    random_scalar_view P,
-                    random_scalar_view W,
-                    random_ord_view    indices,
-                    random_ord_view    offsets)
+    StateTransition(scalar_view         randoms,
+                    scalar_view         weights,
+                    ord_view            states,
+                    ord_view            starting_inds,
+                    ord_view            row_lengths,
+                    ord_view            stages,
+                    const MC_Data_View &mc_data)
         : d_randoms(randoms)
         , d_weights(weights)
         , d_states(states)
         , d_starting_inds(starting_inds)
         , d_row_lengths(row_lengths)
         , d_stages(stages)
-        , d_P(P)
-        , d_W(W)
-        , d_indices(indices)
-        , d_offsets(offsets)
+        , d_mc_data(mc_data)
     {
     }
 
@@ -203,7 +195,7 @@ class StateTransition
     void operator()(policy_member member) const
     {
         // Perform lower_bound search to get new state
-        int new_ind = lower_bound(d_P,d_starting_inds(member),
+        int new_ind = lower_bound(d_mc_data.P,d_starting_inds(member),
             d_row_lengths(member),d_randoms(member));
 
         // Update state
@@ -214,12 +206,12 @@ class StateTransition
         }
         else
         {
-            int new_state            = d_indices(new_ind);
-            d_weights(member)       *= d_W(new_ind);
+            int new_state            = d_mc_data.inds(new_ind);
+            d_weights(member)       *= d_mc_data.W(new_ind);
             d_states(member)         = new_state;
-            d_starting_inds(member)  = d_offsets(new_state);
-            d_row_lengths(member)    = d_offsets(new_state+1) -
-                                       d_offsets(new_state);
+            d_starting_inds(member)  = d_mc_data.offsets(new_state);
+            d_row_lengths(member)    = d_mc_data.offsets(new_state+1) -
+                                       d_mc_data.offsets(new_state);
             d_stages(member)++;
         }
     }
@@ -232,10 +224,7 @@ class StateTransition
     const ord_view           d_starting_inds;
     const ord_view           d_row_lengths;
     const ord_view           d_stages;
-    const random_scalar_view d_P;
-    const random_scalar_view d_W;
-    const random_ord_view    d_indices;
-    const random_ord_view    d_offsets;
+    const MC_Data_View       d_mc_data;
 };
 
 //===========================================================================//

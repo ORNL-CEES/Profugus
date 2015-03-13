@@ -128,18 +128,9 @@ class MonteCarloSolver : public AleaSolver,
     // Implementation of apply
     void applyImpl(const MV &x, MV &y) const;
 
-    void convertMatrices(Teuchos::RCP<const MATRIX> H,
-                         Teuchos::RCP<const MATRIX> P,
-                         Teuchos::RCP<const MATRIX> W);
-
-    Teuchos::RCP<MC_Data> d_mc_data;
     Teuchos::RCP<Teuchos::ParameterList> d_mc_pl;
 
-    scalar_view d_H;
-    scalar_view d_P;
-    scalar_view d_W;
-    ord_view    d_inds;
-    ord_view    d_offsets;
+    MC_Data_View d_mc_data;
     scalar_view d_coeffs;
 
     enum MC_TYPE { FORWARD, ADJOINT };

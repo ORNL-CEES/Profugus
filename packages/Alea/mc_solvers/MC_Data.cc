@@ -45,6 +45,71 @@ MC_Data::MC_Data(Teuchos::RCP<const MATRIX> A,
     buildMonteCarloMatrices();
 }
 
+//---------------------------------------------------------------------------//
+// Convert matrices to Kokkos View storage
+//---------------------------------------------------------------------------//
+MC_Data_View MC_Data::createKokkosViews()
+{
+    REQUIRE( d_H->isLocallyIndexed() );
+    REQUIRE( d_P->isLocallyIndexed() );
+    REQUIRE( d_W->isLocallyIndexed() );
+    REQUIRE( d_H->supportsRowViews() );
+    REQUIRE( d_P->supportsRowViews() );
+    REQUIRE( d_W->supportsRowViews() );
+
+    LO numRows     = d_H->getNodeNumRows();
+    GO numNonZeros = d_H->getNodeNumEntries();
+
+    // Allocate views
+    scalar_view H("H",numNonZeros);
+    scalar_view P("H",numNonZeros);
+    scalar_view W("H",numNonZeros);
+    ord_view    inds("inds,numNonZeros");
+    ord_view    offsets("offsets",numRows+1);
+
+    // Mirror views on host
+    scalar_view::HostMirror H_host       = Kokkos::create_mirror_view(H);
+    scalar_view::HostMirror P_host       = Kokkos::create_mirror_view(P);
+    scalar_view::HostMirror W_host       = Kokkos::create_mirror_view(W);
+    ord_view::HostMirror    inds_host    = Kokkos::create_mirror_view(inds);
+    ord_view::HostMirror    offsets_host = Kokkos::create_mirror_view(offsets);
+
+    Teuchos::ArrayView<const double> H_row, P_row, W_row;
+    Teuchos::ArrayView<const int> ind_row;
+
+    // Copy data from CrsMatrix into Kokkos host mirrors
+    LO count = 0;
+    for( LO irow=0; irow<numRows; ++irow )
+    {
+        // Get row views
+        d_H->getLocalRowView(irow,ind_row,H_row);
+        d_P->getLocalRowView(irow,ind_row,P_row);
+        d_W->getLocalRowView(irow,ind_row,W_row);
+
+        // Copy into host mirror
+        std::copy( H_row.begin(), H_row.end(), &H_host(count) );
+        std::copy( P_row.begin(), P_row.end(), &P_host(count) );
+        std::copy( W_row.begin(), W_row.end(), &W_host(count) );
+        std::copy( ind_row.begin(), ind_row.end(), &inds_host(count) );
+        count += ind_row.size();
+        offsets_host(irow+1) = count;
+    }
+
+    // Release pointers to Tpetra matrices
+    d_H       = Teuchos::null;
+    d_P       = Teuchos::null;
+    d_W       = Teuchos::null;
+
+    // Copy to device
+    Kokkos::deep_copy(H,H_host);
+    Kokkos::deep_copy(P,P_host);
+    Kokkos::deep_copy(W,W_host);
+    Kokkos::deep_copy(inds,inds_host);
+    Kokkos::deep_copy(offsets,offsets_host);
+
+    // Create data view object
+    return MC_Data_View(H,P,W,inds,offsets);
+}
 
 //---------------------------------------------------------------------------//
 // PRIVATE MEMBER FUNCTIONS
