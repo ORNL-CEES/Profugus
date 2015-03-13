@@ -44,11 +44,7 @@ class AdjointMcEventKernel
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
-    AdjointMcEventKernel(const random_scalar_view             H,
-                         const random_scalar_view             P,
-                         const random_scalar_view             W,
-                         const random_ord_view                inds,
-                         const random_ord_view                offsets,
+    AdjointMcEventKernel(const MC_Data_View                  &mc_data,
                          const const_scalar_view              coeffs,
                          Teuchos::RCP<Teuchos::ParameterList> pl,
                          generator_pool                       pool);
@@ -65,11 +61,7 @@ class AdjointMcEventKernel
     int d_N;
 
     // Data for Monte Carlo
-    const random_scalar_view d_H;
-    const random_scalar_view d_P;
-    const random_scalar_view d_W;
-    const random_ord_view    d_inds;
-    const random_ord_view    d_offsets;
+    const MC_Data_View       d_mc_data;
     const random_scalar_view d_coeffs;
     const scalar_view        d_start_cdf;
     const scalar_view        d_start_wt;

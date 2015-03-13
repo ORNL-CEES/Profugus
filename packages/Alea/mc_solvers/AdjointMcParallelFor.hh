@@ -50,11 +50,7 @@ class AdjointMcParallelFor
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
-    AdjointMcParallelFor(const const_view_type                H,
-                         const const_view_type                P,
-                         const const_view_type                W,
-                         const const_ord_view                 inds,
-                         const const_ord_view                 offsets,
+    AdjointMcParallelFor(const MC_Data_View                  &mc_data,
                          const const_view_type                coeffs,
                          Teuchos::RCP<Teuchos::ParameterList> pl);
 
@@ -97,6 +93,7 @@ class AdjointMcParallelFor
     int d_N;
 
     // Data for Monte Carlo
+    const MC_Data_View    d_mc_data;
     const const_view_type d_H;
     const const_view_type d_P;
     const const_view_type d_W;

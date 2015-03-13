@@ -34,21 +34,12 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 AdjointMcEventKernel::AdjointMcEventKernel(
-        const random_scalar_view             H,
-        const random_scalar_view             P,
-        const random_scalar_view             W,
-        const random_ord_view                inds,
-        const random_ord_view                offsets,
+        const MC_Data_View                  &mc_data,
         const const_scalar_view              coeffs,
         Teuchos::RCP<Teuchos::ParameterList> pl,
         generator_pool                       pool)
-
-  : d_N(offsets.size()-1)
-  , d_H(H)
-  , d_P(P)
-  , d_W(W)
-  , d_inds(inds)
-  , d_offsets(offsets)
+  : d_N(mc_data.offsets.size()-1)
+  , d_mc_data(mc_data)
   , d_coeffs(coeffs)
   , d_start_cdf("start_cdf",d_N)
   , d_start_wt("start_wt",d_N)
@@ -95,9 +86,9 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     // Build kernels
     InitHistory     init_history(randoms,d_start_cdf,d_start_wt,weights,
                                  states,starting_inds,row_lengths,stages,
-                                 d_inds,d_offsets);
+                                 d_mc_data);
     StateTransition transition(randoms,weights,states,starting_inds,
-                               row_lengths,stages,d_P,d_W,d_inds,d_offsets);
+                               row_lengths,stages,d_mc_data);
     CollisionTally  coll_tally(weights,states,d_coeffs,y_device);
 
     // Create policy

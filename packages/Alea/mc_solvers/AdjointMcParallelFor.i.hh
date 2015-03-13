@@ -33,20 +33,13 @@ namespace alea
  * \param pl Problem parameters
  */
 //---------------------------------------------------------------------------//
-AdjointMcParallelFor::AdjointMcParallelFor(const const_view_type                H,
-                                 const const_view_type                P,
-                                 const const_view_type                W,
-                                 const const_ord_view                 inds,
-                                 const const_ord_view                 offsets,
-                                 const const_view_type                coeffs,
-                                 Teuchos::RCP<Teuchos::ParameterList> pl)
+AdjointMcParallelFor::AdjointMcParallelFor(
+        const MC_Data_View                  &mc_data,
+        const const_view_type                coeffs,
+        Teuchos::RCP<Teuchos::ParameterList> pl)
 
-  : d_N(offsets.size()-1)
-  , d_H(H)
-  , d_P(P)
-  , d_W(W)
-  , d_inds(inds)
-  , d_offsets(offsets)
+  : d_N(mc_data.offsets.size()-1)
+  , d_mc_data(mc_data)
   , d_coeffs(coeffs)
   , d_start_cdf("start_cdf",d_N)
   , d_start_wt("start_wt",d_N)
@@ -249,12 +242,12 @@ void AdjointMcParallelFor::getNewRow( const LO        state,
                                       const LO     * &inds,
                                             LO       &row_length ) const
 {
-    LO off     = d_offsets(state);
-    h_vals     = &d_H(off);
-    p_vals     = &d_P(off);
-    w_vals     = &d_W(off);
-    inds       = &d_inds(off);
-    row_length = d_offsets(state+1)-off;
+    LO off     = d_mc_data.offsets(state);
+    h_vals     = &(d_mc_data.H(off));
+    p_vals     = &(d_mc_data.P(off));
+    w_vals     = &(d_mc_data.W(off));
+    inds       = &(d_mc_data.inds(off));
+    row_length = d_mc_data.offsets(state+1)-off;
 }
 
 //---------------------------------------------------------------------------//
