@@ -64,7 +64,7 @@ MC_Data_View MC_Data::createKokkosViews()
     scalar_view H("H",numNonZeros);
     scalar_view P("H",numNonZeros);
     scalar_view W("H",numNonZeros);
-    ord_view    inds("inds,numNonZeros");
+    ord_view    inds("inds",numNonZeros);
     ord_view    offsets("offsets",numRows+1);
 
     // Mirror views on host
