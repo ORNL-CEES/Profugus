@@ -77,11 +77,34 @@ namespace
 
 //===========================================================================//
 /*!
+ * \class History_Data
+ * \brief Struct for containing data related to MC history for Kokkos kernels
+ */
+//===========================================================================//
+struct History_Data
+{
+    History_Data(){}
+    History_Data(int N)
+        : weight("weight",N)
+        , state("state",N)
+        , starting_ind("starting_ind",N)
+        , row_length("row_length",N)
+        , stage("stage",N)
+    {}
+
+    scalar_view weight;
+    ord_view    state;
+    ord_view    starting_ind;
+    ord_view    row_length;
+    ord_view    stage;
+};
+
+//===========================================================================//
+/*!
  * \class MC_History
  * \brief Struct for containing data related to MC history for Kokkos kernels
  */
 //===========================================================================//
-
 struct MC_History
 {
     SCALAR weight;
@@ -111,20 +134,12 @@ class InitHistory
     InitHistory(scalar_view         randoms,
                 const_scalar_view   init_cdf,
                 const_scalar_view   init_wts,
-                scalar_view         weights,
-                ord_view            states,
-                ord_view            starting_inds,
-                ord_view            row_lengths,
-                ord_view            stages,
+                const History_Data &hist_data,
                 const MC_Data_View &mc_data)
         : d_randoms(randoms)
         , d_init_cdf(init_cdf)
         , d_init_wts(init_wts)
-        , d_weights(weights)
-        , d_states(states)
-        , d_starting_inds(starting_inds)
-        , d_row_lengths(row_lengths)
-        , d_stages(stages)
+        , d_hist_data(hist_data)
         , d_mc_data(mc_data)
     {
     }
@@ -136,12 +151,12 @@ class InitHistory
         int state = lower_bound(d_init_cdf,0,d_init_cdf.size(),
                                 d_randoms(member));
 
-        d_weights(member)       = d_init_wts(state);
-        d_states(member)        = state;
-        d_starting_inds(member) = d_mc_data.offsets(state);
-        d_row_lengths(member)   = d_mc_data.offsets(state+1) -
-                                  d_mc_data.offsets(state);
-        d_stages(member)        = 0;
+        d_hist_data.weight(member)       = d_init_wts(state);
+        d_hist_data.state(member)        = state;
+        d_hist_data.starting_ind(member) = d_mc_data.offsets(state);
+        d_hist_data.row_length(member)   = d_mc_data.offsets(state+1) -
+                                           d_mc_data.offsets(state);
+        d_hist_data.stage(member)        = 0;
     }
 
   private:
@@ -149,11 +164,7 @@ class InitHistory
     const scalar_view       d_randoms;
     const const_scalar_view d_init_cdf;
     const const_scalar_view d_init_wts;
-    const scalar_view       d_weights;
-    const ord_view          d_states;
-    const ord_view          d_starting_inds;
-    const ord_view          d_row_lengths;
-    const ord_view          d_stages;
+    const History_Data      d_hist_data;
     const MC_Data_View      d_mc_data;
 };
 
@@ -175,18 +186,10 @@ class StateTransition
     typedef policy_type::member_type    policy_member;
 
     StateTransition(scalar_view         randoms,
-                    scalar_view         weights,
-                    ord_view            states,
-                    ord_view            starting_inds,
-                    ord_view            row_lengths,
-                    ord_view            stages,
+                    const History_Data &hist_data,
                     const MC_Data_View &mc_data)
         : d_randoms(randoms)
-        , d_weights(weights)
-        , d_states(states)
-        , d_starting_inds(starting_inds)
-        , d_row_lengths(row_lengths)
-        , d_stages(stages)
+        , d_hist_data(hist_data)
         , d_mc_data(mc_data)
     {
     }
@@ -195,35 +198,32 @@ class StateTransition
     void operator()(policy_member member) const
     {
         // Perform lower_bound search to get new state
-        int new_ind = lower_bound(d_mc_data.P,d_starting_inds(member),
-            d_row_lengths(member),d_randoms(member));
+        int new_ind = lower_bound(d_mc_data.P,d_hist_data.starting_ind(member),
+            d_hist_data.row_length(member),d_randoms(member));
 
         // Update state
-        if( new_ind == d_starting_inds(member)+d_row_lengths(member) )
+        if( new_ind == d_hist_data.starting_ind(member) +
+                       d_hist_data.row_length(member) )
         {
-            d_weights(member) = 0.0;
-            d_states(member)  = -1;
+            d_hist_data.weight(member) = 0.0;
+            d_hist_data.state(member)  = -1;
         }
         else
         {
-            int new_state            = d_mc_data.inds(new_ind);
-            d_weights(member)       *= d_mc_data.W(new_ind);
-            d_states(member)         = new_state;
-            d_starting_inds(member)  = d_mc_data.offsets(new_state);
-            d_row_lengths(member)    = d_mc_data.offsets(new_state+1) -
-                                       d_mc_data.offsets(new_state);
-            d_stages(member)++;
+            int new_state                    = d_mc_data.inds(new_ind);
+            d_hist_data.weight(member)      *= d_mc_data.W(new_ind);
+            d_hist_data.state(member)        = new_state;
+            d_hist_data.starting_ind(member) = d_mc_data.offsets(new_state);
+            d_hist_data.row_length(member)   = d_mc_data.offsets(new_state+1) -
+                                               d_mc_data.offsets(new_state);
+            d_hist_data.stage(member)++;
         }
     }
 
   private:
 
     const scalar_view        d_randoms;
-    const scalar_view        d_weights;
-    const ord_view           d_states;
-    const ord_view           d_starting_inds;
-    const ord_view           d_row_lengths;
-    const ord_view           d_stages;
+    const History_Data       d_hist_data;
     const MC_Data_View       d_mc_data;
 };
 
@@ -244,12 +244,10 @@ class CollisionTally
     typedef Kokkos::RangePolicy<DEVICE> policy_type;
     typedef policy_type::member_type    policy_member;
 
-    CollisionTally(scalar_view        weights,
-                   ord_view           states,
+    CollisionTally(const History_Data &hist_data,
                    random_scalar_view coeffs,
                    scalar_view        y)
-        : d_weights(weights)
-        , d_states(states)
+        : d_hist_data(hist_data)
         , d_coeffs(coeffs)
         , d_y(y)
     {
@@ -258,14 +256,13 @@ class CollisionTally
     KOKKOS_INLINE_FUNCTION
     void operator()(policy_member member) const
     {
-        Kokkos::atomic_add(&d_y(d_states(member)),d_weights(member));
+        Kokkos::atomic_add(&d_y(d_hist_data.state(member)),d_hist_data.weight(member));
         //d_coeffs(d_histories(member).stage)*d_histories(member).weight);
     }
 
   private:
 
-    const scalar_view        d_weights;
-    const ord_view           d_states;
+    const History_Data       d_hist_data;
     const random_scalar_view d_coeffs;
     const scalar_view        d_y;
 };

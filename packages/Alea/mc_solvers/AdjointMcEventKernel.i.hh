@@ -75,21 +75,15 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     build_initial_distribution(x);
 
     // Need to get Kokkos view directly, this is silly
-    const scalar_view  y_device(      "result",        d_N);
-    const scalar_view  weights(       "weights",       d_num_histories);
-    const scalar_view  randoms(       "randoms",       d_num_histories);
-    const ord_view     states(        "states",        d_num_histories);
-    const ord_view     starting_inds( "starting_inds", d_num_histories);
-    const ord_view     row_lengths(   "row_lengths",   d_num_histories);
-    const ord_view     stages(        "stages",        d_num_histories);
+    const scalar_view  y_device( "result",      d_N);
+    const scalar_view  randoms(  "randoms",     d_num_histories);
+    const History_Data hist_data(d_num_histories);
 
     // Build kernels
-    InitHistory     init_history(randoms,d_start_cdf,d_start_wt,weights,
-                                 states,starting_inds,row_lengths,stages,
+    InitHistory     init_history(randoms,d_start_cdf,d_start_wt,hist_data,
                                  d_mc_data);
-    StateTransition transition(randoms,weights,states,starting_inds,
-                               row_lengths,stages,d_mc_data);
-    CollisionTally  coll_tally(weights,states,d_coeffs,y_device);
+    StateTransition transition(randoms,hist_data,d_mc_data);
+    CollisionTally  coll_tally(hist_data,d_coeffs,y_device);
 
     // Create policy
     range_policy policy(0,d_num_histories);
