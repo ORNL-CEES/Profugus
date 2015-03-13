@@ -31,11 +31,6 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 
-struct NewStateTag {};
-struct NewRowTag   {};
-struct TallyTag    {};
-
-
 class AdjointMcEventKernel
 {
   public:
