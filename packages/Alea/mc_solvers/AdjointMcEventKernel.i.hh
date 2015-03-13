@@ -94,7 +94,7 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     Kokkos::parallel_for(policy,coll_tally);
 
     // Loop over history length (start at 1)
-    for( int i=1; i<d_max_history_length; ++i )
+    for( int i=1; i<=d_max_history_length; ++i )
     {
         Kokkos::fill_random(randoms,d_rand_pool,1.0);
         Kokkos::parallel_for(policy,transition);
