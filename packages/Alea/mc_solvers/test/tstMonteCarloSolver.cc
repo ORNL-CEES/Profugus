@@ -89,14 +89,38 @@ class MonteCarlo : public ::testing::Test
     Teuchos::RCP<MV> d_x;
 };
 
-TEST_F(MonteCarlo,Collision)
+TEST_F(MonteCarlo,ParallelForCollision)
 {
     Teuchos::sublist(d_pl,"Monte Carlo")->set("estimator","collision");
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","parallel_for");
     this->Solve(0.12);
 }
 
-TEST_F(MonteCarlo,ExpectedValue)
+TEST_F(MonteCarlo,ParallelForExpectedValue)
 {
     Teuchos::sublist(d_pl,"Monte Carlo")->set("estimator","expected_value");
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","parallel_for");
     this->Solve(0.06);
 }
+
+TEST_F(MonteCarlo,ParallelReduceCollision)
+{
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("estimator","collision");
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","parallel_reduce");
+    this->Solve(0.12);
+}
+
+TEST_F(MonteCarlo,ParallelReduceExpectedValue)
+{
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("estimator","expected_value");
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","parallel_reduce");
+    this->Solve(0.06);
+}
+
+TEST_F(MonteCarlo,EventCollision)
+{
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("estimator","collision");
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","event");
+    this->Solve(0.12);
+}
+

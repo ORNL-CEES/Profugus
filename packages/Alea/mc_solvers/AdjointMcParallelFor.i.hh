@@ -87,6 +87,7 @@ void AdjointMcParallelFor::solve(const MV &x, MV &y)
 
     // Copy data back to host
     Kokkos::deep_copy(y_mirror,y_device);
+    DEVICE::fence();
 
     // Apply scale factor
     SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
@@ -98,7 +99,10 @@ void AdjointMcParallelFor::solve(const MV &x, MV &y)
     // Add rhs for expected value
     if( d_use_expected_value )
     {
-        y.update(d_coeffs(0),x,1.0);
+        scalar_view::HostMirror coeffs_mirror =
+            Kokkos::create_mirror_view(d_coeffs);
+        Kokkos::deep_copy(coeffs_mirror,d_coeffs);
+        y.update(coeffs_mirror(0),x,1.0);
     }
 }
 
