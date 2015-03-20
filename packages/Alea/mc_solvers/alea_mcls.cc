@@ -22,6 +22,7 @@
 #include <BelosTpetraAdapter.hpp>
 #include "BelosLinearProblem.hpp"
 
+#include <MCLS_FixedPointSolverManager.hpp>
 #include <MCLS_TemereSolverManager.hpp>
 #include <MCLS_MCSASolverManager.hpp>
 #include <MCLS_AndersonSolverManager.hpp>
@@ -66,10 +67,19 @@ int main( int argc, char *argv[] )
 	    Teuchos::rcpFromRef( plist->sublist("Belos",true) );
 
 	// Build a communicator for the sets.
+	std::string decomp_type = plist->get<std::string>("Rank Decomposition");
 	int num_sets = mcls_list->get<int>("Number of Sets");
 	int set_size = comm->getSize() / num_sets;
-	int set_id = std::floor( Teuchos::as<double>(comm->getRank()) /
+	int set_id = -1;
+	if ( "Set Strided" == decomp_type )
+	{
+	    set_id = std::floor( Teuchos::as<double>(comm->getRank()) /
 				 Teuchos::as<double>(set_size) );
+	}
+	else if ( "Block Strided" == decomp_type )
+	{
+	    set_id = comm->getRank() % num_sets;
+	}
 	Teuchos::RCP<const Teuchos::Comm<int> > set_comm =
 	    comm->split( set_id, comm->getRank() );
 
@@ -139,6 +149,26 @@ int main( int argc, char *argv[] )
 
 	    // Build the MCLS solver.
 	    MCLS::TemereSolverManager<VECTOR,CRS_MATRIX> solver_manager( problem, mcls_list );
+
+	    // Solve the problem.
+	    solver_manager.solve();
+	}
+
+	// Solve the problem with MCLS fixed point.
+	else if ( "Fixed Point" == solver_type )
+	{
+	    // Extract the linear problem.
+	    Teuchos::RCP<const CRS_MATRIX> A =
+		Teuchos::rcp_dynamic_cast<const CRS_MATRIX>( pA );
+	    Teuchos::RCP<const VECTOR> b = pb->getVector( 0 );
+	    Teuchos::RCP<VECTOR> x = px->getVectorNonConst( 0 );
+	    Teuchos::RCP<MCLS::LinearProblem<VECTOR,CRS_MATRIX> > problem =
+		Teuchos::rcp( 
+		    new MCLS::LinearProblem<VECTOR,CRS_MATRIX>(
+			A, x, b) );
+
+	    // Build the MCLS solver.
+	    MCLS::FixedPointSolverManager<VECTOR,CRS_MATRIX> solver_manager( problem, mcls_list );
 
 	    // Solve the problem.
 	    solver_manager.solve();
