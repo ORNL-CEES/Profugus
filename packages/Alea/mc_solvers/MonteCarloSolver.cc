@@ -86,7 +86,6 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
 //---------------------------------------------------------------------------//
 void MonteCarloSolver::initialize()
 {
-    std::cout << "Entering MonteCarloSolver::initialize()" << std::endl;
     REQUIRE( b_A != Teuchos::null );
 
     // Create Polynomial
@@ -122,7 +121,6 @@ void MonteCarloSolver::initialize()
     b_label = "MonteCarloSolver";
     d_initialized = true;
     d_init_count++;
-    std::cout << "Leaving MonteCarloSolver::initialize()" << std::endl;
 }
 
 //---------------------------------------------------------------------------//
@@ -132,7 +130,6 @@ void MonteCarloSolver::initialize()
 //---------------------------------------------------------------------------//
 void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 {
-    std::cout << "Entering MonteCarloSolver::applyImpl()" << std::endl;
     REQUIRE( d_initialized );
 
     d_apply_count++;
@@ -185,10 +182,8 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_FOR )
     {
         // Create kernel for performing group of MC histories
-        std::cout << "Building ParallelFor kernel" << std::endl;
         AdjointMcParallelFor kernel(d_mc_data,d_coeffs,d_mc_pl);
 
-        std::cout << "Calling kernel solve" << std::endl;
         kernel.solve(x,y);
     }
     else if( d_mc_type == ADJOINT && d_kernel_type == EVENT )
@@ -208,7 +203,6 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     // There isn't a proper iteration count for MC
     // We use the number of histories as a stand-in
     b_num_iters = d_num_histories;
-    std::cout << "Leaving MonteCarloSolver::applyImpl()" << std::endl;
 }
 
 } // namespace alea
