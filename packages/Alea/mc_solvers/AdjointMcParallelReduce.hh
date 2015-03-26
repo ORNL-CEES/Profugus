@@ -122,6 +122,7 @@ class AdjointMcParallelReduce
     bool   d_print;
     int    d_num_histories;
     int    d_histories_per_team;
+    SCALAR d_wt_cutoff;
     SCALAR d_start_wt_factor;
 
 };
