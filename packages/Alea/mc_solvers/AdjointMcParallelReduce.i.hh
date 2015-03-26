@@ -58,6 +58,9 @@ AdjointMcParallelReduce::AdjointMcParallelReduce(
     // Power factor for initial probability distribution
     d_start_wt_factor = pl->get<SCALAR>("start_weight_factor",1.0);
 
+    // Weight cutoff
+    d_wt_cutoff = pl->get<SCALAR>("weight_cutoff",0.0);
+
     // Should we print anything to screen
     std::string verb = profugus::to_lower(pl->get("verbosity","low"));
     d_print = (verb == "high");
@@ -68,36 +71,6 @@ AdjointMcParallelReduce::AdjointMcParallelReduce(
 //---------------------------------------------------------------------------//
 void AdjointMcParallelReduce::solve(const MV &x, MV &y)
 {
-    // Determine number of histories needed per team
-    /*
-    int rec_team_size = team_policy::team_size_recommended(*this);
-    std::cout << "Recommended team size: " << rec_team_size << std::endl;
-    CHECK( rec_team_size > 0 );
-    int league_size_req = d_num_histories / rec_team_size;
-    std::cout << "Requested league size: " << league_size_req << std::endl;
-    CHECK( league_size_req > 0 );
-    team_policy policy(league_size_req,rec_team_size);
-    int num_teams = policy.league_size();
-    int team_size = policy.team_size();
-    int num_threads = num_teams * team_size;
-    int total_histories = d_num_histories;
-    if( d_num_histories % num_threads != 0 )
-    {
-        total_histories = (total_histories/num_threads + 1)*num_threads;
-        ADD_WARNING("Requested number of histories (" << d_num_histories
-           << ") is not divisible by number of threads ("
-           << num_threads << "), number of histories is being increased to "
-           << total_histories << std::endl);
-    }
-    d_histories_per_team = total_histories / num_teams;
-
-
-    std::cout << "Using team policy with " << num_teams << " teams, "
-        << team_size << " threads per team" << std::endl;
-    std::cout << "Performing " << total_histories << " total histories, "
-        << d_histories_per_team << " per team" << std::endl;
-        */
-
     range_policy policy(0,d_num_histories);
 
     // Build initial probability and weight distributions
@@ -148,11 +121,6 @@ void AdjointMcParallelReduce::init( SCALAR *update ) const
 //---------------------------------------------------------------------------//
 void AdjointMcParallelReduce::operator()(const policy_member &member, SCALAR *y) const
 {
-    //printf("Executing kernel on team %i of %i, thread %i of %i\n",
-    //        member.league_rank(),member.league_size(),member.team_rank(),
-    //        member.team_size());
-    //printf("Vector address is %p on team %i, thread %i\n",
-    //        y,member.league_rank(),member.team_rank());
     LO new_ind;
     LO state;
     const SCALAR * row_h;
@@ -161,11 +129,6 @@ void AdjointMcParallelReduce::operator()(const policy_member &member, SCALAR *y)
     const LO     * row_inds;
     int row_length;
 
-    //int team_size = member.team_size();
-    //int histories_per_thread = d_histories_per_team / team_size;
-
-    //printf("Getting random number generator on team %i, thread %i\n",
-    //        member.league_rank(),member.team_rank());
     generator_type rand_gen = d_rand_pool.get_state();
 
     int histories_per_thread = 1;
@@ -232,6 +195,9 @@ void AdjointMcParallelReduce::operator()(const policy_member &member, SCALAR *y)
             }
             */
             if( stage >= d_max_history_length )
+                break;
+
+            if( std::abs(weight/initial_weight) < d_wt_cutoff )
                 break;
 
             // Get new state index
