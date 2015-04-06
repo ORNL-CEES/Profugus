@@ -21,7 +21,10 @@
 #include "Epetra_MultiVector.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_Operator.h"
+#include "Epetra_LocalMap.h"
+#include "Epetra_Import.h"
 #include "../LinAlgTypedefs.hh"
+#include "spn/VectorTraits.hh"
 
 using profugus::EpetraTypes;
 using profugus::TpetraTypes;
@@ -97,6 +100,64 @@ void fill_vector<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x,
         int gid = x->getMap()->getGlobalElement(i);
         x_data[i] = vals[gid];
     }
+}
+
+// get_global_data
+template <class T>
+Teuchos::ArrayRCP<const double> get_global_copy(
+    Teuchos::RCP<const typename T::MV> x)
+{
+    NOT_IMPLEMENTED("get_global_data for arbitrary MV type.");
+}
+
+template <>
+Teuchos::ArrayRCP<const double> get_global_copy<EpetraTypes>(
+    Teuchos::RCP<const Epetra_MultiVector> x)
+{
+#ifdef COMM_MPI
+    Epetra_MpiComm comm(profugus::communicator);
+#else
+    Epetra_SerialComm comm;
+#endif
+
+    Epetra_LocalMap map( x->GlobalLength(), 0, comm );
+    Teuchos::RCP<Epetra_MultiVector> src =
+        Teuchos::rcp( new Epetra_MultiVector(map,1) );
+
+    // For Epetra importing, give replicated map first, then distributed
+    Epetra_Import importer(map,x->Map());
+    src->Import(*x,importer,Insert);
+
+    // Get data from replicated vector
+    // Need to make a copy because ArrayRCP returned from get_data is weak
+    auto data = profugus::VectorTraits<EpetraTypes>::get_data(src);
+    Teuchos::ArrayRCP<double> data_copy;
+    data_copy.assign(data.begin(),data.end());
+    return data_copy;
+}
+
+template <>
+Teuchos::ArrayRCP<const double> get_global_copy<TpetraTypes>(
+    Teuchos::RCP<const TpetraTypes::MV> x)
+{
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int index_base = 0;
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(x->getGlobalLength(),index_base,comm,
+            Tpetra::LocallyReplicated) );
+    Teuchos::RCP<TpetraTypes::MV> src( new TpetraTypes::MV(map,1) );
+
+    typedef TpetraTypes::LO   LO;
+    typedef TpetraTypes::GO   GO;
+    typedef TpetraTypes::NODE NODE;
+    // For Tpetra importing, give distributed map first, then replicated
+    Tpetra::Import<LO,GO,NODE> importer(x->getMap(),map);
+    src->doImport(*x,importer,Tpetra::INSERT);
+
+    // Get data from replicated vector
+    return profugus::VectorTraits<TpetraTypes>::get_data(src);
 }
 
 // set_sign

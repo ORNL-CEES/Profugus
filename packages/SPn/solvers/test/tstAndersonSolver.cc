@@ -64,11 +64,9 @@ class Chandrasekhar_H : public profugus::OperatorAdapter<T>
 
     void ApplyImpl(const MV &x, MV &y) const
     {
-        // Get data
-        Teuchos::ArrayRCP<const double> x_data =
-            profugus::VectorTraits<T>::get_data(Teuchos::rcpFromRef(x));
-        Teuchos::ArrayRCP<double> y_data =
-            profugus::VectorTraits<T>::get_data_nonconst(Teuchos::rcpFromRef(y));
+        // Get all global values of x (all_gather)
+        auto x_global = linalg_traits::get_global_copy<T>(
+            Teuchos::rcpFromRef(x));
 
         // mu is discretized evaluation points
         std::vector<double> mu(d_N,0.0);
@@ -78,26 +76,25 @@ class Chandrasekhar_H : public profugus::OperatorAdapter<T>
         }
 
         // Evaluate H-equation
+        std::vector<double> y_data(d_N,0.0);
         for( int i=0; i<d_N; ++i )
         {
-            if( linalg_traits::is_local<T>(d_map,i) )
+            // Integral over mu
+            double rsum=0.0;
+            for( int j=0; j<d_N; ++j )
             {
-                // Integral over mu
-                double rsum=0.0;
-                for( int j=0; j<d_N; ++j )
-                {
-                    rsum += mu[i] * x_data[j] / (mu[i] + mu[j]);
-                }
-                y_data[i] = x_data[i] - 1.0 /
-                    (1.0 - (d_c/static_cast<double>(2*d_N)) * rsum);
+                rsum += mu[i] * x_global[j] / (mu[i] + mu[j]);
             }
+            y_data[i] = x_global[i] - 1.0 /
+                (1.0 - (d_c/static_cast<double>(2*d_N)) * rsum);
         }
+
+        linalg_traits::fill_vector<T>(Teuchos::rcpFromRef(y),y_data);
     }
 
     double d_c;
     int d_N;
     Teuchos::RCP<const MAP> d_map;
-
 };
 
 //---------------------------------------------------------------------------//
