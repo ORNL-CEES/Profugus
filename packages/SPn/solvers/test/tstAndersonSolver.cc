@@ -30,39 +30,17 @@ class Chandrasekhar_H : public profugus::OperatorAdapter<T>
     typedef typename T::MAP MAP;
 
     Chandrasekhar_H(double c, int N, Teuchos::RCP<const MAP> map)
-        : profugus::OperatorAdapter<T>(map,map)
+        : profugus::OperatorAdapter<T>(map)
         , d_c(c)
         , d_N(N)
-        , d_map(map)
     {
         REQUIRE( d_c > 0.0 && d_c < 1.0 );
         REQUIRE( d_N > 0 );
     }
 
-    // Operator interfaces, these just pass through to private ApplyImpl
-
-    // Epetra-style apply
-    int Apply( const MV &x, MV &y ) const
-    {
-        ApplyImpl(x,y);
-        return 0;
-    }
-
-    // Tpetra-style apply
-    void apply( const MV &x, MV &y, Teuchos::ETransp mode=Teuchos::NO_TRANS,
-                double alpha=Teuchos::ScalarTraits<double>::one(),
-                double beta=Teuchos::ScalarTraits<double>::zero()) const
-    {
-        REQUIRE( alpha == 1.0 );
-        REQUIRE( beta  == 0.0 );
-        REQUIRE( mode == Teuchos::NO_TRANS );
-
-        ApplyImpl(x,y);
-    }
-
   private:
 
-    void ApplyImpl(const MV &x, MV &y) const
+    void ApplyImpl(const MV &x, MV &y) const override
     {
         // Get all global values of x (all_gather)
         auto x_global = linalg_traits::get_global_copy<T>(
@@ -94,7 +72,6 @@ class Chandrasekhar_H : public profugus::OperatorAdapter<T>
 
     double d_c;
     int d_N;
-    Teuchos::RCP<const MAP> d_map;
 };
 
 //---------------------------------------------------------------------------//
