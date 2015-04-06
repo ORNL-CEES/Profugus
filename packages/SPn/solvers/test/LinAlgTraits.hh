@@ -128,6 +128,25 @@ void set_sign<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x)
     }
 }
 
+// is_local
+template <class T>
+bool is_local(Teuchos::RCP<const typename T::MAP> map, int i)
+{
+    NOT_IMPLEMENTED("is_localfor arbitrary MV type.");
+}
+
+template <>
+bool is_local<EpetraTypes>(Teuchos::RCP<const Epetra_Map> map, int i)
+{
+    return map->MyGID(i);
+}
+
+template <>
+bool is_local<TpetraTypes>(Teuchos::RCP<const TpetraTypes::MAP> map, int i)
+{
+    return map->isNodeGlobalElement(i);
+}
+
 // test_vector
 template <class T>
 void test_vector(Teuchos::RCP<typename T::MV> x, std::vector<double> &vals)
@@ -137,7 +156,7 @@ void test_vector(Teuchos::RCP<typename T::MV> x, std::vector<double> &vals)
 
 template <>
 void test_vector<EpetraTypes>(Teuchos::RCP<Epetra_MultiVector> x,
-                                     std::vector<double> &vals)
+                              std::vector<double> &vals)
 {
     REQUIRE( vals.size() == x->GlobalLength() );
 
@@ -150,7 +169,7 @@ void test_vector<EpetraTypes>(Teuchos::RCP<Epetra_MultiVector> x,
 
 template <>
 void test_vector<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x,
-                                     std::vector<double> &vals)
+                              std::vector<double> &vals)
 {
     Teuchos::ArrayRCP<const double> x_data = x->getData(0);
     for( int i=0; i<x->getLocalLength(); ++i )
