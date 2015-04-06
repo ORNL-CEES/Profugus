@@ -104,6 +104,7 @@ SET(SOLVERS_SOURCES
   solvers/EigenvalueSolverBuilder.pt.cc
   solvers/InverseOperator.pt.cc
   solvers/LinearSolverBuilder.pt.cc
+  solvers/ModelEvaluatorWrapper.pt.cc
   solvers/PowerIteration.pt.cc
   solvers/PreconditionerBuilder.pt.cc
   solvers/RayleighQuotient.pt.cc
