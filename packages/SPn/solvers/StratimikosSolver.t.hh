@@ -170,7 +170,7 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
  */
 //---------------------------------------------------------------------------//
 template <class T>
-void StratimikosSolver<T>::set_operator(Teuchos::RCP<const OP> A)
+void StratimikosSolver<T>::set_operator(Teuchos::RCP<OP> A)
 {
     // Create thyra operator
     d_thyraA = ThyraTraits<T>::buildThyraOP(A);
@@ -189,7 +189,7 @@ void StratimikosSolver<T>::set_operator(Teuchos::RCP<const OP> A)
  */
 //---------------------------------------------------------------------------//
 template <class T>
-void StratimikosSolver<T>::set_preconditioner(Teuchos::RCP<const OP> P)
+void StratimikosSolver<T>::set_preconditioner(Teuchos::RCP<OP> P)
 {
     // Create thyra operator
     d_prec = ThyraTraits<T>::buildThyraOP(P);
