@@ -99,10 +99,10 @@ void Davidson_Eigensolver<T>::solve( double &keff, Teuchos::RCP<MV> x)
     Teuchos::RCP<Teuchos::ParameterList> anasazi_list =
         Teuchos::sublist(d_db,"Anasazi");
     if( anasazi_list->get<int>("Maximum Subspace Dimension") >
-        MultiVecTraits::GetVecLength(*x) )
+        MultiVecTraits::GetGlobalLength(*x) )
     {
         anasazi_list->set<int>("Maximum Subspace Dimension",
-                               MultiVecTraits::GetVecLength(*x));
+                               MultiVecTraits::GetGlobalLength(*x));
     }
 
     // Create solver
