@@ -23,6 +23,7 @@
 #include "harness/Warnings.hh"
 #include "StratimikosSolver.hh"
 #include "LinAlgTypedefs.hh"
+#include "ThyraTraits.hh"
 
 namespace profugus
 {
@@ -34,7 +35,7 @@ namespace profugus
  * \brief Constructor
  */
 template <class T>
-StratimikosSolver<T>::StratimikosSolver(RCP_ParameterList db)
+StratimikosSolver<T>::StratimikosSolver(Teuchos::RCP<ParameterList> db)
     : LinearSolver<T>(db)
     , d_updated_operator( false )
 {
@@ -42,7 +43,8 @@ StratimikosSolver<T>::StratimikosSolver(RCP_ParameterList db)
 
     // read database
     // get stratimikos database and convert to a ParameterList
-    RCP_ParameterList builderplist = Teuchos::sublist(db, "Stratimikos");
+    Teuchos::RCP<ParameterList> builderplist =
+        Teuchos::sublist(db, "Stratimikos");
     CHECK(!builderplist.is_null());
 
     if (db->isParameter("linear_solver_xml_file"))
@@ -98,7 +100,7 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
     REQUIRE(b_max_iters > 0);
 
     // Create Thyra preconditioner if we have an operator for it
-    RCP_Prec prec;
+    RCP<const Prec> prec;
     if( d_prec!=Teuchos::null )
     {
         prec = unspecifiedPrec(d_prec);
@@ -122,17 +124,14 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
 
     // make Thyra view into the solution vector
     RCP<Thyra::MultiVectorBase<ST> > thyra_x =
-        buildThyraMV(x,d_thyraA->domain());
+        ThyraTraits<T>::buildThyraMV(x,d_thyraA->domain());
 
     // make Thyra view of the right-hand side
     RCP<const Thyra::MultiVectorBase<ST> > thyra_b =
-        buildThyraConstMV(b,d_thyraA->range());
+        ThyraTraits<T>::buildThyraConstMV(b,d_thyraA->range());
 
     // solve
     Thyra::SolveCriteria<ST> criteria;
-
-    std::vector<ST> b_norm(1);
-    MVT::MvNorm(*b,b_norm);
 
     // measure convergence against |A*x-b| / |b|
     criteria.solveMeasureType = Thyra::SolveMeasureType(
@@ -149,18 +148,13 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
     Thyra::SolveStatus<ST> solveStatus = Thyra::solve<ST>(
         *d_solver, Thyra::NOTRANS, *thyra_b, thyra_x.ptr(), ptrInArg(criteria));
 
-    std::vector<ST> x_norm(1);
-    MVT::MvNorm(*x,x_norm);
-
     // get the number of iterations for the solve
     b_num_iters = solveStatus.extraParameters->template get<int>("Iteration Count");
 
-    ST final_res = solveStatus.achievedTol;
-
-    Thyra::ESolveStatus status = solveStatus.solveStatus;
-
     if( b_verbosity >= LinearSolver<T>::LOW )
     {
+        ST final_res = solveStatus.achievedTol;
+
         profugus::pout << b_label << " performed " << b_num_iters
             << " iterations.  Final residual norm is "
             << profugus::scientific << profugus::setprecision(3)
@@ -169,19 +163,17 @@ void StratimikosSolver<T>::solve(Teuchos::RCP<MV>       x,
 }
 
 //---------------------------------------------------------------------------//
-// TEMPLATE SPECIALIZATIONS
-//---------------------------------------------------------------------------//
 /*!
  * \brief Set operator and convert to Thyra operator
  *
  * \param A operator
  */
-template <>
-void StratimikosSolver<EpetraTypes>::set_operator(
-    Teuchos::RCP<Epetra_Operator> A)
+//---------------------------------------------------------------------------//
+template <class T>
+void StratimikosSolver<T>::set_operator(Teuchos::RCP<const OP> A)
 {
     // Create thyra operator
-    d_thyraA = Thyra::epetraLinearOp(A);
+    d_thyraA = ThyraTraits<T>::buildThyraOP(A);
 
     // Indicate that the operator has been updated.
     d_updated_operator = true;
@@ -195,110 +187,14 @@ void StratimikosSolver<EpetraTypes>::set_operator(
  *
  * \param P operator to be applied as preconditioner.
  */
-template <>
-void StratimikosSolver<EpetraTypes>::set_preconditioner(
-    Teuchos::RCP<Epetra_Operator> P)
+//---------------------------------------------------------------------------//
+template <class T>
+void StratimikosSolver<T>::set_preconditioner(Teuchos::RCP<const OP> P)
 {
     // Create thyra operator
-    d_prec = Thyra::epetraLinearOp(P);
+    d_prec = ThyraTraits<T>::buildThyraOP(P);
 
     ENSURE( d_prec != Teuchos::null );
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Wrap MV into a Thyra vector
- */
-template <>
-Teuchos::RCP<Thyra::MultiVectorBase<EpetraTypes::ST> >
-StratimikosSolver<EpetraTypes>::buildThyraMV(
-    Teuchos::RCP<Epetra_MultiVector> x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
-{
-    return Thyra::create_MultiVector(x,space);
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Wrap const MV into a Thyra vector
- */
-template <>
-Teuchos::RCP<const Thyra::MultiVectorBase<EpetraTypes::ST> >
-StratimikosSolver<EpetraTypes>::buildThyraConstMV(
-    Teuchos::RCP<const Epetra_MultiVector> x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
-{
-    return Thyra::create_MultiVector(x,space);
-}
-
-/*!
- * \brief Set operator and convert to Thyra operator
- *
- * \param A operator
- */
-template <>
-void StratimikosSolver<TpetraTypes>::set_operator(
-        Teuchos::RCP<TpetraTypes::OP> A)
-{
-    // Create thyra operator
-    Teuchos::RCP<Thyra::VectorSpaceBase<ST> > rangeSpace =
-        Thyra::tpetraVectorSpace<ST>(A->getRangeMap());
-    Teuchos::RCP<Thyra::VectorSpaceBase<ST> > domainSpace =
-        Thyra::tpetraVectorSpace<ST>(A->getDomainMap());
-    d_thyraA = Thyra::tpetraLinearOp<ST,LO,GO,NODE>(
-        rangeSpace,domainSpace,A);
-
-    // Indicate that the operator has been updated.
-    d_updated_operator = true;
-
-    ENSURE(d_thyraA != Teuchos::null );
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Set preconditioner.
- *
- * \param P operator to be applied as preconditioner.
- */
-template <>
-void StratimikosSolver<TpetraTypes>::set_preconditioner(
-    Teuchos::RCP<TpetraTypes::OP> P)
-{
-    // Create thyra operator
-    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > rangeSpace =
-        Thyra::tpetraVectorSpace<ST>(P->getRangeMap());
-    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > domainSpace =
-        Thyra::tpetraVectorSpace<ST>(P->getDomainMap());
-    d_prec = Thyra::tpetraLinearOp<ST,LO,GO,NODE>(
-        rangeSpace,domainSpace,P);
-
-    ENSURE( d_prec != Teuchos::null );
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Wrap MV into a Thyra vector
- */
-template <>
-Teuchos::RCP<Thyra::MultiVectorBase<TpetraTypes::ST> >
-StratimikosSolver<TpetraTypes>::buildThyraMV(
-    Teuchos::RCP<TpetraTypes::MV> x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
-{
-    return Thyra::createMultiVector(x,space);
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Wrap const MV into a Thyra vector
- */
-template <>
-Teuchos::RCP<const Thyra::MultiVectorBase<TpetraTypes::ST> >
-StratimikosSolver<TpetraTypes>::buildThyraConstMV(
-    Teuchos::RCP<const TpetraTypes::MV> x,
-    Teuchos::RCP<const Thyra::VectorSpaceBase<ST> > space) const
-{
-    return Thyra::createConstMultiVector(x,space);
 }
 
 } // end namespace profugus

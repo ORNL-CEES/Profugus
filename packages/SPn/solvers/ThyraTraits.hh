@@ -1,7 +1,7 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
  * \file   solvers/ThyraTraits.hh
- * \author hu4
+ * \author Steven Hamilton
  * \date   Thu Apr 02 10:24:48 2015
  * \brief  ThyraTraits class definition.
  * \note   Copyright (C) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -38,9 +38,8 @@ class UndefinedThyraTraits
  * \brief Traits class for interoperability of Epetra/Tpetra with Thyra.
  *
  * Considering a fundamental idea of Thyra is to provide interoperability
- * of different concrete operator/vector types, it is absurb that this class
+ * of different concrete operator/vector types, it is absurd that this class
  * needs to exist.
- *
  */
 //===========================================================================//
 template <class T>

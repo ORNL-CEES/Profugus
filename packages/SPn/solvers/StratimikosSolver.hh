@@ -35,11 +35,9 @@ namespace profugus
  * \brief Use Trilinos' Stratimikos solver interface to solve a linear system.
  *
  * This class provides a general interface to Trilinos's Stratimikos linear
- * solver package.  The user provides a Thyra LinearOpBase and two Thyra
- * MultiVecBase objects, the following system is solved:
- * \f[
-   \mathbf{A}X = B\:.
- * \f]
+ * solver package.  The user provides a Epetra/Tpetra operators and
+ * multivectors and this class wraps it into appropriate Thyra operators and
+ * vectors, builds a solver using Stratimikos, and solves the system.
  */
 /*!
  * \example solvers/test/tstStratimikos.cc
@@ -55,31 +53,24 @@ class StratimikosSolver : public LinearSolver<T>
     //@{
     //! Useful typedefs.
     typedef typename T::ST                              ST;
-    typedef typename T::LO                              LO;
-    typedef typename T::GO                              GO;
-    typedef typename T::NODE                            NODE;
     typedef typename T::MV                              MV;
     typedef typename T::OP                              OP;
     typedef LinearSolver<T>                             Base;
     typedef Teuchos::ParameterList                      ParameterList;
-    typedef Teuchos::RCP<ParameterList>                 RCP_ParameterList;
     typedef Thyra::LinearOpBase<double>                 LOp;
     typedef Thyra::PreconditionerBase<double>           Prec;
     typedef Thyra::LinearOpWithSolveBase<double>        LOWS;
     typedef Thyra::LinearOpWithSolveFactoryBase<double> LOWS_Factory;
-    typedef Teuchos::RCP<LOWS_Factory>                  RCP_LOWS_Factory;
-    typedef Teuchos::RCP<const LOp>                     RCP_LOp;
-    typedef Teuchos::RCP<LOWS>                          RCP_LOWS;
-    typedef Teuchos::RCP<const Prec>                    RCP_Prec;
     typedef Anasazi::MultiVecTraits<double,MV>          MVT;
     //@}
 
   private:
-    RCP_LOWS_Factory   d_factory;
-    RCP_LOWS           d_solver;
-    RCP_LOp            d_thyraA;
-    RCP_LOp            d_prec;
-    bool               d_updated_operator;
+
+    Teuchos::RCP<LOWS_Factory>  d_factory;
+    Teuchos::RCP<LOWS>          d_solver;
+    Teuchos::RCP<const LOp>     d_thyraA;
+    Teuchos::RCP<const LOp>     d_prec;
+    bool                        d_updated_operator;
 
     using Base::b_tolerance;
     using Base::b_verbosity;
@@ -90,7 +81,7 @@ class StratimikosSolver : public LinearSolver<T>
   public:
     // Constructor.
     // Read Profugus database entries for solver parameters.
-    explicit StratimikosSolver(RCP_ParameterList db);
+    explicit StratimikosSolver(Teuchos::RCP<ParameterList> db);
 
     // Set Operator for linear system
     void set_operator(Teuchos::RCP<OP> A);
@@ -110,15 +101,6 @@ class StratimikosSolver : public LinearSolver<T>
     //! Maximum number of iterations.
     int max_itr() const { return b_max_iters; }
 
-  private:
-
-    Teuchos::RCP<Thyra::MultiVectorBase<double> > buildThyraMV(
-            Teuchos::RCP<MV> x,
-            Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const;
-
-    Teuchos::RCP<const Thyra::MultiVectorBase<double> > buildThyraConstMV(
-            Teuchos::RCP<const MV> x,
-            Teuchos::RCP<const Thyra::VectorSpaceBase<double> > space) const;
 };
 
 } // end namespace profugus
