@@ -16,6 +16,9 @@
 #include "spn/VectorTraits.hh"
 #include "LinAlgTraits.hh"
 
+#include "AnasaziMultiVecTraits.hpp"
+#include "AnasaziOperatorTraits.hpp"
+
 using profugus::AndersonSolver;
 
 //---------------------------------------------------------------------------//
@@ -118,7 +121,11 @@ TYPED_TEST_CASE(AndersonSolverTest, MyTypes);
 
 TYPED_TEST(AndersonSolverTest, Heqn)
 {
-    typedef typename TypeParam::MV MV;
+    typedef typename TypeParam::ST              ST;
+    typedef typename TypeParam::MV              MV;
+    typedef typename TypeParam::OP              OP;
+    typedef Anasazi::MultiVecTraits<ST,MV>      MVT;
+    typedef Anasazi::OperatorTraits<ST,MV,OP>   OPT;
 
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     pl->set("tolerance",1e-6);
@@ -132,11 +139,24 @@ TYPED_TEST(AndersonSolverTest, Heqn)
     std::vector<double> x_data(this->d_N,0.0);
     linalg_traits::fill_vector<TypeParam>(x,x_data);
 
+    // Compute initial function value
+    Teuchos::RCP<MV> y = linalg_traits::build_vector<TypeParam>(this->d_N);
+    OPT::Apply(*this->d_op,*x,*y);
+    std::vector<double> tmp_norm(1);
+    MVT::MvNorm(*y,tmp_norm);
+    double norm_init = tmp_norm[0];
+
     // Build solver
     profugus::AndersonSolver<TypeParam> solver(this->d_op,pl);
 
     // Solve
     solver.solve(x);
+
+    // Check final function value against tolerance
+    OPT::Apply(*this->d_op,*x,*y);
+    MVT::MvNorm(*y,tmp_norm);
+    double norm_final = tmp_norm[0];
+    EXPECT_TRUE( norm_final / norm_init < 1e-6 );
 
     // Check solution
     std::vector<double> expected =
