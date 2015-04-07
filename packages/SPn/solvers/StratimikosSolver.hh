@@ -84,10 +84,10 @@ class StratimikosSolver : public LinearSolver<T>
     explicit StratimikosSolver(Teuchos::RCP<ParameterList> db);
 
     // Set Operator for linear system
-    void set_operator(Teuchos::RCP<OP> A);
+    void set_operator(Teuchos::RCP<const OP> A);
 
     // Set Operator for preconditioner
-    void set_preconditioner(Teuchos::RCP<OP> P);
+    void set_preconditioner(Teuchos::RCP<const OP> P);
 
     // Solve a linear problem.
     void solve(Teuchos::RCP<MV>       x,
