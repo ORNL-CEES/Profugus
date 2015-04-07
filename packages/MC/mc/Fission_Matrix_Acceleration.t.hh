@@ -130,6 +130,9 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
         "end_cycle", mc_db->template get<int>("num_inactive_cycles", 10));
     d_accelerate  = false;
 
+    // determine if we should update the particle population
+    b_update_Np = fmdb->get("update_Np", false);
+
     // make a "null" external source to pass to the solver
     Teuchos::RCP<const Source_t> null_source;
     CHECK(null_source.is_null());

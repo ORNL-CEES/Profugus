@@ -81,6 +81,9 @@ class Fission_Matrix_Acceleration
     // Number of global sites after the latest correction.
     int b_current_Np;
 
+    // Update fission sites.
+    bool b_update_Np;
+
   public:
     // Constructor.
     Fission_Matrix_Acceleration() : b_current_Np(0) { /* ... */ }
@@ -104,6 +107,9 @@ class Fission_Matrix_Acceleration
 
     //! Return the number of fission sites after acceleration.
     int num_sites() const { return b_current_Np; }
+
+    //! Update the number of source particles each cycle.
+    bool update_num_particles() const { return b_update_Np; }
 
     //! Get SPN mesh.
     const Mesh& mesh() const { return *b_mesh; }
