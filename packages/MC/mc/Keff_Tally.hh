@@ -104,6 +104,11 @@ class Keff_Tally : public Pathlength_Tally
 
     // Clear/re-initialize all tally values between solves.
     virtual void reset() override final;
+
+    // >>> SETTERS
+
+    //! Set the latest keff in the tally.
+    void set_keff(double k) { d_keff_cycle = k; }
 };
 
 } // end namespace profugus

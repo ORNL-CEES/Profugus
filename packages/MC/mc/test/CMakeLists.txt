@@ -37,6 +37,8 @@ ADD_UTILS_TEST(tstFission_Matrix_Processor NP 1 2 3 4 5 6 7 8)
 
 ADD_UTILS_TEST(tstTallier.cc                    )
 ADD_UTILS_TEST(tstKCode_Solver.cc               )
+ADD_UTILS_TEST(tstAnderson_Operator.cc          )
+ADD_UTILS_TEST(tstAnderson_Solver.cc            )
 ADD_UTILS_TEST(tstFission_Matrix_Acceleration.cc)
 
 ADD_UTILS_TEST(tstSource_Transporter.cc       DEPLIBS mc_test_lib)

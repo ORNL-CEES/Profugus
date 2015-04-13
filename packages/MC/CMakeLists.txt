@@ -90,6 +90,8 @@ LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
 
 FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
+  mc/Anderson_Operator.pt.cc
+  mc/Anderson_Solver.pt.cc
   mc/Box_Shape.cc
   mc/Domain_Transporter.cc
   mc/Fission_Matrix_Acceleration.pt.cc
