@@ -18,6 +18,8 @@
 
 #include "xs/XS_Builder.hh"
 #include "solvers/LinAlgTypedefs.hh"
+#include "spn/MatrixTraits.hh"
+#include "geometry/Cartesian_Mesh.hh"
 #include "../Fission_Source.hh"
 #include "../Global_RNG.hh"
 #include "../Tally.hh"
@@ -43,6 +45,7 @@ class Anderson_OperatorTest : public testing::Test
     typedef Physics_t::Particle_t                 Particle_t;
     typedef Physics_t::Bank_t                     Bank_t;
     typedef profugus::VR_Roulette                 Var_Reduction_t;
+    typedef profugus::Cartesian_Mesh              Mesh_t;
 
     typedef Physics_t::XS_t   XS_t;
     typedef Physics_t::RCP_XS RCP_XS;
@@ -61,6 +64,8 @@ class Anderson_OperatorTest : public testing::Test
     typedef Operator_t::SP_Fission_Source     SP_Fission_Source;
     typedef Operator_t::SP_Source_Transporter SP_Transporter;
     typedef std::shared_ptr<Var_Reduction_t>  SP_Var_Reduction;
+
+    typedef Operator_t::RCP_MAP RCP_MAP;
 
   protected:
     void SetUp()
@@ -208,6 +213,25 @@ class Anderson_OperatorTest : public testing::Test
 
 TEST_F(Anderson_OperatorTest, api)
 {
+    // Make anderson mesh
+    std::vector<double> r = {0.0, 1.26, 2.52, 3.78};
+    std::vector<double> z = {0.0, 1.0};
+    auto mesh = std::make_shared<Mesh_t>(r, r, z);
+
+    // make a map corresponding to this mesh
+    profugus::set_internal_comm(communicator);
+    auto map = profugus::MatrixTraits<LinAlg_t>::build_map(10, 10);
+    profugus::reset_internal_comm();
+
+    // make fission source
+    auto fs = std::make_shared<profugus::Fission_Source>(
+        db, geometry, physics, rcon);
+
+    // Make the operator
+    Operator_t anderson(transporter, fs, mesh, map, communicator);
+
+    // Set the tallier
+    anderson.set_tallier(tallier);
 }
 
 //---------------------------------------------------------------------------//

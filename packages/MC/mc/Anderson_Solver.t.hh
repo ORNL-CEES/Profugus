@@ -128,7 +128,6 @@ void Anderson_Solver<T>::set(SP_Source_Transporter transporter,
     CHECK(d_Np > 0.0);
 
     ENSURE(!d_operator.is_null());
-    ENSURE(b_tallier->is_built());
 }
 
 //---------------------------------------------------------------------------//
@@ -206,6 +205,7 @@ void Anderson_Solver<T>::initialize()
 
     ENSURE(b_tallier->num_pathlength_tallies() >= 1);
     ENSURE(d_keff_tally->cycle_count() == 0);
+    ENSURE(b_tallier->is_built());
 }
 
 //---------------------------------------------------------------------------//
