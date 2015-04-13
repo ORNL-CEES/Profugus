@@ -95,7 +95,7 @@ void Anderson_Solver<T>::set(SP_Source_Transporter transporter,
     double init_keff = d_db->get("keff_init", 1.0);
     VALIDATE(init_keff >= 0., "Initial keff guess (keff_init="
              << init_keff << ") must be nonnegative.");
-    d_keff_tally = std::make_shared<Keff_Tally>(
+    b_keff_tally = std::make_shared<Keff_Tally>(
         init_keff, b_tallier->physics());
 
     // Get the anderson mesh boundaries
@@ -189,7 +189,7 @@ void Anderson_Solver<T>::initialize()
            "a prior transport solve without reset() being called.");
 
     // Add the keff tally to the ACTIVE cycle tallier and build it
-    b_tallier->add_pathlength_tally(d_keff_tally);
+    b_tallier->add_pathlength_tally(b_keff_tally);
     b_tallier->build();
     CHECK(b_tallier->is_built());
     CHECK(b_tallier->num_pathlength_tallies() >= 1);
@@ -204,7 +204,7 @@ void Anderson_Solver<T>::initialize()
     }
 
     ENSURE(b_tallier->num_pathlength_tallies() >= 1);
-    ENSURE(d_keff_tally->cycle_count() == 0);
+    ENSURE(b_keff_tally->cycle_count() == 0);
     ENSURE(b_tallier->is_built());
 }
 
@@ -224,7 +224,7 @@ void Anderson_Solver<T>::run_inactive()
     // First set a null tallier
     auto first_tallier = std::make_shared<Tallier_t>();
     first_tallier->set(b_tallier->geometry(), b_tallier->physics());
-    first_tallier->add_pathlength_tally(d_keff_tally);
+    first_tallier->add_pathlength_tally(b_keff_tally);
     first_tallier->build();
     CHECK(first_tallier->is_built());
     CHECK(first_tallier->num_tallies() == 1);
@@ -241,13 +241,13 @@ void Anderson_Solver<T>::run_inactive()
     {
         // Iterate and time
         cycle_timer.start();
-        d_operator->iterate(d_keff_tally->latest());
+        d_operator->iterate(b_keff_tally->latest());
         cycle_timer.stop();
 
         if (d_node == 0)
         {
             cout << fixed      << setw(4) << cycle << "   "
-                 << fixed      << setw(8) << d_keff_tally->latest() << "  "
+                 << fixed      << setw(8) << b_keff_tally->latest() << "  "
                  << scientific << setw(9) << cycle_timer.TIMER_CLOCK()
                  << endl;
         }
@@ -308,10 +308,10 @@ void Anderson_Solver<T>::run_active()
 
     // Set the tallier to run active cycles
     b_tallier->begin_active_cycles();
-    CHECK(d_keff_tally->cycle_count() == 0);
+    CHECK(b_keff_tally->cycle_count() == 0);
 
     // Set the keff tally to start active cycles with k from Anderson
-    d_keff_tally->set_keff(d_k_anderson);
+    b_keff_tally->set_keff(d_k_anderson);
 
     // Set the active tallier in the operator
     d_operator->set_tallier(b_tallier);
@@ -327,7 +327,7 @@ void Anderson_Solver<T>::run_active()
     {
         // Iterate and time
         cycle_timer.start();
-        d_operator->iterate(d_keff_tally->latest());
+        d_operator->iterate(b_keff_tally->latest());
         d_operator->update_source();
         cycle_timer.stop();
 
@@ -335,15 +335,15 @@ void Anderson_Solver<T>::run_active()
         if (d_node == 0)
         {
             cout << fixed      << setw(4)  << cycle << "   "
-                 << fixed      << setw(8)  << d_keff_tally->latest() << "  "
-                 << fixed      << setw(8)  << d_keff_tally->mean() << "  "
-                 << scientific << setw(11) << d_keff_tally->variance() << "  "
+                 << fixed      << setw(8)  << b_keff_tally->latest() << "  "
+                 << fixed      << setw(8)  << b_keff_tally->mean() << "  "
+                 << scientific << setw(11) << b_keff_tally->variance() << "  "
                  << scientific << setw(11) << cycle_timer.TIMER_CLOCK()
                  << endl;
         }
     }
     cout << endl;
-    CHECK(num_total == d_keff_tally->cycle_count());
+    CHECK(num_total == b_keff_tally->cycle_count());
 
     profugus::global_barrier();
 

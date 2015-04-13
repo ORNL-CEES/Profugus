@@ -212,7 +212,7 @@ TEST_F(Anderson_SolverTest, api)
     adb.set("x_bounds", OneDArray(r));
     adb.set("y_bounds", OneDArray(r));
     adb.set("z_bounds", OneDArray(z));
-    
+
     // make fission source
     auto fs = std::make_shared<profugus::Fission_Source>(
         db, geometry, physics, rcon);

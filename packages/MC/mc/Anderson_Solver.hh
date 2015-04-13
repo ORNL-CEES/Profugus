@@ -14,11 +14,11 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 
+#include "Keff_Solver.hh"
+
 #include "comm/global.hh"
 #include "solvers/AndersonSolver.hh"
-#include "Solver.hh"
 #include "Anderson_Operator.hh"
-#include "Keff_Tally.hh"
 
 namespace profugus
 {
@@ -36,8 +36,10 @@ namespace profugus
 //===========================================================================//
 
 template<class T>
-class Anderson_Solver : public Solver
+class Anderson_Solver : public Keff_Solver
 {
+    typedef Keff_Solver Base;
+
   public:
     typedef Anderson_Operator<T>                     Operator;
     typedef Teuchos::RCP<Teuchos::ParameterList>     RCP_Std_DB;
@@ -46,8 +48,7 @@ class Anderson_Solver : public Solver
     typedef AndersonSolver<T>                        Anderson_t;
     typedef std::shared_ptr<Anderson_t>              SP_Anderson;
     typedef typename Operator::SP_Source_Transporter SP_Source_Transporter;
-    typedef typename Operator::SP_Fission_Source     SP_Fission_Source;
-    typedef std::shared_ptr<Keff_Tally>              SP_Keff_Tally;
+    typedef typename Base::SP_Fission_Source         SP_Fission_Source;
 
   private:
     // >>> DATA
@@ -58,11 +59,11 @@ class Anderson_Solver : public Solver
     // Anderson operator.
     RCP_Operator d_operator;
 
-    // Keff tally.
-    SP_Keff_Tally d_keff_tally;
-
     // Anderson non-linear solver.
     SP_Anderson d_anderson;
+
+    // Bring base class types in.
+    using Base::b_keff_tally;
 
   public:
     // Constructor.
@@ -79,10 +80,13 @@ class Anderson_Solver : public Solver
     // Call to reset the solver and tallies for another calculation.
     void reset() override;
 
-    // >>> ACCESSORS
+    //! Get acceleration.
+    SP_FM_Acceleration acceleration() const
+    {
+        return typename Base::SP_FM_Acceleration();
+    }
 
-    //! Keff tally for tracking k-effective.
-    SP_Keff_Tally keff_tally() const { return d_keff_tally; }
+    // >>> ACCESSORS
 
   private:
     // >>> IMPLEMENTATION

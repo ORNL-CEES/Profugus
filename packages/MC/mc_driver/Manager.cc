@@ -18,12 +18,35 @@
 #include "comm/global.hh"
 #include "utils/Serial_HDF5_Writer.hh"
 #include "utils/Parallel_HDF5_Writer.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "mc/Fission_Source.hh"
 #include "mc/Uniform_Source.hh"
+#include "mc/KCode_Solver.hh"
+#include "mc/Anderson_Solver.hh"
 #include "Manager.hh"
 
 namespace mc
 {
+
+//---------------------------------------------------------------------------//
+// PRIVATE TEMPLATE FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build an Anderson solver.
+ */
+template<class T>
+void Manager::build_anderson(SP_Transporter    transporter,
+                             SP_Fission_Source source)
+{
+    // make the solver
+    auto anderson = std::make_shared< profugus::Anderson_Solver<T> >(d_db);
+
+    // set the solver
+    anderson->set(transporter, source);
+
+    // assign the base solver
+    d_keff_solver = anderson;
+}
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -120,17 +143,48 @@ void Manager::setup(const std::string &xml_file)
             std::make_shared<profugus::Fission_Source>(
                 d_db, d_geometry, d_physics, d_rnd_control));
 
-        // make the solver
-        d_kcode_solver = std::make_shared<KCode_Solver_t>(d_db);
+        // >>> determine eigensolver
 
-        // set the solver
-        d_kcode_solver->set(transporter, source);
+        // Anderson
+        if (d_db->isSublist("anderson_db"))
+        {
+            // determine the trilinos implementation
+            auto &adb  = d_db->sublist("anderson_db");
+            auto  impl = adb.get("trilinos_implementation",
+                                 std::string("epetra"));
 
-        // set hybrid acceleration
-        d_kcode_solver->set(builder.get_acceleration());
+            VALIDATE(impl == "epetra" || impl == "tpetra", "Invalid "
+                     << "trilinos_implementation " << impl << " must be "
+                     << "epetra or tpetra");
+
+            if (impl == "epetra")
+            {
+                build_anderson<profugus::EpetraTypes>(transporter, source);
+            }
+            else
+            {
+                build_anderson<profugus::TpetraTypes>(transporter, source);
+            }
+        }
+
+        // Standard K-Code
+        else
+        {
+            // make the solver
+            auto kcode_solver = std::make_shared<profugus::KCode_Solver>(d_db);
+
+            // set the solver
+            kcode_solver->set(transporter, source);
+
+            // set hybrid acceleration
+            kcode_solver->set(builder.get_acceleration());
+
+            // assign the base solver
+            d_keff_solver = kcode_solver;
+        }
 
         // assign the base solver
-        d_solver = d_kcode_solver;
+        d_solver = d_keff_solver;
     }
     else if (prob_type == "fixed")
     {
@@ -173,14 +227,14 @@ void Manager::solve()
         SCREEN_MSG("Executing solver");
 
         // run the appropriate solver
-        if (d_kcode_solver)
+        if (d_keff_solver)
         {
             CHECK(!d_fixed_solver);
-            d_kcode_solver->solve();
+            d_keff_solver->solve();
         }
         else if (d_fixed_solver)
         {
-            CHECK(!d_kcode_solver);
+            CHECK(!d_keff_solver);
             d_fixed_solver->solve();
         }
         else
@@ -223,10 +277,10 @@ void Manager::output()
     string outfile = m.str();
 
     // scalar output for kcode
-    if (d_kcode_solver)
+    if (d_keff_solver)
     {
         // get the kcode tally
-        auto keff = d_kcode_solver->keff_tally();
+        auto keff = d_keff_solver->keff_tally();
         CHECK(keff);
 
         // make the hdf5 file
@@ -243,9 +297,9 @@ void Manager::output()
         writer.write(string("cycle_estimates"), keff->all_keff());
 
         // do diagnostics on acceleration if it exists
-        if (d_kcode_solver->acceleration())
+        if (d_keff_solver->acceleration())
         {
-            d_kcode_solver->acceleration()->diagnostics(writer);
+            d_keff_solver->acceleration()->diagnostics(writer);
         }
 
         writer.end_group();
