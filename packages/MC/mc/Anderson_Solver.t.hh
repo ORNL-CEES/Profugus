@@ -55,10 +55,11 @@ Anderson_Solver<T>::Anderson_Solver(RCP_Std_DB db)
              "Failed to define z-boundaries for anderson mesh");
 
     // Set Anderson solver defaults
-    adb.template get<int>("Storage Depth", 2);
-    adb.template get<double>("Mixing Parameter", 0.8);
-    adb.template get<int>("Acceleration Start Iteration", 0);
     adb.template get<double>("tolerance", 1.0e-3);
+    auto &apr = adb.sublist("Anderson Parameters");
+    apr.template get<int>("Storage Depth", 2);
+    apr.template get<double>("Mixing Parameter", 0.8);
+    apr.template get<int>("Acceleration Start Iteration", 1);
 
     // Make a set-constant communicator
     profugus::split(d_node, 0, d_set_comm);
@@ -266,7 +267,10 @@ void Anderson_Solver<T>::anderson_solve()
 
     REQUIRE(d_anderson);
 
-    // First set a null tallier
+    // Initialize the Anderson operator and get a solution vector
+    auto v = d_operator->initialize_Anderson();
+
+    // Make a null tallier
     auto null_tallier = std::make_shared<Tallier_t>();
     null_tallier->set(b_tallier->geometry(), b_tallier->physics());
     null_tallier->build();
@@ -275,9 +279,6 @@ void Anderson_Solver<T>::anderson_solve()
 
     // Set the null tallier
     d_operator->set_tallier(null_tallier);
-
-    // Initialize the Anderson operator and get a solution vector
-    auto v = d_operator->initialize_Anderson();
 
     // Solve using Anderson
     d_anderson->solve(v);

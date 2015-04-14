@@ -80,7 +80,12 @@ public:
                       RCP_MAP map, profugus::Communicator_t set_comm);
 
     // Set the tallier.
-    void set_tallier(SP_Tallier t) { REQUIRE(t); d_tallier = t; }
+    void set_tallier(SP_Tallier t)
+    {
+        REQUIRE(t);
+        d_tallier = t;
+        d_transporter->set(d_tallier);
+    }
 
     // Do a transport iteration.
     void iterate(double k) const;

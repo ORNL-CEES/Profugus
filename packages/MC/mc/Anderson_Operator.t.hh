@@ -129,12 +129,12 @@ auto Anderson_Operator<T>::initialize_Anderson() -> RCP_MV
     // Get the data from sol_vec (this is the total vector g + k)
     auto v = VectorTraits<T>::get_data_nonconst(sol_vec);
 
-    // Get a view to gp (just over g)
-    auto gp = VectorTraits<T>::get_data_nonconst(d_gp)();
+    // Get an ArrayRCP to gp (just over g)
+    auto gp = VectorTraits<T>::get_data_nonconst(d_gp);
     CHECK(gp.size() + 1 == v.size());
 
     // Make gp from the existing cycle fission sites
-    restrict(*d_fission_sites, gp);
+    restrict(*d_fission_sites, gp());
 
     // Write gp into v to initialize the solution vector
     std::copy(gp.begin(), gp.end(), v.begin());
@@ -175,6 +175,7 @@ double Anderson_Operator<T>::finalize_Anderson(const MV &v)
 
     // Make view of data
     auto g = Teuchos::arrayView(in.get(), nc);
+    CHECK(g.size() == nc);
 
     // get last k from v
     double k = in[nc];
@@ -182,6 +183,9 @@ double Anderson_Operator<T>::finalize_Anderson(const MV &v)
 
     // Apply prolongation P: g->f, to make fission sites for active cycles
     prolongate(g, *d_fission_sites);
+
+    // update the source
+    update_source();
 
     // return the last k iterate
     return k;
@@ -206,8 +210,12 @@ void Anderson_Operator<T>::ApplyImpl(const MV &x, MV &y) const
     CHECK(out.size() == in.size());
 
     // Make views of data
-    auto g  = Teuchos::arrayView(in.get(), nc);
-    auto gp = VectorTraits<T>::get_data_nonconst(d_gp)();
+    auto g = Teuchos::arrayView(in.get(), nc);
+    CHECK(g.size() == nc);
+
+    // This is an ArrayRCP
+    auto gp = VectorTraits<T>::get_data_nonconst(d_gp);
+    CHECK(gp.size() == nc);
 
     // get k from x
     double k = in[nc];
@@ -223,7 +231,7 @@ void Anderson_Operator<T>::ApplyImpl(const MV &x, MV &y) const
     iterate(k);
 
     // Restrict to get new g = Rf
-    restrict(*d_fission_sites, gp);
+    restrict(*d_fission_sites, gp());
 
     // >>> Update F(g,k)
 
@@ -261,7 +269,7 @@ void Anderson_Operator<T>::prolongate(const_View              g,
     REQUIRE(g.size() == d_mesh->num_cells());
 
     // Make views of g' (the old vector).
-    auto gp = VectorTraits<T>::get_data(d_gp)();
+    auto gp = VectorTraits<T>::get_data(d_gp);
     CHECK(gp.size() == g.size());
 
     // make a new fission site container
