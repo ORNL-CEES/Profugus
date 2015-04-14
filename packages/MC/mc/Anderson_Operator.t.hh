@@ -13,6 +13,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <iomanip>
 
 #include "spn/VectorTraits.hh"
 #include "spn/MatrixTraits.hh"
@@ -219,6 +221,11 @@ void Anderson_Operator<T>::ApplyImpl(const MV &x, MV &y) const
 
     // get k from x
     double k = in[nc];
+    if (d_node == 0)
+    {
+        std::cout << "Anderson k iterate: " << std::fixed << std::setw(8)
+                  << k << std::endl;
+    }
     CHECK(k > 0.0);
 
     // Apply prolongation P: g->f
