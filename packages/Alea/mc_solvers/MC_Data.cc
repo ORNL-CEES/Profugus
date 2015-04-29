@@ -193,8 +193,19 @@ void MC_Data::buildMonteCarloMatrices()
     if( type == "adjoint" )
     {
         // Transpose H
+        /*
         Tpetra::RowMatrixTransposer<SCALAR,LO,GO,NODE> transposer(d_H);
         d_H = transposer.createTranspose();
+        */
+
+        // Transposer is broken for Cuda, this will be fun
+        typedef Kokkos::Compat::KokkosDeviceWrapperNode<HOST> HostNode;
+        auto host_node = KokkosClassic::Details::getNode<HostNode>();
+        auto dev_node = d_H->getNode();
+        auto H_host = d_H->clone(host_node);
+        Tpetra::RowMatrixTransposer<SCALAR,LO,GO,HostNode> transposer(H_host);
+        H_host = transposer.createTranspose();
+        d_H = H_host->clone(dev_node);
     }
     CHECK( d_H != Teuchos::null );
 
