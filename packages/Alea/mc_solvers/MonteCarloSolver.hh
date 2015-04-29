@@ -72,15 +72,6 @@ class MonteCarloSolver : public AleaSolver,
     void compute() override { if( !d_initialized ) initialize(); }
     bool isComputed() const override {return d_initialized;}
 
-    magnitude_type computeCondEst(Ifpack2::CondestType CT=Ifpack2::Cheap,
-        LO MaxIters=1550,magnitude_type tol=1e-9,
-        const Teuchos::Ptr<const MATRIX> &matrix=Teuchos::null) override
-    {
-        return -1.0;
-    }
-
-    magnitude_type getCondEst() const override { return -1.0; }
-
     Teuchos::RCP<const MATRIX> getMatrix() const override { return b_A; }
     int getNumInitialize() const override { return d_init_count; }
     int getNumCompute() const override { return d_init_count; }
