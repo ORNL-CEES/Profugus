@@ -103,9 +103,22 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
 // PUBLIC FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build the initial source.
+ * \brief Build the initial fission source.
  */
 void Fission_Source::build_initial_source()
+{
+    // send an empty mesh and view
+    SP_Cart_Mesh     mesh;
+    Const_Array_View view;
+    build_initial_source(mesh, view);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build the initial source from a mesh distribution.
+ */
+void Fission_Source::build_initial_source(SP_Cart_Mesh     mesh,
+                                          Const_Array_View fis_dens)
 {
     REQUIRE(d_np_total > 0);
 
@@ -119,7 +132,7 @@ void Fission_Source::build_initial_source()
     make_RNG();
 
     // build the domain-replicated fission source
-    build_DR();
+    build_DR(mesh, fis_dens);
 
     // set counters
     d_num_left = d_np_domain;
@@ -275,31 +288,7 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
     }
     else
     {
-        // sample the geometry until a fission site is found (if there is no
-        // fission in a given domain the number of particles on that domain is
-        // zero, and we never get here) --> so, fission sampling should always
-        // be successful
-        sampled = false;
-        while (!sampled)
-        {
-            // sample a point in the geometry
-            sample_r(r, rng);
-
-            // intialize the geometry state
-            b_geometry->initialize(r, omega, p->geo_state());
-
-            // get the material id
-            matid = b_geometry->matid(p->geo_state());
-
-            // try initializing fission here, if it is successful we are
-            // finished
-            if (b_physics->initialize_fission(matid, *p))
-            {
-                sampled = true;
-            }
-
-            DIAGNOSTICS_TWO(integers["fission_src_samples"]++);
-        }
+        matid = sample_geometry(r, omega, *p, rng);
     }
 
     // set the material id in the particle
@@ -329,7 +318,8 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
  * (1 block per set).  Thus, the number of particles per set is equal to the
  * number of particles per domain.
  */
-void Fission_Source::build_DR()
+void Fission_Source::build_DR(SP_Cart_Mesh     mesh,
+                              Const_Array_View fis_dens)
 {
     // calculate the number of particles per domain and set (equivalent)
     d_np_domain = d_np_total / b_nodes;
@@ -338,6 +328,106 @@ void Fission_Source::build_DR()
     // particles in each domain, so the total may change slightly from the
     // requested value)
     d_np_total = d_np_domain * b_nodes;
+
+    // if there is a mesh then do stratified sampling to calculate the initial
+    // fission distribution
+    if (mesh)
+    {
+        REQUIRE(mesh->num_cells() == fis_dens.size());
+
+        // number of cells in the mesh
+        int num_cells = mesh->num_cells();
+
+        // determine the total number of fissions
+        double fissions = 0.0;
+        for (int cell = 0; cell < num_cells; ++cell)
+        {
+            fissions += fis_dens[cell] * mesh->volume(cell);
+        }
+        CHECK(fissions > 0.0);
+
+        // allocate fission distribution
+        Vec_Int n(num_cells, 0);
+
+        // pre-sample sites on this domain
+        double nu            = 0.0;
+        int    new_np_domain = 0;
+        for (int cell = 0; cell < num_cells; ++cell)
+        {
+            // calculate the expected number of sites in this cell
+            nu = fis_dens[cell] * mesh->volume(cell) / fissions * d_np_domain;
+
+            // there can be n or n+1 sites; with probability n+1-nu there will
+            // be n sites, with probability nu-n there will be n+1 sites
+            n[cell] = nu;
+            if (Global_RNG::d_rng.ran() < nu - static_cast<double>(n[cell]))
+            {
+                ++n[cell];
+            }
+
+            // add up the number of particles on this domain
+            new_np_domain += n[cell];
+        }
+
+        // store the distributions persistently
+        std::swap(n, d_fis_dist);
+
+        // update the number of particles globally and on the domain
+        d_np_domain = new_np_domain;
+        d_np_total  = d_np_domain;
+        profugus::global_sum(&d_np_total, 1);
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Sample geometry to get a particle.
+ */
+int Fission_Source::sample_geometry(Space_Vector       &r,
+                                    const Space_Vector &omega,
+                                    Particle_t         &p,
+                                    RNG_t               rng)
+{
+    using def::X; using def::Y; using def::Z;
+
+    // sampled complete flag
+    bool sampled = false;
+
+    // material id
+    int matid = 0;
+
+    // sample the full geometry
+    if (d_fis_dist.empty())
+    {
+        // sample the geometry until a fission site is found (if there is no
+        // fission in a given domain the number of particles on that domain is
+        // zero, and we never get here) --> so, fission sampling should always
+        // be successful
+        while (!sampled)
+        {
+            // sample a point in the geometry
+            r[X] = d_width[X] * rng.ran() + d_lower[X];
+            r[Y] = d_width[Y] * rng.ran() + d_lower[Y];
+            r[Z] = d_width[Z] * rng.ran() + d_lower[Z];
+
+            // intialize the geometry state
+            b_geometry->initialize(r, omega, p.geo_state());
+
+            // get the material id
+            matid = b_geometry->matid(p.geo_state());
+
+            // try initializing fission here, if it is successful we are
+            // finished
+            if (b_physics->initialize_fission(matid, p))
+            {
+                sampled = true;
+            }
+
+            DIAGNOSTICS_TWO(integers["fission_src_samples"]++);
+        }
+    }
+
+    return matid;
 }
 
 } // end namespace profugus

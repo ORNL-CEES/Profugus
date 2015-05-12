@@ -11,6 +11,9 @@
 #ifndef mc_Fission_Source_hh
 #define mc_Fission_Source_hh
 
+#include "Teuchos_ArrayView.hpp"
+
+#include "geometry/Cartesian_Mesh.hh"
 #include "Fission_Rebalance.hh"
 #include "Source.hh"
 
@@ -71,7 +74,10 @@ class Fission_Source : public Source
     typedef Physics_t::Fission_Site_Container       Fission_Site_Container;
     typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
     typedef std::shared_ptr<Fission_Rebalance>      SP_Fission_Rebalance;
+    typedef std::shared_ptr<Cartesian_Mesh>         SP_Cart_Mesh;
+    typedef Teuchos::ArrayView<const double>        Const_Array_View;
     typedef def::Vec_Dbl                            Vec_Dbl;
+    typedef def::Vec_Int                            Vec_Int;
     //@}
 
   private:
@@ -88,8 +94,11 @@ class Fission_Source : public Source
     Fission_Source(RCP_Std_DB db, SP_Geometry geometry, SP_Physics physics,
                    SP_RNG_Control rng_control);
 
-    // Build the initial source.
+    // Build the initial fission source.
     void build_initial_source();
+
+    // Build the initial source from a mesh distribution.
+    void build_initial_source(SP_Cart_Mesh mesh, Const_Array_View fis_dens);
 
     // Build a source from a fission site container.
     void build_source(SP_Fission_Sites &fission_sites);
@@ -148,20 +157,15 @@ class Fission_Source : public Source
     typedef Source Base;
 
     // Build the domain replicated fission source.
-    void build_DR();
+    void build_DR(SP_Cart_Mesh mesh, Const_Array_View fis_dens);
+
+    // Sample the geometry.
+    int sample_geometry(Space_Vector &r, const Space_Vector &omega,
+                        Particle_t &p, RNG_t rng);
 
     // Initial fission source lower coords and width.
     Space_Vector d_lower;
     Space_Vector d_width;
-
-    // Sample r.
-    void sample_r(Space_Vector &r, RNG_t rng)
-    {
-        using def::X; using def::Y; using def::Z;
-        r[X] = d_width[X] * rng.ran() + d_lower[X];
-        r[Y] = d_width[Y] * rng.ran() + d_lower[Y];
-        r[Z] = d_width[Z] * rng.ran() + d_lower[Z];
-    }
 
     // Requested particles per cycle.
     size_type d_np_requested;
@@ -180,6 +184,9 @@ class Fission_Source : public Source
 
     // Dummy fission site container.
     Fission_Site_Container d_dummy_container;
+
+    // Number of fissions per mesh cell.
+    Vec_Int d_fis_dist;
 };
 
 } // end namespace profugus
