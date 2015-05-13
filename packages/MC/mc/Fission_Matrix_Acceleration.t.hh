@@ -194,6 +194,7 @@ void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
 {
     REQUIRE(!d_fm_solver.is_null());
 
+    d_accelerate = false;
     if (d_cycle_ctr >= d_cycle_begin && d_cycle_ctr < d_cycle_end)
     {
         d_fm_solver->set_u_begin(f, k_l);
