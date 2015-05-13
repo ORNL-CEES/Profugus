@@ -376,6 +376,9 @@ void Fission_Source::build_DR(SP_Cart_Mesh     mesh,
         d_np_domain = new_np_domain;
         d_np_total  = d_np_domain;
         profugus::global_sum(&d_np_total, 1);
+
+        // store the mesh for later use
+        d_fis_mesh = mesh;
     }
 }
 
@@ -388,7 +391,7 @@ int Fission_Source::sample_geometry(Space_Vector       &r,
                                     Particle_t         &p,
                                     RNG_t               rng)
 {
-    using def::X; using def::Y; using def::Z;
+    using def::I; using def::J; using def::K;
 
     // sampled complete flag
     bool sampled = false;
@@ -396,9 +399,11 @@ int Fission_Source::sample_geometry(Space_Vector       &r,
     // material id
     int matid = 0;
 
-    // sample the full geometry
-    if (d_fis_dist.empty())
+    // >>> Sample the full geometry
+    if (!d_fis_mesh)
     {
+        CHECK(d_fis_dist.empty());
+
         // sample the geometry until a fission site is found (if there is no
         // fission in a given domain the number of particles on that domain is
         // zero, and we never get here) --> so, fission sampling should always
@@ -406,9 +411,9 @@ int Fission_Source::sample_geometry(Space_Vector       &r,
         while (!sampled)
         {
             // sample a point in the geometry
-            r[X] = d_width[X] * rng.ran() + d_lower[X];
-            r[Y] = d_width[Y] * rng.ran() + d_lower[Y];
-            r[Z] = d_width[Z] * rng.ran() + d_lower[Z];
+            r[I] = d_width[I] * rng.ran() + d_lower[I];
+            r[J] = d_width[J] * rng.ran() + d_lower[J];
+            r[K] = d_width[K] * rng.ran() + d_lower[K];
 
             // intialize the geometry state
             b_geometry->initialize(r, omega, p.geo_state());
@@ -425,6 +430,59 @@ int Fission_Source::sample_geometry(Space_Vector       &r,
 
             DIAGNOSTICS_TWO(integers["fission_src_samples"]++);
         }
+    }
+    // >>> Sample the mesh source
+    else
+    {
+        CHECK(d_current_cell < d_fis_dist.size());
+        CHECK(d_fis_dist.size() == d_fis_mesh->num_cells());
+        CHECK(d_fis_dist[d_current_cell] > 0);
+
+        // determine the particle birth cell
+        while (d_fis_dist[d_current_cell] == 0)
+        {
+            ++d_current_cell;
+            CHECK(d_current_cell < d_fis_dist.size());
+        }
+
+        // get the logical cell indices in the mesh
+        auto ijk = d_fis_mesh->cardinal(d_current_cell);
+
+        // get the low/high bounds for the cell
+        double xdims[] = {d_fis_mesh->edges(I)[ijk[I]],
+                          d_fis_mesh->edges(I)[ijk[I] + 1]};
+        double ydims[] = {d_fis_mesh->edges(J)[ijk[J]],
+                          d_fis_mesh->edges(J)[ijk[J] + 1]};
+        double zdims[] = {d_fis_mesh->edges(K)[ijk[K]],
+                          d_fis_mesh->edges(K)[ijk[K] + 1]};
+
+        // sample the appropriate cell until a fissionable region is found
+        while (!sampled)
+        {
+            // sample a point in the geometry
+            r[I] = (xdims[1] - xdims[0]) * rng.ran() + xdims[0];
+            r[J] = (ydims[1] - ydims[0]) * rng.ran() + ydims[0];
+            r[K] = (zdims[1] - zdims[0]) * rng.ran() + zdims[0];
+
+            // intialize the geometry state
+            b_geometry->initialize(r, omega, p.geo_state());
+
+            // get the material id
+            matid = b_geometry->matid(p.geo_state());
+
+            // try initializing fission here, if it is successful we are
+            // finished
+            if (b_physics->initialize_fission(matid, p))
+            {
+                sampled = true;
+            }
+
+            DIAGNOSTICS_TWO(integers["fission_src_samples"]++);
+        }
+
+        // subtract a particle from the current cell
+        --d_fis_dist[d_current_cell];
+        CHECK(d_fis_dist[d_current_cell] >= 0);
     }
 
     return matid;

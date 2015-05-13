@@ -185,8 +185,10 @@ class Fission_Source : public Source
     // Dummy fission site container.
     Fission_Site_Container d_dummy_container;
 
-    // Number of fissions per mesh cell.
-    Vec_Int d_fis_dist;
+    // Mesh-based starting distribution.
+    int          d_current_cell;
+    Vec_Int      d_fis_dist;
+    SP_Cart_Mesh d_fis_mesh;
 };
 
 } // end namespace profugus
