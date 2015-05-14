@@ -87,7 +87,6 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
         VALIDATE(d_width[i] > 0., "Fission source width for axis " << i
                  << " has non-positive width " << d_width[i]
                  << " (lower=" << lower << ", upper=" << upper << ")");
-
     }
 
     // store the total number of requested particles per cycle
@@ -111,6 +110,8 @@ void Fission_Source::build_initial_source()
     SP_Cart_Mesh     mesh;
     Const_Array_View view;
     build_initial_source(mesh, view);
+
+    ENSURE(d_wt >= 1.0);
 }
 
 //---------------------------------------------------------------------------//
@@ -144,7 +145,6 @@ void Fission_Source::build_initial_source(SP_Cart_Mesh     mesh,
 
     profugus::global_barrier();
 
-    ENSURE(d_wt >= 1.0);
     ENSURE(d_wt > 0.0);
 }
 
