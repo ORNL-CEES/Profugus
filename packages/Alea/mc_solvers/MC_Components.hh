@@ -161,11 +161,11 @@ class InitHistory
 
   private:
 
-    const scalar_view       d_randoms;
-    const const_scalar_view d_init_cdf;
-    const const_scalar_view d_init_wts;
-    const History_Data      d_hist_data;
-    const MC_Data_View      d_mc_data;
+    const random_scalar_view   d_randoms;
+    const random_scalar_view   d_init_cdf;
+    const random_scalar_view   d_init_wts;
+    const History_Data         d_hist_data;
+    const MC_Data_Texture_View d_mc_data;
 };
 
 //===========================================================================//
@@ -222,9 +222,9 @@ class StateTransition
 
   private:
 
-    const scalar_view        d_randoms;
-    const History_Data       d_hist_data;
-    const MC_Data_View       d_mc_data;
+    const random_scalar_view   d_randoms;
+    const History_Data         d_hist_data;
+    const MC_Data_Texture_View d_mc_data;
 };
 
 //===========================================================================//
