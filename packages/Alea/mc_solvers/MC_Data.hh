@@ -43,6 +43,30 @@ struct MC_Data_View
 
 //---------------------------------------------------------------------------//
 /*!
+ * \class MC_Data_Texture_View
+ * \brief Monte Carlo data reorganized into Kokkos texture Views
+ *
+ * This class stores matrices needed for MC transport in form of Kokkos::View
+ * objects to facilitate device-based parallelism.
+ */
+//---------------------------------------------------------------------------//
+struct MC_Data_Texture_View
+{
+    MC_Data_Texture_View(){}
+
+    MC_Data_Texture_View( MC_Data_View v )
+        : H(v.H), P(v.P), W(v.W), inds(v.inds), offsets(v.offsets)
+    {}
+
+    random_scalar_view H;
+    random_scalar_view P;
+    random_scalar_view W;
+    random_ord_view    inds;
+    random_ord_view    offsets;
+};
+
+//---------------------------------------------------------------------------//
+/*!
  * \class MC_Data
  * \brief Construct data needed for Monte Carlo linear solver.
  *
