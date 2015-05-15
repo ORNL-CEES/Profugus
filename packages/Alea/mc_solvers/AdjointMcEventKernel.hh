@@ -74,7 +74,10 @@ class AdjointMcEventKernel
     bool   d_use_expected_value;
     bool   d_print;
     int    d_num_histories;
+    int    d_num_batches;
+    int    d_histories_batch;
     SCALAR d_start_wt_factor;
+    Teuchos::ArrayRCP<SCALAR> d_y_tmp;
 };
 
 } // namespace alea

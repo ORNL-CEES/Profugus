@@ -48,6 +48,23 @@ AdjointMcEventKernel::AdjointMcEventKernel(
 {
     d_num_histories = pl->get("num_histories",1000);
 
+    // We store history data in vectors of length num_histories/num_batches
+    // There are 4 integer and 1 double valued vectors, for 24 bytes per
+    //  history.  We typically have 48K of shared memory on a GPU, so we'll
+    //  pick an appropriate number of batches.
+    // TODO: Toggle this on GPU/CPU node types to allow larger batch sizes
+    //  on CPU, right now let's assume we're GPU-based for the event kernel.
+    const int shared_mem_size = 48 * 1024;
+    const int per_history_storage = 24;
+    const int max_batch_size = shared_mem_size / per_history_storage;
+    d_num_batches = pl->get("num_batches",1+d_num_histories/max_batch_size);
+    d_histories_batch = d_num_histories / d_num_batches;
+    REQUIRE( d_histories_batch < max_batch_size );
+
+    std::cout << "Performing " << d_num_histories << " per iteration in "
+        << d_num_batches << " batches with " << d_histories_batch
+        << " histories per batch" << std::endl;
+
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
                                                  "expected_value");
@@ -75,43 +92,59 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     build_initial_distribution(x);
 
     // Need to get Kokkos view directly, this is silly
-    const scalar_view  y_device( "result",      d_N);
-    const scalar_view  randoms(  "randoms",     d_num_histories);
-    const History_Data hist_data(d_num_histories);
+    const scalar_view  y_device( "result", d_N);
+    const scalar_view  randoms(  "randoms",d_histories_batch);
+    const History_Data hist_data(d_histories_batch);
 
     // Build kernels
     InitHistory     init_history(randoms,d_start_cdf,d_start_wt,hist_data,
                                  d_mc_data);
     StateTransition transition(randoms,hist_data,d_mc_data);
     CollisionTally  coll_tally(hist_data,d_coeffs,y_device);
+    ZeroVector      zero_y(y_device);
+
+    // Get view of data on host
+    const scalar_host_mirror y_mirror =
+        Kokkos::create_mirror_view(y_device);
+    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
 
     // Create policy
-    range_policy policy(0,d_num_histories);
+    range_policy policy(0,d_histories_batch);
 
-    // Get initial state and tally
-    Kokkos::fill_random(randoms,d_rand_pool,1.0);
-    Kokkos::parallel_for(policy,init_history);
-    Kokkos::parallel_for(policy,coll_tally);
+    // Initialize y
+    Kokkos::parallel_for(d_N,zero_y);
 
-    // Loop over history length (start at 1)
-    for( int i=1; i<=d_max_history_length; ++i )
+    for( int batch=0; batch<d_num_batches; ++batch )
     {
+        // Get initial state and tally
         Kokkos::fill_random(randoms,d_rand_pool,1.0);
-        Kokkos::parallel_for(policy,transition);
+        Kokkos::parallel_for(policy,init_history);
         Kokkos::parallel_for(policy,coll_tally);
+
+        // Loop over history length (start at 1)
+        for( int step=1; step<=d_max_history_length; ++step )
+        {
+            Kokkos::fill_random(randoms,d_rand_pool,1.0);
+            Kokkos::parallel_for(policy,transition);
+            Kokkos::parallel_for(policy,coll_tally);
+        }
+
     }
 
     // Copy data back to host
-    Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-    const scalar_host_mirror y_mirror =
-        Kokkos::create_mirror_view(y_device);
     Kokkos::deep_copy(y_mirror,y_device);
 
     // Apply scale factor
-    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
-    for( LO i=0; i<d_N; ++i )
+    // Here we force a copy of the data in y to the CPU because we can't
+    // currently access it directly on the GPU due to Tpetra limitations.
+    // The surrounding braces force a copy of the data back to the GPU before
+    // moving to the expected value update.
     {
-        y_data[i] = scale_factor*y_mirror(i);
+        Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
+        for( LO i=0; i<d_N; ++i )
+        {
+            y_data[i] += scale_factor*y_mirror(i);
+        }
     }
 
     // Add rhs for expected value

@@ -116,6 +116,38 @@ struct MC_History
 
 //===========================================================================//
 /*!
+ * \class ZeroVector
+ * \brief Zeros out a vector
+ *
+ * Doesn't Kokkos have something built-in for this?
+ */
+//===========================================================================//
+
+class ZeroVector
+{
+  public:
+
+    typedef Kokkos::RangePolicy<DEVICE> policy_type;
+    typedef policy_type::member_type    policy_member;
+
+    ZeroVector(scalar_view v)
+        : d_v(v)
+    {
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int i) const
+    {
+        d_v(i) = 0.0;
+    }
+
+  private:
+
+    const scalar_view d_v;
+};
+
+//===========================================================================//
+/*!
  * \class InitHistory
  * \brief Kernel for initializing histories
  *
