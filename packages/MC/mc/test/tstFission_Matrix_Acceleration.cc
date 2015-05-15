@@ -402,6 +402,7 @@ TYPED_TEST(FM_AccelerationTest, initialization)
 
     typename TestFixture::Vec_Dbl inf_med_vec(this->Ng, 0.0);
     double norm = 0.0;
+    double sign = 0.0;
     for (int g = 0; g < this->Ng; ++g)
     {
         for (int cell = 0; cell < ref_global; ++cell)
@@ -410,13 +411,15 @@ TYPED_TEST(FM_AccelerationTest, initialization)
         }
         inf_med_vec[g] /= static_cast<double>(ref_global);
         norm           += inf_med_vec[g] * inf_med_vec[g];
+        sign           += inf_med_vec[g];
     }
     norm = 1.0 / std::sqrt(norm);
+    sign = fabs(sign) / sign;
 
     // normalize the vector
     for (auto &x : inf_med_vec)
     {
-        x *= norm;
+        x *= norm * sign;
     }
 
     double ref[] = {0.33611574,  0.3155125 ,  0.31716512,  0.40852777,
@@ -424,7 +427,7 @@ TYPED_TEST(FM_AccelerationTest, initialization)
 
     EXPECT_VEC_SOFTEQ(ref, inf_med_vec, 1.0e-5);
 
-    EXPECT_SOFTEQ(1.1889633277246718, this->implementation->keff(), 1.0e-6);
+    EXPECT_SOFTEQ(1.1889633277246718, this->implementation->keff(), 1.0e-5);
 }
 
 //---------------------------------------------------------------------------//

@@ -28,6 +28,7 @@
 #include "spn/VectorTraits.hh"
 #include "spn_driver/Problem_Builder.hh"
 #include "Fission_Matrix_Solver.hh"
+#include "Fission_Source.hh"
 #include "Physics.hh"
 
 namespace profugus
@@ -102,6 +103,9 @@ class Fission_Matrix_Acceleration
 
     //! End cycle acceleration to create fission container at \f$l+1\f$.
     virtual void end_cycle(Fission_Site_Container &f) = 0;
+
+    //! Build the initial fission source.
+    virtual void build_initial_source(Fission_Source &source) = 0;
 
     // >>> ACCESSORS
 
@@ -195,6 +199,9 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // End cycle acceleration.
     void end_cycle(Fission_Site_Container &f);
 
+    //! Build the initial fission source.
+    void build_initial_source(Fission_Source &source);
+
     // >>> ACCESSORS
 
     //! Get the linear system of SPN equations.
@@ -241,6 +248,9 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // Convert g to fissions.
     void convert_g(RCP_Const_Vector g);
 
+    // Convert eigenvector to fissions.
+    void convert_eigenvector(RCP_Const_Vector ev);
+
     // L2 norm of correction.
     std::vector<double> d_norms;
 
@@ -256,6 +266,9 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     // Cycle counters.
     int  d_cycle_ctr, d_cycle_begin, d_cycle_end;
     bool d_accelerate;
+
+    // Generate an initial fission source distribution.
+    bool d_initial_source;
 };
 
 } // end namespace profugus

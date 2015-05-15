@@ -317,12 +317,6 @@ void KCode_Solver::initialize()
     CHECK(d_inactive_tallier->is_built());
     CHECK(d_inactive_tallier->num_pathlength_tallies() >= 1);
 
-    if (d_source->is_initial_source())
-    {
-        // build the initial fission source
-        d_source->build_initial_source();
-    }
-
     // Swap our temp tallier with the user-specified tallies so that we
     // initially only tally k effective.
     // b_tallier is always the one actively getting called by transporter
@@ -332,6 +326,22 @@ void KCode_Solver::initialize()
     if (d_acceleration)
     {
         d_acceleration->initialize(d_db);
+
+        // build the initial fission source (which may or may not use an
+        // initial distribution depending on the acceleration options)
+        if (d_source->is_initial_source())
+        {
+            d_acceleration->build_initial_source(*d_source);
+        }
+    }
+    // build the initial source if no acceleration is on
+    else
+    {
+        // build the initial fission source
+        if (d_source->is_initial_source())
+        {
+            d_source->build_initial_source();
+        }
     }
 
     d_build_phase = INACTIVE_SOLVE;

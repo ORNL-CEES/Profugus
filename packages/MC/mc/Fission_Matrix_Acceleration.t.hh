@@ -130,6 +130,16 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
         "end_cycle", mc_db->template get<int>("num_inactive_cycles", 10));
     d_accelerate  = false;
 
+    // total number (inactive + active) of cycles
+    int num_cycles = mc_db->template get<int>("num_cycles", 50);
+
+    // setup to generate an initial fission source distribution
+    d_initial_source = fmdb->get("initial_source", false);
+    VALIDATE(d_cycle_begin < num_cycles || d_initial_source,
+             "No valid acceleration, the beginning cycle of "
+             << d_cycle_begin << " is >= the number of cycles, "
+             << num_cycles << " and no initial source distribution requested.");
+
     // determine if we should update the particle population
     b_update_Np = fmdb->get("update_Np", false);
 
@@ -142,22 +152,6 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
         Teuchos::rcp_dynamic_cast<Solver_t>(
             SpnSolverBuilder::build("eigenvalue", b_db));
 
-    // >>> ADJOINT SOLVE
-
-    // setup the solver for the adjoint solve
-    eigensolver->setup(b_mat, b_mesh, b_indexer, b_gdata, d_system, true);
-
-    // solve the adjoint problem
-    eigensolver->solve(null_source);
-
-    // store the eigenvalue
-    d_keff = eigensolver->get_eigenvalue();
-    CHECK(d_keff > 0.0);
-
-    // get the eigenvector and assign it
-    std::vector<int> index(1, 0);
-    ATraits::SetBlock(*eigensolver->get_eigenvector(), index, *d_adjoint);
-
     // >>> FORWARD SOLVE
 
     // setup the solver for the forward solve (puts the operators back to
@@ -166,18 +160,43 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
 
     // solve the adjoint problem
     eigensolver->solve(null_source);
-    CHECK(profugus::soft_equiv(eigensolver->get_eigenvalue(), d_keff, 1.0e-3));
+
+    // store the eigenvalue
+    d_keff = eigensolver->get_eigenvalue();
+    CHECK(d_keff > 0.0);
 
     // assign the forward eigenvector
+    std::vector<int> index(1, 0);
     ATraits::SetBlock(*eigensolver->get_eigenvector(), index, *d_forward);
 
-    // >>> BUILD THE FISSION_MATRIX_SOLVER
+    // >>> ADJOINT SOLVE and BUILD FISSION_MATRIX_SOLVER
 
-    // build and set the fission matrix solver
-    d_fm_solver = Teuchos::rcp(
-        new Fission_Matrix_Solver<T>(fmdb, b_mesh, b_indexer,  b_mat, d_system,
-                                     b_global_mesh, d_keff));
-    d_fm_solver->set_eigenvectors(d_forward, d_adjoint);
+    // only do this if we eventually plan to do fission matrix acceleration
+    if (d_cycle_begin < num_cycles)
+    {
+        // setup the solver for the adjoint solve
+        eigensolver->setup(b_mat, b_mesh, b_indexer, b_gdata, d_system, true);
+
+        // solve the adjoint problem
+        eigensolver->solve(null_source);
+        CHECK(profugus::soft_equiv(
+                  eigensolver->get_eigenvalue(), d_keff, 1.0e-3));
+
+        // get the eigenvector and assign it
+        ATraits::SetBlock(*eigensolver->get_eigenvector(), index, *d_adjoint);
+
+        // >>> BUILD THE FISSION_MATRIX_SOLVER
+
+        // set the system back to forward
+        d_system->set_adjoint(false);
+
+        // build and set the fission matrix solver
+        d_fm_solver = Teuchos::rcp(
+            new Fission_Matrix_Solver<T>(
+                fmdb, b_mesh, b_indexer, b_mat, d_system, b_global_mesh,
+                d_keff));
+        d_fm_solver->set_eigenvectors(d_forward, d_adjoint);
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -369,6 +388,40 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
 }
 
 //---------------------------------------------------------------------------//
+/*!
+ * \brief Build the initial fission source.
+ */
+template<class T>
+void Fission_Matrix_Acceleration_Impl<T>::build_initial_source(
+    Fission_Source &source)
+{
+    // if we aren't using an initial source, then do "standard" fission source
+    // initialization and return
+    if (!d_initial_source)
+    {
+        source.build_initial_source();
+        return;
+    }
+
+    REQUIRE(b_global_mesh);
+
+    // otherwise use the forward eigenvector to sample the inital fission
+    // distribution
+
+    // temporarily use d_nu to hold the fission distribution from the SPN
+    // solution
+    std::fill(d_nu.begin(), d_nu.end(), 0.0);
+    convert_eigenvector(d_forward);
+
+    // reduce d_nu so that every domain has the fission density
+    profugus::global_sum(d_nu.data(), d_nu.size());
+
+    // build the initial source
+    source.build_initial_source(b_global_mesh,
+                                Teuchos::ArrayView<const double>(d_nu));
+}
+
+//---------------------------------------------------------------------------//
 #ifdef USE_HDF5
 /*!
  * \brief Write diagnostics to HDF5 file.
@@ -382,17 +435,21 @@ void Fission_Matrix_Acceleration_Impl<T>::diagnostics(
     // write the eigenvalue of the SPN problem
     writer.write("SPn_k", d_keff);
 
-    // write the iteration history
-    writer.write("iterations", d_iterations);
+    // only output data if acceleration has been performed
+    if (!d_iterations.empty())
+    {
+        // write the iteration history
+        writer.write("iterations", d_iterations);
 
-    // write the correction l2 norm
-    writer.write("correction_L2", d_norms);
+        // write the correction l2 norm
+        writer.write("correction_L2", d_norms);
 
-    // write the L_inf norm of the multiplicative correction
-    writer.write("mult_correction_Linf", d_correction);
+        // write the L_inf norm of the multiplicative correction
+        writer.write("mult_correction_Linf", d_correction);
 
-    // write the history of post-corrected fission site numbers
-    writer.write("num_fission_sites", d_Np);
+        // write the history of post-corrected fission site numbers
+        writer.write("num_fission_sites", d_Np);
+    }
 
     writer.end_group();
 }
@@ -466,6 +523,118 @@ void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
                     // do f^T * phi_0
                     d_nu[global] +=  Moment_Coefficients::u_to_phi(
                         u_m[0], u_m[1], u_m[2], u_m[3]) * nu_sigf[g];
+                }
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Convert eigenvector to fission density.
+ */
+template<class T>
+void Fission_Matrix_Acceleration_Impl<T>::convert_eigenvector(
+    RCP_Const_Vector ev)
+{
+    REQUIRE(b_mesh->num_cells() * d_system->get_dims()->num_equations()
+            * b_mat->xs().num_groups() <=
+            VectorTraits<T>::local_length(ev));
+    REQUIRE(d_nu.size() == b_global_mesh->num_cells());
+
+    // SPN moments
+    double u_m[4] = {0.0, 0.0, 0.0, 0.0};
+
+    // get cross sections from the database
+    const auto &xs = b_mat->xs();
+
+    // number of equations (moments) in the SPN solution
+    int N = d_system->get_dims()->num_equations();
+
+    // number of groups
+    int Ng = xs.num_groups();
+
+    // number of local cells
+    int Nc[3] = {b_mesh->num_cells_dim(0),
+                 b_mesh->num_cells_dim(1),
+                 b_mesh->num_cells_dim(2)};
+    CHECK(Nc[0]*Nc[1]*Nc[2] == b_mesh->num_cells());
+
+    // the u vector is ordered cell->moments->group
+    auto v = VTraits::get_data(ev);
+
+    // >>> Determine normalization of eigenvector
+
+    double norm[] = {0.0, 0.0};
+    double flux   = 0.0;
+
+    // loop over cells on this domain
+    for (int cell = 0; cell < b_mesh->num_cells(); ++cell)
+    {
+        // loop over groups
+        for (int g = 0; g < Ng; ++g)
+        {
+            // loop over moments
+            for (int n = 0; n < N; ++n)
+            {
+                CHECK(d_system->index(g, n, cell) < v.size());
+
+                // get the moment from the solution vector
+                u_m[n] = v[d_system->index(g, n, cell)];
+            }
+
+            // get the flux for this cell/group, store in d_nu
+            flux =  Moment_Coefficients::u_to_phi(
+                u_m[0], u_m[1], u_m[2], u_m[3]);
+
+            // calculate the norms
+            norm[0] += flux * flux; // for normalization
+            norm[1] += flux;        // for sign
+        }
+    }
+
+    // do a global reduction on the normalization
+    profugus::global_sum(norm, 2);
+    CHECK(norm[0] > 0.0);
+
+    // calculate the normalization
+    double norm_f = (1.0 / std::sqrt(norm[0])) * (std::fabs(norm[1]) / norm[1]);
+
+    // >>> Calculate the fission density
+
+    // loop over cells on this domain
+    for (int k = 0; k < Nc[2]; ++k)
+    {
+        for (int j = 0; j < Nc[1]; ++j)
+        {
+            for (int i = 0; i < Nc[0]; ++i)
+            {
+                // get the local and global cell indices
+                int global = b_indexer->l2g(i, j, k);
+                int local  = b_indexer->l2l(i, j, k);
+                CHECK(global < d_nu.size());
+                CHECK(local == b_mesh->convert(i, j, k));
+
+                // get nu-sigma_f for this cell
+                const auto &nu_sigf = xs.vector(b_mat->matid(local),
+                                                XS::NU_SIG_F);
+                CHECK(nu_sigf.length() == Ng);
+
+                // loop over groups
+                for (int g = 0; g < Ng; ++g)
+                {
+                    // loop over moments
+                    for (int n = 0; n < N; ++n)
+                    {
+                        CHECK(d_system->index(g, n, local) < v.size());
+
+                        // get the moment from the solution vector
+                        u_m[n] = v[d_system->index(g, n, local)];
+                    }
+
+                    // do f^T * phi_0
+                    d_nu[global] +=  Moment_Coefficients::u_to_phi(
+                        u_m[0], u_m[1], u_m[2], u_m[3]) * norm_f * nu_sigf[g];
                 }
             }
         }
