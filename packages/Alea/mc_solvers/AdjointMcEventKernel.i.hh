@@ -123,7 +123,7 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
         Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
         for( LO i=0; i<d_N; ++i )
         {
-            y_data[i] += scale_factor*y_mirror(i);
+            y_data[i] = scale_factor*y_mirror(i);
         }
     }
 

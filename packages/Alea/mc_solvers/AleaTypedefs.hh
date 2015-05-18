@@ -75,6 +75,7 @@ typedef View<const LO     *,DEVICE,RandomMemory>          random_ord_view;
 typedef View<      SCALAR *,SharedSpace,UnmanagedMemory>  shared_scalar_view;
 typedef View<      LO     *,SharedSpace,UnmanagedMemory>  shared_ord_view;
 typedef View<      SCALAR **,DEVICE>                      scalar_view_2d;
+typedef View<const SCALAR **,DEVICE>                      const_scalar_view_2d;
 typedef View<      SCALAR **,DEVICE,RandomMemory>         random_scalar_view_2d;
 typedef View<SCALAR *,DEVICE>::HostMirror                 scalar_host_mirror;
 typedef View<LO     *,DEVICE>::HostMirror                 ord_host_mirror;
