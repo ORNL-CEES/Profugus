@@ -426,12 +426,12 @@ class TeamEventKernel
     int d_league_size;
     const int d_max_history_length;
     const int d_num_histories;
-    const const_scalar_view    d_start_cdf;
-    const const_scalar_view    d_start_wt;
+    const random_scalar_view   d_start_cdf;
+    const random_scalar_view   d_start_wt;
     const MC_Data_Texture_View d_mc_data;
     const scalar_view          d_y;
     const random_scalar_view   d_coeffs;
-    const_scalar_view_2d       d_randoms;
+    random_scalar_view_2d      d_randoms;
 
 };
 
