@@ -81,6 +81,9 @@ AdjointMcEventKernel::AdjointMcEventKernel(
     // Should we print anything to screen
     std::string verb = profugus::to_lower(pl->get("verbosity","low"));
     d_print = (verb == "high");
+
+    // Use shared_memory version of kernel?
+    d_use_shared_mem = pl->get("use_shared_mem",false);
 }
 
 //---------------------------------------------------------------------------//
@@ -94,8 +97,44 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     // Need to get Kokkos view directly, this is silly
     const scalar_view  y_device( "result", d_N);
 
-#if 0
+    if( d_use_shared_mem )
+        solve_shared_mem(y_device);
+    else
+        solve_global_mem(y_device);
 
+    // Get view of data on host
+    const scalar_host_mirror y_mirror =
+        Kokkos::create_mirror_view(y_device);
+    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
+
+    // Copy data back to host
+    Kokkos::deep_copy(y_mirror,y_device);
+
+    // Apply scale factor
+    // Here we force a copy of the data in y to the CPU because we can't
+    // currently access it directly on the GPU due to Tpetra limitations.
+    // The surrounding braces force a copy of the data back to the GPU before
+    // moving to the expected value update.
+    {
+        Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
+        for( LO i=0; i<d_N; ++i )
+        {
+            y_data[i] += scale_factor*y_mirror(i);
+        }
+    }
+
+    // Add rhs for expected value
+    if( d_use_expected_value )
+    {
+        y.update(d_coeffs(0),x,1.0);
+    }
+}
+
+//---------------------------------------------------------------------------//
+// Solve implementation for global memory kernel
+//---------------------------------------------------------------------------//
+void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
+{
     const scalar_view  randoms(  "randoms",d_histories_batch);
     const History_Data hist_data(d_histories_batch);
 
@@ -105,11 +144,6 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     StateTransition transition(randoms,hist_data,d_mc_data);
     CollisionTally  coll_tally(hist_data,d_coeffs,y_device);
     ZeroVector      zero_y(y_device);
-
-    // Get view of data on host
-    const scalar_host_mirror y_mirror =
-        Kokkos::create_mirror_view(y_device);
-    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
 
     // Create policy
     range_policy policy(0,d_histories_batch);
@@ -133,31 +167,18 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
         }
 
     }
+}
 
-    // Copy data back to host
-    Kokkos::deep_copy(y_mirror,y_device);
+//---------------------------------------------------------------------------//
+// Solve implementation for shared memory kernel
+//---------------------------------------------------------------------------//
+void AdjointMcEventKernel::solve_shared_mem(const scalar_view &y_device) const
+{
+    // Zero out y
+    ZeroVector      zero_y(y_device);
+    Kokkos::parallel_for(d_N,zero_y);
 
-    // Apply scale factor
-    // Here we force a copy of the data in y to the CPU because we can't
-    // currently access it directly on the GPU due to Tpetra limitations.
-    // The surrounding braces force a copy of the data back to the GPU before
-    // moving to the expected value update.
-    {
-        Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-        for( LO i=0; i<d_N; ++i )
-        {
-            y_data[i] += scale_factor*y_mirror(i);
-        }
-    }
-
-
-    // Add rhs for expected value
-    if( d_use_expected_value )
-    {
-        y.update(d_coeffs(0),x,1.0);
-    }
-#else
-
+    // Create kernel and determine appropriate league size
     TeamEventKernel kernel(d_max_history_length,d_num_histories,d_start_cdf,
         d_start_wt,d_mc_data,y_device,d_coeffs);
     int league_size = 1;
@@ -189,35 +210,6 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
 
     // Execute kernel
     Kokkos::parallel_for(policy,kernel);
-
-    // Get view of data on host
-    const scalar_host_mirror y_mirror =
-        Kokkos::create_mirror_view(y_device);
-    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
-
-    // Copy data back to host
-    Kokkos::deep_copy(y_mirror,y_device);
-
-    // Apply scale factor
-    // Here we force a copy of the data in y to the CPU because we can't
-    // currently access it directly on the GPU due to Tpetra limitations.
-    // The surrounding braces force a copy of the data back to the GPU before
-    // moving to the expected value update.
-    {
-        Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-        for( LO i=0; i<d_N; ++i )
-        {
-            y_data[i] += scale_factor*y_mirror(i);
-        }
-    }
-
-    // Add rhs for expected value
-    if( d_use_expected_value )
-    {
-        y.update(d_coeffs(0),x,1.0);
-    }
-
-#endif
 }
 
 //---------------------------------------------------------------------------//
