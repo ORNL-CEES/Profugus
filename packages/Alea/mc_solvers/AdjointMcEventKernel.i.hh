@@ -93,6 +93,9 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
 
     // Need to get Kokkos view directly, this is silly
     const scalar_view  y_device( "result", d_N);
+
+#if 0
+
     const scalar_view  randoms(  "randoms",d_histories_batch);
     const History_Data hist_data(d_histories_batch);
 
@@ -147,11 +150,74 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
         }
     }
 
+
     // Add rhs for expected value
     if( d_use_expected_value )
     {
         y.update(d_coeffs(0),x,1.0);
     }
+#else
+
+    TeamEventKernel kernel(d_max_history_length,d_num_histories,d_start_cdf,
+        d_start_wt,d_mc_data,y_device,d_coeffs);
+    int league_size = 1;
+    while(true)
+    {
+        kernel.set_league_size(league_size);
+
+        int max_team_size = Kokkos::TeamPolicy<DEVICE>::team_size_max(kernel);
+        if( max_team_size > 0 )
+            break;
+        else
+            league_size *= 2;
+    }
+    std::cout << "Using league size of " << league_size << std::endl;
+
+    // Set up kernel for this league size
+    int max_team_size = Kokkos::TeamPolicy<DEVICE>::team_size_max(kernel);
+    int req_team_size = std::min(max_team_size,
+                                 d_num_histories/league_size);
+    Kokkos::TeamPolicy<DEVICE> policy(league_size,req_team_size);
+    int histories_team = d_num_histories / policy.league_size();
+    scalar_view_2d randoms("random_values",
+        d_max_history_length,d_num_histories);
+    Kokkos::fill_random(randoms,d_rand_pool,1.0);
+    kernel.set_randoms(randoms);
+
+    std::cout << "Team size: " << policy.team_size() << std::endl;
+    std::cout << "League size: " << policy.league_size() << std::endl;
+
+    // Execute kernel
+    Kokkos::parallel_for(policy,kernel);
+
+    // Get view of data on host
+    const scalar_host_mirror y_mirror =
+        Kokkos::create_mirror_view(y_device);
+    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
+
+    // Copy data back to host
+    Kokkos::deep_copy(y_mirror,y_device);
+
+    // Apply scale factor
+    // Here we force a copy of the data in y to the CPU because we can't
+    // currently access it directly on the GPU due to Tpetra limitations.
+    // The surrounding braces force a copy of the data back to the GPU before
+    // moving to the expected value update.
+    {
+        Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
+        for( LO i=0; i<d_N; ++i )
+        {
+            y_data[i] += scale_factor*y_mirror(i);
+        }
+    }
+
+    // Add rhs for expected value
+    if( d_use_expected_value )
+    {
+        y.update(d_coeffs(0),x,1.0);
+    }
+
+#endif
 }
 
 //---------------------------------------------------------------------------//
