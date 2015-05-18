@@ -68,11 +68,11 @@ MC_Data_View MC_Data::createKokkosViews()
     ord_view    offsets("offsets",numRows+1);
 
     // Mirror views on host
-    scalar_view::HostMirror H_host       = Kokkos::create_mirror_view(H);
-    scalar_view::HostMirror P_host       = Kokkos::create_mirror_view(P);
-    scalar_view::HostMirror W_host       = Kokkos::create_mirror_view(W);
-    ord_view::HostMirror    inds_host    = Kokkos::create_mirror_view(inds);
-    ord_view::HostMirror    offsets_host = Kokkos::create_mirror_view(offsets);
+    scalar_host_mirror H_host       = Kokkos::create_mirror_view(H);
+    scalar_host_mirror P_host       = Kokkos::create_mirror_view(P);
+    scalar_host_mirror W_host       = Kokkos::create_mirror_view(W);
+    ord_host_mirror    inds_host    = Kokkos::create_mirror_view(inds);
+    ord_host_mirror    offsets_host = Kokkos::create_mirror_view(offsets);
 
     Teuchos::ArrayView<const double> H_row, P_row, W_row;
     Teuchos::ArrayView<const int> ind_row;
