@@ -110,7 +110,7 @@ void MonteCarloSolver::initialize()
     Teuchos::ArrayRCP<const SCALAR> coeffs = poly->getCoeffs(*basis);
     CHECK( !coeffs.is_null() );
     Kokkos::resize(d_coeffs,coeffs.size());
-    scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
+    scalar_host_mirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
     std::copy(coeffs.begin(),coeffs.end(),&coeffs_host(0));
     Kokkos::deep_copy(d_coeffs,coeffs_host);
 

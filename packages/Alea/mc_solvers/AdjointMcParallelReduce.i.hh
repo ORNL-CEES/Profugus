@@ -35,7 +35,7 @@ namespace alea
 //---------------------------------------------------------------------------//
 AdjointMcParallelReduce::AdjointMcParallelReduce(
         const MC_Data_View                  &mc_data,
-        const const_view_type                coeffs,
+        const const_scalar_view              coeffs,
         Teuchos::RCP<Teuchos::ParameterList> pl)
   : value_count(mc_data.offsets.size()-1)
   , d_mc_data(mc_data)
@@ -78,8 +78,8 @@ void AdjointMcParallelReduce::solve(const MV &x, MV &y)
 
     // Need to get Kokkos view directly, this is silly
     Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-    const view_type y_device("result",value_count);
-    const view_type::HostMirror y_mirror =
+    const scalar_view y_device("result",value_count);
+    const scalar_host_mirror y_mirror =
         Kokkos::create_mirror_view(y_device);
 
     // Execute functor
@@ -95,7 +95,7 @@ void AdjointMcParallelReduce::solve(const MV &x, MV &y)
     // Add rhs for expected value
     if( d_use_expected_value )
     {
-        scalar_view::HostMirror coeffs_mirror =
+        scalar_host_mirror coeffs_mirror =
             Kokkos::create_mirror_view(d_coeffs);
         Kokkos::deep_copy(coeffs_mirror,d_coeffs);
         y.update(coeffs_mirror(0),x,1.0);
@@ -327,8 +327,8 @@ void AdjointMcParallelReduce::build_initial_distribution(const MV &x)
     // Build data on host, then explicitly copy to device
     // In future, convert this to a new Kernel to allow building
     //  distributions directly on device if x is allocated there
-    host_view_type start_cdf_host = Kokkos::create_mirror_view(d_start_cdf);
-    host_view_type start_wt_host  = Kokkos::create_mirror_view(d_start_wt);
+    scalar_host_mirror start_cdf_host = Kokkos::create_mirror_view(d_start_cdf);
+    scalar_host_mirror start_wt_host  = Kokkos::create_mirror_view(d_start_wt);
 
     Teuchos::ArrayRCP<const SCALAR> x_data = x.getData(0);
 

@@ -41,17 +41,11 @@ class AdjointMcParallelFor
     typedef Kokkos::RangePolicy<DEVICE> range_policy;
     typedef range_policy::member_type   policy_member;
 
-    // Convenience typedefs
-    typedef Kokkos::View<      SCALAR *, DEVICE> view_type;
-    typedef Kokkos::View<const SCALAR *, DEVICE> const_view_type;
-    typedef Kokkos::View<const LO     *, DEVICE> const_ord_view;
-    typedef view_type::HostMirror                host_view_type;
-
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
     AdjointMcParallelFor(const MC_Data_View                  &mc_data,
-                         const const_view_type                coeffs,
+                         const const_scalar_view              coeffs,
                          Teuchos::RCP<Teuchos::ParameterList> pl);
 
     //! Solve problem (this is a host function)
@@ -93,17 +87,17 @@ class AdjointMcParallelFor
     int d_N;
 
     // Data for Monte Carlo
-    const MC_Data_View    d_mc_data;
-    const const_view_type d_H;
-    const const_view_type d_P;
-    const const_view_type d_W;
-    const const_ord_view  d_inds;
-    const const_ord_view  d_offsets;
-    const const_view_type d_coeffs;
-    const view_type d_start_cdf;
-    const view_type d_start_wt;
+    const MC_Data_View      d_mc_data;
+    const const_scalar_view d_H;
+    const const_scalar_view d_P;
+    const const_scalar_view d_W;
+    const const_ord_view    d_inds;
+    const const_ord_view    d_offsets;
+    const const_scalar_view d_coeffs;
+    const scalar_view       d_start_cdf;
+    const scalar_view       d_start_wt;
 
-    view_type d_y;
+    scalar_view d_y;
 
     // Kokkos random generator pool
     generator_pool d_rand_pool;

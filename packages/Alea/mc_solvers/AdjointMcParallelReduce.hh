@@ -50,17 +50,11 @@ class AdjointMcParallelReduce
     //! Number of entries in a value_type array
     const LO value_count;
 
-    // Convenience typedefs
-    typedef Kokkos::View<      SCALAR *, DEVICE> view_type;
-    typedef Kokkos::View<const SCALAR *, DEVICE> const_view_type;
-    typedef Kokkos::View<const LO     *, DEVICE> const_ord_view;
-    typedef view_type::HostMirror                host_view_type;
-
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
 
     AdjointMcParallelReduce(const MC_Data_View                  &mc_data,
-                            const const_view_type                coeffs,
+                            const const_scalar_view              coeffs,
                             Teuchos::RCP<Teuchos::ParameterList> pl);
 
     //! Solve problem (this is a host function)
@@ -108,10 +102,10 @@ class AdjointMcParallelReduce
                          generator_type &gen ) const;
 
     // Data for Monte Carlo
-    const MC_Data_View d_mc_data;
-    const const_view_type d_coeffs;
-    const view_type d_start_cdf;
-    const view_type d_start_wt;
+    const MC_Data_View      d_mc_data;
+    const const_scalar_view d_coeffs;
+    const scalar_view       d_start_cdf;
+    const scalar_view       d_start_wt;
 
     // Kokkos random generator pool
     generator_pool d_rand_pool;
