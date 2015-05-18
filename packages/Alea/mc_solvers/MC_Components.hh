@@ -366,7 +366,7 @@ class TeamEventKernel
         {
             // Perform lower_bound search to get new state
             int init_state = lower_bound(d_start_cdf,0,d_start_cdf.size(),
-                d_randoms(stage,i+team_offset));
+                d_randoms(i+team_offset,stage));
 
             weight(i)       = d_start_wt(init_state);
             state(i)        = init_state;
@@ -379,7 +379,7 @@ class TeamEventKernel
         {
             // Perform lower_bound search to get new state
             int new_ind = lower_bound(d_mc_data.P,starting_ind(i),
-                row_length(i),d_randoms(stage,i+team_offset));
+                row_length(i),d_randoms(i+team_offset,stage));
 
             // Update state
             if( new_ind == starting_ind(i) + row_length(i) )

@@ -197,7 +197,7 @@ void AdjointMcEventKernel::solve_shared_mem(const scalar_view &y_device) const
     Kokkos::TeamPolicy<DEVICE> policy(league_size,req_team_size);
     int histories_team = d_num_histories / policy.league_size();
     scalar_view_2d randoms("random_values",
-        d_max_history_length,d_num_histories);
+        d_num_histories,d_max_history_length+1);
     Kokkos::fill_random(randoms,d_rand_pool,1.0);
     kernel.set_randoms(randoms);
 
