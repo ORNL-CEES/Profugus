@@ -22,9 +22,7 @@
 #include "Kokkos_DefaultNode.hpp"
 
 // "New" Kokkos nodes
-#include "Kokkos_Serial.hpp"
-#include "Kokkos_OpenMP.hpp"
-#include "Kokkos_Threads.hpp"
+#include "Kokkos_Core.hpp"
 
 namespace alea
 {
@@ -65,15 +63,21 @@ typedef SCALAR_TRAITS::magnitudeType            MAGNITUDE;
 
 // Kokkos View types
 using Kokkos::View;
-typedef Kokkos::MemoryTraits<Kokkos::RandomAccess> RandomMemory;
-typedef View<      SCALAR *,DEVICE>                scalar_view;
-typedef View<const SCALAR *,DEVICE>                const_scalar_view;
-typedef View<      LO     *,DEVICE>                ord_view;
-typedef View<const LO     *,DEVICE>                const_ord_view;
-typedef View<const SCALAR *,DEVICE,RandomMemory>   random_scalar_view;
-typedef View<const LO     *,DEVICE,RandomMemory>   random_ord_view;
-typedef scalar_view::HostMirror                    scalar_host_mirror;
-typedef ord_view::HostMirror                       ord_host_mirror;
+typedef Kokkos::MemoryTraits<Kokkos::RandomAccess>        RandomMemory;
+typedef DEVICE::scratch_memory_space                      SharedSpace;
+typedef Kokkos::MemoryUnmanaged                           UnmanagedMemory;
+typedef View<      SCALAR *,DEVICE>                       scalar_view;
+typedef View<const SCALAR *,DEVICE>                       const_scalar_view;
+typedef View<      LO     *,DEVICE>                       ord_view;
+typedef View<const LO     *,DEVICE>                       const_ord_view;
+typedef View<const SCALAR *,DEVICE,RandomMemory>          random_scalar_view;
+typedef View<const LO     *,DEVICE,RandomMemory>          random_ord_view;
+typedef View<      SCALAR *,SharedSpace,UnmanagedMemory>  shared_scalar_view;
+typedef View<      LO     *,SharedSpace,UnmanagedMemory>  shared_ord_view;
+typedef View<      SCALAR **,DEVICE>                      scalar_view_2d;
+typedef View<      SCALAR **,DEVICE,RandomMemory>         random_scalar_view_2d;
+typedef View<SCALAR *,DEVICE>::HostMirror                 scalar_host_mirror;
+typedef View<LO     *,DEVICE>::HostMirror                 ord_host_mirror;
 }
 
 #endif // AleaTypedefs_hh

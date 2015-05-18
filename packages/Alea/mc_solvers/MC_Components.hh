@@ -299,6 +299,144 @@ class CollisionTally
     const scalar_view        d_y;
 };
 
+//===========================================================================//
+/*!
+ * \class TeamEventKernel
+ * \brief Team-based kernel for event MC
+ *
+ * This class is designed to be used within a Kokkos::parallel_for kernel
+ * using a Kokkos::TeamPolicy
+ */
+//===========================================================================//
+
+class TeamEventKernel
+{
+  public:
+
+    typedef Kokkos::TeamPolicy<DEVICE> policy_type;
+    typedef policy_type::member_type   policy_member;
+
+    typedef Kokkos::Random_XorShift64_Pool<DEVICE>      generator_pool;
+
+    unsigned team_shmem_size(int team_size) const
+    {
+        //return team_size*(sizeof(SCALAR)+4*sizeof(LO));
+        int histories_team = d_num_histories / d_league_size;
+        return histories_team * (sizeof(SCALAR)+3*sizeof(LO));
+    }
+
+    TeamEventKernel( int max_history_length,
+                     int num_histories,
+                     const_scalar_view   start_cdf,
+                     const_scalar_view   start_wt,
+                     const MC_Data_View &mc_data,
+                     scalar_view         y,
+                     random_scalar_view  coeffs )
+        : d_max_history_length(max_history_length)
+        , d_num_histories(num_histories)
+        , d_start_cdf(start_cdf)
+        , d_start_wt(start_wt)
+        , d_mc_data(mc_data)
+        , d_y(y)
+        , d_coeffs(coeffs)
+    {
+    }
+
+    void set_league_size(int league_size){d_league_size = league_size;}
+
+    void set_randoms(scalar_view_2d randoms){d_randoms = randoms;}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const policy_member &member) const
+    {
+        int team_size = member.team_size();
+        int histories_team = d_num_histories / member.league_size();
+        int team_offset = histories_team*member.league_rank();
+
+        shared_scalar_view weight(       member.team_shmem(), histories_team);
+        shared_ord_view    state(        member.team_shmem(), histories_team);
+        shared_ord_view    starting_ind( member.team_shmem(), histories_team);
+        shared_ord_view    row_length(   member.team_shmem(), histories_team);
+
+        // Bring member variables into local scope to allow lambda capture
+        int stage = 0;
+
+        // Init kernel
+        auto init = [=](const int &i)
+        {
+            // Perform lower_bound search to get new state
+            int init_state = lower_bound(d_start_cdf,0,d_start_cdf.size(),
+                d_randoms(stage,i+team_offset));
+
+            weight(i)       = d_start_wt(init_state);
+            state(i)        = init_state;
+            starting_ind(i) = d_mc_data.offsets(init_state);
+            row_length(i)   = d_mc_data.offsets(init_state+1) -
+                              d_mc_data.offsets(init_state);
+        };
+
+        auto transition = [=](const int &i)
+        {
+            // Perform lower_bound search to get new state
+            int new_ind = lower_bound(d_mc_data.P,starting_ind(i),
+                row_length(i),d_randoms(stage,i+team_offset));
+
+            // Update state
+            if( new_ind == starting_ind(i) + row_length(i) )
+            {
+                weight(i) = 0.0;
+                state(i)  = -1;
+            }
+            else
+            {
+                int new_state   = d_mc_data.inds(new_ind);
+                weight(i)      *= d_mc_data.W(new_ind);
+                state(i)        = new_state;
+                starting_ind(i) = d_mc_data.offsets(new_state);
+                row_length(i)   = d_mc_data.offsets(new_state+1) -
+                                  d_mc_data.offsets(new_state);
+            }
+        };
+
+        // Tally kernel
+        auto tally = [=](const int &i)
+        {
+            Kokkos::atomic_add(&d_y(state(i)),weight(i));
+        };
+
+        // Do history initialization and initial tally
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(member,histories_team),init);
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(member,histories_team),tally);
+
+        // Process remaining steps for all histories
+        for( int step=0; step<d_max_history_length; ++step )
+        {
+            stage++;
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(member,histories_team),transition);
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(member,histories_team),tally);
+        }
+    }
+
+  private:
+
+    int d_league_size;
+    const int d_max_history_length;
+    const int d_num_histories;
+    const const_scalar_view    d_start_cdf;
+    const const_scalar_view    d_start_wt;
+    const MC_Data_Texture_View d_mc_data;
+    const scalar_view          d_y;
+    const random_scalar_view   d_coeffs;
+    scalar_view_2d       d_randoms;
+
+};
+
+
+
 } // end namespace alea
 
 #endif // mc_solvers_MC_Components_hh
