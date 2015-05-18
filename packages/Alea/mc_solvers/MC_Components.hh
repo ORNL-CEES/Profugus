@@ -375,7 +375,7 @@ class TeamEventKernel
                               d_mc_data.offsets(init_state);
         };
 
-        auto transition = [=](const int &i)
+        auto transition = [&](const int &i)
         {
             // Perform lower_bound search to get new state
             int new_ind = lower_bound(d_mc_data.P,starting_ind(i),
@@ -431,7 +431,7 @@ class TeamEventKernel
     const MC_Data_Texture_View d_mc_data;
     const scalar_view          d_y;
     const random_scalar_view   d_coeffs;
-    scalar_view_2d       d_randoms;
+    const_scalar_view_2d       d_randoms;
 
 };
 
