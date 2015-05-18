@@ -322,7 +322,7 @@ class TeamEventKernel
     {
         //return team_size*(sizeof(SCALAR)+4*sizeof(LO));
         int histories_team = d_num_histories / d_league_size;
-        return histories_team * (sizeof(SCALAR)+3*sizeof(LO));
+        return histories_team * (sizeof(SCALAR)+sizeof(LO));
     }
 
     TeamEventKernel( int max_history_length,
@@ -355,8 +355,6 @@ class TeamEventKernel
 
         shared_scalar_view weight(       member.team_shmem(), histories_team);
         shared_ord_view    state(        member.team_shmem(), histories_team);
-        shared_ord_view    starting_ind( member.team_shmem(), histories_team);
-        shared_ord_view    row_length(   member.team_shmem(), histories_team);
 
         // Bring member variables into local scope to allow lambda capture
         int stage = 0;
@@ -370,31 +368,28 @@ class TeamEventKernel
 
             weight(i)       = d_start_wt(init_state);
             state(i)        = init_state;
-            starting_ind(i) = d_mc_data.offsets(init_state);
-            row_length(i)   = d_mc_data.offsets(init_state+1) -
-                              d_mc_data.offsets(init_state);
         };
 
         auto transition = [&](const int &i)
         {
             // Perform lower_bound search to get new state
-            int new_ind = lower_bound(d_mc_data.P,starting_ind(i),
-                row_length(i),d_randoms(i+team_offset,stage));
+            int st = state(i);
+            int start = d_mc_data.offsets(st);
+            int length = d_mc_data.offsets(st+1)-start;
+            int new_ind = lower_bound(d_mc_data.P,start,
+                length,d_randoms(i+team_offset,stage));
 
             // Update state
-            if( new_ind == starting_ind(i) + row_length(i) )
+            if( new_ind == start+length )
             {
                 weight(i) = 0.0;
-                state(i)  = -1;
+                state(i)  = 0;
             }
             else
             {
                 int new_state   = d_mc_data.inds(new_ind);
                 weight(i)      *= d_mc_data.W(new_ind);
                 state(i)        = new_state;
-                starting_ind(i) = d_mc_data.offsets(new_state);
-                row_length(i)   = d_mc_data.offsets(new_state+1) -
-                                  d_mc_data.offsets(new_state);
             }
         };
 
