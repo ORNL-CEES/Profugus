@@ -97,6 +97,10 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     // Need to get Kokkos view directly, this is silly
     const scalar_view  y_device( "result", d_N);
 
+    // Zero out y
+    ZeroVector      zero_y(y_device);
+    Kokkos::parallel_for(d_N,zero_y);
+
     if( d_use_shared_mem )
         solve_shared_mem(y_device);
     else
@@ -143,13 +147,9 @@ void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
                                  d_mc_data);
     StateTransition transition(randoms,hist_data,d_mc_data);
     CollisionTally  coll_tally(hist_data,d_coeffs,y_device);
-    ZeroVector      zero_y(y_device);
 
     // Create policy
     range_policy policy(0,d_histories_batch);
-
-    // Initialize y
-    Kokkos::parallel_for(d_N,zero_y);
 
     for( int batch=0; batch<d_num_batches; ++batch )
     {
@@ -174,10 +174,6 @@ void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
 //---------------------------------------------------------------------------//
 void AdjointMcEventKernel::solve_shared_mem(const scalar_view &y_device) const
 {
-    // Zero out y
-    ZeroVector      zero_y(y_device);
-    Kokkos::parallel_for(d_N,zero_y);
-
     // Create kernel and determine appropriate league size
     TeamEventKernel kernel(d_max_history_length,d_num_histories,d_start_cdf,
         d_start_wt,d_mc_data,y_device,d_coeffs);
