@@ -148,18 +148,12 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
     if( d_use_expected_value )
         stage++;
 
+    // Get data and add to tally
+    tallyContribution(state,d_coeffs(stage)*weight);
+
     // Transport particle until done
-    while(true)
+    for( ; stage<d_max_history_length; ++stage )
     {
-        // Get data and add to tally
-        tallyContribution(state,d_coeffs(stage)*weight);
-
-        if( stage >= d_max_history_length )
-        {
-            d_rand_pool.free_state(rand_gen);
-            return;
-        }
-
         // Get new state index
         int start = d_mc_data.offsets(state);
         row_length = d_mc_data.offsets(state+1)-start;
@@ -174,13 +168,15 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
         // Modify weight and update state
         state   =  d_mc_data.inds(new_ind);
         weight *=  d_mc_data.W(new_ind);
-        stage++;
 
         if( d_print )
         {
             printf("Thread %i transitioning to state %i with new weight %6.2e\n",
                    member,state,weight);
         }
+
+        // Get data and add to tally
+        tallyContribution(state,d_coeffs(stage)*weight);
 
     } // while
 
