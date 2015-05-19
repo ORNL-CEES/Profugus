@@ -81,7 +81,7 @@ class AdjointMcEventKernel
     int    d_num_batches;
     int    d_histories_batch;
     SCALAR d_start_wt_factor;
-    Teuchos::ArrayRCP<SCALAR> d_y_tmp;
+    Teuchos::RCP<Teuchos::ParameterList> d_pl;
 };
 
 } // namespace alea
