@@ -45,6 +45,7 @@ AdjointMcEventKernel::AdjointMcEventKernel(
   , d_start_wt("start_wt",d_N)
   , d_rand_pool(pool)
   , d_max_history_length(d_coeffs.size()-1)
+  , d_pl(pl)
 {
     d_num_histories = pl->get("num_histories",1000);
 
@@ -177,21 +178,33 @@ void AdjointMcEventKernel::solve_shared_mem(const scalar_view &y_device) const
     // Create kernel and determine appropriate league size
     TeamEventKernel kernel(d_max_history_length,d_num_histories,d_start_cdf,
         d_start_wt,d_mc_data,y_device,d_coeffs);
-    int league_size = 1;
-    while(true)
-    {
-        kernel.set_league_size(league_size);
 
-        int max_team_size = Kokkos::TeamPolicy<DEVICE>::team_size_max(kernel);
-        if( max_team_size > 0 )
-            break;
-        else
-            league_size *= 2;
+    int league_size = 0;
+    if( d_pl->isType<int>("league_size") )
+    {
+        league_size = d_pl->get<int>("league_size");
+        kernel.set_league_size(league_size);
     }
+    else
+    {
+        league_size = 1;
+        while(true)
+        {
+            kernel.set_league_size(league_size);
+
+            int max_team_size = Kokkos::TeamPolicy<DEVICE>::team_size_max(kernel);
+            if( max_team_size > 0 )
+                break;
+            else
+                league_size *= 2;
+        }
+    }
+    REQUIRE(league_size > 0 );
     std::cout << "Using league size of " << league_size << std::endl;
 
     // Set up kernel for this league size
     int max_team_size = Kokkos::TeamPolicy<DEVICE>::team_size_max(kernel);
+    REQUIRE( max_team_size > 0 );
     int req_team_size = std::min(max_team_size,
                                  d_num_histories/league_size);
     Kokkos::TeamPolicy<DEVICE> policy(league_size,req_team_size);
