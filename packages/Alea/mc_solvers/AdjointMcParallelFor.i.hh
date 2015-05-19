@@ -123,109 +123,69 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
 
     generator_type rand_gen = d_rand_pool.get_state();
 
-    //int histories_per_thread = 1;
-    //for( int ihist=0; ihist<histories_per_thread; ++ihist )
+    // Get starting position and weight
+    state = getNewState(&d_start_cdf(0),d_N,rand_gen);
+    if( state == -1 )
     {
-        /*
-        if( d_print )
-        {
-            printf("Getting new state on team %i, thread %i\n",
-                    member.league_rank(),member.team_rank());
-        }
-        */
+        d_rand_pool.free_state(rand_gen);
+        return;
+    }
 
-        // Get starting position and weight
-        state = getNewState(&d_start_cdf(0),d_N,rand_gen);
-        if( state == -1 )
+    if( std::abs(d_start_wt(state)) == 0.0 )
+    {
+        d_rand_pool.free_state(rand_gen);
+        return;
+    }
+
+    SCALAR weight = d_start_wt(state);
+    SCALAR initial_weight = weight;
+
+    if( d_print )
+    {
+        printf("Starting history in state %i with initial weight %6.2e\n",
+               state,initial_weight);
+    }
+
+    // Collision estimator starts tallying on zeroth order term
+    // Expected value estimator gets this added explicitly at the end
+    int stage = 0;
+    if( d_use_expected_value )
+        stage++;
+
+    // Transport particle until done
+    while(true)
+    {
+        // Get data and add to tally
+        getNewRow(state,row_h,row_cdf,row_wts,row_inds,row_length);
+        tallyContribution(state,d_coeffs(stage)*weight,
+                          row_h,row_inds,row_length);
+
+        if( stage >= d_max_history_length )
         {
             d_rand_pool.free_state(rand_gen);
             return;
         }
 
-        if( std::abs(d_start_wt(state)) == 0.0 )
+        // Get new state index
+        new_ind = getNewState(row_cdf,row_length,rand_gen);
+        if( new_ind == -1 )
         {
             d_rand_pool.free_state(rand_gen);
             return;
         }
 
-        SCALAR weight = d_start_wt(state);
-        SCALAR initial_weight = weight;
+        // Modify weight and update state
+        weight *=  row_wts[new_ind];
+        state   = row_inds[new_ind];
+        stage++;
 
         if( d_print )
         {
-            printf("Starting history in state %i with initial weight %6.2e\n",
-                   state,initial_weight);
+            printf("Transitioning to state %i with new weight %6.2e",
+                   state,weight);
         }
 
-        // Collision estimator starts tallying on zeroth order term
-        // Expected value estimator gets this added explicitly at the end
-        int stage = 0;
-        if( d_use_expected_value )
-            stage++;
-
-        // Transport particle until done
-        while(true)
-        {
-            // Get data and add to tally
-            /*
-            if( d_print )
-            {
-                printf("Getting new row on team %i, thread %i\n",
-                       member.league_rank(),member.team_rank());
-            }
-            */
-            getNewRow(state,row_h,row_cdf,row_wts,row_inds,row_length);
-            /*
-            if( d_print )
-            {
-                printf("Tallying contribution to state %i on team %i, thread %i\n",
-                       state,member.league_rank(),member.team_rank());
-            }
-            */
-            tallyContribution(state,d_coeffs(stage)*weight,
-                              row_h,row_inds,row_length);
-
-            /*
-            if( d_print )
-            {
-                printf("Checking length cutoff on team %i, thread %i\n",
-                       member.league_rank(),member.team_rank());
-            }
-            */
-            if( stage >= d_max_history_length )
-            {
-                d_rand_pool.free_state(rand_gen);
-                return;
-            }
-
-            // Get new state index
-            /*
-            if( d_print )
-            {
-                printf("Getting new state on team %i, thread %i\n",
-                       member.league_rank(),member.team_rank());
-            }
-            */
-            new_ind = getNewState(row_cdf,row_length,rand_gen);
-            if( new_ind == -1 )
-            {
-                d_rand_pool.free_state(rand_gen);
-                return;
-            }
-
-            // Modify weight and update state
-            weight *=  row_wts[new_ind];
-            state   = row_inds[new_ind];
-            stage++;
-
-            if( d_print )
-            {
-                printf("Transitioning to state %i with new weight %6.2e",
-                       state,weight);
-            }
-
-        } // while
-    } // for ihist
+    } // while
 
     d_rand_pool.free_state(rand_gen);
 }
