@@ -68,10 +68,21 @@ class AdjointMcParallelFor
 
     template <class view_type>
     KOKKOS_INLINE_FUNCTION
-    LO getNewState(const view_type      &cdf,
-                         LO              first,
-                         LO              cdf_length,
-                         generator_type &gen ) const;
+    bool initHistory(const view_type      &cdf,
+                           LO             &state,
+                           LO             &cdf_start,
+                           LO             &cdf_length,
+                           SCALAR         &weight,
+                           generator_type &gen ) const;
+
+    template <class view_type>
+    KOKKOS_INLINE_FUNCTION
+    bool transition(const view_type      &cdf,
+                          LO             &state,
+                          LO             &cdf_start,
+                          LO             &cdf_length,
+                          SCALAR         &weight,
+                          generator_type &gen ) const;
 
     // Vector length
     int d_N;
