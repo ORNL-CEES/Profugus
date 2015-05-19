@@ -113,27 +113,26 @@ void AdjointMcParallelFor::solve(const MV &x, MV &y)
 //---------------------------------------------------------------------------//
 void AdjointMcParallelFor::operator()(const policy_member &member) const
 {
-    LO new_ind;
+    LO index;
     LO state;
-    int row_length;
+    LO row_length;
+    SCALAR weight;
 
     generator_type rand_gen = d_rand_pool.get_state();
 
     // Get starting position and weight
-    state = getNewState(d_start_cdf,0,d_N,rand_gen);
-    if( state == -1 )
+    bool valid = initHistory(d_start_cdf,state,index,row_length,weight,rand_gen);
+    if( !valid )
     {
         d_rand_pool.free_state(rand_gen);
         return;
     }
 
-    if( std::abs(d_start_wt(state)) == 0.0 )
+    if( std::abs(weight) == 0.0 )
     {
         d_rand_pool.free_state(rand_gen);
         return;
     }
-
-    SCALAR weight = d_start_wt(state);
     SCALAR initial_weight = weight;
 
     if( d_print )
@@ -155,19 +154,12 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
     for( ; stage<d_max_history_length; ++stage )
     {
         // Get new state index
-        int start = d_mc_data.offsets(state);
-        row_length = d_mc_data.offsets(state+1)-start;
-        new_ind = getNewState(d_mc_data.P,d_mc_data.offsets(state),
-            row_length,rand_gen);
-        if( new_ind== -1 )
+        valid = transition(d_mc_data.P,state,index,row_length,weight,rand_gen);
+        if( !valid )
         {
             d_rand_pool.free_state(rand_gen);
             return;
         }
-
-        // Modify weight and update state
-        state   =  d_mc_data.inds(new_ind);
-        weight *=  d_mc_data.W(new_ind);
 
         if( d_print )
         {
@@ -220,14 +212,16 @@ void AdjointMcParallelFor::tallyContribution(
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Get new state by sampling from cdf
+ * \brief Initialize a history
  */
 //---------------------------------------------------------------------------//
 template <class view_type>
-LO AdjointMcParallelFor::getNewState(const view_type      &cdf,
-                                           LO              first,
-                                           LO              cdf_length,
-                                           generator_type &gen) const
+bool AdjointMcParallelFor::initHistory(const view_type      &cdf,
+                                             LO             &state,
+                                             LO             &cdf_start,
+                                             LO             &cdf_length,
+                                             SCALAR         &weight,
+                                             generator_type &gen) const
 {
     // Generate random number
     SCALAR rand = Kokkos::rand<generator_type,SCALAR>::draw(gen);
@@ -235,12 +229,54 @@ LO AdjointMcParallelFor::getNewState(const view_type      &cdf,
     // Sample cdf to get new state
     // Use local lower_bound implementation, not std library version
     // This allows calling from device
-    LO elem = lower_bound(cdf,first,cdf_length,rand);
+    state = lower_bound(cdf,0,d_N,rand);
 
-    if( elem == first+cdf_length )
-        return -1;
+    if( state == d_N )
+        return false;
 
-    return elem;
+    // Get initial state
+    weight  =  d_start_wt(state);
+
+    // Get row info
+    cdf_start  = d_mc_data.offsets(state);
+    cdf_length = d_mc_data.offsets(state+1)-cdf_start;
+
+    return true;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get new state by sampling from cdf
+ */
+//---------------------------------------------------------------------------//
+template <class view_type>
+bool AdjointMcParallelFor::transition(const view_type      &cdf,
+                                            LO             &state,
+                                            LO             &cdf_start,
+                                            LO             &cdf_length,
+                                            SCALAR         &weight,
+                                            generator_type &gen) const
+{
+    // Generate random number
+    SCALAR rand = Kokkos::rand<generator_type,SCALAR>::draw(gen);
+
+    // Sample cdf to get new state
+    // Use local lower_bound implementation, not std library version
+    // This allows calling from device
+    LO elem = lower_bound(cdf,cdf_start,cdf_length,rand);
+
+    if( elem == cdf_start+cdf_length )
+        return false;
+
+    // Modify weight and update state
+    state   =  d_mc_data.inds(elem);
+    weight *=  d_mc_data.W(elem);
+
+    // Update current row info
+    cdf_start  = d_mc_data.offsets(state);
+    cdf_length = d_mc_data.offsets(state+1)-cdf_start;
+
+    return true;
 }
 
 //---------------------------------------------------------------------------//
