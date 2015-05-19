@@ -115,16 +115,12 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
 {
     LO new_ind;
     LO state;
-    const SCALAR * row_h;
-    const SCALAR * row_cdf;
-    const SCALAR * row_wts;
-    const LO     * row_inds;
     int row_length;
 
     generator_type rand_gen = d_rand_pool.get_state();
 
     // Get starting position and weight
-    state = getNewState(&d_start_cdf(0),d_N,rand_gen);
+    state = getNewState(d_start_cdf,0,d_N,rand_gen);
     if( state == -1 )
     {
         d_rand_pool.free_state(rand_gen);
@@ -142,8 +138,8 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
 
     if( d_print )
     {
-        printf("Starting history in state %i with initial weight %6.2e\n",
-               state,initial_weight);
+        printf("Thread %i starting history in state %i with initial weight %6.2e\n",
+               member,state,initial_weight);
     }
 
     // Collision estimator starts tallying on zeroth order term
@@ -156,9 +152,7 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
     while(true)
     {
         // Get data and add to tally
-        getNewRow(state,row_h,row_cdf,row_wts,row_inds,row_length);
-        tallyContribution(state,d_coeffs(stage)*weight,
-                          row_h,row_inds,row_length);
+        tallyContribution(state,d_coeffs(stage)*weight);
 
         if( stage >= d_max_history_length )
         {
@@ -167,22 +161,25 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
         }
 
         // Get new state index
-        new_ind = getNewState(row_cdf,row_length,rand_gen);
-        if( new_ind == -1 )
+        int start = d_mc_data.offsets(state);
+        row_length = d_mc_data.offsets(state+1)-start;
+        new_ind = getNewState(d_mc_data.P,d_mc_data.offsets(state),
+            row_length,rand_gen);
+        if( new_ind== -1 )
         {
             d_rand_pool.free_state(rand_gen);
             return;
         }
 
         // Modify weight and update state
-        weight *=  row_wts[new_ind];
-        state   = row_inds[new_ind];
+        state   =  d_mc_data.inds(new_ind);
+        weight *=  d_mc_data.W(new_ind);
         stage++;
 
         if( d_print )
         {
-            printf("Transitioning to state %i with new weight %6.2e",
-                   state,weight);
+            printf("Thread %i transitioning to state %i with new weight %6.2e\n",
+                   member,state,weight);
         }
 
     } // while
@@ -199,44 +196,22 @@ void AdjointMcParallelFor::operator()(const policy_member &member) const
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-void AdjointMcParallelFor::getNewRow( const LO        state,
-                                      const SCALAR * &h_vals,
-                                      const SCALAR * &p_vals,
-                                      const SCALAR * &w_vals,
-                                      const LO     * &inds,
-                                            LO       &row_length ) const
-{
-    LO off     = d_mc_data.offsets(state);
-    h_vals     = &(d_mc_data.H(off));
-    p_vals     = &(d_mc_data.P(off));
-    w_vals     = &(d_mc_data.W(off));
-    inds       = &(d_mc_data.inds(off));
-    row_length = d_mc_data.offsets(state+1)-off;
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Tally contribution into vector
- */
-//---------------------------------------------------------------------------//
 void AdjointMcParallelFor::tallyContribution(
         const LO             state,
-        const SCALAR         wt,
-        const SCALAR * const h_vals,
-        const LO     * const inds,
-        const int            row_length ) const
+        const SCALAR         wt ) const
 {
     if( d_use_expected_value )
     {
+        int start = d_mc_data.offsets(state);
+        int row_length = d_mc_data.offsets(state+1)-start;
         if( row_length > 0 )
         {
-            //y[inds[0]] += wt*h_vals[0];
-            Kokkos::atomic_add(&d_y(inds[0]),wt*h_vals[0]);
-            for( LO i=1; i<row_length; ++i )
+            for( LO i=0; i<row_length; ++i )
             {
                 // P is cdf, we want value of pdf
-                //y[inds[i]] += wt*h_vals[i];
-                Kokkos::atomic_add(&d_y(inds[i]),wt*h_vals[i]);
+                //y[inds[i]] += wt*H[i];
+                Kokkos::atomic_add(&d_y(d_mc_data.inds[start+i]),
+                                   wt*d_mc_data.H[start+i]);
             }
         }
     }
@@ -252,8 +227,10 @@ void AdjointMcParallelFor::tallyContribution(
  * \brief Get new state by sampling from cdf
  */
 //---------------------------------------------------------------------------//
-LO AdjointMcParallelFor::getNewState(const SCALAR * const  cdf,
-                                     const LO              cdf_length,
+template <class view_type>
+LO AdjointMcParallelFor::getNewState(const view_type      &cdf,
+                                           LO              first,
+                                           LO              cdf_length,
                                            generator_type &gen) const
 {
     // Generate random number
@@ -262,12 +239,12 @@ LO AdjointMcParallelFor::getNewState(const SCALAR * const  cdf,
     // Sample cdf to get new state
     // Use local lower_bound implementation, not std library version
     // This allows calling from device
-    const SCALAR * const elem = lower_bound(cdf,cdf+cdf_length,rand);
+    LO elem = lower_bound(cdf,first,cdf_length,rand);
 
-    if( elem == cdf+cdf_length )
+    if( elem == first+cdf_length )
         return -1;
 
-    return elem - cdf;
+    return elem;
 }
 
 //---------------------------------------------------------------------------//

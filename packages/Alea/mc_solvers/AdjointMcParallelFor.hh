@@ -63,36 +63,21 @@ class AdjointMcParallelFor
     void build_initial_distribution(const MV &x);
 
     KOKKOS_INLINE_FUNCTION
-    void getNewRow(const LO        state,
-                   const SCALAR * &h_vals,
-                   const SCALAR * &p_vals,
-                   const SCALAR * &w_vals,
-                   const LO     * &inds,
-                         LO       &row_length) const;
-
-    KOKKOS_INLINE_FUNCTION
     void tallyContribution(const LO state,
-                           const SCALAR wt,
-                           const SCALAR * const h_vals,
-                           const LO     * const inds,
-                           const int            row_length ) const;
+                           const SCALAR wt ) const;
 
+    template <class view_type>
     KOKKOS_INLINE_FUNCTION
-    LO getNewState(const SCALAR * const  cdf,
-                   const LO              cdf_length,
+    LO getNewState(const view_type      &cdf,
+                         LO              first,
+                         LO              cdf_length,
                          generator_type &gen ) const;
-
 
     // Vector length
     int d_N;
 
     // Data for Monte Carlo
     const MC_Data_View      d_mc_data;
-    const const_scalar_view d_H;
-    const const_scalar_view d_P;
-    const const_scalar_view d_W;
-    const const_ord_view    d_inds;
-    const const_ord_view    d_offsets;
     const const_scalar_view d_coeffs;
     const scalar_view       d_start_cdf;
     const scalar_view       d_start_wt;
