@@ -283,7 +283,7 @@ TEST_F(FissionSourceTest, Small)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(FissionSourceTest, Mesh_Initialize)
+TEST_F(FissionSourceTest, Initialize_Mesh)
 {
     EXPECT_FALSE(b_db->isParameter("init_fission_src"));
 
@@ -320,6 +320,69 @@ TEST_F(FissionSourceTest, Mesh_Initialize)
         EXPECT_EQ(1251, source.total_num_to_transport());
         EXPECT_EQ(1250, source.Np());
     }
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(FissionSourceTest, Small_Mesh)
+{
+    EXPECT_FALSE(b_db->isParameter("init_fission_src"));
+
+    // make a mesh
+    std::vector<double> r = {0.0, 1.26, 2.52};
+    std::vector<double> z = {0.0, 5.0, 10.0, 14.28};
+    auto mesh = std::make_shared<profugus::Cartesian_Mesh>(r, r, z);
+    std::vector<double> rho = {0.0, 2.0, 1.5, 0.0,
+                               0.0, 3.0, 2.5, 0.0,
+                               0.0, 1.8, 1.2, 0.0};
+
+    // set to a small number of particles and rebuild the source and test
+    // particles
+    b_db->set("Np", 12);
+
+    // make fission source
+    Fission_Source source(b_db, b_geometry, b_physics, b_rcon);
+    source.build_initial_source(mesh, rho);
+    EXPECT_TRUE(!source.empty());
+
+    EXPECT_EQ(12, source.Np());
+
+    int ctr = 0;
+    Fission_Source::SP_Particle p;
+    while (!source.empty())
+    {
+        p = source.get_particle();
+        ctr++;
+
+        EXPECT_TRUE(p->alive());
+        EXPECT_EQ(1, p->matid());
+
+        auto r = b_geometry->position(p->geo_state());
+
+        if (r[1] < 1.26)
+        {
+            EXPECT_TRUE(r[0] > 1.26);
+        }
+
+        if (r[1] > 1.26)
+        {
+            EXPECT_TRUE(r[0] < 1.26);
+        }
+
+        if (nodes == 1)
+        {
+            EXPECT_EQ(1.0, p->wt());
+        }
+    }
+
+    if (nodes == 1)
+    {
+        EXPECT_EQ(12, ctr);
+    }
+
+    EXPECT_EQ(source.num_to_transport(), ctr);
+    EXPECT_EQ(ctr, source.num_run());
+    EXPECT_EQ(0, source.num_left());
 }
 
 //---------------------------------------------------------------------------//

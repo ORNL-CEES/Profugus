@@ -143,6 +143,9 @@ void Fission_Source::build_initial_source(SP_Cart_Mesh     mesh,
     d_wt = static_cast<double>(d_np_requested) /
            static_cast<double>(d_np_total);
 
+    // initialize starting cell
+    d_current_cell = 0;
+
     profugus::global_barrier();
 
     ENSURE(d_wt > 0.0);
@@ -371,6 +374,7 @@ void Fission_Source::build_DR(SP_Cart_Mesh     mesh,
 
         // store the distributions persistently
         std::swap(n, d_fis_dist);
+        CHECK(d_fis_dist.size() == num_cells);
 
         // update the number of particles globally and on the domain
         d_np_domain = new_np_domain;
@@ -434,9 +438,9 @@ int Fission_Source::sample_geometry(Space_Vector       &r,
     // >>> Sample the mesh source
     else
     {
-        CHECK(d_current_cell < d_fis_dist.size());
         CHECK(d_fis_dist.size() == d_fis_mesh->num_cells());
-        CHECK(d_fis_dist[d_current_cell] > 0);
+        CHECK(d_current_cell < d_fis_dist.size());
+        CHECK(d_fis_dist[d_current_cell] >= 0);
 
         // determine the particle birth cell
         while (d_fis_dist[d_current_cell] == 0)
