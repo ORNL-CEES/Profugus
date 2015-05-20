@@ -88,7 +88,7 @@ class AdjointMcParallelFor
     int d_N;
 
     // Data for Monte Carlo
-    const MC_Data_View      d_mc_data;
+    const MC_Data_Texture_View      d_mc_data;
     const const_scalar_view d_coeffs;
     const scalar_view       d_start_cdf;
     const scalar_view       d_start_wt;
