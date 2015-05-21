@@ -89,14 +89,12 @@ struct History_Data
         , state("state",N)
         , starting_ind("starting_ind",N)
         , row_length("row_length",N)
-        , stage("stage",N)
     {}
 
     scalar_view weight;
     ord_view    state;
     ord_view    starting_ind;
     ord_view    row_length;
-    ord_view    stage;
 };
 
 //===========================================================================//
@@ -111,7 +109,6 @@ struct MC_History
     LO     state;
     LO     starting_ind;
     LO     row_length;
-    LO     stage;
 };
 
 //===========================================================================//
@@ -188,7 +185,6 @@ class InitHistory
         d_hist_data.starting_ind(member) = d_mc_data.offsets(state);
         d_hist_data.row_length(member)   = d_mc_data.offsets(state+1) -
                                            d_mc_data.offsets(state);
-        d_hist_data.stage(member)        = 0;
     }
 
   private:
@@ -248,7 +244,6 @@ class StateTransition
             d_hist_data.starting_ind(member) = d_mc_data.offsets(new_state);
             d_hist_data.row_length(member)   = d_mc_data.offsets(new_state+1) -
                                                d_mc_data.offsets(new_state);
-            d_hist_data.stage(member)++;
         }
     }
 
@@ -257,6 +252,166 @@ class StateTransition
     const random_scalar_view   d_randoms;
     const History_Data         d_hist_data;
     const MC_Data_Texture_View d_mc_data;
+};
+
+//===========================================================================//
+/*!
+ * \class BinnedStateTransition
+ * \brief Kernel for transitioning a new state
+ *
+ * This class is designed to be used within a Kokkos::parallel_for kernel
+ * using a Kokkos::TeamPolicy.  This kernel differs from the previous one
+ * in that it tries to achieve locality in data access by having each thread
+ * team only process entries within a certain range of states.
+ */
+//===========================================================================//
+
+class BinnedStateTransition
+{
+  public:
+
+    typedef Kokkos::TeamPolicy<DEVICE> policy_type;
+    typedef policy_type::member_type   policy_member;
+
+    unsigned team_shmem_size(int team_size) const
+    {
+        return 2 * shared_ord_view::shmem_size(team_size) +
+                   shared_ord_view::shmem_size(1);
+    }
+
+    BinnedStateTransition(scalar_view         randoms,
+                          const History_Data &hist_data,
+                          const MC_Data_View &mc_data,
+                          int N)
+        : d_randoms(randoms)
+        , d_hist_data(hist_data)
+        , d_mc_data(mc_data)
+        , d_num_histories(randoms.size())
+        , d_N(N)
+    {
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const policy_member &member) const
+    {
+        // Determine range of states to be processed by this team
+        int states_per_team = d_N / member.league_size();
+        int extra_states = d_N % member.league_size();
+        int state_begin = member.league_rank() * states_per_team;
+        if( member.league_rank() < extra_states )
+        {
+            state_begin += member.league_rank();
+            states_per_team++;
+        }
+        else
+        {
+            state_begin += extra_states;
+        }
+        int state_end = state_begin + states_per_team;
+
+        // Shared space for storing ids to be precessed by team
+        shared_ord_view ready_ids(member.team_shmem(), member.team_size());
+        shared_ord_view tmp_ids(member.team_shmem(), member.team_size());
+        shared_ord_view count(member.team_shmem(),1);
+
+        count(0) = 0;
+
+        //
+        // Loop over ALL histories, process those in specified range
+        //
+
+        auto combine = [&]()
+        {
+            int mycount = count(0);
+            for( int i=0; i<member.team_size(); ++i )
+            {
+                // Add any non-negative values to list of ready ids
+                if( tmp_ids(i) >= 0 )
+                {
+                    ready_ids(mycount) = tmp_ids(i);
+                    tmp_ids(i) = -1;
+                    mycount++;
+                }
+                // If we hit the team_size, stop
+                if( mycount == member.team_size() )
+                    break;
+            }
+            count(0) = mycount;
+        };
+
+        // Process in batches of the team size
+        for( int i=0; i<d_num_histories; i+=member.team_size() )
+        {
+            int tid = i + member.team_rank();
+            if( tid < d_num_histories                 &&
+                d_hist_data.state(tid) >= state_begin &&
+                d_hist_data.state(tid) <  state_end )
+            {
+                tmp_ids(member.team_rank()) = tid;
+            }
+            else
+            {
+                tmp_ids(member.team_rank()) = -1;
+            }
+
+            member.team_barrier();
+            Kokkos::single(Kokkos::PerTeam(member),combine);
+            member.team_barrier();
+
+            if( count(0) >= member.team_size() )
+            {
+                // Process available histories
+                process_history(ready_ids(member.team_rank()));
+
+                // Copy any remaining ids from tmp_ids into ready_ids
+                member.team_barrier();
+                count(0) = 0;
+                Kokkos::single(Kokkos::PerTeam(member),combine);
+                member.team_barrier();
+            }
+        }
+        // Process any remaining histories
+        if( member.team_rank() < count(0) )
+        {
+            process_history(ready_ids(member.team_rank()));
+        }
+    }
+
+  private:
+
+    KOKKOS_INLINE_FUNCTION
+    void process_history(int tid) const
+    {
+        // Perform lower_bound search to get new state
+        int new_ind = lower_bound(d_mc_data.P,
+            d_hist_data.starting_ind(tid),
+            d_hist_data.row_length(tid),
+            d_randoms(tid));
+
+        // Update state
+        if( new_ind == d_hist_data.starting_ind(tid) +
+                       d_hist_data.row_length(tid) )
+        {
+            d_hist_data.weight(tid) = 0.0;
+            d_hist_data.state(tid)  = -1;
+        }
+        else
+        {
+            int new_state                 = d_mc_data.inds(new_ind);
+            d_hist_data.weight(tid)      *= d_mc_data.W(new_ind);
+            d_hist_data.state(tid)        = new_state;
+            d_hist_data.starting_ind(tid) = d_mc_data.offsets(new_state);
+            d_hist_data.row_length(tid)   = d_mc_data.offsets(new_state+1) -
+                                            d_mc_data.offsets(new_state);
+        }
+    }
+
+
+    const random_scalar_view   d_randoms;
+    const History_Data         d_hist_data;
+    const MC_Data_Texture_View d_mc_data;
+    int d_num_histories;
+    int d_N;
 };
 
 //===========================================================================//
@@ -289,7 +444,6 @@ class CollisionTally
     void operator()(policy_member member) const
     {
         Kokkos::atomic_add(&d_y(d_hist_data.state(member)),d_hist_data.weight(member));
-        //d_coeffs(d_histories(member).stage)*d_histories(member).weight);
     }
 
   private:
@@ -320,7 +474,6 @@ class TeamEventKernel
 
     unsigned team_shmem_size(int team_size) const
     {
-        //return team_size*(sizeof(SCALAR)+4*sizeof(LO));
         int histories_team = d_num_histories / d_league_size;
         return histories_team * (sizeof(SCALAR)+sizeof(LO));
     }

@@ -40,6 +40,7 @@ class AdjointMcEventKernel
     // Execution policy and team member types
     typedef Kokkos::RangePolicy<DEVICE> range_policy;
     typedef range_policy::member_type   policy_member;
+    typedef Kokkos::TeamPolicy<DEVICE>  team_policy;
 
     typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
     typedef typename generator_pool::generator_type generator_type;
@@ -59,6 +60,9 @@ class AdjointMcEventKernel
 
     void solve_shared_mem( const scalar_view &y_device ) const;
     void solve_global_mem( const scalar_view &y_device ) const;
+
+    template <class device>
+    void sort_by_state( const History_Data &data ) const;
 
     // Vector length
     int d_N;
