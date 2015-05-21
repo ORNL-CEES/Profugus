@@ -13,6 +13,13 @@
 #include <random>
 #include <cmath>
 
+#if defined(__CUDACC__)
+#include <thrust/device_ptr.h>
+#include <thrust/tuple.h>
+#include <thrust/iterator/zip_iterator.h>
+#include <thrust/sort.h>
+#endif
+
 #include "AdjointMcEventKernel.hh"
 #include "MC_Components.hh"
 #include "utils/String_Functions.hh"
@@ -136,6 +143,69 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
 }
 
 //---------------------------------------------------------------------------//
+// Sort history data by state
+//---------------------------------------------------------------------------//
+template <class device>
+void AdjointMcEventKernel::sort_by_state(const History_Data &data) const
+{
+    const ord_view state = data.state;
+    const scalar_view weight = data.weight;
+    const ord_view starting_ind = data.starting_ind;
+    const ord_view row_length = data.row_length;
+    int N = state.size();
+
+    // Pack data into tuple
+    std::vector<std::tuple<LO,SCALAR,LO,LO> > v(N);
+    for( LO i=0; i<N; ++i )
+        v[i] = std::make_tuple(
+            state(i),weight(i),starting_ind(i),row_length(i));
+
+    // Sort
+    std::sort(v.begin(),v.end());
+
+    // Put back into Views
+    for( LO i=0; i<N; ++i )
+    {
+        state(i)        = std::get<0>(v[i]);
+        weight(i)       = std::get<1>(v[i]);
+        starting_ind(i) = std::get<2>(v[i]);
+        row_length(i)   = std::get<3>(v[i]);
+    }
+}
+
+#ifdef KOKKOS_HAVE_CUDA
+//---------------------------------------------------------------------------//
+// Sort history data by state -- Cuda specialization using thrust
+//---------------------------------------------------------------------------//
+template <>
+void AdjointMcEventKernel::sort_by_state<Kokkos::Cuda>(
+    const History_Data &data) const
+{
+    // Get Kokkos Views
+    const ord_view state = data.state;
+    const scalar_view weight = data.weight;
+    const ord_view starting_ind = data.starting_ind;
+    const ord_view row_length = data.row_length;
+    int N = state.size();
+
+    // Convert raw pointers to thrust device pointers
+    auto state_ptr = thrust::device_pointer_cast(state.ptr_on_device());
+    auto weight_ptr = thrust::device_pointer_cast(weight.ptr_on_device());
+    auto starting_ind_ptr = thrust::device_pointer_cast(
+        starting_ind.ptr_on_device());
+    auto row_length_ptr = thrust::device_pointer_cast(
+        row_length.ptr_on_device());
+
+    // Sort using zip iterator
+    auto tuple_begin = thrust::make_zip_iterator( thrust::make_tuple(
+        state_ptr,weight_ptr,starting_ind_ptr,row_length_ptr));
+    auto tuple_end = thrust::make_zip_iterator( thrust::make_tuple(
+        state_ptr+N,weight_ptr+N,starting_ind_ptr+N,row_length_ptr+N));
+    thrust::sort(tuple_begin,tuple_end);
+}
+#endif
+
+//---------------------------------------------------------------------------//
 // Solve implementation for global memory kernel
 //---------------------------------------------------------------------------//
 void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
@@ -148,9 +218,19 @@ void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
                                  d_mc_data);
     StateTransition transition(randoms,hist_data,d_mc_data);
     CollisionTally  coll_tally(hist_data,d_coeffs,y_device);
+    BinnedStateTransition binned_transition(randoms,hist_data,d_mc_data,
+        y_device.size());
 
     // Create policy
     range_policy policy(0,d_histories_batch);
+
+    int league_size = d_pl->get<int>("league_size",128);
+    int team_size   = d_pl->get<int>("team_size",
+        team_policy::team_size_max(binned_transition));
+    team_policy team_pol(league_size,team_size);
+
+    std::cout << "Team policy has league size of " << team_pol.league_size()
+        << " and team size of " << team_pol.team_size() << std::endl;
 
     for( int batch=0; batch<d_num_batches; ++batch )
     {
@@ -162,8 +242,10 @@ void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
         // Loop over history length (start at 1)
         for( int step=1; step<=d_max_history_length; ++step )
         {
+            //sort_by_state<DEVICE>(hist_data);
             Kokkos::fill_random(randoms,d_rand_pool,1.0);
-            Kokkos::parallel_for(policy,transition);
+            //Kokkos::parallel_for(policy,transition);
+            Kokkos::parallel_for(team_pol,binned_transition);
             Kokkos::parallel_for(policy,coll_tally);
         }
 
@@ -192,7 +274,7 @@ void AdjointMcEventKernel::solve_shared_mem(const scalar_view &y_device) const
         {
             kernel.set_league_size(league_size);
 
-            int max_team_size = Kokkos::TeamPolicy<DEVICE>::team_size_max(kernel);
+            int max_team_size = team_policy::team_size_max(kernel);
             if( max_team_size > 0 )
                 break;
             else
@@ -203,11 +285,11 @@ void AdjointMcEventKernel::solve_shared_mem(const scalar_view &y_device) const
     std::cout << "Using league size of " << league_size << std::endl;
 
     // Set up kernel for this league size
-    int max_team_size = Kokkos::TeamPolicy<DEVICE>::team_size_max(kernel);
+    int max_team_size = team_policy::team_size_max(kernel);
     REQUIRE( max_team_size > 0 );
     int req_team_size = std::min(max_team_size,
                                  d_num_histories/league_size);
-    Kokkos::TeamPolicy<DEVICE> policy(league_size,req_team_size);
+    team_policy policy(league_size,req_team_size);
     int histories_team = d_num_histories / policy.league_size();
     scalar_view_2d randoms("random_values",
         d_num_histories,d_max_history_length+1);
@@ -252,7 +334,6 @@ void AdjointMcEventKernel::build_initial_distribution(const MV &x)
     Kokkos::deep_copy(d_start_cdf,start_cdf_host);
     Kokkos::deep_copy(d_start_wt, start_wt_host);
 }
-
 
 } // namespace alea
 
