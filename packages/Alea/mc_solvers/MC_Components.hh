@@ -310,68 +310,58 @@ class BinnedStateTransition
         int state_end = state_begin + states_per_team;
 
         // Shared space for storing ids to be precessed by team
-        shared_ord_view ready_ids(member.team_shmem(), member.team_size());
-        shared_ord_view tmp_ids(member.team_shmem(), member.team_size());
-        shared_ord_view count(member.team_shmem(),1);
+        shared_ord_view ready_ids(  member.team_shmem(), member.team_size());
+        shared_ord_view tmp_ids(    member.team_shmem(), member.team_size());
 
-        count(0) = 0;
+        int count = 0;
+        int tid, hist, myindex, this_count;
 
         //
         // Loop over ALL histories, process those in specified range
         //
 
-        auto combine = [&]()
-        {
-            int mycount = count(0);
-            for( int i=0; i<member.team_size(); ++i )
-            {
-                // Add any non-negative values to list of ready ids
-                if( tmp_ids(i) >= 0 )
-                {
-                    ready_ids(mycount) = tmp_ids(i);
-                    tmp_ids(i) = -1;
-                    mycount++;
-                }
-                // If we hit the team_size, stop
-                if( mycount == member.team_size() )
-                    break;
-            }
-            count(0) = mycount;
-        };
-
         // Process in batches of the team size
         for( int i=0; i<d_num_histories; i+=member.team_size() )
         {
-            int tid = i + member.team_rank();
+            tid = i + member.team_rank();
+            hist = -1;
             if( tid < d_num_histories                 &&
                 d_hist_data.state(tid) >= state_begin &&
                 d_hist_data.state(tid) <  state_end )
             {
-                tmp_ids(member.team_rank()) = tid;
-            }
-            else
-            {
-                tmp_ids(member.team_rank()) = -1;
+                hist = tid;
             }
 
-            member.team_barrier();
-            Kokkos::single(Kokkos::PerTeam(member),combine);
-            member.team_barrier();
+            myindex = member.team_scan(static_cast<int>(hist>=0));
+            this_count = myindex + (hist>=0);
+            member.team_broadcast(this_count,member.team_size()-1);
 
-            if( count(0) >= member.team_size() )
+            // Add my work to ready list if it is a valid index
+            if( hist>=0 && count+myindex < member.team_size() )
+                ready_ids(count+myindex) = tid;
+
+            // If enough histories are ready, process them
+            if( count+this_count >= member.team_size() )
             {
                 // Process available histories
                 process_history(ready_ids(member.team_rank()));
 
-                // Copy any remaining ids from tmp_ids into ready_ids
-                member.team_barrier();
-                count(0) = 0;
-                Kokkos::single(Kokkos::PerTeam(member),combine);
-                member.team_barrier();
+                // Populate ready list from work that didn't fit into list
+                if( hist >= 0 )
+                {
+                    ready_ids((count+myindex)%member.team_size())=tid;;
+                }
+                count = (count+this_count)%member.team_size();
+
+            }
+            else
+            {
+                count += this_count;
             }
         }
+
         // Process any remaining histories
-        if( member.team_rank() < count(0) )
+        if( member.team_rank() < count )
         {
             process_history(ready_ids(member.team_rank()));
         }
