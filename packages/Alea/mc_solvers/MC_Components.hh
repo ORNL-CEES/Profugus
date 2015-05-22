@@ -275,8 +275,7 @@ class BinnedStateTransition
 
     unsigned team_shmem_size(int team_size) const
     {
-        return 2 * shared_ord_view::shmem_size(team_size) +
-                   shared_ord_view::shmem_size(1);
+        return shared_ord_view::shmem_size(team_size);
     }
 
     BinnedStateTransition(scalar_view         randoms,
@@ -284,8 +283,12 @@ class BinnedStateTransition
                           const MC_Data_View &mc_data,
                           int N)
         : d_randoms(randoms)
-        , d_hist_data(hist_data)
-        , d_mc_data(mc_data)
+        , d_states(hist_data.state)
+        , d_weights(hist_data.weight)
+        , d_P(mc_data.P)
+        , d_W(mc_data.W)
+        , d_inds(mc_data.inds)
+        , d_offsets(mc_data.offsets)
         , d_num_histories(randoms.size())
         , d_N(N)
     {
@@ -295,23 +298,25 @@ class BinnedStateTransition
     void operator()(const policy_member &member) const
     {
         // Determine range of states to be processed by this team
-        int states_per_team = d_N / member.league_size();
-        int extra_states = d_N % member.league_size();
-        int state_begin = member.league_rank() * states_per_team;
-        if( member.league_rank() < extra_states )
+        int state_begin, state_end;
         {
-            state_begin += member.league_rank();
-            states_per_team++;
+            int states_per_team = d_N / member.league_size();
+            int extra_states = d_N % member.league_size();
+            state_begin = member.league_rank() * states_per_team;
+            if( member.league_rank() < extra_states )
+            {
+                state_begin += member.league_rank();
+                states_per_team++;
+            }
+            else
+            {
+                state_begin += extra_states;
+            }
+            state_end = state_begin + states_per_team;
         }
-        else
-        {
-            state_begin += extra_states;
-        }
-        int state_end = state_begin + states_per_team;
 
         // Shared space for storing ids to be precessed by team
         shared_ord_view ready_ids(  member.team_shmem(), member.team_size());
-        shared_ord_view tmp_ids(    member.team_shmem(), member.team_size());
 
         int count = 0;
         int tid, hist, myindex, this_count;
@@ -325,9 +330,9 @@ class BinnedStateTransition
         {
             tid = i + member.team_rank();
             hist = -1;
-            if( tid < d_num_histories                 &&
-                d_hist_data.state(tid) >= state_begin &&
-                d_hist_data.state(tid) <  state_end )
+            if( tid < d_num_histories        &&
+                d_states(tid) >= state_begin &&
+                d_states(tid) <  state_end )
             {
                 hist = tid;
             }
@@ -349,7 +354,7 @@ class BinnedStateTransition
                 // Populate ready list from work that didn't fit into list
                 if( hist >= 0 )
                 {
-                    ready_ids((count+myindex)%member.team_size())=tid;;
+                    ready_ids((count+myindex)%member.team_size())=tid;
                 }
                 count = (count+this_count)%member.team_size();
 
@@ -373,33 +378,31 @@ class BinnedStateTransition
     void process_history(int tid) const
     {
         // Perform lower_bound search to get new state
-        int new_ind = lower_bound(d_mc_data.P,
-            d_hist_data.starting_ind(tid),
-            d_hist_data.row_length(tid),
-            d_randoms(tid));
+        int start_ind  = d_offsets(d_states(tid));
+        int row_length = d_offsets(d_states(tid)+1)-start_ind;
+        int new_ind = lower_bound(d_P,start_ind,row_length,d_randoms(tid));
 
         // Update state
-        if( new_ind == d_hist_data.starting_ind(tid) +
-                       d_hist_data.row_length(tid) )
+        if( new_ind == start_ind + row_length )
         {
-            d_hist_data.weight(tid) = 0.0;
-            d_hist_data.state(tid)  = -1;
+            d_weights(tid) = 0.0;
+            d_states(tid)  = -1;
         }
         else
         {
-            int new_state                 = d_mc_data.inds(new_ind);
-            d_hist_data.weight(tid)      *= d_mc_data.W(new_ind);
-            d_hist_data.state(tid)        = new_state;
-            d_hist_data.starting_ind(tid) = d_mc_data.offsets(new_state);
-            d_hist_data.row_length(tid)   = d_mc_data.offsets(new_state+1) -
-                                            d_mc_data.offsets(new_state);
+            d_weights(tid) *= d_W(new_ind);
+            d_states(tid)   = d_inds(new_ind);
         }
     }
 
 
     const random_scalar_view   d_randoms;
-    const History_Data         d_hist_data;
-    const MC_Data_Texture_View d_mc_data;
+    const ord_view             d_states;
+    const scalar_view          d_weights;
+    const random_scalar_view   d_P;
+    const random_scalar_view   d_W;
+    const random_ord_view      d_inds;
+    const random_ord_view      d_offsets;
     int d_num_histories;
     int d_N;
 };
