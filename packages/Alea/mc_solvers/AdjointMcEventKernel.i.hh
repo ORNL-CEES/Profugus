@@ -56,22 +56,15 @@ AdjointMcEventKernel::AdjointMcEventKernel(
 {
     d_num_histories = pl->get("num_histories",1000);
 
-    // We store history data in vectors of length num_histories/num_batches
-    // There are 4 integer and 1 double valued vectors, for 24 bytes per
-    //  history.  We typically have 48K of shared memory on a GPU, so we'll
-    //  pick an appropriate number of batches.
-    // TODO: Toggle this on GPU/CPU node types to allow larger batch sizes
-    //  on CPU, right now let's assume we're GPU-based for the event kernel.
-    const int shared_mem_size = 48 * 1024;
-    const int per_history_storage = 24;
-    const int max_batch_size = shared_mem_size / per_history_storage;
-    d_num_batches = pl->get("num_batches",1+d_num_histories/max_batch_size);
+    d_num_batches = pl->get("num_batches",1);
     d_histories_batch = d_num_histories / d_num_batches;
-    REQUIRE( d_histories_batch < max_batch_size );
 
-    std::cout << "Performing " << d_num_histories << " per iteration in "
-        << d_num_batches << " batches with " << d_histories_batch
-        << " histories per batch" << std::endl;
+    if( d_num_batches > 1 )
+    {
+        std::cout << "Performing " << d_num_histories << " per iteration in "
+            << d_num_batches << " batches with " << d_histories_batch
+            << " histories per batch" << std::endl;
+    }
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
