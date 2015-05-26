@@ -349,6 +349,7 @@ class BinnedStateTransition
             if( count+this_count >= member.team_size() )
             {
                 // Process available histories
+                member.team_barrier();
                 process_history(ready_ids(member.team_rank()));
 
                 // Populate ready list from work that didn't fit into list
