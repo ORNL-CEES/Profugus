@@ -315,7 +315,7 @@ class BinnedStateTransition
             state_end = state_begin + states_per_team;
         }
 
-        // Shared space for storing ids to be precessed by team
+        // Shared space for storing ids to be processed by team
         shared_ord_view ready_ids(  member.team_shmem(), member.team_size());
 
         int count = 0;
@@ -449,132 +449,229 @@ class CollisionTally
 
 //===========================================================================//
 /*!
- * \class TeamEventKernel
- * \brief Team-based kernel for event MC
+ * \class SharedMemTransition
+ * \brief Kernel for transitioning a new state
  *
  * This class is designed to be used within a Kokkos::parallel_for kernel
- * using a Kokkos::TeamPolicy
+ * using a Kokkos::TeamPolicy.
  */
 //===========================================================================//
 
-class TeamEventKernel
+class SharedMemTransition
 {
   public:
 
     typedef Kokkos::TeamPolicy<DEVICE> policy_type;
     typedef policy_type::member_type   policy_member;
 
-    typedef Kokkos::Random_XorShift64_Pool<DEVICE>      generator_pool;
-
     unsigned team_shmem_size(int team_size) const
     {
-        int histories_team = d_num_histories / d_league_size;
-        return histories_team * (sizeof(SCALAR)+sizeof(LO));
+        return shared_ord_view::shmem_size(team_size) +
+               shared_scalar_view::shmem_size(d_max_block_size);
     }
 
-    TeamEventKernel( int max_history_length,
-                     int num_histories,
-                     const_scalar_view   start_cdf,
-                     const_scalar_view   start_wt,
-                     const MC_Data_View &mc_data,
-                     scalar_view         y,
-                     random_scalar_view  coeffs )
-        : d_max_history_length(max_history_length)
-        , d_num_histories(num_histories)
-        , d_start_cdf(start_cdf)
-        , d_start_wt(start_wt)
-        , d_mc_data(mc_data)
-        , d_y(y)
-        , d_coeffs(coeffs)
+    int num_blocks() const{ return d_num_blocks; }
+
+    SharedMemTransition(scalar_view         randoms,
+                        const History_Data &hist_data,
+                        const MC_Data_View &mc_data,
+                        int N, int num_shared_values)
+        : d_randoms(randoms)
+        , d_states(hist_data.state)
+        , d_weights(hist_data.weight)
+        , d_P(mc_data.P)
+        , d_W(mc_data.W)
+        , d_inds(mc_data.inds)
+        , d_offsets(mc_data.offsets)
+        , d_num_histories(randoms.size())
+        , d_N(N)
     {
+        // Copy offsets array to host
+        REQUIRE( d_offsets.size() == (d_N+1) );
+        ord_host_mirror offsets_host = Kokkos::create_mirror_view(d_offsets);
+        Kokkos::deep_copy(offsets_host,d_offsets);
+
+        // Determine how many "blocks" we need so that each block of P
+        // has at most "num_shared_values" entries
+        std::vector<int> states_per_block(1,0);
+        states_per_block.reserve(d_N/num_shared_values);
+        int sum = 0;
+        d_max_block_size = 0;
+        for( int i=0; i<d_N; ++i )
+        {
+            int num_this_row = offsets_host(i+1) - offsets_host(i);
+            REQUIRE( num_this_row <= num_shared_values );
+            if( sum + num_this_row <= num_shared_values )
+            {
+                states_per_block.back()++;
+                sum += num_this_row;
+            }
+            else
+            {
+                d_max_block_size = max(sum,d_max_block_size);
+                states_per_block.push_back(1);
+                sum = num_this_row;
+            }
+        }
+        ENSURE( d_max_block_size <= num_shared_values );
+        std::cout << "Maximum block size is " << d_max_block_size <<
+            ", max size allowed is " << num_shared_values << std::endl;
+
+        d_num_blocks = states_per_block.size();
+        Kokkos::resize(d_block_offsets,d_num_blocks+1);
+        ord_host_mirror block_offsets_host =
+            Kokkos::create_mirror_view(d_block_offsets);
+        block_offsets_host(0) = 0;
+        for( int i=0; i<d_num_blocks; ++i )
+        {
+            REQUIRE( states_per_block[i] <= num_shared_values );
+            block_offsets_host(i+1) = block_offsets_host(i) +
+                states_per_block[i];
+        }
+
+        Kokkos::deep_copy(d_block_offsets,block_offsets_host);
     }
-
-    void set_league_size(int league_size){d_league_size = league_size;}
-
-    void set_randoms(scalar_view_2d randoms){d_randoms = randoms;}
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const policy_member &member) const
     {
-        int team_size = member.team_size();
-        int histories_team = d_num_histories / member.league_size();
-        int team_offset = histories_team*member.league_rank();
+        shared_scalar_view P_shared(member.team_shmem(),d_max_block_size);
 
-        shared_scalar_view weight(       member.team_shmem(), histories_team);
-        shared_ord_view    state(        member.team_shmem(), histories_team);
-
-        // Bring member variables into local scope to allow lambda capture
-        int stage = 0;
-
-        // Init kernel
-        auto init = [=](const int &i)
+        // Determine range of states to be processed by this team
+        int state_begin = d_block_offsets(member.league_rank());
+        int state_end   = d_block_offsets(member.league_rank()+1);
+        int block_offset = d_offsets(state_begin);
+        int block_end = d_offsets(state_end);
+        member.team_barrier();
         {
-            // Perform lower_bound search to get new state
-            int init_state = lower_bound(d_start_cdf,0,d_start_cdf.size(),
-                d_randoms(i+team_offset,stage));
-
-            weight(i)       = d_start_wt(init_state);
-            state(i)        = init_state;
-        };
-
-        auto transition = [&](const int &i)
-        {
-            // Perform lower_bound search to get new state
-            int st = state(i);
-            int start = d_mc_data.offsets(st);
-            int length = d_mc_data.offsets(st+1)-start;
-            int new_ind = lower_bound(d_mc_data.P,start,
-                length,d_randoms(i+team_offset,stage));
-
-            // Update state
-            if( new_ind == start+length )
+            for( int i=block_offset; i<block_end; i+=member.team_size() )
             {
-                weight(i) = 0.0;
-                state(i)  = 0;
+                if( i + member.team_rank() < block_end )
+                {
+                    /*
+                    if( (member.team_rank() + i -block_offset) >= P_shared.size() ||
+                         member.team_rank() + i >= d_P.size() )
+                    {
+                        printf("Invalid index in team %i, member %i at index %i,"
+                                " block starts at %i and ends at %i,"
+                                " attempting to accesss index %i of %i, %i of %i\n",
+                                member.league_rank(),member.team_rank(),i,
+                                block_offset,block_end,
+                                member.team_rank()+i-block_offset,P_shared.size(),
+                                member.team_rank()+i,d_P.size());
+                    }
+                    */
+
+                    P_shared(member.team_rank()+i-block_offset) =
+                        d_P(i+member.team_rank());
+                }
+            }
+        }
+
+        // Shared space for storing ids to be processed by team
+        shared_ord_view ready_ids(member.team_shmem(), member.team_size());
+
+        int count = 0;
+        int tid, hist, myindex, this_count;
+
+        //
+        // Loop over ALL histories, process those in specified range
+        //
+
+        // Process in batches of the team size
+        for( int i=0; i<d_num_histories; i+=member.team_size() )
+        {
+            tid = i + member.team_rank();
+            hist = -1;
+            if( tid < d_num_histories        &&
+                d_states(tid) >= state_begin &&
+                d_states(tid) <  state_end )
+            {
+                hist = tid;
+            }
+
+            myindex = member.team_scan(static_cast<int>(hist>=0));
+            this_count = myindex + (hist>=0);
+            member.team_broadcast(this_count,member.team_size()-1);
+
+            // Add my work to ready list if it is a valid index
+            if( hist>=0 && count+myindex < member.team_size() )
+                ready_ids(count+myindex) = tid;
+
+            // If enough histories are ready, process them
+            if( count+this_count >= member.team_size() )
+            {
+                // Process available histories
+                member.team_barrier();
+                process_history(ready_ids(member.team_rank()),P_shared,
+                    block_offset);
+
+                // Populate ready list from work that didn't fit into list
+                if( hist >= 0 )
+                {
+                    ready_ids((count+myindex)%member.team_size())=tid;
+                }
+                count = (count+this_count)%member.team_size();
+
             }
             else
             {
-                int new_state   = d_mc_data.inds(new_ind);
-                weight(i)      *= d_mc_data.W(new_ind);
-                state(i)        = new_state;
+                count += this_count;
             }
-        };
+        }
 
-        // Tally kernel
-        auto tally = [=](const int &i)
+        // Process any remaining histories
+        if( member.team_rank() < count )
         {
-            Kokkos::atomic_add(&d_y(state(i)),weight(i));
-        };
-
-        // Do history initialization and initial tally
-        Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(member,histories_team),init);
-        Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(member,histories_team),tally);
-
-        // Process remaining steps for all histories
-        for( int step=0; step<d_max_history_length; ++step )
-        {
-            stage++;
-            Kokkos::parallel_for(
-                Kokkos::TeamThreadRange(member,histories_team),transition);
-            Kokkos::parallel_for(
-                Kokkos::TeamThreadRange(member,histories_team),tally);
+            process_history(ready_ids(member.team_rank()),P_shared,
+                block_offset);
         }
     }
 
   private:
 
-    int d_league_size;
-    const int d_max_history_length;
-    const int d_num_histories;
-    const random_scalar_view   d_start_cdf;
-    const random_scalar_view   d_start_wt;
-    const MC_Data_Texture_View d_mc_data;
-    const scalar_view          d_y;
-    const random_scalar_view   d_coeffs;
-    random_scalar_view_2d      d_randoms;
+    KOKKOS_INLINE_FUNCTION
+    void process_history(int tid, shared_scalar_view &P_shared,
+            int block_offset) const
+    {
+        // Starting index and length of current row
+        int start_ind  = d_offsets(d_states(tid));
+        int row_length = d_offsets(d_states(tid)+1)-start_ind;
 
+        // Perform lower_bound search to get new state
+        // Decrease starting index by block_offset to make the index relative
+        // to local block (P_shared is only a small portion of the global P)
+        int new_ind = lower_bound(P_shared,start_ind-block_offset,row_length,
+            d_randoms(tid));
+
+        // Put index back into global index space
+        new_ind += block_offset;
+
+        // Update state
+        if( new_ind == start_ind + row_length )
+        {
+            d_weights(tid) = 0.0;
+            d_states(tid)  = -1;
+        }
+        else
+        {
+            d_weights(tid) *= d_W(new_ind);
+            d_states(tid)   = d_inds(new_ind);
+        }
+    }
+
+    const random_scalar_view   d_randoms;
+    const ord_view             d_states;
+    const scalar_view          d_weights;
+    ord_view                   d_block_offsets;
+    const random_scalar_view   d_P;
+    const random_scalar_view   d_W;
+    const random_ord_view      d_inds;
+    const random_ord_view      d_offsets;
+    int d_num_histories;
+    int d_N;
+    int d_num_blocks;
+    int d_max_block_size;
 };
 
 

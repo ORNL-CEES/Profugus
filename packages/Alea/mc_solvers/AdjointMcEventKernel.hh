@@ -55,11 +55,12 @@ class AdjointMcEventKernel
 
   private:
 
+    enum TRANSITION {STANDARD, BINNED, SHARED_MEM};
+
     // Build the initial CDF and weights (host function)
     void build_initial_distribution(const MV &x);
 
-    void solve_shared_mem( const scalar_view &y_device ) const;
-    void solve_global_mem( const scalar_view &y_device ) const;
+    void solve_impl( const scalar_view &y_device ) const;
 
     template <class device>
     void sort_by_state( const History_Data &data ) const;
@@ -77,10 +78,10 @@ class AdjointMcEventKernel
     generator_pool d_rand_pool;
 
     // Problem parameters
+    TRANSITION d_transition_type;
     int    d_max_history_length;
     bool   d_use_expected_value;
     bool   d_print;
-    bool   d_use_shared_mem;
     int    d_num_histories;
     int    d_num_batches;
     int    d_histories_batch;
