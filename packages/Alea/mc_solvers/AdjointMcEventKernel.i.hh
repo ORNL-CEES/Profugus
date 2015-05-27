@@ -83,8 +83,20 @@ AdjointMcEventKernel::AdjointMcEventKernel(
     std::string verb = profugus::to_lower(pl->get("verbosity","low"));
     d_print = (verb == "high");
 
-    // Use shared_memory version of kernel?
-    d_use_shared_mem = pl->get("use_shared_mem",false);
+    std::string transition =
+        profugus::to_lower(pl->get("transition_type","standard"));
+    if( transition == "standard" )
+        d_transition_type = STANDARD;
+    else if( transition == "binned" )
+        d_transition_type = BINNED;
+    else if( transition == "shared_mem" )
+        d_transition_type = SHARED_MEM;
+    else
+    {
+        std::stringstream ss;
+        ss << "Unknown transition kernel type: " << transition << std::endl;
+        VALIDATE(false,ss);
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -102,10 +114,7 @@ void AdjointMcEventKernel::solve(const MV &x, MV &y)
     ZeroVector      zero_y(y_device);
     Kokkos::parallel_for(d_N,zero_y);
 
-    if( d_use_shared_mem )
-        solve_shared_mem(y_device);
-    else
-        solve_global_mem(y_device);
+    solve_impl(y_device);
 
     // Get view of data on host
     const scalar_host_mirror y_mirror =
@@ -201,7 +210,7 @@ void AdjointMcEventKernel::sort_by_state<Kokkos::Cuda>(
 //---------------------------------------------------------------------------//
 // Solve implementation for global memory kernel
 //---------------------------------------------------------------------------//
-void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
+void AdjointMcEventKernel::solve_impl(const scalar_view &y_device) const
 {
     const scalar_view  randoms(  "randoms",d_histories_batch);
     const History_Data hist_data(d_histories_batch);
@@ -214,11 +223,23 @@ void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
     BinnedStateTransition binned_transition(randoms,hist_data,d_mc_data,
         y_device.size());
 
+    int num_shared_values = d_pl->get("num_shared_values",512);
+    SharedMemTransition shared_mem_transition(randoms,hist_data,d_mc_data,
+        y_device.size(),num_shared_values);
+
     // Create policy
     range_policy policy(0,d_histories_batch);
 
-    int league_size = d_pl->get<int>("league_size",128);
-    int team_size   = d_pl->get<int>("team_size",
+    // Determine league size -- shared memory kernel requires a particular
+    // league size, the other kernels can use any size determined by an
+    // input parameter
+    int league_size;
+    if( d_transition_type == SHARED_MEM )
+        league_size = shared_mem_transition.num_blocks();
+    else
+        league_size = d_pl->get<int>("league_size",128);
+
+    int team_size = d_pl->get<int>("team_size",
         team_policy::team_size_max(binned_transition));
     team_policy team_pol(league_size,team_size);
 
@@ -237,63 +258,24 @@ void AdjointMcEventKernel::solve_global_mem(const scalar_view &y_device) const
         {
             //sort_by_state<DEVICE>(hist_data);
             Kokkos::fill_random(randoms,d_rand_pool,1.0);
-            //Kokkos::parallel_for(policy,transition);
-            Kokkos::parallel_for(team_pol,binned_transition);
+            switch( d_transition_type )
+            {
+                case STANDARD:
+                    Kokkos::parallel_for(policy,transition);
+                    break;
+                case BINNED:
+                    Kokkos::parallel_for(team_pol,binned_transition);
+                    break;
+                case SHARED_MEM:
+                    std::cout << "Launching shared mem kernel" << std::endl;
+                    Kokkos::parallel_for(team_pol,shared_mem_transition);
+                    DEVICE::fence();
+                    std::cout << "Finished with shared mem kernel" << std::endl;
+                    break;
+            };
             Kokkos::parallel_for(policy,coll_tally);
         }
-
     }
-}
-
-//---------------------------------------------------------------------------//
-// Solve implementation for shared memory kernel
-//---------------------------------------------------------------------------//
-void AdjointMcEventKernel::solve_shared_mem(const scalar_view &y_device) const
-{
-    // Create kernel and determine appropriate league size
-    TeamEventKernel kernel(d_max_history_length,d_num_histories,d_start_cdf,
-        d_start_wt,d_mc_data,y_device,d_coeffs);
-
-    int league_size = 0;
-    if( d_pl->isType<int>("league_size") )
-    {
-        league_size = d_pl->get<int>("league_size");
-        kernel.set_league_size(league_size);
-    }
-    else
-    {
-        league_size = 1;
-        while(true)
-        {
-            kernel.set_league_size(league_size);
-
-            int max_team_size = team_policy::team_size_max(kernel);
-            if( max_team_size > 0 )
-                break;
-            else
-                league_size *= 2;
-        }
-    }
-    REQUIRE(league_size > 0 );
-    std::cout << "Using league size of " << league_size << std::endl;
-
-    // Set up kernel for this league size
-    int max_team_size = team_policy::team_size_max(kernel);
-    REQUIRE( max_team_size > 0 );
-    int req_team_size = std::min(max_team_size,
-                                 d_num_histories/league_size);
-    team_policy policy(league_size,req_team_size);
-    int histories_team = d_num_histories / policy.league_size();
-    scalar_view_2d randoms("random_values",
-        d_num_histories,d_max_history_length+1);
-    Kokkos::fill_random(randoms,d_rand_pool,1.0);
-    kernel.set_randoms(randoms);
-
-    std::cout << "Team size: " << policy.team_size() << std::endl;
-    std::cout << "League size: " << policy.league_size() << std::endl;
-
-    // Execute kernel
-    Kokkos::parallel_for(policy,kernel);
 }
 
 //---------------------------------------------------------------------------//
