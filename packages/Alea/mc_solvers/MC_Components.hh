@@ -279,10 +279,12 @@ class BinnedStateTransition
     }
 
     BinnedStateTransition(scalar_view         randoms,
+                          ord_view            old_states,
                           const History_Data &hist_data,
                           const MC_Data_View &mc_data,
                           int N)
         : d_randoms(randoms)
+        , d_old_states(old_states)
         , d_states(hist_data.state)
         , d_weights(hist_data.weight)
         , d_P(mc_data.P)
@@ -331,8 +333,8 @@ class BinnedStateTransition
             tid = i + member.team_rank();
             hist = -1;
             if( tid < d_num_histories        &&
-                d_states(tid) >= state_begin &&
-                d_states(tid) <  state_end )
+                d_old_states(tid) >= state_begin &&
+                d_old_states(tid) <  state_end )
             {
                 hist = tid;
             }
@@ -398,6 +400,7 @@ class BinnedStateTransition
 
 
     const random_scalar_view   d_randoms;
+    const random_ord_view      d_old_states;
     const ord_view             d_states;
     const scalar_view          d_weights;
     const random_scalar_view   d_P;
@@ -473,10 +476,12 @@ class SharedMemTransition
     int num_blocks() const{ return d_num_blocks; }
 
     SharedMemTransition(scalar_view         randoms,
+                        ord_view            old_states,
                         const History_Data &hist_data,
                         const MC_Data_View &mc_data,
                         int N, int num_shared_values)
         : d_randoms(randoms)
+        , d_old_states(old_states)
         , d_states(hist_data.state)
         , d_weights(hist_data.weight)
         , d_P(mc_data.P)
@@ -508,7 +513,8 @@ class SharedMemTransition
             }
             else
             {
-                d_max_block_size = max(sum,d_max_block_size);
+                d_max_block_size =
+                    sum>d_max_block_size ? sum : d_max_block_size;
                 states_per_block.push_back(1);
                 sum = num_this_row;
             }
@@ -548,20 +554,6 @@ class SharedMemTransition
             {
                 if( i + member.team_rank() < block_end )
                 {
-                    /*
-                    if( (member.team_rank() + i -block_offset) >= P_shared.size() ||
-                         member.team_rank() + i >= d_P.size() )
-                    {
-                        printf("Invalid index in team %i, member %i at index %i,"
-                                " block starts at %i and ends at %i,"
-                                " attempting to accesss index %i of %i, %i of %i\n",
-                                member.league_rank(),member.team_rank(),i,
-                                block_offset,block_end,
-                                member.team_rank()+i-block_offset,P_shared.size(),
-                                member.team_rank()+i,d_P.size());
-                    }
-                    */
-
                     P_shared(member.team_rank()+i-block_offset) =
                         d_P(i+member.team_rank());
                 }
@@ -584,8 +576,8 @@ class SharedMemTransition
             tid = i + member.team_rank();
             hist = -1;
             if( tid < d_num_histories        &&
-                d_states(tid) >= state_begin &&
-                d_states(tid) <  state_end )
+                d_old_states(tid) >= state_begin &&
+                d_old_states(tid) <  state_end )
             {
                 hist = tid;
             }
@@ -623,6 +615,7 @@ class SharedMemTransition
         // Process any remaining histories
         if( member.team_rank() < count )
         {
+            member.team_barrier();
             process_history(ready_ids(member.team_rank()),P_shared,
                 block_offset);
         }
@@ -661,6 +654,7 @@ class SharedMemTransition
     }
 
     const random_scalar_view   d_randoms;
+    const random_ord_view      d_old_states;
     const ord_view             d_states;
     const scalar_view          d_weights;
     ord_view                   d_block_offsets;
