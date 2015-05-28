@@ -371,6 +371,7 @@ class BinnedStateTransition
         // Process any remaining histories
         if( member.team_rank() < count )
         {
+            member.team_barrier();
             process_history(ready_ids(member.team_rank()));
         }
     }
