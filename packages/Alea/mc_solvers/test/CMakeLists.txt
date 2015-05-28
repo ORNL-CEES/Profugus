@@ -26,6 +26,7 @@ ADD_UTILS_TEST(tstRichardsonIteration)
 # Single process only tests
 ADD_UTILS_TEST(tstMCSA             NP 1)
 ADD_UTILS_TEST(tstMC_Data          NP 1)
+ADD_UTILS_TEST(tstMC_Components    NP 1)
 ADD_UTILS_TEST(tstMonteCarloSolver NP 1)
 
 ##---------------------------------------------------------------------------##
