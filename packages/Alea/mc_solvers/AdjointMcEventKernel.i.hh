@@ -215,17 +215,26 @@ void AdjointMcEventKernel::solve_impl(const scalar_view &y_device) const
     const scalar_view  randoms(  "randoms",d_histories_batch);
     const History_Data hist_data(d_histories_batch);
 
+    // The binning process for the binned and shared memory kernels need
+    // access to the old list of states to avoid a race condition
+    ord_view old_states("old_states");
+    if( d_transition_type==BINNED ||
+        d_transition_type==SHARED_MEM )
+    {
+        Kokkos::resize(old_states,d_histories_batch);
+    }
+
     // Build kernels
     InitHistory     init_history(randoms,d_start_cdf,d_start_wt,hist_data,
                                  d_mc_data);
     StateTransition transition(randoms,hist_data,d_mc_data);
     CollisionTally  coll_tally(hist_data,d_coeffs,y_device);
-    BinnedStateTransition binned_transition(randoms,hist_data,d_mc_data,
-        y_device.size());
+    BinnedStateTransition binned_transition(randoms,old_states,hist_data,
+        d_mc_data,y_device.size());
 
     int num_shared_values = d_pl->get("num_shared_values",512);
-    SharedMemTransition shared_mem_transition(randoms,hist_data,d_mc_data,
-        y_device.size(),num_shared_values);
+    SharedMemTransition shared_mem_transition(randoms,old_states,hist_data,
+        d_mc_data,y_device.size(),num_shared_values);
 
     // Create policy
     range_policy policy(0,d_histories_batch);
@@ -264,13 +273,12 @@ void AdjointMcEventKernel::solve_impl(const scalar_view &y_device) const
                     Kokkos::parallel_for(policy,transition);
                     break;
                 case BINNED:
+                    Kokkos::deep_copy(old_states,hist_data.state);
                     Kokkos::parallel_for(team_pol,binned_transition);
                     break;
                 case SHARED_MEM:
-                    std::cout << "Launching shared mem kernel" << std::endl;
+                    Kokkos::deep_copy(old_states,hist_data.state);
                     Kokkos::parallel_for(team_pol,shared_mem_transition);
-                    DEVICE::fence();
-                    std::cout << "Finished with shared mem kernel" << std::endl;
                     break;
             };
             Kokkos::parallel_for(policy,coll_tally);
