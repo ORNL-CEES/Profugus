@@ -200,7 +200,7 @@ class TestComponents : public ::testing::TestWithParam<int>
 
 // Run each test with several history counts
 INSTANTIATE_TEST_CASE_P(Default,TestComponents,
-                        ::testing::Values(10));
+                        ::testing::Values(10,100,1000,10000));
 
 TEST_P(TestComponents,StandardTransition)
 {
