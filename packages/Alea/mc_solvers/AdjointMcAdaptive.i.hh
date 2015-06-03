@@ -80,10 +80,12 @@ void AdjointMcAdaptive::solve(const MV &x, MV &y)
 
     int state = -1;
     double wt = 0.0;
+    double init_wt = 0.0;
     for( int i=0; i<d_num_histories; ++i )
     {
         // Get initial state for this history by sampling from start_cdf
         initializeHistory(state,wt,start_cdf,start_wt,h_row,p_row,w_row,ind_row);
+        init_wt = wt;
 
         // With expected value estimator we start on stage 1 because
         // zeroth order term is added explicitly at the end
@@ -101,6 +103,10 @@ void AdjointMcAdaptive::solve(const MV &x, MV &y)
 
             // Tally
             tallyContribution(state,wt,y_data,h_row,ind_row);
+
+            // Check weight cutoff
+            if( std::abs(wt/init_wt) < d_weight_cutoff )
+                break;
         }
     }
 
