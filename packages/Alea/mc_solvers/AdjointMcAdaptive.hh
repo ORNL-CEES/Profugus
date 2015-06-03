@@ -51,6 +51,7 @@ class AdjointMcAdaptive
         Teuchos::ArrayRCP<double>      &cdf,
         Teuchos::ArrayRCP<double>      &wt) const;
 
+    // Initialize a new history
     inline void initializeHistory(int &state, double &wt,
         Teuchos::ArrayRCP<const double>   start_cdf,
         Teuchos::ArrayRCP<const double>   start_wt,
@@ -59,12 +60,14 @@ class AdjointMcAdaptive
         Teuchos::ArrayView<const double> &w_row,
         Teuchos::ArrayView<const int>    &ind_row);
 
+    // Transition a history to a new state
     inline void getNewState(int &state, double &wt,
         Teuchos::ArrayView<const double> &h_row,
         Teuchos::ArrayView<const double> &p_row,
         Teuchos::ArrayView<const double> &w_row,
         Teuchos::ArrayView<const int>    &ind_row);
 
+    // Add contribution of current history to solution
     inline void tallyContribution(int state, double wt,
         Teuchos::ArrayRCP<double>        y,
         Teuchos::ArrayView<const double> h_row,
