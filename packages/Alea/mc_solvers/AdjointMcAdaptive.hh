@@ -46,29 +46,29 @@ class AdjointMcAdaptive
     void extractMatrices(Teuchos::RCP<const MC_Data> mc_data);
 
     // Build the initial CDF and weights
-    void build_initial_distribution(
-            Teuchos::ArrayRCP<const double> x,
-            Teuchos::ArrayRCP<double>      &cdf,
-            Teuchos::ArrayRCP<double>      &wt) const;
+    inline void build_initial_distribution(
+        Teuchos::ArrayRCP<const double> x,
+        Teuchos::ArrayRCP<double>      &cdf,
+        Teuchos::ArrayRCP<double>      &wt) const;
 
-    void initializeHistory(int &state, double &wt,
-            Teuchos::ArrayRCP<const double>   start_cdf,
-            Teuchos::ArrayRCP<const double>   start_wt,
-            Teuchos::ArrayView<const double> &h_row,
-            Teuchos::ArrayView<const double> &p_row,
-            Teuchos::ArrayView<const double> &w_row,
-            Teuchos::ArrayView<const int>    &ind_row);
+    inline void initializeHistory(int &state, double &wt,
+        Teuchos::ArrayRCP<const double>   start_cdf,
+        Teuchos::ArrayRCP<const double>   start_wt,
+        Teuchos::ArrayView<const double> &h_row,
+        Teuchos::ArrayView<const double> &p_row,
+        Teuchos::ArrayView<const double> &w_row,
+        Teuchos::ArrayView<const int>    &ind_row);
 
-    void getNewState(int &state, double &wt,
-                     Teuchos::ArrayView<const double> &h_row,
-                     Teuchos::ArrayView<const double> &p_row,
-                     Teuchos::ArrayView<const double> &w_row,
-                     Teuchos::ArrayView<const int>    &ind_row);
+    inline void getNewState(int &state, double &wt,
+        Teuchos::ArrayView<const double> &h_row,
+        Teuchos::ArrayView<const double> &p_row,
+        Teuchos::ArrayView<const double> &w_row,
+        Teuchos::ArrayView<const int>    &ind_row);
 
-    void tallyContribution(int state, double wt,
-                           Teuchos::ArrayRCP<double>        y,
-                           Teuchos::ArrayView<const double> h_row,
-                           Teuchos::ArrayView<const int>    ind_row) const;
+    inline void tallyContribution(int state, double wt,
+        Teuchos::ArrayRCP<double>        y,
+        Teuchos::ArrayView<const double> h_row,
+        Teuchos::ArrayView<const int>    ind_row) const;
 
     // Data for Monte Carlo
     Teuchos::ArrayRCP<Teuchos::ArrayView<const double> > d_H;
