@@ -33,7 +33,8 @@ namespace alea
  * \param pl Problem parameters
  */
 //---------------------------------------------------------------------------//
-AdjointMcAdaptive::AdjointMcAdaptive(Teuchos::RCP<const MC_Data> mc_data,
+AdjointMcAdaptive::AdjointMcAdaptive(
+        Teuchos::RCP<const MC_Data> mc_data,
         Teuchos::RCP<Teuchos::ParameterList> pl,
         generator_pool rand_pool)
 
@@ -42,9 +43,11 @@ AdjointMcAdaptive::AdjointMcAdaptive(Teuchos::RCP<const MC_Data> mc_data,
   , d_rand_gen(d_rand_pool.get_state())
 {
     // Get parameters
-    d_num_histories      = pl->get("num_histories",1000);
+    d_max_num_histories  = pl->get("num_histories",1000);
     d_max_history_length = pl->get("max_history_length",1000);
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
+    d_batch_size         = pl->get("batch_size",100);
+    d_tolerance          = pl->get("tolerance",0.01);
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -73,49 +76,123 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
     build_initial_distribution(b_data,start_cdf,start_wt);
 
     Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
+    std::fill( x_data.begin(), x_data.end(), 0.0 );
 
     // Storage for current row of H, P, W
     Teuchos::ArrayView<const double> h_row, p_row, w_row;
     Teuchos::ArrayView<const int> ind_row;
 
+    Teuchos::ArrayRCP<double> x_history(d_N);
+    Teuchos::ArrayRCP<double> x_batch(d_N);
+    Teuchos::ArrayRCP<double> variance(d_N);
+    Teuchos::ArrayRCP<double> variance_batch(d_N);
+
     int state = -1;
     double wt = 0.0;
     double init_wt = 0.0;
-    for( int i=0; i<d_num_histories; ++i )
+
+    double rel_std_dev = 1e6;
+    int batch=0;
+    int num_histories = 0;
+    while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
     {
-        // Get initial state for this history by sampling from start_cdf
-        initializeHistory(state,wt,start_cdf,start_wt,h_row,p_row,w_row,ind_row);
-        init_wt = wt;
+        batch++;
+        std::fill( x_batch.begin(), x_batch.end(), 0.0 );
+        std::fill( variance_batch.begin(), variance_batch.end(), 0.0 );
 
-        // With expected value estimator we start on stage 1 because
-        // zeroth order term is added explicitly at the end
-        int stage = d_use_expected_value ? 1 : 0;
-
-        // Perform initial tally
-        tallyContribution(state,wt,x_data,h_row,ind_row);
-
-        for( ; stage<=d_max_history_length; ++stage )
+        for( int i=0; i<d_batch_size; ++i )
         {
-            // Move to new state
-            getNewState(state,wt,h_row,p_row,w_row,ind_row);
+            std::fill( x_history.begin(), x_history.end(), 0.0 );
 
-            // Tally
-            tallyContribution(state,wt,x_data,h_row,ind_row);
+            // Get initial state for this history by sampling from start_cdf
+            initializeHistory(state,wt,start_cdf,start_wt,h_row,p_row,w_row,ind_row);
+            if( h_row.size() == 0 )
+                continue;
+            init_wt = wt;
 
-            // Check weight cutoff
-            if( std::abs(wt/init_wt) < d_weight_cutoff )
-                break;
+            // With expected value estimator we start on stage 1 because
+            // zeroth order term is added explicitly at the end
+            int stage = d_use_expected_value ? 1 : 0;
+
+            // Perform initial tally
+            tallyContribution(state,wt,x_history,h_row,ind_row);
+
+            for( ; stage<=d_max_history_length; ++stage )
+            {
+                // Move to new state
+                getNewState(state,wt,h_row,p_row,w_row,ind_row);
+                if( h_row.size() == 0 )
+                    break;
+
+                // Tally
+                tallyContribution(state,wt,x_history,h_row,ind_row);
+
+                // Check weight cutoff
+                if( std::abs(wt/init_wt) < d_weight_cutoff )
+                    break;
+            }
+
+            for( int i=0; i<d_N; ++i )
+            {
+                x_batch[i]  += x_history[i];
+                variance_batch[i] += x_history[i]*x_history[i];
+            }
+
         }
+
+        for( int i=0; i<d_N; ++i )
+        {
+            x_data[i] = (x_data[i] * static_cast<double>(num_histories) +
+                         x_batch[i]) /
+                         static_cast<double>(num_histories+d_batch_size);
+            variance[i] = (variance[i] * static_cast<double>(num_histories-1) +
+                         variance_batch[i]) /
+                         static_cast<double>(num_histories+d_batch_size);
+        }
+
+        num_histories += d_batch_size;
+
+        // Normalize by number of histories
+        double scale_factor = 1.0 / static_cast<double>(num_histories);
+        std::transform(x_data.begin(),x_data.end(),x_data.begin(),
+            [scale_factor](double val){return val*scale_factor;});
+
+        // Normalize variance by num_histories-1
+        scale_factor = 1.0 / static_cast<double>(num_histories-1);
+        std::transform(variance.begin(),variance.end(),variance.begin(),
+            [scale_factor](double val){return val*scale_factor;});
+
+        // Add rhs for expected value
+        if( d_use_expected_value )
+            x.update(1.0,b,1.0);
+
+        // Compute 1-norm of solution and variance of mean
+        double soln_1norm = 0.0;
+        double std_dev_1norm = 0.0;
+        for( int i=0; i<d_N; ++i )
+        {
+            soln_1norm += std::abs(x_data[i]);
+            double var = variance[i] / static_cast<double>(num_histories);
+            std_dev_1norm += std::sqrt(var);
+        }
+        CHECK( soln_1norm > 0.0 );
+        rel_std_dev = std_dev_1norm / soln_1norm;
+
+        std::cout << "Relative std dev at batch " << batch << ": "
+            << rel_std_dev << std::endl;
     }
 
-    // Normalize by number of histories
-    double scale_factor = 1.0 / static_cast<double>(d_num_histories);
-    std::transform(x_data.begin(),x_data.end(),x_data.begin(),
-        [scale_factor](double val){return val*scale_factor;});
+    if( rel_std_dev < d_tolerance )
+    {
+        std::cout << "Converged using " << num_histories << " histories"
+            << std::endl;
+    }
+    else
+    {
+        std::cout << "Did not converge, final relative std dev is " <<
+            rel_std_dev << std::endl;
+    }
 
-    // Add rhs for expected value
-    if( d_use_expected_value )
-        x.update(1.0,b,1.0);
 }
 
 //---------------------------------------------------------------------------//

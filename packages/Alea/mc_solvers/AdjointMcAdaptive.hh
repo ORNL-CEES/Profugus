@@ -85,8 +85,10 @@ class AdjointMcAdaptive
     // Problem parameters
     int    d_max_history_length;
     bool   d_use_expected_value;
-    int    d_num_histories;
+    int    d_max_num_histories;
     double d_weight_cutoff;
+    int    d_batch_size;
+    double d_tolerance;
     std::string d_verbosity;
 
     // Kokkos random number generator
