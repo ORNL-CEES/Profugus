@@ -10,6 +10,7 @@
 #define mc_solver_MonteCarloSolver_hh
 
 #include "Kokkos_View.hpp"
+#include "Kokkos_Random.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_ArrayRCP.hpp"
@@ -53,10 +54,7 @@ class MonteCarloSolver : public AleaSolver,
 {
   public:
 
-    typedef Kokkos::View<      SCALAR *,DEVICE> view_type;
-    typedef Kokkos::View<const SCALAR *,DEVICE> const_view_type;
-    typedef Kokkos::View<      LO     *,DEVICE> ord_view;
-    typedef Kokkos::View<const LO     *,DEVICE> const_ord_view;
+    typedef Kokkos::Random_XorShift64_Pool<DEVICE>  generator_pool;
 
     MonteCarloSolver(Teuchos::RCP<const MATRIX>           A,
                      Teuchos::RCP<Teuchos::ParameterList> pl);
@@ -73,15 +71,6 @@ class MonteCarloSolver : public AleaSolver,
     bool isInitialized() const override {return d_initialized;}
     void compute() override { if( !d_initialized ) initialize(); }
     bool isComputed() const override {return d_initialized;}
-
-    magnitude_type computeCondEst(Ifpack2::CondestType CT=Ifpack2::Cheap,
-        LO MaxIters=1550,magnitude_type tol=1e-9,
-        const Teuchos::Ptr<const MATRIX> &matrix=Teuchos::null) override
-    {
-        return -1.0;
-    }
-
-    magnitude_type getCondEst() const override { return -1.0; }
 
     Teuchos::RCP<const MATRIX> getMatrix() const override { return b_A; }
     int getNumInitialize() const override { return d_init_count; }
@@ -130,27 +119,23 @@ class MonteCarloSolver : public AleaSolver,
     // Implementation of apply
     void applyImpl(const MV &x, MV &y) const;
 
-    void convertMatrices(Teuchos::RCP<const MATRIX> H,
-                         Teuchos::RCP<const MATRIX> P,
-                         Teuchos::RCP<const MATRIX> W);
-
-    Teuchos::RCP<MC_Data> d_mc_data;
     Teuchos::RCP<Teuchos::ParameterList> d_mc_pl;
 
-    view_type d_H;
-    view_type d_P;
-    view_type d_W;
-    ord_view  d_inds;
-    ord_view  d_offsets;
-    view_type d_coeffs;
+    MC_Data_View d_mc_data;
+    scalar_view d_coeffs;
 
     enum MC_TYPE { FORWARD, ADJOINT };
+    enum KERNEL_TYPE { PARALLEL_FOR, PARALLEL_REDUCE, EVENT };
 
-    MC_TYPE d_type;
+    MC_TYPE d_mc_type;
+    KERNEL_TYPE d_kernel_type;
     bool    d_use_expected_value;
     GO      d_num_histories;
     SCALAR  d_weight_cutoff;
     SCALAR  d_start_wt_factor;
+
+    // Kokkos random generator pool
+    generator_pool d_rand_pool;
 
     int d_num_threads;
 

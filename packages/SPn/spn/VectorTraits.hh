@@ -159,17 +159,6 @@ class VectorTraits<EpetraTypes>
         CHECK( err == 0 );
         return dot;
     }
-
-    static double dot_product(Teuchos::RCP<const Vector_t> x,
-                              Teuchos::RCP<const Vector_t> y)
-    {
-        double dot;
-        int err;
-        err = x->Dot(*y,&dot);
-        CHECK( err == 0 );
-        return dot;
-    }
-
 };
 
 // Specialization on TpetraTypes

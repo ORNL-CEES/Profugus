@@ -92,7 +92,7 @@ void Arnoldi<T>::solve(double &eval,
     {
         // calculate problem sizes
         int subspace   = d_pl->get<int>("subspace");
-        int N = MultiVecTraits::GetVecLength(*evec);
+        int N = MultiVecTraits::GetGlobalLength(*evec);
         int block_size = d_pl->get<int>("Block Size");
         int num_blocks = std::min( (N-2)/block_size, subspace );
 

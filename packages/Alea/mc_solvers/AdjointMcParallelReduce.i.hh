@@ -1,19 +1,20 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdjointMcKernel.cc
+ * \file   AdjointMcParallelReduce.cc
  * \author Steven Hamilton
  * \brief  Perform single history of adjoint MC
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_AdjointMcKernel_i_hh
-#define mc_solver_AdjointMcKernel_i_hh
+#ifndef mc_solver_AdjointMcParallelReduce_i_hh
+#define mc_solver_AdjointMcParallelReduce_i_hh
 
 #include <iterator>
 #include <random>
 #include <cmath>
 
-#include "AdjointMcKernel.hh"
+#include "AdjointMcParallelReduce.hh"
+#include "MC_Components.hh"
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
@@ -27,40 +28,24 @@ namespace alea
  * \param P Views into entries of probability matrix
  * \param W Views into entries of weight matrix
  * \param inds Views into nonzeros indices
+ * \param offsets Starting indices for each matrix row
  * \param coeffs Polynomial coefficients
- * \param local_length Number of local elements in vector
- * \param start_cdf CDF corresponding to random walk starting locations.
- * \param start_wt  Weights corresponding to random walk starting locations.
- * \param rng ThreadedRNG object for generating local random values
- * \param histories_per_thread Number of histories to be computed
- * \param use_expected_value Should expected value estimator be used?
- * \param print Should debug info be printed?
+ * \param pl Problem parameters
  */
 //---------------------------------------------------------------------------//
-AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
-                                 const const_view_type                P,
-                                 const const_view_type                W,
-                                 const const_ord_view                 inds,
-                                 const const_ord_view                 offsets,
-                                 const const_view_type                coeffs,
-                                 Teuchos::RCP<Teuchos::ParameterList> pl)
-
-  : value_count(offsets.size()-1)
-  , d_H(H)
-  , d_P(P)
-  , d_W(W)
-  , d_inds(inds)
-  , d_offsets(offsets)
+AdjointMcParallelReduce::AdjointMcParallelReduce(
+        const MC_Data_View                  &mc_data,
+        const const_scalar_view              coeffs,
+        Teuchos::RCP<Teuchos::ParameterList> pl)
+  : value_count(mc_data.offsets.size()-1)
+  , d_mc_data(mc_data)
   , d_coeffs(coeffs)
   , d_start_cdf("start_cdf",value_count)
   , d_start_wt("start_wt",value_count)
+  , d_rand_pool(pl->get("random_seed",31891))
   , d_max_history_length(d_coeffs.size()-1)
 {
     d_num_histories = pl->get("num_histories",1000);
-
-    // Set up RNG
-    int rand_seed = pl->get("random_seed",31891);
-    d_rand_pool.init(rand_seed,DEVICE::max_hardware_threads());
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -73,6 +58,9 @@ AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
     // Power factor for initial probability distribution
     d_start_wt_factor = pl->get<SCALAR>("start_weight_factor",1.0);
 
+    // Weight cutoff
+    d_wt_cutoff = pl->get<SCALAR>("weight_cutoff",0.0);
+
     // Should we print anything to screen
     std::string verb = profugus::to_lower(pl->get("verbosity","low"));
     d_print = (verb == "high");
@@ -81,43 +69,24 @@ AdjointMcKernel::AdjointMcKernel(const const_view_type                H,
 //---------------------------------------------------------------------------//
 // Solve problem using Monte Carlo
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::solve(const MV &x, MV &y)
+void AdjointMcParallelReduce::solve(const MV &x, MV &y)
 {
-    // Determine number of histories needed per team
-    int rec_team_size = team_policy::team_size_recommended(*this);
-    int league_size_req = d_num_histories / rec_team_size;
-    team_policy policy(league_size_req,rec_team_size);
-    int num_teams = policy.league_size();
-    int team_size = policy.team_size();
-    int num_threads = num_teams * team_size;
-    int total_histories = d_num_histories;
-    if( d_num_histories % num_threads != 0 )
-    {
-        total_histories = (total_histories/num_threads + 1)*num_threads;
-        ADD_WARNING("Requested number of histories (" << d_num_histories
-           << ") is not divisible by number of threads ("
-           << num_threads << "), number of histories is being increased to "
-           << total_histories << std::endl);
-    }
-    d_histories_per_team = total_histories / num_teams;
+    range_policy policy(0,d_num_histories);
 
     // Build initial probability and weight distributions
     build_initial_distribution(x);
 
     // Need to get Kokkos view directly, this is silly
     Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-    const view_type y_device("result",value_count);
-    const view_type::HostMirror y_mirror =
+    const scalar_view y_device("result",value_count);
+    const scalar_host_mirror y_mirror =
         Kokkos::create_mirror_view(y_device);
 
     // Execute functor
     Kokkos::parallel_reduce(policy,*this,y_mirror);
 
-    // Copy data back to host, this shouldn't need to happen
-    Kokkos::deep_copy(y_mirror,y_device);
-
     // Apply scale factor
-    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(total_histories);
+    SCALAR scale_factor = 1.0 / static_cast<SCALAR>(d_num_histories);
     for( LO i=0; i<value_count; ++i )
     {
         y_data[i] = scale_factor*y_mirror(i);
@@ -126,7 +95,10 @@ void AdjointMcKernel::solve(const MV &x, MV &y)
     // Add rhs for expected value
     if( d_use_expected_value )
     {
-        y.update(d_coeffs(0),x,1.0);
+        scalar_host_mirror coeffs_mirror =
+            Kokkos::create_mirror_view(d_coeffs);
+        Kokkos::deep_copy(coeffs_mirror,d_coeffs);
+        y.update(coeffs_mirror(0),x,1.0);
     }
 }
 
@@ -134,7 +106,7 @@ void AdjointMcKernel::solve(const MV &x, MV &y)
 //---------------------------------------------------------------------------//
 // Kokkos init
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::init( SCALAR *update ) const
+void AdjointMcParallelReduce::init( SCALAR *update ) const
 {
     for( LO i=0; i<value_count; ++i )
     {
@@ -147,7 +119,7 @@ void AdjointMcKernel::init( SCALAR *update ) const
  * \brief Perform adjoint Monte Carlo process
  */
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
+void AdjointMcParallelReduce::operator()(const policy_member &member, SCALAR *y) const
 {
     LO new_ind;
     LO state;
@@ -157,13 +129,19 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
     const LO     * row_inds;
     int row_length;
 
-    int team_size = member.team_size();
-    int histories_per_thread = d_histories_per_team / team_size;
-
     generator_type rand_gen = d_rand_pool.get_state();
 
+    int histories_per_thread = 1;
     for( int ihist=0; ihist<histories_per_thread; ++ihist )
     {
+        /*
+        if( d_print )
+        {
+            printf("Getting new state on team %i, thread %i\n",
+                    member.league_rank(),member.team_rank());
+        }
+        */
+
         // Get starting position and weight
         state = getNewState(&d_start_cdf(0),value_count,rand_gen);
         if( state == -1 )
@@ -191,14 +169,45 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
         while(true)
         {
             // Get data and add to tally
+            /*
+            if( d_print )
+            {
+                printf("Getting new row on team %i, thread %i\n",
+                       member.league_rank(),member.team_rank());
+            }
+            */
             getNewRow(state,row_h,row_cdf,row_wts,row_inds,row_length);
+            /*
+            if( d_print )
+            {
+                printf("Tallying contribution to state %i on team %i, thread %i\n",
+                       state,member.league_rank(),member.team_rank());
+            }
+            */
             tallyContribution(state,d_coeffs(stage)*weight,
                               row_h,row_inds,row_length,y);
 
+            /*
+            if( d_print )
+            {
+                printf("Checking length cutoff on team %i, thread %i\n",
+                       member.league_rank(),member.team_rank());
+            }
+            */
             if( stage >= d_max_history_length )
                 break;
 
+            if( std::abs(weight/initial_weight) < d_wt_cutoff )
+                break;
+
             // Get new state index
+            /*
+            if( d_print )
+            {
+                printf("Getting new state on team %i, thread %i\n",
+                       member.league_rank(),member.team_rank());
+            }
+            */
             new_ind = getNewState(row_cdf,row_length,rand_gen);
             if( new_ind == -1 )
                 break;
@@ -210,7 +219,7 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
 
             if( d_print )
             {
-                printf("Transitioning to state %i with new weight %6.2e\n",
+                printf("Transitioning to state %i with new weight %6.2e",
                        state,weight);
             }
 
@@ -223,7 +232,7 @@ void AdjointMcKernel::operator()(team_member member, SCALAR *y) const
 //---------------------------------------------------------------------------//
 // Kokkos join
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::join(      volatile SCALAR *update,
+void AdjointMcParallelReduce::join(      volatile SCALAR *update,
                            const volatile SCALAR *input) const
 {
     for( LO i=0; i<value_count; ++i )
@@ -241,19 +250,19 @@ void AdjointMcKernel::join(      volatile SCALAR *update,
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::getNewRow( const LO        state,
+void AdjointMcParallelReduce::getNewRow( const LO        state,
                                  const SCALAR * &h_vals,
                                  const SCALAR * &p_vals,
                                  const SCALAR * &w_vals,
                                  const LO     * &inds,
                                        LO       &row_length ) const
 {
-    LO off     = d_offsets(state);
-    h_vals     = &d_H(off);
-    p_vals     = &d_P(off);
-    w_vals     = &d_W(off);
-    inds       = &d_inds(off);
-    row_length = d_offsets(state+1)-off;
+    LO off     = d_mc_data.offsets(state);
+    h_vals     = &d_mc_data.H(off);
+    p_vals     = &d_mc_data.P(off);
+    w_vals     = &d_mc_data.W(off);
+    inds       = &d_mc_data.inds(off);
+    row_length = d_mc_data.offsets(state+1)-off;
 }
 
 //---------------------------------------------------------------------------//
@@ -261,7 +270,7 @@ void AdjointMcKernel::getNewRow( const LO        state,
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-void AdjointMcKernel::tallyContribution(
+void AdjointMcParallelReduce::tallyContribution(
         const LO             state,
         const SCALAR         wt,
         const SCALAR * const h_vals,
@@ -292,16 +301,17 @@ void AdjointMcKernel::tallyContribution(
  * \brief Get new state by sampling from cdf
  */
 //---------------------------------------------------------------------------//
-LO AdjointMcKernel::getNewState(const SCALAR * const  cdf,
+LO AdjointMcParallelReduce::getNewState(const SCALAR * const  cdf,
                                 const LO              cdf_length,
                                       generator_type &gen) const
 {
     // Generate random number
-    //SCALAR rand = d_rng.getRandom(thread);
     SCALAR rand = Kokkos::rand<generator_type,SCALAR>::draw(gen);
 
     // Sample cdf to get new state
-    const SCALAR * const elem = std::lower_bound(cdf,cdf+cdf_length,rand);
+    // Use local lower_bound implementation, not std library version
+    // This allows calling from device
+    const SCALAR * const elem = lower_bound(cdf,cdf+cdf_length,rand);
 
     if( elem == cdf+cdf_length )
         return -1;
@@ -309,14 +319,16 @@ LO AdjointMcKernel::getNewState(const SCALAR * const  cdf,
     return elem - cdf;
 }
 
+//---------------------------------------------------------------------------//
 // Build initial cdf and weights
-void AdjointMcKernel::build_initial_distribution(const MV &x)
+//---------------------------------------------------------------------------//
+void AdjointMcParallelReduce::build_initial_distribution(const MV &x)
 {
     // Build data on host, then explicitly copy to device
     // In future, convert this to a new Kernel to allow building
     //  distributions directly on device if x is allocated there
-    host_view_type start_cdf_host = Kokkos::create_mirror_view(d_start_cdf);
-    host_view_type start_wt_host  = Kokkos::create_mirror_view(d_start_wt);
+    scalar_host_mirror start_cdf_host = Kokkos::create_mirror_view(d_start_cdf);
+    scalar_host_mirror start_wt_host  = Kokkos::create_mirror_view(d_start_wt);
 
     Teuchos::ArrayRCP<const SCALAR> x_data = x.getData(0);
 
@@ -343,4 +355,4 @@ void AdjointMcKernel::build_initial_distribution(const MV &x)
 
 } // namespace alea
 
-#endif // mc_solver_AdjointMcKernel_i_hh
+#endif // mc_solver_AdjointMcParallelReduce_i_hh

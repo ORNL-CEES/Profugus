@@ -15,6 +15,58 @@ namespace alea
 
 //---------------------------------------------------------------------------//
 /*!
+ * \class MC_Data_View
+ * \brief Monte Carlo data reorganized into Kokkos Views
+ *
+ * This class stores matrices needed for MC transport in form of Kokkos::View
+ * objects to facilitate device-based parallelism.
+ */
+//---------------------------------------------------------------------------//
+struct MC_Data_View
+{
+    MC_Data_View(){}
+
+    MC_Data_View( const_scalar_view h,
+                  const_scalar_view p,
+                  const_scalar_view w,
+                  const_ord_view    ind,
+                  const_ord_view    off)
+        : H(h), P(p), W(w), inds(ind), offsets(off)
+    {}
+
+    const_scalar_view H;
+    const_scalar_view P;
+    const_scalar_view W;
+    const_ord_view    inds;
+    const_ord_view    offsets;
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \class MC_Data_Texture_View
+ * \brief Monte Carlo data reorganized into Kokkos texture Views
+ *
+ * This class stores matrices needed for MC transport in form of Kokkos::View
+ * objects to facilitate device-based parallelism.
+ */
+//---------------------------------------------------------------------------//
+struct MC_Data_Texture_View
+{
+    MC_Data_Texture_View(){}
+
+    MC_Data_Texture_View( MC_Data_View v )
+        : H(v.H), P(v.P), W(v.W), inds(v.inds), offsets(v.offsets)
+    {}
+
+    random_scalar_view H;
+    random_scalar_view P;
+    random_scalar_view W;
+    random_ord_view    inds;
+    random_ord_view    offsets;
+};
+
+//---------------------------------------------------------------------------//
+/*!
  * \class MC_Data
  * \brief Construct data needed for Monte Carlo linear solver.
  *
@@ -66,6 +118,9 @@ class MC_Data
         REQUIRE( d_W != Teuchos::null );
         return d_W;
     }
+
+    //! Convert matrices to Kokkos::Views
+    MC_Data_View createKokkosViews();
 
   private:
 

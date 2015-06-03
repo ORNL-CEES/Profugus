@@ -10,10 +10,13 @@
 #include <string>
 
 #include "MonteCarloSolver.hh"
-#include "AdjointMcKernel.hh"
-#include "ForwardMcKernel.hh"
+#include "AdjointMcParallelFor.hh"
+#include "AdjointMcParallelReduce.hh"
+#include "AdjointMcEventKernel.hh"
+//#include "ForwardMcKernel.hh"
 #include "PolynomialFactory.hh"
-#include "Kokkos_ExecPolicy.hpp"
+#include "Kokkos_Core.hpp"
+#include "Kokkos_Random.hpp"
 #include "harness/DBC.hh"
 
 namespace alea
@@ -37,6 +40,7 @@ namespace alea
 MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
                                    Teuchos::RCP<Teuchos::ParameterList> pl )
   : AleaSolver(A,pl)
+  , d_rand_pool(pl->get("random_seed",31891))
 {
     // Get Monte Carlo sublist
     d_mc_pl = Teuchos::sublist(pl,"Monte Carlo");
@@ -45,11 +49,26 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
     AleaSolver::setParameters(d_mc_pl);
 
     // Determine forward or adjoint
-    std::string type = d_mc_pl->get("mc_type","adjoint");
-    if( type == "forward" )
-        d_type = FORWARD;
+    std::string mc_type = d_mc_pl->get("mc_type","adjoint");
+    VALIDATE(mc_type == "adjoint" || mc_type == "forward",
+             "Invalid mc_type.");
+    if( mc_type == "forward" )
+        d_mc_type = FORWARD;
     else
-        d_type = ADJOINT;
+        d_mc_type = ADJOINT;
+
+    // Type of Kokkos kernel
+    std::string kernel_type = d_mc_pl->get("kernel_type","parallel_for");
+    VALIDATE(kernel_type == "parallel_reduce" ||
+             kernel_type == "parallel_for"    ||
+             kernel_type == "event",
+             "Invalid kernel_type.");
+    if( kernel_type == "parallel_for" )
+        d_kernel_type = PARALLEL_FOR;
+    else if( kernel_type == "parallel_reduce" )
+        d_kernel_type = PARALLEL_REDUCE;
+    else if( kernel_type == "event" )
+        d_kernel_type = EVENT;
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
@@ -91,16 +110,13 @@ void MonteCarloSolver::initialize()
     Teuchos::ArrayRCP<const SCALAR> coeffs = poly->getCoeffs(*basis);
     CHECK( !coeffs.is_null() );
     Kokkos::resize(d_coeffs,coeffs.size());
-    view_type::HostMirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
+    scalar_host_mirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
     std::copy(coeffs.begin(),coeffs.end(),&coeffs_host(0));
     Kokkos::deep_copy(d_coeffs,coeffs_host);
 
     // Create Monte Carlo data
-    d_mc_data = Teuchos::rcp(
-        new MC_Data(b_A,basis,b_pl) );
-    convertMatrices(d_mc_data->getIterationMatrix(),
-                    d_mc_data->getProbabilityMatrix(),
-                    d_mc_data->getWeightMatrix());
+    Teuchos::RCP<MC_Data> mc_data( new MC_Data(b_A,basis,b_pl) );
+    d_mc_data = mc_data->createKokkosViews();
 
     b_label = "MonteCarloSolver";
     d_initialized = true;
@@ -132,7 +148,7 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 
     LO N = x.getLocalLength();
 
-    if( d_type == FORWARD )
+    if( d_mc_type == FORWARD )
     {
         /*
         int histories_per_state = d_num_histories / N;
@@ -156,10 +172,24 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
                        */
 
     }
-    else if( d_type == ADJOINT )
+    else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_REDUCE )
     {
         // Create kernel for performing group of MC histories
-        AdjointMcKernel kernel(d_H,d_P,d_W,d_inds,d_offsets,d_coeffs,d_mc_pl);
+        AdjointMcParallelReduce kernel(d_mc_data,d_coeffs,d_mc_pl);
+
+        kernel.solve(x,y);
+    }
+    else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_FOR )
+    {
+        // Create kernel for performing group of MC histories
+        AdjointMcParallelFor kernel(d_mc_data,d_coeffs,d_mc_pl);
+
+        kernel.solve(x,y);
+    }
+    else if( d_mc_type == ADJOINT && d_kernel_type == EVENT )
+    {
+        // Create kernel for performing group of MC histories
+        AdjointMcEventKernel kernel(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool);
 
         kernel.solve(x,y);
     }
@@ -173,74 +203,6 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     // There isn't a proper iteration count for MC
     // We use the number of histories as a stand-in
     b_num_iters = d_num_histories;
-}
-
-//---------------------------------------------------------------------------//
-// PRIVATE MEMBER FUNCTIONS
-//---------------------------------------------------------------------------//
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Convert MC matrices from CrsMatrix format to lightweight views.
- *
- * Data access in the Tpetra CrsMatrix implementation is not thread safe so
- * we get threadsafe views here to hand to the MC kernel.
- */
-//---------------------------------------------------------------------------//
-void MonteCarloSolver::convertMatrices(Teuchos::RCP<const MATRIX> H,
-                                       Teuchos::RCP<const MATRIX> P,
-                                       Teuchos::RCP<const MATRIX> W)
-{
-    REQUIRE( H->isLocallyIndexed() );
-    REQUIRE( P->isLocallyIndexed() );
-    REQUIRE( W->isLocallyIndexed() );
-    REQUIRE( H->supportsRowViews() );
-    REQUIRE( P->supportsRowViews() );
-    REQUIRE( W->supportsRowViews() );
-
-    LO numRows     = H->getNodeNumRows();
-    GO numNonZeros = H->getNodeNumEntries();
-
-    Kokkos::resize(d_H,numNonZeros);
-    Kokkos::resize(d_P,numNonZeros);
-    Kokkos::resize(d_W,numNonZeros);
-    Kokkos::resize(d_inds,numNonZeros);
-    Kokkos::resize(d_offsets,numRows+1);
-
-    // Mirror views on host
-    view_type::HostMirror H_host      = Kokkos::create_mirror_view(d_H);
-    view_type::HostMirror P_host      = Kokkos::create_mirror_view(d_P);
-    view_type::HostMirror W_host      = Kokkos::create_mirror_view(d_W);
-    ord_view::HostMirror inds_host    = Kokkos::create_mirror_view(d_inds);
-    ord_view::HostMirror offsets_host = Kokkos::create_mirror_view(d_offsets);
-
-    Teuchos::ArrayView<const double> H_row, P_row, W_row;
-    Teuchos::ArrayView<const int> ind_row;
-
-    // Copy data from CrsMatrix into Kokkos host mirrors
-    LO count = 0;
-    for( LO irow=0; irow<numRows; ++irow )
-    {
-        // Get row views
-        H->getLocalRowView(irow,ind_row,H_row);
-        P->getLocalRowView(irow,ind_row,P_row);
-        W->getLocalRowView(irow,ind_row,W_row);
-
-        // Copy into host mirror
-        std::copy( H_row.begin(), H_row.end(), &H_host(count) );
-        std::copy( P_row.begin(), P_row.end(), &P_host(count) );
-        std::copy( W_row.begin(), W_row.end(), &W_host(count) );
-        std::copy( ind_row.begin(), ind_row.end(), &inds_host(count) );
-        count += ind_row.size();
-        offsets_host(irow+1) = count;
-    }
-
-    // Copy to device
-    Kokkos::deep_copy(d_H,H_host);
-    Kokkos::deep_copy(d_P,P_host);
-    Kokkos::deep_copy(d_W,W_host);
-    Kokkos::deep_copy(d_inds,inds_host);
-    Kokkos::deep_copy(d_offsets,offsets_host);
 }
 
 } // namespace alea
