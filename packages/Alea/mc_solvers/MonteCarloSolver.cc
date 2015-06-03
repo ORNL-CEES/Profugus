@@ -10,6 +10,7 @@
 #include <string>
 
 #include "MonteCarloSolver.hh"
+#include "AdjointMcAdaptive.hh"
 #include "AdjointMcParallelFor.hh"
 #include "AdjointMcParallelReduce.hh"
 #include "AdjointMcEventKernel.hh"
@@ -61,7 +62,8 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
     std::string kernel_type = d_mc_pl->get("kernel_type","parallel_for");
     VALIDATE(kernel_type == "parallel_reduce" ||
              kernel_type == "parallel_for"    ||
-             kernel_type == "event",
+             kernel_type == "event"           ||
+             kernel_type == "adaptive",
              "Invalid kernel_type.");
     if( kernel_type == "parallel_for" )
         d_kernel_type = PARALLEL_FOR;
@@ -69,6 +71,8 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
         d_kernel_type = PARALLEL_REDUCE;
     else if( kernel_type == "event" )
         d_kernel_type = EVENT;
+    else if( kernel_type == "adaptive" )
+        d_kernel_type = ADAPTIVE;
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
@@ -115,8 +119,8 @@ void MonteCarloSolver::initialize()
     Kokkos::deep_copy(d_coeffs,coeffs_host);
 
     // Create Monte Carlo data
-    Teuchos::RCP<MC_Data> mc_data( new MC_Data(b_A,basis,b_pl) );
-    d_mc_data = mc_data->createKokkosViews();
+    d_mc_data = Teuchos::rcp(new MC_Data(b_A,basis,b_pl));
+    d_mc_data_kokkos = d_mc_data->createKokkosViews();
 
     b_label = "MonteCarloSolver";
     d_initialized = true;
@@ -175,23 +179,29 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_REDUCE )
     {
         // Create kernel for performing group of MC histories
-        AdjointMcParallelReduce kernel(d_mc_data,d_coeffs,d_mc_pl);
+        AdjointMcParallelReduce kernel(d_mc_data_kokkos,d_coeffs,d_mc_pl);
 
         kernel.solve(x,y);
     }
     else if( d_mc_type == ADJOINT && d_kernel_type == PARALLEL_FOR )
     {
         // Create kernel for performing group of MC histories
-        AdjointMcParallelFor kernel(d_mc_data,d_coeffs,d_mc_pl);
+        AdjointMcParallelFor kernel(d_mc_data_kokkos,d_coeffs,d_mc_pl);
 
         kernel.solve(x,y);
     }
     else if( d_mc_type == ADJOINT && d_kernel_type == EVENT )
     {
         // Create kernel for performing group of MC histories
-        AdjointMcEventKernel kernel(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool);
+        AdjointMcEventKernel kernel(d_mc_data_kokkos,d_coeffs,d_mc_pl,d_rand_pool);
 
         kernel.solve(x,y);
+    }
+    else if( d_mc_type == ADJOINT && d_kernel_type == ADAPTIVE )
+    {
+        AdjointMcAdaptive solver(d_mc_data,d_mc_pl,d_rand_pool);
+
+        solver.solve(x,y);
     }
 
     if( b_verbosity >= LOW )

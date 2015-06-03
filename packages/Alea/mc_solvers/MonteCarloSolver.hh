@@ -121,11 +121,12 @@ class MonteCarloSolver : public AleaSolver,
 
     Teuchos::RCP<Teuchos::ParameterList> d_mc_pl;
 
-    MC_Data_View d_mc_data;
-    scalar_view d_coeffs;
+    Teuchos::RCP<MC_Data> d_mc_data;
+    MC_Data_View          d_mc_data_kokkos;
+    scalar_view           d_coeffs;
 
     enum MC_TYPE { FORWARD, ADJOINT };
-    enum KERNEL_TYPE { PARALLEL_FOR, PARALLEL_REDUCE, EVENT };
+    enum KERNEL_TYPE { PARALLEL_FOR, PARALLEL_REDUCE, EVENT, ADAPTIVE };
 
     MC_TYPE d_mc_type;
     KERNEL_TYPE d_kernel_type;

@@ -95,11 +95,6 @@ MC_Data_View MC_Data::createKokkosViews()
         offsets_host(irow+1) = count;
     }
 
-    // Release pointers to Tpetra matrices
-    d_H       = Teuchos::null;
-    d_P       = Teuchos::null;
-    d_W       = Teuchos::null;
-
     // Copy to device
     Kokkos::deep_copy(H,H_host);
     Kokkos::deep_copy(P,P_host);
