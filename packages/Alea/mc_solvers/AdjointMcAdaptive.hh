@@ -38,7 +38,7 @@ class AdjointMcAdaptive
                       generator_pool                       rand_pool);
 
     //! Solve problem
-    void solve(const MV &x, MV &y);
+    void solve(const MV &b, MV &x);
 
   private:
 
@@ -47,7 +47,7 @@ class AdjointMcAdaptive
 
     // Build the initial CDF and weights
     inline void build_initial_distribution(
-        Teuchos::ArrayRCP<const double> x,
+        Teuchos::ArrayRCP<const double> b,
         Teuchos::ArrayRCP<double>      &cdf,
         Teuchos::ArrayRCP<double>      &wt) const;
 
@@ -69,7 +69,7 @@ class AdjointMcAdaptive
 
     // Add contribution of current history to solution
     inline void tallyContribution(int state, double wt,
-        Teuchos::ArrayRCP<double>        y,
+        Teuchos::ArrayRCP<double>        x,
         Teuchos::ArrayView<const double> h_row,
         Teuchos::ArrayView<const int>    ind_row) const;
 

@@ -63,16 +63,16 @@ AdjointMcAdaptive::AdjointMcAdaptive(Teuchos::RCP<const MC_Data> mc_data,
 //---------------------------------------------------------------------------//
 // Solve problem using Monte Carlo
 //---------------------------------------------------------------------------//
-void AdjointMcAdaptive::solve(const MV &x, MV &y)
+void AdjointMcAdaptive::solve(const MV &b, MV &x)
 {
     // Containers to hold starting cdf and wt arrays
     Teuchos::ArrayRCP<double> start_cdf, start_wt;
 
     // Build initial probability and weight distributions
-    Teuchos::ArrayRCP<const double> x_data = x.getData(0);
-    build_initial_distribution(x_data,start_cdf,start_wt);
+    Teuchos::ArrayRCP<const double> b_data = b.getData(0);
+    build_initial_distribution(b_data,start_cdf,start_wt);
 
-    Teuchos::ArrayRCP<double> y_data = y.getDataNonConst(0);
+    Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
 
     // Storage for current row of H, P, W
     Teuchos::ArrayView<const double> h_row, p_row, w_row;
@@ -94,7 +94,7 @@ void AdjointMcAdaptive::solve(const MV &x, MV &y)
             stage++;
 
         // Perform initial tally
-        tallyContribution(state,wt,y_data,h_row,ind_row);
+        tallyContribution(state,wt,x_data,h_row,ind_row);
 
         for( ; stage<=d_max_history_length; ++stage )
         {
@@ -102,7 +102,7 @@ void AdjointMcAdaptive::solve(const MV &x, MV &y)
             getNewState(state,wt,h_row,p_row,w_row,ind_row);
 
             // Tally
-            tallyContribution(state,wt,y_data,h_row,ind_row);
+            tallyContribution(state,wt,x_data,h_row,ind_row);
 
             // Check weight cutoff
             if( std::abs(wt/init_wt) < d_weight_cutoff )
@@ -112,12 +112,12 @@ void AdjointMcAdaptive::solve(const MV &x, MV &y)
 
     // Normalize by number of histories
     double scale_factor = 1.0 / static_cast<double>(d_num_histories);
-    std::transform(y_data.begin(),y_data.end(),y_data.begin(),
+    std::transform(x_data.begin(),x_data.end(),x_data.begin(),
         [scale_factor](double val){return val*scale_factor;});
 
     // Add rhs for expected value
     if( d_use_expected_value )
-        y.update(1.0,x,1.0);
+        x.update(1.0,b,1.0);
 }
 
 //---------------------------------------------------------------------------//
@@ -159,7 +159,7 @@ void AdjointMcAdaptive::extractMatrices(Teuchos::RCP<const MC_Data> mc_data)
  */
 //---------------------------------------------------------------------------//
 void AdjointMcAdaptive::tallyContribution(int state, double wt,
-        Teuchos::ArrayRCP<double>        y,
+        Teuchos::ArrayRCP<double>        x,
         Teuchos::ArrayView<const double> h_row,
         Teuchos::ArrayView<const int>    ind_row ) const
 {
@@ -171,13 +171,13 @@ void AdjointMcAdaptive::tallyContribution(int state, double wt,
         // contributions corresponding to each element
         for( int i=0; i<h_row.size(); ++i )
         {
-            y[ind_row[i]] += wt * h_row[i];
+            x[ind_row[i]] += wt * h_row[i];
         }
     }
     else
     {
         // Collision estimator just adds weight
-        y[state] += wt;
+        x[state] += wt;
     }
 }
 
@@ -263,17 +263,17 @@ void AdjointMcAdaptive::getNewState(int &state, double &wt,
 // Build initial cdf and weights
 //---------------------------------------------------------------------------//
 void AdjointMcAdaptive::build_initial_distribution(
-        Teuchos::ArrayRCP<const double> x,
+        Teuchos::ArrayRCP<const double> b,
         Teuchos::ArrayRCP<double>      &cdf,
         Teuchos::ArrayRCP<double>      &wt) const
 {
     cdf.resize(d_N);
     wt.resize(d_N);
 
-    // First take absolute value of x
+    // First take absolute value of b
     for( int i=0; i<d_N; ++i )
     {
-        cdf[i] = std::abs(x[i]);
+        cdf[i] = std::abs(b[i]);
     }
 
     // Normalize to get a PDF
@@ -282,9 +282,9 @@ void AdjointMcAdaptive::build_initial_distribution(
     std::transform(cdf.begin(),cdf.end(),cdf.begin(),
             [pdf_sum](double val){return val/pdf_sum;});
 
-    // Compute weight vector s.t. x = p * wt
-    std::transform(x.begin(),x.end(),cdf.begin(),wt.begin(),
-            [](double x, double y){return y==0.0 ? 0.0 : x/y;});
+    // Compute weight vector s.t. b = p * wt
+    std::transform(b.begin(),b.end(),cdf.begin(),wt.begin(),
+            [](double u, double v){return v==0.0 ? 0.0 : u/v;});
 
     // Convert PDF to CDF
     std::partial_sum(cdf.begin(),cdf.end(),cdf.begin());
