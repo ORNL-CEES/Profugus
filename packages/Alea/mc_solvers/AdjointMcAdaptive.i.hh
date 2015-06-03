@@ -89,9 +89,7 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
 
         // With expected value estimator we start on stage 1 because
         // zeroth order term is added explicitly at the end
-        int stage = 0;
-        if( d_use_expected_value )
-            stage++;
+        int stage = d_use_expected_value ? 1 : 0;
 
         // Perform initial tally
         tallyContribution(state,wt,x_data,h_row,ind_row);
