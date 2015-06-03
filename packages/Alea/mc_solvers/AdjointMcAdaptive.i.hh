@@ -37,10 +37,7 @@ AdjointMcAdaptive::AdjointMcAdaptive(Teuchos::RCP<const MC_Data> mc_data,
         Teuchos::RCP<Teuchos::ParameterList> pl,
         generator_pool rand_pool)
 
-  : d_H(mc_data->getIterationMatrix())
-  , d_P(mc_data->getProbabilityMatrix())
-  , d_W(mc_data->getWeightMatrix())
-  , d_N(d_H->getGlobalNumRows())
+  : d_N(mc_data->getIterationMatrix()->getGlobalNumRows())
   , d_rand_pool(rand_pool)
   , d_rand_gen(d_rand_pool.get_state())
 {
@@ -59,6 +56,8 @@ AdjointMcAdaptive::AdjointMcAdaptive(Teuchos::RCP<const MC_Data> mc_data,
 
     // Should we print anything to screen
     d_verbosity = profugus::to_lower(pl->get("verbosity","low"));
+
+    extractMatrices(mc_data);
 }
 
 //---------------------------------------------------------------------------//
@@ -118,6 +117,35 @@ void AdjointMcAdaptive::solve(const MV &x, MV &y)
 //---------------------------------------------------------------------------//
 // PRIVATE FUNCTIONS
 //---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+// Extract matrices into ArrayView objects for faster data access
+//---------------------------------------------------------------------------//
+void AdjointMcAdaptive::extractMatrices(Teuchos::RCP<const MC_Data> mc_data)
+{
+    d_H.resize(d_N);
+    d_P.resize(d_N);
+    d_W.resize(d_N);
+    d_ind.resize(d_N);
+
+    Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
+    Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
+    Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
+
+    Teuchos::ArrayView<const double> val_row;
+    Teuchos::ArrayView<const int>    ind_row;
+    for( int i=0; i<d_N; ++i )
+    {
+        // Extract row i of matrix
+        H->getLocalRowView(i,ind_row,val_row);
+        d_H[i] = val_row;
+        P->getLocalRowView(i,ind_row,val_row);
+        d_P[i] = val_row;
+        W->getLocalRowView(i,ind_row,val_row);
+        d_W[i] = val_row;
+        d_ind[i] = ind_row;
+    }
+}
 
 //---------------------------------------------------------------------------//
 /*!
@@ -181,9 +209,10 @@ void AdjointMcAdaptive::initializeHistory(int &state, double &wt,
     wt    = start_wt[state];
 
     // Get new rows for this state
-    d_H->getLocalRowView(state,ind_row,h_row);
-    d_P->getLocalRowView(state,ind_row,p_row);
-    d_W->getLocalRowView(state,ind_row,w_row);
+    h_row   = d_H[state];
+    p_row   = d_P[state];
+    w_row   = d_W[state];
+    ind_row = d_ind[state];
 }
 //---------------------------------------------------------------------------//
 /*!
@@ -218,9 +247,10 @@ void AdjointMcAdaptive::getNewState(int &state, double &wt,
     wt    *=  w_row[index];
 
     // Get new rows for this state
-    d_H->getLocalRowView(state,ind_row,h_row);
-    d_P->getLocalRowView(state,ind_row,p_row);
-    d_W->getLocalRowView(state,ind_row,w_row);
+    h_row   = d_H[state];
+    p_row   = d_P[state];
+    w_row   = d_W[state];
+    ind_row = d_ind[state];
 }
 
 //---------------------------------------------------------------------------//

@@ -42,6 +42,9 @@ class AdjointMcAdaptive
 
   private:
 
+    // Convert from Tpetra matrices to ArrayViews
+    void extractMatrices(Teuchos::RCP<const MC_Data> mc_data);
+
     // Build the initial CDF and weights
     void build_initial_distribution(
             Teuchos::ArrayRCP<const double> x,
@@ -68,9 +71,10 @@ class AdjointMcAdaptive
                            Teuchos::ArrayView<const int>    ind_row) const;
 
     // Data for Monte Carlo
-    Teuchos::RCP<const MATRIX> d_H;
-    Teuchos::RCP<const MATRIX> d_P;
-    Teuchos::RCP<const MATRIX> d_W;
+    Teuchos::ArrayRCP<Teuchos::ArrayView<const double> > d_H;
+    Teuchos::ArrayRCP<Teuchos::ArrayView<const double> > d_P;
+    Teuchos::ArrayRCP<Teuchos::ArrayView<const double> > d_W;
+    Teuchos::ArrayRCP<Teuchos::ArrayView<const int> >    d_ind;
 
     // Vector length
     int d_N;
