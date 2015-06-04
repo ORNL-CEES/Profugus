@@ -111,9 +111,9 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
             std::fill( x_history.begin(), x_history.end(), 0.0 );
 
             // Get initial state for this history by sampling from start_cdf
-            initializeHistory(state,wt,start_cdf,start_wt,h_row,p_row,w_row,ind_row);
-            if( h_row.size() == 0 )
-                continue;
+            initializeHistory(state,wt,start_cdf,start_wt,h_row,p_row,w_row,
+                ind_row);
+            CHECK( h_row.size() > 0 );
             init_wt = wt;
 
             // With expected value estimator we start on stage 1 because
@@ -146,6 +146,7 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
 
         }
 
+        // Add current batch results to cumulative mean and variance
         for( int i=0; i<d_N; ++i )
         {
             x_data[i] = (x_data[i] * static_cast<double>(num_histories) +
@@ -193,7 +194,8 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
     {
         if( rel_std_dev < d_tolerance )
         {
-            std::cout << "Converged using " << num_histories << " histories"
+            std::cout << "Converged with relative std dev of " << rel_std_dev
+                << " using " << num_histories << " histories"
                 << std::endl;
         }
         else
