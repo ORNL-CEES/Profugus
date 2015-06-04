@@ -89,7 +89,9 @@ class AdjointMcAdaptive
     double d_weight_cutoff;
     int    d_batch_size;
     double d_tolerance;
-    std::string d_verbosity;
+
+    enum VERBOSITY {NONE, LOW, HIGH};
+    VERBOSITY d_verbosity;
 
     // Kokkos random number generator
     generator_pool d_rand_pool;

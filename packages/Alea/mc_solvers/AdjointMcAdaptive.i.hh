@@ -58,7 +58,13 @@ AdjointMcAdaptive::AdjointMcAdaptive(
     d_use_expected_value = (estimator == "expected_value");
 
     // Should we print anything to screen
-    d_verbosity = profugus::to_lower(pl->get("verbosity","low"));
+    std::string verb = profugus::to_lower(pl->get("verbosity","low"));
+    if( verb == "none" )
+        d_verbosity = NONE;
+    else if( verb == "low" )
+        d_verbosity = LOW;
+    else if( verb == "high" )
+        d_verbosity = HIGH;
 
     extractMatrices(mc_data);
 }
@@ -146,25 +152,22 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
                          x_batch[i]) /
                          static_cast<double>(num_histories+d_batch_size);
             variance[i] = (variance[i] * static_cast<double>(num_histories-1) +
-                         variance_batch[i]) /
-                         static_cast<double>(num_histories+d_batch_size);
+                         variance_batch[i]);
         }
 
         num_histories += d_batch_size;
 
-        // Normalize by number of histories
-        double scale_factor = 1.0 / static_cast<double>(num_histories);
-        std::transform(x_data.begin(),x_data.end(),x_data.begin(),
-            [scale_factor](double val){return val*scale_factor;});
-
-        // Normalize variance by num_histories-1
-        scale_factor = 1.0 / static_cast<double>(num_histories-1);
-        std::transform(variance.begin(),variance.end(),variance.begin(),
-            [scale_factor](double val){return val*scale_factor;});
-
         // Add rhs for expected value
         if( d_use_expected_value )
             x.update(1.0,b,1.0);
+
+        // Subtract square of mean from variance
+        for( int i=0; i<d_N; ++i )
+        {
+            variance[i] = (variance[i] - x_data[i]*x_data[i]*
+                static_cast<double>(num_histories)) /
+                static_cast<double>(num_histories-1);
+        }
 
         // Compute 1-norm of solution and variance of mean
         double soln_1norm = 0.0;
@@ -173,26 +176,32 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
         {
             soln_1norm += std::abs(x_data[i]);
             double var = variance[i] / static_cast<double>(num_histories);
-            std_dev_1norm += std::sqrt(var);
+            if( var > 0.0 )
+                std_dev_1norm += std::sqrt(var);
         }
         CHECK( soln_1norm > 0.0 );
         rel_std_dev = std_dev_1norm / soln_1norm;
 
-        std::cout << "Relative std dev at batch " << batch << ": "
-            << rel_std_dev << std::endl;
+        if( d_verbosity == HIGH )
+        {
+            std::cout << "Relative std dev after " << num_histories <<
+                " histories : " << rel_std_dev << std::endl;
+        }
     }
 
-    if( rel_std_dev < d_tolerance )
+    if( d_verbosity >= LOW )
     {
-        std::cout << "Converged using " << num_histories << " histories"
-            << std::endl;
+        if( rel_std_dev < d_tolerance )
+        {
+            std::cout << "Converged using " << num_histories << " histories"
+                << std::endl;
+        }
+        else
+        {
+            std::cout << "Did not converge, final relative std dev is " <<
+                rel_std_dev << std::endl;
+        }
     }
-    else
-    {
-        std::cout << "Did not converge, final relative std dev is " <<
-            rel_std_dev << std::endl;
-    }
-
 }
 
 //---------------------------------------------------------------------------//

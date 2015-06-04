@@ -204,12 +204,6 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
         solver.solve(x,y);
     }
 
-    if( b_verbosity >= LOW )
-    {
-        std::cout << "Performed " << d_num_histories
-            << " histories" << std::endl;
-    }
-
     // There isn't a proper iteration count for MC
     // We use the number of histories as a stand-in
     b_num_iters = d_num_histories;
