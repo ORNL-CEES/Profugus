@@ -146,14 +146,17 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
 
         }
 
-        // Add current batch results to cumulative mean and variance
+        // Compute new second moment and mean from batch results
         for( int i=0; i<d_N; ++i )
         {
-            x_data[i] = (x_data[i] * static_cast<double>(num_histories) +
-                         x_batch[i]) /
-                         static_cast<double>(num_histories+d_batch_size);
+            // From the old variance, compute the new second moment
             variance[i] = (variance[i] * static_cast<double>(num_histories-1) +
-                         variance_batch[i]);
+                x_data[i]*x_data[i]*static_cast<double>(num_histories) +
+                variance_batch[i]);
+
+            // Compute new mean
+            x_data[i] = (x_data[i] * static_cast<double>(num_histories) +
+                x_batch[i]) / static_cast<double>(num_histories+d_batch_size);
         }
 
         num_histories += d_batch_size;
@@ -162,7 +165,7 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
         if( d_use_expected_value )
             x.update(1.0,b,1.0);
 
-        // Subtract square of mean from variance
+        // Subtract square of mean from second moment to get variance
         for( int i=0; i<d_N; ++i )
         {
             variance[i] = (variance[i] - x_data[i]*x_data[i]*
