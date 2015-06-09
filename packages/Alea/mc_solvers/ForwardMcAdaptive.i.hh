@@ -38,7 +38,7 @@ ForwardMcAdaptive::ForwardMcAdaptive(
         const const_scalar_view     coeffs,
         Teuchos::RCP<Teuchos::ParameterList> pl,
         generator_pool rand_pool)
-        
+
   : d_N(mc_data->getIterationMatrix()->getGlobalNumRows())
   , d_coeffs(coeffs) // Modified by Max
   , d_rand_pool(rand_pool)
@@ -46,7 +46,7 @@ ForwardMcAdaptive::ForwardMcAdaptive(
 {
     // Get parameters
     d_max_num_histories  = pl->get("num_histories",1000);
-    d_max_history_length = pl->get("max_history_length",1000);
+    d_max_history_length = d_coeffs.size()-1;
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
     d_batch_size         = pl->get("batch_size",100);
     d_tolerance          = pl->get("tolerance",0.01);
@@ -87,12 +87,14 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
     double x_batch;
     Teuchos::ArrayRCP<double> variance(d_N);
     double variance_batch;
-    
+
     Teuchos::ArrayRCP<const double> b_data = b.getData(0);
 
     int state = -1;
     double wt = 0.0;
-    
+
+    int total_histories = 0;
+
     for (int entry=0; entry < d_N; ++entry)
     {
     	double rel_std_dev = 1e6;
@@ -100,97 +102,104 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
     	int num_histories = 0;
     	batch=0;
 
-	while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
-	{
-		batch++;
-		x_batch = 0.0;
-    	        variance_batch = 0.0;
+        while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
+        {
+            batch++;
+            x_batch = 0.0;
+            variance_batch = 0.0;
 
-		for( int i=0; i<d_batch_size; ++i )
-		{
-		    double x_history = 0.0;
-		    int stage = 0 ;
-		    int init_wt = 1.0;
-		    wt = 1.0 ;
+            for( int i=0; i<d_batch_size; ++i )
+            {
+                double x_history = 0.0;
+                int stage = 0 ;
+                int init_wt = 1.0;
+                wt = 1.0 ;
 
-		    // Perform initial tally
-		    tallyContribution(d_coeffs[stage]*wt*b_data[entry],x_history);
-		    
-		    // Get new rows for this state
-    		    h_row   = d_H[entry];
-    		    p_row   = d_P[entry];
-    		    w_row   = d_W[entry];
-    		    ind_row = d_ind[entry];
+                // Perform initial tally
+                tallyContribution(d_coeffs[stage]*wt*b_data[entry],x_history);
 
-		    for( ; stage<=d_max_history_length; ++stage )
-		    {
-		        // Move to new state
-		        getNewState(state,wt,h_row,p_row,w_row,ind_row);
-		        if( h_row.size() == 0 )
-		            break;
+                // Get new rows for this state
+                h_row   = d_H[entry];
+                p_row   = d_P[entry];
+                w_row   = d_W[entry];
+                ind_row = d_ind[entry];
 
-		        // Tally
-		        tallyContribution(d_coeffs[stage]*wt*b_data[state],x_history);
+                for( ; stage<=d_max_history_length; ++stage )
+                {
+                    // Move to new state
+                    getNewState(state,wt,h_row,p_row,w_row,ind_row);
+                    if( h_row.size() == 0 )
+                        break;
 
-		        // Check weight cutoff
-		        if( std::abs(wt/init_wt) < d_weight_cutoff )
-		            break;
-		    }
+                    // Tally
+                    tallyContribution(d_coeffs[stage]*wt*b_data[state],x_history);
 
-		    x_batch  += x_history;
-		}
-		
-		variance_batch += x_batch * x_batch;
-		
-               // From the old variance, compute the new second moment
-	       variance[entry] = (variance[entry] * static_cast<double>(num_histories-1) +
-	                x_data[entry]*x_data[entry]*static_cast<double>(num_histories) +
-		        variance_batch);
+                    // Check weight cutoff
+                    if( std::abs(wt) < d_weight_cutoff )
+                        break;
+                }
 
-	       // Compute new mean
-	       x_data[entry] = (x_data[entry] * static_cast<double>(num_histories) +
-	       x_batch) / static_cast<double>(num_histories+d_batch_size);
-	       
-	       num_histories += d_batch_size;
-		
-		variance[entry] = (variance[entry] - x_data[entry]*x_data[entry]*
-	    	static_cast<double>(num_histories)) /
-	    	static_cast<double>(num_histories-1);
-	
-		if(x_data[entry] == 0.0)
-		{
-			rel_std_dev=0.0;
-			break;
-		}
+                x_batch  += x_history;
+            }
 
-		// Compute 1-norm of solution and variance of mean
-		double std_dev = 0;
-		double var = variance[entry] / static_cast<double>(num_histories);
-		if( var > 0.0 )
-		    std_dev += std::sqrt(var);
-	
-		CHECK( static_cast<double>(std::abs(x_data[entry])) > 0.0 );
-		rel_std_dev = static_cast<double>( std_dev / static_cast<double>(std::abs(x_data[entry])) );
+            variance_batch += x_batch * x_batch;
 
-	}
+            // From the old variance, compute the new second moment
+            variance[entry] = (variance[entry] * static_cast<double>(num_histories-1) +
+                    x_data[entry]*x_data[entry]*static_cast<double>(num_histories) +
+                    variance_batch);
+
+            // Compute new mean
+            x_data[entry] = (x_data[entry] * static_cast<double>(num_histories) +
+                    x_batch) / static_cast<double>(num_histories+d_batch_size);
+
+            num_histories += d_batch_size;
+
+            variance[entry] = (variance[entry] - x_data[entry]*x_data[entry]*
+                    static_cast<double>(num_histories)) /
+                static_cast<double>(num_histories-1);
+
+            if(x_data[entry] == 0.0)
+            {
+                rel_std_dev=0.0;
+                break;
+            }
+
+            // Compute 1-norm of solution and variance of mean
+            double std_dev = 0;
+            double var = variance[entry] / static_cast<double>(num_histories);
+            if( var > 0.0 )
+                std_dev += std::sqrt(var);
+
+            CHECK( static_cast<double>(std::abs(x_data[entry])) > 0.0 );
+            rel_std_dev = static_cast<double>( std_dev / static_cast<double>(std::abs(x_data[entry])) );
+
+        }
+        std::cout << "Entry " << entry << " performed " << num_histories << " histories" << " with final std dev of " << rel_std_dev << std::endl;
+        total_histories += num_histories;
 	//std::cout<<rel_std_dev<<std::endl;
     }
+
+    std::cout << "Performed " << total_histories << " total histories, "
+        << " average of " <<
+        static_cast<double>(total_histories)/static_cast<double>(d_N)
+        << " per entry" << std::endl;
 
 	double sol_1norm = 0.0;
 	for(int i=0; i<d_N; ++i)
 		sol_1norm += static_cast<double>( std::abs(x_data[i]) );
-		
+
 	double std_dev_1norm = 0.0;
 	for(int i=0; i<d_N; ++i)
 		std_dev_1norm += static_cast<double>( std::sqrt( variance[i] ) );
-	
-    
+
+
 	if( d_verbosity == HIGH )
 	{
 	    std::cout << "Relative std dev: "  << static_cast<double>( std_dev_1norm / std_dev_1norm) << std::endl;
 	}
-    
-	
+
+
 /*    if( d_verbosity >= LOW )
     {
         if( rel_std_dev < d_tolerance )
@@ -245,7 +254,7 @@ void ForwardMcAdaptive::extractMatrices(Teuchos::RCP<const MC_Data> mc_data)
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-void ForwardMcAdaptive::tallyContribution(double wt, double& x) 
+void ForwardMcAdaptive::tallyContribution(double wt, double& x)
 {
         x += wt;
 }
