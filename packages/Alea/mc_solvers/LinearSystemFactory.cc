@@ -291,17 +291,19 @@ void LinearSystemFactory::buildMatrixMarketSystem(
 
     Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
     Teuchos::RCP<const Teuchos::Comm<int> > comm =
-        Teuchos::DefaultComm<int>::getComm();
+        Teuchos::DefaultComm<int>::getComm();            
     A = Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readSparseFile(
         filename,comm,node);
-
+	
     Teuchos::RCP<const MAP> map = A->getDomainMap();
+        
     if( pl->isType<std::string>("rhs_filename") )
     {
         std::string rhs_file = pl->get<std::string>("rhs_filename");
         b = Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readVectorFile(
             rhs_file,comm,node,map);
     }
+        
     else
     {
         // Just make RHS constant

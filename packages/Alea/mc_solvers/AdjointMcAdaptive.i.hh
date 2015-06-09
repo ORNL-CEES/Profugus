@@ -35,10 +35,12 @@ namespace alea
 //---------------------------------------------------------------------------//
 AdjointMcAdaptive::AdjointMcAdaptive(
         Teuchos::RCP<const MC_Data> mc_data,
+        const const_scalar_view     coeffs,
         Teuchos::RCP<Teuchos::ParameterList> pl,
         generator_pool rand_pool)
-
+        
   : d_N(mc_data->getIterationMatrix()->getGlobalNumRows())
+  , d_coeffs(coeffs) // Modified by Max
   , d_rand_pool(rand_pool)
   , d_rand_gen(d_rand_pool.get_state())
 {
@@ -103,6 +105,7 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
     while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
     {
         batch++;
+        std::cout<<"rel_std_dev: "<<rel_std_dev<<std::endl;
         std::fill( x_batch.begin(), x_batch.end(), 0.0 );
         std::fill( variance_batch.begin(), variance_batch.end(), 0.0 );
 
@@ -121,7 +124,8 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
             int stage = d_use_expected_value ? 1 : 0;
 
             // Perform initial tally
-            tallyContribution(state,wt,x_history,h_row,ind_row);
+            tallyContribution(state,d_coeffs[stage]*wt,x_history,h_row,ind_row);
+            //std::cout<<"d_coeffs= "<<d_coeffs[stage]<<std::endl;
 
             for( ; stage<=d_max_history_length; ++stage )
             {
@@ -131,7 +135,7 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
                     break;
 
                 // Tally
-                tallyContribution(state,wt,x_history,h_row,ind_row);
+                tallyContribution(state,d_coeffs[stage]*wt,x_history,h_row,ind_row);
 
                 // Check weight cutoff
                 if( std::abs(wt/init_wt) < d_weight_cutoff )
@@ -163,7 +167,8 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
 
         // Add rhs for expected value
         if( d_use_expected_value )
-            x.update(1.0,b,1.0);
+            //x.update(1.0,b,1.0);// morified by Max
+            x.update(d_coeffs[0],b,1.0);
 
         // Subtract square of mean from second moment to get variance
         for( int i=0; i<d_N; ++i )

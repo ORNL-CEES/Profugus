@@ -11,6 +11,7 @@
 
 #include "MonteCarloSolver.hh"
 #include "AdjointMcAdaptive.hh"
+#include "ForwardMcAdaptive.hh"
 #include "AdjointMcParallelFor.hh"
 #include "AdjointMcParallelReduce.hh"
 #include "AdjointMcEventKernel.hh"
@@ -115,6 +116,7 @@ void MonteCarloSolver::initialize()
     CHECK( !coeffs.is_null() );
     Kokkos::resize(d_coeffs,coeffs.size());
     scalar_host_mirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
+       
     std::copy(coeffs.begin(),coeffs.end(),&coeffs_host(0));
     Kokkos::deep_copy(d_coeffs,coeffs_host);
 
@@ -152,7 +154,7 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 
     LO N = x.getLocalLength();
 
-    if( d_mc_type == FORWARD )
+    if( d_mc_type == FORWARD && d_kernel_type != ADAPTIVE)
     {
         /*
         int histories_per_state = d_num_histories / N;
@@ -199,9 +201,16 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     }
     else if( d_mc_type == ADJOINT && d_kernel_type == ADAPTIVE )
     {
-        AdjointMcAdaptive solver(d_mc_data,d_mc_pl,d_rand_pool);
+        AdjointMcAdaptive solver(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool); //modified by Max
 
         solver.solve(x,y);
+    }
+    
+    else if( d_mc_type == FORWARD && d_kernel_type == ADAPTIVE )
+    {
+    	ForwardMcAdaptive solver(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool); //modified by Max
+    	
+    	solver.solve(x,y);
     }
 
     // There isn't a proper iteration count for MC
