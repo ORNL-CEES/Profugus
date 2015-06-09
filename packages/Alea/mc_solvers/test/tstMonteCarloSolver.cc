@@ -129,14 +129,26 @@ TEST_F(MonteCarlo,AdaptiveCollision)
     Teuchos::sublist(d_pl,"Monte Carlo")->set("estimator","collision");
     Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","adaptive");
     Teuchos::sublist(d_pl,"Monte Carlo")->set("max_history_length",100);
-    this->Solve(0.12);
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("tolerance",0.1);
+    this->Solve(0.2);
 }
 
-TEST_F(MonteCarlo,AdaptiveExpectedValue)
+/*TEST_F(MonteCarlo,AdaptiveExpectedValue)
 {
     Teuchos::sublist(d_pl,"Monte Carlo")->set("estimator","expected_value");
     Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","adaptive");
     Teuchos::sublist(d_pl,"Monte Carlo")->set("max_history_length",100);
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("tolerance",0.1);
     this->Solve(0.06);
+}*/
+
+TEST_F(MonteCarlo,AdaptiveForward)
+{
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("mc_type","forward");
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("kernel_type","adaptive");
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("max_history_length",100);
+    Teuchos::sublist(d_pl,"Monte Carlo")->set("tolerance",0.1);
+    this->Solve(0.2);
 }
+
 
