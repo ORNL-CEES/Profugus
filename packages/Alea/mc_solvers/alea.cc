@@ -14,6 +14,7 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_ScalarTraits.hpp"
 #include "Teuchos_XMLParameterListHelpers.hpp"
+#include "MatrixMarket_Tpetra.hpp"
 
 using namespace alea;
 using std::chrono::high_resolution_clock;
@@ -88,6 +89,13 @@ int main( int argc, char *argv[] )
         std::cout << "Final relative residual norm: "
                   << res_norm[0]/b_norm[0] << std::endl;
     }
+
+    //std::ofstream sol_file;
+    //sol_file.open("solution.txt");
+    std::string file("solution.txt");
+    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file,x);
+    std::cout<<"I have printed somewhere"<<std::endl;
+    //sol_file.close();
 
     // Finalize Kokkos device
     //DeviceTraits<DEVICE>::finalize();
