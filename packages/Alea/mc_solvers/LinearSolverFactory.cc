@@ -17,6 +17,7 @@
 #include "PolynomialPreconditioner.hh"
 #include "RichardsonIteration.hh"
 #include "SyntheticAcceleration.hh"
+#include "SequentialMC.hh"
 #include "harness/DBC.hh"
 
 namespace alea
@@ -52,6 +53,7 @@ LinearSolverFactory::buildSolver(std::string solver_type,
     VALIDATE(solver_type=="belos"                  ||
              solver_type=="chebyshev"              ||
              solver_type=="mcsa"                   ||
+             solver_type=="sequential_mc"          ||
              solver_type=="monte_carlo"            ||
              solver_type=="polynomial"             ||
              solver_type=="richardson"             ||
@@ -82,6 +84,10 @@ LinearSolverFactory::buildSolver(std::string solver_type,
     else if( solver_type == "synthetic_acceleration" )
     {
         return Teuchos::rcp( new SyntheticAcceleration(A,pl) );
+    }
+    else if ( solver_type == "sequential_mc" )
+    {
+    	return Teuchos::rcp( new SequentialMC(A,pl) );
     }
     else if( solver_type == "belos" )
     {
