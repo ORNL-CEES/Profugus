@@ -92,8 +92,10 @@ int main( int argc, char *argv[] )
 
     //std::ofstream sol_file;
     //sol_file.open("solution.txt");
-    std::string file("solution.txt");
-    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file,x);
+    std::string file_sol("solution.mtx");
+    std::string file_rhs("rhs.mtx");
+    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_sol,x);
+    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_rhs,b);
     std::cout<<"I have printed somewhere"<<std::endl;
     //sol_file.close();
 

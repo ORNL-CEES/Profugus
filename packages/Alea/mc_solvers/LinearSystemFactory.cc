@@ -108,7 +108,7 @@ void LinearSystemFactory::buildDiffusionSystem(
     {
         double gid = static_cast<double>(b->getMap()->getGlobalElement(i));
         double val = std::sin(pi*gid / static_cast<double>(N-1));
-        b->replaceLocalValue(i,0,std::sin(val));
+        b->replaceLocalValue(i,0,val);
     }
 }
 
@@ -411,6 +411,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
               scale_type=="row"      ||
               scale_type=="column"   ||
               scale_type=="sign"     ||
+              scale_type=="file"     ||
               scale_type=="none",
               "scale_type must be one of: none, diagonal, block, row, sign.");
 
@@ -500,7 +501,52 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
             b->replaceLocalValue(i,0,b->getData(0)[i]*diag_sign.getData()[i]);
         }
     }
+    
+    else if (scale_type == "file")
+    {
+    	std::string precond_file = pl->get<std::string>("preconditioner_file","none");  	
+    	VALIDATE(precond_file != "none", 
+    	"When the scaling_type is 'file' the preconditioner file must be specified ");
 
+	Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
+        Teuchos::RCP<const Teuchos::Comm<int> > comm =
+                Teuchos::DefaultComm<int>::getComm();            
+    	
+    	std::cout<<"Loading preconditioner file"<<std::endl;
+	Teuchos::RCP<CRS_MATRIX> Pr = Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readSparseFile(
+        precond_file,comm,node);
+        
+        VALIDATE( (  A->getNodeNumRows() == Pr->getNodeNumRows() ), 
+        "System matrix and preconditioner do not have the same number of rows" );
+        
+        VALIDATE( ( A->getNodeNumCols() == Pr->getNodeNumCols() ), 
+        "System matrix and preconditioner do not have the same number of columns" );    
+    
+        VALIDATE( ( A->getNodeNumCols() == Pr->getNodeNumRows() ), 
+        "System matrix and preconditioner must be compatible for the matrix-matrix multiply" );        
+    
+    	Teuchos::RCP<CRS_MATRIX> C = Tpetra::createCrsMatrix<SCALAR> ( A->getDomainMap());
+    	
+    	//Teuchos::RCP<CRS_MATRIX> C;
+    	//size_t max_nnz = d_A->getNodeMaxNumRowEntries();
+    	//C = Teuchos::rcp( new CRS_MATRIX(d_A->getDomainMap(),max_nnz) );
+    	
+    	Tpetra::MatrixMatrix::Multiply(*A, Teuchos::NO_TRANS ,*Pr, Teuchos::NO_TRANS ,*C, true);
+    	CHECK( C->isFillComplete() );
+    
+    	//Tpetra::MatrixMatrix::Add(C, Teuchos::NO_TRANS , 1.0, Pr, Teuchos::NO_TRANS , 0.0, A);
+    	A=C;
+    	CHECK( A->isFillComplete() );
+    	
+    	MV Prb = Tpetra::createCopy(*b);
+    	
+    	//Pr.multiply(*b, Prb, 1.0, 0.0);
+    	Pr->apply(Prb,*b);
+    	
+    	*b=Prb;
+    	std::cout<<"Preconditioner applied to matrix and right hand side"<<std::endl;
+    }
+    
     return A;
 }
 

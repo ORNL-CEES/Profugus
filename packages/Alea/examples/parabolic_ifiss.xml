@@ -1,0 +1,35 @@
+<ParameterList name="main">
+  <Parameter name="solver_type"              type="string"  value="mcsa"/>
+  <Parameter name="preconditioner"           type="string"  value="none"/>
+  <ParameterList name="Problem">
+    <Parameter name="matrix_type"            type="string"  value="matrix_market"/>
+    <Parameter name="matrix_filename"        type="string"  value="A_parabolic.mtx"/>
+    <Parameter name="rhs_filename"           type="string"  value="b_parabolic.mtx"/>
+    <Parameter name="scaling_type"           type="string"  value="file"/>
+    <Parameter name="preconditioner_file"    type="string"  value="parabolic_precond.mtx"/>
+  </ParameterList>
+  <ParameterList name="Synthetic Acceleration">
+    <Parameter name="max_iterations"         type="int"     value="500"/>
+    <Parameter name="tolerance"              type="double"  value="1.0e-7"/>
+    <Parameter name="divergence_tolerance"   type="double"  value="1.0e4"/>
+    <Parameter name="verbosity"              type="string"  value="high"/>
+  </ParameterList>
+  <ParameterList name="Monte Carlo">
+    <Parameter name="mc_type"                type="string"  value="adjoint"/>
+    <Parameter name="estimator"              type="string"  value="collision"/>
+    <Parameter name="kernel_type"            type="string"  value="adaptive"/>
+    <Parameter name="num_histories"          type="int"     value="10000000"/>
+    <Parameter name="batch_size"             type="int"     value="1000"/>
+    <Parameter name="max_history_length"     type="int"     value="1000"/>
+    <Parameter name="tolerance"              type="double"  value="1e-1"/>
+    <Parameter name="weight_cutoff"          type="double"  value="1e-6"/>
+    <Parameter name="verbosity"              type="string"  value="low"/> 
+  </ParameterList>
+  <ParameterList name="Polynomial">
+    <Parameter name="polynomial_type"        type="string"  value="neumann"/>
+    <Parameter name="polynomial_order"       type="int"     value="1000"/>
+  </ParameterList>
+</ParameterList>
+
+
+
