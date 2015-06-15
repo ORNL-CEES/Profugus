@@ -29,14 +29,16 @@ struct MC_Data_View
     MC_Data_View( const_scalar_view h,
                   const_scalar_view p,
                   const_scalar_view w,
+                  const_scalar_view h_tilde,
                   const_ord_view    ind,
                   const_ord_view    off)
-        : H(h), P(p), W(w), inds(ind), offsets(off)
+        : H(h), P(p), W(w), H_tilde(h_tilde), inds(ind), offsets(off)
     {}
 
     const_scalar_view H;
     const_scalar_view P;
     const_scalar_view W;
+    const_scalar_view H_tilde;
     const_ord_view    inds;
     const_ord_view    offsets;
 };
@@ -55,12 +57,13 @@ struct MC_Data_Texture_View
     MC_Data_Texture_View(){}
 
     MC_Data_Texture_View( MC_Data_View v )
-        : H(v.H), P(v.P), W(v.W), inds(v.inds), offsets(v.offsets)
+        : H(v.H), P(v.P), W(v.W), H_tilde(v.H_tilde), inds(v.inds), offsets(v.offsets)
     {}
 
     random_scalar_view H;
     random_scalar_view P;
     random_scalar_view W;
+    random_scalar_view H_tilde;
     random_ord_view    inds;
     random_ord_view    offsets;
 };
@@ -119,6 +122,14 @@ class MC_Data
         return d_W;
     }
 
+
+    //! Access H_tilde matrix for the finiteness of the variance, \f$\tilde{\textbf{H}}\f$
+    Teuchos::RCP<const MATRIX> getHtilde() const
+    {
+        REQUIRE( d_H_tilde != Teuchos::null );
+        return d_H_tilde;
+    }
+
     //! Convert matrices to Kokkos::Views
     MC_Data_View createKokkosViews();
 
@@ -126,7 +137,7 @@ class MC_Data
 
     void buildIterationMatrix(Teuchos::RCP<const PolynomialBasis> basis);
     void buildMonteCarloMatrices();
-
+    
     // Original matrix
     Teuchos::RCP<const MATRIX> d_A;
 
@@ -141,6 +152,10 @@ class MC_Data
 
     // Weight matrix
     Teuchos::RCP<CRS_MATRIX> d_W;
+    
+    // H_tilde matrix for the check on the finiteness of the variance
+    Teuchos::RCP<CRS_MATRIX> d_H_tilde;
+    
 };
 
 }

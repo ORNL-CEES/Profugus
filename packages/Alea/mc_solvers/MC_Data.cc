@@ -53,9 +53,11 @@ MC_Data_View MC_Data::createKokkosViews()
     REQUIRE( d_H->isLocallyIndexed() );
     REQUIRE( d_P->isLocallyIndexed() );
     REQUIRE( d_W->isLocallyIndexed() );
+    REQUIRE( d_H_tilde->isLocallyIndexed() );
     REQUIRE( d_H->supportsRowViews() );
     REQUIRE( d_P->supportsRowViews() );
     REQUIRE( d_W->supportsRowViews() );
+    REQUIRE( d_H_tilde->supportsRowViews() );
 
     LO numRows     = d_H->getNodeNumRows();
     GO numNonZeros = d_H->getNodeNumEntries();
@@ -64,6 +66,7 @@ MC_Data_View MC_Data::createKokkosViews()
     scalar_view H("H",numNonZeros);
     scalar_view P("H",numNonZeros);
     scalar_view W("H",numNonZeros);
+    scalar_view H_tilde("H",numNonZeros);
     ord_view    inds("inds",numNonZeros);
     ord_view    offsets("offsets",numRows+1);
 
@@ -71,10 +74,11 @@ MC_Data_View MC_Data::createKokkosViews()
     scalar_host_mirror H_host       = Kokkos::create_mirror_view(H);
     scalar_host_mirror P_host       = Kokkos::create_mirror_view(P);
     scalar_host_mirror W_host       = Kokkos::create_mirror_view(W);
+    scalar_host_mirror H_tilde_host       = Kokkos::create_mirror_view(H_tilde);
     ord_host_mirror    inds_host    = Kokkos::create_mirror_view(inds);
     ord_host_mirror    offsets_host = Kokkos::create_mirror_view(offsets);
 
-    Teuchos::ArrayView<const double> H_row, P_row, W_row;
+    Teuchos::ArrayView<const double> H_row, P_row, W_row, H_tilde_row;
     Teuchos::ArrayView<const int> ind_row;
 
     // Copy data from CrsMatrix into Kokkos host mirrors
@@ -85,11 +89,13 @@ MC_Data_View MC_Data::createKokkosViews()
         d_H->getLocalRowView(irow,ind_row,H_row);
         d_P->getLocalRowView(irow,ind_row,P_row);
         d_W->getLocalRowView(irow,ind_row,W_row);
+        d_H_tilde->getLocalRowView(irow,ind_row,H_tilde_row);
 
         // Copy into host mirror
         std::copy( H_row.begin(), H_row.end(), &H_host(count) );
         std::copy( P_row.begin(), P_row.end(), &P_host(count) );
         std::copy( W_row.begin(), W_row.end(), &W_host(count) );
+        std::copy( H_tilde_row.begin(), H_tilde_row.end(), &H_tilde_host(count) );
         std::copy( ind_row.begin(), ind_row.end(), &inds_host(count) );
         count += ind_row.size();
         offsets_host(irow+1) = count;
@@ -99,11 +105,12 @@ MC_Data_View MC_Data::createKokkosViews()
     Kokkos::deep_copy(H,H_host);
     Kokkos::deep_copy(P,P_host);
     Kokkos::deep_copy(W,W_host);
+    Kokkos::deep_copy(H_tilde,H_tilde_host);
     Kokkos::deep_copy(inds,inds_host);
     Kokkos::deep_copy(offsets,offsets_host);
 
     // Create data view object
-    return MC_Data_View(H,P,W,inds,offsets);
+    return MC_Data_View(H,P,W,H_tilde,inds,offsets);
 }
 
 //---------------------------------------------------------------------------//
@@ -118,7 +125,7 @@ void MC_Data::buildIterationMatrix(Teuchos::RCP<const PolynomialBasis> basis)
     REQUIRE( basis != Teuchos::null );
 
     // Get parameters for conversion from A to H
-    SCALAR alpha, beta;
+    SCALAR alpha, beta;    
     basis->getBasisCoefficients(alpha,beta);
     REQUIRE( alpha != SCALAR_TRAITS::nan() );
     REQUIRE( beta  != SCALAR_TRAITS::nan() );
@@ -209,8 +216,9 @@ void MC_Data::buildMonteCarloMatrices()
     LO max_nnz = d_H->getNodeMaxNumRowEntries();
     d_P = Teuchos::rcp( new CRS_MATRIX(d_H->getDomainMap(),max_nnz) );
     d_W = Teuchos::rcp( new CRS_MATRIX(d_H->getDomainMap(),max_nnz) );
+    d_H_tilde = Teuchos::rcp( new CRS_MATRIX(d_H->getDomainMap(),max_nnz) );
 
-    Teuchos::ArrayRCP<SCALAR> H_vals(max_nnz), P_vals(max_nnz), W_vals(max_nnz);
+    Teuchos::ArrayRCP<SCALAR> H_vals(max_nnz), P_vals(max_nnz), W_vals(max_nnz), H_tilde_vals(max_nnz);
     Teuchos::ArrayRCP<GO>     H_inds(max_nnz);
     size_t num_entries;
     for( LO irow=0; irow<N; ++irow )
@@ -248,10 +256,12 @@ void MC_Data::buildMonteCarloMatrices()
                 if( this_prob > 0.0 )
                 {
                     W_vals[icol] = H_vals[icol] / this_prob;
+                    H_tilde_vals[icol] = H_vals[icol] * H_vals[icol] / this_prob;
                 }
                 else
                 {
                     W_vals[icol] = 0.0;
+                    H_tilde_vals[icol] = 0.0;
                 }
             }
         }
@@ -259,12 +269,15 @@ void MC_Data::buildMonteCarloMatrices()
         {
             std::fill( P_vals.begin(), P_vals.end(), 0.0 );
             std::fill( W_vals.begin(), W_vals.end(), 0.0 );
+            std::fill( H_tilde_vals.begin(), H_tilde_vals.end(), 0.0 );
         }
         d_P->insertGlobalValues(irow,H_inds(0,num_entries),P_vals(0,num_entries));
         d_W->insertGlobalValues(irow,H_inds(0,num_entries),W_vals(0,num_entries));
+        d_H_tilde->insertGlobalValues(irow,H_inds(0,num_entries),H_tilde_vals(0,num_entries));
     }
     d_P->fillComplete();
     d_W->fillComplete();
+    d_H_tilde->fillComplete();
 }
 
 } // namespace alea

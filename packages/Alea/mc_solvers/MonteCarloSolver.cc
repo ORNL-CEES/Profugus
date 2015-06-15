@@ -21,6 +21,11 @@
 #include "Kokkos_Random.hpp"
 #include "harness/DBC.hh"
 
+#include "AnasaziBasicEigenproblem.hpp"
+#include "AnasaziBlockKrylovSchurSolMgr.hpp"
+#include "AnasaziTpetraAdapter.hpp"
+#include "AnasaziMultiVecTraits.hpp"
+
 namespace alea
 {
 
@@ -78,6 +83,7 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
     d_initialized = false;
+    d_radii_computed = false;
 }
 
 //---------------------------------------------------------------------------//
@@ -127,6 +133,57 @@ void MonteCarloSolver::initialize()
     b_label = "MonteCarloSolver";
     d_initialized = true;
     d_init_count++;
+    
+    //Compute the spectral radii of the iteration matrix and H_tilde
+    std::cout<<"Computation of the spectral radii of H and H_tilde"<<std::endl;
+    
+    // Create eigenvector
+    bool zero_out = true;
+    Teuchos::RCP<MV> x( new MV(b_A->getDomainMap(),1,zero_out) );
+    
+    // Anasazi eigenproblem for the iteration matrix
+    typedef Anasazi::BasicEigenproblem<SCALAR,MV,OP> Eigenproblem;
+    Teuchos::RCP<Eigenproblem> problem( new Eigenproblem(d_mc_data->getIterationMatrix(),x) );
+    problem->setNEV(1);
+    problem->setProblem();
+    
+    // Set basic parameters
+    Teuchos::ParameterList anasazi_pl;
+    int global_length = x->getGlobalLength();
+    int num_blocks = std::min(20,global_length-2);
+    anasazi_pl.set<int>("Num Blocks",num_blocks);
+    anasazi_pl.set<SCALAR>("Convergence Tolerance",1.0e-8);
+
+    // Use BlockKrylovSchur for now, can try out different solvers later
+    typedef Anasazi::BlockKrylovSchurSolMgr<SCALAR,MV,OP> KrylovSchur;
+ 
+    // Option to compute largest magnitude eigenvalue 
+    anasazi_pl.set<std::string>("Which","LM");
+    Teuchos::RCP<KrylovSchur> solver( new KrylovSchur(problem,anasazi_pl) );
+
+    // Compute the largest magnitude eigenvalue of the iteration matrix
+    solver->solve();
+
+    SCALAR realpart = solver->getRitzValues()[0].realpart;
+    SCALAR imagpart = solver->getRitzValues()[0].imagpart;
+    
+    d_rhoH = std::sqrt ( realpart * realpart + imagpart * imagpart ) ;
+    
+    // Anasazi eigenproblem for the H_tilde
+    problem = Teuchos::rcp ( new Eigenproblem(d_mc_data->getHtilde(),x) );
+    problem->setNEV(1);
+    problem->setProblem();
+    
+    solver = Teuchos::rcp ( new KrylovSchur(problem,anasazi_pl) );
+    
+    // Compute the largest magnitude eigenvalue of the H_tilde
+    solver->solve();
+    realpart = solver->getRitzValues()[0].realpart;
+    imagpart = solver->getRitzValues()[0].imagpart;
+    
+    d_rhoHtilde = std::sqrt ( realpart * realpart + imagpart * imagpart ) ;
+
+    d_radii_computed = true;
 }
 
 //---------------------------------------------------------------------------//
@@ -137,6 +194,10 @@ void MonteCarloSolver::initialize()
 void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 {
     REQUIRE( d_initialized );
+    REQUIRE( d_radii_computed );
+    
+    std::cout<<"Spectral radius of the interation matrix: "<<d_rhoH<<std::endl;;
+    std::cout<<"Spectral radius of H tilde: "<<d_rhoHtilde<<std::endl;
 
     d_apply_count++;
 

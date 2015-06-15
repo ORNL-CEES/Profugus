@@ -18,6 +18,7 @@
 
 #include "Ifpack2_Preconditioner.hpp"
 #include "Ifpack2_Details_CanChangeMatrix.hpp"
+#include "AnasaziTypes.hpp"
 
 #include "AleaSolver.hh"
 #include "AleaTypedefs.hh"
@@ -134,6 +135,10 @@ class MonteCarloSolver : public AleaSolver,
     GO      d_num_histories;
     SCALAR  d_weight_cutoff;
     SCALAR  d_start_wt_factor;
+    SCALAR d_rhoH;
+    SCALAR d_rhoHtilde;
+    bool d_radii_computed;
+
 
     // Kokkos random generator pool
     generator_pool d_rand_pool;
