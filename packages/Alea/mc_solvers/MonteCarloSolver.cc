@@ -184,6 +184,9 @@ void MonteCarloSolver::initialize()
     d_rhoHtilde = std::sqrt ( realpart * realpart + imagpart * imagpart ) ;
 
     d_radii_computed = true;
+    std::cout<<"Spectral radius of the interation matrix: "<<d_rhoH<<std::endl;;
+    std::cout<<"Spectral radius of H tilde: "<<d_rhoHtilde<<std::endl;
+
 }
 
 //---------------------------------------------------------------------------//
@@ -196,9 +199,6 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     REQUIRE( d_initialized );
     REQUIRE( d_radii_computed );
     
-    std::cout<<"Spectral radius of the interation matrix: "<<d_rhoH<<std::endl;;
-    std::cout<<"Spectral radius of H tilde: "<<d_rhoHtilde<<std::endl;
-
     d_apply_count++;
 
     // For now we only support operating on a single vector
