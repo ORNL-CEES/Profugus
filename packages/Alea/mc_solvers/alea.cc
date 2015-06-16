@@ -14,6 +14,7 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_ScalarTraits.hpp"
 #include "Teuchos_XMLParameterListHelpers.hpp"
+#include "Teuchos_DefaultComm.hpp"
 #include "MatrixMarket_Tpetra.hpp"
 
 using namespace alea;
@@ -90,15 +91,31 @@ int main( int argc, char *argv[] )
                   << res_norm[0]/b_norm[0] << std::endl;
     }
 
-    //std::ofstream sol_file;
-    //sol_file.open("solution.txt");
-    std::string file_sol("solution.mtx");
-    std::string file_rhs("rhs.mtx");
-    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_sol,x);
-    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_rhs,b);
-    std::cout<<"I have printed somewhere"<<std::endl;
-    //sol_file.close();
+    std::string scale_type = pl->get<std::string>("scaling_type","diagonal");
+    
+    if (scale_type == "file")    
+    {
+	    std::string pos_scale = pl->get<std::string>("position_scaling", "left");
+	    if ( pos_scale == "right" ) 
+	    {
+	    	std::string precond_file = pl->get<std::string>("preconditioner_file","none");
+		Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
+		Teuchos::RCP<const Teuchos::Comm<int> > comm =
+		        Teuchos::DefaultComm<int>::getComm();            
+	    	
+	    	std::cout<<"Loading preconditioner file"<<std::endl;
+		Teuchos::RCP<CRS_MATRIX> Pr = Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readSparseFile(
+		precond_file,comm,node);
 
+	   	MV Prx = Tpetra::createCopy(*x);
+	    	Pr->apply(Prx,*x);
+	    	*x=Prx;    	
+	    }
+    }
+
+    std::string file_sol("solution.mtx");
+    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_sol,x);
+    
     // Finalize Kokkos device
     //DeviceTraits<DEVICE>::finalize();
 

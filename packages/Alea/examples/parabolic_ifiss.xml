@@ -7,6 +7,7 @@
     <Parameter name="rhs_filename"           type="string"  value="b_parabolic.mtx"/>
     <Parameter name="scaling_type"           type="string"  value="file"/>
     <Parameter name="preconditioner_file"    type="string"  value="parabolic_precond.mtx"/>
+    <Parameter name="position_scaling"       type="string"  value="left"/>
   </ParameterList>
   <ParameterList name="Synthetic Acceleration">
     <Parameter name="max_iterations"         type="int"     value="500"/>

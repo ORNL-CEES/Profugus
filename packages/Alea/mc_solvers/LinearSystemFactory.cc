@@ -504,6 +504,9 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
     
     else if (scale_type == "file")
     {
+    	std::string pos_scale = pl->get<std::string>("position_scaling", "left");
+    	VALIDATE( (pos_scale == "left" || pos_scale=="right"), "invalid position specified to apply the preconditioner");
+    	
     	std::string precond_file = pl->get<std::string>("preconditioner_file","none");  	
     	VALIDATE(precond_file != "none", 
     	"When the scaling_type is 'file' the preconditioner file must be specified ");
@@ -522,29 +525,50 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
         VALIDATE( ( A->getNodeNumCols() == Pr->getNodeNumCols() ), 
         "System matrix and preconditioner do not have the same number of columns" );    
     
-        VALIDATE( ( A->getNodeNumCols() == Pr->getNodeNumRows() ), 
-        "System matrix and preconditioner must be compatible for the matrix-matrix multiply" );        
-    
-    	Teuchos::RCP<CRS_MATRIX> C = Tpetra::createCrsMatrix<SCALAR> ( A->getDomainMap());
-    	
-    	//Teuchos::RCP<CRS_MATRIX> C;
-    	//size_t max_nnz = d_A->getNodeMaxNumRowEntries();
-    	//C = Teuchos::rcp( new CRS_MATRIX(d_A->getDomainMap(),max_nnz) );
-    	
-    	Tpetra::MatrixMatrix::Multiply(*A, Teuchos::NO_TRANS ,*Pr, Teuchos::NO_TRANS ,*C, true);
-    	CHECK( C->isFillComplete() );
-    
-    	//Tpetra::MatrixMatrix::Add(C, Teuchos::NO_TRANS , 1.0, Pr, Teuchos::NO_TRANS , 0.0, A);
-    	A=C;
-    	CHECK( A->isFillComplete() );
-    	
-    	MV Prb = Tpetra::createCopy(*b);
-    	
-    	//Pr.multiply(*b, Prb, 1.0, 0.0);
-    	Pr->apply(Prb,*b);
-    	
-    	*b=Prb;
-    	std::cout<<"Preconditioner applied to matrix and right hand side"<<std::endl;
+    	if ( pos_scale == "left" )
+        {
+		VALIDATE( ( A->getNodeNumCols() == Pr->getNodeNumRows() ), 
+		"System matrix and preconditioner must be compatible for the matrix-matrix multiply" );        
+	    
+	    	Teuchos::RCP<CRS_MATRIX> C = Tpetra::createCrsMatrix<SCALAR> ( A->getDomainMap());
+	    	
+	    	//Teuchos::RCP<CRS_MATRIX> C;
+	    	//size_t max_nnz = d_A->getNodeMaxNumRowEntries();
+	    	//C = Teuchos::rcp( new CRS_MATRIX(d_A->getDomainMap(),max_nnz) );
+	    	
+	    	Tpetra::MatrixMatrix::Multiply(*Pr, Teuchos::NO_TRANS ,*A, Teuchos::NO_TRANS ,*C, true);
+	    	CHECK( C->isFillComplete() );
+	    
+	    	//Tpetra::MatrixMatrix::Add(C, Teuchos::NO_TRANS , 1.0, Pr, Teuchos::NO_TRANS , 0.0, A);
+	    	A=C;
+	    	CHECK( A->isFillComplete() );
+	    	
+	    	MV Prb = Tpetra::createCopy(*b);
+	    	
+	    	//Pr.multiply(*b, Prb, 1.0, 0.0);
+	    	Pr->apply(Prb,*b);
+	    	
+	    	*b=Prb;
+	    	std::cout<<"Preconditioner applied to matrix and right hand side for left scaling"<<std::endl;
+    	}
+    	else if ( pos_scale == "right" ) 
+    	{
+    		VALIDATE( ( A->getNodeNumRows() == Pr->getNodeNumCols() ), 
+    		"System matrix and preconditioner must be compatible for the matrix-matrix multiply" ); 
+	    	Teuchos::RCP<CRS_MATRIX> C = Tpetra::createCrsMatrix<SCALAR> ( A->getDomainMap());
+	    	
+	    	//Teuchos::RCP<CRS_MATRIX> C;
+	    	//size_t max_nnz = d_A->getNodeMaxNumRowEntries();
+	    	//C = Teuchos::rcp( new CRS_MATRIX(d_A->getDomainMap(),max_nnz) );
+	    	
+	    	Tpetra::MatrixMatrix::Multiply(*A, Teuchos::NO_TRANS ,*Pr, Teuchos::NO_TRANS ,*C, true);
+	    	CHECK( C->isFillComplete() );
+	    
+	    	//Tpetra::MatrixMatrix::Add(C, Teuchos::NO_TRANS , 1.0, Pr, Teuchos::NO_TRANS , 0.0, A);
+	    	A=C;
+	    	CHECK( A->isFillComplete() );
+    		std::cout<<"Preconditioner applied to matrix for right scaling"<<std::endl;
+    	}
     }
     
     return A;
