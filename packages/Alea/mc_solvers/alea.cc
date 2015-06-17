@@ -113,6 +113,7 @@ int main( int argc, char *argv[] )
 	    }
     }
 
+    std::setprecision(10);
     std::string file_sol("solution.mtx");
     Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_sol,x);
     
