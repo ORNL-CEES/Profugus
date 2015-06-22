@@ -127,7 +127,11 @@ void SequentialMC::applyImpl(const MV &x, MV &y) const
             if( b_verbosity >= LOW )
             {
                 std::cout << "SequentialMC converged after "
+<<<<<<< HEAD
                     << b_num_iters << " iterations." << r_norm[0]/r0_norm << std::endl;
+=======
+                    << b_num_iters << " iterations with reasidual norm: "<< r_norm[0]/r0_norm << std::endl;
+>>>>>>> 0c9295df7c2497da1049a592c5a73de7ec7338fc
             }
             break;
         }
@@ -137,7 +141,7 @@ void SequentialMC::applyImpl(const MV &x, MV &y) const
         {
             if( b_verbosity >= LOW )
             {
-                std::cout << "SyntheticAcceleration reached maximum iteration "
+                std::cout << "SequentialMC reached maximum iteration "
                     << "count with relative residual norm of "
                     << r_norm[0]/r0_norm << std::endl;
             }
