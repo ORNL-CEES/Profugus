@@ -19,7 +19,7 @@
     <Parameter name="mc_type"                type="string"  value="adjoint"/>
     <Parameter name="estimator"              type="string"  value="collision"/>
     <Parameter name="kernel_type"            type="string"  value="adaptive"/>
-    <Parameter name="num_histories"          type="int"     value="10000000"/>
+    <Parameter name="num_histories"          type="int"     value="1000000000"/>
     <Parameter name="batch_size"             type="int"     value="1000"/>
     <Parameter name="max_history_length"     type="int"     value="1000"/>
     <Parameter name="tolerance"              type="double"  value="1e-1"/>

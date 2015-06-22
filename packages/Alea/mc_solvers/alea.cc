@@ -113,9 +113,25 @@ int main( int argc, char *argv[] )
 	    }
     }
 
-    std::setprecision(10);
-    std::string file_sol("solution.mtx");
-    Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_sol,x);
+    FILE *pFile;
+    pFile = fopen("solution.mtx", "w");
+
+    size_t N = myA -> getGlobalNumRows();
+    
+    Teuchos::ArrayRCP<SCALAR> xp = x->getDataNonConst(0);
+
+    fprintf(pFile, "%%%MatrixMarket matrix array real general \n");
+    fprintf(pFile, "%d %d \n", N,1);
+    for (unsigned int index = 0; index < N; ++index)
+         fprintf (pFile, "%14.15f \n", xp[index]);
+    
+    fclose(pFile);
+
+    //std::string file_sol("solution.mtx");
+    //Tpetra::MatrixMarket::Writer<MV>::writeDenseFile (file_sol,x);
+
+    //for (unsigned int i=0; i<=10; ++i)
+    //     printf("%4.14f \n", xp[i]);
     
     // Finalize Kokkos device
     //DeviceTraits<DEVICE>::finalize();

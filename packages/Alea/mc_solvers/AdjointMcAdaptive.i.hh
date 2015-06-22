@@ -105,7 +105,7 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
     while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
     {
         batch++;
-        std::cout<<"rel_std_dev: "<<rel_std_dev<<std::endl;
+        //std::cout<<"rel_std_dev: "<<rel_std_dev<<std::endl;
         std::fill( x_batch.begin(), x_batch.end(), 0.0 );
         std::fill( variance_batch.begin(), variance_batch.end(), 0.0 );
 

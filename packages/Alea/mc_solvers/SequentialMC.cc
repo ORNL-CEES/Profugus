@@ -127,7 +127,7 @@ void SequentialMC::applyImpl(const MV &x, MV &y) const
             if( b_verbosity >= LOW )
             {
                 std::cout << "SequentialMC converged after "
-                    << b_num_iters << " iterations." << std::endl;
+                    << b_num_iters << " iterations." << r_norm[0]/r0_norm << std::endl;
             }
             break;
         }
