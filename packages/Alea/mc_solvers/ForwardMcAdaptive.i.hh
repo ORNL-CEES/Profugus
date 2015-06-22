@@ -102,8 +102,7 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
     	int num_histories = 0;
     	batch=0;
 
-        while( ( rel_std_dev == 0.0 && num_histories < d_max_num_histories ) ||
-( rel_std_dev > d_tolerance && num_histories < d_max_num_histories ) )
+        while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
         {
             batch++;
             x_batch = 0.0;
@@ -162,18 +161,19 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
 
             if(x_data[entry] == 0.0)
             {
-                rel_std_dev=0.0;
-                break;
+                rel_std_dev=1e6;
             }
+	    else
+	    {
+		// Compute 1-norm of solution and variance of mean
+		double std_dev = 0;
+		double var = variance[entry] / static_cast<double>(num_histories);
+		if( var > 0.0 )
+		    std_dev += std::sqrt(var);
 
-            // Compute 1-norm of solution and variance of mean
-            double std_dev = 0;
-            double var = variance[entry] / static_cast<double>(num_histories);
-            if( var > 0.0 )
-                std_dev += std::sqrt(var);
-
-            CHECK( static_cast<double>(std::abs(x_data[entry])) > 0.0 );
-            rel_std_dev = static_cast<double>( std_dev / static_cast<double>(std::abs(x_data[entry])) );
+	        //CHECK( static_cast<double>(std::abs(x_data[entry])) > 0.0 );
+		rel_std_dev = static_cast<double>( std_dev / static_cast<double>(std::abs(x_data[entry])) );
+            }
 
         }
         std::cout << "Entry " << entry << " performed " << num_histories << " histories" << " with final std dev of " << rel_std_dev << std::endl;
