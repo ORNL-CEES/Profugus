@@ -107,6 +107,13 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
             batch++;
             x_batch = 0.0;
             variance_batch = 0.0;
+            h_row   = d_H[entry];
+            if( h_row.size() == 0 )
+            {
+            	rel_std_dev=0.0;
+                break;
+            }
+            
 
             for( int i=0; i<d_batch_size; ++i )
             {
@@ -123,7 +130,7 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
                 p_row   = d_P[entry];
                 w_row   = d_W[entry];
                 ind_row = d_ind[entry];
-
+                
                 for( ; stage<=d_max_history_length; ++stage )
                 {
                     // Move to new state
