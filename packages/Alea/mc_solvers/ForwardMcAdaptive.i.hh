@@ -102,8 +102,8 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
     	int num_histories = 0;
     	batch=0;
 
-        while( ( rel_std_dev > d_tolerance && num_histories < d_max_num_histories ) ||
-         ( rel_std_dev == 0.0 && num_histories < d_max_num_histories ) )
+        while( ( rel_std_dev == 0.0 && num_histories < d_max_num_histories ) ||
+( rel_std_dev > d_tolerance && num_histories < d_max_num_histories ) )
         {
             batch++;
             x_batch = 0.0;
