@@ -101,13 +101,10 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
     	int batch=0;
     	int num_histories = 0;
     	batch=0;
-
-        p_row   = d_P[entry];
         
-        std::vector<SCALAR> p_row_vec = Teuchos::createVector( p_row );
-        SCALAR sum=0.0;
-        sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0.0);
-        std::cout<<"The sum is: "<<sum<<std::endl;
+        std::vector<SCALAR> p_row_vec = Teuchos::createVector( d_P[entry] );
+        SCALAR sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0.0);
+
         if( sum == 0.0 )
         {
             int init_wt = 1.0;
@@ -150,7 +147,6 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
 		            getNewState(state,wt,h_row,p_row,w_row,ind_row);
 		            
 		            p_row_vec = Teuchos::createVector( p_row );
-		            sum = 0.0;
         		    sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0.0);
 		            if( sum == 0.0 )
 		                break;
