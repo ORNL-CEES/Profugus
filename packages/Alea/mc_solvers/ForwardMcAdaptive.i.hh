@@ -102,9 +102,11 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
     	int num_histories = 0;
     	batch=0;
 
-        h_row   = d_H[entry];
+        p_row   = d_P[entry];
         
-        if( h_row.size() == 1 && h_row[0] == 0.0  )
+        std::vector<SCALAR> p_row_vec = Teuchos::createVector( p_row );
+        SCALAR sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0);
+        if( sum == 0.0 )
         {
             int init_wt = 1.0;
             int stage = 0 ;
@@ -144,7 +146,10 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
 		        {
 		            // Move to new state
 		            getNewState(state,wt,h_row,p_row,w_row,ind_row);
-		            if( h_row.size() == 0 )
+		            
+		            p_row_vec = Teuchos::createVector( p_row );
+        		    sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0);
+		            if( sum == 0.0 )
 		                break;
 
 		            // Tally
