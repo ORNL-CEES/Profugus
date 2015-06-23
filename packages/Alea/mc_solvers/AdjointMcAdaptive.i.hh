@@ -165,10 +165,6 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
 
         num_histories += d_batch_size;
 
-        // Add rhs for expected value
-        if( d_use_expected_value )
-            //x.update(1.0,b,1.0);// morified by Max
-            x.update(d_coeffs[0],b,1.0);
 
         // Subtract square of mean from second moment to get variance
         for( int i=0; i<d_N; ++i )
@@ -191,12 +187,19 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
         CHECK( soln_1norm > 0.0 );
         rel_std_dev = std_dev_1norm / soln_1norm;
 
+
         if( d_verbosity == HIGH )
         {
             std::cout << "Relative std dev after " << num_histories <<
                 " histories : " << rel_std_dev << std::endl;
         }
     }
+
+    // Add rhs for expected value
+    if( d_use_expected_value )
+       //x.update(1.0,b,1.0);// morified by Max
+       x.update(d_coeffs[0],b,1.0);
+
 
     if( d_verbosity >= LOW )
     {
