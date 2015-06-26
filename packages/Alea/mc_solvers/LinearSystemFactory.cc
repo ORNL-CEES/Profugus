@@ -83,6 +83,7 @@ LinearSystemFactory::buildLinearSystem( Teuchos::RCP<Teuchos::ParameterList> pl 
     }
 
     A = applyScaling(A,b,mat_pl);
+    A = applyShift(A,mat_pl);
 
     return Teuchos::rcp( new LinearSystem(A,b) );
 }
@@ -390,6 +391,36 @@ void LinearSystemFactory::buildProfugusSystem(
                 "Is trilinos_implementation=tpetra?");
         }
     }
+}
+
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Apply specified shift to matrix
+ */
+//---------------------------------------------------------------------------//
+Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyShift(
+    Teuchos::RCP<CRS_MATRIX>                 A,
+    Teuchos::RCP<Teuchos::ParameterList> pl )
+{
+    VECTOR diag(A->getDomainMap());
+    A->getLocalDiagCopy(diag);
+
+    SCALAR shift = pl->get<SCALAR>("diagonal_shift", 0.0);
+ 
+    Teuchos::ArrayRCP<SCALAR> diag_vec = diag.getDataNonConst();
+    
+    for(size_t i=0; i < diag_vec.size(); ++i)
+    {
+    	Teuchos::ArrayRCP<SCALAR> val(1);
+    	val[0] = diag_vec[i] + shift * diag_vec[i]; 
+    	Teuchos::ArrayRCP<int> col(1);
+    	col[0]=i;
+    	Teuchos::ArrayView<SCALAR> val_view=val(0,0);
+    	Teuchos::ArrayView<int> col_view=col(0,0);
+	auto index = A->replaceLocalValues(i,col_view,val_view);
+    }
+    return A;
 }
 
 //---------------------------------------------------------------------------//
