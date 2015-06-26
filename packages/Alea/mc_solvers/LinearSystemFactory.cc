@@ -407,19 +407,31 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyShift(
     A->getLocalDiagCopy(diag);
 
     SCALAR shift = pl->get<SCALAR>("diagonal_shift", 0.0);
- 
+     
     Teuchos::ArrayRCP<SCALAR> diag_vec = diag.getDataNonConst();
+      
+    int max_entries = A -> getNodeMaxNumRowEntries();
+    Teuchos::ArrayRCP<LO> inds( max_entries );
+    Teuchos::ArrayRCP<SCALAR> vals( max_entries );
     
-    for(size_t i=0; i < diag_vec.size(); ++i)
+    A -> resumeFill();
+    for ( int i=0; i<diag_vec.size(); ++i )
     {
-    	Teuchos::ArrayRCP<SCALAR> val(1);
-    	val[0] = diag_vec[i] + shift * diag_vec[i]; 
-    	Teuchos::ArrayRCP<int> col(1);
-    	col[0]=i;
-    	Teuchos::ArrayView<SCALAR> val_view=val(0,0);
-    	Teuchos::ArrayView<int> col_view=col(0,0);
-	auto index = A->replaceLocalValues(i,col_view,val_view);
+    	size_t num_entries;
+    	A -> getLocalRowCopy( i, inds(), vals(), num_entries );
+    	int index = std::find( inds.begin(), inds.end(), i ) - inds.begin();
+    	vals[index] = vals[index] + shift * vals[index];
+    	Teuchos::ArrayView<SCALAR> vals_view=vals( index, 1 );
+    	Teuchos::ArrayView<LO> cols_view=inds( index, 1 );
+    	//std::cout<<"size of inds = "<<inds.size()<<" and size of cols = " <<vals.size()<<std::endl;
+    	auto changes = A -> replaceLocalValues( i, cols_view, vals_view );
+    	CHECK( changes==1 );
+    	//std::cout<<num_entries<<std::endl;
     }
+        
+    A -> fillComplete();
+    
+    CHECK( A -> isFillComplete() );    
     return A;
 }
 
