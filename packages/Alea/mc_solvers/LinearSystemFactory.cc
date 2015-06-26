@@ -82,8 +82,8 @@ LinearSystemFactory::buildLinearSystem( Teuchos::RCP<Teuchos::ParameterList> pl 
         buildProfugusSystem(mat_pl,A,b);
     }
 
-    A = applyScaling(A,b,mat_pl);
     A = applyShift(A,mat_pl);
+    A = applyScaling(A,b,mat_pl);
 
     return Teuchos::rcp( new LinearSystem(A,b) );
 }
