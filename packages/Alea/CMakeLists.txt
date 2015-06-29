@@ -49,6 +49,12 @@ IF(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
     -Wno-unused-variable)
 ENDIF()
 
+# Check if CUDA is enabled
+IF( TPL_ENABLE_CUDA )
+    MESSAGE(STATUS "Building mc_solvers with CUDA support.")
+    SET(USE_CUDA ON)
+ENDIF()
+
 #
 # Resolve min/max conflict on Windows
 #
@@ -93,6 +99,14 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/RichardsonIteration.cc
   mc_solvers/SyntheticAcceleration.cc
   )
+
+# Append Cuda sources if enabled
+IF( USE_CUDA )
+  SET(MC_SOLVERS_CUDA_SOURCES
+      mc_solvers/AdjointMcCuda.cu
+      )
+ENDIF()
+
 LIST(APPEND HEADERS ${MC_SOLVERS_HEADERS})
 LIST(APPEND SOURCES ${MC_SOLVERS_SOURCES})
 INSTALL(FILES ${MC_SOLVERS_HEADERS} DESTINATION include/Alea/mc_solvers)
@@ -103,10 +117,17 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h DESTINATION include/Alea)
 ##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
 
+IF( USE_CUDA )
+  PACKAGE_ADD_CUDA_LIBRARY(
+    Alea_Cuda
+    SOURCES ${MC_SOLVERS_CUDA_SOURCES})
+ENDIF()
+
 TRIBITS_ADD_LIBRARY(
   Alea
   NOINSTALLHEADERS ${HEADERS}
-  SOURCES ${SOURCES})
+  SOURCES ${SOURCES}
+  DEPLIBS ${Alea_Cuda})
 
 TRIBITS_ADD_EXECUTABLE(
   xalea

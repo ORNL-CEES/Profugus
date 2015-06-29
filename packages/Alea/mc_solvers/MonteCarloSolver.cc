@@ -6,6 +6,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <Alea/config.h>
+
 #include <iterator>
 #include <string>
 
@@ -20,6 +22,10 @@
 #include "Kokkos_Core.hpp"
 #include "Kokkos_Random.hpp"
 #include "harness/DBC.hh"
+
+#ifdef USE_CUDA
+#include "AdjointMcCuda.hh"
+#endif
 
 #include "AnasaziBasicEigenproblem.hpp"
 #include "AnasaziBlockKrylovSchurSolMgr.hpp"
@@ -69,7 +75,8 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
     VALIDATE(kernel_type == "parallel_reduce" ||
              kernel_type == "parallel_for"    ||
              kernel_type == "event"           ||
-             kernel_type == "adaptive",
+             kernel_type == "adaptive"        ||
+             kernel_type == "cuda",
              "Invalid kernel_type.");
     if( kernel_type == "parallel_for" )
         d_kernel_type = PARALLEL_FOR;
@@ -79,6 +86,8 @@ MonteCarloSolver::MonteCarloSolver(Teuchos::RCP<const MATRIX> A,
         d_kernel_type = EVENT;
     else if( kernel_type == "adaptive" )
         d_kernel_type = ADAPTIVE;
+    else if( kernel_type == "cuda" )
+        d_kernel_type = CUDA;
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
@@ -122,7 +131,7 @@ void MonteCarloSolver::initialize()
     CHECK( !coeffs.is_null() );
     Kokkos::resize(d_coeffs,coeffs.size());
     scalar_host_mirror coeffs_host = Kokkos::create_mirror_view(d_coeffs);
-       
+
     std::copy(coeffs.begin(),coeffs.end(),&coeffs_host(0));
     Kokkos::deep_copy(d_coeffs,coeffs_host);
 
@@ -133,20 +142,20 @@ void MonteCarloSolver::initialize()
     b_label = "MonteCarloSolver";
     d_initialized = true;
     d_init_count++;
-    
+
     //Compute the spectral radii of the iteration matrix and H_tilde
     std::cout<<"Computation of the spectral radii of H and H_tilde"<<std::endl;
-    
+
     // Create eigenvector
     bool zero_out = true;
     Teuchos::RCP<MV> x( new MV(b_A->getDomainMap(),1,zero_out) );
-    
+
     // Anasazi eigenproblem for the iteration matrix
     typedef Anasazi::BasicEigenproblem<SCALAR,MV,OP> Eigenproblem;
     Teuchos::RCP<Eigenproblem> problem( new Eigenproblem(d_mc_data->getIterationMatrix(),x) );
     problem->setNEV(1);
     problem->setProblem();
-    
+
     // Set basic parameters
     Teuchos::ParameterList anasazi_pl;
     int global_length = x->getGlobalLength();
@@ -156,8 +165,8 @@ void MonteCarloSolver::initialize()
 
     // Use BlockKrylovSchur for now, can try out different solvers later
     typedef Anasazi::BlockKrylovSchurSolMgr<SCALAR,MV,OP> KrylovSchur;
- 
-    // Option to compute largest magnitude eigenvalue 
+
+    // Option to compute largest magnitude eigenvalue
     anasazi_pl.set<std::string>("Which","LM");
     Teuchos::RCP<KrylovSchur> solver( new KrylovSchur(problem,anasazi_pl) );
 
@@ -166,21 +175,21 @@ void MonteCarloSolver::initialize()
 
     SCALAR realpart = solver->getRitzValues()[0].realpart;
     SCALAR imagpart = solver->getRitzValues()[0].imagpart;
-    
+
     d_rhoH = std::sqrt ( realpart * realpart + imagpart * imagpart ) ;
-    
+
     // Anasazi eigenproblem for the H_tilde
     problem = Teuchos::rcp ( new Eigenproblem(d_mc_data->getHtilde(),x) );
     problem->setNEV(1);
     problem->setProblem();
-    
+
     solver = Teuchos::rcp ( new KrylovSchur(problem,anasazi_pl) );
-    
+
     // Compute the largest magnitude eigenvalue of the H_tilde
     solver->solve();
     realpart = solver->getRitzValues()[0].realpart;
     imagpart = solver->getRitzValues()[0].imagpart;
-    
+
     d_rhoHtilde = std::sqrt ( realpart * realpart + imagpart * imagpart ) ;
 
     d_radii_computed = true;
@@ -198,7 +207,7 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 {
     REQUIRE( d_initialized );
     REQUIRE( d_radii_computed );
-    
+
     d_apply_count++;
 
     // For now we only support operating on a single vector
@@ -262,15 +271,24 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
     }
     else if( d_mc_type == ADJOINT && d_kernel_type == ADAPTIVE )
     {
-        AdjointMcAdaptive solver(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool); //modified by Max
+        AdjointMcAdaptive solver(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool);
 
         solver.solve(x,y);
     }
-    
+    else if( d_mc_type == ADJOINT && d_kernel_type == CUDA )
+    {
+#ifdef USE_CUDA
+        AdjointMcCuda solver(d_mc_data,d_coeffs,d_mc_pl);
+
+        solver.solve(x,y);
+#else
+        VALIDATE(false,"Cuda must be enabled to use Cuda kernel.");
+#endif
+    }
     else if( d_mc_type == FORWARD && d_kernel_type == ADAPTIVE )
     {
-    	ForwardMcAdaptive solver(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool); //modified by Max
-    	
+    	ForwardMcAdaptive solver(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool);
+
     	solver.solve(x,y);
     }
 

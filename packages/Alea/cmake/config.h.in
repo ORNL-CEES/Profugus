@@ -21,6 +21,9 @@
 /* MCLS Linear Solvers */
 #cmakedefine USE_MCLS
 
+/* CUDA Support */
+#cmakedefine USE_CUDA
+
 /* PARALLEL MPI ENVIRONMENT VARIABLES */
 #include <Utils/config.h>
 

@@ -127,7 +127,7 @@ class MonteCarloSolver : public AleaSolver,
     scalar_view           d_coeffs;
 
     enum MC_TYPE { FORWARD, ADJOINT };
-    enum KERNEL_TYPE { PARALLEL_FOR, PARALLEL_REDUCE, EVENT, ADAPTIVE };
+    enum KERNEL_TYPE { PARALLEL_FOR, PARALLEL_REDUCE, EVENT, ADAPTIVE, CUDA };
 
     MC_TYPE d_mc_type;
     KERNEL_TYPE d_kernel_type;
