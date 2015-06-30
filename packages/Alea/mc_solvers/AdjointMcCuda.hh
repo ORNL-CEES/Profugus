@@ -64,6 +64,8 @@ class AdjointMcCuda
     // Vector length
     int d_N;
     int d_nnz;
+    int d_num_curand_calls;
+    int d_rng_seed;
 
     // Problem parameters
     int    d_max_history_length;

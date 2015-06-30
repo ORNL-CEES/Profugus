@@ -8,7 +8,10 @@
 
 #include <iterator>
 #include <cmath>
+#include <curand_kernel.h>
 #include <thrust/copy.h>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 #include "AdjointMcCuda.hh"
 #include "utils/String_Functions.hh"
@@ -16,13 +19,6 @@
 
 namespace alea
 {
-
-// Declare Cuda functions
-__global__ void hello_world()
-{
-    int tid = blockIdx.x *blockDim.x + threadIdx.x;
-    printf("Hello, I am thread %i\n",tid);
-}
 
 // lower_bound implementation that can be called from device
 __device__ const double * lower_bound(const double * first,
@@ -49,33 +45,6 @@ __device__ const double * lower_bound(const double * first,
     return first;
 }
 
-//---------------------------------------------------------------------------//
-/*!
- * \brief Initialize history into new state
- */
-//---------------------------------------------------------------------------//
-__device__ void initializeHistory(int &state, double &wt, int N,
-        const double * const start_cdf,
-        const double * const start_wt)
-{
-    // Generate random number
-    double rand = 0.5;
-
-    // Sample cdf to get new state
-    auto elem = lower_bound(start_cdf,start_cdf+N,rand);
-
-    if( elem == &start_cdf[N-1]+1 )
-    {
-        state = -1;
-        wt    = 0.0;
-        return;
-    }
-
-    // Get weight and update state
-    state = elem-start_cdf;
-    wt    = start_wt[state];
-}
-
 // atomicAdd, not provided by Cuda for doubles
 __device__ double atomicAdd(double* address, double val)
 {
@@ -93,6 +62,47 @@ __device__ double atomicAdd(double* address, double val)
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Initialize Cuda RNG
+ */
+//---------------------------------------------------------------------------//
+__global__ void initialize_rng(curandState *state, int seed, int offset)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+    curand_init(seed,tid,offset,&state[tid]);
+
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Initialize history into new state
+ */
+//---------------------------------------------------------------------------//
+__device__ void initializeHistory(int &state, double &wt, int N,
+        const double * const start_cdf,
+        const double * const start_wt,
+              curandState   *rng_state)
+{
+    // Generate random number
+    double rand = curand_uniform_double(rng_state);
+
+    // Sample cdf to get new state
+    auto elem = lower_bound(start_cdf,start_cdf+N,rand);
+
+    if( elem == &start_cdf[N-1]+1 )
+    {
+        state = -1;
+        wt    = 0.0;
+        return;
+    }
+
+    // Get weight and update state
+    state = elem-start_cdf;
+    wt    = start_wt[state];
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Get new state by sampling from cdf
  */
 //---------------------------------------------------------------------------//
@@ -100,10 +110,11 @@ __device__ void getNewState(int &state, double &wt,
         const double * const P,
         const double * const W,
         const int    * const inds,
-        const int    * const offsets)
+        const int    * const offsets,
+              curandState   *rng_state )
 {
     // Generate random number
-    double rand = 0.5;
+    double rand = curand_uniform_double(rng_state);
 
     // Sample cdf to get new state
     auto beg_row = P + offsets[state];
@@ -171,17 +182,25 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
         const int    * const inds,
         const int    * const offsets,
         const double * const coeffs,
-              double * const x )
+              double * const x,
+              curandState   *rng_state)
 {
     int state = -1;
     double wt = 0.0;
-    double init_wt = 0.0;
+
+    // Store rng state locally
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    curandState local_state = rng_state[tid];
 
     // Get initial state for this history by sampling from start_cdf
-    initializeHistory(state,wt,N,start_cdf,start_wt);
+    initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
+    //printf("Starting history in state %i with weight %7.3f\n",state,wt);
     if( state == -1 )
+    {
+        rng_state[tid] = local_state;
         return;
-    init_wt = wt;
+    }
+    double init_wt = wt;
 
     // With expected value estimator we start on stage 1 because
     // zeroth order term is added explicitly at the end
@@ -194,9 +213,11 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
     for( ; stage<=history_length; ++stage )
     {
         // Move to new state
-        getNewState(state,wt,P,W,inds,offsets);
+        getNewState(state,wt,P,W,inds,offsets,&local_state);
+        //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
+
         if( state == -1 )
-            return;
+            break;
 
         // Tally
         tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
@@ -204,8 +225,11 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
 
         // Check weight cutoff
         if( std::abs(wt/init_wt) < wt_cutoff )
-            return;
+            break;
     }
+
+    // Store rng state back to global
+    rng_state[tid] = local_state;
 }
         
 //---------------------------------------------------------------------------//
@@ -229,7 +253,7 @@ AdjointMcCuda::AdjointMcCuda(
 {
     // Get parameters
     d_num_histories      = pl->get("num_histories",1000);
-    d_max_history_length = pl->get("max_history_length",1000);
+    d_max_history_length = coeffs.size()-1;
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
 
     // Determine type of tally
@@ -250,6 +274,9 @@ AdjointMcCuda::AdjointMcCuda(
         d_verbosity = HIGH;
 
     prepareDeviceData(mc_data,coeffs);
+
+    d_num_curand_calls = 0;
+    d_rng_seed = pl->get<int>("rng_seed",1234);
 }
 
 //---------------------------------------------------------------------------//
@@ -281,22 +308,62 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     thrust::device_vector<double> x_vec(d_N);
     double * const x_ptr = thrust::raw_pointer_cast(x_vec.data());
 
-    int block_size = 256;
+    int block_size = std::min(256,d_num_histories);
     int num_blocks = d_num_histories / block_size;
-    std::cout << "Launching MC device kernel" << std::endl;
+
+    curandState *rng_states;
+    cudaError e = cudaMalloc((void **)&rng_states,
+        block_size*num_blocks*sizeof(curandState));
+
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+    VALIDATE(cudaSuccess==e,"Failed to allocate memory");
+
+    // Initialize RNG
+    initialize_rng<<<num_blocks,block_size>>>(rng_states,d_rng_seed,
+        d_num_curand_calls);
+
+    // Check for errors in kernel launch
+    e = cudaGetLastError();
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+    VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
+    d_num_curand_calls++;
+
     run_monte_carlo<<<num_blocks,block_size>>>(d_N,d_max_history_length,
         d_weight_cutoff, d_use_expected_value,
-        start_cdf_ptr,start_wt_ptr,H,P,W,inds,offsets,coeffs,x_ptr);
+        start_cdf_ptr,start_wt_ptr,H,P,W,inds,offsets,coeffs,x_ptr,rng_states);
 
-    // Copy data back tin 
+    // Check for errors in kernel launch
+    e = cudaGetLastError();
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+    VALIDATE(cudaSuccess==e,"Failed to execute MC kernel");
+
+    // Scale by history count
+    for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
+        *itr /= static_cast<double>(num_blocks*block_size);
+
+    // Copy data back to host
     {
         Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
         thrust::copy(x_vec.begin(),x_vec.end(),x_data.get());
     }
 
+
     // Add rhs for expected value
     if( d_use_expected_value )
        x.update(d_coeffs[0],b,1.0);
+
+    // Free RNG state
+    e = cudaFree(rng_states);
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+    VALIDATE(cudaSuccess==e,"Failed to deallocate memory");
 }
 
 //---------------------------------------------------------------------------//
@@ -338,9 +405,12 @@ void AdjointMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
         thrust::copy(val_row.begin(),val_row.end(),h_iter);
         h_iter += val_row.size();
         P->getLocalRowView(i,ind_row,val_row);
+        thrust::copy(val_row.begin(),val_row.end(),p_iter);
         p_iter += val_row.size();
         W->getLocalRowView(i,ind_row,val_row);
+        thrust::copy(val_row.begin(),val_row.end(),w_iter);
         w_iter += val_row.size();
+        thrust::copy(ind_row.begin(),ind_row.end(),ind_iter);
         ind_iter += ind_row.size();
         d_offsets[i+1] = d_offsets[i] + ind_row.size();
     }
@@ -350,11 +420,12 @@ void AdjointMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
     CHECK( ind_iter == d_inds.end() );
 
     // Copy coefficients into device vector
+    const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
+    Kokkos::deep_copy(coeffs_host,coeffs);
     d_coeffs.resize(coeffs.size());
-    thrust::device_ptr<const double> coeffs_begin(coeffs.ptr_on_device());
-    thrust::device_ptr<const double> coeffs_end(
-        coeffs.ptr_on_device()+coeffs.size());
-    thrust::copy(coeffs_begin,coeffs_end,d_coeffs.begin());
+    thrust::copy(coeffs_host.ptr_on_device(),
+                 coeffs_host.ptr_on_device()+coeffs_host.size(),
+                 d_coeffs.begin());
 }
 
 //---------------------------------------------------------------------------//
