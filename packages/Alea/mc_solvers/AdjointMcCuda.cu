@@ -32,7 +32,8 @@ __device__ const double * lower_bound(const double * first,
     {
         step = count / 2;
         it = first+step;
-        if( __ldg( &(*it) ) < val )
+        if( __ldg( &(*it) ) < val ) //Modified by Max
+        //if ( *it<val )
         {
             first = ++it;
             count -= step+1;
@@ -98,7 +99,8 @@ __device__ void initializeHistory(int &state, double &wt, int N,
 
     // Get weight and update state
     state = elem-start_cdf;
-    wt    = __ldg(&start_wt[state]);
+    wt    = __ldg(&start_wt[state]); //modified by Max
+    //wt = start_wt[state];
 }
 
 //---------------------------------------------------------------------------//
@@ -132,7 +134,9 @@ __device__ void getNewState(int &state, double &wt,
     // Modify weight and update state
     auto index = elem - P;
     state  =  __ldg(&inds[index]); //modified by Max
+    //state = inds[index];
     wt    *=  __ldg(&W[index]); //modified by Max
+    //wt = W[index];
 }
 
 //---------------------------------------------------------------------------//
