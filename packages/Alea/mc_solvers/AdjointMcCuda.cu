@@ -20,6 +20,8 @@
 namespace alea
 {
 
+#define USE_LDG 1
+
 // lower_bound implementation that can be called from device
 __device__ const double * lower_bound(const double * first,
         const double * last,
@@ -32,8 +34,11 @@ __device__ const double * lower_bound(const double * first,
     {
         step = count / 2;
         it = first+step;
+#if USE_LDG
         if( __ldg( &(*it) ) < val ) //Modified by Max
-        //if ( *it<val )
+#else
+        if ( *it<val )
+#endif
         {
             first = ++it;
             count -= step+1;
@@ -99,8 +104,11 @@ __device__ void initializeHistory(int &state, double &wt, int N,
 
     // Get weight and update state
     state = elem-start_cdf;
+#if USE_LDG
     wt    = __ldg(&start_wt[state]); //modified by Max
-    //wt = start_wt[state];
+#else
+    wt = start_wt[state];
+#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -133,10 +141,13 @@ __device__ void getNewState(int &state, double &wt,
 
     // Modify weight and update state
     auto index = elem - P;
+#if USE_LDG
     state  =  __ldg(&inds[index]); //modified by Max
-    //state = inds[index];
     wt    *=  __ldg(&W[index]); //modified by Max
-    //wt = W[index];
+#else
+    state = inds[index];
+    wt = W[index];
+#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -160,7 +171,11 @@ __device__ void tallyContribution(int state, double wt,
         // contributions corresponding to each element
         for( int i=row_begin; i<row_end; ++i )
         {
+#if USE_LDG
             atomicAdd(x+inds[i],wt* ( __ldg(&H[i]) ) );//modified by Max
+#else
+            atomicAdd(x+inds[i],wt*H[i]);//modified by Max
+#endif
 
         }
     }
