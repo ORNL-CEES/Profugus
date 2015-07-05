@@ -12,6 +12,8 @@
 #include <thrust/copy.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/sequence.h>
+#include <thrust/binary_search.h>
 
 #include "AdjointMcCuda.hh"
 #include "utils/String_Functions.hh"
@@ -74,6 +76,14 @@ __global__ void initialize_rng(curandState *state, int seed, int offset)
 
 }
 
+
+__global__ void initialize_rng2(curandState *state, int*seed, int offset)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+    curand_init(seed[tid], 0, offset, &state[tid]);
+}
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Initialize history into new state
@@ -122,6 +132,7 @@ __device__ void getNewState(int &state, double &wt,
     auto beg_row = P + offsets[state];
     auto end_row = P + offsets[state+1];
     auto elem = lower_bound(beg_row,end_row,rand);
+    //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
 
     if( elem == end_row )
     {
@@ -325,8 +336,15 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 
     // Initialize RNG
-    initialize_rng<<<num_blocks,block_size>>>(rng_states,d_rng_seed,
-        d_num_curand_calls);
+    //initialize_rng<<<num_blocks,block_size>>>(rng_states,d_rng_seed,
+    //    d_num_curand_calls);
+
+    thrust::device_vector<int> seeds( block_size*num_blocks);
+    thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
+    int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
+
+    initialize_rng2<<<num_blocks, block_size>>>(rng_states, seed_ptr, 
+          d_num_curand_calls);
 
     // Check for errors in kernel launch
     e = cudaGetLastError();
