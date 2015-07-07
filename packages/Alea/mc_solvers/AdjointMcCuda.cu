@@ -9,11 +9,14 @@
 #include <iterator>
 #include <cmath>
 #include <curand_kernel.h>
+#include <curand.h>
 #include <thrust/copy.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sequence.h>
 #include <thrust/binary_search.h>
+#include <thrust/generate.h>
+#include <thrust/random.h>
 
 #include "AdjointMcCuda.hh"
 #include "utils/String_Functions.hh"
@@ -121,6 +124,33 @@ __device__ void initializeHistory(int &state, double &wt, int N,
 #endif
 }
 
+
+__device__ void initializeHistory2(int &state, double &wt, int N,
+        const double * const start_cdf,
+        const double * const start_wt,
+              double &rand)
+{
+
+    // Sample cdf to get new state
+    auto elem = lower_bound(start_cdf,start_cdf+N,rand);
+
+    if( elem == &start_cdf[N-1]+1 )
+    {
+        state = -1;
+        wt    = 0.0;
+        return;
+    }
+
+    // Get weight and update state
+    state = elem-start_cdf;
+#if USE_LDG
+    wt    = __ldg(&start_wt[state]); //modified by Max
+#else
+    wt = start_wt[state];
+#endif
+}
+
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Get new state by sampling from cdf
@@ -161,6 +191,41 @@ __device__ void getNewState(int &state, double &wt,
 #endif
 }
 
+
+__device__ void getNewState2(int &state, double &wt,
+        const double * const P,
+        const double * const W,
+        const int    * const inds,
+        const int    * const offsets,
+              double   &rand )
+{
+
+    // Sample cdf to get new state
+    auto beg_row = P + offsets[state];
+    auto end_row = P + offsets[state+1];
+    auto elem = lower_bound(beg_row,end_row,rand);
+    //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
+
+    if( elem == end_row )
+    {
+        // Invalidate all row data
+        state = -1;
+        wt = 0.0;
+        return;
+    }
+
+    // Modify weight and update state
+    auto index = elem - P;
+#if USE_LDG
+    state  =  __ldg(&inds[index]); //modified by Max
+    wt    *=  __ldg(&W[index]); //modified by Max
+#else
+    state = inds[index];
+    wt = W[index];
+#endif
+}
+
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Tally contribution into vector
@@ -197,12 +262,14 @@ __device__ void tallyContribution(int state, double wt,
     }
 }
 
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
 __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
+        int batch_size,
         bool expected_value,
         const double * const start_cdf,
         const double * const start_wt,
@@ -221,9 +288,21 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
     // Store rng state locally
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     curandState local_state = rng_state[tid];
+ 
+    extern __shared__ double steps[];
+
+    //__syncthreads();
+ 
+    for (int i = 0; i<batch_size; ++i)
+        steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
+
+    //__syncthreads();
 
     // Get initial state for this history by sampling from start_cdf
     initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
+
+    //initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
+
     //printf("Starting history in state %i with weight %7.3f\n",state,wt);
     if( state == -1 )
     {
@@ -240,11 +319,24 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
     tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
         expected_value);
 
+    int count_batch = 0;
+
     for( ; stage<=history_length; ++stage )
     {
+        if (count_batch == batch_size)
+        {
+
+          //__syncthreads();
+         count_batch = 0;
+         for (int i = 0; i<batch_size; ++i)
+            steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
+        }
+
         // Move to new state
-        getNewState(state,wt,P,W,inds,offsets,&local_state);
+        //getNewState(state,wt,P,W,inds,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
+
+        getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
 
         if( state == -1 )
             break;
@@ -253,9 +345,12 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
         tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
             expected_value);
 
+        count_batch++;
+
         // Check weight cutoff
         if( std::abs(wt/init_wt) < wt_cutoff )
             break;
+   
     }
 
     // Store rng state back to global
@@ -369,8 +464,10 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-    run_monte_carlo<<<num_blocks,block_size>>>(d_N,d_max_history_length,
-        d_weight_cutoff, d_use_expected_value,
+    int batch_size = 5;
+
+    run_monte_carlo<<< num_blocks,block_size, sizeof(double) * block_size * batch_size >>>(d_N,d_max_history_length,
+        d_weight_cutoff, batch_size, d_use_expected_value,
         start_cdf_ptr,start_wt_ptr,H,P,W,inds,offsets,coeffs,x_ptr,rng_states);
 
     // Check for errors in kernel launch
