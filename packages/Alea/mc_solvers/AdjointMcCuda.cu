@@ -221,7 +221,7 @@ __device__ void getNewState2(int &state, double &wt,
     wt    *=  __ldg(&W[index]); //modified by Max
 #else
     state = inds[index];
-    wt = W[index];
+    wt *= W[index];
 #endif
 }
 
