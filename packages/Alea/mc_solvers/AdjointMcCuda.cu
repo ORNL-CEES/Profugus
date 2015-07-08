@@ -25,7 +25,7 @@
 namespace alea
 {
 
-#define USE_LDG 1
+#define USE_LDG 0
 
 // lower_bound implementation that can be called from device
 __device__ const double * lower_bound(const double * first,
@@ -187,7 +187,7 @@ __device__ void getNewState(int &state, double &wt,
     wt    *=  __ldg(&W[index]); //modified by Max
 #else
     state = inds[index];
-    wt = W[index];
+    wt *= W[index];
 #endif
 }
 
@@ -289,14 +289,12 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     curandState local_state = rng_state[tid];
  
-    extern __shared__ double steps[];
-
-    //__syncthreads();
+/*    extern __shared__ double steps[];
  
     for (int i = 0; i<batch_size; ++i)
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
 
-    //__syncthreads();
+*/
 
     // Get initial state for this history by sampling from start_cdf
     initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
@@ -319,11 +317,11 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
     tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
         expected_value);
 
-    int count_batch = 0;
+  //  int count_batch = 0;
 
     for( ; stage<=history_length; ++stage )
     {
-        if (count_batch == batch_size)
+/*        if (count_batch == batch_size)
         {
 
           //__syncthreads();
@@ -332,11 +330,13 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
             steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
         }
 
+*/
+
         // Move to new state
-        //getNewState(state,wt,P,W,inds,offsets,&local_state);
+        getNewState(state,wt,P,W,inds,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
-        getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
+        //getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
 
         if( state == -1 )
             break;
@@ -345,7 +345,7 @@ __global__ void run_monte_carlo(int N, int history_length, double wt_cutoff,
         tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
             expected_value);
 
-        count_batch++;
+        //count_batch++;
 
         // Check weight cutoff
         if( std::abs(wt/init_wt) < wt_cutoff )
