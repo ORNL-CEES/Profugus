@@ -104,6 +104,7 @@ SET(MC_SOLVERS_SOURCES
 IF( USE_CUDA )
   SET(MC_SOLVERS_CUDA_SOURCES
       mc_solvers/AdjointMcCuda.cu
+      mc_solvers/ForwardMcCuda.cu
       )
 ENDIF()
 

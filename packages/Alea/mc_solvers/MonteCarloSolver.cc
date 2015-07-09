@@ -25,6 +25,7 @@
 
 #ifdef USE_CUDA
 #include "AdjointMcCuda.hh"
+#include "ForwardMcCuda.hh"
 #endif
 
 #include "AnasaziBasicEigenproblem.hpp"
@@ -285,6 +286,16 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
         VALIDATE(false,"Cuda must be enabled to use Cuda kernel.");
 #endif
     }
+    else if( d_mc_type == FORWARD && d_kernel_type == CUDA )
+    {
+#ifdef USE_CUDA
+        ForwardMcCuda solver(d_mc_data,d_coeffs,d_mc_pl);
+
+        solver.solve(x,y);
+#else
+        VALIDATE(false,"Cuda must be enabled to use Cuda kernel.");
+#endif
+    }    
     else if( d_mc_type == FORWARD && d_kernel_type == ADAPTIVE )
     {
     	ForwardMcAdaptive solver(d_mc_data,d_coeffs,d_mc_pl,d_rand_pool);
