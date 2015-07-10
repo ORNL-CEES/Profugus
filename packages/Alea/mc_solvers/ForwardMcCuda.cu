@@ -27,9 +27,6 @@
 namespace alea
 {
 
-#ifndef USE_LDG
-#define USE_LDG 0
-#endif
 
 //---------------------------------------------------------------------------//
 /*!
@@ -39,7 +36,7 @@ namespace alea
 __device__ void tallyContribution(int state, double wt, double * const x)
 {
         // Collision estimator just adds weight
-        F_atomicAdd(x+state,wt);
+        atomicAdd(x+state,wt);
 }
 
 
@@ -230,7 +227,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
     int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
 
-    F_initialize_rng2<<<num_blocks, block_size>>>(rng_states, seed_ptr, 
+    initialize_rng2<<<num_blocks, block_size>>>(rng_states, seed_ptr, 
           d_num_curand_calls);
 
     // Check for errors in kernel launch
