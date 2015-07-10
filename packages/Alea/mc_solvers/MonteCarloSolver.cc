@@ -225,7 +225,7 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
 
     LO N = x.getLocalLength();
 
-    if( d_mc_type == FORWARD && d_kernel_type != ADAPTIVE)
+    if( d_mc_type == FORWARD && d_kernel_type != ADAPTIVE && d_kernel_type !=CUDA)
     {
         /*
         int histories_per_state = d_num_histories / N;
