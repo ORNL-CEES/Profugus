@@ -18,170 +18,18 @@
 #include <thrust/generate.h>
 #include <thrust/random.h>
 
-//#include "AdjointMcCuda.cu"
 #include "ForwardMcCuda.hh"
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
-#include "math.h"
+#include "CudaUtils.hh"
 
 namespace alea
 {
 
+#ifndef USE_LDG
 #define USE_LDG 0
-
-
-
-// lower_bound implementation that can be called from device
-__device__ const double * F_lower_bound(const double * first,
-        const double * last,
-        double   val)
-{
-    const double * it;
-    int count, step;
-    count = last - first;
-    while( count > 0 )
-    {
-        step = count / 2;
-        it = first+step;
-#if USE_LDG
-        if( __ldg( &(*it) ) < val ) //Modified by Max
-#else
-        if ( *it<val )
 #endif
-        {
-            first = ++it;
-            count -= step+1;
-        }
-        else
-        {
-            count = step;
-        }
-    }
-    return first;
-}
-
-
-
-// atomicAdd, not provided by Cuda for doubles
-__device__ double F_atomicAdd(double* address, double val)
-{
-    unsigned long long int* address_as_ull =
-        (unsigned long long int*)address;
-    unsigned long long int old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed,
-                __double_as_longlong(val +
-                    __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
-}
-
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Initialize Cuda RNG
- */
-//---------------------------------------------------------------------------//
-__global__ void F_initialize_rng(curandState *state, int seed, int offset)
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-
-    curand_init(seed,tid,offset,&state[tid]);
-
-}
-
-
-__global__ void F_initialize_rng2(curandState *state, int*seed, int offset)
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-
-    curand_init(seed[tid], 0, offset, &state[tid]);
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Initialize history into new state
- */
-//---------------------------------------------------------------------------//
-
-
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Get new state by sampling from cdf
- */
-//---------------------------------------------------------------------------//
-__device__ void F_getNewState(int &state, double &wt,
-        const double * const P,
-        const double * const W,
-        const int    * const inds,
-        const int    * const offsets,
-              curandState   *rng_state )
-{
-    // Generate random number
-    double rand = curand_uniform_double(rng_state);
-
-    // Sample cdf to get new state
-    auto beg_row = P + offsets[state];
-    auto end_row = P + offsets[state+1];
-    auto elem = F_lower_bound(beg_row,end_row,rand);
-    //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
-
-    if( elem == end_row )
-    {
-        // Invalidate all row data
-        state = -1;
-        wt = 0.0;
-        return;
-    }
-
-    // Modify weight and update state
-    auto index = elem - P;
-#if USE_LDG
-    state  =  __ldg(&inds[index]); //modified by Max
-    wt    *=  __ldg(&W[index]); //modified by Max
-#else
-    state = inds[index];
-    wt *= W[index];
-#endif
-}
-
-
-__device__ void F_getNewState2(int &state, double &wt,
-        const double * const P,
-        const double * const W,
-        const int    * const inds,
-        const int    * const offsets,
-              double   &rand )
-{
-
-    // Sample cdf to get new state
-    auto beg_row = P + offsets[state];
-    auto end_row = P + offsets[state+1];
-    auto elem = F_lower_bound(beg_row,end_row,rand);
-    //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
-
-    if( elem == end_row )
-    {
-        // Invalidate all row data
-        state = -1;
-        wt = 0.0;
-        return;
-    }
-
-    // Modify weight and update state
-    auto index = elem - P;
-#if USE_LDG
-    state  =  __ldg(&inds[index]); //modified by Max
-    wt    *=  __ldg(&W[index]); //modified by Max
-#else
-    state = inds[index];
-    wt *= W[index];
-#endif
-}
-
 
 //---------------------------------------------------------------------------//
 /*!
@@ -200,7 +48,7 @@ __device__ void tallyContribution(int state, double wt, double * const x)
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-__global__ void F_run_monte_carlo(int N, int history_length, double wt_cutoff,
+__global__ void forward_run_monte_carlo(int N, int history_length, double wt_cutoff,
         int entry_histories, 
         int batch_size,
         const double * const H,
@@ -265,7 +113,7 @@ __global__ void F_run_monte_carlo(int N, int history_length, double wt_cutoff,
 */
 
         // Move to new state
-        F_getNewState(state,wt,P,W,inds,offsets,&local_state);
+        getNewState(state,wt,P,W,inds,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
         //getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
@@ -395,7 +243,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     int batch_size = 5;
    
-    F_run_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length,
+    forward_run_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length,
         d_weight_cutoff, d_num_histories, batch_size,
         H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);
 

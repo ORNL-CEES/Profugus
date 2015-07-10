@@ -103,6 +103,7 @@ SET(MC_SOLVERS_SOURCES
 # Append Cuda sources if enabled
 IF( USE_CUDA )
   SET(MC_SOLVERS_CUDA_SOURCES
+      mc_solver/CudaUtils.cu
       mc_solvers/AdjointMcCuda.cu
       mc_solvers/ForwardMcCuda.cu
       )

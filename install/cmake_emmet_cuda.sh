@@ -20,7 +20,7 @@ MPI_PATH="/usr/lib64/openmpi"
 HDF5_PATH="${MPI_PATH}"
 
 # Cuda flags
-CUDA_NVCC_FLAGS="-std=c++11 -Xcudafe --diag_suppress=code_is_unreachable"
+CUDA_NVCC_FLAGS="-std=c++11 -Xcudafe --diag_suppress=code_is_unreachable -dc"
 
 ##---------------------------------------------------------------------------##
 
