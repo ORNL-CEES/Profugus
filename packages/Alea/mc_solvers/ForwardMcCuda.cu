@@ -249,8 +249,6 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to execute MC kernel"); 
 
-    std::cout<<"histories per entry: "<<d_num_histories<<std::endl; 
-
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
         *itr /= static_cast<double>(d_num_histories);

@@ -18,7 +18,7 @@ namespace alea
 
 
 // lower_bound implementation that can be called from device
-__device__ const double * lower_bound(const double * first,
+__device__ inline const double * lower_bound(const double * first,
         const double * last,
         double   val)
 {
@@ -47,7 +47,7 @@ __device__ const double * lower_bound(const double * first,
 }
 
 // atomicAdd, not provided by Cuda for doubles
-__device__ double atomicAdd(double* address, double val)
+__device__ inline double atomicAdd(double* address, double val)
 {
     unsigned long long int* address_as_ull =
         (unsigned long long int*)address;
@@ -67,7 +67,7 @@ __device__ double atomicAdd(double* address, double val)
  * \brief Get new state by sampling from cdf
  */
 //---------------------------------------------------------------------------//
-__device__ void getNewState(int &state, double &wt,
+__device__ inline void getNewState(int &state, double &wt,
         const double * const P,
         const double * const W,
         const int    * const inds,
@@ -103,7 +103,7 @@ __device__ void getNewState(int &state, double &wt,
 }
 
 
-__device__ void getNewState2(int &state, double &wt,
+__device__ inline void getNewState2(int &state, double &wt,
         const double * const P,
         const double * const W,
         const int    * const inds,
@@ -142,7 +142,7 @@ __device__ void getNewState2(int &state, double &wt,
  * \brief Initialize Cuda RNG
  */
 //---------------------------------------------------------------------------//
-__global__ void initialize_rng(curandState *state, int seed, int offset)
+__global__ inline void initialize_rng(curandState *state, int seed, int offset)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -151,7 +151,7 @@ __global__ void initialize_rng(curandState *state, int seed, int offset)
 }
 
 
-__global__ void initialize_rng2(curandState *state, int*seed, int offset)
+__global__ inline void initialize_rng2(curandState *state, int*seed, int offset)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 

@@ -25,6 +25,13 @@
 namespace alea
 {
 
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 256
+#endif 
+
+#ifndef BATCH_SIZE
+#define BATCH_SIZE 5
+#endif
 
 //---------------------------------------------------------------------------//
 /*!
@@ -129,7 +136,6 @@ __device__ void tallyContribution(int state, double wt,
  */
 //---------------------------------------------------------------------------//
 __global__ void adjoint_run_monte_carlo(int N, int history_length, double wt_cutoff,
-        int batch_size,
         bool expected_value,
         const double * const start_cdf,
         const double * const start_wt,
@@ -149,9 +155,9 @@ __global__ void adjoint_run_monte_carlo(int N, int history_length, double wt_cut
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     curandState local_state = rng_state[tid];
  
-    extern __shared__ double steps[];
+    __shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
  
-    for (int i = 0; i<batch_size; ++i)
+    for (int i = 0; i<BATCH_SIZE; ++i)
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
 
 
@@ -181,12 +187,12 @@ __global__ void adjoint_run_monte_carlo(int N, int history_length, double wt_cut
 
     for( ; stage<=history_length; ++stage )
     {
-        if (count_batch == batch_size)
+        if (count_batch == BATCH_SIZE)
         {
 
           //__syncthreads();
          count_batch = 0;
-         for (int i = 0; i<batch_size; ++i)
+         for (int i = 0; i<BATCH_SIZE; ++i)
             steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
         }
 
@@ -291,12 +297,15 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     thrust::device_vector<double> x_vec(d_N);
     double * const x_ptr = thrust::raw_pointer_cast(x_vec.data());
 
-    int block_size = std::min(256,d_num_histories);
-    int num_blocks = d_num_histories / block_size;
+    //int block_size = std::min(256,d_num_histories);
+    VALIDATE( BLOCK_SIZE <= d_num_histories, 
+          "Number of histories is smaller than the block size" );
+
+    int num_blocks = d_num_histories / BLOCK_SIZE;
 
     curandState *rng_states;
-    cudaError e = cudaMalloc((void **)&rng_states,
-        block_size*num_blocks*sizeof(curandState));
+    cudaError e = cudaMalloc( (void **)&rng_states,
+        BLOCK_SIZE * num_blocks * sizeof(curandState) );
 
     if( cudaSuccess != e )
         std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
@@ -307,11 +316,11 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     //initialize_rng<<<num_blocks,block_size>>>(rng_states,d_rng_seed,
     //    d_num_curand_calls);
 
-    thrust::device_vector<int> seeds( block_size*num_blocks);
+    thrust::device_vector<int> seeds( BLOCK_SIZE * num_blocks );
     thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
     int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
 
-    initialize_rng2<<<num_blocks, block_size>>>(rng_states, seed_ptr, 
+    initialize_rng2<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
           d_num_curand_calls);
 
     // Check for errors in kernel launch
@@ -322,10 +331,8 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-    int batch_size = 5;
-
-    adjoint_run_monte_carlo<<< num_blocks,block_size, sizeof(double) * block_size * batch_size >>>(d_N,d_max_history_length,
-        d_weight_cutoff, batch_size, d_use_expected_value,
+    adjoint_run_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,d_max_history_length,
+        d_weight_cutoff, d_use_expected_value,
         start_cdf_ptr,start_wt_ptr,H,P,W,inds,offsets,coeffs,x_ptr,rng_states);
 
     // Check for errors in kernel launch
@@ -337,7 +344,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
-        *itr /= static_cast<double>(num_blocks*block_size);
+        *itr /= static_cast<double>( num_blocks * BLOCK_SIZE );
 
     // Copy data back to host
     {
