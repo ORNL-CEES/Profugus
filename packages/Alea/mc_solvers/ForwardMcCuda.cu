@@ -22,8 +22,6 @@
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
-#include "CudaUtils.hh"
-
 namespace alea
 {
 
