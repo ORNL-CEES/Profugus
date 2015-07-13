@@ -148,62 +148,57 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
         const double * const rhs, 
               curandState   *rng_state)
 {
-    int state = -1;
-
-    // Store rng state locally
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;  
-    curandState local_state = rng_state[tid];
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     if( tid < N )
     {
-
-        for (int i = 0; i<entry_histories; ++i)
+        int entry=tid;
+        
+        for(int i=0; i<entry_histories; ++i)
         {
-    		int entry = tid;
-    		state = entry;
-                double wt = 1.0;
+	    int state = entry;
+	    double wt = 1.0;
 
-    		//initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
+	    curandState local_state = rng_state[tid];
+	 
+	    //printf("Starting history in state %i with weight %7.3f\n",state,wt);
+	    if( state >= N )
+	    {
+		rng_state[tid] = local_state;
+		return;
+	    }
+	    double init_wt = wt;
 
-    		//printf("Starting history in state %i with weight %7.3f\n",state,wt);
-    		if( state >= N )
-    		{
-        		rng_state[tid] = local_state;
-        		return;
-    		}
-    		double init_wt = wt;
+	    int stage = 0;
 
-    		int stage = 0;
+	    // Perform initial tally
+	    tallyContribution(state,coeffs[stage]*wt*rhs[state],x);
 
-    		// Perform initial tally
-    		tallyContribution(state,coeffs[stage]*wt*rhs[state],x);
+	  //  int count_batch = 0;
 
+	    for(; stage<=history_length; ++stage )
+	    {
+		// Move to new state
+		getNewState(state,wt,P,W,inds,offsets,&local_state);
+		//printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
-  	//  	int count_batch = 0;
+		if( state == -1 )
+		    break;
 
-    		for(; stage<=history_length; ++stage )
-    		{
-        		// Move to new state
-        		getNewState(state,wt,P,W,inds,offsets,&local_state);
-        		//printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
+		// Tally
+		tallyContribution(entry,coeffs[stage]*wt*rhs[state],x);
 
-        		//getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
+		//count_batch++;
 
-        		if( state == -1 )
-            			break;
+		// Check weight cutoff
+		if( std::abs(wt/init_wt) < wt_cutoff )
+		    break;
+	   
+	    }
 
-        		// Tally
-    		        tallyContribution(entry,coeffs[stage]*wt*rhs[state],x);
-
-        		// Check weight cutoff
-        		if( std::abs(wt/init_wt) < wt_cutoff )
-            			break;
-   
-    		} 
+	    // Store rng state back to global
+	    rng_state[tid] = local_state;
         }
-
-    	// Store rng state back to global
-    	rng_state[tid] = local_state;
     }
 }
 
