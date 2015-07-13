@@ -303,9 +303,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     int block_size = std::min(256,tot_histories);
     int num_blocks = tot_histories / block_size + 1;
-    
-    int block_size = std::min(256, tot_histories);
-  
+      
 #else 
 
     //instantiation of as many threads as the number of entries in the solution
@@ -346,12 +344,12 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
 #ifdef THREAD_PER_ENTRY
    
-    run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
-        H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);
-        
-#else        
-
     run_forward_monte_carlo2<<< num_blocks,block_size, d_num_histories*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
+        H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);    
+        
+#else    
+    
+    run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
         H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);
 
 #endif
