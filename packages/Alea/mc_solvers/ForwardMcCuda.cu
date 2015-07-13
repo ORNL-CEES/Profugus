@@ -23,7 +23,7 @@
 #include "harness/Warnings.hh"
 
 #ifndef THREAD_PER_ENTRY
-#define THREAD_PER_ENTRY
+#define THREAD_PER_ENTRY 1
 #endif
 
 namespace alea
@@ -296,7 +296,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     thrust::device_vector<double> x_vec(d_N);
     double * const x_ptr = thrust::raw_pointer_cast(x_vec.data());
 
-#ifdef THREAD_PER_HISTORY
+#ifdef THREAD_PER_ENTRY
 
     //instiantiation of as many threads as the total number of histories
     int tot_histories = d_num_histories * d_N;
@@ -344,7 +344,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-#ifdef THREAD_PER_HISTORY
+#ifdef THREAD_PER_ENTRY
    
     run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
         H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);
@@ -363,7 +363,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to execute MC kernel"); 
 
-#ifdef THREAD_PER_HISTORY
+#ifdef THREAD_PER_ENTRY
 
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
