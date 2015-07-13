@@ -43,7 +43,7 @@ __device__ void tallyContribution(int state, double wt, double * const x)
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-__global__ void forward_run_monte_carlo(int N, int history_length, double wt_cutoff,
+__global__ void run_forward_monte_carlo(int N, int history_length, double wt_cutoff,
         int entry_histories, 
         int batch_size,
         const double * const H,
@@ -80,7 +80,7 @@ __global__ void forward_run_monte_carlo(int N, int history_length, double wt_cut
     //initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
 
     //printf("Starting history in state %i with weight %7.3f\n",state,wt);
-    if( state > N )
+    if( state >= N )
     {
         rng_state[tid] = local_state;
         return;
@@ -130,6 +130,92 @@ __global__ void forward_run_monte_carlo(int N, int history_length, double wt_cut
     // Store rng state back to global
     rng_state[tid] = local_state;
 }
+
+
+__global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cutoff,
+        int entry_histories, 
+        const double * const H,
+        const double * const P,
+        const double * const W,
+        const int    * const inds,
+        const int    * const offsets,
+        const double * const coeffs,
+              double * const x,
+        const double * const rhs, 
+              curandState   *rng_state)
+{
+    int state = -1;
+    double wt = 1.0;
+
+    // Store rng state locally
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+    extern __shared__ double sol[];    
+
+    for (int i = 0; i<entry_histories; ++i)
+        sol[threadIdx.x + i] = 0.0;
+
+    if( tid < N )
+    {
+    	int entry = tid;
+
+    	state = entry;
+    	curandState local_state = rng_state[tid];
+  
+        for (int i = 0; i<entry_histories; ++i)
+        {
+    		//initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
+
+    		//printf("Starting history in state %i with weight %7.3f\n",state,wt);
+    		if( state >= N )
+    		{
+        		rng_state[tid] = local_state;
+        		return;
+    		}
+    		double init_wt = wt;
+
+    		int stage = 0;
+
+    		// Perform initial tally
+    		tallyContribution(state,coeffs[stage]*wt*rhs[state],&sol[threadIdx.x+i]);
+
+  	//  	int count_batch = 0;
+
+    		for(; stage<=history_length; ++stage )
+    		{
+        		// Move to new state
+        		getNewState(state,wt,P,W,inds,offsets,&local_state);
+        		//printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
+
+        		//getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
+
+        		if( state == -1 )
+            			break;
+
+        		// Tally
+        		tallyContribution(entry,coeffs[stage]*wt*rhs[state],&sol[threadIdx.x + i]);
+
+        		// Check weight cutoff
+        		if( std::abs(wt/init_wt) < wt_cutoff )
+            			break;
+   
+    		} 
+        }
+        double update = 0.0;
+
+        for (int i = 0; i< entry_histories; ++i)
+            update += sol[threadIdx.x + i];
+
+        update /= entry_histories;
+        x[tid]=update;
+
+    	// Store rng state back to global
+    	rng_state[tid] = local_state;
+    }
+}
+
+
+
         
 //---------------------------------------------------------------------------//
 /*!
@@ -201,12 +287,20 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     thrust::device_vector<double> x_vec(d_N);
     double * const x_ptr = thrust::raw_pointer_cast(x_vec.data());
 
-    int tot_histories = d_num_histories * d_N;
+    //instiantiation of as many threads as the total number of histories
+/*    int tot_histories = d_num_histories * d_N;
 
     int block_size = std::min(256,tot_histories);
     int num_blocks = tot_histories / block_size + 1;
-  
-    VALIDATE( num_blocks > 0, "The size of the problem is too small" );
+    
+    int block_size = std::min(256, tot_histories);
+*/  
+
+    //instantiation of as many threads as the number of entries in the solution
+    int block_size = std::min(256, d_N);
+    int num_blocks = d_N / block_size + 1;
+
+     VALIDATE( num_blocks > 0, "The size of the problem is too small" );
 
     curandState *rng_states;
     cudaError e = cudaMalloc((void **)&rng_states,
@@ -235,12 +329,13 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
-
-    int batch_size = 5;
    
-    forward_run_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length,
-        d_weight_cutoff, d_num_histories, batch_size,
+//    run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
+//        H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);
+
+    run_forward_monte_carlo2<<< num_blocks,block_size, d_num_histories*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
         H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);
+
 
     // Check for errors in kernel launch
     e = cudaGetLastError();
@@ -250,8 +345,8 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to execute MC kernel"); 
 
     // Scale by history count
-    for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
-        *itr /= static_cast<double>(d_num_histories);
+    /*for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
+        *itr /= static_cast<double>(d_num_histories);*/
 
     // Copy data back to host
     {

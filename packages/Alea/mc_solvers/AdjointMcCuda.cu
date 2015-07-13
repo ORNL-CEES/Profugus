@@ -135,7 +135,7 @@ __device__ void tallyContribution(int state, double wt,
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-__global__ void adjoint_run_monte_carlo(int N, int history_length, double wt_cutoff,
+__global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cutoff,
         bool expected_value,
         const double * const start_cdf,
         const double * const start_wt,
@@ -160,12 +160,10 @@ __global__ void adjoint_run_monte_carlo(int N, int history_length, double wt_cut
     for (int i = 0; i<BATCH_SIZE; ++i)
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
 
-
-
     // Get initial state for this history by sampling from start_cdf
-    initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
+    //initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
 
-    //initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
+    initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
 
     //printf("Starting history in state %i with weight %7.3f\n",state,wt);
     if( state == -1 )
@@ -183,7 +181,7 @@ __global__ void adjoint_run_monte_carlo(int N, int history_length, double wt_cut
     tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
         expected_value);
 
-    int count_batch = 0;
+    int count_batch = 1;
 
     for( ; stage<=history_length; ++stage )
     {
@@ -331,7 +329,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-    adjoint_run_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,d_max_history_length,
+    run_adjoint_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,d_max_history_length,
         d_weight_cutoff, d_use_expected_value,
         start_cdf_ptr,start_wt_ptr,H,P,W,inds,offsets,coeffs,x_ptr,rng_states);
 
