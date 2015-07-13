@@ -296,7 +296,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     thrust::device_vector<double> x_vec(d_N);
     double * const x_ptr = thrust::raw_pointer_cast(x_vec.data());
 
-#ifdef THREAD_PER_ENTRY
+#ifndef THREAD_PER_ENTRY
 
     //instiantiation of as many threads as the total number of histories
     int tot_histories = d_num_histories * d_N;
@@ -342,15 +342,15 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-#ifdef THREAD_PER_ENTRY
+#ifndef THREAD_PER_ENTRY
    
-    run_forward_monte_carlo2<<< num_blocks,block_size, d_num_histories*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
-        H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);    
+    run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
+        H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);       
         
 #else    
-    
-    run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
-        H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);
+         
+    run_forward_monte_carlo2<<< num_blocks,block_size, d_num_histories*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
+      H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states); 
 
 #endif
 
