@@ -37,6 +37,11 @@ __device__ void tallyContribution(int state, double wt, double * const x)
         atomicAdd(x+state,wt);
 }
 
+__device__ void tallyContribution2(double wt, double * const x)
+{
+        atomic_Add(x,wt);
+}
+
 
 //---------------------------------------------------------------------------//
 /*!
@@ -177,7 +182,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
     		int stage = 0;
 
     		// Perform initial tally
-    		tallyContribution(state,coeffs[stage]*wt*rhs[state],&sol[threadIdx.x+i]);
+    		tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x + i]);
 
   	//  	int count_batch = 0;
 
@@ -193,7 +198,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
             			break;
 
         		// Tally
-        		tallyContribution(entry,coeffs[stage]*wt*rhs[state],&sol[threadIdx.x + i]);
+        		tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x + i]);
 
         		// Check weight cutoff
         		if( std::abs(wt/init_wt) < wt_cutoff )
@@ -203,7 +208,10 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
         }
         double update = 0.0;
 
-        for (int i = 0; i< entry_histories; ++i)
+        for (int i = 0; i< entry_hi
+        
+        
+        stories; ++i)
             update += sol[threadIdx.x + i];
 
         update /= entry_histories;
