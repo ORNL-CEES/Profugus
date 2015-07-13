@@ -41,11 +41,6 @@ __device__ void tallyContribution(int state, double wt, double * const x)
         atomicAdd(x+state,wt);
 }
 
-__device__ void tallyContribution2(double wt, double * const x)
-{
-        atomicAdd(x,wt);
-}
-
 
 //---------------------------------------------------------------------------//
 /*!
@@ -154,25 +149,20 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
               curandState   *rng_state)
 {
     int state = -1;
-    double wt = 1.0;
 
     // Store rng state locally
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-
-    extern __shared__ double sol[];    
-
-    for (int i = 0; i<entry_histories; ++i)
-        sol[threadIdx.x + i] = 0.0;
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;  
+    curandState local_state = rng_state[tid];
 
     if( tid < N )
     {
-    	int entry = tid;
 
-    	state = entry;
-    	curandState local_state = rng_state[tid];
-  
         for (int i = 0; i<entry_histories; ++i)
         {
+    		int entry = tid;
+    		state = entry;
+                double wt = 1.0;
+
     		//initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
 
     		//printf("Starting history in state %i with weight %7.3f\n",state,wt);
@@ -186,7 +176,8 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
     		int stage = 0;
 
     		// Perform initial tally
-    		tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x + i]);
+    		tallyContribution(state,coeffs[stage]*wt*rhs[state],x);
+
 
   	//  	int count_batch = 0;
 
@@ -202,7 +193,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
             			break;
 
         		// Tally
-        		tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x + i]);
+    		        tallyContribution(entry,coeffs[stage]*wt*rhs[state],x);
 
         		// Check weight cutoff
         		if( std::abs(wt/init_wt) < wt_cutoff )
@@ -210,13 +201,6 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
    
     		} 
         }
-        double update = 0.0;
-
-        for (int i = 0; i< entry_histories; ++i)
-            update += sol[threadIdx.x + i];
-
-        update /= entry_histories;
-        x[tid]=update;
 
     	// Store rng state back to global
     	rng_state[tid] = local_state;
@@ -343,11 +327,17 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     d_num_curand_calls++;
 
 #if THREAD_PER_ENTRY
+
+    std::cout<<"Aspetta e spera"<<std::endl;
    
-    run_forward_monte_carlo2<<< num_blocks,block_size, d_num_histories*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
+    run_forward_monte_carlo2<<< num_blocks,block_size,sizeof(double)*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
       H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
+
+    std::cout<<"Col cazzo!!!"<<std::endl;
         
 #else    
+
+    int batch_size = 5;
                
     run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
         H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);            
@@ -361,13 +351,11 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to execute MC kernel"); 
 
-#if !THREAD_PER_ENTRY
-
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
-        *itr /= static_cast<double>(d_num_histories);
-        
-#endif        
+        *itr /= static_cast<double>(d_num_histories); 
+
+    std::cout<<"Qui ci arrivo"<<std::endl;
 
     // Copy data back to host
     {
