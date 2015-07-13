@@ -361,7 +361,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to execute MC kernel"); 
 
-#ifdef THREAD_PER_ENTRY
+#ifndef THREAD_PER_ENTRY
 
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
