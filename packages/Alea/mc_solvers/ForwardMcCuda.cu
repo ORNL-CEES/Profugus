@@ -39,7 +39,7 @@ __device__ void tallyContribution(int state, double wt, double * const x)
 
 __device__ void tallyContribution2(double wt, double * const x)
 {
-        atomic_Add(x,wt);
+        atomicAdd(x,wt);
 }
 
 
@@ -208,10 +208,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
         }
         double update = 0.0;
 
-        for (int i = 0; i< entry_hi
-        
-        
-        stories; ++i)
+        for (int i = 0; i< entry_histories; ++i)
             update += sol[threadIdx.x + i];
 
         update /= entry_histories;
