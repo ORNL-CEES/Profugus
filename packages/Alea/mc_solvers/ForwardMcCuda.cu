@@ -322,13 +322,9 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     d_num_curand_calls++;
 
 #if THREAD_PER_ENTRY
-
-    std::cout<<"Aspetta e spera"<<std::endl;
    
     run_forward_monte_carlo2<<< num_blocks,block_size,sizeof(double)*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
       H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
-
-    std::cout<<"Col cazzo!!!"<<std::endl;
         
 #else    
 
@@ -349,8 +345,6 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
         *itr /= static_cast<double>(d_num_histories); 
-
-    std::cout<<"Qui ci arrivo"<<std::endl;
 
     // Copy data back to host
     {
