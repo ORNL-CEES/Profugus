@@ -41,6 +41,11 @@ __device__ void tallyContribution(int state, double wt, double * const x)
         atomicAdd(x+state,wt);
 }
 
+__device__ void tallyContribution2(double wt, double * const x)
+{
+        atomicAdd(x,wt);
+}
+
 
 //---------------------------------------------------------------------------//
 /*!
@@ -150,6 +155,10 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
+//    extern __shared__ double sol[];
+
+//    sol[threadIdx.x]=0.0;
+
     if( tid < N )
     {
         int entry=tid;
@@ -174,7 +183,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
 	    // Perform initial tally
 	    tallyContribution(state,coeffs[stage]*wt*rhs[state],x);
 
-	  //  int count_batch = 0;
+            //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x]);
 
 	    for(; stage<=history_length; ++stage )
 	    {
@@ -187,8 +196,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
 
 		// Tally
 		tallyContribution(entry,coeffs[stage]*wt*rhs[state],x);
-
-		//count_batch++;
+                //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x]);
 
 		// Check weight cutoff
 		if( std::abs(wt/init_wt) < wt_cutoff )
@@ -199,6 +207,9 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
 	    // Store rng state back to global
 	    rng_state[tid] = local_state;
         }
+    
+        //x[entry]=sol[threadIdx.x];
+
     }
 }
 
