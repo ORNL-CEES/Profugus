@@ -26,9 +26,9 @@
 #define THREAD_PER_ENTRY 1
 #endif
 
+
 namespace alea
 {
-
 
 //---------------------------------------------------------------------------//
 /*!
@@ -52,6 +52,8 @@ __device__ void tallyContribution2(double wt, double * const x)
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
+
+#if !STRUCT_MATRIX
 __global__ void run_forward_monte_carlo(int N, int history_length, double wt_cutoff,
         int entry_histories, 
         int batch_size,
@@ -213,6 +215,75 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
     }
 }
 
+#else
+
+__global__ void run_forward_monte_carlo3(int N, int history_length, double wt_cutoff,
+        int entry_histories, 
+        device_row_data* data, 
+        const double * const coeffs,
+              double * const x,
+        const double * const rhs, 
+              curandState   *rng_state)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if( tid < N )
+    {
+        int entry=tid;
+        
+        for(int i=0; i<entry_histories; ++i)
+        {
+	    int state = entry;
+	    double wt = 1.0;
+
+	    curandState local_state = rng_state[tid];
+	 
+	    //printf("Starting history in state %i with weight %7.3f\n",state,wt);
+	    if( state >= N )
+	    {
+		rng_state[tid] = local_state;
+		return;
+	    }
+	    double init_wt = wt;
+
+	    int stage = 0;
+
+	    // Perform initial tally
+	    tallyContribution(state,coeffs[stage]*wt*rhs[state],x);
+
+            //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x]);
+
+	    for(; stage<=history_length; ++stage )
+	    {
+		// Move to new state
+		getNewState(state,wt,data,&local_state);
+		//printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
+
+		if( state == -1 )
+		    break;
+
+		// Tally
+		tallyContribution(entry,coeffs[stage]*wt*rhs[state],x);
+                //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x]);
+
+		// Check weight cutoff
+		if( std::abs(wt/init_wt) < wt_cutoff )
+		    break;
+	   
+	    }
+
+	    // Store rng state back to global
+	    rng_state[tid] = local_state;
+        }
+    
+        //x[entry]=sol[threadIdx.x];
+
+    }
+}
+
+
+
+#endif
 
 
         
@@ -256,10 +327,18 @@ ForwardMcCuda::ForwardMcCuda(
     else if( verb == "high" )
         d_verbosity = HIGH;
 
+#if STRUCT_MATRIX
+    device_data = NULL;
+#endif
+
     prepareDeviceData(mc_data,coeffs);
 
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
+    
+#if STRUCT_MATRIX    
+    VALIDATE( device_data != NULL, "device data struct is not initialized" );
+#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -275,31 +354,30 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     const double * const rhs_ptr = thrust::raw_pointer_cast(rhs.data());
 
+#if !STRUCT_MATRIX
     const double * const H       = thrust::raw_pointer_cast(d_H.data());
     const double * const P       = thrust::raw_pointer_cast(d_P.data());
     const double * const W       = thrust::raw_pointer_cast(d_W.data());
     const int    * const inds    = thrust::raw_pointer_cast(d_inds.data());
     const int    * const offsets = thrust::raw_pointer_cast(d_offsets.data());
+#endif
     const double * const coeffs  = thrust::raw_pointer_cast(d_coeffs.data());
+
 
     // Create vector for state
     thrust::device_vector<double> x_vec(d_N);
     double * const x_ptr = thrust::raw_pointer_cast(x_vec.data());
-
+    
 #if THREAD_PER_ENTRY
-
     //instantiation of as many threads as the number of entries in the solution
     int block_size = std::min(256, d_N);
     int num_blocks = d_N / block_size + 1;
-      
 #else 
-
     //instiantiation of as many threads as the total number of histories
     int tot_histories = d_num_histories * d_N;
 
     int block_size = std::min(256,tot_histories);
     int num_blocks = tot_histories / block_size + 1;    
-    
 #endif
 
     VALIDATE( num_blocks > 0, "The size of the problem is too small" );
@@ -332,18 +410,27 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-#if THREAD_PER_ENTRY
-   
-    run_forward_monte_carlo2<<< num_blocks,block_size,sizeof(double)*block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
-      H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
-        
-#else    
+#if !STRUCT_MATRIX
 
-    int batch_size = 5;
-               
-    run_forward_monte_carlo<<< num_blocks,block_size>>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
-        H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);            
+	#if THREAD_PER_ENTRY
+	   
+	    run_forward_monte_carlo2<<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
+	      H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
+		
+	#else    
 
+	    int batch_size = 5;
+		       
+	    run_forward_monte_carlo<<< num_blocks,block_size >>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
+		H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);            
+
+	#endif
+	
+#else	
+
+        run_forward_monte_carlo3<<< num_blocks,block_size >>>( d_N,d_max_history_length,d_weight_cutoff,d_num_histories,device_data,
+                coeffs,x_ptr,rhs_ptr,rng_states  );
+                
 #endif
 
     // Check for errors in kernel launch
@@ -378,6 +465,8 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 //---------------------------------------------------------------------------//
 // Extract matrices into ArrayView objects for faster data access
 //---------------------------------------------------------------------------//
+
+#if !STRUCT_MATRIX
 void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
         const const_scalar_view coeffs)
 {
@@ -433,5 +522,71 @@ void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
                  d_coeffs.begin());
 }
 
+#else
+
+void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
+        const const_scalar_view coeffs)
+{
+    Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
+    Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
+    Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
+
+    device_row_data d_data[d_N]; 
+    device_data = d_data;
+
+    Teuchos::ArrayView<const double> val_row;
+    Teuchos::ArrayView<const int>    ind_row;
+    auto h_iter   = d_H.begin();
+    auto p_iter   = d_P.begin();
+    auto w_iter   = d_W.begin();
+    auto ind_iter = d_inds.begin();
+    // This loop should perhaps be rewritten, right now a separate call
+    // to cudaMemcpy is performed for each row of each matrix
+    // It might be more efficient to create a single vector on the CPU
+    // and do a single copy to device?
+    d_offsets[0] = 0;
+    for( int i=0; i<d_N; ++i )
+    {
+        // Extract row i of matrix
+        H->getLocalRowView(i,ind_row,val_row);
+        thrust::copy(val_row.begin(),val_row.end(),h_iter);
+        device_data[i].H_row.resize( val_row.size() );
+        thrust::copy(val_row.begin(),val_row.end(),device_data[i].H_row.begin());
+        h_iter += val_row.size();
+        
+        P->getLocalRowView(i,ind_row,val_row);
+        thrust::copy(val_row.begin(),val_row.end(),p_iter);
+        device_data[i].P_row.resize( val_row.size() );
+        thrust::copy(val_row.begin(),val_row.end(),device_data[i].P_row.begin());
+        p_iter += val_row.size();
+        
+        W->getLocalRowView(i,ind_row,val_row);
+        thrust::copy(val_row.begin(),val_row.end(),w_iter);
+        device_data[i].W_row.resize( val_row.size() );
+        thrust::copy(val_row.begin(),val_row.end(),device_data[i].W_row.begin());
+        w_iter += val_row.size();
+        
+        
+        thrust::copy(ind_row.begin(),ind_row.end(),ind_iter);
+        device_data[i].inds.resize( ind_row.size() );
+        thrust::copy(ind_row.begin(),ind_row.end(),device_data[i].inds.begin());
+        ind_iter += ind_row.size();
+        d_offsets[i+1] = d_offsets[i] + ind_row.size();
+    }
+    CHECK( h_iter   == d_H.end() );
+    CHECK( p_iter   == d_P.end() );
+    CHECK( w_iter   == d_W.end() );
+    CHECK( ind_iter == d_inds.end() );
+
+    // Copy coefficients into device vector
+    const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
+    Kokkos::deep_copy(coeffs_host,coeffs);
+    d_coeffs.resize(coeffs.size());
+    thrust::copy(coeffs_host.ptr_on_device(),
+                 coeffs_host.ptr_on_device()+coeffs_host.size(),
+                 d_coeffs.begin());
+}
+
+#endif
 
 } // namespace alea

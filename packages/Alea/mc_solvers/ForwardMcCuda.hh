@@ -28,7 +28,6 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 //
-
 class ForwardMcCuda
 {
   public:
@@ -54,6 +53,11 @@ class ForwardMcCuda
     thrust::device_vector<int>    d_inds;
     thrust::device_vector<int>    d_offsets;
     thrust::device_vector<double> d_coeffs;
+    
+#if STRUCT_MATRIX    
+    device_row_data* device_data;
+#endif
+    
 #endif
 
     // Vector length

@@ -9,14 +9,31 @@
 #ifndef mc_solver_CudaUtils_hh
 #define mc_solver_CudaUtils_hh
 
+#ifdef __CUDACC__
+#include <thrust/device_vector.h>
+#endif
+
 namespace alea
 {
 
 #ifndef USE_LDG
-#define USE_LDG 0
+#define USE_LDG 1
 #endif
 
+#ifndef STRUCT_MATRIX
+#define STRUCT_MATRIX 0
+#endif 
 
+#ifdef __CUDACC__
+#if STRUCT_MATRIX
+struct device_row_data{
+	thrust::device_vector<double> H_row(10);	
+	thrust::device_vector<double> P_row(10);
+	thrust::device_vector<double> W_row(10);
+	thrust::device_vector<int> inds(10);
+};
+#endif
+#endif
 // lower_bound implementation that can be called from device
 __device__ inline const double * lower_bound(const double * first,
         const double * last,
@@ -67,6 +84,8 @@ __device__ inline double atomicAdd(double* address, double val)
  * \brief Get new state by sampling from cdf
  */
 //---------------------------------------------------------------------------//
+
+#if !STRUCT_MATRIX
 __device__ inline void getNewState(int &state, double &wt,
         const double * const P,
         const double * const W,
@@ -102,6 +121,41 @@ __device__ inline void getNewState(int &state, double &wt,
 #endif
 }
 
+
+#else
+
+__device__ inline void getNewState(int &state, double &wt,
+              device_row_data* data,
+              curandState   *rng_state )
+{
+    // Generate random number
+    double rand = curand_uniform_double(rng_state);
+
+    // Sample cdf to get new state
+    auto elem = lower_bound(data[state].P_row.begin(),data[state].P_row.begin(),rand);
+    //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
+
+    /*if( elem == end_row )
+    {
+        // Invalidate all row data
+        state = -1;
+        wt = 0.0;
+        return;
+    }*/
+
+    // Modify weight and update state
+    auto index = elem;
+#if USE_LDG
+    int prec = state;
+    state  =  __ldg( &(data[prec].inds[index]) ); //modified by Max
+    wt    *=  __ldg( &(data[prec].W_row[index]) ); //modified by Max
+#else
+    state = data[prec].inds[index];
+    wt *= data[prec].W_row[index];
+#endif
+}
+
+#endif
 
 __device__ inline void getNewState2(int &state, double &wt,
         const double * const P,
