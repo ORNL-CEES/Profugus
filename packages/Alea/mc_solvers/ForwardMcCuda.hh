@@ -47,15 +47,16 @@ class ForwardMcCuda
             const const_scalar_view coeffs);
 
     // Data for Monte Carlo
-    thrust::device_vector<double> d_H;
-    thrust::device_vector<double> d_P;
-    thrust::device_vector<double> d_W;
-    thrust::device_vector<int>    d_inds;
     thrust::device_vector<int>    d_offsets;
     thrust::device_vector<double> d_coeffs;
     
 #if STRUCT_MATRIX    
-    device_row_data* device_data;
+    thrust::device_vector<device_row_data> mat_data;
+#else
+    thrust::device_vector<double> d_H;
+    thrust::device_vector<double> d_P;
+    thrust::device_vector<double> d_W;
+    thrust::device_vector<int>    d_inds;
 #endif
     
 #endif

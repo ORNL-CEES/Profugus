@@ -217,10 +217,13 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
 
 #else
 
-__global__ void run_forward_monte_carlo3(int N, int history_length, double wt_cutoff,
+__global__ void run_forward_monte_carlo3(int N, 
+        int history_length, 
+        double wt_cutoff,
         int entry_histories, 
         device_row_data* data, 
         const double * const coeffs,
+        const int    * const offsets,
               double * const x,
         const double * const rhs, 
               curandState   *rng_state)
@@ -256,7 +259,7 @@ __global__ void run_forward_monte_carlo3(int N, int history_length, double wt_cu
 	    for(; stage<=history_length; ++stage )
 	    {
 		// Move to new state
-		getNewState(state,wt,data,&local_state);
+		getNewState(state,wt,data,offsets,&local_state);
 		//printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
 		if( state == -1 )
@@ -327,18 +330,11 @@ ForwardMcCuda::ForwardMcCuda(
     else if( verb == "high" )
         d_verbosity = HIGH;
 
-#if STRUCT_MATRIX
-    device_data = NULL;
-#endif
-
     prepareDeviceData(mc_data,coeffs);
 
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
     
-#if STRUCT_MATRIX    
-    VALIDATE( device_data != NULL, "device data struct is not initialized" );
-#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -359,10 +355,14 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     const double * const P       = thrust::raw_pointer_cast(d_P.data());
     const double * const W       = thrust::raw_pointer_cast(d_W.data());
     const int    * const inds    = thrust::raw_pointer_cast(d_inds.data());
-    const int    * const offsets = thrust::raw_pointer_cast(d_offsets.data());
 #endif
+
+    const int    * const offsets = thrust::raw_pointer_cast(d_offsets.data());
     const double * const coeffs  = thrust::raw_pointer_cast(d_coeffs.data());
 
+#if STRUCT_MATRIX
+    device_row_data * data_ptr = thrust::raw_pointer_cast(mat_data.data());
+#endif     
 
     // Create vector for state
     thrust::device_vector<double> x_vec(d_N);
@@ -428,8 +428,8 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 	
 #else	
 
-        run_forward_monte_carlo3<<< num_blocks,block_size >>>( d_N,d_max_history_length,d_weight_cutoff,d_num_histories,device_data,
-                coeffs,x_ptr,rhs_ptr,rng_states  );
+        run_forward_monte_carlo3<<< num_blocks,block_size >>>( d_N,d_max_history_length,d_weight_cutoff,d_num_histories,data_ptr,
+                coeffs,offsets,x_ptr,rhs_ptr,rng_states  );
                 
 #endif
 
@@ -531,52 +531,38 @@ void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
     Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
     Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
 
-    device_row_data d_data[d_N]; 
-    device_data = d_data;
-
-    Teuchos::ArrayView<const double> val_row;
+    Teuchos::ArrayView<const double> pval_row;
+    Teuchos::ArrayView<const double> hval_row;
+    Teuchos::ArrayView<const double> wval_row;
     Teuchos::ArrayView<const int>    ind_row;
-    auto h_iter   = d_H.begin();
-    auto p_iter   = d_P.begin();
-    auto w_iter   = d_W.begin();
-    auto ind_iter = d_inds.begin();
     // This loop should perhaps be rewritten, right now a separate call
     // to cudaMemcpy is performed for each row of each matrix
     // It might be more efficient to create a single vector on the CPU
     // and do a single copy to device?
     d_offsets[0] = 0;
+
+    mat_data.resize(d_nnz);
+
+    int count = 0;
     for( int i=0; i<d_N; ++i )
     {
         // Extract row i of matrix
-        H->getLocalRowView(i,ind_row,val_row);
-        thrust::copy(val_row.begin(),val_row.end(),h_iter);
-        device_data[i].H_row.resize( val_row.size() );
-        thrust::copy(val_row.begin(),val_row.end(),device_data[i].H_row.begin());
-        h_iter += val_row.size();
+        H->getLocalRowView(i,ind_row,hval_row);
+        P->getLocalRowView(i,ind_row,pval_row);
+        W->getLocalRowView(i,ind_row,wval_row); 
+     
+        for( int j = 0; j < ind_row.size(); ++j )
+        {
+            mat_data[count].H = hval_row[j];            
+            mat_data[count].P = pval_row[j];
+            mat_data[count].W = wval_row[j];
+            count++;
+        }
         
-        P->getLocalRowView(i,ind_row,val_row);
-        thrust::copy(val_row.begin(),val_row.end(),p_iter);
-        device_data[i].P_row.resize( val_row.size() );
-        thrust::copy(val_row.begin(),val_row.end(),device_data[i].P_row.begin());
-        p_iter += val_row.size();
-        
-        W->getLocalRowView(i,ind_row,val_row);
-        thrust::copy(val_row.begin(),val_row.end(),w_iter);
-        device_data[i].W_row.resize( val_row.size() );
-        thrust::copy(val_row.begin(),val_row.end(),device_data[i].W_row.begin());
-        w_iter += val_row.size();
-        
-        
-        thrust::copy(ind_row.begin(),ind_row.end(),ind_iter);
-        device_data[i].inds.resize( ind_row.size() );
-        thrust::copy(ind_row.begin(),ind_row.end(),device_data[i].inds.begin());
-        ind_iter += ind_row.size();
         d_offsets[i+1] = d_offsets[i] + ind_row.size();
     }
-    CHECK( h_iter   == d_H.end() );
-    CHECK( p_iter   == d_P.end() );
-    CHECK( w_iter   == d_W.end() );
-    CHECK( ind_iter == d_inds.end() );
+
+    CHECK( count == d_nnz );
 
     // Copy coefficients into device vector
     const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
