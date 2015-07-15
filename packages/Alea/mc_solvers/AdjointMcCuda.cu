@@ -130,6 +130,39 @@ __device__ void tallyContribution(int state, double wt,
 }
 
 
+__device__ void tallyContribution(int state, double wt,
+              double * const x, 
+              const device_row_data * data,
+              const int    * const offsets,
+              bool           expected_value)
+{
+    if( expected_value )
+    {
+        int row_begin = offsets[state];
+        int row_end   = offsets[state+1];
+
+        // For expected value estimator, loop over current row and add
+        // contributions corresponding to each element
+        for( int i=row_begin; i<row_end; ++i )
+        {
+#if USE_LDG
+            atomicAdd(x+data[row_begin+state].inds,
+             wt* ( __ldg(&(data[row_begin+i].H)) ));//modified by Max
+#else
+            atomicAdd(x+data[row_begin+i].inds,
+                wt*data[row_begin+i].H);//modified by Max
+#endif
+
+        }
+    }
+    else
+    {
+        // Collision estimator just adds weight
+        atomicAdd(x+state,wt);
+    }
+}
+
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Tally contribution into vector
@@ -218,6 +251,89 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     // Store rng state back to global
     rng_state[tid] = local_state;
 }
+
+
+__global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cutoff,
+        bool expected_value,
+        const double * const start_cdf,
+        const double * const start_wt,
+        device_row_data * data,
+        const int    * const offsets,
+        const double * const coeffs,
+              double * const x,
+              curandState   *rng_state)
+{
+    int state = -1;
+    double wt = 0.0;
+
+    // Store rng state locally
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    curandState local_state = rng_state[tid];
+ 
+    //__shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
+ 
+    /*for (int i = 0; i<BATCH_SIZE; ++i)
+        steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
+    */
+    // Get initial state for this history by sampling from start_cdf
+    initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
+
+    //initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
+
+    //printf("Starting history in state %i with weight %7.3f\n",state,wt);
+    if( state == -1 )
+    {
+        rng_state[tid] = local_state;
+        return;
+    }
+    double init_wt = wt;
+
+    // With expected value estimator we start on stage 1 because
+    // zeroth order term is added explicitly at the end
+    int stage = expected_value ? 1 : 0;
+
+    // Perform initial tally
+    tallyContribution(state,coeffs[stage]*wt,x,data,offsets,
+        expected_value);
+
+    int count_batch = 1;
+
+    for( ; stage<=history_length; ++stage )
+    {
+        /*if (count_batch == BATCH_SIZE)
+        {
+
+          //__syncthreads();
+         count_batch = 0;
+         for (int i = 0; i<BATCH_SIZE; ++i)
+            steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
+        }*/
+
+        // Move to new state
+        getNewState(state,wt,data,offsets,&local_state);
+        //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
+
+        //getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
+
+        if( state == -1 )
+            break;
+
+        // Tally
+        tallyContribution(state,coeffs[stage]*wt,x,data,offsets,
+            expected_value);
+
+        count_batch++;
+
+        // Check weight cutoff
+        if( std::abs(wt/init_wt) < wt_cutoff )
+            break;
+   
+    }
+
+    // Store rng state back to global
+    rng_state[tid] = local_state;
+}
+
         
 //---------------------------------------------------------------------------//
 /*!
@@ -242,6 +358,10 @@ AdjointMcCuda::AdjointMcCuda(
     d_num_histories      = pl->get("num_histories",1000);
     d_max_history_length = coeffs.size()-1;
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
+    d_struct             = pl->get("struct_matrix", 0);
+
+    VALIDATE( d_struct==0 || d_struct==1, 
+            "Value for the flag to manage matrix data not valid" );
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -284,10 +404,22 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     const double * const start_wt_ptr  =
         thrust::raw_pointer_cast(start_wt.data());
 
-    const double * const H       = thrust::raw_pointer_cast(d_H.data());
-    const double * const P       = thrust::raw_pointer_cast(d_P.data());
-    const double * const W       = thrust::raw_pointer_cast(d_W.data());
-    const int    * const inds    = thrust::raw_pointer_cast(d_inds.data());
+    const double * H;
+    const double * P;
+    const double * W;
+    const int    * inds; 
+    device_row_data * data_ptr;
+
+    if( d_struct==0 )
+    {
+    	H       = thrust::raw_pointer_cast(d_H.data());
+    	P       = thrust::raw_pointer_cast(d_P.data());
+    	W       = thrust::raw_pointer_cast(d_W.data());
+    	inds    = thrust::raw_pointer_cast(d_inds.data());
+    }
+    else
+    	 data_ptr = thrust::raw_pointer_cast(mat_data.data());   
+
     const int    * const offsets = thrust::raw_pointer_cast(d_offsets.data());
     const double * const coeffs  = thrust::raw_pointer_cast(d_coeffs.data());
 
@@ -329,9 +461,20 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-    run_adjoint_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,d_max_history_length,
-        d_weight_cutoff, d_use_expected_value,
-        start_cdf_ptr,start_wt_ptr,H,P,W,inds,offsets,coeffs,x_ptr,rng_states);
+    if( d_struct==0 )
+    {
+    	run_adjoint_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,
+                d_max_history_length, d_weight_cutoff, d_use_expected_value,
+                start_cdf_ptr,start_wt_ptr,H,P,W,
+                inds,offsets,coeffs,x_ptr,rng_states);
+    }
+    else
+    {
+    	run_adjoint_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,
+                d_max_history_length, d_weight_cutoff, d_use_expected_value,
+                start_cdf_ptr,start_wt_ptr,data_ptr,
+                offsets,coeffs,x_ptr,rng_states);
+    }
 
     // Check for errors in kernel launch
     e = cudaGetLastError();

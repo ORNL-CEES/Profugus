@@ -60,6 +60,8 @@ class AdjointMcCuda
     thrust::device_vector<int>    d_inds;
     thrust::device_vector<int>    d_offsets;
     thrust::device_vector<double> d_coeffs;
+
+    thrust::device_vector<device_row_data> mat_data;
 #endif
 
     // Vector length
@@ -73,6 +75,7 @@ class AdjointMcCuda
     bool   d_use_expected_value;
     int    d_num_histories;
     double d_weight_cutoff;
+    bool   d_struct;
 
     enum VERBOSITY {NONE, LOW, HIGH};
     VERBOSITY d_verbosity;

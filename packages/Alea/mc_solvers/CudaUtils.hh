@@ -20,20 +20,12 @@ namespace alea
 #define USE_LDG 1
 #endif
 
-#ifndef STRUCT_MATRIX
-#define STRUCT_MATRIX 1
-#endif 
-
-//#ifdef __CUDACC__
-//#if STRUCT_MATRIX
 struct device_row_data{
 	double H;	
 	double P;
         double W;
 	int inds;
 };
-//#endif
-//#endif
 
 // lower_bound implementation that can be called from device
 __device__ inline const double * lower_bound(const double * first,
@@ -64,7 +56,6 @@ __device__ inline const double * lower_bound(const double * first,
     return first;
 }
 
-#if STRUCT_MATRIX
 // lower_bound implementation that can be called from device
 __device__ inline const device_row_data * lower_bound(const device_row_data* first,
                   const device_row_data* last, 
@@ -93,7 +84,6 @@ __device__ inline const device_row_data * lower_bound(const device_row_data* fir
        }
        return first;
 }
-#endif
 
 // atomicAdd, not provided by Cuda for doubles
 __device__ inline double atomicAdd(double* address, double val)
@@ -152,7 +142,6 @@ __device__ inline void getNewState(int &state, double &wt,
 #endif
 }
 
-#if STRUCT_MATRIX
 __device__ inline void getNewState(int &state, double &wt,
               device_row_data* data,
               const int    * const offsets,
@@ -186,8 +175,6 @@ __device__ inline void getNewState(int &state, double &wt,
     wt *= data[index].W;
 #endif
 }
-#endif
-
 
 __device__ inline void getNewState2(int &state, double &wt,
         const double * const P,
@@ -243,7 +230,6 @@ __global__ inline void initialize_rng2(curandState *state, int*seed, int offset)
 
     curand_init(seed[tid], 0, offset, &state[tid]);
 }
-
 
 
         

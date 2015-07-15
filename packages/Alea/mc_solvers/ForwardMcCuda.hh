@@ -50,15 +50,11 @@ class ForwardMcCuda
     thrust::device_vector<int>    d_offsets;
     thrust::device_vector<double> d_coeffs;
     
-#if STRUCT_MATRIX    
     thrust::device_vector<device_row_data> mat_data;
-#else
     thrust::device_vector<double> d_H;
     thrust::device_vector<double> d_P;
     thrust::device_vector<double> d_W;
-    thrust::device_vector<int>    d_inds;
-#endif
-    
+    thrust::device_vector<int>    d_inds; 
 #endif
 
     // Vector length
@@ -71,6 +67,7 @@ class ForwardMcCuda
     int    d_max_history_length;
     int    d_num_histories;
     double d_weight_cutoff;
+    bool   d_struct;
 
     enum VERBOSITY {NONE, LOW, HIGH};
     VERBOSITY d_verbosity;

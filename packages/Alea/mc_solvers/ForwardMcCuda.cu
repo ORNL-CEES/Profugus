@@ -53,7 +53,6 @@ __device__ void tallyContribution2(double wt, double * const x)
  */
 //---------------------------------------------------------------------------//
 
-#if !STRUCT_MATRIX
 __global__ void run_forward_monte_carlo(int N, int history_length, double wt_cutoff,
         int entry_histories, 
         int batch_size,
@@ -215,7 +214,6 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
     }
 }
 
-#else
 
 __global__ void run_forward_monte_carlo3(int N, 
         int history_length, 
@@ -286,7 +284,6 @@ __global__ void run_forward_monte_carlo3(int N,
 
 
 
-#endif
 
 
         
@@ -313,6 +310,10 @@ ForwardMcCuda::ForwardMcCuda(
     d_num_histories      = pl->get("num_histories",1000);
     d_max_history_length = coeffs.size()-1;
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
+    d_struct             = pl->get("struct_matrix", 0);
+
+    VALIDATE( d_struct == 0 || d_struct == 1, 
+            "Value for the flag to manage matrix data not valid" );
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -350,19 +351,24 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     const double * const rhs_ptr = thrust::raw_pointer_cast(rhs.data());
 
-#if !STRUCT_MATRIX
-    const double * const H       = thrust::raw_pointer_cast(d_H.data());
-    const double * const P       = thrust::raw_pointer_cast(d_P.data());
-    const double * const W       = thrust::raw_pointer_cast(d_W.data());
-    const int    * const inds    = thrust::raw_pointer_cast(d_inds.data());
-#endif
+    const double * H;
+    const double * P;
+    const double * W;
+    const int    * inds;
+    device_row_data * data_ptr;
+
+    if( d_struct==0 )
+    {
+    	H       = thrust::raw_pointer_cast(d_H.data());
+    	P       = thrust::raw_pointer_cast(d_P.data());
+    	W       = thrust::raw_pointer_cast(d_W.data());
+    	inds    = thrust::raw_pointer_cast(d_inds.data());
+    }
+    else
+    	 data_ptr = thrust::raw_pointer_cast(mat_data.data());   
 
     const int    * const offsets = thrust::raw_pointer_cast(d_offsets.data());
     const double * const coeffs  = thrust::raw_pointer_cast(d_coeffs.data());
-
-#if STRUCT_MATRIX
-    device_row_data * data_ptr = thrust::raw_pointer_cast(mat_data.data());
-#endif     
 
     // Create vector for state
     thrust::device_vector<double> x_vec(d_N);
@@ -410,8 +416,8 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
-#if !STRUCT_MATRIX
-
+    if( d_struct==0 )
+    {
 	#if THREAD_PER_ENTRY
 	   
 	    run_forward_monte_carlo2<<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
@@ -425,14 +431,13 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 		H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);            
 
 	#endif
-	
-#else	
-
+    }	
+    else
+    {	
         run_forward_monte_carlo3<<< num_blocks,block_size >>>( d_N,d_max_history_length,d_weight_cutoff,d_num_histories,data_ptr,
                 coeffs,offsets,x_ptr,rhs_ptr,rng_states  );
-                
-#endif
-
+     
+    }           
     // Check for errors in kernel launch
     e = cudaGetLastError();
     if( cudaSuccess != e )
@@ -466,113 +471,115 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 // Extract matrices into ArrayView objects for faster data access
 //---------------------------------------------------------------------------//
 
-#if !STRUCT_MATRIX
 void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
         const const_scalar_view coeffs)
 {
-    Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
-    Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
-    Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
+	if(d_struct == 0)
+	{
+    		Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
+    		Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
+    		Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
 
-    d_nnz = H->getNodeNumEntries();
-    d_H.resize(d_nnz);
-    d_P.resize(d_nnz);
-    d_W.resize(d_nnz);
-    d_inds.resize(d_nnz);
-    d_offsets.resize(d_N+1);
-
-    Teuchos::ArrayView<const double> val_row;
-    Teuchos::ArrayView<const int>    ind_row;
-    auto h_iter   = d_H.begin();
-    auto p_iter   = d_P.begin();
-    auto w_iter   = d_W.begin();
-    auto ind_iter = d_inds.begin();
+   		d_nnz = H->getNodeNumEntries();
+    		d_H.resize(d_nnz);
+    		d_P.resize(d_nnz);
+    		d_W.resize(d_nnz);
+    		d_inds.resize(d_nnz);
+    		d_offsets.resize(d_N+1);
+	
+    		Teuchos::ArrayView<const double> val_row;
+    		Teuchos::ArrayView<const int>    ind_row;
+    		auto h_iter   = d_H.begin();
+    		auto p_iter   = d_P.begin();
+    		auto w_iter   = d_W.begin();
+    		auto ind_iter = d_inds.begin();
     // This loop should perhaps be rewritten, right now a separate call
     // to cudaMemcpy is performed for each row of each matrix
     // It might be more efficient to create a single vector on the CPU
     // and do a single copy to device?
-    d_offsets[0] = 0;
-    for( int i=0; i<d_N; ++i )
-    {
-        // Extract row i of matrix
-        H->getLocalRowView(i,ind_row,val_row);
-        thrust::copy(val_row.begin(),val_row.end(),h_iter);
-        h_iter += val_row.size();
-        P->getLocalRowView(i,ind_row,val_row);
-        thrust::copy(val_row.begin(),val_row.end(),p_iter);
-        p_iter += val_row.size();
-        W->getLocalRowView(i,ind_row,val_row);
-        thrust::copy(val_row.begin(),val_row.end(),w_iter);
-        w_iter += val_row.size();
-        thrust::copy(ind_row.begin(),ind_row.end(),ind_iter);
-        ind_iter += ind_row.size();
-        d_offsets[i+1] = d_offsets[i] + ind_row.size();
-    }
-    CHECK( h_iter   == d_H.end() );
-    CHECK( p_iter   == d_P.end() );
-    CHECK( w_iter   == d_W.end() );
-    CHECK( ind_iter == d_inds.end() );
+    		d_offsets[0] = 0;
+    		for( int i=0; i<d_N; ++i )
+    		{
+        		// Extract row i of matrix
+        		H->getLocalRowView(i,ind_row,val_row);
+        		thrust::copy(val_row.begin(),val_row.end(),h_iter);
+        		h_iter += val_row.size();
+        		P->getLocalRowView(i,ind_row,val_row);
+        		thrust::copy(val_row.begin(),val_row.end(),p_iter);
+        		p_iter += val_row.size();
+       			W->getLocalRowView(i,ind_row,val_row);
+        		thrust::copy(val_row.begin(),val_row.end(),w_iter);
+        		w_iter += val_row.size();
+        		thrust::copy(ind_row.begin(),ind_row.end(),ind_iter);
+        		ind_iter += ind_row.size();
+        		d_offsets[i+1] = d_offsets[i] + ind_row.size();
+    		}
+    		CHECK( h_iter   == d_H.end() );
+    		CHECK( p_iter   == d_P.end() );
+    		CHECK( w_iter   == d_W.end() );
+    		CHECK( ind_iter == d_inds.end() );
 
-    // Copy coefficients into device vector
-    const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
-    Kokkos::deep_copy(coeffs_host,coeffs);
-    d_coeffs.resize(coeffs.size());
-    thrust::copy(coeffs_host.ptr_on_device(),
-                 coeffs_host.ptr_on_device()+coeffs_host.size(),
-                 d_coeffs.begin());
-}
+    		// Copy coefficients into device vector
+    		const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
+    		Kokkos::deep_copy(coeffs_host,coeffs);
+    		d_coeffs.resize(coeffs.size());
+    		thrust::copy(coeffs_host.ptr_on_device(),
+                	 coeffs_host.ptr_on_device()+coeffs_host.size(),
+                 	d_coeffs.begin());
+	}
 
-#else
+	else
+	{
+    		Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
+    		Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
+    		Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
 
-void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
-        const const_scalar_view coeffs)
-{
-    Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
-    Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
-    Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
-
-    Teuchos::ArrayView<const double> pval_row;
-    Teuchos::ArrayView<const double> hval_row;
-    Teuchos::ArrayView<const double> wval_row;
-    Teuchos::ArrayView<const int>    ind_row;
+    		Teuchos::ArrayView<const double> pval_row;
+    		Teuchos::ArrayView<const double> hval_row;
+    		Teuchos::ArrayView<const double> wval_row;
+    		Teuchos::ArrayView<const int>    ind_row;
     // This loop should perhaps be rewritten, right now a separate call
     // to cudaMemcpy is performed for each row of each matrix
     // It might be more efficient to create a single vector on the CPU
     // and do a single copy to device?
-    d_offsets[0] = 0;
+    		d_offsets[0] = 0;
 
-    mat_data.resize(d_nnz);
+    		thrust::host_vector< device_row_data > data_host( d_nnz );
+    		mat_data.resize( d_nnz );
 
-    int count = 0;
-    for( int i=0; i<d_N; ++i )
-    {
-        // Extract row i of matrix
-        H->getLocalRowView(i,ind_row,hval_row);
-        P->getLocalRowView(i,ind_row,pval_row);
-        W->getLocalRowView(i,ind_row,wval_row); 
+    		int count = 0;
+    		for( int i=0; i<d_N; ++i )
+    		{
+        		// Extract row i of matrix
+        		H->getLocalRowView(i,ind_row,hval_row);
+        		P->getLocalRowView(i,ind_row,pval_row);
+        		W->getLocalRowView(i,ind_row,wval_row); 
      
-        for( int j = 0; j < ind_row.size(); ++j )
-        {
-            mat_data[count].H = hval_row[j];            
-            mat_data[count].P = pval_row[j];
-            mat_data[count].W = wval_row[j];
-            count++;
-        }
+        		for( int j = 0; j < ind_row.size(); ++j )
+        		{
+            			data_host[count].H = hval_row[j];            
+            			data_host[count].P = pval_row[j];
+            			data_host[count].W = wval_row[j];
+            			count++;
+        		}
         
-        d_offsets[i+1] = d_offsets[i] + ind_row.size();
-    }
+        		d_offsets[i+1] = d_offsets[i] + ind_row.size();
+    		}
 
-    CHECK( count == d_nnz );
+    		CHECK( count == d_nnz );
 
-    // Copy coefficients into device vector
-    const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
-    Kokkos::deep_copy(coeffs_host,coeffs);
-    d_coeffs.resize(coeffs.size());
-    thrust::copy(coeffs_host.ptr_on_device(),
-                 coeffs_host.ptr_on_device()+coeffs_host.size(),
-                 d_coeffs.begin());
+    		thrust::copy( data_host.begin(), data_host.end(), mat_data.begin() );
+
+    		// Copy coefficients into device vector
+    		const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
+    		Kokkos::deep_copy(coeffs_host,coeffs);
+    		d_coeffs.resize(coeffs.size());
+    		thrust::copy(coeffs_host.ptr_on_device(),
+                 	coeffs_host.ptr_on_device()+coeffs_host.size(),
+                 	d_coeffs.begin());
+
+        }
 }
 
-#endif
 
 } // namespace alea
