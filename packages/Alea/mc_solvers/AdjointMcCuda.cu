@@ -182,15 +182,15 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     curandState local_state = rng_state[tid];
  
-    __shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
+/*    __shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
  
     for (int i = 0; i<BATCH_SIZE; ++i)
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
-
+*/
     // Get initial state for this history by sampling from start_cdf
-    //initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
+    initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
 
-    initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
+    //initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
 
     //printf("Starting history in state %i with weight %7.3f\n",state,wt);
     if( state == -1 )
@@ -208,24 +208,24 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
         expected_value);
 
-    int count_batch = 1;
+    //int count_batch = 1;
 
     for( ; stage<=history_length; ++stage )
     {
-        if (count_batch == BATCH_SIZE)
+    /*    if (count_batch == BATCH_SIZE)
         {
 
           //__syncthreads();
          count_batch = 0;
          for (int i = 0; i<BATCH_SIZE; ++i)
             steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
-        }
+        }*/
 
         // Move to new state
-        //getNewState(state,wt,P,W,inds,offsets,&local_state);
+        getNewState(state,wt,P,W,inds,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
-        getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
+        //getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
 
         if( state == -1 )
             break;
@@ -234,7 +234,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
             expected_value);
 
-        count_batch++;
+        //count_batch++;
 
         // Check weight cutoff
         if( std::abs(wt/init_wt) < wt_cutoff )
