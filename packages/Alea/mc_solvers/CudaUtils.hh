@@ -63,15 +63,15 @@ __device__ inline const device_row_data * lower_bound(const device_row_data* fir
 {
        const device_row_data* it;     
        int count, step;
-       count = last - first;      
+       count = (last - first);      
        while( count > 0 )
        {
             step = count/2;
             it = first + step;
 #if USE_LDG
-            if( __ldg( &(*it).P ) < val ) //Modified by Max
+            if( __ldg( &it->P ) < val ) //Modified by Max
 #else
-            if( (*it).P < val )
+            if( it->P < val )
 #endif
             {
                 first = ++it;                    
@@ -166,13 +166,12 @@ __device__ inline void getNewState(int &state, double &wt,
     }
 
     // Modify weight and update state
-    auto index = elem - data;
 #if USE_LDG
-    state  =  __ldg( &(data[index].inds) ); //modified by Max
-    wt    *=  __ldg( &(data[index].W) ); //modified by Max
+    state  =  __ldg( &(elem->inds) ); //modified by Max
+    wt    *=  __ldg( &(elem->W) ); //modified by Max
 #else
-    state = data[index].inds;
-    wt *= data[index].W;
+    state = elem->inds;
+    wt *= elem->W;
 #endif
 }
 
