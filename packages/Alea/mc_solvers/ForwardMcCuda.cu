@@ -531,6 +531,7 @@ void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
 
 	else
 	{
+   		d_nnz = H->getNodeNumEntries();
     		Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
     		Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
     		Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
@@ -561,6 +562,7 @@ void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
             			data_host[count].H = hval_row[j];            
             			data_host[count].P = pval_row[j];
             			data_host[count].W = wval_row[j];
+            			data_host[count].inds = ind_row[j];
             			count++;
         		}
         

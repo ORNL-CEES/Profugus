@@ -552,6 +552,7 @@ void AdjointMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
 
 	else
 	{
+            d_nnz = H->getNodeNumEntries();
     		Teuchos::ArrayView<const double> pval_row;
     		Teuchos::ArrayView<const double> hval_row;
     		Teuchos::ArrayView<const double> wval_row;
@@ -575,10 +576,16 @@ void AdjointMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
      
         		for( int j = 0; j < ind_row.size(); ++j )
         		{
-            			data_host[count].H = hval_row[j];            
-            			data_host[count].P = pval_row[j];
-            			data_host[count].W = wval_row[j];
-            			count++;
+                    CHECK( count < data_host.size() );
+                    CHECK( j < hval_row.size() );
+                    CHECK( j < pval_row.size() );
+                    CHECK( j < wval_row.size() );
+                    CHECK( j < ind_row.size() );
+                    data_host[count].H   = hval_row[j];            
+                    data_host[count].P   = pval_row[j];
+                    data_host[count].W   = wval_row[j];
+                    data_host[count].inds = ind_row[j];
+                    count++;
         		}
         
         		d_offsets[i+1] = d_offsets[i] + ind_row.size();
@@ -587,6 +594,7 @@ void AdjointMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
     		CHECK( count == d_nnz );
 
     		thrust::copy( data_host.begin(), data_host.end(), mat_data.begin() );
+            //mat_data = data_host;
 
     		// Copy coefficients into device vector
     		const_scalar_view::HostMirror coeffs_host = Kokkos::create_mirror_view(coeffs);
