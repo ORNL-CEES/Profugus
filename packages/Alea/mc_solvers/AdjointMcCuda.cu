@@ -422,7 +422,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 
     // Initialize RNG
-    //initialize_rng<<<num_blocks,block_size>>>(rng_states,d_rng_seed,
+    //initialize_rng<<<num_blocks,BLOCK_SIZE>>>(rng_states,d_rng_seed,
     //    d_num_curand_calls);
 
     thrust::device_vector<int> seeds( BLOCK_SIZE * num_blocks );
