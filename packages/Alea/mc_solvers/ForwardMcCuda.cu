@@ -474,18 +474,19 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 void ForwardMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
         const const_scalar_view coeffs)
 {
+    	Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
+    	Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
+    	Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
+
+    	d_offsets.resize(d_N+1);
+
 	if(d_struct == 0)
 	{
-    		Teuchos::RCP<const MATRIX> H = mc_data->getIterationMatrix();
-    		Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
-    		Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
-
    		d_nnz = H->getNodeNumEntries();
     		d_H.resize(d_nnz);
     		d_P.resize(d_nnz);
     		d_W.resize(d_nnz);
     		d_inds.resize(d_nnz);
-    		d_offsets.resize(d_N+1);
 	
     		Teuchos::ArrayView<const double> val_row;
     		Teuchos::ArrayView<const int>    ind_row;

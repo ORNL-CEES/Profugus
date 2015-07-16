@@ -17,7 +17,7 @@ namespace alea
 {
 
 #ifndef USE_LDG
-#define USE_LDG 1
+#define USE_LDG 0
 #endif
 
 struct device_row_data{
@@ -71,7 +71,7 @@ __device__ inline const device_row_data * lower_bound(const device_row_data* fir
 #if USE_LDG
             if( __ldg( &(*it).P ) < val ) //Modified by Max
 #else
-            if( *it.P < val )
+            if( (*it).P < val )
 #endif
             {
                 first = ++it;                    
