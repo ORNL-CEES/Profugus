@@ -16,11 +16,6 @@
 namespace alea
 {
 
-#ifndef USE_LDG
-#define USE_LDG 1
-#endif
-
-
 struct device_row_data{
 	double H;	
 	double P;

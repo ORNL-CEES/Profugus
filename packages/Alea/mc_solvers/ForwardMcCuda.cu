@@ -22,10 +22,6 @@
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
-#ifndef THREAD_PER_ENTRY
-#define THREAD_PER_ENTRY 1
-#endif
-
 
 namespace alea
 {
@@ -306,11 +302,12 @@ ForwardMcCuda::ForwardMcCuda(
   : d_N(mc_data->getIterationMatrix()->getGlobalNumRows())
 {
     // Get parameters
-    d_num_histories      = pl->get("num_histories",1000);
-    d_max_history_length = coeffs.size()-1;
-    d_weight_cutoff      = pl->get("weight_cutoff",0.0);
-    d_struct             = pl->get("struct_matrix", 0);
-    d_use_ldg            = pl->get("use_ldg", 0);
+    d_num_histories        = pl->get("num_histories",1000);
+    d_max_history_length   = coeffs.size()-1;
+    d_weight_cutoff        = pl->get("weight_cutoff",0.0);
+    d_struct               = pl->get("struct_matrix", 0);
+    d_use_ldg              = pl->get("use_ldg", 0);
+    d_use_thread_per_entry = pl->get("thread_per_entry",0);
 
     VALIDATE( d_struct == 0 || d_struct == 1, 
             "Value for the flag to manage matrix data not valid" );
@@ -421,7 +418,8 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     if( d_struct==0 )
     {
-	#if THREAD_PER_ENTRY
+	if( d_use_thread_per_entry )
+        {
             if( d_use_ldg==0 )	
             {   
 		    run_forward_monte_carlo2<StandardAccess><<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,
@@ -434,8 +432,9 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 		    	d_max_history_length, d_weight_cutoff, d_num_histories,
 			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
             }		
-	#else    
-
+        }
+	else    
+        {
 	    int batch_size = 5;
 		       
             if( d_use_ldg==0 )		      
@@ -450,7 +449,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 			d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
 			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);                   
             }
-	#endif
+	}
     }	
     else
     {	
