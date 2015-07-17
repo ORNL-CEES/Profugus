@@ -31,19 +31,24 @@ struct device_row_data{
 
 class StandardAccess{
 public:
-      static inline double get(double *d){
+      __device__ static inline double get(const double * d){
       	return *d;
       };
-
+ 
+      __device__ static inline int get(const int * d){
+        return *d;
+      }
 };
 
 
 class LDGAccess{
 public:
-      static inline double get(double *d){
+      __device__ static inline double get(const double *d){
       	return __ldg(d);
       };
-
+      __device__ static inline int get(const int *d){
+        return __ldg(d);
+      }
 };
 
 
@@ -121,7 +126,7 @@ __device__ inline double atomicAdd(double* address, double val)
  */
 //---------------------------------------------------------------------------//
 
-template <class Memory Access>
+template <class MemoryAccess>
 __device__ inline void getNewState(int &state, double &wt,
         const double * const P,
         const double * const W,
@@ -135,7 +140,7 @@ __device__ inline void getNewState(int &state, double &wt,
     // Sample cdf to get new state
     auto beg_row = P + offsets[state];
     auto end_row = P + offsets[state+1];
-    auto elem = lower_bound(beg_row,end_row,rand);
+    auto elem = lower_bound<MemoryAccess>(beg_row,end_row,rand);
     //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
 
     if( elem == end_row )
@@ -165,7 +170,7 @@ __device__ inline void getNewState(int &state, double &wt,
     auto beg_row = &data[offsets[state]];
     auto end_row = &data[offsets[state+1]];
 
-    auto elem = lower_bound(beg_row,end_row,rand);
+    auto elem = lower_bound<MemoryAccess>(beg_row,end_row,rand);
     //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
 
     if( elem == end_row )
@@ -181,7 +186,7 @@ __device__ inline void getNewState(int &state, double &wt,
     wt    *=  MemoryAccess::get( &(elem->W) ); //modified by Max
 }
 
-template<class MassMatrix>
+template<class MemoryAccess>
 __device__ inline void getNewState2(int &state, double &wt,
         const double * const P,
         const double * const W,
@@ -193,7 +198,7 @@ __device__ inline void getNewState2(int &state, double &wt,
     // Sample cdf to get new state
     auto beg_row = P + offsets[state];
     auto end_row = P + offsets[state+1];
-    auto elem = lower_bound(beg_row,end_row,rand);
+    auto elem = lower_bound<MemoryAccess>(beg_row,end_row,rand);
     //auto elem = thrust::lower_bound( thrust::seq, beg_row, end_row, rand);
 
     if( elem == end_row )

@@ -48,7 +48,7 @@ __device__ void initializeHistory(int &state, double &wt, int N,
     double rand = curand_uniform_double(rng_state);
 
     // Sample cdf to get new state
-    auto elem = lower_bound(start_cdf,start_cdf+N,rand);
+    auto elem = lower_bound<MemoryAccess>(start_cdf,start_cdf+N,rand);
 
     if( elem == &start_cdf[N-1]+1 )
     {
@@ -70,7 +70,7 @@ __device__ void initializeHistory2(int &state, double &wt, int N,
 {
 
     // Sample cdf to get new state
-    auto elem = lower_bound(start_cdf,start_cdf+N,rand);
+    auto elem = lower_bound<MemoryAccess>(start_cdf,start_cdf+N,rand);
 
     if( elem == &start_cdf[N-1]+1 )
     {
@@ -232,7 +232,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-template< MemoryAccess >
+template<class MemoryAccess >
 __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cutoff,
         bool expected_value,
         const double * const start_cdf,
