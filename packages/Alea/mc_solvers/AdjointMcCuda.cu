@@ -163,11 +163,11 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     curandState local_state = rng_state[tid];
  
-/*    __shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
+    /*__shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
  
     for (int i = 0; i<BATCH_SIZE; ++i)
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
-*/
+    */
     // Get initial state for this history by sampling from start_cdf
     initializeHistory< MemoryAccess >(state,wt,N,start_cdf,start_wt,&local_state);
 
@@ -206,7 +206,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         getNewState< MemoryAccess >(state,wt,P,W,inds,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
-        //getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
+	//getNewState2< MemoryAccess >(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
 
         if( state == -1 )
             break;
@@ -558,7 +558,7 @@ void AdjointMcCuda::prepareDeviceData(Teuchos::RCP<const MC_Data> mc_data,
 
 	else
 	{
-            d_nnz = H->getNodeNumEntries();
+                d_nnz = H->getNodeNumEntries();
     		Teuchos::ArrayView<const double> pval_row;
     		Teuchos::ArrayView<const double> hval_row;
     		Teuchos::ArrayView<const double> wval_row;
