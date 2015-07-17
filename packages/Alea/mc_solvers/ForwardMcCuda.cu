@@ -53,6 +53,7 @@ __device__ void tallyContribution2(double wt, double * const x)
  */
 //---------------------------------------------------------------------------//
 
+template<class MemoryAccess>
 __global__ void run_forward_monte_carlo(int N, int history_length, double wt_cutoff,
         int entry_histories, 
         int batch_size,
@@ -118,10 +119,10 @@ __global__ void run_forward_monte_carlo(int N, int history_length, double wt_cut
 */
 
         // Move to new state
-        getNewState(state,wt,P,W,inds,offsets,&local_state);
+        getNewState<MemoryAccess>(state,wt,P,W,inds,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
-        //getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
+        //getNewState2<MemoryAccess>(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
 
         if( state == -1 )
             break;
@@ -142,6 +143,7 @@ __global__ void run_forward_monte_carlo(int N, int history_length, double wt_cut
 }
 
 
+template<class MemoryAccess>
 __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cutoff,
         int entry_histories, 
         const double * const H,
@@ -189,7 +191,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
 	    for(; stage<=history_length; ++stage )
 	    {
 		// Move to new state
-		getNewState(state,wt,P,W,inds,offsets,&local_state);
+		getNewState<MemoryAccess>(state,wt,P,W,inds,offsets,&local_state);
 		//printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
 		if( state == -1 )
@@ -215,6 +217,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
 }
 
 
+template<class MemoryAccess>
 __global__ void run_forward_monte_carlo3(int N, 
         int history_length, 
         double wt_cutoff,
@@ -257,7 +260,7 @@ __global__ void run_forward_monte_carlo3(int N,
 	    for(; stage<=history_length; ++stage )
 	    {
 		// Move to new state
-		getNewState(state,wt,data,offsets,&local_state);
+		getNewState<MemoryAccess>(state,wt,data,offsets,&local_state);
 		//printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
 		if( state == -1 )
@@ -281,10 +284,6 @@ __global__ void run_forward_monte_carlo3(int N,
 
     }
 }
-
-
-
-
 
         
 //---------------------------------------------------------------------------//
@@ -311,9 +310,13 @@ ForwardMcCuda::ForwardMcCuda(
     d_max_history_length = coeffs.size()-1;
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
     d_struct             = pl->get("struct_matrix", 0);
+    d_use_ldg            = pl->get("use_ldg", 0);
 
     VALIDATE( d_struct == 0 || d_struct == 1, 
             "Value for the flag to manage matrix data not valid" );
+           
+    VALIDATE( d_use_ldg==0 || d_use_ldg==1, 
+            "Value for the texture memory handling not valid" );                    
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -419,24 +422,48 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     if( d_struct==0 )
     {
 	#if THREAD_PER_ENTRY
-	   
-	    run_forward_monte_carlo2<<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories,
-	      H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
-		
+            if( d_use_ldg==0 )	
+            {   
+		    run_forward_monte_carlo2<StandardAccess><<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,
+		    	d_max_history_length, d_weight_cutoff, d_num_histories,
+			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
+            }
+            else
+            {
+		    run_forward_monte_carlo2<LDGAccess><<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,
+		    	d_max_history_length, d_weight_cutoff, d_num_histories,
+			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
+            }		
 	#else    
 
 	    int batch_size = 5;
 		       
-	    run_forward_monte_carlo<<< num_blocks,block_size >>>(d_N,d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
-		H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);            
-
+            if( d_use_ldg==0 )		      
+            {
+		    run_forward_monte_carlo<StandardAccess><<< num_blocks,block_size >>>(d_N,
+			d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
+			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);            
+            }
+            else
+            {
+		    run_forward_monte_carlo<LDGAccess><<< num_blocks,block_size >>>(d_N,
+			d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
+			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);                   
+            }
 	#endif
     }	
     else
     {	
-        run_forward_monte_carlo3<<< num_blocks,block_size >>>( d_N,d_max_history_length,d_weight_cutoff,d_num_histories,data_ptr,
-                coeffs,offsets,x_ptr,rhs_ptr,rng_states  );
-     
+        if( d_use_ldg==0 )
+        {
+		run_forward_monte_carlo3<StandardAccess><<< num_blocks,block_size >>>( d_N,d_max_history_length,d_weight_cutoff,d_num_histories,data_ptr,
+		        coeffs,offsets,x_ptr,rhs_ptr,rng_states  );
+        }
+        else
+        {
+		run_forward_monte_carlo3<LDGAccess><<< num_blocks,block_size >>>( d_N,d_max_history_length,d_weight_cutoff,d_num_histories,data_ptr,
+		        coeffs,offsets,x_ptr,rhs_ptr,rng_states  );
+        }
     }           
     // Check for errors in kernel launch
     e = cudaGetLastError();

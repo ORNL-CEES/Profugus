@@ -20,6 +20,7 @@ namespace alea
 #define USE_LDG 1
 #endif
 
+
 struct device_row_data{
 	double H;	
 	double P;
@@ -27,7 +28,27 @@ struct device_row_data{
 	int inds;
 };
 
+
+class StandardAccess{
+public:
+      static inline double get(double *d){
+      	return *d;
+      };
+
+};
+
+
+class LDGAccess{
+public:
+      static inline double get(double *d){
+      	return __ldg(d);
+      };
+
+};
+
+
 // lower_bound implementation that can be called from device
+template<class MemoryAccess>
 __device__ inline const double * lower_bound(const double * first,
         const double * last,
         double   val)
@@ -39,11 +60,7 @@ __device__ inline const double * lower_bound(const double * first,
     {
         step = count / 2;
         it = first+step;
-#if USE_LDG
-        if( __ldg( &(*it) ) < val ) //Modified by Max
-#else
-        if ( *it<val )
-#endif
+        if( MemoryAccess::get(it) < val )
         {
             first = ++it;
             count -= step+1;
@@ -57,6 +74,7 @@ __device__ inline const double * lower_bound(const double * first,
 }
 
 // lower_bound implementation that can be called from device
+template<class MemoryAccess>
 __device__ inline const device_row_data * lower_bound(const device_row_data* first,
                   const device_row_data* last, 
                   double val)
@@ -68,11 +86,7 @@ __device__ inline const device_row_data * lower_bound(const device_row_data* fir
        {
             step = count/2;
             it = first + step;
-#if USE_LDG
-            if( __ldg( &it->P ) < val ) //Modified by Max
-#else
-            if( it->P < val )
-#endif
+            if( MemoryAccess::get(&it->P) < val ) //Modified by Max
             {
                 first = ++it;                    
                 count -= step+1;
@@ -107,6 +121,7 @@ __device__ inline double atomicAdd(double* address, double val)
  */
 //---------------------------------------------------------------------------//
 
+template <class Memory Access>
 __device__ inline void getNewState(int &state, double &wt,
         const double * const P,
         const double * const W,
@@ -133,15 +148,11 @@ __device__ inline void getNewState(int &state, double &wt,
 
     // Modify weight and update state
     auto index = elem - P;
-#if USE_LDG
-    state  =  __ldg(&inds[index]); //modified by Max
-    wt    *=  __ldg(&W[index]); //modified by Max
-#else
-    state = inds[index];
-    wt *= W[index];
-#endif
+    state  =  MemoryAccess::get(&inds[index]); //modified by Max
+    wt    *=  MemoryAccess::get(&W[index]); //modified by Max
 }
 
+template<class MemoryAccess>
 __device__ inline void getNewState(int &state, double &wt,
               device_row_data* data,
               const int    * const offsets,
@@ -166,15 +177,11 @@ __device__ inline void getNewState(int &state, double &wt,
     }
 
     // Modify weight and update state
-#if USE_LDG
-    state  =  __ldg( &(elem->inds) ); //modified by Max
-    wt    *=  __ldg( &(elem->W) ); //modified by Max
-#else
-    state = elem->inds;
-    wt *= elem->W;
-#endif
+    state  =  MemoryAccess::get( &(elem->inds) ); //modified by Max
+    wt    *=  MemoryAccess::get( &(elem->W) ); //modified by Max
 }
 
+template<class MassMatrix>
 __device__ inline void getNewState2(int &state, double &wt,
         const double * const P,
         const double * const W,
@@ -199,13 +206,8 @@ __device__ inline void getNewState2(int &state, double &wt,
 
     // Modify weight and update state
     auto index = elem - P;
-#if USE_LDG
-    state  =  __ldg(&inds[index]); //modified by Max
-    wt    *=  __ldg(&W[index]); //modified by Max
-#else
-    state = inds[index];
-    wt *= W[index];
-#endif
+    state  =  MemoryAccess::get(&inds[index]); //modified by Max
+    wt    *=  MemoryAccess::get(&W[index]); //modified by Max
 }
 
 

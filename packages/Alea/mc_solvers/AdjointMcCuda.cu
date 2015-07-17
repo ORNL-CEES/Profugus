@@ -38,6 +38,7 @@ namespace alea
  * \brief Initialize history into new state
  */
 //---------------------------------------------------------------------------//
+template<class MemoryAccess>
 __device__ void initializeHistory(int &state, double &wt, int N,
         const double * const start_cdf,
         const double * const start_wt,
@@ -58,14 +59,10 @@ __device__ void initializeHistory(int &state, double &wt, int N,
 
     // Get weight and update state
     state = elem-start_cdf;
-#if USE_LDG
-    wt    = __ldg(&start_wt[state]); //modified by Max
-#else
-    wt = start_wt[state];
-#endif
+    wt    = MemoryAccess::get(&start_wt[state]); //modified by Max
 }
 
-
+template<class MemoryAccess>
 __device__ void initializeHistory2(int &state, double &wt, int N,
         const double * const start_cdf,
         const double * const start_wt,
@@ -84,11 +81,7 @@ __device__ void initializeHistory2(int &state, double &wt, int N,
 
     // Get weight and update state
     state = elem-start_cdf;
-#if USE_LDG
-    wt    = __ldg(&start_wt[state]); //modified by Max
-#else
-    wt = start_wt[state];
-#endif
+    wt    = MemoryAccess::get(&start_wt[state]); //modified by Max
 }
 
 
@@ -98,6 +91,7 @@ __device__ void initializeHistory2(int &state, double &wt, int N,
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
+template<class MemoryAccess>
 __device__ void tallyContribution(int state, double wt,
               double * const x, 
         const double * const H,
@@ -113,14 +107,8 @@ __device__ void tallyContribution(int state, double wt,
         // For expected value estimator, loop over current row and add
         // contributions corresponding to each element
         for( int i=row_begin; i<row_end; ++i )
-        {
-#if USE_LDG
-            atomicAdd(x+inds[i],wt* ( __ldg(&H[i]) ) );//modified by Max
-#else
-            atomicAdd(x+inds[i],wt*H[i]);//modified by Max
-#endif
+            atomicAdd(x+inds[i],wt* ( MemoryAccess::get(&H[i]) ) );//modified by Max
 
-        }
     }
     else
     {
@@ -129,7 +117,7 @@ __device__ void tallyContribution(int state, double wt,
     }
 }
 
-
+template<class MemoryAccess>
 __device__ void tallyContribution(int state, double wt,
               double * const x, 
               const device_row_data * data,
@@ -144,16 +132,8 @@ __device__ void tallyContribution(int state, double wt,
         // For expected value estimator, loop over current row and add
         // contributions corresponding to each element
         for( int i=row_begin; i<row_end; ++i )
-        {
-#if USE_LDG
             atomicAdd(x+data[i].inds,
-             wt* ( __ldg(&(data[i].H)) ));//modified by Max
-#else
-            atomicAdd(x+data[i].inds,
-                wt*data[i].H);//modified by Max
-#endif
-
-        }
+             wt* ( MemoryAccess::get(&(data[i].H)) ));//modified by Max
     }
     else
     {
@@ -162,6 +142,7 @@ __device__ void tallyContribution(int state, double wt,
     }
 }
 
+template<class MemoryAccess>
 __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cutoff,
         bool expected_value,
         const double * const start_cdf,
@@ -188,9 +169,9 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
 */
     // Get initial state for this history by sampling from start_cdf
-    initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
+    initializeHistory< MemoryAccess >(state,wt,N,start_cdf,start_wt,&local_state);
 
-    //initializeHistory2(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
+    //initializeHistory2< MemoryAccess >(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
 
     //printf("Starting history in state %i with weight %7.3f\n",state,wt);
     if( state == -1 )
@@ -205,7 +186,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     int stage = expected_value ? 1 : 0;
 
     // Perform initial tally
-    tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
+    tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,H,inds,offsets,
         expected_value);
 
     //int count_batch = 1;
@@ -222,7 +203,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         }*/
 
         // Move to new state
-        getNewState(state,wt,P,W,inds,offsets,&local_state);
+        getNewState< MemoryAccess >(state,wt,P,W,inds,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
         //getNewState2(state,wt,P,W,inds,offsets,steps[threadIdx.x + count_batch * blockDim.x]);
@@ -231,7 +212,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
             break;
 
         // Tally
-        tallyContribution(state,coeffs[stage]*wt,x,H,inds,offsets,
+        tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,H,inds,offsets,
             expected_value);
 
         //count_batch++;
@@ -251,6 +232,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
+template< MemoryAccess >
 __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cutoff,
         bool expected_value,
         const double * const start_cdf,
@@ -269,7 +251,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     curandState local_state = rng_state[tid];
  
     // Get initial state for this history by sampling from start_cdf
-    initializeHistory(state,wt,N,start_cdf,start_wt,&local_state);
+    initializeHistory< MemoryAccess >(state,wt,N,start_cdf,start_wt,&local_state);
 
     //printf("Starting history in state %i with weight %7.3f\n",state,wt);
     if( state == -1 )
@@ -284,21 +266,21 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     int stage = expected_value ? 1 : 0;
 
     // Perform initial tally
-    tallyContribution(state,coeffs[stage]*wt,x,data,offsets,
+    tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,data,offsets,
         expected_value);
 
     for( ; stage<=history_length; ++stage )
     {
 
         // Move to new state
-        getNewState(state,wt,data,offsets,&local_state);
+        getNewState< MemoryAccess >(state,wt,data,offsets,&local_state);
         //printf("Stage %i, moving to state %i with new weight of %7.3f\n",stage,state,wt);
 
         if( state == -1 )
             break;
 
         // Tally
-        tallyContribution(state,coeffs[stage]*wt,x,data,offsets,
+        tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,data,offsets,
             expected_value);
 
         // Check weight cutoff
@@ -338,9 +320,13 @@ AdjointMcCuda::AdjointMcCuda(
     d_max_history_length = coeffs.size()-1;
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
     d_struct             = pl->get("struct_matrix", 0);
+    d_use_ldg            = pl->get("use_ldg", 0);
 
     VALIDATE( d_struct==0 || d_struct==1, 
             "Value for the flag to manage matrix data not valid" );
+            
+    VALIDATE( d_use_ldg==0 || d_use_ldg==1, 
+            "Value for the texture memory handling not valid" );        
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -442,18 +428,38 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     if( d_struct==0 )
     {
-    	run_adjoint_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,
-                d_max_history_length, d_weight_cutoff, d_use_expected_value,
-                start_cdf_ptr,start_wt_ptr,H,P,W,
-                inds,offsets,coeffs,x_ptr,rng_states);
+        if( d_use_ldg==0 )
+        {
+	    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+		        d_max_history_length, d_weight_cutoff, d_use_expected_value,
+		        start_cdf_ptr,start_wt_ptr,H,P,W,
+		        inds,offsets,coeffs,x_ptr,rng_states);
+        }
+        else
+        {
+	    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+		        d_max_history_length, d_weight_cutoff, d_use_expected_value,
+		        start_cdf_ptr,start_wt_ptr,H,P,W,
+		        inds,offsets,coeffs,x_ptr,rng_states);
+        
+        }        
     }
     else
     {
-        //std::cout<<"Qui ci arrivo"<<std::endl;
-    	run_adjoint_monte_carlo<<< num_blocks,BLOCK_SIZE >>>(d_N,
-                d_max_history_length, d_weight_cutoff, d_use_expected_value,
-                start_cdf_ptr,start_wt_ptr,data_ptr,
-                offsets,coeffs,x_ptr,rng_states);
+        if( d_use_ldg==0 )
+        {
+	    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+		        d_max_history_length, d_weight_cutoff, d_use_expected_value,
+		        start_cdf_ptr,start_wt_ptr,data_ptr,
+		        offsets,coeffs,x_ptr,rng_states);
+	}
+	else{
+	    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+		        d_max_history_length, d_weight_cutoff, d_use_expected_value,
+		        start_cdf_ptr,start_wt_ptr,data_ptr,
+		        offsets,coeffs,x_ptr,rng_states);
+	
+	}	        
     }
 
     // Check for errors in kernel launch

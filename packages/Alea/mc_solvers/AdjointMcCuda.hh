@@ -76,6 +76,7 @@ class AdjointMcCuda
     int    d_num_histories;
     double d_weight_cutoff;
     bool   d_struct;
+    bool   d_use_ldg;
 
     enum VERBOSITY {NONE, LOW, HIGH};
     VERBOSITY d_verbosity;
