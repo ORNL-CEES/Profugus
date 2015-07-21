@@ -9,6 +9,8 @@
 #ifndef mc_solver_AdjointMcCuda_hh
 #define mc_solver_AdjointMcCuda_hh
 
+#include <string>
+
 #include "MC_Data.hh"
 
 #include "AleaTypedefs.hh"
@@ -62,6 +64,8 @@ class AdjointMcCuda
     thrust::device_vector<double> d_coeffs;
 
     thrust::device_vector<device_row_data> mat_data;
+
+    SEED_TYPE d_seed_type;
 #endif
 
     // Vector length
@@ -71,12 +75,12 @@ class AdjointMcCuda
     int d_rng_seed;
 
     // Problem parameters
-    int    d_max_history_length;
-    bool   d_use_expected_value;
-    int    d_num_histories;
-    double d_weight_cutoff;
-    bool   d_struct;
-    bool   d_use_ldg;
+    int       d_max_history_length;
+    bool      d_use_expected_value;
+    int       d_num_histories;
+    double    d_weight_cutoff;
+    bool      d_struct;
+    bool      d_use_ldg;
 
     enum VERBOSITY {NONE, LOW, HIGH};
     VERBOSITY d_verbosity;

@@ -163,9 +163,9 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     curandState local_state = rng_state[tid];
  
-    /*__shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
+    //__shared__ double steps[BLOCK_SIZE * BATCH_SIZE];
  
-    for (int i = 0; i<BATCH_SIZE; ++i)
+    /*for (int i = 0; i<BATCH_SIZE; ++i)
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
     */
     // Get initial state for this history by sampling from start_cdf
@@ -215,7 +215,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,H,inds,offsets,
             expected_value);
 
-        //count_batch++;
+       // count_batch++;
 
         // Check weight cutoff
         if( std::abs(wt/init_wt) < wt_cutoff )
@@ -321,12 +321,24 @@ AdjointMcCuda::AdjointMcCuda(
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
     d_struct             = pl->get("struct_matrix", 0);
     d_use_ldg            = pl->get("use_ldg", 0);
+    std::string seed_type= pl->get("seed_type", "same");
 
     VALIDATE( d_struct==0 || d_struct==1, 
             "Value for the flag to manage matrix data not valid" );
             
     VALIDATE( d_use_ldg==0 || d_use_ldg==1, 
             "Value for the texture memory handling not valid" );        
+
+    VALIDATE( seed_type.c_str()=="same" || seed_type.c_str()=="different" 
+              || seed_type.c_str()=="random", 
+              "Type of seed selected is not valid" );	
+
+    if( seed_type.c_str()=="same" )   
+    	d_seed_type = SEED_TYPE::SAME;
+    else if( seed_type.c_str()=="different" )
+        d_seed_type = SEED_TYPE::DIFF;
+    else if( seed_type.c_str()=="random" ) 
+        d_seed_type = SEED_TYPE::RAND;
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -407,16 +419,30 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 
-    // Initialize RNG
-    //initialize_rng<<<num_blocks,BLOCK_SIZE>>>(rng_states,d_rng_seed,
-    //    d_num_curand_calls);
+    if( d_seed_type==SEED_TYPE::SAME )
+    {
+    	// Initialize RNG
+   	initialize_rng<<<num_blocks,BLOCK_SIZE>>>(rng_states,&d_rng_seed,
+    	    d_num_curand_calls,d_seed_type);
+    }
+    else if ( d_seed_type==SEED_TYPE::DIFF )
+    {
+    	thrust::device_vector<int> seeds( BLOCK_SIZE*num_blocks);
+    	thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
+    	int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
 
-    thrust::device_vector<int> seeds( BLOCK_SIZE * num_blocks );
-    thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
-    int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
+    	initialize_rng<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
+            d_num_curand_calls,d_seed_type);
+    }
+    else if ( d_seed_type==SEED_TYPE::RAND )
+    {
+    	thrust::device_vector<int> seeds( BLOCK_SIZE*num_blocks);
+    	thrust::generate(seeds.begin(), seeds.end(), rand);
+    	int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
 
-    initialize_rng2<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
-          d_num_curand_calls);
+    	initialize_rng<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
+            d_num_curand_calls,d_seed_type);
+    }
 
     // Check for errors in kernel launch
     e = cudaGetLastError();

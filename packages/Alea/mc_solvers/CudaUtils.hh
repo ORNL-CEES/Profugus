@@ -24,6 +24,13 @@ struct device_row_data{
 };
 
 
+enum class SEED_TYPE{
+	SAME,
+        DIFF,
+        RAND
+}; 
+
+
 class StandardAccess{
 public:
       __device__ static inline double get(const double * d){
@@ -216,22 +223,17 @@ __device__ inline void getNewState2(int &state, double &wt,
  * \brief Initialize Cuda RNG
  */
 //---------------------------------------------------------------------------//
-__global__ inline void initialize_rng(curandState *state, int seed, int offset)
+__global__ inline void initialize_rng(curandState *state, int* seed, int offset, SEED_TYPE seed_type)
 {
+
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
-    curand_init(seed,tid,offset,&state[tid]);
+    if( seed_type==SEED_TYPE::SAME ) 
+    	curand_init(*seed,tid,offset,&state[tid]);
+    else if( seed_type==SEED_TYPE::DIFF || seed_type==SEED_TYPE::RAND )
+    	curand_init(seed[tid], 0, offset, &state[tid]);
 
 }
-
-
-__global__ inline void initialize_rng2(curandState *state, int*seed, int offset)
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-
-    curand_init(seed[tid], 0, offset, &state[tid]);
-}
-
 
         
 }

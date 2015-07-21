@@ -9,6 +9,8 @@
 #ifndef mc_solver_ForwardMcCuda_hh
 #define mc_solver_ForwardMcCuda_hh
 
+#include <string>
+
 #include "MC_Data.hh"
 
 #include "AleaTypedefs.hh"
@@ -55,6 +57,8 @@ class ForwardMcCuda
     thrust::device_vector<double> d_P;
     thrust::device_vector<double> d_W;
     thrust::device_vector<int>    d_inds; 
+
+    SEED_TYPE d_seed_type; 
 #endif
 
     // Vector length
@@ -64,12 +68,12 @@ class ForwardMcCuda
     int d_rng_seed;
 
     // Problem parameters
-    int    d_max_history_length;
-    int    d_num_histories;
-    double d_weight_cutoff;
-    bool   d_struct;
-    bool   d_use_ldg;
-    bool   d_use_thread_per_entry;
+    int       d_max_history_length;
+    int       d_num_histories;
+    double    d_weight_cutoff;
+    bool      d_struct;
+    bool      d_use_ldg;
+    bool      d_use_thread_per_entry;
 
     enum VERBOSITY {NONE, LOW, HIGH};
     VERBOSITY d_verbosity;

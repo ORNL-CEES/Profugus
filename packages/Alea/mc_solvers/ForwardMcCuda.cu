@@ -308,12 +308,27 @@ ForwardMcCuda::ForwardMcCuda(
     d_struct               = pl->get("struct_matrix", 0);
     d_use_ldg              = pl->get("use_ldg", 0);
     d_use_thread_per_entry = pl->get("thread_per_entry",0);
+    std::string seed_type  = pl->get("seed_type", "same");
 
     VALIDATE( d_struct == 0 || d_struct == 1, 
             "Value for the flag to manage matrix data not valid" );
            
     VALIDATE( d_use_ldg==0 || d_use_ldg==1, 
             "Value for the texture memory handling not valid" );                    
+    VALIDATE( d_use_thread_per_entry==0 || d_use_thread_per_entry==1,
+            "Value for the task distribution between threads not valid" );
+
+
+    VALIDATE( seed_type.c_str()=="same" || seed_type.c_str()=="different" 
+              || seed_type.c_str()=="random", 
+              "Type of seed selected is not valid" );	
+
+    if( seed_type.c_str()=="same" )   
+    	d_seed_type = SEED_TYPE::SAME;
+    else if( seed_type.c_str()=="different" )
+        d_seed_type = SEED_TYPE::DIFF;
+    else if( seed_type.c_str()=="random" ) 
+        d_seed_type = SEED_TYPE::RAND;
 
     // Determine type of tally
     std::string estimator = pl->get<std::string>("estimator",
@@ -373,18 +388,24 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     // Create vector for state
     thrust::device_vector<double> x_vec(d_N);
     double * const x_ptr = thrust::raw_pointer_cast(x_vec.data());
-    
-#if THREAD_PER_ENTRY
-    //instantiation of as many threads as the number of entries in the solution
-    int block_size = std::min(256, d_N);
-    int num_blocks = d_N / block_size + 1;
-#else 
-    //instiantiation of as many threads as the total number of histories
-    int tot_histories = d_num_histories * d_N;
 
-    int block_size = std::min(256,tot_histories);
-    int num_blocks = tot_histories / block_size + 1;    
-#endif
+    int block_size;
+    int num_blocks;
+    int tot_histories;
+    
+    if(d_use_thread_per_entry)
+    {
+	//instantiation of as many threads as the number of entries in the solution
+    	block_size = std::min(256, d_N);
+    	num_blocks = d_N / block_size + 1;
+    }
+    else 
+    {
+	//instiantiation of as many threads as the total number of histories
+        tot_histories = d_num_histories * d_N;
+        block_size = std::min(256,tot_histories);
+        num_blocks = tot_histories / block_size + 1;    
+    }
 
     VALIDATE( num_blocks > 0, "The size of the problem is too small" );
 
@@ -397,16 +418,30 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 
-    // Initialize RNG
-    //initialize_rng<<<num_blocks,block_size>>>(rng_states,d_rng_seed,
-    //    d_num_curand_calls);
+    if( d_seed_type==SEED_TYPE::SAME )
+    {
+    	// Initialize RNG
+   	initialize_rng<<<num_blocks,block_size>>>(rng_states,&d_rng_seed,
+    	    d_num_curand_calls,d_seed_type);
+    }
+    else if ( d_seed_type==SEED_TYPE::DIFF )
+    {
+    	thrust::device_vector<int> seeds( block_size*num_blocks);
+    	thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
+    	int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
 
-    thrust::device_vector<int> seeds( block_size*num_blocks);
-    thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
-    int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
+    	initialize_rng<<<num_blocks, block_size>>>(rng_states, seed_ptr, 
+            d_num_curand_calls,d_seed_type);
+    }
+    else if ( d_seed_type==SEED_TYPE::RAND )
+    {
+    	thrust::device_vector<int> seeds( block_size*num_blocks);
+    	thrust::generate(seeds.begin(), seeds.end(), rand);
+    	int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
 
-    initialize_rng2<<<num_blocks, block_size>>>(rng_states, seed_ptr, 
-          d_num_curand_calls);
+    	initialize_rng<<<num_blocks, block_size>>>(rng_states, seed_ptr, 
+            d_num_curand_calls,d_seed_type);
+    }
 
     // Check for errors in kernel launch
     e = cudaGetLastError();
