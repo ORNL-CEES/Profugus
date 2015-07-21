@@ -8,6 +8,7 @@
 
 #include <iterator>
 #include <cmath>
+#include <ctime>
 #include <curand_kernel.h>
 #include <curand.h>
 #include <thrust/copy.h>
@@ -321,7 +322,7 @@ AdjointMcCuda::AdjointMcCuda(
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
     d_struct             = pl->get("struct_matrix", 0);
     d_use_ldg            = pl->get("use_ldg", 0);
-    std::string seed_type= pl->get("seed_type", "same");
+    std::string seed_type= pl->get("seed_type", std::string("same") );
 
     VALIDATE( d_struct==0 || d_struct==1, 
             "Value for the flag to manage matrix data not valid" );
@@ -329,15 +330,16 @@ AdjointMcCuda::AdjointMcCuda(
     VALIDATE( d_use_ldg==0 || d_use_ldg==1, 
             "Value for the texture memory handling not valid" );        
 
-    VALIDATE( seed_type.c_str()=="same" || seed_type.c_str()=="different" 
-              || seed_type.c_str()=="random", 
+    VALIDATE( seed_type == std::string("same") 
+              || seed_type == std::string("different")
+              || seed_type == std::string("random"), 
               "Type of seed selected is not valid" );	
 
-    if( seed_type.c_str()=="same" )   
+    if( seed_type.c_str()==std::string("same") )   
     	d_seed_type = SEED_TYPE::SAME;
-    else if( seed_type.c_str()=="different" )
+    else if( seed_type.c_str()==std::string("different") )
         d_seed_type = SEED_TYPE::DIFF;
-    else if( seed_type.c_str()=="random" ) 
+    else if( seed_type.c_str()==std::string("random") ) 
         d_seed_type = SEED_TYPE::RAND;
 
     // Determine type of tally
@@ -421,27 +423,36 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     if( d_seed_type==SEED_TYPE::SAME )
     {
+        std::cout<<"Same seed instantiated for all the threads"<<std::endl;
+
     	// Initialize RNG
-   	initialize_rng<<<num_blocks,BLOCK_SIZE>>>(rng_states,&d_rng_seed,
-    	    d_num_curand_calls,d_seed_type);
+   	initialize_rng<<<num_blocks,BLOCK_SIZE>>>(rng_states,d_rng_seed,
+    	    d_num_curand_calls, d_seed_type);
     }
     else if ( d_seed_type==SEED_TYPE::DIFF )
     {
+        std::cout<<"Different adjacent seeds instantiated"<<std::endl;
+
     	thrust::device_vector<int> seeds( BLOCK_SIZE*num_blocks);
     	thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
     	int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
 
     	initialize_rng<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
-            d_num_curand_calls,d_seed_type);
+            d_num_curand_calls, d_seed_type);
     }
     else if ( d_seed_type==SEED_TYPE::RAND )
     {
-    	thrust::device_vector<int> seeds( BLOCK_SIZE*num_blocks);
-    	thrust::generate(seeds.begin(), seeds.end(), rand);
-    	int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
+        std::cout<<"Different random seeds instantiated"<<std::endl;
+
+    	thrust::device_vector<int> dev_seeds( BLOCK_SIZE*num_blocks);
+        thrust::host_vector<int> host_seeds( BLOCK_SIZE*num_blocks );
+        std::srand(std::time(0));
+    	thrust::generate(host_seeds.begin(), host_seeds.end(), std::rand);
+        dev_seeds=host_seeds;
+    	int* seed_ptr = thrust::raw_pointer_cast(dev_seeds.data());
 
     	initialize_rng<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
-            d_num_curand_calls,d_seed_type);
+            d_num_curand_calls, d_seed_type);
     }
 
     // Check for errors in kernel launch
