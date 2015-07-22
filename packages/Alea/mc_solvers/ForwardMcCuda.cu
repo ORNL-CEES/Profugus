@@ -424,7 +424,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
         std::cout<<"Same seed instantiated for all the threads"<<std::endl;
 
     	// Initialize RNG
-   	initialize_rng<<<num_blocks,block_size>>>(rng_states,&d_rng_seed,
+   	initialize_rng<<<num_blocks,block_size>>>(rng_states,d_rng_seed,
     	    d_num_curand_calls, d_seed_type);
     }
     else if ( d_seed_type==SEED_TYPE::DIFF )
