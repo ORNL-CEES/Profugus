@@ -233,7 +233,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
  * \brief Tally contribution into vector
  */
 //---------------------------------------------------------------------------//
-template<class MemoryAccess >
+template<class MemoryAccess>
 __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cutoff,
         bool expected_value,
         const double * const start_cdf,
@@ -442,7 +442,8 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     }
     else if ( d_seed_type==SEED_TYPE::RAND )
     {
-        std::cout<<"Different random seeds instantiated"<<std::endl;
+        std::cout<<"Different random seeds instantiated from 0 to "<<
+         RAND_MAX<<std::endl;
 
     	thrust::device_vector<int> dev_seeds( BLOCK_SIZE*num_blocks);
         thrust::host_vector<int> host_seeds( BLOCK_SIZE*num_blocks );
