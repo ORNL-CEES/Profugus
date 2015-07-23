@@ -9,8 +9,14 @@
 #ifndef mc_solver_CudaUtils_hh
 #define mc_solver_CudaUtils_hh
 
+#include <cmath>
+#include <ctime>
+
 #ifdef __CUDACC__
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+#include <thrust/sequence.h>
+#include <thrust/generate.h>
 #endif
 
 namespace alea
@@ -223,25 +229,87 @@ __device__ inline void getNewState2(int &state, double &wt,
  * \brief Initialize Cuda RNG
  */
 //---------------------------------------------------------------------------//
-__global__ inline void initialize_rng(curandState *state, int seed, int offset, SEED_TYPE seed_type)
+
+class SameSeed{
+
+    public:
+          inline SameSeed(unsigned int);
+          __device__ inline unsigned int getSeed(){return seed;};
+          __device__ inline unsigned int getSequence(){unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; return tid;};
+
+    private:
+          unsigned int seed;
+};
+
+inline SameSeed::SameSeed(unsigned int index):seed(index){};
+
+
+class DifferentSeed{
+
+    public:
+          inline DifferentSeed(unsigned int, unsigned int);
+          __device__ inline unsigned int getSeed();
+          __device__ inline unsigned int getSequence(){return 0;};
+
+    private:
+          unsigned int* seed_ptr;
+          thrust::device_vector<unsigned int> seeds;
+};
+
+inline DifferentSeed::DifferentSeed(unsigned int N, unsigned int index)
 {
+	seeds.resize(N);
+        thrust::sequence( seeds.begin(), seeds.end(), index );
+        seed_ptr = thrust::raw_pointer_cast(seeds.data());
+}
 
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-
-    curand_init(seed,tid,offset,&state[tid]);
-
+__device__ inline unsigned int DifferentSeed::getSeed()
+{
+        unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+	return seed_ptr[tid];
 }
 
 
-__global__ inline void initialize_rng(curandState *state, int* seed, int offset, SEED_TYPE seed_type)
+
+class RandomSeed{
+
+    public:
+          inline RandomSeed(unsigned int);
+          __device__ inline unsigned int getSeed();
+          __device__ inline unsigned int getSequence(){return 0;};
+
+    private:
+          unsigned int* seed_ptr;
+          thrust::device_vector<unsigned int> dev_seeds;
+};
+
+inline RandomSeed::RandomSeed(unsigned int N)
 {
-
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-
-    curand_init(seed[tid], 0, offset, &state[tid]);
-
-}
+	dev_seeds.resize(N);
         
+        thrust::host_vector<int> host_seeds( N );
+        std::srand(std::time(0));
+    	thrust::generate(host_seeds.begin(), host_seeds.end(), std::rand);
+        dev_seeds=host_seeds;
+        
+        seed_ptr = thrust::raw_pointer_cast(dev_seeds.data());        
+}
+
+__device__ inline unsigned int RandomSeed::getSeed()
+{
+        int tid = threadIdx.x + blockIdx.x * blockDim.x;
+	return seed_ptr[tid];
+}
+
+template<class seed_type>
+__global__ inline void initialize_rng(curandState *state, int offset, seed_type seed)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    
+    curand_init(seed.getSeed(), seed.getSequence(), offset, &state[tid]);	
+}
+
+ 
 }
 
 

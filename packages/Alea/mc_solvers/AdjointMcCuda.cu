@@ -7,8 +7,6 @@
 //---------------------------------------------------------------------------//
 
 #include <iterator>
-#include <cmath>
-#include <ctime>
 #include <curand_kernel.h>
 #include <curand.h>
 #include <thrust/copy.h>
@@ -426,34 +424,28 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         std::cout<<"Same seed instantiated for all the threads"<<std::endl;
 
     	// Initialize RNG
-   	initialize_rng<<<num_blocks,BLOCK_SIZE>>>(rng_states,d_rng_seed,
-    	    d_num_curand_calls, d_seed_type);
+    	SameSeed seed(d_rng_seed);
+	initialize_rng<SameSeed><<<num_blocks,BLOCK_SIZE>>>(rng_states,
+    	    d_num_curand_calls, seed);
     }
     else if ( d_seed_type==SEED_TYPE::DIFF )
     {
         std::cout<<"Different adjacent seeds instantiated"<<std::endl;
 
-    	thrust::device_vector<int> seeds( BLOCK_SIZE*num_blocks);
-    	thrust::sequence(seeds.begin(), seeds.end(), d_rng_seed);
-    	int* seed_ptr = thrust::raw_pointer_cast(seeds.data());
-
-    	initialize_rng<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
-            d_num_curand_calls, d_seed_type);
+    	DifferentSeed seed( BLOCK_SIZE*num_blocks, d_rng_seed);
+    	
+    	initialize_rng<DifferentSeed><<<num_blocks, BLOCK_SIZE>>>(rng_states,  
+            d_num_curand_calls, seed);
     }
     else if ( d_seed_type==SEED_TYPE::RAND )
     {
         std::cout<<"Different random seeds instantiated from 0 to "<<
          RAND_MAX<<std::endl;
 
-    	thrust::device_vector<int> dev_seeds( BLOCK_SIZE*num_blocks);
-        thrust::host_vector<int> host_seeds( BLOCK_SIZE*num_blocks );
-        std::srand(std::time(0));
-    	thrust::generate(host_seeds.begin(), host_seeds.end(), std::rand);
-        dev_seeds=host_seeds;
-    	int* seed_ptr = thrust::raw_pointer_cast(dev_seeds.data());
-
-    	initialize_rng<<<num_blocks, BLOCK_SIZE>>>(rng_states, seed_ptr, 
-            d_num_curand_calls, d_seed_type);
+    	RandomSeed seed( BLOCK_SIZE*num_blocks);
+ 
+    	initialize_rng<RandomSeed><<<num_blocks, BLOCK_SIZE>>>(rng_states,
+            d_num_curand_calls, seed);
     }
 
     // Check for errors in kernel launch
