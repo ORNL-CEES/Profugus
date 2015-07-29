@@ -17,6 +17,9 @@
 #include "Teuchos_DefaultComm.hpp"
 #include "MatrixMarket_Tpetra.hpp"
 
+#include "cuda.h"
+#include "cuda_runtime_api.h"
+
 using namespace alea;
 using std::chrono::high_resolution_clock;
 using std::chrono::duration_cast;
@@ -135,6 +138,25 @@ int main( int argc, char *argv[] )
     
     // Finalize Kokkos device
     //DeviceTraits<DEVICE>::finalize();
+
+  int nDevices;
+
+  cudaGetDeviceCount(&nDevices);
+  printf("The number of GPU devices is: %d\n", nDevices);
+  for (int i = 0; i < nDevices; i++) {
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, i);
+    printf("Device Number: %d\n", i);
+    printf("  Device name: %s\n", prop.name);
+    printf("  Memory Clock Rate (KHz): %d\n",
+           prop.memoryClockRate);
+    printf("  Memory Bus Width (bits): %d\n",
+           prop.memoryBusWidth);
+    printf("  Peak Memory Bandwidth (GB/s): %f\n\n",
+           2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
+    printf("  globalL1CacheSupported:  %d\n", prop.globalL1CacheSupported);
+    printf("  localL1CacheSupported:  %d\n", prop.localL1CacheSupported);
+  }
 
     Kokkos::finalize();
     profugus::finalize();

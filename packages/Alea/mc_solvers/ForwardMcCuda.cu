@@ -419,6 +419,8 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+
     if( d_seed_type==SEED_TYPE::SAME )
     {
         std::cout<<"Same seed instantiated for all the threads"<<std::endl;

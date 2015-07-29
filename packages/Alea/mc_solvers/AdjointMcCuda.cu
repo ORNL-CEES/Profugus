@@ -9,6 +9,7 @@
 #include <iterator>
 #include <curand_kernel.h>
 #include <curand.h>
+#include <cuda_runtime_api.h>
 #include <thrust/copy.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -25,7 +26,7 @@ namespace alea
 {
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 1024
 #endif 
 
 #ifndef BATCH_SIZE
@@ -419,6 +420,8 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+
     if( d_seed_type==SEED_TYPE::SAME )
     {
         std::cout<<"Same seed instantiated for all the threads"<<std::endl;
@@ -455,6 +458,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
+
 
     if( d_struct==0 )
     {
