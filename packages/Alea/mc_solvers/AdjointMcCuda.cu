@@ -40,16 +40,11 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 
-/*class InitializePolicy
+class OnTheFly
 {
-public:
-        virtual __device__ inline double get(curandState* ){ return 0.0; };
-};
-
-class OnTheFly: public InitializePolicy{
 
 public: 
-        __device__ inline double get(curandState* rng_state) override
+        __device__ inline double get(curandState* rng_state)
        {
               double rand = curand_uniform_double(rng_state);	
 	      return rand;
@@ -65,63 +60,15 @@ __global__ void initial_state(curandState* state, unsigned int* ss)
 
 
 
-class Precomputed: public InitializePolicy{
-
-private:
-        bool computed = false;
-        unsigned int* starting_states;
-public:
-        Precomputed(curandState*, unsigned int, unsigned int);
-	__device__ inline double get(curandState*) override
-        { 
-          unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
-	  return starting_states[tid]; 
-        };
-};
-
-Precomputed::Precomputed(curandState* state, 
-	unsigned int num_blocks, unsigned int block_size):computed(true)
-{ 
-	thrust::host_vector< unsigned int > host_ss;
-	thrust::device_vector< unsigned int > device_ss(num_blocks * block_size);
-	thrust::device_ptr< unsigned int > dev_ptr = device_ss.data();
-	unsigned int* raw_ptr = thrust::raw_pointer_cast(dev_ptr);
-	initial_state<<<num_blocks, block_size>>>(state, raw_ptr);
-	host_ss = device_ss;
-	thrust::sort(host_ss.begin(), host_ss.end());
-	
-	starting_states = host_ss.data();
-}*/
-
-
-
-class OnTheFly{
-
-public: 
-        __device__ inline double get(curandState* rng_state) 
-       {
-              double rand = curand_uniform_double(rng_state);	
-	      return rand;
-       };
-};
-
-
-__global__ void initial_state(curandState* state, unsigned int* ss)
+class Precomputed
 {
-	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	ss[tid] = curand_uniform_double(&state[tid]);
-}
-
-
-
-class Precomputed{
 
 private:
         bool computed = false;
         unsigned int* starting_states;
 public:
         Precomputed(curandState*, unsigned int, unsigned int);
-	__device__ inline double get(curandState*) 
+	__device__ inline double get(curandState*)
         { 
           unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
 	  return starting_states[tid]; 
@@ -141,6 +88,7 @@ Precomputed::Precomputed(curandState* state,
 	
 	starting_states = host_ss.data();
 }
+
 
 template<class MemoryAccess, class ComputePolicy>
 __device__ void initializeHistory(int &state, double &wt, int N,
@@ -573,61 +521,10 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     OnTheFly initialize;
 
     if( d_precompute_states == 0 )
-    {
-            std::cout<<"Histories initialized on the fly"<<std::endl;
-//            dynamic_cast< OnTheFly* >(initialize);
-//            initialize = new(OnTheFly);
-    }
-    /*else
-    {
-            std::cout<<"Histories initialized with a precomputed approach"<<std::endl;
-            dynamic_cast< Precomputed* >(initialize);
-            *initialize = Precomputed( rng_states, num_blocks, BLOCK_SIZE );
-    }*/
-
-    if( d_struct==0 )
-    {
-	if( d_use_ldg==0 )
-	{
-	    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-			d_max_history_length, d_weight_cutoff, d_use_expected_value,
-			start_cdf_ptr,start_wt_ptr,H,P,W,
-			inds,offsets,coeffs,x_ptr,rng_states, initialize);
-	}
-	else
-	{
-	    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-			d_max_history_length, d_weight_cutoff, d_use_expected_value,
-			start_cdf_ptr,start_wt_ptr,H,P,W,
-			inds,offsets,coeffs,x_ptr,rng_states, initialize);
-	
-	}        
-    }
+        launch_monte_carlo<OnTheFly>();
     else
-    {
-	if( d_use_ldg==0 )
-	{
-	    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-			d_max_history_length, d_weight_cutoff, d_use_expected_value,
-			start_cdf_ptr,start_wt_ptr,data_ptr,
-			offsets,coeffs,x_ptr,rng_states, initialize);
-	}
-	else{
-	    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-			d_max_history_length, d_weight_cutoff, d_use_expected_value,
-			start_cdf_ptr,start_wt_ptr,data_ptr,
-			offsets,coeffs,x_ptr,rng_states, initialize);
-
-	}	                   
-    }           
-
-    // Check for errors in kernel launch
-    e = cudaGetLastError();
-    if( cudaSuccess != e )
-        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
-
-    VALIDATE(cudaSuccess==e,"Failed to execute MC kernel");
-
+        launch_monte_carlo<Precomputed>();
+    
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
         *itr /= static_cast<double>( num_blocks * BLOCK_SIZE );
@@ -649,6 +546,55 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
 
     VALIDATE(cudaSuccess==e,"Failed to deallocate memory");
+}
+
+template <class InitializePolicy>
+void AdjointMcCuda::launch_monte_carlo()
+{
+    InitializePolicy initialize(...);
+
+    if( d_struct==0 )
+    {
+        if( d_use_ldg==0 )
+        {
+            run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+                    d_max_history_length, d_weight_cutoff, d_use_expected_value,
+                    start_cdf_ptr,start_wt_ptr,H,P,W,
+                    inds,offsets,coeffs,x_ptr,rng_states, initialize);
+        }
+        else
+        {
+            run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+                    d_max_history_length, d_weight_cutoff, d_use_expected_value,
+                    start_cdf_ptr,start_wt_ptr,H,P,W,
+                    inds,offsets,coeffs,x_ptr,rng_states, initialize);
+        }        
+    }
+    else
+    {
+        if( d_use_ldg==0 )
+        {
+            run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+                    d_max_history_length, d_weight_cutoff, d_use_expected_value,
+                    start_cdf_ptr,start_wt_ptr,data_ptr,
+                    offsets,coeffs,x_ptr,rng_states, initialize);
+        }
+        else{
+            run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+                    d_max_history_length, d_weight_cutoff, d_use_expected_value,
+                    start_cdf_ptr,start_wt_ptr,data_ptr,
+                    offsets,coeffs,x_ptr,rng_states, initialize);
+
+        }	                   
+    }           
+
+    // Check for errors in kernel launch
+    e = cudaGetLastError();
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+    VALIDATE(cudaSuccess==e,"Failed to execute MC kernel");
+
 }
 
 //---------------------------------------------------------------------------//
