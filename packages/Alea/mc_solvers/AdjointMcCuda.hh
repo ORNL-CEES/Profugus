@@ -81,6 +81,8 @@ class AdjointMcCuda
     double    d_weight_cutoff;
     bool      d_struct;
     bool      d_use_ldg;
+    bool      d_precompute_states;
+
 
     enum VERBOSITY {NONE, LOW, HIGH};
     VERBOSITY d_verbosity;
