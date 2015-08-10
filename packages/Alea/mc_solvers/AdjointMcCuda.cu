@@ -39,10 +39,66 @@ namespace alea
  * \brief Initialize history into new state
  */
 //---------------------------------------------------------------------------//
+
+/*class InitializePolicy
+{
+public:
+        virtual __device__ inline double get(curandState* ){ return 0.0; };
+};
+
+class OnTheFly: public InitializePolicy{
+
+public: 
+        __device__ inline double get(curandState* rng_state) override
+       {
+              double rand = curand_uniform_double(rng_state);	
+	      return rand;
+       };
+};
+
+
+__global__ void initial_state(curandState* state, unsigned int* ss)
+{
+	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+	ss[tid] = curand_uniform_double(&state[tid]);
+}
+
+
+
+class Precomputed: public InitializePolicy{
+
+private:
+        bool computed = false;
+        unsigned int* starting_states;
+public:
+        Precomputed(curandState*, unsigned int, unsigned int);
+	__device__ inline double get(curandState*) override
+        { 
+          unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
+	  return starting_states[tid]; 
+        };
+};
+
+Precomputed::Precomputed(curandState* state, 
+	unsigned int num_blocks, unsigned int block_size):computed(true)
+{ 
+	thrust::host_vector< unsigned int > host_ss;
+	thrust::device_vector< unsigned int > device_ss(num_blocks * block_size);
+	thrust::device_ptr< unsigned int > dev_ptr = device_ss.data();
+	unsigned int* raw_ptr = thrust::raw_pointer_cast(dev_ptr);
+	initial_state<<<num_blocks, block_size>>>(state, raw_ptr);
+	host_ss = device_ss;
+	thrust::sort(host_ss.begin(), host_ss.end());
+	
+	starting_states = host_ss.data();
+}*/
+
+
+
 class OnTheFly{
 
 public: 
-       __device__ inline double get(curandState* rng_state)
+        __device__ inline double get(curandState* rng_state) 
        {
               double rand = curand_uniform_double(rng_state);	
 	      return rand;
@@ -65,8 +121,11 @@ private:
         unsigned int* starting_states;
 public:
         Precomputed(curandState*, unsigned int, unsigned int);
-	__device__ inline double get(curandState*){ unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
-	                                       return starting_states[tid]; };
+	__device__ inline double get(curandState*) 
+        { 
+          unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
+	  return starting_states[tid]; 
+        };
 };
 
 Precomputed::Precomputed(curandState* state, 
@@ -82,7 +141,6 @@ Precomputed::Precomputed(curandState* state,
 	
 	starting_states = host_ss.data();
 }
-
 
 template<class MemoryAccess, class ComputePolicy>
 __device__ void initializeHistory(int &state, double &wt, int N,
@@ -217,7 +275,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         steps[threadIdx.x + i*blockDim.x] = curand_uniform_double(&local_state);
     */
     // Get initial state for this history by sampling from start_cdf
-    initializeHistory< MemoryAccess, ComputePolicy >(state,wt,N,start_cdf,start_wt,&local_state, initialize);
+    initializeHistory< MemoryAccess >(state,wt,N,start_cdf,start_wt,&local_state, initialize);
 
     //initializeHistory2< MemoryAccess >(state,wt,N,start_cdf,start_wt,steps[threadIdx.x]);
 
@@ -300,7 +358,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     curandState local_state = rng_state[tid];
  
     // Get initial state for this history by sampling from start_cdf
-    initializeHistory< MemoryAccess, ComputePolicy >(state,wt,N,start_cdf,start_wt,&local_state, initialize);
+    initializeHistory< MemoryAccess >(state,wt,N,start_cdf,start_wt,&local_state, initialize);
 
     //printf("Starting history in state %i with weight %7.3f\n",state,wt);
     if( state == -1 )
@@ -512,83 +570,55 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
     d_num_curand_calls++;
 
+    OnTheFly initialize;
+
     if( d_precompute_states == 0 )
     {
-            OnTheFly initialize;
-	    if( d_struct==0 )
-	    {
-		if( d_use_ldg==0 )
-		{
-		    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,H,P,W,
-				inds,offsets,coeffs,x_ptr,rng_states, initialize);
-		}
-		else
-		{
-		    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,H,P,W,
-				inds,offsets,coeffs,x_ptr,rng_states, initialize);
-		
-		}        
-	    }
-	    else
-	    {
-		if( d_use_ldg==0 )
-		{
-		    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,data_ptr,
-				offsets,coeffs,x_ptr,rng_states, initialize);
-		}
-		else{
-		    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,data_ptr,
-				offsets,coeffs,x_ptr,rng_states, initialize);
+            std::cout<<"Histories initialized on the fly"<<std::endl;
+//            dynamic_cast< OnTheFly* >(initialize);
+//            initialize = new(OnTheFly);
+    }
+    /*else
+    {
+            std::cout<<"Histories initialized with a precomputed approach"<<std::endl;
+            dynamic_cast< Precomputed* >(initialize);
+            *initialize = Precomputed( rng_states, num_blocks, BLOCK_SIZE );
+    }*/
+
+    if( d_struct==0 )
+    {
+	if( d_use_ldg==0 )
+	{
+	    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+			d_max_history_length, d_weight_cutoff, d_use_expected_value,
+			start_cdf_ptr,start_wt_ptr,H,P,W,
+			inds,offsets,coeffs,x_ptr,rng_states, initialize);
+	}
+	else
+	{
+	    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+			d_max_history_length, d_weight_cutoff, d_use_expected_value,
+			start_cdf_ptr,start_wt_ptr,H,P,W,
+			inds,offsets,coeffs,x_ptr,rng_states, initialize);
 	
-		}	        
-	    }
+	}        
     }
     else
     {
-            Precomputed initialize( rng_states, num_blocks, BLOCK_SIZE );
-	    if( d_struct==0 )
-	    {
-		if( d_use_ldg==0 )
-		{
-		    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,H,P,W,
-				inds,offsets,coeffs,x_ptr,rng_states, initialize);
-		}
-		else
-		{
-		    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,H,P,W,
-				inds,offsets,coeffs,x_ptr,rng_states, initialize);
-		
-		}        
-	    }
-	    else
-	    {
-		if( d_use_ldg==0 )
-		{
-		    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,data_ptr,
-				offsets,coeffs,x_ptr,rng_states, initialize);
-		}
-		else{
-		    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
-				d_max_history_length, d_weight_cutoff, d_use_expected_value,
-				start_cdf_ptr,start_wt_ptr,data_ptr,
-				offsets,coeffs,x_ptr,rng_states, initialize);
-	
-		}	        
-	    }            
+	if( d_use_ldg==0 )
+	{
+	    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+			d_max_history_length, d_weight_cutoff, d_use_expected_value,
+			start_cdf_ptr,start_wt_ptr,data_ptr,
+			offsets,coeffs,x_ptr,rng_states, initialize);
+	}
+	else{
+	    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
+			d_max_history_length, d_weight_cutoff, d_use_expected_value,
+			start_cdf_ptr,start_wt_ptr,data_ptr,
+			offsets,coeffs,x_ptr,rng_states, initialize);
+
+	}	                   
     }           
 
     // Check for errors in kernel launch
