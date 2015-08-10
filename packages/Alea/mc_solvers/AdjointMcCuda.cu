@@ -579,13 +579,13 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 		    	run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
 				d_max_history_length, d_weight_cutoff, d_use_expected_value,
 				start_cdf_ptr,start_wt_ptr,data_ptr,
-				offsets,coeffs,x_ptr,rng_states);
+				offsets,coeffs,x_ptr,rng_states, initialize);
 		}
 		else{
 		    	run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
 				d_max_history_length, d_weight_cutoff, d_use_expected_value,
 				start_cdf_ptr,start_wt_ptr,data_ptr,
-				offsets,coeffs,x_ptr,rng_states);
+				offsets,coeffs,x_ptr,rng_states, initialize);
 	
 		}	        
 	    }            
