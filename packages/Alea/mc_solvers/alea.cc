@@ -158,6 +158,7 @@ int main( int argc, char *argv[] )
     printf("  localL1CacheSupported:  %d\n", prop.localL1CacheSupported);
   }
 
+
     Kokkos::finalize();
     profugus::finalize();
     return 0;
