@@ -66,6 +66,23 @@ class AdjointMcCuda
     thrust::device_vector<device_row_data> mat_data;
 
     SEED_TYPE d_seed_type;
+
+
+    template <class InitializePolicy>
+    void launch_monte_carlo(int, int,
+    	int, double, bool,
+    	const double * const,
+        const double * const,
+    	const double *,
+    	const double *,
+    	const double *,
+    	const int *,
+    	device_row_data *,
+    	const int *,
+    	const double *,
+    	double *,
+    	curandState *);
+
 #endif
 
     // Vector length
