@@ -17,6 +17,11 @@
 #include <thrust/host_vector.h>
 #include <thrust/sequence.h>
 #include <thrust/generate.h>
+#include <thrust/sort.h>
+#endif
+
+#ifndef BATCH_INIT
+#define BATCH_INIT 10000
 #endif
 
 namespace alea
@@ -59,6 +64,56 @@ public:
       }
 };
 
+
+
+class OnTheFly
+{
+
+public: 
+       OnTheFly(curandState*, unsigned int, unsigned int){};
+        __device__ inline double get(curandState* rng_state)
+       {
+              double rand = curand_uniform_double(rng_state);	
+	      return rand;
+       };
+};
+
+
+__global__ inline void initial_state(curandState* state, double* ss)
+{
+	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+        if(tid < BATCH_INIT)
+		ss[tid] = curand_uniform_double(&state[tid]);
+}
+
+
+
+class Precomputed
+{
+
+private:
+        bool computed = false;
+        double* starting_states;
+public:
+        inline Precomputed(curandState*, unsigned int, unsigned int);
+	__device__ inline double get(curandState*)
+        { 
+          if( computed == false )
+            return -1;
+          unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
+	  return starting_states[tid%BATCH_INIT]; 
+        };
+};
+
+inline Precomputed::Precomputed(curandState* state, 
+	unsigned int num_blocks, unsigned int block_size):computed(true)
+{ 
+	thrust::device_vector< double > device_ss(BATCH_INIT);
+	thrust::device_ptr< double > dev_ptr = device_ss.data();
+	starting_states = thrust::raw_pointer_cast(dev_ptr);
+	initial_state<<<num_blocks, block_size>>>(state, starting_states);
+	thrust::sort( device_ss.begin(), device_ss.end() );
+}
 
 // lower_bound implementation that can be called from device
 template<class MemoryAccess>

@@ -17,9 +17,9 @@
 #include <thrust/binary_search.h>
 #include <thrust/generate.h>
 #include <thrust/random.h>
-#include <thrust/sort.h>
 
 #include "AdjointMcCuda.hh"
+#include "CudaTypeTraits.hh"
 #include "utils/String_Functions.hh"
 #include "harness/Warnings.hh"
 
@@ -39,55 +39,6 @@ namespace alea
  * \brief Initialize history into new state
  */
 //---------------------------------------------------------------------------//
-
-class OnTheFly
-{
-
-public: 
-       OnTheFly(curandState*, unsigned int, unsigned int){};
-        __device__ inline double get(curandState* rng_state)
-       {
-              double rand = curand_uniform_double(rng_state);	
-	      return rand;
-       };
-};
-
-
-__global__ void initial_state(curandState* state, double* ss)
-{
-	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	ss[tid] = curand_uniform_double(&state[tid]);
-}
-
-
-
-class Precomputed
-{
-
-private:
-        bool computed = false;
-        double* starting_states;
-public:
-        Precomputed(curandState*, unsigned int, unsigned int);
-	__device__ inline double get(curandState*)
-        { 
-          if( computed == false )
-            return;
-          unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
-	  return starting_states[tid]; 
-        };
-};
-
-Precomputed::Precomputed(curandState* state, 
-	unsigned int num_blocks, unsigned int block_size):computed(true)
-{ 
-	thrust::device_vector< double > device_ss(num_blocks * block_size);
-	thrust::device_ptr< double > dev_ptr = device_ss.data();
-	starting_states = thrust::raw_pointer_cast(dev_ptr);
-	initial_state<<<num_blocks, block_size>>>(state, starting_states);
-	thrust::sort( device_ss.begin(), device_ss.end() );
-}
-
 
 template<class MemoryAccess, class InitializePolicy>
 __device__ void initializeHistory(int &state, double &wt, int N,

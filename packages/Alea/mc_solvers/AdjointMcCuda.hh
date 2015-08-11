@@ -18,6 +18,7 @@
 #ifdef __CUDACC__
 #include <thrust/device_vector.h>
 #include "CudaUtils.hh"
+//#include "TypeTraits.hh"
 #endif
 
 namespace alea
