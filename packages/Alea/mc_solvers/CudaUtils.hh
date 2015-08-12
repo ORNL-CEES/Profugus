@@ -72,6 +72,7 @@ public:
               double rand = curand_uniform_double(rng_state);	
 	      return rand;
        };
+       inline void free_data(){};
 };
 
 
@@ -98,7 +99,7 @@ public:
           unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
 	  return starting_states[tid]; 
         };
-        ~Precomputed();
+        inline void free_data();
 };
 
 inline Precomputed::Precomputed(curandState* state, 
@@ -112,11 +113,13 @@ inline Precomputed::Precomputed(curandState* state,
 
         VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 	initial_state<<<num_blocks, block_size>>>(state, starting_states);
-	thrust::sort( starting_states, starting_states + block_size * num_blocks );
+
+        cudaDeviceSynchronize();
+	thrust::sort( starting_states, starting_states + (block_size * num_blocks) );
 }
 
 
-Precomputed::~Precomputed()
+inline void Precomputed::free_data()
 {		
 	cudaError e = cudaFree(starting_states);
         if( cudaSuccess != e )
