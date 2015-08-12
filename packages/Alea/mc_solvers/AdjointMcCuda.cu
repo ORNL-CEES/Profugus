@@ -488,7 +488,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     //int block_size = std::min(256,d_num_histories);
     VALIDATE( BLOCK_SIZE <= d_num_histories, 
           "Number of histories is smaller than the block size" );
-
+   
     int num_blocks     = d_initialize_batch / BLOCK_SIZE;
     int num_loops      = d_num_histories / ( BLOCK_SIZE * num_blocks );
 
@@ -514,10 +514,10 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     }
     else if ( d_seed_type==SEED_TYPE::DIFF )
     {
-        std::cout<<"Different adjacent seeds instantiated"<<std::
+        std::cout<<"Different adjacent seeds instantiated"<<std::endl;
 
  	DifferentSeed seed( BLOCK_SIZE*num_blocks, d_rng_seed );
-    	initialize_rng<DifferentSeed><<<num_blocks_rng, BLOCK_SIZE>>>(rng_states,  
+    	initialize_rng<DifferentSeed><<<num_blocks, BLOCK_SIZE>>>(rng_states,  
             d_num_curand_calls, seed);
     }
     else if ( d_seed_type==SEED_TYPE::RAND )
