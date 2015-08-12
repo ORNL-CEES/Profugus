@@ -100,6 +100,7 @@ class AdjointMcCuda
     bool      d_struct;
     bool      d_use_ldg;
     bool      d_precompute_states;
+    int       d_initialize_batch;
 
 
     enum VERBOSITY {NONE, LOW, HIGH};

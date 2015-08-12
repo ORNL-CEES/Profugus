@@ -327,7 +327,8 @@ AdjointMcCuda::AdjointMcCuda(
     d_struct             = pl->get("struct_matrix", 0);
     d_use_ldg            = pl->get("use_ldg", 0);
     d_precompute_states  = pl->get("precompute_states", 0);
-    std::string seed_type= pl->get("seed_type", std::string("same") );
+    d_initialize_batch   = pl->get("initialize_batch", d_num_histories);
+    std::string seed_type  = pl->get("seed_type", std::string("same"));
 
     VALIDATE( d_struct==0 || d_struct==1, 
             "Value for the flag to manage matrix data not valid" );
@@ -337,11 +338,20 @@ AdjointMcCuda::AdjointMcCuda(
             
     VALIDATE( d_precompute_states==0 || d_precompute_states==1, 
             "Value for the policy of computing states not valid" );                  
-
     VALIDATE( seed_type == std::string("same") 
               || seed_type == std::string("different")
               || seed_type == std::string("random"), 
               "Type of seed selected is not valid" );	
+
+    if( d_precompute_states == 0 )
+	d_initialize_batch = d_num_histories;
+
+    VALIDATE( d_initialize_batch <= d_num_histories, 
+              "Dim. of the batch to initialize histories must be smaller or equal to total nb. of histories" );
+
+    VALIDATE( d_num_histories % d_initialize_batch == 0,
+	      "Dim. of the batch to initialize histories must be a divisor of total nb. of histories" );
+
 
     if( seed_type.c_str()==std::string("same") )   
     	d_seed_type = SEED_TYPE::SAME;
@@ -479,7 +489,8 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     VALIDATE( BLOCK_SIZE <= d_num_histories, 
           "Number of histories is smaller than the block size" );
 
-    int num_blocks = d_num_histories / BLOCK_SIZE;
+    int num_blocks     = d_initialize_batch / BLOCK_SIZE;
+    int num_loops      = d_num_histories / ( BLOCK_SIZE * num_blocks );
 
     curandState *rng_states;
     cudaError e = cudaMalloc( (void **)&rng_states,
@@ -503,11 +514,10 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     }
     else if ( d_seed_type==SEED_TYPE::DIFF )
     {
-        std::cout<<"Different adjacent seeds instantiated"<<std::endl;
+        std::cout<<"Different adjacent seeds instantiated"<<std::
 
  	DifferentSeed seed( BLOCK_SIZE*num_blocks, d_rng_seed );
-    	
-    	initialize_rng<DifferentSeed><<<num_blocks, BLOCK_SIZE>>>(rng_states,  
+    	initialize_rng<DifferentSeed><<<num_blocks_rng, BLOCK_SIZE>>>(rng_states,  
             d_num_curand_calls, seed);
     }
     else if ( d_seed_type==SEED_TYPE::RAND )
@@ -515,7 +525,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         std::cout<<"Different random seeds instantiated from 0 to "<<
          RAND_MAX<<std::endl;
 
-    	RandomSeed seed( BLOCK_SIZE*num_blocks);
+    	RandomSeed seed( BLOCK_SIZE * num_blocks );
  
     	initialize_rng<RandomSeed><<<num_blocks, BLOCK_SIZE>>>(rng_states,
             d_num_curand_calls, seed);
@@ -527,22 +537,26 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
 
     VALIDATE(cudaSuccess==e,"Failed to initialize RNG");
-    d_num_curand_calls++;
 
-    if( d_precompute_states == 0 )
-        launch_monte_carlo< OnTheFly >(d_N,num_blocks,
-              d_max_history_length, d_weight_cutoff, d_use_expected_value,
-              start_cdf_ptr,start_wt_ptr,H,P,W,
-              inds,data_ptr,offsets,coeffs,x_ptr,rng_states);
-    else
-        launch_monte_carlo< Precomputed >(d_N,num_blocks,
-              d_max_history_length, d_weight_cutoff, d_use_expected_value,
-              start_cdf_ptr,start_wt_ptr,H,P,W,
-              inds,data_ptr,offsets,coeffs,x_ptr,rng_states);
+    for(int count=0; count < num_loops; ++count)
+    {
+	if( d_precompute_states == 0 )
+        	launch_monte_carlo< OnTheFly >(d_N,num_blocks,
+              	 d_max_history_length, d_weight_cutoff, d_use_expected_value,
+              	 start_cdf_ptr,start_wt_ptr,H,P,W,
+              	 inds,data_ptr,offsets,coeffs,x_ptr,rng_states);
+    	else
+        	launch_monte_carlo< Precomputed >(d_N,num_blocks,
+              	 d_max_history_length, d_weight_cutoff, d_use_expected_value,
+              	 start_cdf_ptr,start_wt_ptr,H,P,W,
+             	 inds,data_ptr,offsets,coeffs,x_ptr,rng_states);
+
+        d_num_curand_calls++;
+    }
 
     // Scale by history count
     for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
-        *itr /= static_cast<double>( num_blocks * BLOCK_SIZE );
+        *itr /= static_cast<double>( num_blocks * BLOCK_SIZE * num_loops );
 
     // Copy data back to host
     {
