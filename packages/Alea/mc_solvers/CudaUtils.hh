@@ -98,16 +98,31 @@ public:
           unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x; 
 	  return starting_states[tid]; 
         };
+        ~Precomputed();
 };
 
 inline Precomputed::Precomputed(curandState* state, 
 	unsigned int num_blocks, unsigned int block_size):computed(true)
 { 
-	thrust::device_vector< double > device_ss( num_blocks * block_size );
-	thrust::device_ptr< double > dev_ptr = device_ss.data();
-	starting_states = thrust::raw_pointer_cast(dev_ptr);
+        cudaError e = cudaMalloc( (void **)&starting_states,
+           block_size * num_blocks * sizeof(double) );
+
+        if( cudaSuccess != e )
+           std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+        VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 	initial_state<<<num_blocks, block_size>>>(state, starting_states);
-	thrust::sort( device_ss.begin(), device_ss.end() );
+	thrust::sort( starting_states, starting_states + block_size * num_blocks );
+}
+
+
+Precomputed::~Precomputed()
+{		
+	cudaError e = cudaFree(starting_states);
+        if( cudaSuccess != e )
+           std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+        VALIDATE(cudaSuccess==e,"Failed to deallocate memory");
 }
 
 // lower_bound implementation that can be called from device

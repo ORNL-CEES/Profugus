@@ -551,11 +551,11 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
               	 start_cdf_ptr,start_wt_ptr,H,P,W,
              	 inds,data_ptr,offsets,coeffs,x_ptr,rng_states);
 
-        d_num_curand_calls++;
+       d_num_curand_calls++;
     }
 
     // Scale by history count
-    for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
+    for( auto itr = x_vec.begin(); itr != x_vec.end(); ++itr )
         *itr /= static_cast<double>( num_blocks * BLOCK_SIZE * num_loops );
 
     // Copy data back to host
