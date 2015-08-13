@@ -344,6 +344,14 @@ AdjointMcCuda::AdjointMcCuda(
               || seed_type == std::string("random"), 
               "Type of seed selected is not valid" );	
 
+    int device_count = -1; 
+
+    cudaError e = cudaGetDeviceCount( &device_count );
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+    VALIDATE(d_device_number <= device_count, 
+            "The number of the device inserted exceeds the set of devices available");
+
     if( d_precompute_states == 0 )
 	d_initialize_batch = d_num_histories;
 
@@ -383,7 +391,7 @@ AdjointMcCuda::AdjointMcCuda(
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
 
-    cudaError e = cudaSetDevice( d_device_number );
+    e = cudaSetDevice( d_device_number );
     if( cudaSuccess != e )
         std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
 }
@@ -405,6 +413,7 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
      curandState * rng_states)
 {
 
+//    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
     InitializePolicy initialize( rng_states, num_blocks,  BLOCK_SIZE );
 
     if( d_struct==0 )

@@ -325,6 +325,14 @@ ForwardMcCuda::ForwardMcCuda(
               || seed_type == std::string("random"), 
               "Type of seed selected is not valid" );	
 
+    int device_count = -1; 
+    cudaError e = cudaGetDeviceCount( &device_count );
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+    VALIDATE(d_device_number <= device_count, 
+            "The number of the device inserted exceeds the set of devices available");
+
     if( seed_type.c_str()==std::string("same") )   
     	d_seed_type = SEED_TYPE::SAME;
     else if( seed_type.c_str()==std::string("different") )
@@ -353,7 +361,7 @@ ForwardMcCuda::ForwardMcCuda(
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
 
-    cudaError e = cudaSetDevice( d_device_number );
+    e = cudaSetDevice( d_device_number );
     if( cudaSuccess != e )
         std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
     
