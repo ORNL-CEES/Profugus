@@ -413,7 +413,7 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
      curandState * rng_states)
 {
 
-//    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
+    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
     InitializePolicy initialize( rng_states, num_blocks,  BLOCK_SIZE );
 
     if( d_struct==0 )
@@ -453,7 +453,6 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
 
         }	                   
     }          
-//    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
     cudaDeviceSynchronize(); 
     initialize.free_data();
 }
