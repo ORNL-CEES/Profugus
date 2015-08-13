@@ -308,6 +308,7 @@ ForwardMcCuda::ForwardMcCuda(
     d_weight_cutoff        = pl->get("weight_cutoff",0.0);
     d_struct               = pl->get("struct_matrix", 0);
     d_use_ldg              = pl->get("use_ldg", 0);
+    d_device_number        = pl->get("device_number", 0);
     d_use_thread_per_entry = pl->get("thread_per_entry",0);
     std::string seed_type  = pl->get("seed_type", std::string("same"));
 
@@ -351,6 +352,10 @@ ForwardMcCuda::ForwardMcCuda(
 
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
+
+    cudaError e = cudaSetDevice( d_device_number );
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
     
 }
 

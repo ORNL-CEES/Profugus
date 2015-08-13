@@ -107,15 +107,16 @@ inline Precomputed::Precomputed(curandState* state,
 { 
         cudaError e = cudaMalloc( (void **)&starting_states,
            block_size * num_blocks * sizeof(double) );
-
         if( cudaSuccess != e )
            std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
+	thrust::device_ptr< double > dev_ptr( starting_states );
 
         VALIDATE(cudaSuccess==e,"Failed to allocate memory");
 	initial_state<<<num_blocks, block_size>>>(state, starting_states);
 
-        cudaDeviceSynchronize();
-	thrust::sort( starting_states, starting_states + (block_size * num_blocks) );
+        //cudaDeviceSynchronize();
+	thrust::sort( dev_ptr, dev_ptr + (block_size * num_blocks) );
 }
 
 

@@ -99,6 +99,7 @@ class AdjointMcCuda
     double    d_weight_cutoff;
     bool      d_struct;
     bool      d_use_ldg;
+    int       d_device_number;
     bool      d_precompute_states;
     int       d_initialize_batch;
 

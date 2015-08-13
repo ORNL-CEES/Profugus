@@ -326,6 +326,7 @@ AdjointMcCuda::AdjointMcCuda(
     d_weight_cutoff      = pl->get("weight_cutoff",0.0);
     d_struct             = pl->get("struct_matrix", 0);
     d_use_ldg            = pl->get("use_ldg", 0);
+    d_device_number      = pl->get("device_number", 0);
     d_precompute_states  = pl->get("precompute_states", 0);
     d_initialize_batch   = pl->get("initialize_batch", d_num_histories);
     std::string seed_type  = pl->get("seed_type", std::string("same"));
@@ -381,6 +382,10 @@ AdjointMcCuda::AdjointMcCuda(
 
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
+
+    cudaError e = cudaSetDevice( d_device_number );
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
 }
 
 
@@ -400,9 +405,7 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
      curandState * rng_states)
 {
 
-    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
     InitializePolicy initialize( rng_states, num_blocks,  BLOCK_SIZE );
-    cudaDeviceSynchronize(); 
 
     if( d_struct==0 )
     {
@@ -441,6 +444,7 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
 
         }	                   
     }          
+//    cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
     cudaDeviceSynchronize(); 
     initialize.free_data();
 }

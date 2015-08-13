@@ -73,6 +73,7 @@ class ForwardMcCuda
     double    d_weight_cutoff;
     bool      d_struct;
     bool      d_use_ldg;
+    int       d_device_number;
     bool      d_use_thread_per_entry;
 
     enum VERBOSITY {NONE, LOW, HIGH};
