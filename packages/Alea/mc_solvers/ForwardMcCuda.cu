@@ -356,15 +356,15 @@ ForwardMcCuda::ForwardMcCuda(
     else if( verb == "high" )
         d_verbosity = HIGH;
 
+    e = cudaSetDevice( d_device_number );
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
     prepareDeviceData(mc_data,coeffs);
 
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
-
-    e = cudaSetDevice( d_device_number );
-    if( cudaSuccess != e )
-        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
-    
+ 
 }
 
 //---------------------------------------------------------------------------//
