@@ -386,14 +386,16 @@ AdjointMcCuda::AdjointMcCuda(
     else if( verb == "high" )
         d_verbosity = HIGH;
 
+    e = cudaSetDevice( d_device_number );
+    if( cudaSuccess != e )
+        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+
     prepareDeviceData(mc_data,coeffs);
 
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
 
-    e = cudaSetDevice( d_device_number );
-    if( cudaSuccess != e )
-        std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
+    std::cout<<"Number of device called: "<<d_device_number<<std::endl;
 }
 
 
@@ -410,7 +412,8 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
      const int * const offsets,
      const double * const coeffs,
      double * x_ptr,
-     curandState * rng_states)
+     curandState * rng_states,
+     double &time                )
 {
 
     //cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
@@ -454,6 +457,10 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
         }	                   
     }          
     cudaDeviceSynchronize(); 
+ 
+    if ( is_precomputed< Precomputed >::value )
+    	time = initialize.getSortTime();
+
     initialize.free_data();
 }
 
@@ -505,6 +512,11 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
    
     int num_blocks     = d_initialize_batch / BLOCK_SIZE;
     int num_loops      = d_num_histories / ( BLOCK_SIZE * num_blocks );
+
+    double time = 0;
+    double cumulate_time = 0;
+
+    std::cout<<"Number of loops: "<<num_loops<<std::endl;	
 
     curandState *rng_states;
     cudaError e = cudaMalloc( (void **)&rng_states,
@@ -558,15 +570,23 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         	launch_monte_carlo< OnTheFly >(d_N,num_blocks,
               	 d_max_history_length, d_weight_cutoff, d_use_expected_value,
               	 start_cdf_ptr,start_wt_ptr,H,P,W,
-              	 inds,data_ptr,offsets,coeffs,x_ptr,rng_states);
+              	 inds,data_ptr,offsets,coeffs,x_ptr,rng_states,time);
+
     	else
+        {
         	launch_monte_carlo< Precomputed >(d_N,num_blocks,
               	 d_max_history_length, d_weight_cutoff, d_use_expected_value,
               	 start_cdf_ptr,start_wt_ptr,H,P,W,
-             	 inds,data_ptr,offsets,coeffs,x_ptr,rng_states);
+             	 inds,data_ptr,offsets,coeffs,x_ptr,rng_states,time);
 
+                cumulate_time += time;
+        }
+ 
        d_num_curand_calls++;
+       
     }
+    if( d_precompute_states == 1 )
+      	 std::cout<<"Time spent on the sorting: "<< cumulate_time <<"milliseconds"<<std::endl;
 
     // Scale by history count
     for( auto itr = x_vec.begin(); itr != x_vec.end(); ++itr )

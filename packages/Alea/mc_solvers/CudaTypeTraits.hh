@@ -16,18 +16,18 @@ namespace alea{
 
 
 template <typename T>
-struct is_onthefly {
+struct is_precomputed {
   static const bool value = false;
 };
  
 template <>
-struct is_onthefly<OnTheFly> {
+struct is_precomputed<OnTheFly> {
+  static const bool value = false;
+};
+ 
+template <>
+struct is_precomputed<Precomputed> {
   static const bool value = true;
-};
- 
-template <>
-struct is_onthefly<Precomputed> {
-  static const bool value = false;
 };
 
 

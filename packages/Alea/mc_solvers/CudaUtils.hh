@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <ctime>
+#include <chrono>
 
 #ifdef __CUDACC__
 #include <thrust/device_vector.h>
@@ -19,6 +20,10 @@
 #include <thrust/generate.h>
 #include <thrust/sort.h>
 #endif
+
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
 
 namespace alea
 {
@@ -67,6 +72,7 @@ class OnTheFly
 
 public: 
        OnTheFly(curandState*, unsigned int, unsigned int){};
+       inline double getSortTime(){return 0.0;};
         __device__ inline double get(curandState* rng_state)
        {
               double rand = curand_uniform_double(rng_state);	
@@ -90,8 +96,13 @@ class Precomputed
 private:
         bool computed = false;
         double* starting_states;
+        double cumulative_time = 0;
+        high_resolution_clock::time_point time_start =
+            high_resolution_clock::now();
+        high_resolution_clock::time_point time_end;
 public:
         inline Precomputed(curandState*, unsigned int, unsigned int);
+        inline double getSortTime();
 	__device__ inline double get(curandState*)
         { 
           if( computed == false )
@@ -116,7 +127,11 @@ inline Precomputed::Precomputed(curandState* state,
 	initial_state<<<num_blocks, block_size>>>(state, starting_states);
 
         //cudaDeviceSynchronize();
+        time_start = high_resolution_clock::now();
 	thrust::sort( dev_ptr, dev_ptr + (block_size * num_blocks) );
+        time_end = high_resolution_clock::now();
+
+        cumulative_time = duration_cast<milliseconds>(time_end-time_start).count();
 }
 
 
@@ -127,6 +142,12 @@ inline void Precomputed::free_data()
            std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
 
         VALIDATE(cudaSuccess==e,"Failed to deallocate memory");
+}
+
+
+inline double Precomputed::getSortTime()
+{
+	return cumulative_time;
 }
 
 // lower_bound implementation that can be called from device
