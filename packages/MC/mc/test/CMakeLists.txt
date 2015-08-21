@@ -41,6 +41,10 @@ ADD_UTILS_TEST(tstFission_Source.cc      NP 1 2 4 DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstUniform_Source.cc      NP 1 2 4 DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstFixed_Source_Solver.cc          DEPLIBS mc_test_lib)
 
+IF (${PROJECT_NAME}_ENABLE_OpenMP)
+  ADD_UTILS_TEST(tstOMP.cc NP 1 2 4)
+ENDIF()
+
 ##---------------------------------------------------------------------------##
 ## FILES
 ##---------------------------------------------------------------------------##

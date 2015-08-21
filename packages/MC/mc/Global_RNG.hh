@@ -36,6 +36,7 @@ class Global_RNG
 
     //! RNG available to entire domain.
     static RNG_t d_rng;
+#pragma omp threadprivate(d_rng)
 };
 
 } // end namespace profugus
