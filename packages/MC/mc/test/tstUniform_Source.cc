@@ -185,14 +185,14 @@ TEST_F(UniformSourceTest, multithread)
 #pragma omp parallel
     {
         int id = profugus::thread_id();
-         
+
         EXPECT_EQ(50, source.num_to_transport());
 
         if (id == 0 || id == 1)
         {
             EXPECT_EQ(13, source.num_left());
         }
-            
+
         if (id == 2 || id == 3)
         {
             EXPECT_EQ(12, source.num_left());
@@ -215,12 +215,12 @@ TEST_F(UniformSourceTest, multithread)
 
             EXPECT_EQ(id, rng.get_num());
         }
-        
+
         if (id == 0 || id == 1)
         {
             EXPECT_EQ(13, ctr);
         }
-        
+
         if (id == 2 || id == 3)
         {
             EXPECT_EQ(12, ctr);
