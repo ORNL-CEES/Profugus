@@ -152,5 +152,82 @@ TEST_F(UniformSourceTest, build_and_run)
 }
 
 //---------------------------------------------------------------------------//
+
+TEST_F(UniformSourceTest, multithread)
+{
+    if (!profugus::multithreading_available())
+    {
+        SKIP_TEST("Multithreading unavailable in this build.");
+    }
+
+    // Only run this test on 1 pe
+    if (nodes != 1)
+    {
+        SKIP_TEST("This is a 1 processor test.");
+    }
+
+    // Set test to 4 threads
+    profugus::set_num_threads(4);
+
+    // Set particles
+    b_db->set("Np", 50);
+
+    // make a uniform source
+    Source source(b_db, b_geometry, b_physics, b_rcon);
+
+    // make a sampling shape (uniform)
+    SP_Shape box(std::make_shared<profugus::Box_Shape>(
+                     0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
+
+    // build the source
+    source.build_source(box);
+
+#pragma omp parallel
+    {
+        int id = profugus::thread_id();
+         
+        EXPECT_EQ(50, source.num_to_transport());
+
+        if (id == 0 || id == 1)
+        {
+            EXPECT_EQ(13, source.num_left());
+        }
+            
+        if (id == 2 || id == 3)
+        {
+            EXPECT_EQ(12, source.num_left());
+        }
+
+        // sample source particles
+        int ctr = 0;
+        while (!source.empty())
+        {
+            // get a particle
+            SP_Particle p = source.get_particle();
+
+            ctr++;
+
+            EXPECT_TRUE(p->alive());
+            EXPECT_EQ(1.0, p->wt());
+            EXPECT_EQ(3, p->matid());
+
+            const auto &rng = p->rng();
+
+            EXPECT_EQ(id, rng.get_num());
+        }
+        
+        if (id == 0 || id == 1)
+        {
+            EXPECT_EQ(13, ctr);
+        }
+        
+        if (id == 2 || id == 3)
+        {
+            EXPECT_EQ(12, ctr);
+        }
+    }
+}
+
+//---------------------------------------------------------------------------//
 //                 end of tstUniform_Source.cc
 //---------------------------------------------------------------------------//

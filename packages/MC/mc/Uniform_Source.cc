@@ -24,6 +24,13 @@ namespace profugus
 {
 
 //---------------------------------------------------------------------------//
+// STATIC VARIABLES
+//---------------------------------------------------------------------------//
+
+Source::size_type Uniform_Source::d_np_left = 0;
+Source::size_type Uniform_Source::d_np_run  = 0;
+
+//---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 /*!
@@ -44,8 +51,6 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     , d_np_total(0)
     , d_np_domain(0)
     , d_wt(1.0)
-    , d_np_left(0)
-    , d_np_run(0)
 {
     REQUIRE(!db.is_null());
 
@@ -111,6 +116,23 @@ void Uniform_Source::build_source(SP_Shape geometric_shape)
     // set counters
     d_np_left = d_np_domain;
     d_np_run  = 0;
+
+#pragma omp parallel copyin(d_np_left, d_np_run)
+    {
+        // store number of threads in the team and thread id
+        int nt = num_current_threads();
+        int id = thread_id();
+
+        // extra particles
+        int extra = d_np_left % nt;
+
+        // base number of particles per thread
+        d_np_left = d_np_left / nt;
+
+        // add extra to threads
+        if (id < extra)
+            ++d_np_left;
+    }
 
     profugus::global_barrier();
 }

@@ -46,6 +46,10 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
 {
     using def::I; using def::J; using def::K;
 
+    VALIDATE(num_available_threads() == 1, "Fission source is not implemented "
+             << "for multithreading; number of threads = "
+             << num_available_threads());
+
     REQUIRE(b_geometry);
     REQUIRE(b_physics);
     REQUIRE(b_rng_control);

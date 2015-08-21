@@ -114,11 +114,18 @@ class Uniform_Source : public Source
     // Particle weight.
     double d_wt;
 
-    // Number of source particles left in the current domain.
-    size_type d_np_left;
+    // Number of source particles left in the current domain (thread).
+    static size_type d_np_left;
 
-    // Number of particles run on the current domain.
-    size_type d_np_run;
+    // Number of particles run on the current domain (thread).
+    static size_type d_np_run;
+
+    // Thread variables.
+#pragma omp threadprivate(d_np_run)
+#pragma omp threadprivate(d_np_left)
+
+    // Enforce singleton due to threading.
+    static int d_number;
 };
 
 } // end namespace profugus

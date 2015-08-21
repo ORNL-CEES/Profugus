@@ -53,17 +53,30 @@ Source::~Source()
  */
 void Source::make_RNG()
 {
+    REQUIRE(!is_threading_dynamic());
+
     // calculate offsets for generating random numbers on each processor (so
     // we don't use the same rng streams)
 
     // we use the same RNG for every particle in the cycle, each cycle a new
     // RNG is generated on each domain
 
-    // make the random number generator on this domain for this cycle
-    profugus::Global_RNG::d_rng = b_rng_control->rng(d_rng_stream + b_node);
+    // when threading is on, allocate unique-threadprivate rng for each thread
+
+#pragma omp parallel
+    {
+        // global random number id
+        int id = thread_id() + num_current_threads() * b_node;
+
+#pragma omp critical
+        {
+            // make the random number generator on this domain for this cycle
+            profugus::Global_RNG::d_rng = b_rng_control->rng(d_rng_stream + id);
+        }
+    }
 
     // advance to the next set of streams
-    d_rng_stream += b_nodes;
+    d_rng_stream += b_nodes * num_available_threads();
 
     ENSURE(profugus::Global_RNG::d_rng.assigned());
 }
