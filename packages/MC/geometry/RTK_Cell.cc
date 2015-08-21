@@ -672,7 +672,7 @@ int RTK_Cell::region(double x,
     }
 
     // calculate rp
-    register double rp2 = x*x + y*y;
+    double rp2 = x*x + y*y;
 
     // loop through shells to find the containing shell
     for (int n = 0; n < d_num_shells; ++n)

@@ -181,8 +181,8 @@ void Physics::collide(Particle_t &particle,
     int group = particle.group();
 
     // calculate the scattering cross section ratio
-    register double c = d_scatter[d_mid2l[d_matid]][group] /
-                        d_mat->vector(d_matid, XS_t::TOTAL)[group];
+    double c = d_scatter[d_mid2l[d_matid]][group] /
+               d_mat->vector(d_matid, XS_t::TOTAL)[group];
     CHECK(!d_implicit_capture ? c <= 1.0 : c >= 0.0);
 
     // we need to do analog transport if the particle is c = 0.0 regardless of
