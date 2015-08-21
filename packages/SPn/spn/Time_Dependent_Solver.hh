@@ -77,7 +77,7 @@ class Time_Dependent_Solver : public Solver_Base_Tmpl<T>
 
     // Set up the solver.
     void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,
-               RCP_Indexer indexer, RCP_Global_Data data);
+               RCP_Indexer indexer, RCP_Global_Data data, bool adjoint = false);
 
     // Solve the SPN equations.
     void solve(Teuchos::RCP<const External_Source> q);

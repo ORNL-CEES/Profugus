@@ -76,7 +76,7 @@ inline double dot_product(const def::Space_Vector &v,
  */
 inline void vector_normalize(def::Space_Vector &vector)
 {
-    double norm = 1.0 / vector_magnitude(vector);
+    double norm     = 1.0 / vector_magnitude(vector);
     vector[def::X] *= norm;
     vector[def::Y] *= norm;
     vector[def::Z] *= norm;

@@ -14,12 +14,38 @@ namespace profugus
 {
 
 //---------------------------------------------------------------------------//
-// DESTRUCTOR
+// TALLY BASE CLASS
 //---------------------------------------------------------------------------//
 /*!
  * \brief Pure virtual destructor definition.
  */
 Tally::~Tally()
+{
+}
+
+//---------------------------------------------------------------------------//
+// TALLY DERIVED CLASSES
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Pure virtual destructor definition.
+ */
+Source_Tally::~Source_Tally()
+{
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Pure virtual destructor definition.
+ */
+Pathlength_Tally::~Pathlength_Tally()
+{
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Pure virtual destructor definition.
+ */
+Compound_Tally::~Compound_Tally()
 {
 }
 

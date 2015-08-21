@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/mc.cc
+ * \file   spn_driver/spn.cc
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:24:55 2014
  * \brief  SPn Mini-App executable.
@@ -19,6 +19,9 @@
 #include "comm/P_Stream.hh"
 #include "utils/Definitions.hh"
 #include "Manager.hh"
+#include "SPn/config.h"
+
+#include <Teuchos_TimeMonitor.hpp>
 
 // Parallel specs.
 int node  = 0;
@@ -31,8 +34,8 @@ void print_usage()
 {
     if (node == 0)
     {
-        std::cout << "Usage: xmc -i XMLFILE" << std::endl;
-        std::cout << "Executes the xmc executable using XMLFILE "
+        std::cout << "Usage: xspn -i XMLFILE" << std::endl;
+        std::cout << "Executes the xspn executable using XMLFILE "
                   << "as the input file." << std::endl;
         exit(1);
     }
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
     nodes = profugus::nodes();
 
     profugus::pcout << "=======================================\n"
-                    << "    Profugus MC Mini-APP               \n"
+                    << "    Profugus SPN Mini-APP              \n"
                     << "    (C) ORNL, Battelle, 2014           \n"
                     << "=======================================\n"
                     << profugus::endl;
@@ -111,7 +114,7 @@ int main(int argc, char *argv[])
     try
     {
         // make the manager
-        mc::Manager manager;
+        spn::Manager manager;
 
         // setup the problem
         manager.setup(xml_file);
@@ -148,12 +151,19 @@ int main(int argc, char *argv[])
     profugus::pcout << "\n" << "Total execution time : "
                     << profugus::scientific
                     << profugus::setprecision(4)
-                    << total << " seconds." << profugus::endl;
+                    << total << " seconds." << profugus::endl << profugus::endl;
+
+#ifdef USE_TRILINOS_TIMING
+    // output final timing from trilinos components
+    Teuchos::TableFormat &format = Teuchos::TimeMonitor::format();
+    format.setPrecision(5);
+    Teuchos::TimeMonitor::summarize();
+#endif
 
     profugus::finalize();
     return 0;
 }
 
 //---------------------------------------------------------------------------//
-//                 end of mc.cc
+//                 end of spn.cc
 //---------------------------------------------------------------------------//

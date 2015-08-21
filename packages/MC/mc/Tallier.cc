@@ -20,6 +20,51 @@ namespace profugus
 {
 
 //---------------------------------------------------------------------------//
+// PRIVATE TEMPLATE IMPLEMENTATION
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Prune added tallies for doubles.
+ */
+template<class Vec_T>
+void Tallier::prune(Vec_T &tallies)
+{
+    // sort the tally container based on the tally name
+    auto sort_f = [](const SP_Tally &a, const SP_Tally &b)
+                  { return a->name() < b->name(); };
+    std::sort(tallies.begin(), tallies.end(), sort_f);
+
+    // make a new tally container
+    Vec_T new_tallies;
+
+    // define a place-holder for the "previous tally" to use to check for
+    // duplicates
+    typename Vec_T::value_type prev_tally;
+    CHECK(!prev_tally);
+
+    // iterate through tallies and remove duplicates
+    for (const auto &t : tallies)
+    {
+        CHECK(t);
+
+        // if this is a dublicate, continue
+        if (t == prev_tally)
+            continue;
+
+        // add the tally
+        new_tallies.push_back(t);
+
+        // update the previous tally
+        prev_tally = t;
+    }
+    CHECK(new_tallies.size() <= tallies.size());
+    REMEMBER(int size = new_tallies.size());
+
+    // swap the new_tallies with the tallies
+    tallies.swap(new_tallies);
+    ENSURE(tallies.size() == size);
+}
+
+//---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 /*!
@@ -59,7 +104,7 @@ void Tallier::set(SP_Geometry geometry,
 /*!
  * \brief Add a pathlength tally.
  */
-void Tallier::add_pathlength_tally(SP_Tally tally)
+void Tallier::add_pathlength_tally(SP_Pathlength_Tally tally)
 {
     REQUIRE(tally);
     REQUIRE(d_build_phase < BUILT);
@@ -72,13 +117,30 @@ void Tallier::add_pathlength_tally(SP_Tally tally)
 /*!
  * \brief Add a source tally.
  */
-void Tallier::add_source_tally(SP_Tally tally)
+void Tallier::add_source_tally(SP_Source_Tally tally)
 {
     REQUIRE(tally);
     REQUIRE(d_build_phase < BUILT);
 
     // add the tally
     d_src.push_back(tally);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Add a compound tally.
+ */
+void Tallier::add_compound_tally(SP_Compound_Tally tally)
+{
+    REQUIRE(tally);
+    REQUIRE(d_build_phase < BUILT);
+
+    // add the compound tally
+    d_comp.push_back(tally);
+
+    // add the source and pathlength tallies owned by the compound tally
+    add_source_tally(tally->get_src_tally());
+    add_pathlength_tally(tally->get_pl_tally());
 }
 
 //---------------------------------------------------------------------------//
@@ -93,11 +155,14 @@ void Tallier::build()
     // prune the tallies for duplicates
     prune(d_pl);
     prune(d_src);
+    prune(d_comp);
 
-    // add pathlength and source tallies to the "totals"
+    // add pathlength, source, and compound tallies to the "totals"
     d_tallies.insert(d_tallies.end(), d_pl.begin(), d_pl.end());
     d_tallies.insert(d_tallies.end(), d_src.begin(), d_src.end());
-    CHECK(num_tallies() == num_source_tallies() + num_pathlength_tallies());
+    d_tallies.insert(d_tallies.end(), d_comp.begin(), d_comp.end());
+    CHECK(num_tallies() == num_source_tallies() + num_pathlength_tallies() +
+          num_compound_tallies());
 
     // Set the build phase
     d_build_phase = BUILT;
@@ -298,6 +363,7 @@ void Tallier::swap(Tallier &rhs)
     // swap vector internals
     d_pl.swap(rhs.d_pl);
     d_src.swap(rhs.d_src);
+    d_comp.swap(rhs.d_comp);
     d_tallies.swap(rhs.d_tallies);
 
     // swap geometry and physics
@@ -306,50 +372,6 @@ void Tallier::swap(Tallier &rhs)
 
     // swap build phase
     std::swap(d_build_phase, rhs.d_build_phase);
-}
-
-//---------------------------------------------------------------------------//
-// IMPLEMENTATION
-//---------------------------------------------------------------------------//
-/*!
- * \brief Prune added tallies for doubles.
- */
-void Tallier::prune(Vec_Tallies &tallies)
-{
-    // sort the tally container based on the tally name
-    auto sort_f = [](const SP_Tally &a, const SP_Tally &b)
-                  { return a->name() < b->name(); };
-    std::sort(tallies.begin(), tallies.end(), sort_f);
-
-    // make a new tally container
-    Vec_Tallies new_tallies;
-
-    // define a place-holder for the "previous tally" to use to check for
-    // duplicates
-    SP_Tally prev_tally;
-    CHECK(!prev_tally);
-
-    // iterate through tallies and remove duplicates
-    for (const auto &t : tallies)
-    {
-        CHECK(t);
-
-        // if this is a dublicate, continue
-        if (t == prev_tally)
-            continue;
-
-        // add the tally
-        new_tallies.push_back(t);
-
-        // update the previous tally
-        prev_tally = t;
-    }
-    CHECK(new_tallies.size() <= tallies.size());
-    REMEMBER(int size = new_tallies.size());
-
-    // swap the new_tallies with the tallies
-    tallies.swap(new_tallies);
-    ENSURE(tallies.size() == size);
 }
 
 } // end namespace profugus

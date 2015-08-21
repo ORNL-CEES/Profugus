@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/Manager.hh
+ * \file   mc_driver/Manager.hh
  * \author Thomas M>. Evans
  * \date   Wed Jun 18 11:21:16 2014
  * \brief  Manager class definition.
@@ -8,16 +8,16 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef driver_Manager_hh
-#define driver_Manager_hh
+#ifndef mc_driver_Manager_hh
+#define mc_driver_Manager_hh
 
 #include <sstream>
 #include <string>
 #include <memory>
 
 #include "comm/P_Stream.hh"
-#include "mc/KCode_Solver.hh"
 #include "mc/Fixed_Source_Solver.hh"
+#include "mc/Keff_Solver.hh"
 #include "mc/Global_RNG.hh"
 #include "mc/Source_Transporter.hh"
 #include "Problem_Builder.hh"
@@ -41,8 +41,8 @@ class Manager
     typedef Problem_Builder::SP_Geometry           SP_Geometry;
     typedef profugus::Solver                       Solver_t;
     typedef std::shared_ptr<Solver_t>              SP_Solver;
-    typedef profugus::KCode_Solver                 KCode_Solver_t;
-    typedef std::shared_ptr<KCode_Solver_t>        SP_KCode_Solver;
+    typedef profugus::Keff_Solver                  Keff_Solver_t;
+    typedef std::shared_ptr<Keff_Solver_t>         SP_Keff_Solver;
     typedef profugus::Fixed_Source_Solver          Fixed_Source_Solver_t;
     typedef std::shared_ptr<Fixed_Source_Solver_t> SP_Fixed_Source_Solver;
     typedef Solver_t::Tallier_t                    Tallier_t;
@@ -65,7 +65,7 @@ class Manager
 
     // Solvers.
     SP_Solver              d_solver;
-    SP_KCode_Solver        d_kcode_solver;
+    SP_Keff_Solver         d_keff_solver;
     SP_Fixed_Source_Solver d_fixed_solver;
 
     // Random number controller.
@@ -87,6 +87,12 @@ class Manager
   private:
     // >>> IMPLEMENTATION
 
+    typedef Keff_Solver_t::SP_Fission_Source SP_Fission_Source;
+
+    // Build an Anderson solver.
+    template<class T>
+    void build_anderson(SP_Transporter transporter, SP_Fission_Source source);
+
     // Processor.
     int d_node, d_nodes;
 
@@ -105,7 +111,7 @@ class Manager
 
 } // end namespace mc
 
-#endif // driver_Manager_hh
+#endif // mc_driver_Manager_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Manager.hh

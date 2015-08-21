@@ -15,6 +15,7 @@
 #include <string>
 
 #include "Physics.hh"
+#include "Definitions.hh"
 #include "harness/DBC.hh"
 
 namespace profugus
@@ -46,12 +47,16 @@ class Tally
     // Tally name.
     std::string b_name;
 
+    // Is this on during inactive cycles?
+    bool b_inactive;
+
   public:
     //! Constructor.
-    Tally(SP_Physics physics)
-        : b_physics(physics), b_name("tally")
+    Tally(SP_Physics physics, bool inactive)
+        : b_physics(physics)
+        , b_inactive(inactive)
     {
-        ENSURE(b_physics);
+        REQUIRE(b_physics);
     }
 
     // Destructor.
@@ -63,19 +68,16 @@ class Tally
     //! Get the tally name.
     const std::string& name() const { return b_name; }
 
+    //! Query if this tally is on during inactive cycles.
+    bool inactive_cycle_tally() const { return b_inactive; }
+
     // >>> PUBLIC INTERFACE
 
-    //! Tally events at particle birth.
-    virtual void birth(const Particle_t &p) = 0;
-
-    //! Track particle, using pre-calculated physics information (multipliers)
-    virtual void accumulate(double step, const Particle_t &p) = 0;
-
     //! Accumulate first and second moments
-    virtual void end_history() = 0;
+    virtual void end_history() { /* * */ }
 
     //! Do post-processing on first and second moments
-    virtual void finalize(double num_particles) = 0;
+    virtual void finalize(double num_particles) { /* * */ }
 
     //! Begin active cycles in a kcode calculation (default no-op)
     virtual void begin_active_cycles() { /* * */ }
@@ -87,7 +89,96 @@ class Tally
     virtual void end_cycle(double num_particles) { /* * */ }
 
     //! Clear/re-initialize all tally values between solves
-    virtual void reset() = 0;
+    virtual void reset() { /* * */ }
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \class Source_Tally
+ * \brief Defines source tally interfaces.
+ */
+class Source_Tally : public Tally
+{
+    typedef Tally Base;
+
+  public:
+    // Constructor.
+    Source_Tally(SP_Physics physics, bool inactive)
+        : Base(physics, inactive)
+    { /*...*/ }
+
+    // Destructor.
+    virtual ~Source_Tally() = 0;
+
+    // >>> TALLY INTERFACE
+
+    //! Tally events at particle birth.
+    virtual void birth(const Particle_t &p) = 0;
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \class Pathlength_Tally
+ * \brief Defines source tally interfaces.
+ */
+class Pathlength_Tally : public Tally
+{
+    typedef Tally Base;
+
+  public:
+    // Constructor.
+    Pathlength_Tally(SP_Physics physics, bool inactive)
+        : Base(physics, inactive)
+    { /*...*/ }
+
+    // Destructor.
+    virtual ~Pathlength_Tally() = 0;
+
+    // >>> TALLY INTERFACE
+
+    //! Track particle and tally.
+    virtual void accumulate(double step, const Particle_t &p) = 0;
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \class Compound_Tally
+ * \brief Tally that is multiple types (source and/or pathlength).
+ */
+class Compound_Tally : public Tally
+{
+    typedef Tally Base;
+
+  public:
+    //@{
+    //! Tally typedefs.aaa
+    typedef std::shared_ptr<Pathlength_Tally> SP_Pathlength_Tally;
+    typedef std::shared_ptr<Source_Tally>     SP_Source_Tally;
+    //@}
+
+  protected:
+    // >>> DATA
+
+    // Tally components.
+    SP_Pathlength_Tally b_pl_tally;
+    SP_Source_Tally     b_src_tally;
+
+  public:
+    // Constructor.
+    Compound_Tally(SP_Physics physics, bool inactive)
+        : Base(physics, inactive)
+    { /*...*/ }
+
+    // Destructor.
+    virtual ~Compound_Tally() = 0;
+
+    // >>> TALLY INTERFACE
+
+    //! Get the component pathlength tally.
+    SP_Pathlength_Tally get_pl_tally() const { return b_pl_tally; }
+
+    //! Get the component source tally.
+    SP_Source_Tally get_src_tally() const { return b_src_tally; }
 };
 
 } // end namespace profugus

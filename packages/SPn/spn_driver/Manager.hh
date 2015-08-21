@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/Manager.hh
+ * \file   spn_driver/Manager.hh
  * \author Thomas M. Evans
  * \date   Fri Mar 14 11:32:36 2014
  * \brief  Manager class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef driver_Manager_hh
-#define driver_Manager_hh
+#ifndef spn_driver_Manager_hh
+#define spn_driver_Manager_hh
 
 #include <sstream>
 #include <string>
@@ -34,17 +34,17 @@ class Manager
 {
   private:
     // Typedefs.
-    typedef Problem_Builder::RCP_ParameterList     RCP_ParameterList;
-    typedef Problem_Builder::RCP_Mesh              RCP_Mesh;
-    typedef Problem_Builder::RCP_Indexer           RCP_Indexer;
-    typedef Problem_Builder::RCP_Global_Data       RCP_Global_Data;
-    typedef Problem_Builder::RCP_Mat_DB            RCP_Mat_DB;
-    typedef profugus::Solver_Base                  Solver_Base_t;
-    typedef Solver_Base_t::RCP_Dimensions          RCP_Dimensions;
-    typedef Teuchos::RCP<profugus::State>          RCP_State;
-    typedef Teuchos::RCP<Solver_Base_t>            RCP_Solver_Base;
-    typedef profugus::Isotropic_Source             External_Source_t;
-    typedef Teuchos::RCP<External_Source_t>        RCP_External_Source;
+    typedef Problem_Builder::RCP_ParameterList RCP_ParameterList;
+    typedef Problem_Builder::RCP_Mesh          RCP_Mesh;
+    typedef Problem_Builder::RCP_Indexer       RCP_Indexer;
+    typedef Problem_Builder::RCP_Global_Data   RCP_Global_Data;
+    typedef Problem_Builder::RCP_Mat_DB        RCP_Mat_DB;
+    typedef profugus::Solver_Base              Solver_Base_t;
+    typedef Solver_Base_t::RCP_Dimensions      RCP_Dimensions;
+    typedef Teuchos::RCP<profugus::State>      RCP_State;
+    typedef Teuchos::RCP<Solver_Base_t>        RCP_Solver_Base;
+    typedef profugus::Isotropic_Source         External_Source_t;
+    typedef Teuchos::RCP<External_Source_t>    RCP_External_Source;
 
     // >>> DATA
 
@@ -110,7 +110,7 @@ class Manager
 
 } // end namespace spn
 
-#endif // driver_Manager_hh
+#endif // spn_driver_Manager_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Manager.hh

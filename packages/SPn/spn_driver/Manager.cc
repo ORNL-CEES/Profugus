@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/Manager.cc
+ * \file   spn_driver/Manager.cc
  * \author Thomas M. Evans
  * \date   Fri Mar 14 11:32:36 2014
  * \brief  Manager member definitions.
@@ -98,8 +98,11 @@ void Manager::setup(const std::string &xml_file)
     d_solver_base =
         profugus::SpnSolverBuilder::build(prob_type,d_db);
 
+    // set default as a forward (not adjoint) run
+    bool adjoint = d_db->get("adjoint", false);
+
     // setup the solver
-    d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata);
+    d_solver_base->setup(d_dim, d_mat, d_mesh, d_indexer, d_gdata, adjoint);
 
     // make the state
     d_state = Teuchos::rcp(

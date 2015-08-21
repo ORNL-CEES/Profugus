@@ -76,6 +76,11 @@ void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
 {
     SCOPED_TIMER("MC::Fission_Rebalance.rebalance");
 
+    // initialize send/receive counters for this rebalance
+    d_num_recv = 0;
+    d_num_send = 0;
+    d_num_iter = 0;
+
     // return if only 1 set
     if (d_num_sets == 1)
     {
@@ -92,11 +97,6 @@ void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
     // set-up global/local fission bank parameters
     fission_bank_parameters(fission_bank);
     profugus::global_barrier();
-
-    // initialize send/receive counters for this rebalance
-    d_num_recv = 0;
-    d_num_send = 0;
-    d_num_iter = 0;
 
     // actual fissions on the set
     int set_sites = 0;

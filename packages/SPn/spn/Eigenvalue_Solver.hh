@@ -13,6 +13,7 @@
 
 #include <SPn/config.h>
 
+#include "harness/DBC.hh"
 #include "comm/Timer.hh"
 #include "solvers/EigenvalueSolver.hh"
 #include "Solver_Base.hh"
@@ -57,6 +58,7 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
     typedef profugus::EigenvalueSolver<T>               Eigensolver;
     typedef Teuchos::RCP<Eigensolver>                   RCP_Eigensolver;
     typedef Linear_System<T>                            Linear_System_t;
+    typedef Teuchos::RCP<Linear_System_t>               RCP_Linear_System;
     typedef typename Linear_System_t::External_Source   External_Source;
     typedef typename Linear_System_t::RCP_Timestep      RCP_Timestep;
     typedef typename Linear_System_t::RCP_ParameterList RCP_ParameterList;
@@ -91,7 +93,12 @@ class Eigenvalue_Solver : public Solver_Base_Tmpl<T>
 
     // Set up the solver.
     void setup(RCP_Dimensions dim, RCP_Mat_DB mat, RCP_Mesh mesh,
-               RCP_Indexer indexer, RCP_Global_Data data);
+               RCP_Indexer indexer, RCP_Global_Data data, bool adjoint = false);
+
+    // Set up the solver from a pre-built linear system.
+    void setup(RCP_Mat_DB mat, RCP_Mesh mesh, RCP_Indexer indexer,
+               RCP_Global_Data data, RCP_Linear_System system,
+               bool adjoint = false);
 
     // Solve the SPN eigenvalue equations.
     void solve(Teuchos::RCP<const External_Source> q);
