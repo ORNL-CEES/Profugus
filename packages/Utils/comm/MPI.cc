@@ -20,6 +20,7 @@
 #include "Functions.hh"
 #include "MPI.hh"
 #include "P_Stream.hh"
+#include "OMP.hh"
 
 namespace profugus
 {
@@ -126,6 +127,12 @@ void initialize(int &argc, char **&argv)
 
     // always set pncout
     pncout.set_master(node());
+
+    // Set dynamic threading off by default
+    turn_off_dynamic_threading();
+
+    // Default to 1 thread
+    set_num_threads(1);
 }
 
 //---------------------------------------------------------------------------//
