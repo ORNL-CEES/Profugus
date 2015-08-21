@@ -20,16 +20,18 @@
 #include <string>
 
 #include "Serial.hh"
+#include "OMP.hh"
 
 namespace profugus
 {
 
 Communicator_t default_communicator = 0;
-Communicator_t communicator = 0;
+Communicator_t communicator         = 0;
 
 //---------------------------------------------------------------------------//
 // CUSTOM COMMUNICATOR FUNCTIONS
 //---------------------------------------------------------------------------//
+
 void set_default(const Communicator_t&)
 {
 }
@@ -96,6 +98,11 @@ void barrier(const Communicator_t&)
 
 void initialize(int &argc, char **&argv)
 {
+    // Turn off dynamic threading by default
+    turn_off_dynamic_threading();
+
+    // Default to 1 thread
+    set_num_threads(1);
 }
 
 //---------------------------------------------------------------------------//
