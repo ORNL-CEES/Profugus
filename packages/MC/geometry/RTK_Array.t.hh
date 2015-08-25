@@ -392,6 +392,33 @@ void RTK_Array<T>::distance_to_boundary(const Space_Vector &r,
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Build volumes.
+ *
+ * \note The vessel is not included in the volume calculations (the vessel
+ * does not have a cellid).
+ */
+template<class T>
+typename RTK_Array<T>::Vec_Dbl
+RTK_Array<T>::get_volumes() const
+{
+    Vec_Dbl volumes(d_total_cells, 0.0);
+
+    // build the volumes
+    build_volumes(volumes, 0);
+
+#ifdef REMEMBER_ON
+    using def::X; using def::Y; using def::Z;
+    double total = std::accumulate(volumes.begin(), volumes.end(), 0.0);
+    double ref   = pitch(X) * pitch(Y) * height();
+    VALIDATE(profugus::soft_equiv(total, ref, 1.0e-14 * volumes.size()),
+             "Added cell volumes = " << total << " are not equal to the "
+             << "total volume of " << ref);
+#endif
+    return volumes;
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Update the state of particle while in mid-track (at collision sites).
  */
 template<class T>
@@ -947,6 +974,30 @@ void RTK_Array<T>::add_vessel(double R0,
 
     ENSURE(soft_equiv(rox - xoff, pitch(X)));
     ENSURE(soft_equiv(roy - yoff, pitch(Y)));
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build volumes.
+ */
+template<class T>
+void RTK_Array<T>::build_volumes(Vec_Dbl &v,
+                                 int      offset) const
+{
+    using def::X; using def::Y; using def::Z;
+
+    // recursively dive into objects and calculate the volumes
+    for (int k = 0; k < d_N[Z]; ++k)
+    {
+        for (int j = 0; j < d_N[Y]; ++j)
+        {
+            for (int i = 0; i < d_N[X]; ++i)
+            {
+                int off = d_Nc_offset[index(i, j, k)] + offset;
+                object(i,j,k).build_volumes(v, off);
+            }
+        }
+    }
 }
 
 //---------------------------------------------------------------------------//

@@ -187,6 +187,9 @@ class RTK_Cell
     // Query for vessel.
     bool has_vessel() const { return d_vessel; }
 
+    // Build volumes in the pin.
+    void build_volumes(Vec_Dbl &v, int offset) const;
+
     // Vessel radius and offsets.
     bool vessel_data(double &R0, double &R1, double &xc, double &yc) const;
 

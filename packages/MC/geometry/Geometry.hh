@@ -94,9 +94,6 @@ class Geometry : public Tracking_Geometry<RTK_State>
     // Level of array.
     const int d_level;
 
-    // Modular interface is determined from database
-    bool d_modular;
-
   public:
     // Constructor.
     explicit Geometry(SP_Array array);
@@ -144,6 +141,16 @@ class Geometry : public Tracking_Geometry<RTK_State>
 
     //! Number of cells (excluding "outside" cell)
     geometry::cell_type num_cells() const { return d_array->num_cells(); }
+
+    // Get the volume for a cell
+    double cell_volume(int cellid) const
+    {
+        REQUIRE(cellid < num_cells());
+        CHECK(cellid < d_volumes.size());
+        double vol = d_volumes[cellid];
+        ENSURE(vol >= 0.0);
+        return vol;
+    }
 
     //! Return the current cell ID
     geometry::cell_type cell(const Geo_State_t &state) const

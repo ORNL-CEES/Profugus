@@ -26,11 +26,13 @@ namespace profugus
 template<class Array>
 Geometry<Array>::Geometry(SP_Array array)
     : d_array(array)
-    , d_volumes(d_array->num_cells(), 0.0)
+    , d_volumes(d_array->get_volumes())
     , d_level(d_array->level())
-    , d_modular( false )
-{
+{;
+    REQUIRE(d_volumes.size() == num_cells());
+
     d_array->get_extents(d_lower, d_upper);
+
     ENSURE(d_array);
     ENSURE(d_lower <= d_upper);
 }
