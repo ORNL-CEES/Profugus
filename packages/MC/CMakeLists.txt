@@ -38,7 +38,8 @@ APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 TRIBITS_ADD_DEBUG_OPTION()
 
 # to allow includes like #include "comm/Comm.h"
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 # to allow includes like #include "Utils/config.h"
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/..)
@@ -93,6 +94,7 @@ SET(MC_SOURCES
   mc/Anderson_Operator.pt.cc
   mc/Anderson_Solver.pt.cc
   mc/Box_Shape.cc
+  mc/Cell_Tally.cc
   mc/Domain_Transporter.cc
   mc/Fission_Matrix_Acceleration.pt.cc
   mc/Fission_Matrix_Processor.cc
