@@ -12,8 +12,13 @@
 #define spn_LinearSystem_t_hh
 
 #include "Teuchos_ParameterList.hpp"
+#include "Teuchos_Ptr.hpp"
+#include "Epetra_CrsMatrix.h"
+#include "Epetra_RowMatrix.h"
+#include "Epetra_RowMatrixTransposer.h"
 
 #include "harness/DBC.hh"
+#include "harness/Warnings.hh"
 #include "comm/global.hh"
 #include "SPN_Constants.hh"
 #include "Linear_System.hh"
@@ -40,6 +45,7 @@ Linear_System<T>::Linear_System(RCP_ParameterList db,
     , b_mat(mat)
     , b_dt(dt)
     , b_mom_coeff(Teuchos::rcp(new Moment_Coefficients(db, dim, mat, dt)))
+    , b_adjoint(false)
     , b_node(profugus::node())
     , b_nodes(profugus::nodes())
 {
@@ -88,6 +94,84 @@ Linear_System<T>::Linear_System(RCP_ParameterList db,
 template <class T>
 Linear_System<T>::~Linear_System()
 {
+}
+
+//---------------------------------------------------------------------------//
+// PUBLIC FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Setup system to build adjoints.
+ *
+ * If this is set to true, then build adjoint operators from the forward.
+ * Note that the forward operators are never changed.  The forward operators
+ * can be retained by subsequent calls to this function with adjoint set to
+ * false.
+ *
+ * \pre only works with Epetra
+ */
+template <class T>
+void Linear_System<T>::set_adjoint(bool adjoint)
+{
+    // no op for anything but Trilinos
+    ADD_WARNING("Adjoint only supported for Epetra, turning off adjoint");
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Epecialization on adjoints for Epetra.
+ */
+template<>
+void Linear_System<EpetraTypes>::set_adjoint(bool adjoint)
+{
+    REQUIRE(Teuchos::nonnull(b_operator));
+    REQUIRE(Teuchos::nonnull(b_fission));
+
+    // set adjoint flag
+    b_adjoint = adjoint;
+
+    // if this is adjoint build adjoint operators
+    if (b_adjoint)
+    {
+        // cast the operator to a Epetra_RowMatrix
+        Teuchos::RCP<Epetra_RowMatrix> a =
+            Teuchos::rcp_dynamic_cast<Epetra_RowMatrix>(b_operator);
+        Teuchos::RCP<Epetra_RowMatrix> b =
+            Teuchos::rcp_dynamic_cast<Epetra_RowMatrix>(b_fission);
+
+        // if this is a Row_Matrix then we can use the row-matrix transposer
+        if (Teuchos::nonnull(a) && Teuchos::nonnull(b))
+        {
+            Epetra_RowMatrixTransposer a_trans(a.getRawPtr());
+            Epetra_RowMatrixTransposer b_trans(b.getRawPtr());
+
+            // make raw pointers for the new matrices
+            Epetra_CrsMatrix *aT = nullptr, *bT = nullptr;
+
+            // make the transposes
+            a_trans.CreateTranspose(true, aT);
+            b_trans.CreateTranspose(true, bT);
+            CHECK(aT != nullptr);
+            CHECK(bT != nullptr);
+
+            // assign to the adjoint operators
+            b_adjoint_operator = Teuchos::rcp(aT);
+            b_adjoint_fission  = Teuchos::rcp(bT);
+        }
+
+        // otherwise set use transpose and hope for the best
+        else
+        {
+            b_adjoint_operator = b_operator;
+            b_adjoint_fission  = b_fission;
+        }
+
+        ENSURE(Teuchos::nonnull(b_adjoint_operator));
+        ENSURE(Teuchos::nonnull(b_adjoint_fission));
+    }
+
+    // set the regular operators transpose flag
+    b_operator->SetUseTranspose(b_adjoint);
+    b_fission->SetUseTranspose(b_adjoint);
 }
 
 } // end namespace profugus

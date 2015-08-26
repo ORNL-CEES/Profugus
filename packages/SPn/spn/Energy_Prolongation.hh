@@ -55,23 +55,6 @@ class Energy_Prolongation : public OperatorAdapter<T>
                          Teuchos::RCP<const MAP> fine_map,
                          const std::vector<int> &steer_vec );
 
-    int Apply( const MV &x, MV &y ) const
-    {
-        ApplyImpl(x,y);
-        return 0;
-    }
-
-    void apply( const MV &x, MV &y, Teuchos::ETransp mode=Teuchos::NO_TRANS,
-                double alpha=Teuchos::ScalarTraits<double>::one(),
-                double beta=Teuchos::ScalarTraits<double>::zero()) const
-    {
-        REQUIRE( alpha == 1.0 );
-        REQUIRE( beta  == 0.0 );
-        REQUIRE( mode == Teuchos::NO_TRANS );
-
-        ApplyImpl(x,y);
-    }
-
   private:
 
     void ApplyImpl(const MV &x, MV &y) const;

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   driver/Problem_Builder.cc
+ * \file   mc_driver/Problem_Builder.cc
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder member definitions.
@@ -18,9 +18,13 @@
 #include "utils/Definitions.hh"
 #include "utils/String_Functions.hh"
 #include "xs/XS_Builder.hh"
+#include "solvers/LinAlgTypedefs.hh"
+#include "geometry/Mesh_Geometry.hh"
 #include "mc/Box_Shape.hh"
 #include "mc/VR_Analog.hh"
 #include "mc/VR_Roulette.hh"
+#include "mc/Fission_Matrix_Tally.hh"
+#include "mc/Source_Diagnostic_Tally.hh"
 #include "Problem_Builder.hh"
 
 namespace mc
@@ -108,6 +112,12 @@ void Problem_Builder::setup(const std::string &xml_file)
     {
         build_source(master->sublist("SOURCE"));
     }
+
+    // build the SPN problem for fission matrix acceleration
+    build_spn_problem();
+
+    // build the tallier
+    build_tallies();
 }
 
 //---------------------------------------------------------------------------//
@@ -482,6 +492,182 @@ void Problem_Builder::build_source(const ParameterList &source_db)
     // add the shape to the main database because the MC source gets the
     // spectral shape from the main db
     d_db->set("spectral_shape", shape);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build the tallies.
+ */
+void Problem_Builder::build_tallies()
+{
+    using profugus::Mesh_Geometry;
+    using profugus::Fission_Matrix_Tally;
+    using profugus::Source_Diagnostic_Tally;
+
+    // make the tallier
+    d_tallier = std::make_shared<Tallier_t>();
+    d_tallier->set(d_geometry, d_physics);
+
+    // check for fission matrix tallies
+    if (d_db->isSublist("fission_matrix_db"))
+    {
+        // get the database
+        const ParameterList &fdb = d_db->sublist("fission_matrix_db");
+
+        // if this is a tally then add it
+        if (fdb.isSublist("tally"))
+        {
+            INSIST(!d_shape,
+                   "Cannot run fission matrix on fixed-source problems.");
+
+            // get the database
+            const ParameterList &tdb = fdb.sublist("tally");
+
+            // validate that there is a fission matrix mesh defined
+            VALIDATE(tdb.isParameter("x_bounds"),
+                     "Failed to define x-boundaries for fission matrix mesh");
+            VALIDATE(tdb.isParameter("y_bounds"),
+                     "Failed to define y-boundaries for fission matrix mesh");
+            VALIDATE(tdb.isParameter("z_bounds"),
+                     "Failed to define z-boundaries for fission matrix mesh");
+
+            // get the fission matrix mesh boundaries
+            auto xb = tdb.get<OneDArray_dbl>("x_bounds").toVector();
+            auto yb = tdb.get<OneDArray_dbl>("y_bounds").toVector();
+            auto zb = tdb.get<OneDArray_dbl>("z_bounds").toVector();
+            Fission_Matrix_Tally::SP_Mesh_Geometry geo(
+                std::make_shared<Mesh_Geometry>(xb, yb, zb));
+
+            // build the fission matrix
+            auto fm_tally(std::make_shared<Fission_Matrix_Tally>(
+                              d_db, d_physics, geo));
+            CHECK(fm_tally);
+
+            // add this to the tallier
+            d_tallier->add_compound_tally(fm_tally);
+        }
+    }
+
+    // check for source tallies
+    if (d_db->isSublist("source_diagnostic_db"))
+    {
+        INSIST(!d_shape,
+               "Cannot run source diagnostic on fixed-source problems.");
+
+        // get the database
+        const ParameterList &sdb = d_db->sublist("source_diagnostic_db");
+
+        // validate that there is a source diagnostic mesh defined
+        VALIDATE(sdb.isParameter("x_bounds"),
+                 "Failed to define x-boundaries for source diagnostic mesh");
+        VALIDATE(sdb.isParameter("y_bounds"),
+                 "Failed to define y-boundaries for source diagnostic mesh");
+        VALIDATE(sdb.isParameter("z_bounds"),
+                 "Failed to define z-boundaries for source diagnostic mesh");
+
+        // get the fission matrix mesh boundaries
+        auto xb = sdb.get<OneDArray_dbl>("x_bounds").toVector();
+        auto yb = sdb.get<OneDArray_dbl>("y_bounds").toVector();
+        auto zb = sdb.get<OneDArray_dbl>("z_bounds").toVector();
+        Source_Diagnostic_Tally::SP_Mesh_Geometry geo(
+            std::make_shared<Mesh_Geometry>(xb, yb, zb));
+
+        // the default is to tally during inactive cycles
+
+        // build the source tally
+        auto src_tally(std::make_shared<Source_Diagnostic_Tally>(
+                           d_db, d_physics, geo, true));
+        CHECK(src_tally);
+
+        // add this to the tallier
+        d_tallier->add_source_tally(src_tally);
+    }
+
+    ENSURE(d_tallier);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \build the SPN problem
+ */
+void Problem_Builder::build_spn_problem()
+{
+    typedef profugus::EpetraTypes                          ET;
+    typedef profugus::TpetraTypes                          TT;
+    typedef profugus::Fission_Matrix_Acceleration_Impl<ET> FM_ET;
+    typedef profugus::Fission_Matrix_Acceleration_Impl<TT> FM_TT;
+
+    // check for fission matrix acceleration
+    if (d_db->isSublist("fission_matrix_db"))
+    {
+        // get the database
+        const ParameterList &fdb = d_db->sublist("fission_matrix_db");
+
+        // if this is an acceleration, then build the SPN problem builder
+        if (fdb.isSublist("acceleration"))
+        {
+            INSIST(!d_shape,
+                   "Cannot run fission matrix on fixed-source problems.");
+
+            // get the database
+            const ParameterList &adb = fdb.sublist("acceleration");
+
+            // validate parameters
+            VALIDATE(adb.isParameter("spn_problem"),
+                     "Failed to define the equivalent SPN problem for "
+                     << "fission matrix acceleration.");
+
+            // get the xml-file for the SPN problem
+            auto spn_input = adb.get<std::string>("spn_problem");
+
+            // make the SPN problem builder
+            SPN_Builder spn_builder;
+
+            // setup the SPN problem
+            spn_builder.setup(spn_input);
+
+            // get the SPN problem database
+            auto spn_db = spn_builder.problem_db();
+
+            // get the linear algebra type
+            std::string type = spn_db->get("trilinos_implementation",
+                                           std::string("epetra"));
+
+            // build the fission matrix acceleration
+            if (type == "epetra")
+            {
+                d_fm_acceleration = std::make_shared<FM_ET>();
+            }
+            else if (type == "tpetra")
+            {
+                d_fm_acceleration = std::make_shared<FM_TT>();
+            }
+
+            // build the problem
+            d_fm_acceleration->build_problem(spn_builder);
+
+            // get the global mesh
+            const auto &mesh = d_fm_acceleration->global_mesh();
+
+            // make the bounds
+            OneDArray_dbl x(mesh.edges(0));
+            OneDArray_dbl y(mesh.edges(1));
+            OneDArray_dbl z(mesh.edges(2));
+
+            // make a source tally that defaults to the acceleration mesh if a
+            // source tally hasn't been defined
+            ParameterList &sdb = d_db->sublist("source_diagnostic_db");
+
+            // make a default parameterlist
+            ParameterList def;
+            def.set("x_bounds", x);
+            def.set("y_bounds", y);
+            def.set("z_bounds", z);
+
+            // add these to the source diagnosic tally
+            sdb.setParametersNotAlreadySet(def);
+        }
+    }
 }
 
 } // end namespace mc

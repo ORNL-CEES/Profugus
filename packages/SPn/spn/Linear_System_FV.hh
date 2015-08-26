@@ -253,8 +253,8 @@ class Linear_System_FV : public Linear_System<T>
  */
 template <class T>
 int Linear_System_FV<T>::index(int g,
-                            int eqn,
-                            int cell) const
+                               int eqn,
+                               int cell) const
 {
     REQUIRE(g < d_Ng);
     REQUIRE(eqn < d_Ne);

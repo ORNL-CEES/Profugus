@@ -120,6 +120,9 @@ class RTK_Array
     // Set outer vessel.
     void set_vessel(double r0, double r1, int vid);
 
+    // Build and get volumes of cells.
+    Vec_Dbl get_volumes() const;
+
     // >>> TRACKING FUNCTIONALITY
 
     // Initialize a state.
@@ -229,6 +232,9 @@ class RTK_Array
     // Add the vessel to an object in the array.
     void add_vessel_to_object(int i, int j, int k, double R0, double R1,
                               double xoff, double yoff, int vid);
+
+    // Build volumes.
+    void build_volumes(Vec_Dbl &v, int offset) const;
 
     // Return the widths by dimension.
     double dx(int i) const { return d_x[i+1] - d_x[i]; }

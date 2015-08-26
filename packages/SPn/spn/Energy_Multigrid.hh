@@ -74,24 +74,6 @@ class Energy_Multigrid : public OperatorAdapter<T>
                       Teuchos::RCP<Global_Mesh_Data>  data,
                       Teuchos::RCP<Linear_System<T> > fine_system );
 
-    int Apply( const MV &x, MV &y ) const
-    {
-        ApplyImpl(x,y);
-        return 0;
-    }
-
-    void apply( const MV &x, MV &y, Teuchos::ETransp mode=Teuchos::NO_TRANS,
-                double alpha=Teuchos::ScalarTraits<double>::one(),
-                double beta=Teuchos::ScalarTraits<double>::zero()) const
-    {
-        REQUIRE( alpha == 1.0 );
-        REQUIRE( beta  == 0.0 );
-        REQUIRE( mode == Teuchos::NO_TRANS );
-
-        ApplyImpl(x,y);
-    }
-
-
   private:
 
     void ApplyImpl(const MV &x, MV &y) const;

@@ -21,7 +21,10 @@
 #include "Epetra_MultiVector.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_Operator.h"
+#include "Epetra_LocalMap.h"
+#include "Epetra_Import.h"
 #include "../LinAlgTypedefs.hh"
+#include "spn/VectorTraits.hh"
 
 using profugus::EpetraTypes;
 using profugus::TpetraTypes;
@@ -99,6 +102,64 @@ void fill_vector<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x,
     }
 }
 
+// get_global_data
+template <class T>
+Teuchos::ArrayRCP<const double> get_global_copy(
+    Teuchos::RCP<const typename T::MV> x)
+{
+    NOT_IMPLEMENTED("get_global_data for arbitrary MV type.");
+}
+
+template <>
+Teuchos::ArrayRCP<const double> get_global_copy<EpetraTypes>(
+    Teuchos::RCP<const Epetra_MultiVector> x)
+{
+#ifdef COMM_MPI
+    Epetra_MpiComm comm(profugus::communicator);
+#else
+    Epetra_SerialComm comm;
+#endif
+
+    Epetra_LocalMap map( x->GlobalLength(), 0, comm );
+    Teuchos::RCP<Epetra_MultiVector> src =
+        Teuchos::rcp( new Epetra_MultiVector(map,1) );
+
+    // For Epetra importing, give replicated map first, then distributed
+    Epetra_Import importer(map,x->Map());
+    src->Import(*x,importer,Insert);
+
+    // Get data from replicated vector
+    // Need to make a copy because ArrayRCP returned from get_data is weak
+    auto data = profugus::VectorTraits<EpetraTypes>::get_data(src);
+    Teuchos::ArrayRCP<double> data_copy;
+    data_copy.assign(data.begin(),data.end());
+    return data_copy;
+}
+
+template <>
+Teuchos::ArrayRCP<const double> get_global_copy<TpetraTypes>(
+    Teuchos::RCP<const TpetraTypes::MV> x)
+{
+    Teuchos::RCP<const Teuchos::Comm<int> > comm =
+        Teuchos::DefaultComm<int>::getComm();
+
+    int index_base = 0;
+    Teuchos::RCP<const TpetraTypes::MAP> map(
+        new TpetraTypes::MAP(x->getGlobalLength(),index_base,comm,
+            Tpetra::LocallyReplicated) );
+    Teuchos::RCP<TpetraTypes::MV> src( new TpetraTypes::MV(map,1) );
+
+    typedef TpetraTypes::LO   LO;
+    typedef TpetraTypes::GO   GO;
+    typedef TpetraTypes::NODE NODE;
+    // For Tpetra importing, give distributed map first, then replicated
+    Tpetra::Import<LO,GO,NODE> importer(x->getMap(),map);
+    src->doImport(*x,importer,Tpetra::INSERT);
+
+    // Get data from replicated vector
+    return profugus::VectorTraits<TpetraTypes>::get_data(src);
+}
+
 // set_sign
 template <class T>
 void set_sign(Teuchos::RCP<typename T::MV> x)
@@ -128,6 +189,25 @@ void set_sign<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x)
     }
 }
 
+// is_local
+template <class T>
+bool is_local(Teuchos::RCP<const typename T::MAP> map, int i)
+{
+    NOT_IMPLEMENTED("is_localfor arbitrary MV type.");
+}
+
+template <>
+bool is_local<EpetraTypes>(Teuchos::RCP<const Epetra_Map> map, int i)
+{
+    return map->MyGID(i);
+}
+
+template <>
+bool is_local<TpetraTypes>(Teuchos::RCP<const TpetraTypes::MAP> map, int i)
+{
+    return map->isNodeGlobalElement(i);
+}
+
 // test_vector
 template <class T>
 void test_vector(Teuchos::RCP<typename T::MV> x, std::vector<double> &vals)
@@ -137,7 +217,7 @@ void test_vector(Teuchos::RCP<typename T::MV> x, std::vector<double> &vals)
 
 template <>
 void test_vector<EpetraTypes>(Teuchos::RCP<Epetra_MultiVector> x,
-                                     std::vector<double> &vals)
+                              std::vector<double> &vals)
 {
     REQUIRE( vals.size() == x->GlobalLength() );
 
@@ -150,7 +230,7 @@ void test_vector<EpetraTypes>(Teuchos::RCP<Epetra_MultiVector> x,
 
 template <>
 void test_vector<TpetraTypes>(Teuchos::RCP<TpetraTypes::MV> x,
-                                     std::vector<double> &vals)
+                              std::vector<double> &vals)
 {
     Teuchos::ArrayRCP<const double> x_data = x->getData(0);
     for( int i=0; i<x->getLocalLength(); ++i )

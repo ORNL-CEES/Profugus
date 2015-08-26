@@ -21,6 +21,35 @@ using profugus::Particle;
 TEST(Particle, construction)
 {
     Particle p;
+
+    // access the particle metadata
+    EXPECT_EQ(0, p.metadata().size());
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(Particle, metadata)
+{
+    // add some metadata
+    auto fm_cell = Particle::Metadata::new_pod_member<int>("fm_birth_cell");
+
+    // make the particle
+    {
+        Particle p, q;
+
+        EXPECT_EQ(1, p.metadata().size());
+
+        auto &metadata = p.metadata();
+        metadata.access<int>(fm_cell) = 101;
+
+        EXPECT_EQ(101, p.metadata().access<int>(fm_cell));
+        EXPECT_EQ(0, q.metadata().access<int>(fm_cell));
+    }
+
+    Particle::Metadata::reset();
+
+    Particle p;
+    EXPECT_EQ(0, p.metadata().size());
 }
 
 //---------------------------------------------------------------------------//

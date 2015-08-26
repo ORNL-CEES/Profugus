@@ -74,7 +74,7 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
     double init_keff = d_db->get("keff_init", 1.0);
     VALIDATE(init_keff >= 0., "Initial keff guess (keff_init="
             << init_keff << ") must be nonnegative.");
-    d_keff_tally = std::make_shared<Keff_Tally>(init_keff,
+    b_keff_tally = std::make_shared<Keff_Tally>(init_keff,
                                                 b_tallier->physics());
 
     // create our "disabled" (inactive cycle) tallier
@@ -84,9 +84,18 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
     d_build_phase = ASSIGNED;
 
     ENSURE(b_tallier);
-    ENSURE(d_keff_tally);
+    ENSURE(b_keff_tally);
     ENSURE(d_transporter);
     ENSURE(d_build_phase == ASSIGNED);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set the acceleration method.
+ */
+void KCode_Solver::set(SP_FM_Acceleration acceleration)
+{
+    d_acceleration = acceleration;
 }
 
 //---------------------------------------------------------------------------//
@@ -154,7 +163,7 @@ void KCode_Solver::solve()
             cout.setf(std::ios::internal);
 
             cout << fixed      << setw(4) << cycle << "   "
-                 << fixed      << setw(8) << d_keff_tally->latest() << "  "
+                 << fixed      << setw(8) << b_keff_tally->latest() << "  "
                  << scientific << setw(9) << cycle_timer.TIMER_CLOCK()
                  << endl;
         }
@@ -190,9 +199,9 @@ void KCode_Solver::solve()
             cout.setf(std::ios::internal);
 
             cout << fixed      << setw(4)  << cycle << "   "
-                 << fixed      << setw(8)  << d_keff_tally->latest() << "  "
-                 << fixed      << setw(8)  << d_keff_tally->mean() << "  "
-                 << scientific << setw(11) << d_keff_tally->variance() << "  "
+                 << fixed      << setw(8)  << b_keff_tally->latest() << "  "
+                 << fixed      << setw(8)  << b_keff_tally->mean() << "  "
+                 << scientific << setw(11) << b_keff_tally->variance() << "  "
                  << scientific << setw(11) << cycle_timer.TIMER_CLOCK()
                  << endl;
         }
@@ -257,32 +266,88 @@ void KCode_Solver::initialize()
             "a prior transport solve without reset() being called.");
 
     // Add the keff tally to the ACTIVE cycle tallier and build it
-    b_tallier->add_pathlength_tally(d_keff_tally);
+    b_tallier->add_pathlength_tally(b_keff_tally);
     b_tallier->build();
+    CHECK(b_keff_tally->inactive_cycle_tally());
     CHECK(b_tallier->is_built());
     CHECK(b_tallier->num_pathlength_tallies() >= 1);
 
-    // Add the keff tally to the INACTIVE cycle tallier and build it
-    d_inactive_tallier->add_pathlength_tally(d_keff_tally);
+    // get tallies from the active tallier and add them to the inactive
+    // tallier if they are inactive tallies
+    for (auto titr = b_tallier->begin(); titr != b_tallier->end(); ++titr)
+    {
+        CHECK(*titr);
+
+        // get the SP to the tally
+        auto tally = *titr;
+
+        // if this tally should be on during inactive cycles, add it
+        if (tally->inactive_cycle_tally())
+        {
+            // create tallies (only 1 can be valid)
+            auto pl_t  = std::dynamic_pointer_cast<Pathlength_Tally>(tally);
+            auto src_t = std::dynamic_pointer_cast<Source_Tally>(tally);
+            auto cpd_t = std::dynamic_pointer_cast<Compound_Tally>(tally);
+
+            // attempt to cast to valid tally types and add the tally
+            if (pl_t)
+            {
+                CHECK(!src_t && !cpd_t);
+                d_inactive_tallier->add_pathlength_tally(pl_t);
+            }
+            else if (src_t)
+            {
+                CHECK(!pl_t && !cpd_t);
+                d_inactive_tallier->add_source_tally(src_t);
+            }
+            else if (cpd_t)
+            {
+                CHECK(!pl_t && !src_t);
+                d_inactive_tallier->add_compound_tally(cpd_t);
+            }
+            else
+            {
+                throw profugus::assertion("Unknown tally type.");
+            }
+        }
+    }
+
+    // build the inactive tallies
     d_inactive_tallier->build();
     CHECK(d_inactive_tallier->is_built());
     CHECK(d_inactive_tallier->num_pathlength_tallies() >= 1);
-
-    if (d_source->is_initial_source())
-    {
-        // build the initial fission source
-        d_source->build_initial_source();
-    }
 
     // Swap our temp tallier with the user-specified tallies so that we
     // initially only tally k effective.
     // b_tallier is always the one actively getting called by transporter
     swap(*d_inactive_tallier, *b_tallier);
 
+    // initialize the acceleration
+    if (d_acceleration)
+    {
+        d_acceleration->initialize(d_db);
+
+        // build the initial fission source (which may or may not use an
+        // initial distribution depending on the acceleration options)
+        if (d_source->is_initial_source())
+        {
+            d_acceleration->build_initial_source(*d_source);
+        }
+    }
+    // build the initial source if no acceleration is on
+    else
+    {
+        // build the initial fission source
+        if (d_source->is_initial_source())
+        {
+            d_source->build_initial_source();
+        }
+    }
+
     d_build_phase = INACTIVE_SOLVE;
 
     ENSURE(b_tallier->num_pathlength_tallies() >= 1);
-    ENSURE(d_keff_tally->cycle_count() == 0);
+    ENSURE(b_keff_tally->cycle_count() == 0);
     ENSURE(d_build_phase == INACTIVE_SOLVE);
 }
 
@@ -308,8 +373,16 @@ void KCode_Solver::iterate()
     d_transporter->assign_source(d_source);
 
     // set the solver to sample fission sites
-    d_transporter->sample_fission_sites(
-        d_fission_sites, d_keff_tally->latest());
+    d_transporter->sample_fission_sites(d_fission_sites,
+                                        b_keff_tally->latest());
+
+    // inititalize the acceleration at the beginning of the cycle with the
+    // rebalanced fission sites owned by the source
+    if (d_acceleration)
+    {
+        d_acceleration->start_cycle(b_keff_tally->latest(),
+                                    d_source->fission_sites());
+    }
 
     // initialize keff tally to the beginning of the cycle
     b_tallier->begin_cycle();
@@ -322,6 +395,21 @@ void KCode_Solver::iterate()
     // histories. Each processor adjusts the particle weights so that the
     // total weight emitted, summed over all processors, is d_Np.
     b_tallier->end_cycle(d_Np);
+
+    // process acceleration at the end of the cycle
+    if (d_acceleration)
+    {
+        d_acceleration->end_cycle(*d_fission_sites);
+
+        // update the number of fission sites (source particles) per cycle
+        if (d_acceleration->update_num_particles())
+        {
+            d_Np = d_acceleration->num_sites();
+
+            // update the source
+            d_source->update_Np(d_Np);
+        }
+    }
 
     // build a new source from the fission site distribution
     d_source->build_source(d_fission_sites);

@@ -91,8 +91,15 @@ LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
 
 FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
+  mc/Anderson_Operator.pt.cc
+  mc/Anderson_Solver.pt.cc
   mc/Box_Shape.cc
+  mc/Cell_Tally.cc
   mc/Domain_Transporter.cc
+  mc/Fission_Matrix_Acceleration.pt.cc
+  mc/Fission_Matrix_Processor.cc
+  mc/Fission_Matrix_Solver.pt.cc
+  mc/Fission_Matrix_Tally.cc
   mc/Fission_Rebalance.cc
   mc/Fission_Source.cc
   mc/Fixed_Source_Solver.cc
@@ -101,10 +108,12 @@ SET(MC_SOURCES
   mc/KCode_Solver.cc
   mc/Keff_Tally.cc
   mc/Particle.cc
+  mc/Particle_Metaclass.pt.cc
   mc/Physics.cc
   mc/Sampler.cc
   mc/Solver.cc
   mc/Source.cc
+  mc/Source_Diagnostic_Tally.cc
   mc/Source_Transporter.cc
   mc/Tallier.cc
   mc/Tally.cc
@@ -118,9 +127,9 @@ LIST(APPEND SOURCES ${MC_SOURCES})
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
-  driver/Manager.cc
-  driver/Problem_Builder.cc
-  driver/mc.cc
+  mc_driver/Manager.cc
+  mc_driver/Problem_Builder.cc
+  mc_driver/mc.cc
   )
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
@@ -139,7 +148,7 @@ TRIBITS_ADD_EXECUTABLE(
   xmc
   NOEXESUFFIX
   NOEXEPREFIX
-  SOURCES driver/mc.cc
+  SOURCES mc_driver/mc.cc
   INSTALLABLE
   )
 

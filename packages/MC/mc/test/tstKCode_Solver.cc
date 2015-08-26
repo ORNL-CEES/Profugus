@@ -29,7 +29,7 @@
 // Helpers
 //---------------------------------------------------------------------------//
 
-class Dummy_Tally : public profugus::Tally
+class Dummy_Tally : public profugus::Pathlength_Tally
 {
     typedef profugus::Tally     Base;
     typedef std::vector<double> Vec_Dbl;
@@ -43,7 +43,7 @@ class Dummy_Tally : public profugus::Tally
 
     // Constructor
     Dummy_Tally(SP_Physics physics)
-        : Base(physics)
+        : profugus::Pathlength_Tally(physics, false)
         , d_pl_counter(1)
         , d_finalized_np(-1.)
     {
@@ -64,17 +64,11 @@ class Dummy_Tally : public profugus::Tally
 
     // >>> DERIVED INTERFACE
 
-    //! Nothing at birth.
-    void birth(const Particle_t &p) { /* * */ }
-
     //! Track particle, using pre-calculated physics information (multipliers)
     inline void accumulate(double step, const Particle_t& p)
     {
         d_pl_counter += 1;
     }
-
-    //! Nothing done at end of particle history
-    void end_history() { /* * */ }
 
     //! Finalize is called at end of program, not cycle, so this is a null-op
     void finalize(double np) { d_finalized_np = np; }
