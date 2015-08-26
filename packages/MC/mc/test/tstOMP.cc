@@ -11,6 +11,9 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include <cmath>
+#include <utility>
+#include <iomanip>
 
 #include <omp.h>
 
@@ -177,6 +180,9 @@ TEST(OMP, copyin)
 
 //---------------------------------------------------------------------------//
 
+namespace source
+{
+
 class Source
 {
   public:
@@ -231,8 +237,12 @@ class Transporter
     }
 };
 
+} // end namespace source
+
 TEST(OMP, sp_copyin)
 {
+    using namespace source;
+
     omp_set_dynamic(0);
     omp_set_num_threads(4);
 
@@ -242,6 +252,254 @@ TEST(OMP, sp_copyin)
 
     Transporter t;
     t.set_source();
+}
+
+//---------------------------------------------------------------------------//
+
+namespace tally
+{
+
+enum Type {A, B, C};
+
+class Tally
+{
+  private:
+    int d_type;
+
+    // Local tally
+    double d_l;
+
+    // Moments.
+    double d_first;
+    double d_second;
+
+  public:
+    Tally(Type type)
+        : d_type(type)
+        , d_l(0.0)
+        , d_first(0.0)
+        , d_second(0.0)
+    {
+        /* * */
+    }
+
+    void accumulate(Type t, double v)
+    {
+        if (t == d_type)
+        {
+            d_l += v;
+        }
+    }
+
+    void end_history()
+    {
+        // Store moments
+        d_first  += d_l;
+        d_second += d_l * d_l;
+
+        // Reset local
+        d_l = 0.0;
+    }
+
+    void finalize(int N)
+    {
+        double inv_N = 1.0 / N;
+
+        double l1 = d_first  * inv_N;
+        double l2 = d_second * inv_N;
+
+        double var = N / (static_cast<double>(N) - 1) * (l2 - l1*l1);
+
+        d_first  = l1;
+        d_second = std::sqrt(var / N);
+    }
+
+    double mean()  const { return d_first; }
+    double error() const { return d_second; }
+    int    type()  const { return d_type; }
+
+    std::pair<double, double> get_moments() const
+    {
+        return std::make_pair(d_first, d_second);
+    }
+
+    void set_moments(std::pair<double, double> moments)
+    {
+        d_first  = moments.first;
+        d_second = moments.second;
+    }
+};
+
+class Tallier
+{
+  public:
+    typedef std::shared_ptr<Tally> SP_Tally;
+    typedef std::vector<SP_Tally>  Tallies;
+
+  private:
+    Tallies d_tallies;
+
+  public:
+    Tallier() { /* * */ }
+
+    int num_tallies() const { return d_tallies.size(); }
+
+    void add_tally(SP_Tally t)
+    {
+        d_tallies.push_back(t);
+    }
+
+    const Tallies& get_tallies() const
+    {
+        return d_tallies;
+    }
+
+    void accumulate(Type type, double v)
+    {
+        for (const auto &t : d_tallies)
+        {
+            t->accumulate(type, v);
+        }
+    }
+
+    void end_history()
+    {
+        for (const auto &t : d_tallies)
+        {
+            t->end_history();
+        }
+    }
+
+    void finalize(int N)
+    {
+        for (const auto &t : d_tallies)
+        {
+            t->finalize(N);
+        }
+    }
+};
+
+class Thread_Data
+{
+  public:
+    static std::shared_ptr<Tallier> t;
+#pragma omp threadprivate(t)
+};
+
+std::shared_ptr<Tallier> Thread_Data::t;
+
+void build()
+{
+    omp_set_dynamic(0);
+    omp_set_num_threads(4);
+
+    // Build the talliers
+#pragma omp parallel
+    {
+        Thread_Data::t = std::make_shared<Tallier>();
+
+        // Make tallies and add them
+        auto a = std::make_shared<Tally>(A);
+        auto b = std::make_shared<Tally>(B);
+
+        Thread_Data::t->add_tally(a);
+        Thread_Data::t->add_tally(b);
+    }
+}
+
+void thread_finalize(int N)
+{
+    REQUIRE(!profugus::in_thread_parallel_region());
+
+    std::vector<double> l1(Thread_Data::t->num_tallies(), 0.0);
+    std::vector<double> l2(Thread_Data::t->num_tallies(), 0.0);
+
+#pragma omp parallel
+    {
+        const auto &tallies = Thread_Data::t->get_tallies();
+
+        int tctr = 0;
+        for (auto &t : tallies)
+        {
+            auto moments = t->get_moments();
+#pragma omp atomic update
+            l1[tctr] += moments.first;
+#pragma omp atomic update
+            l2[tctr] += moments.second;
+
+            ++tctr;
+        }
+    }
+
+    auto &tallies = Thread_Data::t->get_tallies();
+    int tctr = 0;
+    for (auto &t : tallies)
+    {
+        t->set_moments(std::make_pair(l1[tctr], l2[tctr]));
+        ++tctr;
+    }
+
+    Thread_Data::t->finalize(N);
+}
+
+} // end namespace tally
+
+TEST(OMP, threadprivate_tally)
+{
+    using namespace tally;
+
+    build();
+
+    // Do simulated sampling
+    std::vector< std::vector< std::pair<Type, double> > > r = {
+        {{A, 1.0}, {B, 2.0}, {B, 1.0}, {A, 3.0}, {C, 4.0}, {C, 5.0}},
+        {{A, 2.0}, {B, 3.0}, {B, 5.0}, {A, 4.0}, {C, 9.0}, {C, 1.0}},
+        {{A, 3.0}, {B, 4.0}, {B, 6.0}, {A, 2.0}, {C, 2.0}, {C, 9.0}},
+        {{A, 4.0}, {B, 5.0}, {B, 7.0}, {A, 7.0}, {C, 1.0}, {C, 2.0}}};
+
+    int N = 12;
+
+#pragma omp parallel
+    {
+        int id = profugus::thread_id();
+
+        double off = 0.0;
+
+#pragma omp for
+        for (int n = 0; n < N; ++n)
+        {
+            for (const auto &s : r[id])
+            {
+                Thread_Data::t->accumulate(s.first, s.second + off);
+            }
+
+            Thread_Data::t->end_history();
+
+            off += 0.1;
+        }
+    }
+
+    thread_finalize(N);
+
+    const auto &tallies = Thread_Data::t->get_tallies();
+
+    for (const auto &t : tallies)
+    {
+        if (t->type() == A)
+        {
+            EXPECT_FLOAT_EQ(6.7, t->mean());
+            EXPECT_SOFTEQ(0.81333582, t->error(), 1.0e-6);
+        }
+        else if (t->type() == B)
+        {
+            EXPECT_FLOAT_EQ(8.45, t->mean());
+            EXPECT_SOFTEQ(1.00968792, t->error(), 1.0e-6);
+        }
+        else
+        {
+            EXPECT_TRUE(0);
+        }
+    }
 }
 
 //---------------------------------------------------------------------------//
