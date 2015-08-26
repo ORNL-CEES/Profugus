@@ -11,6 +11,7 @@
 #include <cmath>
 #include <algorithm>
 
+#include "Utils/comm/global.hh"
 #include "Cell_Tally.hh"
 
 namespace profugus
@@ -90,6 +91,32 @@ void Cell_Tally::finalize(double num_particles)
 {
     REQUIRE(num_particles > 1);
 
+    // Do a global reduction on moments
+    std::vector<double> first(d_tally.size(),  0.0);
+    std::vector<double> second(d_tally.size(), 0.0);
+
+    int ctr = 0;
+    for (const auto &t : d_tally)
+    {
+        // Get a reference to the moments
+        auto &moments = t.second;
+
+        // Copy the moments into the communciation buffer
+        first[ctr]  = moments.first;
+        second[ctr] = moments.second;
+
+        // Update the counter
+        ++ctr;
+    }
+    CHECK(ctr == d_tally.size());
+
+    // Do global reductions on the moments
+    profugus::global_sum(first.data(),  first.size());
+    profugus::global_sum(second.data(), second.size());
+
+    // Reset the counter
+    ctr = 0;
+
     // Iterate through tally cells and build the variance and mean
     for (auto &t : d_tally)
     {
@@ -98,15 +125,15 @@ void Cell_Tally::finalize(double num_particles)
         // Get the volume for the cell
         double inv_V = 1.0 / d_geometry->cell_volume(t.first);
 
-        // Get a reference to the moments
-        auto &moments = t.second;
-
         // Store 1/N
         double inv_N = 1.0 / static_cast<double>(num_particles);
 
         // Calculate means for this cell
-        double avg_l  = moments.first * inv_N;
-        double avg_l2 = moments.second * inv_N;
+        double avg_l  = first[ctr] * inv_N;
+        double avg_l2 = second[ctr] * inv_N;
+
+        // Get a reference to the moments
+        auto &moments = t.second;
 
         // Store the sample mean
         moments.first = avg_l * inv_V;
@@ -117,7 +144,11 @@ void Cell_Tally::finalize(double num_particles)
 
         // Store the error of the sample mean
         moments.second = std::sqrt(var * inv_N);
+
+        // Update the counter
+        ++ctr;
     }
+    CHECK(ctr == d_tally.size());
 }
 
 //---------------------------------------------------------------------------//

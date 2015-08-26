@@ -252,7 +252,7 @@ TEST_F(CellTallyTest, one_cell)
     tally->end_history();
 
     // Finalize
-    tally->finalize(3);
+    tally->finalize(3 * nodes);
 
     // Get the results
     auto results = tally->results();
@@ -263,8 +263,17 @@ TEST_F(CellTallyTest, one_cell)
     const auto &r = results[3];
 
     EXPECT_SOFTEQ(2.833333333e-03, r.first,  1.0e-8);
-    EXPECT_SOFTEQ(7.264831573e-04, r.second, 1.0e-8);
+
+    if (nodes == 0)
+    {
+        EXPECT_SOFTEQ(7.264831573e-04, r.second, 1.0e-8);
+    }
+    else if (nodes == 4)
+    {
+        EXPECT_SOFTEQ(0.0003097734590948617, r.second, 1.0e-8);
+    }
 }
+
 //---------------------------------------------------------------------------//
 
 TEST_F(CellTallyTest, multi_cell)
@@ -346,7 +355,7 @@ TEST_F(CellTallyTest, multi_cell)
     tally->end_history();
 
     // Finalize
-    tally->finalize(3);
+    tally->finalize(3 * nodes);
 
     // Get the results
     auto results = tally->results();
@@ -361,14 +370,22 @@ TEST_F(CellTallyTest, multi_cell)
     const auto &r1 = results[1];
     const auto &r3 = results[3];
 
-    EXPECT_SOFTEQ(5.00000000e-04, r0.first,  1.0e-8);
-    EXPECT_SOFTEQ(5.00000000e-04, r0.second, 1.0e-8);
+    EXPECT_SOFTEQ(5.00000000e-04,  r0.first, 1.0e-8);
+    EXPECT_SOFTEQ(5.00000000e-04,  r1.first, 1.0e-8);
+    EXPECT_SOFTEQ(2.833333333e-03, r3.first, 1.0e-8);
 
-    EXPECT_SOFTEQ(5.00000000e-04, r1.first,  1.0e-8);
-    EXPECT_SOFTEQ(5.00000000e-04, r1.second, 1.0e-8);
-
-    EXPECT_SOFTEQ(2.833333333e-03, r3.first,  1.0e-8);
-    EXPECT_SOFTEQ(7.264831573e-04, r3.second, 1.0e-8);
+    if (nodes == 0)
+    {
+        EXPECT_SOFTEQ(5.00000000e-04,  r0.second, 1.0e-8);
+        EXPECT_SOFTEQ(5.00000000e-04,  r1.second, 1.0e-8);
+        EXPECT_SOFTEQ(7.264831573e-04, r3.second, 1.0e-8);
+    }
+    else if (nodes == 4)
+    {
+        EXPECT_SOFTEQ(0.00021320071635561042, r0.second, 1.0e-8);
+        EXPECT_SOFTEQ(0.00021320071635561042, r1.second, 1.0e-8);
+        EXPECT_SOFTEQ(0.0003097734590948617,  r3.second, 1.0e-8);
+    }
 }
 
 //---------------------------------------------------------------------------//
