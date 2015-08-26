@@ -30,6 +30,8 @@ inline bool multithreading_available()
     return false;
 }
 
+//---------------------------------------------------------------------------//
+
 inline void set_num_threads(int nt)
 {
 #ifdef _OPENMP
