@@ -19,8 +19,32 @@
 
 #include "Utils/gtest/utils_gtest.hh"
 
+// Allow explicit instantiations in this stand-alone test
+#include "Utils/utils/Metaclass.t.hh"
+
 //---------------------------------------------------------------------------//
 // Test fixture
+//---------------------------------------------------------------------------//
+
+class Thingy
+{
+  public:
+    typedef profugus::Metaclass<Thingy> Metadata;
+
+  private:
+    Metadata d_metadata;
+
+  public:
+    
+    //@{
+    //! Get metadata.
+    const Metadata& metadata() const { return d_metadata; }
+    Metadata& metadata() { return d_metadata; }
+    //@}
+};
+
+template class profugus::Metaclass<Thingy>;
+
 //---------------------------------------------------------------------------//
 
 class CellTallyTest : public ::testing::Test
@@ -28,6 +52,7 @@ class CellTallyTest : public ::testing::Test
   protected:
     // >>> TYPEDEFS
     typedef profugus::Cell_Tally    Cell_Tally;
+    typedef Cell_Tally::State_t     Tally_State;
     typedef Cell_Tally::Geometry_t  Geometry_t;
     typedef Cell_Tally::SP_Geometry SP_Geometry;
     typedef Cell_Tally::Physics_t   Physics_t;
@@ -171,6 +196,85 @@ class CellTallyTest : public ::testing::Test
 
 //---------------------------------------------------------------------------//
 // TESTS
+//---------------------------------------------------------------------------//
+
+TEST_F(CellTallyTest, state)
+{
+    Tally_State state;
+
+    EXPECT_TRUE(state.state().empty());
+
+    // Add some cells
+    state(1) = 1.0;
+    state(2) = 2.0;
+    state(9) = 9.0;
+    state(1) = 2.0;
+
+    const auto &s = state.state();
+    EXPECT_EQ(3, s.size());
+
+    EXPECT_TRUE(s.count(1));
+    EXPECT_TRUE(s.count(2));
+    EXPECT_TRUE(s.count(9));
+
+    EXPECT_EQ(2, s.find(1)->second);
+    EXPECT_EQ(2, s.find(2)->second);
+    EXPECT_EQ(9, s.find(9)->second);
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(CellTallyTest, metadata)
+{
+    {
+        Thingy t;
+        EXPECT_EQ(0, t.metadata().size());
+    }
+
+    unsigned int ct_idx = 0;
+    
+    {
+        auto mm = std::make_shared<
+            profugus::metaclass::Member_Manager_Cell_Tally_State>();
+
+        ct_idx = Thingy::Metadata::new_member<Tally_State>(
+            "cell_tally_state", mm);
+    }
+
+    {
+        Thingy t;
+        EXPECT_EQ(1, t.metadata().size());
+
+        auto &state = t.metadata().access<Tally_State>(ct_idx);
+        EXPECT_TRUE(state.state().empty());
+
+        // Add some cells
+        state(1) = 1.0;
+        state(2) = 2.0;
+        state(9) = 9.0;
+        state(1) = 2.0;
+
+        const auto &s = state.state();
+        EXPECT_EQ(3, s.size());
+
+        EXPECT_TRUE(s.count(1));
+        EXPECT_TRUE(s.count(2));
+        EXPECT_TRUE(s.count(9));
+
+        EXPECT_EQ(2, s.find(1)->second);
+        EXPECT_EQ(2, s.find(2)->second);
+        EXPECT_EQ(9, s.find(9)->second);
+
+        Thingy p;
+        EXPECT_TRUE(p.metadata().access<Tally_State>(ct_idx).state().empty());
+    }
+
+    Thingy::Metadata::reset();
+
+    Thingy t;
+    EXPECT_EQ(0, t.metadata().size());
+}
+
 //---------------------------------------------------------------------------//
 
 TEST_F(CellTallyTest, one_cell)
@@ -387,6 +491,10 @@ TEST_F(CellTallyTest, multi_cell)
         EXPECT_SOFTEQ(0.0003097734590948617,  r3.second, 1.0e-8);
     }
 }
+
+//---------------------------------------------------------------------------//
+
+
 
 //---------------------------------------------------------------------------//
 // end of MC/mc/test/tstCell_Tally.cc

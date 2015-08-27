@@ -16,6 +16,7 @@
 #include <memory>
 #include <utility>
 
+#include "Cell_Tally_State.hh"
 #include "Tally.hh"
 
 namespace profugus
@@ -40,6 +41,7 @@ class Cell_Tally : public Pathlength_Tally
   public:
     //@{
     //! Typedefs.
+    typedef Cell_Tally_State                 State_t;
     typedef Physics_t::Geometry_t            Geometry_t;
     typedef std::shared_ptr<Geometry_t>      SP_Geometry;
     typedef std::pair<double, double>        Moments;
