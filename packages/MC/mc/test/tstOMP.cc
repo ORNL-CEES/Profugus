@@ -97,15 +97,13 @@ TEST_F(TestRNG, 1_thread)
 
 #pragma omp parallel
     {
-        int id = 0;
 #pragma omp critical
         {
-            auto refr = rng_control->rng(id);
-            for (int n = 0; n < 100; ++n)
+            auto refr = rng_control->rng(thread_id);
+            for (int n = 0; n < 1; ++n)
             {
                 EXPECT_SOFTEQ(refr.ran(), rng.ran(), 1.0e-6);
             }
-            ++id;
         }
     }
 }

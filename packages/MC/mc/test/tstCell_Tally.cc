@@ -35,7 +35,7 @@ class Thingy
     Metadata d_metadata;
 
   public:
-    
+
     //@{
     //! Get metadata.
     const Metadata& metadata() const { return d_metadata; }
@@ -232,7 +232,7 @@ TEST_F(CellTallyTest, metadata)
     }
 
     unsigned int ct_idx = 0;
-    
+
     {
         auto mm = std::make_shared<
             profugus::metaclass::Member_Manager_Cell_Tally_State>();
@@ -267,6 +267,20 @@ TEST_F(CellTallyTest, metadata)
 
         Thingy p;
         EXPECT_TRUE(p.metadata().access<Tally_State>(ct_idx).state().empty());
+
+        // Check persistence
+        Thingy q(t);
+
+        const auto &qs = q.metadata().access<Tally_State>(ct_idx).state();
+        EXPECT_EQ(3, qs.size());
+
+        EXPECT_TRUE(qs.count(1));
+        EXPECT_TRUE(qs.count(2));
+        EXPECT_TRUE(qs.count(9));
+
+        EXPECT_EQ(2, qs.find(1)->second);
+        EXPECT_EQ(2, qs.find(2)->second);
+        EXPECT_EQ(9, qs.find(9)->second);
     }
 
     Thingy::Metadata::reset();
@@ -281,79 +295,88 @@ TEST_F(CellTallyTest, one_cell)
 {
     tally->set_cells({3});
 
-    Particle_t p;
-    p.set_wt(1.0);
-
     // History 1
+    {
+        Particle_t p;
+        p.set_wt(1.0);
 
-    geometry->initialize({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(0, geometry->cell(p.geo_state()));
+        geometry->initialize({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(0, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
 
-    geometry->initialize({11.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(1, geometry->cell(p.geo_state()));
+        geometry->initialize({11.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(1, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
 
-    geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
 
-    geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(3, geometry->cell(p.geo_state()));
+        geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(3, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(4.0, p);
-    tally->accumulate(2.0, p);
+        // tally here
+        tally->accumulate(4.0, p);
+        tally->accumulate(2.0, p);
 
-    geometry->initialize({9.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({9.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
 
-    tally->end_history();
+        tally->end_history(p);
+    }
 
     // History 2
+    {
+        Particle_t p;
+        p.set_wt(1.0);
 
-    geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
-    tally->accumulate(6.0, p);
-    tally->accumulate(9.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
+        tally->accumulate(6.0, p);
+        tally->accumulate(9.0, p);
 
-    geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(3, geometry->cell(p.geo_state()));
+        geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(3, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(2.0, p);
-    tally->accumulate(1.0, p);
+        // tally here
+        tally->accumulate(2.0, p);
+        tally->accumulate(1.0, p);
 
-    tally->end_history();
+        tally->end_history(p);
+    }
 
     // History 3
+    {
+        Particle_t p;
+        p.set_wt(1.0);
 
-    geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(7.0, p);
-    tally->accumulate(6.0, p);
+        // no tally here
+        tally->accumulate(7.0, p);
+        tally->accumulate(6.0, p);
 
-    geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(3, geometry->cell(p.geo_state()));
+        geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(3, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(8.0, p);
+        // tally here
+        tally->accumulate(8.0, p);
 
-    tally->end_history();
+        tally->end_history(p);
+    }
 
     // Finalize
     tally->finalize(3 * nodes);
@@ -384,79 +407,88 @@ TEST_F(CellTallyTest, multi_cell)
 {
     tally->set_cells({3, 1, 0});
 
-    Particle_t p;
-    p.set_wt(1.0);
-
     // History 1
+    {
+        Particle_t p;
+        p.set_wt(1.0);
 
-    geometry->initialize({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(0, geometry->cell(p.geo_state()));
+        geometry->initialize({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(0, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(3.0, p);
+        // tally here
+        tally->accumulate(3.0, p);
 
-    geometry->initialize({11.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(1, geometry->cell(p.geo_state()));
+        geometry->initialize({11.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(1, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(3.0, p);
+        // tally here
+        tally->accumulate(3.0, p);
 
-    geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
 
-    geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(3, geometry->cell(p.geo_state()));
+        geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(3, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(4.0, p);
-    tally->accumulate(2.0, p);
+        // tally here
+        tally->accumulate(4.0, p);
+        tally->accumulate(2.0, p);
 
-    geometry->initialize({9.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({9.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
 
-    tally->end_history();
+        tally->end_history(p);
+    }
 
     // History 2
+    {
+        Particle_t p;
+        p.set_wt(1.0);
 
-    geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(3.0, p);
-    tally->accumulate(6.0, p);
-    tally->accumulate(9.0, p);
+        // no tally here
+        tally->accumulate(3.0, p);
+        tally->accumulate(6.0, p);
+        tally->accumulate(9.0, p);
 
-    geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(3, geometry->cell(p.geo_state()));
+        geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(3, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(2.0, p);
-    tally->accumulate(1.0, p);
+        // tally here
+        tally->accumulate(2.0, p);
+        tally->accumulate(1.0, p);
 
-    tally->end_history();
+        tally->end_history(p);
+    }
 
     // History 3
+    {
+        Particle_t p;
+        p.set_wt(1.0);
 
-    geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(2, geometry->cell(p.geo_state()));
+        geometry->initialize({5.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(2, geometry->cell(p.geo_state()));
 
-    // no tally here
-    tally->accumulate(7.0, p);
-    tally->accumulate(6.0, p);
+        // no tally here
+        tally->accumulate(7.0, p);
+        tally->accumulate(6.0, p);
 
-    geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
-    EXPECT_EQ(3, geometry->cell(p.geo_state()));
+        geometry->initialize({15.0, 15.0, 1.0}, {1.0, 1.0, 1.0}, p.geo_state());
+        EXPECT_EQ(3, geometry->cell(p.geo_state()));
 
-    // tally here
-    tally->accumulate(8.0, p);
+        // tally here
+        tally->accumulate(8.0, p);
 
-    tally->end_history();
+        tally->end_history(p);
+    }
 
     // Finalize
     tally->finalize(3 * nodes);
@@ -491,10 +523,6 @@ TEST_F(CellTallyTest, multi_cell)
         EXPECT_SOFTEQ(0.0003097734590948617,  r3.second, 1.0e-8);
     }
 }
-
-//---------------------------------------------------------------------------//
-
-
 
 //---------------------------------------------------------------------------//
 // end of MC/mc/test/tstCell_Tally.cc

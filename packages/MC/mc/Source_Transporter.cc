@@ -110,23 +110,23 @@ void Source_Transporter::solve()
         while (!bank.empty())
         {
             // get a particle from the bank
-            SP_Particle bank_particle = bank.pop();
-            CHECK(bank_particle);
-            CHECK(bank_particle->alive());
+            p = bank.pop();
+            CHECK(p);
+            CHECK(p->alive());
 
             // make particle alive
-            bank_particle->live();
+            p->live();
 
             // transport it
-            d_transporter.transport(*bank_particle, bank);
-            CHECK(!bank_particle->alive());
+            d_transporter.transport(*p, bank);
+            CHECK(!p->alive());
         }
 
         // update the counter
         ++counter;
 
         // indicate completion of particle history
-        d_tallier->end_history();
+        d_tallier->end_history(*p);
 
         // print message if needed
         if (counter % d_print_count == 0)

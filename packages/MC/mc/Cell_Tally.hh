@@ -70,7 +70,7 @@ class Cell_Tally : public Pathlength_Tally
     // >>> TALLY INTERFACE
 
     // Accumulate first and second moments
-    void end_history();
+    void end_history(const Particle_t &p);
 
     // Do post-processing on first and second moments
     void finalize(double num_particles);
@@ -85,6 +85,9 @@ class Cell_Tally : public Pathlength_Tally
 
   private:
     // >>> IMPLEMENTATION
+
+    // Index in the particles tally state.
+    const unsigned int d_state_idx;
 
     typedef std::unordered_map<int, double> History_Tally;
 

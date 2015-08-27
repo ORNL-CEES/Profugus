@@ -133,7 +133,7 @@ class Tallier
     void end_cycle(double num_particles);
 
     // Perform all end-history tally tasks.
-    void end_history();
+    void end_history(const Particle_t &p);
 
     // Finalize tallies.
     void finalize(double num_particles);

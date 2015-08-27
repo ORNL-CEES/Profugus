@@ -26,13 +26,25 @@ namespace profugus
 Cell_Tally::Cell_Tally(SP_Physics physics)
     : Base(physics, false)
     , d_geometry(b_physics->get_geometry())
+    , d_state_idx(0)
 {
     REQUIRE(d_geometry);
 
-    // set the tally name
+    // Add tally state metadata to the particle
+
+    // First make a member memory manager
+    auto member =
+        std::make_shared<metaclass::Member_Manager_Cell_Tally_State>();
+
+    // Now make the metadata in the particle
+    const_cast<unsigned int &>(d_state_idx) =
+        Particle_t::Metadata::new_member<State_t>("cell_tally_state", member);
+    CHECK(Particle_t::Metadata::name(d_state_idx) == "cell_tally_state");
+
+    // Set the tally name
     set_name("cell");
 
-    // reset tally
+    // Seset tally
     reset();
 }
 
@@ -63,11 +75,15 @@ void Cell_Tally::set_cells(const std::vector<int> &cells)
 /*
  * \brief Accumulate first and second moments.
  */
-void Cell_Tally::end_history()
+void Cell_Tally::end_history(const Particle_t &p)
 {
+    // Get the particles private tally
+    const State_t::History_Tally &hist =
+        p.metadata().access<State_t>(d_state_idx).state();
+
     // Iterate through local tally results and add them to the permanent
     // results
-    for (const auto &t : d_hist)
+    for (const auto &t : hist)
     {
         CHECK(d_tally.find(t.first) != d_tally.end());
 
@@ -78,9 +94,6 @@ void Cell_Tally::end_history()
         r.first  += t.second;
         r.second += t.second * t.second;
     }
-
-    // Clear the local tally
-    clear_local();
 }
 
 //---------------------------------------------------------------------------//
@@ -157,17 +170,12 @@ void Cell_Tally::finalize(double num_particles)
  */
 void Cell_Tally::reset()
 {
-    // Clear the local tally
-    clear_local();
-
     // Clear all current tally results (but keep existing cells in place)
     for (auto &t : d_tally)
     {
         t.second.first  = 0.0;
         t.second.second = 0.0;
     }
-
-    ENSURE(d_hist.empty());
 }
 
 //---------------------------------------------------------------------------//
@@ -177,8 +185,13 @@ void Cell_Tally::reset()
 void Cell_Tally::accumulate(double            step,
                             const Particle_t &p)
 {
+    REQUIRE(Particle_t::Metadata::name(d_state_idx) == "cell_tally_state");
+
     // Get the cell index
     int cell = d_geometry->cell(p.geo_state());
+
+    // Get the particle local history tally
+    auto &hist = *p.metadata().access<State_t>(d_state_idx).data();
 
     // O(1) check to see if we need to tally it
     if (d_tally.find(cell) != d_tally.end())
@@ -186,23 +199,8 @@ void Cell_Tally::accumulate(double            step,
         CHECK(d_tally.count(cell) == 1);
 
         // Tally for the history
-        d_hist[cell] += p.wt() * step;
+        hist[cell] += p.wt() * step;
     }
-}
-
-//---------------------------------------------------------------------------//
-// PRIVATE FUNCTIONS
-//---------------------------------------------------------------------------//
-/*
- * \brief Clear local values.
- */
-void Cell_Tally::clear_local()
-{
-    // Clear the local tally
-    History_Tally tally;
-    std::swap(tally, d_hist);
-
-    ENSURE(d_hist.empty());
 }
 
 } // end namespace profugus

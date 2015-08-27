@@ -11,6 +11,7 @@
 #ifndef MC_mc_Cell_Tally_State_hh
 #define MC_mc_Cell_Tally_State_hh
 
+#include <memory>
 #include <unordered_map>
 
 #include "Utils/harness/DBC.hh"
@@ -35,18 +36,25 @@ class Cell_Tally_State
     // >>> DATA
 
     // Tally for a history.
-    History_Tally d_hist;
+    std::shared_ptr<History_Tally> d_hist;
 
   public:
-    Cell_Tally_State() { /* * */ }
+    Cell_Tally_State()
+    : d_hist(std::make_shared<History_Tally>())
+    {
+        /* * */
+    }
 
     //! Get the history of the tally.
-    const History_Tally& state() const { return d_hist; }
+    const History_Tally& state() const { return *d_hist; }
 
     //@{
     //! Add contribution to a cell.
-    double& operator()(int cell) { return d_hist[cell]; }
+    double& operator()(int cell) { return (*d_hist)[cell]; }
     //@}
+
+    //! Return the data.
+    std::shared_ptr<History_Tally> data() const { return d_hist; }
 };
 
 //---------------------------------------------------------------------------//

@@ -74,7 +74,7 @@ class Tally
     // >>> PUBLIC INTERFACE
 
     //! Accumulate first and second moments
-    virtual void end_history() { /* * */ }
+    virtual void end_history(const Particle_t &p) { /* * */ }
 
     //! Do post-processing on first and second moments
     virtual void finalize(double num_particles) { /* * */ }
