@@ -51,15 +51,16 @@ class CellTallyTest : public ::testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::Cell_Tally    Cell_Tally;
-    typedef Cell_Tally::State_t     Tally_State;
-    typedef Cell_Tally::Geometry_t  Geometry_t;
-    typedef Cell_Tally::SP_Geometry SP_Geometry;
-    typedef Cell_Tally::Physics_t   Physics_t;
-    typedef Cell_Tally::SP_Physics  SP_Physics;
-    typedef Physics_t::Particle_t   Particle_t;
-    typedef Physics_t::XS_t         XS_t;
-    typedef Physics_t::RCP_XS       RCP_XS;
+    typedef profugus::Cell_Tally     Cell_Tally;
+    typedef Cell_Tally::State_t      Tally_State;
+    typedef Cell_Tally::Geometry_t   Geometry_t;
+    typedef Cell_Tally::SP_Geometry  SP_Geometry;
+    typedef Cell_Tally::Physics_t    Physics_t;
+    typedef Cell_Tally::SP_Physics   SP_Physics;
+    typedef Physics_t::Particle_t    Particle_t;
+    typedef Physics_t::XS_t          XS_t;
+    typedef Physics_t::RCP_XS        RCP_XS;
+    typedef Geometry_t::Space_Vector Space_Vector;
 
     typedef Teuchos::ParameterList        ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;
@@ -520,6 +521,132 @@ TEST_F(CellTallyTest, multi_cell)
     {
         EXPECT_SOFTEQ(0.00021320071635561042, r0.second, 1.0e-8);
         EXPECT_SOFTEQ(0.00021320071635561042, r1.second, 1.0e-8);
+        EXPECT_SOFTEQ(0.0003097734590948617,  r3.second, 1.0e-8);
+    }
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(CellTallyTest, multithread)
+{
+    if (!profugus::multithreading_available())
+    {
+        SKIP_TEST("This test only runs with multithreading.");
+    }
+
+    profugus::set_num_threads(2);
+
+    tally->set_cells({0, 3});
+    Space_Vector omega = {1.0, 1.0, 1.0};
+
+#pragma omp parallel
+    {
+        // History 1
+        {
+            Particle_t p;
+            p.set_wt(1.0);
+
+            if (profugus::thread_id() == 0)
+            {
+                geometry->initialize({1.0, 1.0, 1.0}, omega, p.geo_state());
+                EXPECT_EQ(0, geometry->cell(p.geo_state()));
+
+                tally->accumulate(3.0, p);
+
+            }
+            else
+            {
+                geometry->initialize({15.0, 15.0, 1.0}, omega, p.geo_state());
+                EXPECT_EQ(3, geometry->cell(p.geo_state()));
+
+                tally->accumulate(4.0, p);
+                tally->accumulate(2.0, p);
+            }
+
+            tally->end_history(p);
+        }
+
+        // History 2
+        {
+            Particle_t p;
+            p.set_wt(1.0);
+
+            if (profugus::thread_id() == 0)
+            {
+                geometry->initialize({5.0, 15.0, 1.0}, omega, p.geo_state());
+                EXPECT_EQ(2, geometry->cell(p.geo_state()));
+
+                // no tally here
+                tally->accumulate(3.0, p);
+                tally->accumulate(6.0, p);
+                tally->accumulate(9.0, p);
+            }
+            else
+            {
+                geometry->initialize({15.0, 15.0, 1.0}, omega, p.geo_state());
+                EXPECT_EQ(3, geometry->cell(p.geo_state()));
+
+                // tally here
+                tally->accumulate(2.0, p);
+                tally->accumulate(1.0, p);
+            }
+
+            tally->end_history(p);
+        }
+
+        // History 3
+        {
+            Particle_t p;
+            p.set_wt(1.0);
+
+            if (profugus::thread_id() == 0)
+            {
+                geometry->initialize({15.0, 15.0, 1.0}, omega, p.geo_state());
+                EXPECT_EQ(3, geometry->cell(p.geo_state()));
+
+                // tally here
+                tally->accumulate(8.0, p);
+            }
+            else
+            {
+                geometry->initialize({5.0, 15.0, 1.0}, omega, p.geo_state());
+                EXPECT_EQ(2, geometry->cell(p.geo_state()));
+
+                // no tally here
+                tally->accumulate(7.0, p);
+                tally->accumulate(6.0, p);
+            }
+
+            tally->end_history(p);
+        }
+    }
+
+    // Finalize
+    tally->finalize(3 * nodes);
+
+    // Get the results
+    auto results = tally->results();
+
+    EXPECT_EQ(2, results.size());
+    EXPECT_TRUE(results.find(0) != results.end());
+    EXPECT_TRUE(results.find(1) == results.end());
+    EXPECT_TRUE(results.find(2) == results.end());
+    EXPECT_TRUE(results.find(3) != results.end());
+
+    const auto &r0 = results[0];
+    const auto &r3 = results[3];
+
+    EXPECT_SOFTEQ(5.00000000e-04,  r0.first, 1.0e-8);
+    EXPECT_SOFTEQ(2.833333333e-03, r3.first, 1.0e-8);
+
+    if (nodes == 0)
+    {
+        EXPECT_SOFTEQ(5.00000000e-04,  r0.second, 1.0e-8);
+        EXPECT_SOFTEQ(7.264831573e-04, r3.second, 1.0e-8);
+    }
+    else if (nodes == 4)
+    {
+        EXPECT_SOFTEQ(0.00021320071635561042, r0.second, 1.0e-8);
         EXPECT_SOFTEQ(0.0003097734590948617,  r3.second, 1.0e-8);
     }
 }

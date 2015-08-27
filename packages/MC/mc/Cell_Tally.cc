@@ -91,7 +91,9 @@ void Cell_Tally::end_history(const Particle_t &p)
         auto &r = d_tally[t.first];
 
         // Store the moments
+#pragma omp atomic update
         r.first  += t.second;
+#pragma omp atomic update
         r.second += t.second * t.second;
     }
 }
