@@ -54,6 +54,7 @@ Source::~Source()
 void Source::make_RNG()
 {
     REQUIRE(!is_threading_dynamic());
+    REQUIRE(!in_thread_parallel_region());
 
     // calculate offsets for generating random numbers on each processor (so
     // we don't use the same rng streams)

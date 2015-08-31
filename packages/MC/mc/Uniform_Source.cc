@@ -101,6 +101,7 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
 void Uniform_Source::build_source(SP_Shape geometric_shape)
 {
     REQUIRE(geometric_shape);
+    REQUIRE(!in_thread_parallel_region());
 
     SCOPED_TIMER("profugus::Uniform_Source.build_source");
 
