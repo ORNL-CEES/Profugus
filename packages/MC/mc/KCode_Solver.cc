@@ -31,6 +31,9 @@ KCode_Solver::KCode_Solver(RCP_Std_DB db)
     , d_build_phase(CONSTRUCTED)
     , d_quiet(db->get("quiet", false))
 {
+    VALIDATE(profugus::num_available_threads() == 1,
+             "Cannot run multithreaded-eigenvalue problems.");
+
     // set quiet off on work nodes
     if (profugus::node() != 0)
         d_quiet = true;

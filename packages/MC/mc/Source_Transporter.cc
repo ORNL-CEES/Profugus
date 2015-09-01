@@ -73,6 +73,7 @@ void Source_Transporter::solve()
     using std::cout; using std::endl;
 
     REQUIRE(d_source);
+    REQUIRE(!in_thread_parallel_region());
 
     // barrier at the start
     profugus::global_barrier();
@@ -85,60 +86,70 @@ void Source_Transporter::solve()
     // get a base class reference to the source
     Source_t &source = *d_source;
 
-    // make a particle bank
-    typename Transporter_t::Bank_t bank;
-    CHECK(bank.empty());
-
-    // run all the local histories while the source exists, there is no need
-    // to communicate particles because the problem is replicated
-    while (!source.empty())
+    // >>> ENTERING THREAD-PARALLEL TRANSPORT BLOCK
+#pragma omp parallel reduction(+:counter)
     {
-        // get a particle from the source
-        SP_Particle p = source.get_particle();
-        CHECK(p);
-        CHECK(p->alive());
+        // make a particle bank
+        typename Transporter_t::Bank_t bank;
+        CHECK(bank.empty());
 
-        // Do "source event" tallies on the particle
-        d_tallier->source(*p);
-
-        // transport the particle through this (replicated) domain
-        d_transporter.transport(*p, bank);
-        CHECK(!p->alive());
-
-        // transport any secondary particles that are part of this history
-        // (from splitting or physics) that get put into the bank
-        while (!bank.empty())
+        // run all the local histories while the source exists, there is no
+        // need to communicate particles because the problem is replicated
+        while (!source.empty())
         {
-            // get a particle from the bank
-            p = bank.pop();
+            // get a particle from the source
+            SP_Particle p = source.get_particle();
             CHECK(p);
             CHECK(p->alive());
 
-            // make particle alive
-            p->live();
+            // Do "source event" tallies on the particle
+            d_tallier->source(*p);
 
-            // transport it
+            // transport the particle through this (replicated) domain
             d_transporter.transport(*p, bank);
             CHECK(!p->alive());
+
+            // transport any secondary particles that are part of this history
+            // (from splitting or physics) that get put into the bank
+            while (!bank.empty())
+            {
+                // get a particle from the bank
+                p = bank.pop();
+                CHECK(p);
+                CHECK(p->alive());
+
+                // make particle alive
+                p->live();
+
+                // transport it
+                d_transporter.transport(*p, bank);
+                CHECK(!p->alive());
+            }
+
+            // update the counter
+            ++counter;
+
+            // indicate completion of particle history
+            d_tallier->end_history(*p);
+
+            // print message if needed
+            if (profugus::num_current_threads() == 1)
+            {
+                if (counter % d_print_count == 0)
+                {
+                    double percent_complete
+                        = (100. * counter) / source.num_to_transport();
+                    cout << ">>> Finished " << counter << "("
+                         << std::setw(6) << std::fixed << std::setprecision(2)
+                         << percent_complete << "%) particles on domain "
+                         << d_node << endl;
+                }
+            }
         }
 
-        // update the counter
-        ++counter;
-
-        // indicate completion of particle history
-        d_tallier->end_history(*p);
-
-        // print message if needed
-        if (counter % d_print_count == 0)
-        {
-            double percent_complete
-                = (100. * counter) / source.num_to_transport();
-            cout << ">>> Finished " << counter << "("
-                 << std::setw(6) << std::fixed << std::setprecision(2)
-                 << percent_complete << "%) particles on domain "
-                 << d_node << endl;
-        }
+        ENSURE(bank.empty());
     }
+    // >>> EXITING THREAD-PARALLEL TRANSPORT BLOCK
 
     // barrier at the end
     profugus::global_barrier();
@@ -149,7 +160,6 @@ void Source_Transporter::solve()
 #ifdef REMEMBER_ON
     profugus::global_sum(counter);
     ENSURE(counter == source.total_num_to_transport());
-    ENSURE(bank.empty());
 #endif
 }
 

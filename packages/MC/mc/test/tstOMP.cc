@@ -131,6 +131,30 @@ TEST_F(TestRNG, 4_thread)
 
 //---------------------------------------------------------------------------//
 
+TEST(OMP, reduction)
+{
+    omp_set_dynamic(0);
+    omp_set_num_threads(4);
+
+    int counter = 0;
+
+    int samples[] = {99, 101, 103, 97};
+
+#pragma omp parallel reduction(+:counter)
+    {
+        int id = profugus::thread_id();
+
+        for (int i = 0; i < samples[id]; ++i)
+        {
+            ++counter;
+        }
+    }
+
+    EXPECT_EQ(400, counter);
+}
+
+//---------------------------------------------------------------------------//
+
 static int x[] = {0,1,2,3};
 #pragma omp threadprivate(x)
 
