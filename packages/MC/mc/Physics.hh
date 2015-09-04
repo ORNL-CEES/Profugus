@@ -191,9 +191,6 @@ class Physics
     // Fissionable bool by local matid.
     std::vector<bool> d_fissionable;
 
-    // Material id of current region.
-    int d_matid;
-
     // Sample a group.
     int sample_group(int matid, int g, double rnd) const;
 

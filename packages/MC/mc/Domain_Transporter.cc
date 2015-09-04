@@ -110,9 +110,6 @@ void Domain_Transporter::set(SP_Fission_Sites fission_sites,
 
     // assign current iterate of keff
     d_keff = keff;
-
-    // initialize the number of fission sites to 0
-    d_num_fission_sites = 0;
 }
 
 //---------------------------------------------------------------------------//
@@ -135,6 +132,14 @@ void Domain_Transporter::transport(Particle_t &particle,
     // particle state
     Geo_State_t &geo_state = particle.geo_state();
 
+    // Step selector.
+    Step_Selector step;
+
+    // tracking distances
+    double dist_mfp = 0.0;
+    double dist_bnd = 0.0;
+    double dist_col = 0.0;
+
     // step particle through domain while particle is alive; life is relative
     // to the domain, so a particle leaving the domain would be no longer
     // alive wrt the current domain even though the particle might be alive to
@@ -142,7 +147,7 @@ void Domain_Transporter::transport(Particle_t &particle,
     while (particle.alive())
     {
         // calculate distance to collision in mean-free-paths
-        d_dist_mfp = -std::log(particle.rng().ran());
+        dist_mfp = -std::log(particle.rng().ran());
 
         // while we are hitting boundaries, continue to transport until we get
         // to the collision site
@@ -161,35 +166,35 @@ void Domain_Transporter::transport(Particle_t &particle,
         while (particle.event() == events::BOUNDARY)
         {
             CHECK(particle.alive());
-            CHECK(d_dist_mfp > 0.0);
+            CHECK(dist_mfp > 0.0);
 
             // total interaction cross section
-            d_xs_tot = d_physics->total(physics::TOTAL, particle);
-            CHECK(d_xs_tot >= 0.0);
+            double xs_tot = d_physics->total(physics::TOTAL, particle);
+            CHECK(xs_tot >= 0.0);
 
             // sample distance to next collision
-            if (d_xs_tot > 0.0)
-                d_dist_col = d_dist_mfp / d_xs_tot;
+            if (xs_tot > 0.0)
+                dist_col = dist_mfp / xs_tot;
             else
-                d_dist_col = constants::huge;
+                dist_col = constants::huge;
 
             // initialize the distance to collision in the step selector
-            d_step.initialize(d_dist_col, events::COLLISION);
+            step.initialize(dist_col, events::COLLISION);
 
             // calculate distance to next geometry boundary
-            d_dist_bnd = d_geometry->distance_to_boundary(geo_state);
-            d_step.submit(d_dist_bnd, events::BOUNDARY);
+            dist_bnd = d_geometry->distance_to_boundary(geo_state);
+            step.submit(dist_bnd, events::BOUNDARY);
 
             // set the next event in the particle
-            CHECK(d_step.tag() < events::END_EVENT);
-            particle.set_event(static_cast<events::Event>(d_step.tag()));
+            CHECK(step.tag() < events::END_EVENT);
+            particle.set_event(static_cast<events::Event>(step.tag()));
 
             // path-length tallies (the actual movement of the particle will
             // take place when we process the various events)
-            d_tallier->path_length(d_step.step(), particle);
+            d_tallier->path_length(step.step(), particle);
 
             // update the mfp distance travelled
-            d_dist_mfp -= d_step.step() * d_xs_tot;
+            dist_mfp -= step.step() * xs_tot;
 
             // process a particle through the geometric boundary
             if (particle.event() == events::BOUNDARY)
@@ -202,7 +207,7 @@ void Domain_Transporter::transport(Particle_t &particle,
 
         // process particle at a collision
         if (particle.event() == events::COLLISION)
-            process_collision(particle, bank);
+            process_collision(step.step(), particle, bank);
 
         // any future events go here ...
     }
@@ -276,22 +281,22 @@ void Domain_Transporter::process_boundary(Particle_t &particle,
 
 //---------------------------------------------------------------------------//
 
-void Domain_Transporter::process_collision(Particle_t &particle,
+void Domain_Transporter::process_collision(double      step,
+                                           Particle_t &particle,
                                            Bank_t     &bank)
 {
     REQUIRE(d_var_reduction);
     REQUIRE(particle.event() == events::COLLISION);
 
     // move the particle to the collision site
-    d_geometry->move_to_point(d_step.step(), particle.geo_state());
+    d_geometry->move_to_point(step, particle.geo_state());
 
     // sample fission sites
     if (d_sample_fission_sites)
     {
         CHECK(d_fission_sites);
         CHECK(d_keff > 0.0);
-        d_num_fission_sites += d_physics->sample_fission_site(
-            particle, *d_fission_sites, d_keff);
+        d_physics->sample_fission_site(particle, *d_fission_sites, d_keff);
     }
 
     // use the physics package to process the collision

@@ -398,5 +398,129 @@ TEST_F(Domain_TransporterTest, fission_sampling)
 }
 
 //---------------------------------------------------------------------------//
+
+class Multithread_Domain_TransporterTest : public TransporterTestBase
+{
+  protected:
+    typedef profugus::Domain_Transporter       Transporter;
+    typedef Physics_t::Fission_Site_Container  Fission_Site_Container;
+    typedef shared_ptr<Fission_Site_Container> SP_Fission_Sites;
+
+  protected:
+
+    void init_vr()
+    {
+        db->set("weight_cutoff", 0.001);
+        var_red = std::make_shared<profugus::VR_Roulette>(db);
+    }
+
+    void init_tallies()
+    {
+        // no tallies have been added
+        tallier->build();
+    }
+
+  protected:
+
+    void run(int num_threads)
+    {
+        profugus::set_num_threads(num_threads);
+
+        Transporter transporter;
+        transporter.set(geometry, physics);
+        transporter.set(var_red);
+        transporter.set(tallier);
+
+        // events
+        int esc = 0, rk = 0;
+
+        // number of particles
+        int Np = 100;
+
+        std::vector<Particle_t::RNG_t> rngs(100);
+        for (int n = 0; n < 100; ++n)
+        {
+            rngs[n] = rcon->rng(n);
+        }
+
+#pragma omp parallel reduction(+:esc,rk)
+        {
+            int id = profugus::thread_id();
+
+            // make a particle and bank
+            Particle_t p;
+            Bank_t     bank;
+
+            // geometry and physics state
+            Particle_t::Geo_State_t &geo = p.geo_state();
+
+#pragma omp for
+            for (int n = 0; n < Np; ++n)
+            {
+                p.set_rng(rngs[n]);
+
+                // sample a position WITHIN the geometry
+                double x = 3.78 * p.rng().ran();
+                double y = 3.78 * p.rng().ran();
+                double z = 14.28 * p.rng().ran();
+
+                double costheta = 1.0 - 2.0 * p.rng().ran();
+                double phi      = profugus::constants::two_pi * p.rng().ran();
+                double sintheta = sqrt(1.0 - costheta * costheta);
+
+                double Ox = sintheta * cos(phi);
+                double Oy = sintheta * sin(phi);
+                double Oz = costheta;
+
+                p.set_wt(1.0);
+
+                // initialize geometry state
+                geometry->initialize(Vector(x, y, z), Vector(Ox, Oy, Oz), geo);
+                p.set_matid(geometry->matid(geo));
+                EXPECT_TRUE(geometry->boundary_state(geo) ==
+                            profugus::geometry::INSIDE);
+
+                // initialize physics state
+                physics->initialize(1.1, p);
+                EXPECT_EQ(0, p.group());
+
+                // transport the particle
+                p.live();
+                transporter.transport(p, bank);
+                EXPECT_TRUE(!p.alive());
+
+                // count up events
+                if (p.event() == profugus::events::ESCAPE)
+                {
+                    esc++;
+                }
+                else if (p.event() == profugus::events::ROULETTE_KILLED)
+                {
+                    rk++;
+                }
+            }
+        }
+
+        EXPECT_EQ(100, rk + esc);
+        EXPECT_EQ(46, esc);
+        EXPECT_EQ(54, rk);
+    }
+};
+
+//---------------------------------------------------------------------------//
+
+TEST_F(Multithread_Domain_TransporterTest, one)
+{
+    run(1);
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(Multithread_Domain_TransporterTest, four)
+{
+    run(4);
+}
+
+//---------------------------------------------------------------------------//
 //                 end of tstDomain_Transporter.cc
 //---------------------------------------------------------------------------//

@@ -100,33 +100,18 @@ class Domain_Transporter
     // Transport a particle through the domain.
     void transport(Particle_t &particle, Bank_t &bank);
 
-    //! Return the number of sampled fission sites.
-    int num_sampled_fission_sites() const { return d_num_fission_sites; }
-
   private:
     // >>> IMPLEMENTATION
 
-    // Step selector.
-    Step_Selector d_step;
-
-    // Tracking distances.
-    double d_dist_mfp, d_dist_bnd, d_dist_col;
-
-    // Total cross section in region.
-    double d_xs_tot;
-
     // Flag indicating that fission sites should be sampled.
     bool d_sample_fission_sites;
-
-    // Number of fission sites sampled.
-    int d_num_fission_sites;
 
     // Current keff iterate.
     double d_keff;
 
     // Process collisions and boundaries.
     void process_boundary(Particle_t &particle, Bank_t &bank);
-    void process_collision(Particle_t &particle, Bank_t &bank);
+    void process_collision(double step, Particle_t &particle, Bank_t &bank);
 };
 
 } // end namespace profugus
