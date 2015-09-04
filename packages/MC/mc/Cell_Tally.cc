@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include "Utils/comm/global.hh"
+#include "utils/Serial_HDF5_Writer.hh"
 #include "Cell_Tally.hh"
 
 namespace profugus
@@ -178,6 +179,68 @@ void Cell_Tally::reset()
         t.second.first  = 0.0;
         t.second.second = 0.0;
     }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Output results.
+ */
+void Cell_Tally::output(const std::string &out_file)
+{
+#ifdef USE_HDF5
+
+    profugus::Serial_HDF5_Writer writer;
+    writer.open(out_file, profugus::HDF5_IO::APPEND);
+
+    // Allocate space for the output
+    std::vector<int>    cells(d_tally.size());
+    std::vector<double> results(d_tally.size() * 2, 0.0);
+
+    // Fill the output
+    int n = 0, ctr = 0;
+    for (const auto &t : d_tally)
+    {
+        // Store the tally cell
+        cells[n] = t.first;
+        ++n;
+
+        // Store the mean/error
+        const auto &moments = t.second;
+
+        // Mean
+        results[ctr] = moments.first;
+        ++ctr;
+
+        // Error
+        results[ctr] = moments.second;
+        ++ctr;
+    }
+    CHECK(ctr == results.size());
+
+    // Make a decomposition for the results
+    HDF5_IO::Decomp d;
+    d.ndims  = 2;
+    d.global = {cells.size(), 2};
+    d.local  = {cells.size(), 2};
+    d.offset = {0, 0};
+    d.order  = HDF5_IO::ROW_MAJOR;
+
+    // >>> WRITE THE OUTPUT
+
+    writer.begin_group("cell_tally");
+
+    // Write the cells
+    writer.write("cell_ids", cells);
+
+    // Write the results
+    writer.create_incremental_dataspace<double>("moments", d);
+    writer.write_incremental_data("moments", d, results.data());
+
+    writer.end_group();
+
+    writer.close();
+
+#endif
 }
 
 //---------------------------------------------------------------------------//

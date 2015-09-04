@@ -121,6 +121,9 @@ int main(int argc, char *argv[])
 
         // output
         manager.output();
+
+        // timing
+        manager.timing();
     }
     catch (const profugus::assertion &a)
     {

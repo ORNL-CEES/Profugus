@@ -78,6 +78,9 @@ class Cell_Tally : public Pathlength_Tally
     // Clear/re-initialize all tally values between solves
     void reset();
 
+    // Output results.
+    void output(const std::string &out_file);
+
     // >>> PATHLENGTH TALLY INTERFACE
 
     // Track particle and tally.

@@ -144,6 +144,9 @@ class Tallier
     // Swap two talliers.
     void swap(Tallier &rhs);
 
+    // Output tallies.
+    void output(const std::string &out_file);
+
     // >>> ACCESSORS
 
     //! Whether we've called "build" with the current number of tallies

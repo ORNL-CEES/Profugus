@@ -88,6 +88,9 @@ class Tally
     //! End a cycle in a kcode calculation (default no-op)
     virtual void end_cycle(double num_particles) { /* * */ }
 
+    //! Output tally results.
+    virtual void output(const std::string &out_file) { /* * */ }
+
     //! Clear/re-initialize all tally values between solves
     virtual void reset() { /* * */ }
 };

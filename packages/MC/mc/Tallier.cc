@@ -374,6 +374,23 @@ void Tallier::swap(Tallier &rhs)
     std::swap(d_build_phase, rhs.d_build_phase);
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Output tallies.
+ */
+void Tallier::output(const std::string &out_file)
+{
+    REQUIRE(is_finalized());
+
+    SCOPED_TIMER_2("MC::Tallier.output");
+
+    // begin active for each tally
+    for (auto t : d_tallies)
+    {
+        t->output(out_file);
+    }
+}
+
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//
