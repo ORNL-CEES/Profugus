@@ -14,7 +14,6 @@
 
 #include "harness/Soft_Equivalence.hh"
 #include "harness/Warnings.hh"
-#include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
 #include "Definitions.hh"
 #include "RTK_Cell.hh"
@@ -486,8 +485,10 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
     REQUIRE(omega[Z]<0.0 ? r[Z] >= 0.0             : r[Z] <= d_z);
 
     // initialize running dist-to-boundary
-    d_db                      = constants::huge;
-    state.dist_to_next_region = d_db;
+    double db                 = constants::huge;
+    int    face               = 0;
+    int    segment            = 0;
+    state.dist_to_next_region = db;
     state.next_segment        = state.segment;
 
     // >>> CHECK FOR INTERSECTIONS WITH OUTSIDE BOX
@@ -514,32 +515,32 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
     if (d_segments > 1)
     {
         // initialize distance to boundary
-        d_db = constants::huge;
+        db = constants::huge;
 
         // check for intersection with x segment planes
         if (state.face != d_num_shells)
         {
             if (omega[X] > 0.0 && r[X] < 0.0)
             {
-                d_db      = -r[X] / omega[X];
-                d_face    = d_num_shells;
-                d_segment = state.segment - 1;
+                db      = -r[X] / omega[X];
+                face    = d_num_shells;
+                segment = state.segment - 1;
             }
             else if (omega[X] < 0.0 && r[X] > 0.0)
             {
-                d_db      = -r[X] / omega[X];
-                d_face    = d_num_shells;
-                d_segment = state.segment + 1;
+                db      = -r[X] / omega[X];
+                face    = d_num_shells;
+                segment = state.segment + 1;
             }
 
             // update distance to boundary info
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.exiting_face        = Geo_State_t::INTERNAL;
-                state.next_face           = d_face;
+                state.next_face           = face;
                 state.next_region         = state.region;
-                state.next_segment        = d_segment;
+                state.next_segment        = segment;
             }
         }
 
@@ -548,25 +549,25 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
         {
             if (omega[Y] > 0.0 && r[Y] < 0.0)
             {
-                d_db      = -r[Y] / omega[Y];
-                d_face    = d_num_shells + 1;
-                d_segment = state.segment - 2;
+                db      = -r[Y] / omega[Y];
+                face    = d_num_shells + 1;
+                segment = state.segment - 2;
             }
             else if (omega[Y] < 0.0 && r[Y] > 0.0)
             {
-                d_db      = -r[Y] / omega[Y];
-                d_face    = d_num_shells + 1;
-                d_segment = state.segment + 2;
+                db      = -r[Y] / omega[Y];
+                face    = d_num_shells + 1;
+                segment = state.segment + 2;
             }
 
             // update distance to boundary info
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.exiting_face        = Geo_State_t::INTERNAL;
-                state.next_face           = d_face;
+                state.next_face           = face;
                 state.next_region         = state.region;
-                state.next_segment        = d_segment;
+                state.next_segment        = segment;
             }
         }
     }
@@ -844,22 +845,26 @@ void RTK_Cell::dist_to_vessel(const Space_Vector &r,
     // local boolean for hitting a vessel wall
     bool hit = false;
 
+    // distance to boundary
+    double db = constants::huge;
+
     // check distance to first shell
     if (d_inner)
     {
         // only check if we aren't currently on the vessel face
         if (state.face != Geo_State_t::R0_VESSEL)
         {
-            dist_to_shell(l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R0,
-                          Geo_State_t::R0_VESSEL);
+            db = dist_to_shell(
+                l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R0,
+                Geo_State_t::R0_VESSEL);
         }
 
         // update the distance to boundary
-        if (d_db > 0.0)
+        if (db > 0.0)
         {
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.next_face           = Geo_State_t::R0_VESSEL;
                 state.exiting_face        = Geo_State_t::INTERNAL;
                 hit                       = true;
@@ -873,16 +878,17 @@ void RTK_Cell::dist_to_vessel(const Space_Vector &r,
         // only check if we aren't currently on the vessel face
         if (state.face != Geo_State_t::R1_VESSEL)
         {
-            dist_to_shell(l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R1,
-                          Geo_State_t::R1_VESSEL);
+            db = dist_to_shell(
+                l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R1,
+                Geo_State_t::R1_VESSEL);
         }
 
         // update the distance to boundary
-        if (d_db > 0.0)
+        if (db > 0.0)
         {
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.next_face           = Geo_State_t::R1_VESSEL;
                 state.exiting_face        = Geo_State_t::INTERNAL;
                 hit                       = true;
@@ -915,6 +921,8 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
 {
     REQUIRE(d_num_shells > 0);
 
+    double db = constants::huge;
+
     // if we are on a face then check both bounding faces
     if (state.face < d_num_shells)
     {
@@ -922,15 +930,15 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
         // that we would traverse through that shells region on entrance
         if (state.region == state.face)
         {
-            check_shell(r, omega, state.face, state.face, state.region + 1,
-                        state.face, state);
+            db = check_shell(r, omega, state.face, state.face,
+                             state.region + 1, state.face, state);
 
             // if we can't hit the shell because of a glancing shot + floating
             // point error, update the region since we won't traverse the
             // shell
-            if (d_db < 0.0)
+            if (db < 0.0)
             {
-                state.region++;
+                ++state.region;
             }
         }
 
@@ -989,51 +997,53 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
 /*!
  * \brief Check a shell for distance to boundary.
  */
-void RTK_Cell::check_shell(const Space_Vector &r,
-                           const Space_Vector &omega,
-                           int                 shell,
-                           int                 face,
-                           int                 next_region,
-                           int                 next_face,
-                           Geo_State_t        &state)
+double RTK_Cell::check_shell(const Space_Vector &r,
+                             const Space_Vector &omega,
+                             int                 shell,
+                             int                 face,
+                             int                 next_region,
+                             int                 next_face,
+                             Geo_State_t        &state)
 {
     using def::X; using def::Y; using def::Z;
 
     REQUIRE(shell >= 0 && shell < d_num_shells);
 
     // calculate the distance to the requested shell
-    dist_to_shell(r[X], r[Y], omega[X], omega[Y], d_r[shell], face);
+    double db = dist_to_shell(r[X], r[Y], omega[X], omega[Y], d_r[shell], face);
 
     // check the distance to boundary
     //    a) if it intersects the shell, and
     //    b) if it is the smallest distance
-    if (d_db > 0.0)
+    if (db > 0.0)
     {
-        if (d_db < state.dist_to_next_region)
+        if (db < state.dist_to_next_region)
         {
-            state.dist_to_next_region = d_db;
+            state.dist_to_next_region = db;
             state.next_region         = next_region;
             state.next_face           = next_face;
             state.exiting_face        = Geo_State_t::INTERNAL;
         }
     }
+
+    return db;
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Distance to a shell.
  *
- * d_db is set negative if there is no intersection with the shell.
+ * Returned db is set negative if there is no intersection with the shell.
  */
-void RTK_Cell::dist_to_shell(double x,
-                             double y,
-                             double omega_x,
-                             double omega_y,
-                             double r,
-                             int    face)
+double RTK_Cell::dist_to_shell(double x,
+                               double y,
+                               double omega_x,
+                               double omega_y,
+                               double r,
+                               int    face)
 {
     // initialize distance to boundary
-    d_db = -1.0;
+    double db = -1.0;
 
     // calculate terms in the quadratic
     double a = omega_x * omega_x + omega_y * omega_y;
@@ -1060,14 +1070,16 @@ void RTK_Cell::dist_to_shell(double x,
         // determine d, if both d1 and d2 < 0 then the ray does not intersect
         // the surface
         if (d1 < 0.0)
-            d_db = d2;
+            db = d2;
         else if (d2 < 0.0)
-            d_db = d1;
+            db = d1;
         else if (face < d_num_shells)
-            d_db = std::max(d1, d2);
+            db = std::max(d1, d2);
         else
-            d_db = std::min(d1, d2);
+            db = std::min(d1, d2);
     }
+
+    return db;
 }
 
 } // end namespace profugus

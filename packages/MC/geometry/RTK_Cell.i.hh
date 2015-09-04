@@ -103,24 +103,27 @@ void RTK_Cell::dist_to_radial_face(int          axis,
                                    double       dir,
                                    Geo_State_t &state)
 {
+    double db = constants::huge;
+    int face  = 0;
+
     // check high/low faces
     if (dir > 0.0)
     {
-        d_db   = (d_extent[axis][HI] - p) / dir;
-        d_face = Geo_State_t::plus_face[axis];
+        db   = (d_extent[axis][HI] - p) / dir;
+        face = Geo_State_t::plus_face[axis];
     }
     else if (dir < 0.0)
     {
-        d_db   = (d_extent[axis][LO] - p) / dir;
-        d_face = Geo_State_t::minus_face[axis];
+        db   = (d_extent[axis][LO] - p) / dir;
+        face = Geo_State_t::minus_face[axis];
     }
-    CHECK(d_db >= 0.0);
+    CHECK(db >= 0.0);
 
     // updated distance to boundary info
-    if (d_db < state.dist_to_next_region)
+    if (db < state.dist_to_next_region)
     {
-        state.dist_to_next_region = d_db;
-        state.exiting_face        = d_face;
+        state.dist_to_next_region = db;
+        state.exiting_face        = face;
         state.next_face           = Geo_State_t::NONE;
     }
 }
@@ -133,24 +136,27 @@ void RTK_Cell::dist_to_axial_face(double       p,
                                   double       dir,
                                   Geo_State_t &state)
 {
+    double db = constants::huge;
+    int face  = 0;
+
     // check high/low faces
     if (dir > 0.0)
     {
-        d_db   = (d_z - p) / dir;
-        d_face = Geo_State_t::PLUS_Z;
+        db   = (d_z - p) / dir;
+        face = Geo_State_t::PLUS_Z;
     }
     else if (dir < 0.0)
     {
-        d_db   = -p / dir;
-        d_face = Geo_State_t::MINUS_Z;
+        db   = -p / dir;
+        face = Geo_State_t::MINUS_Z;
     }
-    CHECK(d_db >= 0.0);
+    CHECK(db >= 0.0);
 
     // updated distance to boundary info
-    if (d_db < state.dist_to_next_region)
+    if (db < state.dist_to_next_region)
     {
-        state.dist_to_next_region = d_db;
-        state.exiting_face        = d_face;
+        state.dist_to_next_region = db;
+        state.exiting_face        = face;
         state.next_face           = Geo_State_t::NONE;
     }
 }

@@ -17,6 +17,7 @@
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "utils/Vector_Lite.hh"
+#include "utils/Constants.hh"
 #include "RTK_State.hh"
 
 namespace profugus
@@ -210,13 +211,13 @@ class RTK_Cell
                         Geo_State_t &state);
 
     // Distance to a shell.
-    void dist_to_shell(double x, double y, double omega_x, double omega_y,
-                       double r, int face);
+    double dist_to_shell(double x, double y, double omega_x, double omega_y,
+                         double r, int face);
 
     // Update state if it hits a shell.
-    void check_shell(const Space_Vector &r, const Space_Vector &omega,
-                     int shell, int face, int next_region, int next_face,
-                     Geo_State_t &state);
+    double check_shell(const Space_Vector &r, const Space_Vector &omega,
+                       int shell, int face, int next_region, int next_face,
+                       Geo_State_t &state);
 
     // Transform to vessel coordinates.
     double l2g(double local, int dir) const
@@ -246,11 +247,6 @@ class RTK_Cell
 
     // Number of cells.
     int d_num_cells;
-
-    // Work variables.
-    double d_db;
-    int    d_face;
-    int    d_segment;
 
     // Vessel parameters.
     bool d_vessel;         // indicates this cell has a vessel
