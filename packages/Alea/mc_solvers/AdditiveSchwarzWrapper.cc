@@ -38,7 +38,7 @@ AdditiveSchwarzWrapper::AdditiveSchwarzWrapper( Teuchos::RCP<const MATRIX> A,
     this->setParameters(as_pl);
 
     // Build AdditiveSchwarz
-    d_schwarz = Teuchos::rcp( new Ifpack2::AdditiveSchwarz<CRS_MATRIX>(A) );
+    d_schwarz = Teuchos::rcp( new Ifpack2::AdditiveSchwarz<MATRIX>(A) );
     d_schwarz->setParameterList(as_pl);
     d_schwarz->setInnerPreconditioner(prec);
     d_schwarz->compute();
