@@ -11,6 +11,7 @@
 #include <ctime>
 #include <curand_kernel.h>
 #include <curand.h>
+#include <cuda_profiler_api.h>
 #include <thrust/copy.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>

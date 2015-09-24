@@ -10,6 +10,7 @@
 #include <curand_kernel.h>
 #include <curand.h>
 #include <cuda_runtime_api.h>
+#include <cuda_profiler_api.h>
 #include <thrust/copy.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -27,7 +28,7 @@ namespace alea
 {
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 1024
 #endif 
 
 #ifndef BATCH_SIZE
@@ -419,6 +420,8 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
     //cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
     InitializePolicy initialize( rng_states, num_blocks,  BLOCK_SIZE );
 
+    cudaProfilerStart();
+
     if( d_struct==0 )
     {
         if( d_use_ldg==0 )
@@ -462,6 +465,8 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
     	time = initialize.getSortTime();
 
     initialize.free_data();
+
+    cudaProfilerStop();
 }
 
 

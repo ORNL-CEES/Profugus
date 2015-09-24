@@ -1,5 +1,5 @@
 <ParameterList name="main">
-  <Parameter name="solver_type"              type="string"  value="mcsa"/>
+  <Parameter name="solver_type"              type="string"  value="synthetic_acceleration"/>
   <Parameter name="preconditioner"           type="string"  value="none"/>
   <ParameterList name="Problem">
     <Parameter name="matrix_type"            type="string"  value="matrix_market"/>
