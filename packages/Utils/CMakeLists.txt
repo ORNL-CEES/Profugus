@@ -237,6 +237,7 @@ INSTALL(FILES ${HARNESS_HEADERS} DESTINATION include/Utils/harness)
 
 FILE(GLOB COMM_HEADERS comm/*.hh)
 SET(COMM_SOURCES
+  comm/Local_Smart_Thread.cc
   comm/MPI.cc
   comm/MPI_Blocking.pt.cc
   comm/MPI_Gathers.pt.cc
