@@ -320,10 +320,11 @@ TRIBITS_ADD_LIBRARY(
 # Add tests to this package
 
 TRIBITS_ADD_TEST_DIRECTORIES(
+  cxx11
   harness/test
   utils/test
   rng/test
-  cxx11
+  comm/test
   )
 
 ##---------------------------------------------------------------------------##

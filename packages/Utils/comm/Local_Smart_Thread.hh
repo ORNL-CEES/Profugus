@@ -51,7 +51,7 @@ class Local_Smart_Thread
     // >>> DATA
 
     // The locally-scoped thread this smart thread is managing.
-    std::thread d_thread.
+    std::thread d_thread;
 
   public:
 

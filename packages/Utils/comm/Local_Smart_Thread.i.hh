@@ -30,7 +30,7 @@ std::thread::id Local_Smart_Thread::get_id() const
  */
 Local_Smart_Thread make_lst( std::thread local_thread )
 {
-    return LocalSmartThread( std::move(local_thread) );
+    return Local_Smart_Thread( std::move(local_thread) );
 }
 
 //---------------------------------------------------------------------------//
