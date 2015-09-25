@@ -218,7 +218,7 @@ void ForwardMcAdaptive::solve(const MV &b, MV &x)
 
 	if( d_verbosity == HIGH )
 	{
-	    std::cout << "Relative std dev: "  << static_cast<double>( std_dev_1norm / std_dev_1norm) << std::endl;
+	    std::cout << "Relative std dev: "  << static_cast<double>( std_dev_1norm / sol_1norm) << std::endl;
 	}
 
 

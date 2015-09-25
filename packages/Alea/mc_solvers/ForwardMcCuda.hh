@@ -71,6 +71,7 @@ class ForwardMcCuda
     int       d_max_history_length;
     int       d_num_histories;
     double    d_weight_cutoff;
+    bool      d_compute_variance;
     bool      d_struct;
     bool      d_use_ldg;
     int       d_device_number;

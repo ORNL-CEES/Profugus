@@ -210,6 +210,7 @@ __global__ void run_forward_monte_carlo2(int N, int history_length, double wt_cu
         }
     
         //x[entry]=sol[threadIdx.x];
+        //v[entry]=sol[threaddx.x]*sol[threadIdx.x];
 
     }
 }
@@ -253,7 +254,7 @@ __global__ void run_forward_monte_carlo3(int N,
 	    // Perform initial tally
 	    tallyContribution(state,coeffs[stage]*wt*rhs[state],x);
 
-            //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x]);
+            //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x],&var[threadIdx.x], variance);
 
 	    for(; stage<=history_length; ++stage )
 	    {
@@ -266,7 +267,7 @@ __global__ void run_forward_monte_carlo3(int N,
 
 		// Tally
 		tallyContribution(entry,coeffs[stage]*wt*rhs[state],x);
-                //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x]);
+                //tallyContribution2(coeffs[stage]*wt*rhs[state],&sol[threadIdx.x], &var[threadIdx.x], variance);
 
 		// Check weight cutoff
 		if( std::abs(wt/init_wt) < wt_cutoff )
@@ -307,6 +308,7 @@ ForwardMcCuda::ForwardMcCuda(
     d_num_histories        = pl->get("num_histories",1000);
     d_max_history_length   = coeffs.size()-1;
     d_weight_cutoff        = pl->get("weight_cutoff",0.0);
+    d_compute_variance     = pl->get("compute_variance", 0);
     d_struct               = pl->get("struct_matrix", 0);
     d_use_ldg              = pl->get("use_ldg", 0);
     d_device_number        = pl->get("device_number", 0);
@@ -480,13 +482,13 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
             {   
 		    run_forward_monte_carlo2<StandardAccess><<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,
 		    	d_max_history_length, d_weight_cutoff, d_num_histories,
-			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
+			H,P,W,inds,offsets,coeffs,x_ptr,rhs_ptr, rng_states);  
             }
             else
             {
 		    run_forward_monte_carlo2<LDGAccess><<< num_blocks,block_size,sizeof(double)*block_size >>>(d_N,
 		    	d_max_history_length, d_weight_cutoff, d_num_histories,
-			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);  
+			H,P,W,inds,offsets,coeffs,x_ptr,rhs_ptr, rng_states);  
             }		
         }
 	else    
@@ -497,13 +499,13 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
             {
 		    run_forward_monte_carlo<StandardAccess><<< num_blocks,block_size >>>(d_N,
 			d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
-			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);            
+			H,P,W,inds,offsets,coeffs,x_ptr,rhs_ptr, rng_states);            
             }
             else
             {
 		    run_forward_monte_carlo<LDGAccess><<< num_blocks,block_size >>>(d_N,
 			d_max_history_length, d_weight_cutoff, d_num_histories, batch_size,
-			H,P,W,inds,offsets,coeffs,x_ptr, rhs_ptr, rng_states);                   
+			H,P,W,inds,offsets,coeffs,x_ptr,rhs_ptr, rng_states);                   
             }
 	}
     }	
@@ -527,15 +529,15 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to execute MC kernel"); 
 
-    // Scale by history count
-    for( auto itr= x_vec.begin(); itr != x_vec.end(); ++itr )
-        *itr /= static_cast<double>(d_num_histories); 
-
     // Copy data back to host
-    {
+    //{
         Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
         thrust::copy(x_vec.begin(),x_vec.end(),x_data.get());
-    }
+    //}
+
+    // Scale by history count
+    for( auto itr= x_data.begin(); itr != x_data.end(); ++itr )
+        *itr /= static_cast<double>(d_num_histories); 
 
     // Free RNG state
     e = cudaFree(rng_states);
@@ -543,6 +545,7 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
         std::cout << "Cuda Error: " << cudaGetErrorString(e) << std::endl;
 
     VALIDATE(cudaSuccess==e,"Failed to deallocate memory");
+
 }
 
 //---------------------------------------------------------------------------//
