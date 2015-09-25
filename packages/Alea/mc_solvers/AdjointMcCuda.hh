@@ -83,6 +83,7 @@ class AdjointMcCuda
     	const double *,
     	double *,
         double *,
+        bool,
     	curandState *,
         double &);
 
@@ -103,6 +104,7 @@ class AdjointMcCuda
     bool      d_use_ldg;
     int       d_device_number;
     bool      d_precompute_states;
+    bool      d_compute_variance;
     int       d_initialize_batch;
 
 

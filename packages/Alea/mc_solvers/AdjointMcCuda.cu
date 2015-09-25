@@ -96,7 +96,7 @@ __device__ void initializeHistory2(int &state, double &wt, int N,
  */
 //---------------------------------------------------------------------------//
 template<class MemoryAccess>
-__device__ void tallyContribution(int state, double wt,
+__device__ void tallyContribution(bool variance, int state, double wt,
               double * const x, 
               double * const v,
         const double * const H,
@@ -114,7 +114,8 @@ __device__ void tallyContribution(int state, double wt,
         for( int i=row_begin; i<row_end; ++i )
         {
             atomicAdd(x+inds[i],wt* ( MemoryAccess::get(&H[i]) ) );//modified by Max
-            atomicAdd(v+inds[i],wt*wt*( MemoryAccess::get(&H[i]) )*( MemoryAccess::get(&H[i]) )  );
+            if(variance)
+            	atomicAdd(v+inds[i],wt*wt*( MemoryAccess::get(&H[i]) )*( MemoryAccess::get(&H[i]) )  );
         }
 
     }
@@ -122,12 +123,13 @@ __device__ void tallyContribution(int state, double wt,
     {
         // Collision estimator just adds weight
         atomicAdd(x+state,wt);
-        atomicAdd(v+state,wt*wt);
+        if(variance)
+        	atomicAdd(v+state,wt*wt);
     }
 }
 
 template<class MemoryAccess>
-__device__ void tallyContribution(int state, double wt,
+__device__ void tallyContribution(bool variance, int state, double wt,
               double * const x, 
               double * const v,
               const device_row_data * data,
@@ -146,16 +148,18 @@ __device__ void tallyContribution(int state, double wt,
             atomicAdd(x+data[i].inds,
              wt* ( MemoryAccess::get(&(data[i].H)) ));//modified by Max
 
-            atomicAdd(v+data[i].inds,
-             wt*wt* ( MemoryAccess::get(&(data[i].H)) )*
-             ( MemoryAccess::get(&(data[i].H)) ));
+            if(variance)
+            	atomicAdd(v+data[i].inds,
+             		wt*wt* ( MemoryAccess::get(&(data[i].H)) )*
+             		( MemoryAccess::get(&(data[i].H)) ));
         }
     }
     else
     {
         // Collision estimator just adds weight
         atomicAdd(x+state,wt);
-        atomicAdd(v+state,wt*wt);
+        if(variance)
+        	atomicAdd(v+state,wt*wt);
     }
 }
 
@@ -172,6 +176,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         const double * const coeffs,
               double * const x,
               double * const v,
+              bool     variance,
         curandState  * rng_state, 
         InitializePolicy  initialize    )
 {
@@ -205,7 +210,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     int stage = expected_value ? 1 : 0;
 
     // Perform initial tally
-    tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,v,H,inds,offsets,
+    tallyContribution< MemoryAccess >(variance,state,coeffs[stage]*wt,x,v,H,inds,offsets,
         expected_value);
 
     //int count_batch = 1;
@@ -231,7 +236,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
             break;
 
         // Tally
-        tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,v,H,inds,offsets,
+        tallyContribution< MemoryAccess >(variance,state,coeffs[stage]*wt,x,v,H,inds,offsets,
             expected_value);
 
        // count_batch++;
@@ -261,6 +266,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
         const double    * const coeffs,
               double    * const x,
               double    * const v,
+              bool        variance,
         curandState     * rng_state,
         InitializePolicy     initialize  )
 {
@@ -287,7 +293,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
     int stage = expected_value ? 1 : 0;
 
     // Perform initial tally
-    tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,v,data,offsets,
+    tallyContribution< MemoryAccess >(variance,state,coeffs[stage]*wt,x,v,data,offsets,
         expected_value);
 
     for( ; stage<=history_length; ++stage )
@@ -301,7 +307,7 @@ __global__ void run_adjoint_monte_carlo(int N, int history_length, double wt_cut
             break;
 
         // Tally
-        tallyContribution< MemoryAccess >(state,coeffs[stage]*wt,x,v,data,offsets,
+        tallyContribution< MemoryAccess >(variance, state,coeffs[stage]*wt,x,v,data,offsets,
             expected_value);
 
         // Check weight cutoff
@@ -345,6 +351,7 @@ AdjointMcCuda::AdjointMcCuda(
     d_device_number      = pl->get("device_number", 0);
     d_precompute_states  = pl->get("precompute_states", 0);
     d_initialize_batch   = pl->get("initialize_batch", d_num_histories);
+    d_compute_variance   = pl->get("compute_variance", 0);
     std::string seed_type  = pl->get("seed_type", std::string("same"));
 
     VALIDATE( d_struct==0 || d_struct==1, 
@@ -429,6 +436,7 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
      const double * const coeffs,
      double * x_ptr,
      double * v_ptr,
+     bool variance,
      curandState * rng_states,
      double &time                )
 {
@@ -446,7 +454,7 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
 		   (d_N, d_max_history_length, d_weight_cutoff, 
 		   d_use_expected_value,
                    start_cdf_ptr,start_wt_ptr,H,P,W,
-                   inds,offsets,coeffs,x_ptr,v_ptr,rng_states, initialize);
+                   inds,offsets,coeffs,x_ptr,v_ptr,variance,rng_states, initialize);
         }
         else
         {
@@ -454,7 +462,7 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
                    (d_N,d_max_history_length, d_weight_cutoff,
                    d_use_expected_value,
                    start_cdf_ptr,start_wt_ptr,H,P,W,
-                   inds,offsets,coeffs,x_ptr,v_ptr,rng_states, initialize);
+                   inds,offsets,coeffs,x_ptr,v_ptr,variance,rng_states, initialize);
 
         }        
     }
@@ -465,13 +473,13 @@ void AdjointMcCuda::launch_monte_carlo(int d_N,int num_blocks,
             run_adjoint_monte_carlo<StandardAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
                     d_max_history_length, d_weight_cutoff, d_use_expected_value,
                     start_cdf_ptr,start_wt_ptr,data_ptr,
-                    offsets,coeffs,x_ptr,v_ptr,rng_states, initialize);
+                    offsets,coeffs,x_ptr,v_ptr,variance,rng_states, initialize);
         }
         else{
             run_adjoint_monte_carlo<LDGAccess><<< num_blocks,BLOCK_SIZE >>>(d_N,
                     d_max_history_length, d_weight_cutoff, d_use_expected_value,
                     start_cdf_ptr,start_wt_ptr,data_ptr,
-                    offsets,coeffs,x_ptr,v_ptr,rng_states, initialize);
+                    offsets,coeffs,x_ptr,v_ptr,variance,rng_states, initialize);
 
         }	                   
     }          
@@ -593,14 +601,14 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         	launch_monte_carlo< OnTheFly >(d_N,num_blocks,
               	 d_max_history_length, d_weight_cutoff, d_use_expected_value,
               	 start_cdf_ptr,start_wt_ptr,H,P,W,
-              	 inds,data_ptr,offsets,coeffs,x_ptr,v_ptr,rng_states,time);
+              	 inds,data_ptr,offsets,coeffs,x_ptr,v_ptr,d_compute_variance,rng_states,time);
 
     	else
         {
         	launch_monte_carlo< Precomputed >(d_N,num_blocks,
               	 d_max_history_length, d_weight_cutoff, d_use_expected_value,
               	 start_cdf_ptr,start_wt_ptr,H,P,W,
-             	 inds,data_ptr,offsets,coeffs,x_ptr,v_ptr,rng_states,time);
+             	 inds,data_ptr,offsets,coeffs,x_ptr,v_ptr,d_compute_variance,rng_states,time);
 
                 cumulate_time += time;
         }
@@ -616,10 +624,10 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         *itr /= static_cast<double>( num_blocks * BLOCK_SIZE * num_loops );
 
     // Copy data back to host
-    {
+    //{
         Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
         thrust::copy(x_vec.begin(),x_vec.end(),x_data.get());
-    }
+    //}
 
 
     // Add rhs for expected value
@@ -633,27 +641,33 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     VALIDATE(cudaSuccess==e,"Failed to deallocate memory");
 
+    double rel_std_dev = 0.0;
 
-    // Compute new second moment and mean from batch results
-    for( int i=0; i<d_N; ++i )
-        // From the old variance, compute the new second moment
-        v_vec[i] =  v_vec[i]/static_cast<double>( num_blocks * BLOCK_SIZE * num_loops )
-                    - x_vec[i]*x_vec[i];
-
-    // Compute 1-norm of solution and variance of mean
-    double soln_1norm = 0.0;
-    double std_dev_1norm = 0.0;
-    for( int i=0; i<d_N; ++i )
+    if(d_compute_variance)
     {
-        soln_1norm += std::abs(x_vec[i]);
-        double var = v_vec[i]/static_cast<double>( num_blocks * BLOCK_SIZE * num_loops );
-        if( var > 0.0 )
-            std_dev_1norm += std::sqrt(var);
-    }
-    CHECK( soln_1norm > 0.0 );
-    double rel_std_dev = std_dev_1norm / soln_1norm;
+        thrust::host_vector<double> var_vec(d_N);
+        var_vec = v_vec;
+        // Compute new second moment and mean from batch results
+    	for( int i=0; i<d_N; ++i )
+        	// From the old variance, compute the new second moment
+        	var_vec[i] =  var_vec[i]/static_cast<double>( num_blocks * BLOCK_SIZE * num_loops )
+                	    - x_data[i]*x_data[i];
 
-    if( d_verbosity >= LOW )
+    	// Compute 1-norm of solution and variance of mean
+    	double soln_1norm = 0.0;
+    	double std_dev_1norm = 0.0;
+    	for( int i=0; i<d_N; ++i )
+    	{
+        	soln_1norm += std::abs(x_data[i]);
+        	double var = var_vec[i]/static_cast<double>( num_blocks * BLOCK_SIZE * num_loops );
+        	if( var > 0.0 )
+            		std_dev_1norm += std::sqrt(var);
+    	}
+    	CHECK( soln_1norm > 0.0 );
+        rel_std_dev = std_dev_1norm / soln_1norm;
+    }
+
+    if( d_verbosity >= LOW && d_compute_variance)
     {
         std::cout << "Relative std dev of " << rel_std_dev
             << std::endl;    
