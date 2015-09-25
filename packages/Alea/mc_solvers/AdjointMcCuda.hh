@@ -82,6 +82,7 @@ class AdjointMcCuda
     	const int *,
     	const double *,
     	double *,
+        double *,
     	curandState *,
         double &);
 
