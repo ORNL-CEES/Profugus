@@ -624,15 +624,17 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
         *itr /= static_cast<double>( num_blocks * BLOCK_SIZE * num_loops );
 
     // Copy data back to host
-    //{
+    {
         Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
         thrust::copy(x_vec.begin(),x_vec.end(),x_data.get());
-    //}
+    }
 
 
     // Add rhs for expected value
     if( d_use_expected_value )
        x.update(d_coeffs[0],b,1.0);
+
+    Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
 
     // Free RNG state
     e = cudaFree(rng_states);

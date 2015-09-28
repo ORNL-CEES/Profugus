@@ -530,14 +530,14 @@ void ForwardMcCuda::solve(const MV &b, MV &x)
     VALIDATE(cudaSuccess==e,"Failed to execute MC kernel"); 
 
     // Copy data back to host
-    //{
+    {
         Teuchos::ArrayRCP<double> x_data = x.getDataNonConst(0);
         thrust::copy(x_vec.begin(),x_vec.end(),x_data.get());
-    //}
+    	// Scale by history count
+    	for( auto itr= x_data.begin(); itr != x_data.end(); ++itr )
+        	*itr /= static_cast<double>(d_num_histories); 
+    }
 
-    // Scale by history count
-    for( auto itr= x_data.begin(); itr != x_data.end(); ++itr )
-        *itr /= static_cast<double>(d_num_histories); 
 
     // Free RNG state
     e = cudaFree(rng_states);
