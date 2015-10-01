@@ -1,9 +1,9 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   /tstMutex.cc
+ * \file   /tstConditionVariable.cc
  * \author Stuart R. Slattery
  * \date   Thu Sep 24 9:49:03 2015
- * \brief  Mutex testing.
+ * \brief  condition variable testing.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 
 #include "gtest/utils_gtest.hh"
 
@@ -22,6 +23,11 @@ class TestData
 {
   public:
 
+    // Constructor.
+    TestData()
+	: d_ready( false )
+    { /* ... */ }
+
     // Set the data.
     void set_data( std::vector<int>&& data )
     {
@@ -31,7 +37,8 @@ class TestData
     // Find the first even value in the class data.
     void even_func( int& i )
     {
-	std::lock_guard<std::mutex> lock( d_mutex );
+	std::unique_lock<std::mutex> lock( d_mutex );
+	d_run_condition.wait( lock, [&](){return d_ready;} );
 	i = *std::find_if(std::begin(d_x), std::end(d_x),
 			  [](int n){ return n % 2 == 0; });
     }
@@ -39,9 +46,18 @@ class TestData
     // Find the first odd value in the class data.
     void odd_func( int& i )
     {
-	std::lock_guard<std::mutex> lock( d_mutex );
+	std::unique_lock<std::mutex> lock( d_mutex );
+	d_run_condition.wait( lock, [&](){return d_ready;} );
 	i = *std::find_if(std::begin(d_x), std::end(d_x),
 			  [](int n){ return n % 2 == 1; });
+    }
+
+    // Execute all functions that are waiting.
+    void run_funcs()
+    {
+	std::unique_lock<std::mutex> lock( d_mutex );
+	d_ready = true;
+	d_run_condition.notify_all();
     }
 
   private:
@@ -51,6 +67,12 @@ class TestData
 
     // Data mutex.
     std::mutex d_mutex;
+
+    // Execution condition boolean.
+    bool d_ready;
+
+    // Execution condition variable.
+    std::condition_variable d_run_condition;
 };
 
 //---------------------------------------------------------------------------//
@@ -62,18 +84,21 @@ TEST(mutex, mutex_test)
     TestData test_data;
     test_data.set_data( {10, 22, 31, 44, 56} );
 
-    // run a thread to find first odd
+    // initialize a thread to find first odd
     int first_odd = -1;
     std::thread odd_thread( 
 	&TestData::odd_func, &test_data, std::ref(first_odd) );
 
-    // run a thread to find first even
+    // initialize a thread to find first even
     int first_even = -1;
     std::thread even_thread( 
 	&TestData::even_func, &test_data, std::ref(first_even) );
     
     // check that the threads have different ids
     EXPECT_NE( odd_thread.get_id(), even_thread.get_id() );
+
+    // run the threads
+    test_data.run_funcs();
     
     // join the threads before before checking the test results
     EXPECT_TRUE( odd_thread.joinable() );
@@ -90,5 +115,5 @@ TEST(mutex, mutex_test)
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstMutex.cc
+//                 end of tstConditionVariable.cc
 //---------------------------------------------------------------------------//
