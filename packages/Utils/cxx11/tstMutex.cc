@@ -16,40 +16,53 @@
 #include "gtest/utils_gtest.hh"
 
 //---------------------------------------------------------------------------//
+// HELPER DATA
+//---------------------------------------------------------------------------//
+class TestData
+{
+  public:
+
+    // Class data.
+    std::vector<int> x;
+
+    // Data mutex.
+    std::mutex x_mutex;
+
+    // Find the first even value in the class data.
+    void even_func( int& i )
+    {
+	std::lock_guard<std::mutex> lock( x_mutex );
+	i = *std::find_if(std::begin(x), std::end(x),
+			  [](int n){ return n % 2 == 0; });
+    }
+
+    // Find the first odd value in the class data.
+    void odd_func( int& i )
+    {
+	std::lock_guard<std::mutex> lock( x_mutex );
+	i = *std::find_if(std::begin(x), std::end(x),
+			  [](int n){ return n % 2 == 1; });
+    }
+};
+
+//---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-
 TEST(mutex, mutex_test)
 {
-    
-    std::vector<int> x = {10, 22, 31, 44, 56};
-
-    // create a mutex to lock the data in x so only a single thread my read
-    std::mutex x_mutex;
+    // Create some test data.
+    TestData test_data;
+    test_data.x = {10, 22, 31, 44, 56};
 
     // run a thread to find first odd
     int first_odd = -1;
-    auto odd_func = []( int& i, std::vector<int>& vec, std::mutex& vec_mutex )
-		    {
-			std::lock_guard<std::mutex> vec_lock( vec_mutex );
-			i =
-			*std::find_if(std::begin(vec), std::end(vec),
-				      [](int n){ return n % 2 == 1; });
-		    };
     std::thread odd_thread( 
-	odd_func, std::ref(first_odd), std::ref(x), std::ref(x_mutex) );
+	&TestData::odd_func, &test_data, std::ref(first_odd) );
 
     // run a thread to find first even
     int first_even = -1;
-    auto even_func = []( int& i, std::vector<int>& vec, std::mutex& vec_mutex )
-		     {
-			std::lock_guard<std::mutex> vec_lock( vec_mutex );
-			 i =
-			 *std::find_if(std::begin(vec), std::end(vec),
-				       [](int n){ return n % 2 == 0; });
-		     };
     std::thread even_thread( 
-	even_func, std::ref(first_even), std::ref(x), std::ref(x_mutex) );
+	&TestData::even_func, &test_data, std::ref(first_even) );
     
     // check that the threads have different ids
     EXPECT_NE( odd_thread.get_id(), even_thread.get_id() );
