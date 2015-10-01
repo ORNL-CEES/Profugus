@@ -49,7 +49,7 @@ TEST(Thread_Guard, function1)
 			 };
 
 	profugus::Thread_Guard even_thread =
-	    profugus::make_lst(
+	    profugus::thread_guard(
 		std::thread(even_func, std::ref(first_even), std::ref(x)) );
     
 	// check that the threads have different ids

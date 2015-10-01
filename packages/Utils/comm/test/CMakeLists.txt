@@ -9,7 +9,7 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstLocal_Smart_Thread.cc NP 1)
+ADD_UTILS_TEST(tstThread_Guard.cc NP 1)
 
 ##---------------------------------------------------------------------------##
 ## end of comm/test/CMakeLists.txt
