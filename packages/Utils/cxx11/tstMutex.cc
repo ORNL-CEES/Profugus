@@ -22,27 +22,35 @@ class TestData
 {
   public:
 
-    // Class data.
-    std::vector<int> x;
-
-    // Data mutex.
-    std::mutex x_mutex;
+    // Set the data.
+    void set_data( std::vector<int>&& data )
+    {
+	d_x = data;
+    }
 
     // Find the first even value in the class data.
     void even_func( int& i )
     {
-	std::lock_guard<std::mutex> lock( x_mutex );
-	i = *std::find_if(std::begin(x), std::end(x),
+	std::lock_guard<std::mutex> lock( d_mutex );
+	i = *std::find_if(std::begin(d_x), std::end(d_x),
 			  [](int n){ return n % 2 == 0; });
     }
 
     // Find the first odd value in the class data.
     void odd_func( int& i )
     {
-	std::lock_guard<std::mutex> lock( x_mutex );
-	i = *std::find_if(std::begin(x), std::end(x),
+	std::lock_guard<std::mutex> lock( d_mutex );
+	i = *std::find_if(std::begin(d_x), std::end(d_x),
 			  [](int n){ return n % 2 == 1; });
     }
+
+  private:
+
+    // Class data.
+    std::vector<int> d_x;
+
+    // Data mutex.
+    std::mutex d_mutex;
 };
 
 //---------------------------------------------------------------------------//
@@ -52,7 +60,7 @@ TEST(mutex, mutex_test)
 {
     // Create some test data.
     TestData test_data;
-    test_data.x = {10, 22, 31, 44, 56};
+    test_data.set_data( {10, 22, 31, 44, 56} );
 
     // run a thread to find first odd
     int first_odd = -1;
