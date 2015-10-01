@@ -37,8 +37,7 @@ class TestData
     // Find the first even value in the class data.
     void even_func( int& i )
     {
-	std::unique_lock<std::mutex> lock( d_mutex );
-	d_run_condition.wait( lock, [&](){return d_ready;} );
+	wait_and_unlock();
 	i = *std::find_if(std::begin(d_x), std::end(d_x),
 			  [](int n){ return n % 2 == 0; });
     }
@@ -46,8 +45,7 @@ class TestData
     // Find the first odd value in the class data.
     void odd_func( int& i )
     {
-	std::unique_lock<std::mutex> lock( d_mutex );
-	d_run_condition.wait( lock, [&](){return d_ready;} );
+	wait_and_unlock();
 	i = *std::find_if(std::begin(d_x), std::end(d_x),
 			  [](int n){ return n % 2 == 1; });
     }
@@ -55,9 +53,19 @@ class TestData
     // Execute all functions that are waiting.
     void run_funcs()
     {
-	std::unique_lock<std::mutex> lock( d_mutex );
+	std::lock_guard<std::mutex> guard( d_mutex );
 	d_ready = true;
 	d_run_condition.notify_all();
+    }
+
+  private:
+
+    // Wait for the ready signal.
+    void wait_and_unlock()
+    {
+	std::unique_lock<std::mutex> lock( d_mutex );
+	d_run_condition.wait( lock, [this](){return d_ready;} );
+	lock.unlock();
     }
 
   private:
@@ -78,7 +86,7 @@ class TestData
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-TEST(mutex, mutex_test)
+TEST(condition_variable, condition_variable_test)
 {
     // Create some test data.
     TestData test_data;
