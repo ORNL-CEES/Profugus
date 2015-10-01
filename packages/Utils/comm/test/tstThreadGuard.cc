@@ -1,14 +1,14 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   /tstLocal_Smart_Thread.cc
+ * \file   /tstThread_Guard.cc
  * \author Stuart R. Slattery
  * \date   Thu Sep 24 9:49:03 2015
- * \brief  Local_Smart_Thread testing.
+ * \brief  Thread_Guard testing.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "../Local_Smart_Thread.hh"
+#include "../Thread_Guard.hh"
 
 #include <vector>
 #include <algorithm>
@@ -20,7 +20,7 @@
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST(Local_Smart_Thread, function1)
+TEST(Thread_Guard, function1)
 {
     // Declare test data outside of local thread scope.
     int first_odd = -1;
@@ -37,7 +37,7 @@ TEST(Local_Smart_Thread, function1)
 			    *std::find_if(std::begin(vec), std::end(vec),
 					  [](int n){ return n % 2 == 1; });
 			};
-	profugus::Local_Smart_Thread odd_thread(
+	profugus::Thread_Guard odd_thread(
 	    std::thread(odd_func, std::ref(first_odd), std::ref(x)) );
 
 	// run a thread to find first even
@@ -48,7 +48,7 @@ TEST(Local_Smart_Thread, function1)
 					   [](int n){ return n % 2 == 0; });
 			 };
 
-	profugus::Local_Smart_Thread even_thread =
+	profugus::Thread_Guard even_thread =
 	    profugus::make_lst(
 		std::thread(even_func, std::ref(first_even), std::ref(x)) );
     
@@ -63,5 +63,5 @@ TEST(Local_Smart_Thread, function1)
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstLocal_Smart_Thread.cc
+//                 end of tstThread_Guard.cc
 //---------------------------------------------------------------------------//

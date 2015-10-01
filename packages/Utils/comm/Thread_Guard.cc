@@ -1,44 +1,53 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Local_Smart_Thread.i.hh
+ * \file   utils/Thread_Guard.cc
  * \author Stuart R. Slattery
  * \date   Thu Sep 24 10:38:02 2015
- * \brief  Locally-scoped C++11 smart thread.
+ * \brief  Locally-scoped thread guard.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Local_Smart_Thread_i_hh
-#define comm_Local_Smart_Thread_i_hh
+#include "Thread_Guard.hh"
+
+#include "harness/DBC.hh"
 
 namespace profugus
 {
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Get the id of the underlying local thread.
+ * \brief Default constructor.
  */
-std::thread::id Local_Smart_Thread::get_id() const
+Thread_Guard::Thread_Guard()
+{ /* ... */ }
+    
+//---------------------------------------------------------------------------//
+/* 
+ * \brief Thread constructor. This will take ownwership of the input thread.
+ */
+Thread_Guard::Thread_Guard( std::thread local_thread )
+    : d_thread( std::move(local_thread) )
 {
-    return d_thread.get_id();
+    REQUIRE( d_thread.joinable() );
 }
 
 //---------------------------------------------------------------------------//
-/* 
- * \brief Create a local smart thread from a local thread. This will move the
- * thread into the smart thread.
+/*
+ * \brief Destructor. If we have a valid thread we are managing, join it.
  */
-Local_Smart_Thread make_lst( std::thread local_thread )
+Thread_Guard::~Thread_Guard()
 {
-    return Local_Smart_Thread( std::move(local_thread) );
+    if ( d_thread.joinable() )
+    {
+	d_thread.join();
+    }
 }
 
 //---------------------------------------------------------------------------//
 
 } // end namespace profugus
 
-#endif // comm_Local_Smart_Thread_i_hh
-
 //---------------------------------------------------------------------------//
-//              end of comm/Local_Smart_Thread.i.hh
+//                 end of Thread_Guard.cc
 //---------------------------------------------------------------------------//
