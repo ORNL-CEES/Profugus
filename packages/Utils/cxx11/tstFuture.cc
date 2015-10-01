@@ -92,13 +92,14 @@ TEST( packaged_task, packaged_task_test )
     std::thread odd_thread( std::move(first_odd) );
     std::thread even_thread( std::move(first_even) );
 
+    // detach the threads. we know they will finish because we will wait on
+    // the futures
+    odd_thread.detach();
+    even_thread.detach();
+
     // check the even and odd results
     EXPECT_EQ(31, odd_future.get() );
     EXPECT_EQ(10, even_future.get() );    
-
-    // join threads before exiting
-    odd_thread.join();
-    even_thread.join();
 }
 
 //---------------------------------------------------------------------------//

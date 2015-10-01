@@ -56,8 +56,8 @@ TEST(thread, thread_test)
 
     // check the even and odd results after the threads have been joined to
     // ensure the computation has been completed.
-    EXPECT_EQ(31, first_odd);
-    EXPECT_EQ(10, first_even );
+    EXPECT_EQ( 31, first_odd );
+    EXPECT_EQ( 10, first_even );
 }
 
 //---------------------------------------------------------------------------//
