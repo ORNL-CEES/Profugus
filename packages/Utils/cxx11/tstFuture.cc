@@ -59,10 +59,12 @@ TEST(future, future_test)
     test_data.set_data( {10, 22, 31, 44, 56} );
 
     // create a future for the first odd.
-    std::future<int> first_odd = std::async( &TestData::odd_func, &test_data );
+    std::future<int> first_odd = 
+	std::async( &TestData::odd_func, &test_data );
 
     // create a future for the first even.
-    std::future<int> first_even = std::async( &TestData::even_func, &test_data );
+    std::future<int> first_even = 
+	std::async( &TestData::even_func, &test_data );
 
     // check the even and odd results
     EXPECT_EQ( 31, first_odd.get() );
