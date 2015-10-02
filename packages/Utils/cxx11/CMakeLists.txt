@@ -19,6 +19,7 @@ ADD_UTILS_TEST(tstThread.cc            NP 1)
 ADD_UTILS_TEST(tstMutex.cc             NP 1)
 ADD_UTILS_TEST(tstConditionVariable.cc NP 1)
 ADD_UTILS_TEST(tstFuture.cc            NP 1)
+ADD_UTILS_TEST(tstAtomic.cc            NP 1)
 
 ##---------------------------------------------------------------------------##
 ## end of cx11/CMakeLists.txt

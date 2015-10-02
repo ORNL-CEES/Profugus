@@ -65,8 +65,8 @@ TEST(future, future_test)
     std::future<int> first_even = std::async( &TestData::even_func, &test_data );
 
     // check the even and odd results
-    EXPECT_EQ(31, first_odd.get() );
-    EXPECT_EQ(10, first_even.get() );
+    EXPECT_EQ( 31, first_odd.get() );
+    EXPECT_EQ( 10, first_even.get() );
 }
 
 //---------------------------------------------------------------------------//
@@ -98,8 +98,8 @@ TEST( packaged_task, packaged_task_test )
     even_thread.detach();
 
     // check the even and odd results
-    EXPECT_EQ(31, odd_future.get() );
-    EXPECT_EQ(10, even_future.get() );    
+    EXPECT_EQ( 31, odd_future.get() );
+    EXPECT_EQ( 10, even_future.get() );    
 }
 
 //---------------------------------------------------------------------------//
