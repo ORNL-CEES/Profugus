@@ -94,14 +94,16 @@ int main( int argc, char *argv[] )
                   << res_norm[0]/b_norm[0] << std::endl;
     }
 
-    std::string scale_type = pl->get<std::string>("scaling_type","diagonal");
-    
+    Teuchos::RCP<Teuchos::ParameterList> mat_pl =
+        Teuchos::sublist(pl,"Problem");
+    std::string scale_type = mat_pl->get<std::string>("scaling_type","diagonal");
+   
     if (scale_type == "file")    
     {
-	    std::string pos_scale = pl->get<std::string>("position_scaling", "left");
+	    std::string pos_scale = mat_pl->get<std::string>("position_scaling", "left");
 	    if ( pos_scale == "right" ) 
 	    {
-	    	std::string precond_file = pl->get<std::string>("preconditioner_file","none");
+	    	std::string precond_file = mat_pl->get<std::string>("preconditioner_file","none");
 		Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
 		Teuchos::RCP<const Teuchos::Comm<int> > comm =
 		        Teuchos::DefaultComm<int>::getComm();            
@@ -110,9 +112,9 @@ int main( int argc, char *argv[] )
 		Teuchos::RCP<CRS_MATRIX> Pr = Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readSparseFile(
 		precond_file,comm,node);
 
+                Teuchos::ArrayRCP<double> v = x->getDataNonConst(0);
 	   	MV Prx = Tpetra::createCopy(*x);
 	    	Pr->apply(Prx,*x);
-	    	*x=Prx;    	
 	    }
     }
 

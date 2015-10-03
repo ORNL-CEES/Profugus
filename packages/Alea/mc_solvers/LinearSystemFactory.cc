@@ -436,6 +436,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
             b_data[i] = b_data[i] * diag_data[i];
             CHECK( !SCALAR_TRAITS::isnaninf(b_data[i]) );
         }
+        std::cout<<"component: "<<b_data[0]<<std::endl;
     }
     else if( scale_type == "block" )
     {
@@ -548,7 +549,6 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
 	    	//Pr.multiply(*b, Prb, 1.0, 0.0);
 	    	Pr->apply(Prb,*b);
 	    	
-	    	*b=Prb;
 	    	std::cout<<"Preconditioner applied to matrix and right hand side for left scaling"<<std::endl;
     	}
     	else if ( pos_scale == "right" ) 
@@ -654,6 +654,11 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyBlockDiagScaling(
         A->getDomainMap());
     Tpetra::MatrixMatrix::Multiply(*invD,false,*A,false,*DA,true);
     CHECK( DA->isFillComplete() );
+
+    MV Prb = Tpetra::createCopy(*b);
+
+    invD->apply(Prb,*b);
+	    	 
     return DA;
 }
 
