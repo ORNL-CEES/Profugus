@@ -130,10 +130,9 @@ void ParallelHandler::OnTestEnd(const ::testing::TestInfo& test_info)
  * run fails, the overall result is a failure), etc. It also prints warnings
  * at the end of each test.
  */
-int gtest_main(int argc, char *argv[])
+int gtest_main()
 {
     // Initialize MPI
-    profugus::initialize(argc, argv);
     const int node      = profugus::node();
     const int num_nodes = profugus::nodes();
 
@@ -147,9 +146,6 @@ int gtest_main(int argc, char *argv[])
         ::testing::GTEST_FLAG(color) = "no";
     }
 
-    // Initialize google test
-    ::testing::InitGoogleTest(&argc, argv);
-
     // Gets hold of the event listener list.
     ::testing::TestEventListeners& listeners =
         ::testing::UnitTest::GetInstance()->listeners();
@@ -162,10 +158,6 @@ int gtest_main(int argc, char *argv[])
     // Accumulate the result so that all processors will have the same result
     profugus::global_sum(failed);
 
-    // Finish MPI
-    profugus::global_barrier();
-    profugus::finalize();
-
     // Print final results
     if (node == 0)
     {
@@ -175,8 +167,6 @@ int gtest_main(int argc, char *argv[])
             std::cout << UTILS_WARNINGS.pop() << std::endl;
         }
 
-        if (argc)
-            std::cout << "In " << argv[0] << ", ";
         std::cout << "overall test result: "
             << (failed ? "FAILED" : "PASSED")
             << std::endl;

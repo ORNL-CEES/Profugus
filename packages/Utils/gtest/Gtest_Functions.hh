@@ -18,7 +18,7 @@ namespace profugus
 //===========================================================================//
 
 // Implementation for the harness' "main" function.
-int gtest_main(int argc, char *argv[]);
+int gtest_main();
 
 // Print the "skip" message from the skip macro
 void print_skip_message();

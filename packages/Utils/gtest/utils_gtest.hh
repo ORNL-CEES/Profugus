@@ -14,6 +14,8 @@
 #ifndef gtest_utils_gtest_hh
 #define gtest_utils_gtest_hh
 
+#include <hpx/hpx_init.hpp>
+
 #include <Utils/config.h>
 #include "gtest.h"
 #include "Gtest_Functions.hh"
@@ -63,6 +65,18 @@ using profugus::soft_equiv;
     } while (0)
 
 //---------------------------------------------------------------------------//
+// HPX main
+//---------------------------------------------------------------------------//
+int hpx_main( boost::program_options::variables_map& )
+{
+    // Run the tests.
+    profugus::gtest_main();
+
+    // Finalize hpx.
+    return hpx::finalize();
+}
+
+//---------------------------------------------------------------------------//
 // MAIN FUNCTION
 //---------------------------------------------------------------------------//
 /*!
@@ -76,9 +90,23 @@ using profugus::soft_equiv;
  * class because of a linker bug in MS Visual Studio that deletes main()
  * functions in shared libraries.
  */
-int main(int argc, char *argv[])
+int main( int argc, char *argv[] )
 {
-    profugus::gtest_main(argc, argv);
+    // Initialize MPI
+    profugus::initialize(argc, argv);
+
+    // Initialize google test
+    ::testing::InitGoogleTest(&argc, argv);
+
+    // create dummy options
+    boost::program_options::options_description dummy;
+
+    // initalize hpx. will call hpx_main.
+    int hpx_result = hpx::init( dummy, argc, argv );
+
+    // Finish MPI
+    profugus::global_barrier();
+    profugus::finalize();    
 }
 
 //---------------------------------------------------------------------------//
