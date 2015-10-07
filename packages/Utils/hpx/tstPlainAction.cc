@@ -9,8 +9,10 @@
 
 #include <hpx/include/actions.hpp>
 #include <hpx/include/async.hpp>
+#include <hpx/include/lcos.hpp>
 #include <hpx/include/util.hpp>
 
+#include <mutex>
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -79,6 +81,42 @@ TEST( plain_action, add_futures_test )
 
     // Test the results.
     EXPECT_EQ( a+b+c+d, result.get() );
+}
+
+//---------------------------------------------------------------------------//
+TEST( plain_action, wait_all_test )
+{
+    // Allocate space for futures of the local sum tasks.
+    int num_data = 10000;
+    std::vector<hpx::future<double> > local_sum_futures;
+    local_sum_futures.reserve( num_data );
+
+    // Initialize the tasks.
+    for ( int i = 0; i < num_data; ++i )
+    {
+	local_sum_futures.push_back( 
+	    hpx::async<add_numbers_action>( hpx::find_here(), i, i )
+	    );
+    }
+
+    // Wait on the tasks, extract their data, and write into the global sum
+    // with a mutex protection.
+    hpx::lcos::local::spinlock mtx;
+    double global_sum = 0.0;
+    auto sum_func = [&](double s)
+		    { 
+			std::lock_guard<decltype(mtx)> lock(mtx);
+			global_sum += s; 
+		    };
+    hpx::lcos::wait_each( hpx::util::unwrapped(sum_func), local_sum_futures );
+
+    // Test the result.
+    double gold_sum = 0.0;
+    for ( int i = 0; i < num_data; ++i )
+    {
+	gold_sum += i + i;
+    }
+    EXPECT_EQ( global_sum, gold_sum );
 }
 
 //---------------------------------------------------------------------------//

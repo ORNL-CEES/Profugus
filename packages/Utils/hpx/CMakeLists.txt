@@ -9,7 +9,8 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstPlainAction.cc    NP 1)
+ADD_UTILS_TEST(tstPlainAction.cc      NP 1)
+ADD_UTILS_TEST(tstManagedComponent.cc NP 1)
 
 ##---------------------------------------------------------------------------##
 ## end of hpx/CMakeLists.txt
