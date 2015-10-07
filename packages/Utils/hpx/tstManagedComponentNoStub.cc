@@ -101,7 +101,8 @@ HPX_REGISTER_ACTION( testing::server::DataBank::get_action,
 //---------------------------------------------------------------------------//
 // Client class. The client is the high-level facade for the thread-safe
 // server. It uses the stubs class to manage the server and presents the user
-// with a standard API while under the hood the threading is managed.
+// with a standard API while under the hood the threading is managed along
+// with data structure allocation.
 namespace testing
 {
 class DataBank : public hpx::components::client_base<DataBank,server::DataBank>
@@ -163,24 +164,24 @@ class DataBank : public hpx::components::client_base<DataBank,server::DataBank>
 //---------------------------------------------------------------------------//
 TEST( managed_component, add_numbers_test )
 {
-    // Create a data bank client with a local server.
+    // Create a data bank client with a local server. Forward the initial
+    // value down to the server.
+    double init_val = 3.2;
     testing::DataBank bank( 
-	hpx::components::new_<testing::server::DataBank>(hpx::find_here())
-	);;
-
-    // Create a server under the client on this machine.
-    bank.create( hpx::find_here() );
+	hpx::components::new_<testing::server::DataBank>(
+	    hpx::find_here(),init_val)
+	);
 
     // Test the bank.
-    EXPECT_EQ( bank.get_sync(), 0.0 );
+    EXPECT_EQ( bank.get_sync(), init_val );
 
     bank.add_non_blocking( 3.3 );
-    EXPECT_EQ( bank.get_sync(), 3.3 );    
+    EXPECT_EQ( bank.get_sync(), init_val + 3.3 );    
 
     hpx::future<double> bf = bank.get_async();
     bank.add_sync( 4.0 );
-    EXPECT_EQ( bf.get(), 3.3 );
-    EXPECT_EQ( bank.get_sync(), 7.3 );
+    EXPECT_EQ( bf.get(), init_val + 3.3 );
+    EXPECT_EQ( bank.get_sync(), init_val + 7.3 );
 
     bank.reset_non_blocking();
     EXPECT_EQ( bank.get_sync(), 0.0 );

@@ -219,10 +219,7 @@ TEST( managed_component, add_numbers_test )
     // Create a data bank client with a local server.
     testing::DataBank bank( 
 	hpx::components::new_<testing::server::DataBank>(hpx::find_here())
-	);;
-
-    // Create a server under the client on this machine.
-    bank.create( hpx::find_here() );
+	);
 
     // Test the bank.
     EXPECT_EQ( bank.get_sync(), 0.0 );
