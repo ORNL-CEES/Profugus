@@ -12,6 +12,8 @@ INCLUDE(UtilsTest)
 ADD_UTILS_TEST(tstPlainAction.cc            NP 1)
 ADD_UTILS_TEST(tstManagedComponent.cc       NP 1)
 ADD_UTILS_TEST(tstManagedComponentNoStub.cc NP 1)
+ADD_UTILS_TEST(tstDataFlow.cc               NP 1)
+ADD_UTILS_TEST(tstMatrixVectorMultiply.cc   NP 1)
 
 ##---------------------------------------------------------------------------##
 ## end of hpx/CMakeLists.txt

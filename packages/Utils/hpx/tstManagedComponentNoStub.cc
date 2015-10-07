@@ -84,6 +84,7 @@ HPX_REGISTER_ACTION_DECLARATION( testing::server::DataBank::add_action,
 HPX_REGISTER_ACTION_DECLARATION( testing::server::DataBank::get_action,
 				 data_bank_get_action );
 
+// These functions would normally go in the .cpp file for the class.
 // Now register the component with the factory.
 HPX_REGISTER_COMPONENT_MODULE();
 HPX_REGISTER_COMPONENT( 
