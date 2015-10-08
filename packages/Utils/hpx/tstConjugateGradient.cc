@@ -1,8 +1,8 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   /tstMatrixVectorMultiply.cc
+ * \file   /tstConjugateGradient.cc
  * \author Stuart Slattery
- * \brief  HPX matrix-vector multiply test. Effectively an OpenMP style
+ * \brief  HPX conjugate gradient test.
  * implementation.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
@@ -106,9 +106,9 @@ class Matrix
 };
 
 //---------------------------------------------------------------------------//
-// Opaque task holder. Provides a mechanism to wait on an arbitrary task
-// with a future that has a return value we dont care about.
-//---------------------------------------------------------------------------//
+// Opaque task holder. Provides a mechanism to create data dependencies on an
+// arbitrary task with a future that has a return value we dont care about.
+// ---------------------------------------------------------------------------//
 class OpaqueTaskFutureImplBase
 {
   public:
@@ -257,6 +257,22 @@ class VectorOps
 	    );
     }
 
+    // Update a vector with a vector times a scalar. y <- y + a*x.
+    static typename Tag::task_return_type 
+    update( const double a, const Vector& x, Vector& y  )
+    {
+	HPX_ASSERT( x.length() == y.length() );
+	auto update_op = [&x,&y,a]( const int i )
+		      { y.raw_data()[i] += a * x.raw_data()[i]; };
+	auto range = boost::irange(0,x.length());
+	return Tag::task_return_wrapper(
+	    hpx::parallel::for_each( typename Tag::execution_policy(),
+				     std::begin(range),
+				     std::end(range),
+				     update_op )
+	    );
+    }
+
     // Compute the dot product of two vectors.
     static typename Tag::template value_return_type<double> 
     dot( const Vector& x, const Vector& y )
@@ -330,6 +346,59 @@ class MatrixOps
 };
 
 //---------------------------------------------------------------------------//
+// Conjugate gradient implementation.
+//---------------------------------------------------------------------------//
+// synchronous implementation
+void conjugate_gradient_sync( const Matrix& A, 
+			      Vector& x, 
+			      const Vector& b,
+			      const int tolerance, 
+			      int& num_iters )
+{
+    // Initialize data.
+    Vector r( x.length() );
+    Vector work( x.length() );
+    double alpha = 0.0;
+    double ptap = 0.0;
+    double rtr_old = 0.0;
+    double rtr_new = 0.0;
+
+    // Compute initial residual.
+    MatrixOps<SyncTag>::apply( A, x, work );
+    VectorOps<SyncTag>::scale( work, -1.0 );
+    VectorOps<SyncTag>::add( b, work, r );
+    Vector p = r;
+
+    // Compute initial stopping criteria.
+    rtr_old = VectorOps<SyncTag>::dot( r, r );
+    double b_norm = VectorOps<SyncTag>::norm2( b );
+
+    // Iterate until convergence.
+    for ( int k = 0; k < x.length(); ++k )
+    {
+	// Do the projection.
+	MatrixOps<SyncTag>::apply( A, p, work );
+	ptap = VectorOps<SyncTag>::dot( p, work );
+	alpha = rtr_old / ptap;
+	VectorOps<SyncTag>::update( alpha, p, x );
+	VectorOps<SyncTag>::update( -alpha, work, r );
+	rtr_new = VectorOps<SyncTag>::dot( r, r );
+
+	// Check convergence.
+	if ( std::sqrt(rtr_new) / b_norm < tolerance ) 
+	{
+	    num_iters = k+1;
+	    break;
+	}
+
+	// Update p.
+	VectorOps<SyncTag>::scale( p, rtr_new/rtr_old );
+	VectorOps<SyncTag>::update( 1.0, r, p );
+	rtr_old = rtr_new;
+    }
+}
+
+//---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 TEST( vector, vector_sync_test )
@@ -377,6 +446,18 @@ TEST( vector, vector_sync_test )
     for ( int i = 0; i < N; ++i )
     {
 	EXPECT_EQ( x.get(i), 6.6 );
+    }
+
+    Vector p = x;
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( p.get(i), 6.6 );
+    }
+
+    VectorOps<SyncTag>::update( -10.0, z, p );
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( p.get(i), -13.4 );
     }
 }
 
@@ -459,6 +540,19 @@ TEST( vector, vector_async_test )
     {
 	EXPECT_EQ( x.get(i), 6.6 );
     }
+
+    Vector p = x;
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( p.get(i), 6.6 );
+    }
+
+    auto p_update = VectorOps<AsyncTag>::update( -10.0, z, p );
+    p_update.get_future().wait();
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( p.get(i), -13.4 );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -487,5 +581,14 @@ TEST( matrix, matrix_async_test )
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstMatrixVectorMultiply.cc
+TEST( conjugate_gradient, conjugate_gradient_sync_test )
+{
+    int N = 10000;
+    Matrix A( N, N );
+    Vector x( N );
+    Vector y( N );
+}
+
+//---------------------------------------------------------------------------//
+//                 end of tstConjugateGradient.cc
 //---------------------------------------------------------------------------//
