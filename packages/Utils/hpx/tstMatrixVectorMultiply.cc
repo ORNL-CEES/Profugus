@@ -2,7 +2,8 @@
 /*!
  * \file   /tstMatrixVectorMultiply.cc
  * \author Stuart Slattery
- * \brief  HPX matrix-vector multiply test.
+ * \brief  HPX matrix-vector multiply test. Effectively an OpenMP style
+ * implementation.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
@@ -105,15 +106,74 @@ class Matrix
 };
 
 //---------------------------------------------------------------------------//
+// Opaque task holder. Provides a mechanism to wait on an arbitrary task
+// with a future that has a return value we dont care about.
+//---------------------------------------------------------------------------//
+class OpaqueTaskImplBase
+{
+  public:
+    virtual ~OpaqueTaskImplBase() = default;
+    virtual void wait() = 0;
+};
+
+//---------------------------------------------------------------------------//
+template<class T>
+class OpaqueTaskImpl : public OpaqueTaskImplBase
+{
+  public:
+    using future_value_type = T;
+
+  public:    
+    OpaqueTaskImpl( hpx::future<T>&& future )
+	: d_future( std::move(future) )
+    { /* ... */ }
+
+    OpaqueTaskImpl( const OpaqueTaskImpl& opaque ) = delete;
+    OpaqueTaskImpl& operator=( const OpaqueTaskImpl& opaque ) = delete;
+
+    OpaqueTaskImpl( OpaqueTaskImpl&& opaque ) = default;
+    OpaqueTaskImpl& operator=( OpaqueTaskImpl&& opaque ) = default;
+
+    void wait() override { d_future.wait(); }
+
+  private:
+    hpx::future<T> d_future;
+};
+
+//---------------------------------------------------------------------------//
+class OpaqueTask
+{
+  public:
+
+    template<class T>
+    OpaqueTask( hpx::future<T>&& future )
+    {
+	d_task_impl = std::unique_ptr<OpaqueTaskImplBase>( 
+	    new OpaqueTaskImpl<T>(std::move(future)) );
+    }
+
+    OpaqueTask( const OpaqueTask& opaque ) = delete;
+    OpaqueTask& operator=( const OpaqueTask& opaque ) = delete;
+
+    OpaqueTask( OpaqueTask&& opaque ) = default;
+    OpaqueTask& operator=( OpaqueTask&& opaque ) = default;
+
+    void wait() { d_task_impl->wait(); }
+
+  private:
+    std::unique_ptr<OpaqueTaskImplBase> d_task_impl;
+};
+
+//---------------------------------------------------------------------------//
 // Vector operations.
 //---------------------------------------------------------------------------//
 class VectorOps
 {
   public:
 
-    static void fill( Vector& x, const double a )
+    static void fill_sync( Vector& x, const double a )
     {
-	auto fill_op = [&x=x,&a]( const int i ){ x.set(i,a); };
+	auto fill_op = [&x,a]( const int i ){ x.set(i,a); };
 	auto range = boost::irange(0,x.length());
 	hpx::parallel::for_each( hpx::parallel::parallel_execution_policy(),
 				 std::begin(range),
@@ -121,9 +181,21 @@ class VectorOps
 				 fill_op );
     }
 
-    static void scale( Vector& x, const double a )
+    static OpaqueTask fill_async( Vector& x, const double a )
     {
-	auto scale_op = [&x=x,&a]( const int i ){ x.raw_data()[i] *= a; };
+	auto fill_op = [&x,a]( const int i ){ x.set(i,a); };
+	auto range = boost::irange(0,x.length());
+	return OpaqueTask(
+	    hpx::parallel::for_each( hpx::parallel::parallel_task_execution_policy(),
+				     std::begin(range),
+				     std::end(range),
+				     fill_op )
+	    );
+    }
+
+    static void scale_sync( Vector& x, const double a )
+    {
+	auto scale_op = [&x,a]( const int i ){ x.raw_data()[i] *= a; };
 	auto range = boost::irange(0,x.length());
 	hpx::parallel::for_each( hpx::parallel::parallel_execution_policy(),
 				 std::begin(range),
@@ -131,12 +203,24 @@ class VectorOps
 				 scale_op );
     }
 
-    static void add( const Vector& x, const Vector& y, Vector& z )
+    static OpaqueTask scale_async( Vector& x, const double a )
+    {
+	auto scale_op = [&x,a]( const int i ){ x.raw_data()[i] *= a; };
+	auto range = boost::irange(0,x.length());
+	return OpaqueTask(
+	    hpx::parallel::for_each( hpx::parallel::parallel_task_execution_policy(),
+				     std::begin(range),
+				     std::end(range),
+				     scale_op )
+	    );
+    }
+
+    static void add_sync( const Vector& x, const Vector& y, Vector& z )
     {
 	HPX_ASSERT( z.length() == x.length() );
 	HPX_ASSERT( z.length() == y.length() );
 
-	auto sum_op = [&x,&y,&z=z]( const int i )
+	auto sum_op = [&x,&y,&z]( const int i )
 		      { z.raw_data()[i] = x.raw_data()[i] + y.raw_data()[i]; };
 
 	auto range = boost::irange(0,x.length());
@@ -146,7 +230,24 @@ class VectorOps
 				 sum_op );
     }
 
-    static double dot( const Vector& x, const Vector& y )
+    static OpaqueTask add_async( const Vector& x, const Vector& y, Vector& z )
+    {
+	HPX_ASSERT( z.length() == x.length() );
+	HPX_ASSERT( z.length() == y.length() );
+
+	auto sum_op = [&x,&y,&z]( const int i )
+		      { z.raw_data()[i] = x.raw_data()[i] + y.raw_data()[i]; };
+
+	auto range = boost::irange(0,x.length());
+	return OpaqueTask(
+	    hpx::parallel::for_each( hpx::parallel::parallel_task_execution_policy(),
+				     std::begin(range),
+				     std::end(range),
+				     sum_op )
+	    );
+    }
+
+    static double dot_sync( const Vector& x, const Vector& y )
     {
 	HPX_ASSERT( x.length() == y.length() );
 	return hpx::parallel::inner_product( 
@@ -157,9 +258,32 @@ class VectorOps
 	    0.0 );
     }
 
-    static double norm2( const Vector& x )
+    static hpx::future<double> dot_async( const Vector& x, const Vector& y )
     {
-	return std::sqrt( dot(x,x) );
+	HPX_ASSERT( x.length() == y.length() );
+	return hpx::parallel::inner_product( 
+	    hpx::parallel::parallel_task_execution_policy(),
+	    std::begin(x.raw_data()),
+	    std::end(x.raw_data()),
+	    std::begin(y.raw_data()),
+	    0.0 );
+    }
+
+    static double square_root( const double a )
+    {
+	return std::sqrt(a);
+    }
+
+    static double norm2_sync( const Vector& x )
+    {
+	return square_root( dot_sync(x,x) );
+    }
+
+    static hpx::future<double> norm2_async( const Vector& x )
+    {
+	return hpx::lcos::local::dataflow( hpx::launch::async,
+					   hpx::util::unwrapped(square_root), 
+					   dot_async(x,x) );
     }
 };
 
@@ -170,7 +294,7 @@ class MatrixOps
 {
   public:
 
-    static void apply( const Matrix& A, const Vector& x, Vector& y )
+    static void apply_sync( const Matrix& A, const Vector& x, Vector& y )
     {
 	HPX_ASSERT( A.cols() == x.length()  );
 	HPX_ASSERT( A.rows() == y.length()  );
@@ -203,9 +327,9 @@ class MatrixOps
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-TEST( vector, vector_test )
+TEST( vector, vector_sync_test )
 {
-    int N = 10;
+    int N = 100000;
     Vector x( N );
     Vector y( N );
 
@@ -224,27 +348,27 @@ TEST( vector, vector_test )
 	EXPECT_EQ( y.get(i), 1.0 );
     }
 
-    EXPECT_EQ( VectorOps::dot(x,y), N );
-    EXPECT_EQ( VectorOps::norm2(x), std::sqrt(N) );
-    EXPECT_EQ( VectorOps::norm2(y), std::sqrt(N) );
+    EXPECT_EQ( VectorOps::dot_sync(x,y), N );
+    EXPECT_EQ( VectorOps::norm2_sync(x), std::sqrt(N) );
+    EXPECT_EQ( VectorOps::norm2_sync(y), std::sqrt(N) );
 
     Vector z( N );
     EXPECT_EQ( N, z.length() );
 
-    VectorOps::add( x, y, z );
+    VectorOps::add_sync( x, y, z );
     for ( int i = 0; i < N; ++i )
     {
 	EXPECT_EQ( z.get(i), 2.0 );
     }
-    EXPECT_EQ( VectorOps::norm2(z), std::sqrt(4*N) );
+    EXPECT_EQ( VectorOps::norm2_sync(z), std::sqrt(4*N) );
 
-    VectorOps::fill( x, 3.3 );
+    VectorOps::fill_sync( x, 3.3 );
     for ( int i = 0; i < N; ++i )
     {
 	EXPECT_EQ( x.get(i), 3.3 );
     }
 
-    VectorOps::scale( x, 2.0 );
+    VectorOps::scale_sync( x, 2.0 );
     for ( int i = 0; i < N; ++i )
     {
 	EXPECT_EQ( x.get(i), 6.6 );
@@ -252,7 +376,63 @@ TEST( vector, vector_test )
 }
 
 //---------------------------------------------------------------------------//
-TEST( matrix, matrix_test )
+TEST( vector, vector_async_test )
+{
+    int N = 100000;
+    Vector x( N );
+    Vector y( N );
+
+    EXPECT_EQ( N, x.length() );
+    EXPECT_EQ( N, y.length() );
+
+    for ( int i = 0; i < N; ++i )
+    {
+	x.set( i, 1.0 );
+	y.set( i, 1.0 );
+    }
+
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( x.get(i), 1.0 );
+	EXPECT_EQ( y.get(i), 1.0 );
+    }
+
+    hpx::future<double> xy_dot = VectorOps::dot_async(x,y);
+    hpx::future<double> x_norm2 = VectorOps::norm2_async(x);
+    hpx::future<double> y_norm2 = VectorOps::norm2_async(y);
+    EXPECT_EQ( xy_dot.get(), N );
+    EXPECT_EQ( x_norm2.get(), std::sqrt(N) );
+    EXPECT_EQ( y_norm2.get(), std::sqrt(N) );
+
+    Vector z( N );
+    EXPECT_EQ( N, z.length() );
+
+    OpaqueTask xy_add = VectorOps::add_async( x, y, z );
+    xy_add.wait();
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( z.get(i), 2.0 );
+    }
+    hpx::future<double> z_norm2 = VectorOps::norm2_async(z);
+    EXPECT_EQ( z_norm2.get(), std::sqrt(4*N) );
+
+    OpaqueTask x_fill = VectorOps::fill_async( x, 3.3 );
+    x_fill.wait();
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( x.get(i), 3.3 );
+    }
+
+    OpaqueTask x_scale = VectorOps::scale_async( x, 2.0 );
+    x_scale.wait();
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( x.get(i), 6.6 );
+    }
+}
+
+//---------------------------------------------------------------------------//
+TEST( matrix, matrix_sync_test )
 {
     int N = 10000;
     Matrix A( N, N );
@@ -268,7 +448,7 @@ TEST( matrix, matrix_test )
 	x.set( i, i );
     }
 
-    MatrixOps::apply( A, x, y );
+    MatrixOps::apply_sync( A, x, y );
     for ( int i = 0; i < N; ++i )
     {
     	EXPECT_EQ( x.get(i), y.get(i) );
