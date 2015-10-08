@@ -8,6 +8,7 @@
 //---------------------------------------------------------------------------//
 
 #include <hpx/hpx.hpp>
+#include <hpx/include/parallel_algorithm.hpp>
 #include <hpx/include/actions.hpp>
 #include <hpx/include/async.hpp>
 #include <hpx/include/lcos.hpp>
@@ -17,6 +18,11 @@
 #include <hpx/runtime/components/component_factory.hpp>
 #include <hpx/runtime/components/stubs/stub_base.hpp>
 #include <hpx/runtime/applier/apply.hpp>
+#include <hpx/parallel/algorithms/inner_product.hpp>
+#include <hpx/parallel/algorithms/reduce.hpp>
+#include <hpx/parallel/execution_policy.hpp>
+
+#include <boost/range/irange.hpp>
 
 #include <mutex>
 #include <vector>
@@ -27,114 +33,114 @@
 #include "gtest/utils_gtest.hh"
 
 //---------------------------------------------------------------------------//
+// Vector.
+//---------------------------------------------------------------------------//
+class Vector
+{
+  public:
+    using data_it = std::vector<double>::iterator;
+    using const_data_it = std::vector<double>::const_iterator;
+
+  public:
+    Vector() : d_length( 0 ) { /* ... */ }
+    Vector( const int length )
+	: d_length( length )
+	, d_data( length, 0.0 )
+    { /* ... */ }
+
+    int length() const { return d_length; }
+    void set( const int i, const double value ) { d_data[i] = value; }
+    double get( const int i ) { return d_data[i]; }
+    std::vector<double>& raw_data() { return d_data; }
+    const std::vector<double>& raw_data() const { return d_data; }
+
+    static void add( const Vector& x, const Vector& y, Vector& z )
+    {
+	HPX_ASSERT( z.d_length == x.d_length );
+	HPX_ASSERT( z.d_length == y.d_length );
+
+	auto sum_op = [&x,&y,&z=z]( const int i )
+		      { z.d_data[i] = x.d_data[i] + y.d_data[i]; };
+
+	auto range = boost::irange(0,x.d_length);
+	hpx::parallel::for_each( hpx::parallel::parallel_execution_policy(),
+				 std::begin(range),
+				 std::end(range),
+				 sum_op );
+    }
+
+    static double dot( const Vector& x, const Vector& y )
+    {
+	HPX_ASSERT( x.d_length == y.d_length );
+	return hpx::parallel::inner_product( hpx::parallel::parallel_execution_policy(),
+					     std::begin(x.d_data),
+					     std::end(x.d_data),
+					     std::begin(y.d_data),
+					     0.0 );
+    }
+
+    static double norm2( const Vector& x )
+    {
+	double norm = 0.0;
+	for ( auto& d : x.d_data ) norm += d*d;
+	return std::sqrt( norm );
+    }
+
+  private:
+    int d_length;
+    std::vector<double> d_data;
+};
+
+//---------------------------------------------------------------------------//
 // Matrix
 //---------------------------------------------------------------------------//
 class Matrix
 {
   public:
 
-    // Default constructor.
     Matrix() 
 	: d_num_rows( 0 )
 	, d_num_cols( 0 )
     { /* ... */ }
 
-    // Size constructor.
     Matrix( const int num_rows, const int num_cols )
 	: d_num_rows( num_rows )
 	, d_num_cols( num_cols )
-	, d_data( num_cols, std::vector<double>(num_rows, 0.0) )
+	, d_data( num_rows, std::vector<double>(num_cols, 0.0) )
     { /* ... */ }
 
-    // Get the number of rows.
     int rows() const { return d_num_rows; }
-
-    // Get the number of columns.
     int cols() const { return d_num_cols; }
-
-    // Set a specific value.
     void set( const int row, const int col, const double value )
-    {
-	d_data[col][row] = value;
-    }
+    { d_data[row][col] = value; }
 
-    // Get a specific value.
     double get( const int row, const int col ) const
-    {
-	return d_data[col][row];
-    }
+    { return d_data[row][col]; }
 
-    // Add. this = x + y
-    void add( const Matrix& x, const Matrix& y )
+    void apply( const Vector& x, Vector& y ) const
     {
-	HPX_ASSERT( d_num_rows == x.d_num_rows );
-	HPX_ASSERT( d_num_cols == x.d_num_cols );
-	HPX_ASSERT( d_num_rows == y.d_num_rows );
-	HPX_ASSERT( d_num_cols == y.d_num_cols );
-	for ( int j = 0; j < d_num_cols; ++j )
-	{
-	    for ( int i = 0; i < d_num_rows; ++i )
-	    {
-		d_data[j][i] = x.d_data[j][i] + y.d_data[j][i];
-	    }
-	}
-    }
-
-    // Dot product. Vector-vector overload.
-    double dot( const Matrix& x ) const
-    {
-	HPX_ASSERT( d_num_rows == x.d_num_rows  );
-	HPX_ASSERT( d_num_cols == 1 );
-	HPX_ASSERT( x.d_num_cols == 1 );
-	double sum = 0.0;
-	for ( int i = 0; i < d_num_rows; ++i )
-	{
-	    sum += d_data[0][i] * x.d_data[0][i];
-	}
-	return sum;
-    }
-
-    // Dot product. Matrix-vector overload. y = this*x
-    void dot( const Matrix& x, Matrix& y ) const
-    {
-	HPX_ASSERT( d_num_rows == y.d_num_rows  );
-	HPX_ASSERT( d_num_cols == x.d_num_rows  );
-	HPX_ASSERT( x.d_num_cols == y.d_num_cols );
-
-	// Create a vector of futures.
-	std::vector<hpx::future<void> > sum_futures;
-	sum_futures.reserve( d_num_rows );
+	HPX_ASSERT( d_num_cols == x.length()  );
+	HPX_ASSERT( d_num_rows == y.length()  );
 
 	// Create a sum operator for the threads.
-	auto sum_op = [this,&x,&y=y]( const int row, const int col )
-	{
-	    y.d_data[col][row] = 0.0;
-	    for ( int j = 0; j < this->d_num_cols; ++j ) 
-		y.d_data[col][row] += this->d_data[j][row] * x.d_data[col][j];
+	auto sum_op = [this,&x,&y=y]( const int row )
+		      {
+			  const std::vector<double>& x_data = x.raw_data();
+			  std::vector<double>& y_data = y.raw_data();
+			  y_data[row] = 0.0;
+			  for ( auto mij = std::begin(this->d_data[row]),
+				      xj = std::begin(x_data);
+				mij != std::end(this->d_data[row]);
+				++mij, ++xj )	 
+			      y_data[row] += (*mij) * (*xj);
+		      };
 
-	};
-
-	// Calculate the sum. Synchronize on each vector.
-	for ( int v = 0; v < x.d_num_cols; ++v )
-	{
-	    // Launch the sums. One task per row.
-	    for ( int i = 0; i < d_num_rows; ++i )
-	    {
-		sum_futures.push_back( hpx::async(sum_op, i, v) );
-	    }
-
-	    // Wait on the sums.
-	    hpx::lcos::wait_all(sum_futures);
-	}
-    }
-
-    // 2-norm of a single column matrix (vector).
-    double norm2() const
-    {
-	HPX_ASSERT( d_num_cols == 1 );
-	double norm = 0.0;
-	for ( auto& d : d_data[0] ) norm += d*d;
-	return std::sqrt(norm);
+	// Loop in parallel over all the rows.
+	auto range = boost::irange(0,d_num_rows);
+	hpx::parallel::for_each( hpx::parallel::parallel_execution_policy(),
+				 std::begin(range),
+				 std::end(range),
+				 sum_op );
     }
 
   private:
@@ -145,47 +151,71 @@ class Matrix
     // Number of columns.
     int d_num_cols;
 
-    // Local matrix data. Column-major ordering.
+    // Local matrix data. Row-major ordering.
     std::vector<std::vector<double> > d_data;
 };
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-TEST( matrix_vector, vector_dot_test )
+TEST( vector, vector_test )
 {
-    int N = 10000;
-    Matrix x( N, 1 );
-    Matrix y( N, 1 );
+    int N = 10;
+    Vector x( N );
+    Vector y( N );
+
+    EXPECT_EQ( N, x.length() );
+    EXPECT_EQ( N, y.length() );
 
     for ( int i = 0; i < N; ++i )
     {
-	x.set( i, 0, 1.0 );
-	y.set( i, 0, 1.0 );
+	x.set( i, 1.0 );
+	y.set( i, 1.0 );
     }
 
-    EXPECT_EQ( x.dot(y), N );
-    EXPECT_EQ( x.norm2(), std::sqrt(N) );
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( x.get(i), 1.0 );
+	EXPECT_EQ( y.get(i), 1.0 );
+    }
+
+    EXPECT_EQ( Vector::dot(x,y), N );
+    EXPECT_EQ( Vector::norm2(x), std::sqrt(N) );
+    EXPECT_EQ( Vector::norm2(y), std::sqrt(N) );
+
+    Vector z( N );
+    EXPECT_EQ( N, z.length() );
+
+    Vector::add( x, y, z );
+
+    for ( int i = 0; i < N; ++i )
+    {
+	EXPECT_EQ( z.get(i), 2.0 );
+    }
+    EXPECT_EQ( Vector::norm2(z), std::sqrt(4*N) );
 }
 
 //---------------------------------------------------------------------------//
-TEST( matrix_vector, multiply_test )
+TEST( matrix, matrix_test )
 {
     int N = 10000;
     Matrix A( N, N );
-    Matrix x( N, 1 );
-    Matrix y( N, 1 );
+    Vector x( N );
+    Vector y( N );
+
+    EXPECT_EQ( N, A.rows() );
+    EXPECT_EQ( N, A.cols() );
 
     for ( int i = 0; i < N; ++i )
     {
 	A.set( i, i, 1.0 );
-	x.set( i, 0, i );
+	x.set( i, i );
     }
 
-    A.dot( x, y );
+    A.apply( x, y );
     for ( int i = 0; i < N; ++i )
     {
-	EXPECT_EQ( x.get(i,0), y.get(i,0) );
+    	EXPECT_EQ( x.get(i), y.get(i) );
     }
 }
 
