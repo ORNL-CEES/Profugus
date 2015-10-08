@@ -113,7 +113,7 @@ class OpaqueTaskFutureImplBase
 {
   public:
     virtual ~OpaqueTaskFutureImplBase() = default;
-    virtual hpx::shared_future<void> get_future() = 0;
+    virtual hpx::shared_future<int> get_future() = 0;
 };
 
 //---------------------------------------------------------------------------//
@@ -134,7 +134,7 @@ class OpaqueTaskFutureImpl : public OpaqueTaskFutureImplBase
     OpaqueTaskFutureImpl( OpaqueTaskFutureImpl&& opaque ) = default;
     OpaqueTaskFutureImpl& operator=( OpaqueTaskFutureImpl&& opaque ) = default;
 
-    hpx::shared_future<void> get_future() override 
+    hpx::shared_future<int> get_future() override 
     { 
 	return hpx::lcos::local::dataflow( 
 	    hpx::launch::async, 
@@ -142,7 +142,8 @@ class OpaqueTaskFutureImpl : public OpaqueTaskFutureImplBase
 	    d_future );
     }
 
-    static void flow_trigger( const T trigger_val ) { /* ... */ }
+    static int flow_trigger( const T trigger_val ) 
+    { return 0; }
 
   private:
     hpx::future<T> d_future;
@@ -166,37 +167,32 @@ class OpaqueTaskFuture
     OpaqueTaskFuture( OpaqueTaskFuture&& opaque ) = default;
     OpaqueTaskFuture& operator=( OpaqueTaskFuture&& opaque ) = default;
 
-    hpx::shared_future<void> get_future() { return d_task_impl->get_future(); }
+    hpx::shared_future<int> get_future() { return d_task_impl->get_future(); }
 
   private:
     std::unique_ptr<OpaqueTaskFutureImplBase> d_task_impl;
 };
 
 //---------------------------------------------------------------------------//
-// Task flow wrapper.
+// Task flow wrapper. Makes a task wait to execute in a dataflow until other
+// tasks have executed upon which it is dependent.
 //---------------------------------------------------------------------------//
 template<typename F, typename... Args>
-auto task_flow_wrapper( hpx::shared_future<void>, 
-			F&& f, Args&&... args )
+auto task_flow_wrapper( int, F&& f, Args&&... args )
     -> decltype( f(std::forward<Args>(args)...) )
 { 
     return f(std::forward<Args>(args)...); 
 }
 
 template<typename F, typename... Args>
-auto task_flow_wrapper( hpx::shared_future<void>, 
-			hpx::shared_future<void>,
-			F&& f, Args&&... args )
+auto task_flow_wrapper( int, int, F&& f, Args&&... args )
     -> decltype( f(std::forward<Args>(args)...) )
 { 
     return f(std::forward<Args>(args)...); 
 }
 
 template<typename F, typename... Args>
-auto task_flow_wrapper( hpx::shared_future<void>, 
-			hpx::shared_future<void>,
-			hpx::shared_future<void>,
-			F&& f, Args&&... args )
+auto task_flow_wrapper( int, int, int, F&& f, Args&&... args )
     -> decltype( f(std::forward<Args>(args)...) )
 { 
     return f(std::forward<Args>(args)...); 
@@ -209,7 +205,7 @@ class SyncTag
 {
   public:
     template<class T> using value_return_type = T;
-    using task_return_type = void;
+    using task_return_type = int;
     using execution_policy = hpx::parallel::parallel_execution_policy;
 
     template<class T>
@@ -217,14 +213,15 @@ class SyncTag
     { return input.get(); }
     
     template<class Input>
-    static task_return_type task_return_wrapper( Input&& input ) { /* ... */ }
+    static task_return_type task_return_wrapper( Input&& input ) 
+    { return 0; }
 };
 
 class AsyncTag 
 {
   public:
     template<class T> using value_return_type = hpx::future<T>;
-    using task_return_type = hpx::shared_future<void>;
+    using task_return_type = hpx::shared_future<int>;
     using execution_policy = hpx::parallel::parallel_task_execution_policy;
 
     template<class T>
@@ -441,38 +438,58 @@ void conjugate_gradient_async( const Matrix& A,
     Vector r( x.length() );
     Vector work( x.length() );
     double alpha = 0.0;
-    double ptap = 0.0;
+    hpx::future<double> ptap_f;
     double rtr_old = 0.0;
     double rtr_new = 0.0;
 
     // Compute initial residual.
-    hpx::shared_future<void> ax = MatrixOps<AsyncTag>::apply( A, x, work );
-    VectorOps<SyncTag>::scale( work, -1.0 );
-    VectorOps<SyncTag>::add( b, work, r );
+    auto ax = MatrixOps<AsyncTag>::apply( A, x, work );
+    // auto wscale = hpx::lcos::local::dataflow(
+    // 	hpx::launch::async, 
+    // 	hpx::util::unwrapped(&task_flow_wrapper), 
+    // 	ax,
+    // 	hpx::make_ready_future(&VectorOps<SyncTag>::scale), 
+    // 	hpx::make_ready_future(work), 
+    // 	hpx::make_ready_future(-1.0) );
+
+    auto wscale = VectorOps<AsyncTag>::scale( work, -1.0 );
+    wscale.wait();
+    auto radd = VectorOps<AsyncTag>::add( b, work, r );
+    radd.wait();
     Vector p = r;
 
     // Compute initial stopping criteria.
-    rtr_old = VectorOps<SyncTag>::dot( r, r );
-    double b_norm = VectorOps<SyncTag>::norm2( b );
+    hpx::future<double> rtr_f = VectorOps<AsyncTag>::dot( r, r );
+    hpx::future<double> b_norm_f = VectorOps<AsyncTag>::norm2( b );
+    rtr_old = rtr_f.get();
+    double b_norm = b_norm_f.get();
 
     // Iterate until convergence.
     for ( int k = 0; k < x.length(); ++k, ++num_iters )
     {
 	// Do the projection.
-	MatrixOps<SyncTag>::apply( A, p, work );
-	ptap = VectorOps<SyncTag>::dot( p, work );
-	alpha = rtr_old / ptap;
-	VectorOps<SyncTag>::update( alpha, p, x );
-	VectorOps<SyncTag>::update( -alpha, work, r );
-	rtr_new = VectorOps<SyncTag>::dot( r, r );
-
+	auto ap = MatrixOps<AsyncTag>::apply( A, p, work );
+	ap.wait();
+	ptap_f = VectorOps<AsyncTag>::dot( p, work );
+	alpha = rtr_old / ptap_f.get();
+	auto apx = VectorOps<AsyncTag>::update( alpha, p, x );
+	auto awr = VectorOps<AsyncTag>::update( -alpha, work, r );
+	apx.wait();
+	rtr_f = VectorOps<AsyncTag>::dot( r, r );
+	rtr_new = rtr_f.get();
+	
 	// Check convergence.
 	if ( (std::sqrt(rtr_new) / b_norm) < tolerance ) break;
 
 	// Update p.
-	VectorOps<SyncTag>::scale( p, rtr_new/rtr_old );
-	VectorOps<SyncTag>::update( 1.0, r, p );
+	auto pb = VectorOps<AsyncTag>::scale( p, rtr_new/rtr_old );
+	pb.wait();
+	auto rp = VectorOps<AsyncTag>::update( 1.0, r, p );
 	rtr_old = rtr_new;
+
+	// Wait on updates.
+	apx.wait();
+	rp.wait();
     }
 
     // Get the converged tolerance.
@@ -703,6 +720,52 @@ TEST( matrix, async_test )
     {
     	EXPECT_EQ( x.get(i), y.get(i) );
     }
+}
+
+//---------------------------------------------------------------------------//
+TEST( conjugate_gradient, async_test )
+{
+    // Initialize.
+    int N = 5000;
+    Matrix A( N, N );
+    Vector x( N );
+    Vector b( N );
+
+    // Fill A symmetrically.
+    double A_val = 0.0;
+    for ( int i = 0; i < N; ++i )
+    {
+	for ( int j = 0; j < N; ++j )
+	{
+	    if ( i == j )        A_val = 1.0;
+	    else if ( i-1 == j ) A_val = 0.5;
+	    else if ( i+1 == j ) A_val = 0.5;
+	    else if ( i-2 == j ) A_val = 0.25;
+	    else if ( i+2 == j ) A_val = 0.25;
+	    else if ( i-3 == j ) A_val = 0.125;
+	    else if ( i+3 == j ) A_val = 0.125;
+	    else if ( i-4 == j ) A_val = 0.0625;
+	    else if ( i+4 == j ) A_val = 0.0625;
+	    else                 A_val = 0.0;
+	    A.set( i, j, A_val );
+	}
+    }
+
+    // Fill x and b.
+    auto xf = VectorOps<AsyncTag>::fill( x, 0.0 );
+    auto bf = VectorOps<AsyncTag>::fill( b, 1.0 );
+    xf.wait();
+    bf.wait();
+
+    // Solve.
+    double tolerance = 1.0e-12;
+    int num_iters = 0.0;
+    double residual = 0.0;
+    conjugate_gradient_async( A, x, b, tolerance, num_iters, residual );
+
+    // Check the output.
+    std::cout << "Asynchronous Conjugate Gradient " << tolerance << " " 
+	      << residual << " " << num_iters << std::endl;
 }
 
 //---------------------------------------------------------------------------//
