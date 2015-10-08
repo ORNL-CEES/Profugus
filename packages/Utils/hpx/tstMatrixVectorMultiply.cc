@@ -109,59 +109,67 @@ class Matrix
 // Opaque task holder. Provides a mechanism to wait on an arbitrary task
 // with a future that has a return value we dont care about.
 //---------------------------------------------------------------------------//
-class OpaqueTaskImplBase
+class OpaqueTaskFutureImplBase
 {
   public:
-    virtual ~OpaqueTaskImplBase() = default;
-    virtual void wait() = 0;
+    virtual ~OpaqueTaskFutureImplBase() = default;
+    virtual hpx::future<void> get_future() = 0;
 };
 
 //---------------------------------------------------------------------------//
 template<class T>
-class OpaqueTaskImpl : public OpaqueTaskImplBase
+class OpaqueTaskFutureImpl : public OpaqueTaskFutureImplBase
 {
   public:
     using future_value_type = T;
 
   public:    
-    OpaqueTaskImpl( hpx::future<T>&& future )
+    OpaqueTaskFutureImpl( hpx::future<T>&& future )
 	: d_future( std::move(future) )
     { /* ... */ }
 
-    OpaqueTaskImpl( const OpaqueTaskImpl& opaque ) = delete;
-    OpaqueTaskImpl& operator=( const OpaqueTaskImpl& opaque ) = delete;
+    OpaqueTaskFutureImpl( const OpaqueTaskFutureImpl& opaque ) = delete;
+    OpaqueTaskFutureImpl& operator=( const OpaqueTaskFutureImpl& opaque ) = delete;
 
-    OpaqueTaskImpl( OpaqueTaskImpl&& opaque ) = default;
-    OpaqueTaskImpl& operator=( OpaqueTaskImpl&& opaque ) = default;
+    OpaqueTaskFutureImpl( OpaqueTaskFutureImpl&& opaque ) = default;
+    OpaqueTaskFutureImpl& operator=( OpaqueTaskFutureImpl&& opaque ) = default;
 
-    void wait() override { d_future.wait(); }
+    hpx::future<void> get_future() override 
+    { 
+	return hpx::lcos::local::dataflow( 
+	    hpx::launch::async, 
+	    hpx::util::unwrapped(OpaqueTaskFutureImpl<T>::flow_trigger), 
+	    d_future );
+    }
+
+    static void flow_trigger( const T trigger_val ) { /* ... */ }
 
   private:
     hpx::future<T> d_future;
 };
 
 //---------------------------------------------------------------------------//
-class OpaqueTask
+class OpaqueTaskFuture
 {
   public:
 
     template<class T>
-    OpaqueTask( hpx::future<T>&& future )
+    OpaqueTaskFuture( hpx::future<T>&& future )
     {
-	d_task_impl = std::unique_ptr<OpaqueTaskImplBase>( 
-	    new OpaqueTaskImpl<T>(std::move(future)) );
+	d_task_impl = std::unique_ptr<OpaqueTaskFutureImplBase>( 
+	    new OpaqueTaskFutureImpl<T>(std::move(future)) );
     }
 
-    OpaqueTask( const OpaqueTask& opaque ) = delete;
-    OpaqueTask& operator=( const OpaqueTask& opaque ) = delete;
+    OpaqueTaskFuture( const OpaqueTaskFuture& opaque ) = delete;
+    OpaqueTaskFuture& operator=( const OpaqueTaskFuture& opaque ) = delete;
 
-    OpaqueTask( OpaqueTask&& opaque ) = default;
-    OpaqueTask& operator=( OpaqueTask&& opaque ) = default;
+    OpaqueTaskFuture( OpaqueTaskFuture&& opaque ) = default;
+    OpaqueTaskFuture& operator=( OpaqueTaskFuture&& opaque ) = default;
 
-    void wait() { d_task_impl->wait(); }
+    hpx::future<void> get_future() { return d_task_impl->get_future(); }
 
   private:
-    std::unique_ptr<OpaqueTaskImplBase> d_task_impl;
+    std::unique_ptr<OpaqueTaskFutureImplBase> d_task_impl;
 };
 
 //---------------------------------------------------------------------------//
@@ -186,7 +194,7 @@ class AsyncTag
 {
   public:
     template<class T> using value_return_type = hpx::future<T>;
-    using task_return_type = OpaqueTask;
+    using task_return_type = OpaqueTaskFuture;
     using execution_policy = hpx::parallel::parallel_task_execution_policy;
 
     template<class T>
@@ -283,11 +291,13 @@ class VectorOps
 //---------------------------------------------------------------------------//
 // Matrix operations.
 //---------------------------------------------------------------------------//
+template<class Tag>
 class MatrixOps
 {
   public:
 
-    static void apply_sync( const Matrix& A, const Vector& x, Vector& y )
+    static typename Tag::task_return_type
+    apply( const Matrix& A, const Vector& x, Vector& y )
     {
 	HPX_ASSERT( A.cols() == x.length()  );
 	HPX_ASSERT( A.rows() == y.length()  );
@@ -310,37 +320,8 @@ class MatrixOps
 
 	// Loop in parallel over all the rows.
 	auto range = boost::irange( 0, A.rows() );
-	hpx::parallel::for_each( hpx::parallel::parallel_execution_policy(),
-				 std::begin(range),
-				 std::end(range),
-				 sum_op );
-    }
-
-    static OpaqueTask apply_async( const Matrix& A, const Vector& x, Vector& y )
-    {
-	HPX_ASSERT( A.cols() == x.length()  );
-	HPX_ASSERT( A.rows() == y.length()  );
-
-	// Get the vector data.
-	const std::vector<double>& x_data = x.raw_data();
-	std::vector<double>& y_data = y.raw_data();
-
-	// Create a sum operator for the threads.
-	auto sum_op = [&]( const int row )
-		      {
-			  const std::vector<double>& A_data = A.raw_data( row );
-			  y_data[row] = 0.0;
-			  for ( auto mij = std::begin(A_data),
-				      xj = std::begin(x_data);
-				mij != std::end(A_data);
-				++mij, ++xj )	 
-			      y_data[row] += (*mij) * (*xj);
-		      };
-
-	// Loop in parallel over all the rows.
-	auto range = boost::irange( 0, A.rows() );
-	return OpaqueTask(
-	    hpx::parallel::for_each( hpx::parallel::parallel_task_execution_policy(),
+	return Tag::task_return_wrapper(
+	    hpx::parallel::for_each( typename Tag::execution_policy(),
 				     std::begin(range),
 				     std::end(range),
 				     sum_op )
@@ -400,6 +381,30 @@ TEST( vector, vector_sync_test )
 }
 
 //---------------------------------------------------------------------------//
+TEST( matrix, matrix_sync_test )
+{
+    int N = 10000;
+    Matrix A( N, N );
+    Vector x( N );
+    Vector y( N );
+
+    EXPECT_EQ( N, A.rows() );
+    EXPECT_EQ( N, A.cols() );
+
+    for ( int i = 0; i < N; ++i )
+    {
+	A.set( i, i, 1.0 );
+	x.set( i, i );
+    }
+
+    MatrixOps<SyncTag>::apply( A, x, y );
+    for ( int i = 0; i < N; ++i )
+    {
+    	EXPECT_EQ( x.get(i), y.get(i) );
+    }
+}
+
+//---------------------------------------------------------------------------//
 TEST( vector, vector_async_test )
 {
     int N = 100000;
@@ -421,18 +426,19 @@ TEST( vector, vector_async_test )
 	EXPECT_EQ( y.get(i), 1.0 );
     }
 
+    Vector z( N );
+    EXPECT_EQ( N, z.length() );
+
     auto xy_dot = VectorOps<AsyncTag>::dot(x,y);
     auto x_norm2 = VectorOps<AsyncTag>::norm2(x);
     auto y_norm2 = VectorOps<AsyncTag>::norm2(y);
+    auto xy_add = VectorOps<AsyncTag>::add( x, y, z );
+
     EXPECT_EQ( xy_dot.get(), N );
     EXPECT_EQ( x_norm2.get(), std::sqrt(N) );
     EXPECT_EQ( y_norm2.get(), std::sqrt(N) );
 
-    Vector z( N );
-    EXPECT_EQ( N, z.length() );
-
-    auto xy_add = VectorOps<AsyncTag>::add( x, y, z );
-    xy_add.wait();
+    xy_add.get_future().wait();
     for ( int i = 0; i < N; ++i )
     {
 	EXPECT_EQ( z.get(i), 2.0 );
@@ -441,14 +447,14 @@ TEST( vector, vector_async_test )
     EXPECT_EQ( z_norm2.get(), std::sqrt(4*N) );
 
     auto x_fill = VectorOps<AsyncTag>::fill( x, 3.3 );
-    x_fill.wait();
+    x_fill.get_future().wait();
     for ( int i = 0; i < N; ++i )
     {
 	EXPECT_EQ( x.get(i), 3.3 );
     }
 
     auto x_scale = VectorOps<AsyncTag>::scale( x, 2.0 );
-    x_scale.wait();
+    x_scale.get_future().wait();
     for ( int i = 0; i < N; ++i )
     {
 	EXPECT_EQ( x.get(i), 6.6 );
@@ -456,7 +462,7 @@ TEST( vector, vector_async_test )
 }
 
 //---------------------------------------------------------------------------//
-TEST( matrix, matrix_sync_test )
+TEST( matrix, matrix_async_test )
 {
     int N = 10000;
     Matrix A( N, N );
@@ -472,7 +478,8 @@ TEST( matrix, matrix_sync_test )
 	x.set( i, i );
     }
 
-    MatrixOps::apply_sync( A, x, y );
+    auto apply_op = MatrixOps<AsyncTag>::apply( A, x, y );
+    apply_op.get_future().wait();
     for ( int i = 0; i < N; ++i )
     {
     	EXPECT_EQ( x.get(i), y.get(i) );
