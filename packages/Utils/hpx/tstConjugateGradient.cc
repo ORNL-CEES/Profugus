@@ -174,31 +174,6 @@ class OpaqueTaskFuture
 };
 
 //---------------------------------------------------------------------------//
-// Task flow wrapper. Makes a task wait to execute in a dataflow until other
-// tasks have executed upon which it is dependent.
-//---------------------------------------------------------------------------//
-template<typename F, typename... Args>
-auto task_flow_wrapper( int, F&& f, Args&&... args )
-    -> decltype( f(std::forward<Args>(args)...) )
-{ 
-    return f(std::forward<Args>(args)...); 
-}
-
-template<typename F, typename... Args>
-auto task_flow_wrapper( int, int, F&& f, Args&&... args )
-    -> decltype( f(std::forward<Args>(args)...) )
-{ 
-    return f(std::forward<Args>(args)...); 
-}
-
-template<typename F, typename... Args>
-auto task_flow_wrapper( int, int, int, F&& f, Args&&... args )
-    -> decltype( f(std::forward<Args>(args)...) )
-{ 
-    return f(std::forward<Args>(args)...); 
-}
-
-//---------------------------------------------------------------------------//
 // Operation Tags
 //---------------------------------------------------------------------------//
 class SyncTag
@@ -220,13 +195,13 @@ class SyncTag
 class AsyncTag 
 {
   public:
-    template<class T> using value_return_type = hpx::future<T>;
+    template<class T> using value_return_type = hpx::shared_future<T>;
     using task_return_type = hpx::shared_future<int>;
     using execution_policy = hpx::parallel::parallel_task_execution_policy;
 
     template<class T>
-    static value_return_type<T>&& value_return_wrapper( hpx::future<T>&& input ) 
-    { return std::move(input); }
+    static value_return_type<T> value_return_wrapper( hpx::future<T>&& input ) 
+    { return value_return_type<T>(std::move(input)); }
 
     template<class Input>
     static task_return_type task_return_wrapper( Input&& input ) 
@@ -373,15 +348,14 @@ class MatrixOps
 };
 
 //---------------------------------------------------------------------------//
-// Conjugate gradient implementations.
+// Conjugate gradient implementation.
 //---------------------------------------------------------------------------//
-// synchronous implementation
-void conjugate_gradient_sync( const Matrix& A, 
-			      Vector& x, 
-			      const Vector& b,
-			      const double tolerance, 
-			      int& num_iters,
-			      double& residual )
+void conjugate_gradient( const Matrix& A, 
+			 Vector& x, 
+			 const Vector& b,
+			 const double tolerance, 
+			 int& num_iters,
+			 double& residual )
 {
     // Initialize data.
     Vector r( x.length() );
@@ -392,7 +366,8 @@ void conjugate_gradient_sync( const Matrix& A,
     double rtr_new = 0.0;
 
     // Compute initial residual.
-    MatrixOps<SyncTag>::apply( A, x, work );
+    auto ax = MatrixOps<AsyncTag>::apply( A, x, work );
+    ax.wait();
     VectorOps<SyncTag>::scale( work, -1.0 );
     VectorOps<SyncTag>::add( b, work, r );
     Vector p = r;
@@ -405,7 +380,8 @@ void conjugate_gradient_sync( const Matrix& A,
     for ( int k = 0; k < x.length(); ++k, ++num_iters )
     {
 	// Do the projection.
-	MatrixOps<SyncTag>::apply( A, p, work );
+	auto ap = MatrixOps<AsyncTag>::apply( A, p, work );
+	ap.wait();
 	ptap = VectorOps<SyncTag>::dot( p, work );
 	alpha = rtr_old / ptap;
 	VectorOps<SyncTag>::update( alpha, p, x );
@@ -419,77 +395,6 @@ void conjugate_gradient_sync( const Matrix& A,
 	VectorOps<SyncTag>::scale( p, rtr_new/rtr_old );
 	VectorOps<SyncTag>::update( 1.0, r, p );
 	rtr_old = rtr_new;
-    }
-
-    // Get the converged tolerance.
-    residual = std::sqrt(rtr_new) / b_norm;
-}
-
-//---------------------------------------------------------------------------//
-// asynchronous implementation
-void conjugate_gradient_async( const Matrix& A, 
-			       Vector& x, 
-			       const Vector& b,
-			       const double tolerance, 
-			       int& num_iters,
-			       double& residual )
-{
-    // Initialize data.
-    Vector r( x.length() );
-    Vector work( x.length() );
-    double alpha = 0.0;
-    hpx::future<double> ptap_f;
-    double rtr_old = 0.0;
-    double rtr_new = 0.0;
-
-    // Compute initial residual.
-    auto ax = MatrixOps<AsyncTag>::apply( A, x, work );
-    // auto wscale = hpx::lcos::local::dataflow(
-    // 	hpx::launch::async, 
-    // 	hpx::util::unwrapped(&task_flow_wrapper), 
-    // 	ax,
-    // 	hpx::make_ready_future(&VectorOps<SyncTag>::scale), 
-    // 	hpx::make_ready_future(work), 
-    // 	hpx::make_ready_future(-1.0) );
-
-    auto wscale = VectorOps<AsyncTag>::scale( work, -1.0 );
-    wscale.wait();
-    auto radd = VectorOps<AsyncTag>::add( b, work, r );
-    radd.wait();
-    Vector p = r;
-
-    // Compute initial stopping criteria.
-    hpx::future<double> rtr_f = VectorOps<AsyncTag>::dot( r, r );
-    hpx::future<double> b_norm_f = VectorOps<AsyncTag>::norm2( b );
-    rtr_old = rtr_f.get();
-    double b_norm = b_norm_f.get();
-
-    // Iterate until convergence.
-    for ( int k = 0; k < x.length(); ++k, ++num_iters )
-    {
-	// Do the projection.
-	auto ap = MatrixOps<AsyncTag>::apply( A, p, work );
-	ap.wait();
-	ptap_f = VectorOps<AsyncTag>::dot( p, work );
-	alpha = rtr_old / ptap_f.get();
-	auto apx = VectorOps<AsyncTag>::update( alpha, p, x );
-	auto awr = VectorOps<AsyncTag>::update( -alpha, work, r );
-	apx.wait();
-	rtr_f = VectorOps<AsyncTag>::dot( r, r );
-	rtr_new = rtr_f.get();
-	
-	// Check convergence.
-	if ( (std::sqrt(rtr_new) / b_norm) < tolerance ) break;
-
-	// Update p.
-	auto pb = VectorOps<AsyncTag>::scale( p, rtr_new/rtr_old );
-	pb.wait();
-	auto rp = VectorOps<AsyncTag>::update( 1.0, r, p );
-	rtr_old = rtr_new;
-
-	// Wait on updates.
-	apx.wait();
-	rp.wait();
     }
 
     // Get the converged tolerance.
@@ -581,50 +486,6 @@ TEST( matrix, sync_test )
     {
     	EXPECT_EQ( x.get(i), y.get(i) );
     }
-}
-
-//---------------------------------------------------------------------------//
-TEST( conjugate_gradient, sync_test )
-{
-    // Initialize.
-    int N = 5000;
-    Matrix A( N, N );
-    Vector x( N );
-    Vector b( N );
-
-    // Fill A symmetrically.
-    double A_val = 0.0;
-    for ( int i = 0; i < N; ++i )
-    {
-	for ( int j = 0; j < N; ++j )
-	{
-	    if ( i == j )        A_val = 1.0;
-	    else if ( i-1 == j ) A_val = 0.5;
-	    else if ( i+1 == j ) A_val = 0.5;
-	    else if ( i-2 == j ) A_val = 0.25;
-	    else if ( i+2 == j ) A_val = 0.25;
-	    else if ( i-3 == j ) A_val = 0.125;
-	    else if ( i+3 == j ) A_val = 0.125;
-	    else if ( i-4 == j ) A_val = 0.0625;
-	    else if ( i+4 == j ) A_val = 0.0625;
-	    else                 A_val = 0.0;
-	    A.set( i, j, A_val );
-	}
-    }
-
-    // Fill x and b.
-    VectorOps<SyncTag>::fill( x, 0.0 );
-    VectorOps<SyncTag>::fill( b, 1.0 );
-
-    // Solve.
-    double tolerance = 1.0e-12;
-    int num_iters = 0.0;
-    double residual = 0.0;
-    conjugate_gradient_sync( A, x, b, tolerance, num_iters, residual );
-
-    // Check the output.
-    std::cout << "Synchronous Conjugate Gradient " << tolerance << " " 
-	      << residual << " " << num_iters << std::endl;
 }
 
 //---------------------------------------------------------------------------//
@@ -723,7 +584,7 @@ TEST( matrix, async_test )
 }
 
 //---------------------------------------------------------------------------//
-TEST( conjugate_gradient, async_test )
+TEST( conjugate_gradient, cg_test )
 {
     // Initialize.
     int N = 5000;
@@ -752,19 +613,17 @@ TEST( conjugate_gradient, async_test )
     }
 
     // Fill x and b.
-    auto xf = VectorOps<AsyncTag>::fill( x, 0.0 );
-    auto bf = VectorOps<AsyncTag>::fill( b, 1.0 );
-    xf.wait();
-    bf.wait();
+    VectorOps<SyncTag>::fill( x, 0.0 );
+    VectorOps<SyncTag>::fill( b, 1.0 );
 
     // Solve.
     double tolerance = 1.0e-12;
     int num_iters = 0.0;
     double residual = 0.0;
-    conjugate_gradient_async( A, x, b, tolerance, num_iters, residual );
+    conjugate_gradient( A, x, b, tolerance, num_iters, residual );
 
     // Check the output.
-    std::cout << "Asynchronous Conjugate Gradient " << tolerance << " " 
+    std::cout << "Conjugate Gradient " << tolerance << " " 
 	      << residual << " " << num_iters << std::endl;
 }
 
