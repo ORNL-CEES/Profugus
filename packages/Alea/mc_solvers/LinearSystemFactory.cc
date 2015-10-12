@@ -82,6 +82,7 @@ LinearSystemFactory::buildLinearSystem( Teuchos::RCP<Teuchos::ParameterList> pl 
         buildProfugusSystem(mat_pl,A,b);
     }
 
+    A = applyShift(A,mat_pl);
     A = applyScaling(A,b,mat_pl);
 
     return Teuchos::rcp( new LinearSystem(A,b) );
@@ -394,6 +395,47 @@ void LinearSystemFactory::buildProfugusSystem(
 
 //---------------------------------------------------------------------------//
 /*!
+* \brief Apply specified shift to matrix
+  */
+//--------------------------------------------------------------------------
+Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyShift(
+    Teuchos::RCP<CRS_MATRIX>                 A,
+    Teuchos::RCP<Teuchos::ParameterList> pl )
+{
+    VECTOR diag(A->getDomainMap());
+    A->getLocalDiagCopy(diag);
+
+    SCALAR shift = pl->get<SCALAR>("diagonal_shift", 0.0);
+     
+    Teuchos::ArrayRCP<SCALAR> diag_vec = diag.getDataNonConst();
+      
+    int max_entries = A -> getNodeMaxNumRowEntries();
+    Teuchos::ArrayRCP<LO> inds( max_entries );
+    Teuchos::ArrayRCP<SCALAR> vals( max_entries );
+    
+    A -> resumeFill();
+    for ( int i=0; i<diag_vec.size(); ++i )
+    {
+    	size_t num_entries;
+    	A -> getLocalRowCopy( i, inds(), vals(), num_entries );
+    	int index = std::find( inds.begin(), inds.end(), i ) - inds.begin();
+    	vals[index] = vals[index] + shift * vals[index];
+    	Teuchos::ArrayView<SCALAR> vals_view=vals( index, 1 );
+    	Teuchos::ArrayView<LO> cols_view=inds( index, 1 );
+    	//std::cout<<"size of inds = "<<inds.size()<<" and size of cols = " <<vals.size()<<std::endl;
+    	auto changes = A -> replaceLocalValues( i, cols_view, vals_view );
+    	CHECK( changes==1 );
+    	//std::cout<<num_entries<<std::endl;
+     }
+        	    	    	            
+     A -> fillComplete();
+    	    	    	    	                    
+     CHECK( A -> isFillComplete() );    
+     return A;
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Apply specified scaling to matrix
  */
 //---------------------------------------------------------------------------//
@@ -436,7 +478,6 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyScaling(
             b_data[i] = b_data[i] * diag_data[i];
             CHECK( !SCALAR_TRAITS::isnaninf(b_data[i]) );
         }
-        std::cout<<"component: "<<b_data[0]<<std::endl;
     }
     else if( scale_type == "block" )
     {

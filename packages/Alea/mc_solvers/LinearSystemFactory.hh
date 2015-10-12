@@ -71,6 +71,10 @@ class LinearSystemFactory
         Teuchos::RCP<CRS_MATRIX> &A,
         Teuchos::RCP<MV>     &b );
 
+    static Teuchos::RCP<CRS_MATRIX> applyShift(
+        Teuchos::RCP<CRS_MATRIX>                 A,
+        Teuchos::RCP<Teuchos::ParameterList> pl);
+
     static Teuchos::RCP<CRS_MATRIX> applyScaling(
         Teuchos::RCP<CRS_MATRIX>                 A,
         Teuchos::RCP<MV>                     b,
