@@ -143,7 +143,7 @@ Physics::Physics(RCP_Std_DB db,
  * \param p particle
  */
 void Physics::initialize(double      energy,
-                         Particle_t &p)
+                         Particle_t &p) const
 {
     // check to make sure the energy is in the group structure and get the
     // group index
@@ -163,7 +163,7 @@ void Physics::initialize(double      energy,
  * \brief Process a particle through a physical collision.
  */
 void Physics::collide(Particle_t &particle,
-                      Bank_t     &bank)
+                      Bank_t     &bank) const
 {
     REQUIRE(d_geometry);
     REQUIRE(particle.event() == events::COLLISION);
@@ -173,16 +173,16 @@ void Physics::collide(Particle_t &particle,
     REQUIRE(particle.group() < d_Ng);
 
     // get the material id of the current region
-    d_matid = particle.matid();
-    CHECK(d_mid2l[static_cast<unsigned int>(d_matid)] < d_Nm);
-    CHECK(d_geometry->matid(particle.geo_state()) == d_matid);
+    unsigned int matid = particle.matid();
+    CHECK(d_mid2l[static_cast<unsigned int>(matid)] < d_Nm);
+    CHECK(d_geometry->matid(particle.geo_state()) == matid);
 
     // get the group index
     int group = particle.group();
 
     // calculate the scattering cross section ratio
-    double c = d_scatter[d_mid2l[d_matid]][group] /
-               d_mat->vector(d_matid, XS_t::TOTAL)[group];
+    double c = d_scatter[d_mid2l[matid]][group] /
+               d_mat->vector(matid, XS_t::TOTAL)[group];
     CHECK(!d_implicit_capture ? c <= 1.0 : c >= 0.0);
 
     // we need to do analog transport if the particle is c = 0.0 regardless of
@@ -221,7 +221,7 @@ void Physics::collide(Particle_t &particle,
     if (particle.event() != events::ABSORPTION)
     {
         // determine new group of particle
-        group = sample_group(d_matid, group, particle.rng().ran());
+        group = sample_group(matid, group, particle.rng().ran());
         CHECK(group >= 0 && group < d_Ng);
 
         // set the group
@@ -241,7 +241,7 @@ void Physics::collide(Particle_t &particle,
  * \brief Get a total cross section from the physics library.
  */
 double Physics::total(physics::Reaction_Type  type,
-                      const Particle_t       &p)
+                      const Particle_t       &p) const
 {
     REQUIRE(d_mat->num_mat() == d_Nm);
     REQUIRE(d_mat->num_groups() == d_Ng);
@@ -287,7 +287,7 @@ double Physics::total(physics::Reaction_Type  type,
  * fissionable material present
  */
 bool Physics::initialize_fission(unsigned int  matid,
-                                 Particle_t   &p)
+                                 Particle_t   &p) const
 {
     REQUIRE(d_mat->has(matid));
 
@@ -299,7 +299,7 @@ bool Physics::initialize_fission(unsigned int  matid,
     {
         // sample the fission group
         int group = sample_fission_group(matid, p.rng().ran());
-        sampled   = true;
+        sampled = true;
 
         // set the group
         p.set_group(group);
@@ -335,7 +335,7 @@ bool Physics::initialize_fission(unsigned int  matid,
  */
 int Physics::sample_fission_site(const Particle_t       &p,
                                  Fission_Site_Container &fsc,
-                                 double                  keff)
+                                 double                  keff) const
 {
     REQUIRE(d_geometry);
     REQUIRE(d_mat->has(p.matid()));
@@ -386,7 +386,7 @@ int Physics::sample_fission_site(const Particle_t       &p,
  * at the site
  */
 bool Physics::initialize_fission(Fission_Site &fs,
-                                 Particle_t   &p)
+                                 Particle_t   &p) const
 {
     REQUIRE(d_mat->has(fs.m));
     REQUIRE(is_fissionable(fs.m));

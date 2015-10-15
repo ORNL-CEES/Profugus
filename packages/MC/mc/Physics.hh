@@ -103,10 +103,10 @@ class Physics
     SP_Geometry get_geometry() const { return d_geometry; }
 
     // Initialize the physics state.
-    void initialize(double E, Particle_t &p);
+    void initialize(double E, Particle_t &p) const;
 
     // Get a total cross section from the physics library.
-    double total(physics::Reaction_Type type, const Particle_t &p);
+    double total(physics::Reaction_Type type, const Particle_t &p) const;
 
     //! Get the energy from a particle via its physics state
     double energy(const Particle_t &p) const
@@ -125,17 +125,17 @@ class Physics
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process a particle through a physical collision.
-    void collide(Particle_t &particle, Bank_t &bank);
+    void collide(Particle_t &particle, Bank_t &bank) const;
 
     // Sample fission site.
     int sample_fission_site(const Particle_t &p, Fission_Site_Container &fsc,
-                            double keff);
+                            double keff) const;
 
     // Sample fission spectrum and initialize the physics state.
-    bool initialize_fission(unsigned int matid, Particle_t &p);
+    bool initialize_fission(unsigned int matid, Particle_t &p) const;
 
     // Initialize a physics state at a fission site.
-    bool initialize_fission(Fission_Site &fs, Particle_t &p);
+    bool initialize_fission(Fission_Site &fs, Particle_t &p) const;
 
     // Return whether a given material is fissionable
     bool is_fissionable(unsigned int matid) const
@@ -190,9 +190,6 @@ class Physics
 
     // Fissionable bool by local matid.
     std::vector<bool> d_fissionable;
-
-    // Material id of current region.
-    int d_matid;
 
     // Sample a group.
     int sample_group(int matid, int g, double rnd) const;
