@@ -44,9 +44,9 @@ SET(HEADERS "")
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
-  src/Manager.cc
-  src/Problem_Builder.cc
-  src/mc.cc
+  Manager.cc
+  Problem_Builder.cc
+  mc.cc
   )
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
@@ -63,7 +63,7 @@ TRIBITS_ADD_EXECUTABLE(
   xmc
   NOEXESUFFIX
   NOEXEPREFIX
-  SOURCES src/mc.cc
+  SOURCES mc.cc
   INSTALLABLE
   )
 

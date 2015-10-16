@@ -16,10 +16,10 @@
 #include <memory>
 
 #include "comm/P_Stream.hh"
-#include "mc/Fixed_Source_Solver.hh"
-#include "mc/Keff_Solver.hh"
-#include "mc/Global_RNG.hh"
-#include "mc/Source_Transporter.hh"
+#include "physics/Fixed_Source_Solver.hh"
+#include "physics/Keff_Solver.hh"
+#include "physics/Global_RNG.hh"
+#include "physics/Source_Transporter.hh"
 #include "Problem_Builder.hh"
 
 namespace mc

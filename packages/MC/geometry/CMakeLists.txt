@@ -43,17 +43,17 @@ SET(HEADERS "")
 
 # geometry sources
 
-FILE(GLOB GEOMETRY_HEADERS src/*.hh)
+FILE(GLOB GEOMETRY_HEADERS *.hh)
 SET(GEOMETRY_SOURCES
-  src/Cartesian_Mesh.cc
-  src/Geometry.pt.cc
-  src/Mesh_Geometry.cc
-  src/Mesh_State.cc
-  src/RTK_Array.cc
-  src/RTK_Array.pt.cc
-  src/RTK_Cell.cc
-  src/RTK_Functions.cc
-  src/RTK_State.cc
+  Cartesian_Mesh.cc
+  Geometry.pt.cc
+  Mesh_Geometry.cc
+  Mesh_State.cc
+  RTK_Array.cc
+  RTK_Array.pt.cc
+  RTK_Cell.cc
+  RTK_Functions.cc
+  RTK_State.cc
   )
 LIST(APPEND HEADERS ${GEOMETRY_HEADERS})
 LIST(APPEND SOURCES ${GEOMETRY_SOURCES})

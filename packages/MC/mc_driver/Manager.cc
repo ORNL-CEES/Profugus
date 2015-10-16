@@ -19,10 +19,10 @@
 #include "utils/Serial_HDF5_Writer.hh"
 #include "utils/Parallel_HDF5_Writer.hh"
 #include "solvers/LinAlgTypedefs.hh"
-#include "mc/Fission_Source.hh"
-#include "mc/Uniform_Source.hh"
-#include "mc/KCode_Solver.hh"
-#include "mc/Anderson_Solver.hh"
+#include "physics/Fission_Source.hh"
+#include "physics/Uniform_Source.hh"
+#include "physics/KCode_Solver.hh"
+#include "physics/Anderson_Solver.hh"
 #include "Manager.hh"
 
 namespace mc

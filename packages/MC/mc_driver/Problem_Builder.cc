@@ -20,11 +20,11 @@
 #include "xs/XS_Builder.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "geometry/Mesh_Geometry.hh"
-#include "mc/Box_Shape.hh"
-#include "mc/VR_Analog.hh"
-#include "mc/VR_Roulette.hh"
-#include "mc/Fission_Matrix_Tally.hh"
-#include "mc/Source_Diagnostic_Tally.hh"
+#include "physics/Box_Shape.hh"
+#include "physics/VR_Analog.hh"
+#include "physics/VR_Roulette.hh"
+#include "physics/Fission_Matrix_Tally.hh"
+#include "physics/Source_Diagnostic_Tally.hh"
 #include "Problem_Builder.hh"
 
 namespace mc

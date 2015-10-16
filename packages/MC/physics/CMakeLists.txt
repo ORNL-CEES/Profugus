@@ -43,36 +43,36 @@ SET(HEADERS "")
 
 # physics sources
 
-FILE(GLOB PHYSICS_HEADERS src/*.hh)
+FILE(GLOB PHYSICS_HEADERS *.hh)
 SET(PHYSICS_SOURCES
-  src/Anderson_Operator.pt.cc
-  src/Anderson_Solver.pt.cc
-  src/Box_Shape.cc
-  src/Cell_Tally.cc
-  src/Domain_Transporter.cc
-  src/Fission_Matrix_Acceleration.pt.cc
-  src/Fission_Matrix_Processor.cc
-  src/Fission_Matrix_Solver.pt.cc
-  src/Fission_Matrix_Tally.cc
-  src/Fission_Rebalance.cc
-  src/Fission_Source.cc
-  src/Fixed_Source_Solver.cc
-  src/Global_RNG.cc
-  src/Group_Bounds.cc
-  src/KCode_Solver.cc
-  src/Keff_Tally.cc
-  src/Particle.cc
-  src/Particle_Metaclass.pt.cc
-  src/Physics.cc
-  src/Sampler.cc
-  src/Solver.cc
-  src/Source.cc
-  src/Source_Diagnostic_Tally.cc
-  src/Source_Transporter.cc
-  src/Tallier.cc
-  src/Tally.cc
-  src/Uniform_Source.cc
-  src/VR_Roulette.cc
+  Anderson_Operator.pt.cc
+  Anderson_Solver.pt.cc
+  Box_Shape.cc
+  Cell_Tally.cc
+  Domain_Transporter.cc
+  Fission_Matrix_Acceleration.pt.cc
+  Fission_Matrix_Processor.cc
+  Fission_Matrix_Solver.pt.cc
+  Fission_Matrix_Tally.cc
+  Fission_Rebalance.cc
+  Fission_Source.cc
+  Fixed_Source_Solver.cc
+  Global_RNG.cc
+  Group_Bounds.cc
+  KCode_Solver.cc
+  Keff_Tally.cc
+  Particle.cc
+  Particle_Metaclass.pt.cc
+  Physics.cc
+  Sampler.cc
+  Solver.cc
+  Source.cc
+  Source_Diagnostic_Tally.cc
+  Source_Transporter.cc
+  Tallier.cc
+  Tally.cc
+  Uniform_Source.cc
+  VR_Roulette.cc
   )
 LIST(APPEND HEADERS ${PHYSICS_HEADERS})
 LIST(APPEND SOURCES ${PHYSICS_SOURCES})

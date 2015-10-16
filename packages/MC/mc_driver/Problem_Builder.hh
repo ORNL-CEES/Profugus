@@ -22,11 +22,11 @@
 #include "Teuchos_Array.hpp"
 #include "Teuchos_TwoDArray.hpp"
 
-#include "mc/Physics.hh"
-#include "mc/Shape.hh"
-#include "mc/Variance_Reduction.hh"
-#include "mc/Tallier.hh"
-#include "mc/Fission_Matrix_Acceleration.hh"
+#include "physics/Physics.hh"
+#include "physics/Shape.hh"
+#include "physics/Variance_Reduction.hh"
+#include "physics/Tallier.hh"
+#include "physics/Fission_Matrix_Acceleration.hh"
 
 namespace mc
 {
