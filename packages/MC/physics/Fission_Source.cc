@@ -20,7 +20,7 @@
 #include "comm/global.hh"
 #include "comm/Timing.hh"
 #include "utils/Constants.hh"
-#include "mc/Global_RNG.hh"
+#include "Global_RNG.hh"
 
 namespace profugus
 {

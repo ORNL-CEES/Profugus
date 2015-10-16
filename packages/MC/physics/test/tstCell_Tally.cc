@@ -17,7 +17,7 @@
 
 #include "../Cell_Tally.hh"
 
-#include "Utils/gtest/utils_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 //---------------------------------------------------------------------------//
 // Test fixture

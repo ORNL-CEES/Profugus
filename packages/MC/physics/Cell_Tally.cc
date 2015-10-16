@@ -11,7 +11,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include "Utils/comm/global.hh"
+#include "comm/global.hh"
 #include "Cell_Tally.hh"
 
 namespace profugus
