@@ -1,5 +1,5 @@
 ##---------------------------------------------------------------------------##
-## MC/CMakeLists.txt
+## MC/geometry/CMakeLists.txt
 ## Thomas M. Evans
 ## Monday June 20 15:40:52 2011
 ##---------------------------------------------------------------------------##
@@ -18,51 +18,64 @@ APPEND_SET(CMAKE_MODULE_PATH ${Utils_SOURCE_DIR}/cmake)
 ## A) Define the package
 ##---------------------------------------------------------------------------##
 
-TRIBITS_PACKAGE(MC)
+TRIBITS_SUBPACKAGE(mc_geometry)
 
 ##---------------------------------------------------------------------------##
 ## B) Set up package-specific options
 ##---------------------------------------------------------------------------##
 
-## ML OPTIONS
+# to allow includes like #include "comm/Comm.h"
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-## Turn on ML if that package is enabled
-IF (${PROJECT_NAME}_ENABLE_ML)
-  SET(USE_ML 1)
-ENDIF()
-
-# Setup M4 for FORTRAN processing
-APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-# Setup debug option
-TRIBITS_ADD_DEBUG_OPTION()
-
-IF(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
-  PROFUGUS_ADD_CXX_FLAGS(
-    -Wno-sign-compare
-    -Wno-unused-but-set-variable
-    -Wno-unused-variable)
-ENDIF()
-
-#
-# Resolve min/max conflict on Windows
-#
-IF( CMAKE_SYSTEM_NAME MATCHES "Windows" )
-   ADD_DEFINITIONS(-DNOMINMAX)
-ENDIF( CMAKE_SYSTEM_NAME MATCHES "Windows" )
+# to allow includes like #include "Utils/config.h"
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/..)
 
 ##---------------------------------------------------------------------------##
 # C) Process the subpackages
 ##---------------------------------------------------------------------------##
 
-TRIBITS_CONFIGURE_FILE(config.h)
-TRIBITS_PROCESS_SUBPACKAGES()
+##---------------------------------------------------------------------------##
+## SOURCES AND HEADERS
+
+SET(SOURCES "")
+SET(HEADERS "")
+
+# geometry sources
+
+FILE(GLOB GEOMETRY_HEADERS src/*.hh)
+SET(GEOMETRY_SOURCES
+  src/Cartesian_Mesh.cc
+  src/Geometry.pt.cc
+  src/Mesh_Geometry.cc
+  src/Mesh_State.cc
+  src/RTK_Array.cc
+  src/RTK_Array.pt.cc
+  src/RTK_Cell.cc
+  src/RTK_Functions.cc
+  src/RTK_State.cc
+  )
+LIST(APPEND HEADERS ${GEOMETRY_HEADERS})
+LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
+
+##---------------------------------------------------------------------------##
+## LIBRARY AND INSTALL TARGETS
+
+TRIBITS_ADD_LIBRARY(
+  mc_geometry
+  NOINSTALLHEADERS ${HEADERS}
+  SOURCES ${SOURCES})
+
+##---------------------------------------------------------------------------##
+# Add tests to this package
+
+TRIBITS_ADD_TEST_DIRECTORIES( test )
 
 ##---------------------------------------------------------------------------##
 ## D) Do standard postprocessing
 ##---------------------------------------------------------------------------##
 
-TRIBITS_PACKAGE_POSTPROCESS()
+TRIBITS_SUBPACKAGE_POSTPROCESS()
 
 ##---------------------------------------------------------------------------##
 ##                      end of Utils/CMakeLists.txt

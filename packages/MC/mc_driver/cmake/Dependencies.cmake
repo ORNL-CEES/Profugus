@@ -8,12 +8,17 @@
 ## Define sub-packages
 ##---------------------------------------------------------------------------##
 
-TRIBITS_PACKAGE_DEFINE_DEPENDENCIES(
-  SUBPACKAGES_DIRS_CLASSIFICATIONS_OPTREQS
-    mc_geometry   geometry     SS  REQUIRED
-    mc_physics    physics      SS  REQUIRED
-    mc_driver     mc_driver    SS  REQUIRED
-  )
+SET(LIB_REQUIRED_DEP_PACKAGES
+  Teuchos Epetra Matprop Utils SPn MCmc_geometry MCmc_physics)
+
+SET(LIB_OPTIONAL_DEP_PACKAGES)
+
+SET(TEST_REQUIRED_DEP_PACKAGES)
+SET(TEST_OPTIONAL_DEP_PACKAGES)
+SET(LIB_REQUIRED_DEP_TPLS Boost HPX)
+SET(LIB_OPTIONAL_DEP_TPLS)
+SET(TEST_REQUIRED_DEP_TPLS)
+SET(TEST_OPTIONAL_DEP_TPLS)
 
 ##---------------------------------------------------------------------------##
 ##                  end of MC/cmake/Dependencies.cmake
