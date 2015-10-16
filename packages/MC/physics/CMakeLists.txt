@@ -45,12 +45,22 @@ SET(HEADERS "")
 
 FILE(GLOB PHYSICS_HEADERS *.hh)
 SET(PHYSICS_SOURCES
+  Anderson_Operator.pt.cc
+  Anderson_Solver.pt.cc
   Box_Shape.cc
   Cell_Tally.cc
   Domain_Transporter.cc
+  Fission_Matrix_Acceleration.pt.cc
+  Fission_Matrix_Processor.cc
+  Fission_Matrix_Solver.pt.cc
+  Fission_Matrix_Tally.cc
+  Fission_Rebalance.cc
+  Fission_Source.cc
   Fixed_Source_Solver.cc
   Global_RNG.cc
   Group_Bounds.cc
+  KCode_Solver.cc
+  Keff_Tally.cc
   Particle.cc
   Particle_Metaclass.pt.cc
   Physics.cc

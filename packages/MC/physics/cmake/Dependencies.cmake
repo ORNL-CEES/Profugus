@@ -9,7 +9,7 @@
 ##---------------------------------------------------------------------------##
 
 SET(LIB_REQUIRED_DEP_PACKAGES
-  Teuchos Matprop Utils MCmc_geometry )
+  Teuchos Epetra Matprop Utils SPn MCmc_geometry )
 
 SET(LIB_OPTIONAL_DEP_PACKAGES)
 

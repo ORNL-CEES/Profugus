@@ -18,7 +18,8 @@ TRIBITS_ADD_LIBRARY(mc_test_lib
   SOURCES
   SourceTestBase.cc
   TransporterTestBase.cc
-  TESTONLY)
+  TESTONLY
+  DEPLIBS mc_geometry mc_physics)
 
 ##---------------------------------------------------------------------------##
 ## TESTING
