@@ -1,4 +1,0 @@
-<!-- Modify these files to experiment with solver parameters in stratimikos/belos -->
-<ParameterList>
-  <Parameter name="Linear Solver Type" type="string" value="Belos"/>
-</ParameterList>
