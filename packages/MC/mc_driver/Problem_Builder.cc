@@ -104,8 +104,7 @@ void Problem_Builder::setup(const std::string &xml_file)
     // build the variance reduction
     build_var_reduction();
 
-    // build the external source (there won't be one for k-eigenvalue
-    // problems)
+    // build the external source
     if (master->isSublist("SOURCE"))
     {
         build_source(master->sublist("SOURCE"));

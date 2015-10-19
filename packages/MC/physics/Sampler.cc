@@ -10,7 +10,7 @@
 
 #include "Sampler.hh"
 #include "rng/RNG.hh"
-
+#include <iostream>
 namespace profugus
 {
 

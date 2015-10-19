@@ -90,7 +90,7 @@ void Manager::setup(const std::string &xml_file)
     auto shape = builder.get_source_shape();
 
     // problem type
-    std::string prob_type = shape ? "fixed" : "eigenvalue";
+    std::string prob_type = "fixed";
 
     // set the problem type in the final db
     d_db->set("problem_type", prob_type);

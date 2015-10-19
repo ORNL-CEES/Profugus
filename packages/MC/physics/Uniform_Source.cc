@@ -66,16 +66,13 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     CHECK(norm > 0.0);
 
     // assign to the shape cdf
-    REMEMBER(double sum = 0.0);
     norm  = 1.0 / norm;
-    int n = 0;
-    for (double &c : d_erg_cdf)
+    d_erg_cdf[0] = shape[0] * norm;
+    for ( int n = 1; n < d_erg_cdf.size(); ++n )
     {
-        c = shape[n] * norm;
-        REMEMBER(sum += c);
-        ++n;
+        d_erg_cdf[n] = d_erg_cdf[n-1] + shape[n] * norm;
     }
-    ENSURE(soft_equiv(sum, 1.0));
+    CHECK(profugus::soft_equiv(1.0, d_erg_cdf.back(), 1.0e-6));
 
     // initialize timers in this class, which may be necessary because domains
     // with no source will not make this timer otherwise
