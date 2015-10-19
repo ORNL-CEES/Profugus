@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "harness/DBC.hh"
-#include "../Global_RNG.hh"
+#include "rng/RNG_Control.hh"
 #include "../Group_Bounds.hh"
 #include "../Physics.hh"
 
@@ -36,7 +36,7 @@ class SourceTestBase : public testing::Test
   protected:
     typedef profugus::Physics                   Physics_t;
     typedef Physics_t::Geometry_t               Geometry_t;
-    typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
+    typedef profugus::RNG_Control               RNG_Control_t;
 
     typedef Physics_t::XS_t   XS_t;
     typedef Physics_t::RCP_XS RCP_XS;

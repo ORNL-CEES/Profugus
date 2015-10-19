@@ -16,7 +16,6 @@
 #include "harness/DBC.hh"
 #include "comm/Timing.hh"
 #include "comm/global.hh"
-#include "Global_RNG.hh"
 #include "Sampler.hh"
 #include "Uniform_Source.hh"
 
@@ -102,9 +101,6 @@ void Uniform_Source::build_source(SP_Shape geometric_shape)
     // store the spatial shape
     d_geo_shape = geometric_shape;
 
-    // make the RNG for this cycle
-    Base::make_RNG();
-
     // build the source based on domain replication
     build_DR();
 
@@ -124,7 +120,6 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
     using def::I; using def::J; using def::K;
 
     REQUIRE(d_wt > 0.0);
-    REQUIRE(profugus::Global_RNG::d_rng.assigned());
     REQUIRE(d_geo_shape);
 
     // unassigned particle
@@ -141,8 +136,9 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
     // make a particle
     p = std::make_shared<Particle_t>();
 
-    // use the global rng on this domain for the random number generator
-    p->set_rng(profugus::Global_RNG::d_rng);
+    // create a unique rng for the particle
+    int stream_id = d_np_run*b_nodes + b_node;
+    p->set_rng( this->b_rng_control->rng(stream_id) );
     auto rng = p->rng();
 
     // material id

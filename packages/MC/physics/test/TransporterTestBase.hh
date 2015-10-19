@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "../Shape.hh"
-#include "../Global_RNG.hh"
+#include "rng/RNG_Control.hh"
 #include "../Group_Bounds.hh"
 #include "../Physics.hh"
 #include "../Tallier.hh"
@@ -39,7 +39,7 @@ class TransporterTestBase : public testing::Test
   protected:
     typedef profugus::Physics                   Physics_t;
     typedef Physics_t::Geometry_t               Geometry_t;
-    typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
+    typedef profugus::RNG_Control               RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::SP_Particle              SP_Particle;
     typedef Physics_t::Bank_t                   Bank_t;

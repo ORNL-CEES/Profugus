@@ -97,7 +97,7 @@ void Manager::setup(const std::string &xml_file)
 
     // build the random controller
     d_rnd_control = std::make_shared<RNG_Control_t>(
-        d_db->get<int>("seed", 32442));
+        d_db->get<int>("seed", 32442) );
 
     SCREEN_MSG("Building " << prob_type << " solver");
 

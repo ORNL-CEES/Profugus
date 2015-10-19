@@ -17,7 +17,7 @@
 
 #include "comm/P_Stream.hh"
 #include "physics/Fixed_Source_Solver.hh"
-#include "physics/Global_RNG.hh"
+#include "rng/RNG_Control.hh"
 #include "physics/Source_Transporter.hh"
 #include "Problem_Builder.hh"
 
@@ -46,7 +46,7 @@ class Manager
     typedef Solver_t::SP_Tallier                   SP_Tallier;
     typedef profugus::Source_Transporter           Transporter_t;
     typedef std::shared_ptr<Transporter_t>         SP_Transporter;
-    typedef profugus::Global_RNG::RNG_Control_t    RNG_Control_t;
+    typedef profugus::RNG_Control                  RNG_Control_t;
     typedef std::shared_ptr<RNG_Control_t>         SP_RNG_Control;
 
     // >>> DATA

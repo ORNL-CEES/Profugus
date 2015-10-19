@@ -49,7 +49,6 @@ SET(PHYSICS_SOURCES
   Cell_Tally.cc
   Domain_Transporter.cc
   Fixed_Source_Solver.cc
-  Global_RNG.cc
   Group_Bounds.cc
   Particle.cc
   Particle_Metaclass.pt.cc

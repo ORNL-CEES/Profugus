@@ -132,7 +132,6 @@ TEST_F(UniformSourceTest, build_and_run)
     EXPECT_EQ(48, source.total_num_to_transport());
     EXPECT_EQ(48, source.Np());
     EXPECT_EQ(0, source.num_run());
-    EXPECT_EQ(nodes, source.num_streams());
 
     int ctr = 0;
     while (!source.empty())
