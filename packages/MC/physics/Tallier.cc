@@ -278,7 +278,7 @@ void Tallier::end_cycle(double num_particles)
 /*!
  * \brief Perform all end-history tally tasks.
  */
-void Tallier::end_history()
+void Tallier::end_history(const Particle_t &p)
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -287,7 +287,7 @@ void Tallier::end_history()
     // begin active for each tally
     for (auto t : d_tallies)
     {
-        t->end_history();
+        t->end_history(p);
     }
 }
 
@@ -372,6 +372,23 @@ void Tallier::swap(Tallier &rhs)
 
     // swap build phase
     std::swap(d_build_phase, rhs.d_build_phase);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Output tallies.
+ */
+void Tallier::output(const std::string &out_file)
+{
+    REQUIRE(is_finalized());
+
+    SCOPED_TIMER_2("MC::Tallier.output");
+
+    // begin active for each tally
+    for (auto t : d_tallies)
+    {
+        t->output(out_file);
+    }
 }
 
 } // end namespace profugus

@@ -74,7 +74,7 @@ class Tally
     // >>> PUBLIC INTERFACE
 
     //! Accumulate first and second moments
-    virtual void end_history() { /* * */ }
+    virtual void end_history(const Particle_t &p) { /* * */ }
 
     //! Do post-processing on first and second moments
     virtual void finalize(double num_particles) { /* * */ }
@@ -87,6 +87,9 @@ class Tally
 
     //! End a cycle in a kcode calculation (default no-op)
     virtual void end_cycle(double num_particles) { /* * */ }
+
+    //! Output tally results.
+    virtual void output(const std::string &out_file) { /* * */ }
 
     //! Clear/re-initialize all tally values between solves
     virtual void reset() { /* * */ }

@@ -127,12 +127,12 @@ void Manager::setup(const std::string &xml_file)
     SCREEN_MSG("Building " << prob_type << " solver");
 
     // get the tallier
-    SP_Tallier tallier = builder.get_tallier();
+    d_tallier = builder.get_tallier();
 
     // make the transporter
     SP_Transporter transporter(std::make_shared<Transporter_t>(
                                    d_db, d_geometry, d_physics));
-    transporter->set(tallier);
+    transporter->set(d_tallier);
     transporter->set(var_reduction);
 
     // build the appropriate solver (default is eigenvalue)
@@ -209,6 +209,22 @@ void Manager::setup(const std::string &xml_file)
             "Undefined problem type; choose eigenvalue or fixed");
     }
 
+#ifdef USE_HDF5
+    // Output filename
+    std::ostringstream m;
+    m << d_problem_name << "_output.h5";
+    d_output_name = m.str();
+
+    SCREEN_MSG("Initializing " << d_output_name << " output file");
+
+    // make the hdf5 file
+    profugus::Serial_HDF5_Writer writer;
+    writer.open(d_output_name);
+    writer.close();
+#else
+    ADD_WARNING("HDF5 not available in this build, tally output will be off.");
+#endif
+
     ENSURE(d_geometry);
     ENSURE(d_physics);
     ENSURE(d_solver);
@@ -268,13 +284,14 @@ void Manager::output()
 
     profugus::global_barrier();
 
+    // Only do output if we did transport
+    if (!d_db->get<bool>("do_transport"))
+    {
+        return;
+    }
+
     // >>> OUTPUT SOLUTION (only available if HDF5 is on)
 #ifdef USE_HDF5
-
-    // Output filename
-    std::ostringstream m;
-    m << d_problem_name << "_output.h5";
-    string outfile = m.str();
 
     // scalar output for kcode
     if (d_keff_solver)
@@ -285,7 +302,7 @@ void Manager::output()
 
         // make the hdf5 file
         profugus::Serial_HDF5_Writer writer;
-        writer.open(outfile);
+        writer.open(d_output_name, profugus::HDF5_IO::APPEND);
 
         // output scalar quantities
         writer.begin_group("keff");
@@ -308,6 +325,40 @@ void Manager::output()
     }
 
 #endif // USE_HDF5
+
+    // Output all other end-of-problem tallies
+    d_tallier->output(d_output_name);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Write timing to output.
+ */
+void Manager::timing()
+{
+    SCREEN_MSG("Outputting timing data");
+
+#ifdef USE_HDF5
+
+    // make the hdf5 file
+    profugus::Serial_HDF5_Writer writer;
+    writer.open(d_output_name, profugus::HDF5_IO::APPEND);
+
+    // make the timing group
+    writer.begin_group("timing");
+
+    const auto &keys = profugus::Timing_Diagnostics::timer_keys();
+    for (auto k : keys)
+    {
+        writer.write(k, profugus::Timing_Diagnostics::timer_value(k));
+    }
+
+    writer.end_group();
+
+    writer.close();
+
+#endif // USE_HDF5
+
 }
 
 } // end namespace mc

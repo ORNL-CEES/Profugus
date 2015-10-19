@@ -346,7 +346,7 @@ TEST_F(TallierTest, keff_tally)
     tallier.path_length(0.2, *p);
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
 
-    tallier.end_history();
+    tallier.end_history(*p);
 
     // End the cycle
     tallier.end_cycle(3.0);
@@ -383,7 +383,7 @@ TEST_F(TallierTest, keff_tally)
     tallier.path_length(0.2, *p);
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
 
-    tallier.end_history();
+    tallier.end_history(*p);
 
     // End the cycle
     tallier.end_cycle(3.0);
@@ -424,7 +424,7 @@ TEST_F(TallierTest, keff_tally)
     tallier.path_length(0.2, *p);
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
 
-    tallier.end_history();
+    tallier.end_history(*p);
 
     // End the cycle
     tallier.end_cycle(3.0);
@@ -470,7 +470,7 @@ TEST_F(TallierTest, keff_tally)
     tallier.path_length(0.2, *p);
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
 
-    tallier.end_history();
+    tallier.end_history(*p);
 
     // End the cycle
     tallier.end_cycle(3.0);
@@ -518,7 +518,7 @@ TEST_F(TallierTest, keff_tally)
     tallier.path_length(0.2, *p);
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
 
-    tallier.end_history();
+    tallier.end_history(*p);
 
     // End the cycle
     tallier.end_cycle(3.0);

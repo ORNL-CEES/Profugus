@@ -71,6 +71,9 @@ class Manager
     // Random number controller.
     SP_RNG_Control d_rnd_control;
 
+    // Tallier.
+    SP_Tallier d_tallier;
+
   public:
     // Constructor.
     Manager();
@@ -83,6 +86,9 @@ class Manager
 
     // Output.
     void output();
+
+    // Timing
+    void timing();
 
   private:
     // >>> IMPLEMENTATION
@@ -98,6 +104,7 @@ class Manager
 
     // Problem name.
     std::string d_problem_name;
+    std::string d_output_name;
 
     //! Output messages in a common format.
 #define SCREEN_MSG(stream)                            \
@@ -106,7 +113,6 @@ class Manager
         m << ">>> " << stream;                        \
         profugus::pcout << m.str() << profugus::endl; \
     }
-
 };
 
 } // end namespace mc

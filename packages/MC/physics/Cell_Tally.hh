@@ -16,6 +16,7 @@
 #include <memory>
 #include <utility>
 
+#include "Cell_Tally_State.hh"
 #include "Tally.hh"
 
 namespace profugus
@@ -40,6 +41,7 @@ class Cell_Tally : public Pathlength_Tally
   public:
     //@{
     //! Typedefs.
+    typedef Cell_Tally_State                 State_t;
     typedef Physics_t::Geometry_t            Geometry_t;
     typedef std::shared_ptr<Geometry_t>      SP_Geometry;
     typedef std::pair<double, double>        Moments;
@@ -68,13 +70,16 @@ class Cell_Tally : public Pathlength_Tally
     // >>> TALLY INTERFACE
 
     // Accumulate first and second moments
-    void end_history();
+    void end_history(const Particle_t &p);
 
     // Do post-processing on first and second moments
     void finalize(double num_particles);
 
     // Clear/re-initialize all tally values between solves
     void reset();
+
+    // Output results.
+    void output(const std::string &out_file);
 
     // >>> PATHLENGTH TALLY INTERFACE
 
@@ -83,6 +88,9 @@ class Cell_Tally : public Pathlength_Tally
 
   private:
     // >>> IMPLEMENTATION
+
+    // Index in the particles tally state.
+    const unsigned int d_state_idx;
 
     typedef std::unordered_map<int, double> History_Tally;
 

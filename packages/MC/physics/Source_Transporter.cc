@@ -126,7 +126,7 @@ void Source_Transporter::solve()
         ++counter;
 
         // indicate completion of particle history
-        d_tallier->end_history();
+        d_tallier->end_history(*p);
 
         // print message if needed
         if (counter % d_print_count == 0)
