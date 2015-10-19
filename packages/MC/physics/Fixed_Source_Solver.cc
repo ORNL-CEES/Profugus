@@ -56,6 +56,9 @@ void Fixed_Source_Solver::set(SP_Source_Transporter transporter,
     b_tallier = d_transporter->tallier();
     INSIST(b_tallier,
             "Tally not assigned in Source_Transporter in fixed-source solver.");
+
+    // create a cell tally
+    d_cell_tally = std::make_shared<Cell_Tally>( b_tallier->physics() );
 }
 
 //---------------------------------------------------------------------------//
@@ -74,7 +77,8 @@ void Fixed_Source_Solver::solve()
     INSIST(!b_tallier->is_finalized(), "The given tallier was used in "
            "a prior transport solve without reset() being called.");
 
-    // Build the tallier
+    // Add the cell tally and build the tallier
+    b_tallier->add_pathlength_tally( d_cell_tally );
     b_tallier->build();
     CHECK(b_tallier->is_built());
 
