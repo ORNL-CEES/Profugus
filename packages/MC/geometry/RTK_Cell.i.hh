@@ -20,8 +20,8 @@ namespace profugus
 /*!
  * \brief Find the segment for a point
  */
-int RTK_Cell::segment(double x,
-                      double y) const
+int RTK_Cell::segment(const double x,
+                      const double y) const
 {
     using def::X; using def::Y;
 
@@ -55,8 +55,8 @@ int RTK_Cell::segment(double x,
  * \param region region id
  * \param segment segment id
  */
-int RTK_Cell::cell(int region,
-                   int segment) const
+int RTK_Cell::cell(const int region,
+                   const int segment) const
 {
     REQUIRE(d_num_regions > 0);
     REQUIRE(region < d_num_regions);
@@ -71,7 +71,7 @@ int RTK_Cell::cell(int region,
 /*!
  * \brief Return the matid for a region.
  */
-int RTK_Cell::matid(int region) const
+int RTK_Cell::matid(const int region) const
 {
     REQUIRE(d_num_regions > 0);
     REQUIRE(!d_vessel ? region >= 0 && region < d_num_regions :
@@ -98,29 +98,31 @@ int RTK_Cell::matid(int region) const
 /*
  * \brief Distance to external radial surfaces.
  */
-void RTK_Cell::dist_to_radial_face(int          axis,
-                                   double       p,
-                                   double       dir,
-                                   Geo_State_t &state)
+void RTK_Cell::dist_to_radial_face(const int      axis,
+                                   const double   p,
+                                   const double   dir,
+				   double        &db,
+                                   Geo_State_t   &state) const
 {
     // check high/low faces
+    int face = 0;
     if (dir > 0.0)
     {
-        d_db   = (d_extent[axis][HI] - p) / dir;
-        d_face = Geo_State_t::plus_face[axis];
+        db   = (d_extent[axis][HI] - p) / dir;
+        face = Geo_State_t::plus_face[axis];
     }
     else if (dir < 0.0)
     {
-        d_db   = (d_extent[axis][LO] - p) / dir;
-        d_face = Geo_State_t::minus_face[axis];
+        db   = (d_extent[axis][LO] - p) / dir;
+        face = Geo_State_t::minus_face[axis];
     }
-    CHECK(d_db >= 0.0);
+    CHECK(db >= 0.0);
 
     // updated distance to boundary info
-    if (d_db < state.dist_to_next_region)
+    if (db < state.dist_to_next_region)
     {
-        state.dist_to_next_region = d_db;
-        state.exiting_face        = d_face;
+        state.dist_to_next_region = db;
+        state.exiting_face        = face;
         state.next_face           = Geo_State_t::NONE;
     }
 }
@@ -129,28 +131,30 @@ void RTK_Cell::dist_to_radial_face(int          axis,
 /*
  * \brief Distance to external radial surfaces.
  */
-void RTK_Cell::dist_to_axial_face(double       p,
-                                  double       dir,
-                                  Geo_State_t &state)
+void RTK_Cell::dist_to_axial_face(const double  p,
+                                  const double  dir,
+				  double       &db,
+                                  Geo_State_t  &state) const
 {
     // check high/low faces
+    int face = 0;
     if (dir > 0.0)
     {
-        d_db   = (d_z - p) / dir;
-        d_face = Geo_State_t::PLUS_Z;
+        db   = (d_z - p) / dir;
+        face = Geo_State_t::PLUS_Z;
     }
     else if (dir < 0.0)
     {
-        d_db   = -p / dir;
-        d_face = Geo_State_t::MINUS_Z;
+        db   = -p / dir;
+        face = Geo_State_t::MINUS_Z;
     }
-    CHECK(d_db >= 0.0);
+    CHECK(db >= 0.0);
 
     // updated distance to boundary info
-    if (d_db < state.dist_to_next_region)
+    if (db < state.dist_to_next_region)
     {
-        state.dist_to_next_region = d_db;
-        state.exiting_face        = d_face;
+        state.dist_to_next_region = db;
+        state.exiting_face        = face;
         state.next_face           = Geo_State_t::NONE;
     }
 }

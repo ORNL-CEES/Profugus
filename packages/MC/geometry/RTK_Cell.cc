@@ -35,6 +35,7 @@ RTK_Cell::RTK_Cell(int    mod_id,
     : d_mod_id(mod_id)
     , d_r(0)
     , d_ids(0)
+    , d_xy( {pitch,pitch} )
     , d_z(height)
     , d_num_shells(0)
     , d_num_regions(1)
@@ -44,14 +45,11 @@ RTK_Cell::RTK_Cell(int    mod_id,
     , d_mod_region(d_num_regions - 1)
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
+    , d_vessel_id(0)
 {
     REQUIRE(d_z > 0.0);
     REQUIRE(d_segments == 1 || d_segments == 4);
     REQUIRE(d_mod_region == 0);
-
-    // square cell
-    d_xy[0] = pitch;
-    d_xy[1] = pitch;
 
     d_extent[0][LO] = -d_xy[0] * 0.5;
     d_extent[0][HI] =  d_xy[0] * 0.5;
@@ -71,6 +69,7 @@ RTK_Cell::RTK_Cell(int    mod_id,
     : d_mod_id(mod_id)
     , d_r(0)
     , d_ids(0)
+    , d_xy( {dx,dy} )
     , d_z(height)
     , d_num_shells(0)
     , d_num_regions(1)
@@ -80,14 +79,11 @@ RTK_Cell::RTK_Cell(int    mod_id,
     , d_mod_region(d_num_regions - 1)
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
+    , d_vessel_id(0)
 {
     REQUIRE(d_z > 0.0);
     REQUIRE(d_segments == 1 || d_segments == 4);
     REQUIRE(d_mod_region == 0);
-
-    // unique pitches in X/Y
-    d_xy[0] = dx;
-    d_xy[1] = dy;
 
     d_extent[0][LO] = -d_xy[0] * 0.5;
     d_extent[0][HI] =  d_xy[0] * 0.5;
@@ -108,6 +104,7 @@ RTK_Cell::RTK_Cell(int    fuel_id,
     : d_mod_id(mod_id)
     , d_r(1, r)
     , d_ids(1, fuel_id)
+    , d_xy( {pitch,pitch} )
     , d_z(height)
     , d_num_shells(d_r.size())
     , d_num_regions(d_num_shells + 1)
@@ -117,15 +114,12 @@ RTK_Cell::RTK_Cell(int    fuel_id,
     , d_mod_region(d_num_regions - 1)
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
+    , d_vessel_id(0)
 {
     REQUIRE(d_r[0] > 0.0);
     REQUIRE(d_z > 0.0);
     REQUIRE(d_segments == 1 || d_segments == 4);
     REQUIRE(d_mod_region == 1);
-
-    // square cell
-    d_xy[0] = pitch;
-    d_xy[1] = pitch;
 
     d_extent[0][LO] = -d_xy[0] * 0.5;
     d_extent[0][HI] =  d_xy[0] * 0.5;
@@ -149,6 +143,7 @@ RTK_Cell::RTK_Cell(const Vec_Int &ids,
     : d_mod_id(mod_id)
     , d_r(r)
     , d_ids(ids)
+    , d_xy( {pitch,pitch} )
     , d_z(height)
     , d_num_shells(d_r.size())
     , d_num_regions(d_num_shells + 1)
@@ -158,16 +153,13 @@ RTK_Cell::RTK_Cell(const Vec_Int &ids,
     , d_mod_region(d_num_regions - 1)
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
+    , d_vessel_id(0)
 {
     REQUIRE(!d_r.empty() ? d_r.front() > 0.0 : true);
     REQUIRE(d_z > 0.0);
     REQUIRE(d_segments == 1 || d_segments == 4);
     REQUIRE(d_r.size() == d_ids.size());
     REQUIRE(!d_r.empty() ? d_mod_region > 0 : d_mod_region == 0);
-
-    // square cell
-    d_xy[0] = pitch;
-    d_xy[1] = pitch;
 
     d_extent[0][LO] = -d_xy[0] * 0.5;
     d_extent[0][HI] =  d_xy[0] * 0.5;
@@ -195,6 +187,7 @@ RTK_Cell::RTK_Cell(const Vec_Int    &ids,
     : d_mod_id(mod_id)
     , d_r(r)
     , d_ids(ids)
+    , d_xy( {pitch + gap[0] + gap[1], pitch + gap[2] + gap[3]} )
     , d_z(height)
     , d_num_shells(d_r.size())
     , d_num_regions(d_num_shells + 1)
@@ -204,6 +197,7 @@ RTK_Cell::RTK_Cell(const Vec_Int    &ids,
     , d_mod_region(d_num_regions - 1)
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
+    , d_vessel_id(0)
 {
     REQUIRE(d_r.front() > 0.0);
     REQUIRE(d_z > 0.0);
@@ -214,10 +208,6 @@ RTK_Cell::RTK_Cell(const Vec_Int    &ids,
     REQUIRE(gap[1] > 0.0 ? gap[0] == 0.0 : true);
     REQUIRE(gap[2] > 0.0 ? gap[3] == 0.0 : true);
     REQUIRE(gap[3] > 0.0 ? gap[2] == 0.0 : true);
-
-    // square cell with gap
-    d_xy[0] = pitch + gap[0] + gap[1];
-    d_xy[1] = pitch + gap[2] + gap[3];
 
     d_extent[0][LO] = -(pitch * 0.5 + gap[0]);
     d_extent[0][HI] =   pitch * 0.5 + gap[1];
@@ -243,6 +233,7 @@ RTK_Cell::RTK_Cell(int               mod_id,
     : d_mod_id(mod_id)
     , d_r(0)
     , d_ids(0)
+    , d_xy( {pitch + gap[0] + gap[1], pitch + gap[2] + gap[3]} )
     , d_z(height)
     , d_num_shells(0)
     , d_num_regions(1)
@@ -252,6 +243,7 @@ RTK_Cell::RTK_Cell(int               mod_id,
     , d_mod_region(d_num_regions - 1)
     , d_num_cells(d_num_regions * d_segments)
     , d_vessel(false)
+    , d_vessel_id(0)
 {
     REQUIRE(d_z > 0.0);
     REQUIRE(d_segments == 1 || d_segments == 4);
@@ -260,10 +252,6 @@ RTK_Cell::RTK_Cell(int               mod_id,
     REQUIRE(gap[1] > 0.0 ? gap[0] == 0.0 : true);
     REQUIRE(gap[2] > 0.0 ? gap[3] == 0.0 : true);
     REQUIRE(gap[3] > 0.0 ? gap[2] == 0.0 : true);
-
-    // square cell with gap
-    d_xy[0] = pitch + gap[0] + gap[1];
-    d_xy[1] = pitch + gap[2] + gap[3];
 
     d_extent[0][LO] = -(pitch * 0.5 + gap[0]);
     d_extent[0][HI] =   pitch * 0.5 + gap[1];
@@ -352,6 +340,7 @@ RTK_Cell::RTK_Cell(int    mod_id,
     : d_mod_id(mod_id)
     , d_r(0)
     , d_ids(0)
+    , d_xy( {dx,dy} )
     , d_z(height)
     , d_num_shells(0)
     , d_num_regions(1)
@@ -373,18 +362,13 @@ RTK_Cell::RTK_Cell(int    mod_id,
     REQUIRE(d_mod_region == 0);
     REQUIRE(R0 < R1);
 
-    // unique pitches in X/Y
-    d_xy[0] = dx;
-    d_xy[1] = dy;
-
     d_extent[0][LO] = -d_xy[0] * 0.5;
     d_extent[0][HI] =  d_xy[0] * 0.5;
     d_extent[1][LO] = -d_xy[1] * 0.5;
     d_extent[1][HI] =  d_xy[1] * 0.5;
 
-    // calculate offset to vessel origin from pincell origin
-    d_offsets[X] = x_offset - d_extent[X][LO];
-    d_offsets[Y] = y_offset - d_extent[Y][LO];
+    d_offsets[0] = x_offset - d_extent[X][LO];
+    d_offsets[1] = y_offset - d_extent[Y][LO];
 
     // near and far corners relative to the origin of vessel cylinder
     double near[2], far[2];
@@ -473,7 +457,7 @@ void RTK_Cell::initialize(const Space_Vector &r,
  */
 void RTK_Cell::distance_to_boundary(const Space_Vector &r,
                                     const Space_Vector &omega,
-                                    Geo_State_t        &state)
+                                    Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -485,28 +469,32 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
     REQUIRE(omega[Y]<0.0 ? r[Y] >= d_extent[Y][LO] : r[Y] <= d_extent[Y][HI]);
     REQUIRE(omega[Z]<0.0 ? r[Z] >= 0.0             : r[Z] <= d_z);
 
+    // Initialize face and segment data.
+    int face = 0;
+    int segment = 0;
+
     // initialize running dist-to-boundary
-    d_db                      = constants::huge;
-    state.dist_to_next_region = d_db;
+    double db               = constants::huge;
+    state.dist_to_next_region = db;
     state.next_segment        = state.segment;
 
     // >>> CHECK FOR INTERSECTIONS WITH OUTSIDE BOX
 
     // check radial surfaces of box
-    dist_to_radial_face(X, r[X], omega[X], state);
-    dist_to_radial_face(Y, r[Y], omega[Y], state);
+    dist_to_radial_face(X, r[X], omega[X], db, state);
+    dist_to_radial_face(Y, r[Y], omega[Y], db, state);
 
     // check axial surface
-    dist_to_axial_face(r[Z], omega[Z], state);
+    dist_to_axial_face(r[Z], omega[Z], db, state);
 
     // >>> CHECK FOR INTERSECTIONS WITH RADIAL SHELLS
     if (d_num_shells > 0)
     {
-        calc_shell_db(r, omega, state);
+        calc_shell_db(r, omega, db, state);
     }
 
     // >>> CHECK FOR INTERSECTIONS WITH VESSEL
-    dist_to_vessel(r, omega, state);
+    dist_to_vessel(r, omega, db, state);
 
     // >>> CHECK FOR SEGMENT INTERSECTIONS
 
@@ -514,32 +502,32 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
     if (d_segments > 1)
     {
         // initialize distance to boundary
-        d_db = constants::huge;
+        db = constants::huge;
 
         // check for intersection with x segment planes
         if (state.face != d_num_shells)
         {
             if (omega[X] > 0.0 && r[X] < 0.0)
             {
-                d_db      = -r[X] / omega[X];
-                d_face    = d_num_shells;
-                d_segment = state.segment - 1;
+                db      = -r[X] / omega[X];
+                face    = d_num_shells;
+                segment = state.segment - 1;
             }
             else if (omega[X] < 0.0 && r[X] > 0.0)
             {
-                d_db      = -r[X] / omega[X];
-                d_face    = d_num_shells;
-                d_segment = state.segment + 1;
+                db      = -r[X] / omega[X];
+                face    = d_num_shells;
+                segment = state.segment + 1;
             }
 
             // update distance to boundary info
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.exiting_face        = Geo_State_t::INTERNAL;
-                state.next_face           = d_face;
+                state.next_face           = face;
                 state.next_region         = state.region;
-                state.next_segment        = d_segment;
+                state.next_segment        = segment;
             }
         }
 
@@ -548,25 +536,25 @@ void RTK_Cell::distance_to_boundary(const Space_Vector &r,
         {
             if (omega[Y] > 0.0 && r[Y] < 0.0)
             {
-                d_db      = -r[Y] / omega[Y];
-                d_face    = d_num_shells + 1;
-                d_segment = state.segment - 2;
+                db      = -r[Y] / omega[Y];
+                face    = d_num_shells + 1;
+                segment = state.segment - 2;
             }
             else if (omega[Y] < 0.0 && r[Y] > 0.0)
             {
-                d_db      = -r[Y] / omega[Y];
-                d_face    = d_num_shells + 1;
-                d_segment = state.segment + 2;
+                db      = -r[Y] / omega[Y];
+                face    = d_num_shells + 1;
+                segment = state.segment + 2;
             }
 
             // update distance to boundary info
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.exiting_face        = Geo_State_t::INTERNAL;
-                state.next_face           = d_face;
+                state.next_face           = face;
                 state.next_region         = state.region;
-                state.next_segment        = d_segment;
+                state.next_segment        = segment;
             }
         }
     }
@@ -829,7 +817,8 @@ void RTK_Cell::output(std::ostream &out,
  */
 void RTK_Cell::dist_to_vessel(const Space_Vector &r,
                               const Space_Vector &omega,
-                              Geo_State_t        &state)
+			      double             &db,
+                              Geo_State_t        &state) const
 {
     using def::X; using def::Y;
 
@@ -850,16 +839,16 @@ void RTK_Cell::dist_to_vessel(const Space_Vector &r,
         // only check if we aren't currently on the vessel face
         if (state.face != Geo_State_t::R0_VESSEL)
         {
-            dist_to_shell(l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R0,
+            dist_to_shell(db, l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R0,
                           Geo_State_t::R0_VESSEL);
         }
 
         // update the distance to boundary
-        if (d_db > 0.0)
+        if (db > 0.0)
         {
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.next_face           = Geo_State_t::R0_VESSEL;
                 state.exiting_face        = Geo_State_t::INTERNAL;
                 hit                       = true;
@@ -873,16 +862,16 @@ void RTK_Cell::dist_to_vessel(const Space_Vector &r,
         // only check if we aren't currently on the vessel face
         if (state.face != Geo_State_t::R1_VESSEL)
         {
-            dist_to_shell(l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R1,
+            dist_to_shell(db, l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R1,
                           Geo_State_t::R1_VESSEL);
         }
 
         // update the distance to boundary
-        if (d_db > 0.0)
+        if (db > 0.0)
         {
-            if (d_db < state.dist_to_next_region)
+            if (db < state.dist_to_next_region)
             {
-                state.dist_to_next_region = d_db;
+                state.dist_to_next_region = db;
                 state.next_face           = Geo_State_t::R1_VESSEL;
                 state.exiting_face        = Geo_State_t::INTERNAL;
                 hit                       = true;
@@ -911,7 +900,8 @@ void RTK_Cell::dist_to_vessel(const Space_Vector &r,
  */
 void RTK_Cell::calc_shell_db(const Space_Vector &r,
                              const Space_Vector &omega,
-                             Geo_State_t        &state)
+			     double             &db,
+                             Geo_State_t        &state) const
 {
     REQUIRE(d_num_shells > 0);
 
@@ -922,13 +912,14 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
         // that we would traverse through that shells region on entrance
         if (state.region == state.face)
         {
-            check_shell(r, omega, state.face, state.face, state.region + 1,
+            check_shell(r, omega, db,
+			state.face, state.face, state.region + 1,
                         state.face, state);
 
             // if we can't hit the shell because of a glancing shot + floating
             // point error, update the region since we won't traverse the
             // shell
-            if (d_db < 0.0)
+            if (db < 0.0)
             {
                 state.region++;
             }
@@ -938,7 +929,8 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
         // as we aren't on the last face
         if (state.face < d_num_shells - 1)
         {
-            check_shell(r, omega, state.face + 1, Geo_State_t::NONE,
+            check_shell(r, omega, db,
+			state.face + 1, Geo_State_t::NONE,
                         state.region + 1, state.face + 1, state);
         }
 
@@ -946,7 +938,8 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
         // we aren't on the first face
         if (state.face > 0)
         {
-            check_shell(r, omega, state.face - 1, Geo_State_t::NONE,
+            check_shell(r, omega, db,
+			state.face - 1, Geo_State_t::NONE,
                         state.region - 1, state.face - 1, state);
         }
     }
@@ -958,14 +951,16 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
         if (state.region == 0)
         {
             // we can only hit the lowest shell
-            check_shell(r, omega, 0, Geo_State_t::NONE, 1, 0, state);
+            check_shell(r, omega, db,
+			0, Geo_State_t::NONE, 1, 0, state);
         }
 
         // check for hitting highest shell
         else if (state.region == d_mod_region)
         {
             // we can only hit the outer shell
-            check_shell(r, omega, d_num_shells - 1, Geo_State_t::NONE,
+            check_shell(r, omega, db,
+			d_num_shells - 1, Geo_State_t::NONE,
                         d_num_shells - 1, d_num_shells - 1, state);
         }
 
@@ -975,11 +970,13 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
             CHECK(state.region - 1 >= 0);
 
             // check hitting lower shell
-            check_shell(r, omega, state.region - 1, Geo_State_t::NONE,
+            check_shell(r, omega, db,
+			state.region - 1, Geo_State_t::NONE,
                         state.region - 1, state.region - 1, state);
 
             // check hitting higher shell
-            check_shell(r, omega, state.region, Geo_State_t::NONE,
+            check_shell(r, omega, db,
+			state.region, Geo_State_t::NONE,
                         state.region + 1, state.region, state);
         }
     }
@@ -991,27 +988,28 @@ void RTK_Cell::calc_shell_db(const Space_Vector &r,
  */
 void RTK_Cell::check_shell(const Space_Vector &r,
                            const Space_Vector &omega,
+			   double             &db,
                            int                 shell,
                            int                 face,
                            int                 next_region,
                            int                 next_face,
-                           Geo_State_t        &state)
+                           Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
 
     REQUIRE(shell >= 0 && shell < d_num_shells);
 
     // calculate the distance to the requested shell
-    dist_to_shell(r[X], r[Y], omega[X], omega[Y], d_r[shell], face);
+    dist_to_shell(db, r[X], r[Y], omega[X], omega[Y], d_r[shell], face);
 
     // check the distance to boundary
     //    a) if it intersects the shell, and
     //    b) if it is the smallest distance
-    if (d_db > 0.0)
+    if (db > 0.0)
     {
-        if (d_db < state.dist_to_next_region)
+        if (db < state.dist_to_next_region)
         {
-            state.dist_to_next_region = d_db;
+            state.dist_to_next_region = db;
             state.next_region         = next_region;
             state.next_face           = next_face;
             state.exiting_face        = Geo_State_t::INTERNAL;
@@ -1023,17 +1021,18 @@ void RTK_Cell::check_shell(const Space_Vector &r,
 /*!
  * \brief Distance to a shell.
  *
- * d_db is set negative if there is no intersection with the shell.
+ * db is set negative if there is no intersection with the shell.
  */
-void RTK_Cell::dist_to_shell(double x,
+void RTK_Cell::dist_to_shell(double& db,
+			     double x,
                              double y,
                              double omega_x,
                              double omega_y,
                              double r,
-                             int    face)
+                             int    face) const
 {
     // initialize distance to boundary
-    d_db = -1.0;
+    db = -1.0;
 
     // calculate terms in the quadratic
     double a = omega_x * omega_x + omega_y * omega_y;
@@ -1060,13 +1059,13 @@ void RTK_Cell::dist_to_shell(double x,
         // determine d, if both d1 and d2 < 0 then the ray does not intersect
         // the surface
         if (d1 < 0.0)
-            d_db = d2;
+            db = d2;
         else if (d2 < 0.0)
-            d_db = d1;
+            db = d1;
         else if (face < d_num_shells)
-            d_db = std::max(d1, d2);
+            db = std::max(d1, d2);
         else
-            d_db = std::min(d1, d2);
+            db = std::min(d1, d2);
     }
 }
 

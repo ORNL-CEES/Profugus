@@ -97,17 +97,17 @@ class RTK_Cell
     // >>> DATA
 
     // Moderator id.
-    int d_mod_id;
+    const int d_mod_id;
 
     // Shell radii and material ids.
-    Vec_Dbl d_r;
-    Vec_Int d_ids;
+    const Vec_Dbl d_r;
+    const Vec_Int d_ids;
 
     // Radial dimensions (pitch).
-    Vector_Lite<double, 2> d_xy;
+    const Vector_Lite<double, 2> d_xy;
 
     // Z-extent.
-    double d_z;
+    const double d_z;
 
   public:
     // Constructors.
@@ -127,17 +127,13 @@ class RTK_Cell
     // Pin-cells are completed on construction.
     bool completed() const { return true; }
 
-    // Add vessel to pin-cell.
-    bool add_vessel(double R0, double R1, double x_offset, double y_offset,
-                    int vessel_id);
-
     // Initialize a state.
     void initialize(const Space_Vector &r, Geo_State_t &state) const;
 
     // Track to next boundary.
     void distance_to_boundary(const Space_Vector &r,
                               const Space_Vector &omega,
-                              Geo_State_t &state);
+                              Geo_State_t &state) const;
 
     // Update a state at collision sites.
     void update_state(Geo_State_t &state) const;
@@ -149,16 +145,16 @@ class RTK_Cell
     int region(double x, double y) const;
 
     // Query to find segment.
-    inline int segment(double x, double y) const;
+    inline int segment(const double x, const double y) const;
 
     // Query to find cell.
-    inline int cell(int region, int segment) const;
+    inline int cell(const int region, const int segment) const;
 
     // Get extents of this geometry element in the parent reference frame
     inline void get_extents(Space_Vector &lower, Space_Vector &upper) const;
 
     // Return the material id for a region in the pin-cell.
-    inline int matid(int region) const;
+    inline int matid(const int region) const;
 
     //! Return the number of regions.
     int num_regions() const { return d_num_regions; }
@@ -198,25 +194,28 @@ class RTK_Cell
 
     // Intersections with shells.
     void calc_shell_db(const Space_Vector &r, const Space_Vector &omega,
-                       Geo_State_t &state);
+		       double &db, Geo_State_t &state) const;
 
     // Distance to external surface.
-    inline void dist_to_radial_face(int axis, double p, double dir,
-                                    Geo_State_t &state);
-    inline void dist_to_axial_face(double p, double dir, Geo_State_t &state);
+    inline void dist_to_radial_face(const int axis, const double p, const double dir,
+				    double& db, Geo_State_t &state) const;
+    inline void dist_to_axial_face(const double p, const double dir, 
+				   double& db, Geo_State_t &state) const;
 
     // Distance to vessel.
     void dist_to_vessel(const Space_Vector &r, const Space_Vector &omega,
-                        Geo_State_t &state);
+			double &db, Geo_State_t &state) const;
 
     // Distance to a shell.
-    void dist_to_shell(double x, double y, double omega_x, double omega_y,
-                       double r, int face);
+    void dist_to_shell(double& db, double x, double y, 
+		       double omega_x, double omega_y,
+                       double r, int face) const;
 
     // Update state if it hits a shell.
     void check_shell(const Space_Vector &r, const Space_Vector &omega,
+		     double &db,
                      int shell, int face, int next_region, int next_face,
-                     Geo_State_t &state);
+                     Geo_State_t &state) const;
 
     // Transform to vessel coordinates.
     double l2g(double local, int dir) const
@@ -231,34 +230,29 @@ class RTK_Cell
     double d_extent[2][2];
 
     // Number of regions and shells.
-    int d_num_shells;
-    int d_num_regions;
+    const int d_num_shells;
+    const int d_num_regions;
 
     // Number of segments.
-    int d_segments;
-    int d_seg_faces;
+    const int d_segments;
+    const int d_seg_faces;
 
     // Number of internal faces (segment faces + shells).
-    int d_num_int_faces;
+    const int d_num_int_faces;
 
     // Moderator region id.
-    int d_mod_region;
+    const int d_mod_region;
 
     // Number of cells.
-    int d_num_cells;
-
-    // Work variables.
-    double d_db;
-    int    d_face;
-    int    d_segment;
+    const int d_num_cells;
 
     // Vessel parameters.
-    bool d_vessel;         // indicates this cell has a vessel
+    const bool d_vessel;         // indicates this cell has a vessel
     double d_offsets[2];   // radial offsets from origin of outer rtk-array to
                            // origin of the pincell
     double d_R0, d_R1;     // inner and outer vessel radii
     bool d_inner, d_outer; // booleans for inner/outer vessel bisections
-    int d_vessel_id;       // vessel mat id
+    const int d_vessel_id;       // vessel mat id
 };
 
 } // end namespace profugus
