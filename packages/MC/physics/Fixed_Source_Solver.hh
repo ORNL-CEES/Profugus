@@ -16,7 +16,6 @@
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "Source_Transporter.hh"
-#include "Cell_Tally.hh"
 
 namespace profugus
 {
@@ -38,7 +37,6 @@ class Fixed_Source_Solver : public Solver
   public:
     //@{
     //! Typedefs.
-    typedef std::shared_ptr<Cell_Tally>           SP_Cell_Tally;
     typedef Source_Transporter                    Source_Transporter_t;
     typedef std::shared_ptr<Source_Transporter_t> SP_Source_Transporter;
     typedef Source_Transporter_t::SP_Source       SP_Source;
@@ -46,9 +44,6 @@ class Fixed_Source_Solver : public Solver
 
   private:
     // >>> DATA
-
-    // Cell Tally.
-    SP_Cell_Tally d_cell_tally;
 
     // Source transporter.
     SP_Source_Transporter d_transporter;
