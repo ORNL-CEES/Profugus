@@ -26,7 +26,6 @@
 #include "physics/Shape.hh"
 #include "physics/Variance_Reduction.hh"
 #include "physics/Tallier.hh"
-#include "physics/Fission_Matrix_Acceleration.hh"
 
 namespace mc
 {
@@ -48,14 +47,12 @@ class Problem_Builder
     typedef profugus::Physics                             Physics_t;
     typedef Physics_t::Geometry_t                         Geometry_t;
     typedef profugus::Tallier                             Tallier_t;
-    typedef profugus::Fission_Matrix_Acceleration         FM_Acceleration_t;
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
     typedef std::shared_ptr<Geometry_t>                   SP_Geometry;
     typedef std::shared_ptr<profugus::Shape>              SP_Shape;
     typedef std::shared_ptr<profugus::Variance_Reduction> SP_Var_Reduction;
     typedef std::shared_ptr<profugus::Tallier>            SP_Tallier;
     typedef Tallier_t::SP_Tally                           SP_Tally;
-    typedef std::shared_ptr<FM_Acceleration_t>            SP_FM_Acceleration;
     //@}
 
   private:
@@ -70,9 +67,6 @@ class Problem_Builder
 
     // Variance reduction.
     SP_Var_Reduction d_var_reduction;
-
-    // Fission matrix acceleration.
-    SP_FM_Acceleration d_fm_acceleration;
 
     // External source shape.
     SP_Shape d_shape;
@@ -107,9 +101,6 @@ class Problem_Builder
     //! Get the tallier.
     SP_Tallier get_tallier() const { return d_tallier; }
 
-    //! Get the fission matrix acceleration.
-    SP_FM_Acceleration get_acceleration() const { return d_fm_acceleration; }
-
   private:
     // >>> IMPLEMENTATION
 
@@ -130,9 +121,6 @@ class Problem_Builder
     typedef Lattice_t::SP_Object SP_Pin_Cell;
     typedef Lattice_t::Object_t  Pin_Cell_t;
 
-    // Acceleration typedefs.
-    typedef FM_Acceleration_t::Problem_Builder_t SPN_Builder;
-
     // General typedefs.
     typedef std::unordered_map<int, SP_Lattice>  Lattice_Hash;
     typedef std::unordered_map<int, SP_Pin_Cell> Pin_Hash;
@@ -144,7 +132,6 @@ class Problem_Builder
     void build_var_reduction();
     void build_source(const ParameterList &source_db);
     void build_tallies();
-    void build_spn_problem();
 
     // Number of assemblies and pins per assembly.
     int d_Na[2];

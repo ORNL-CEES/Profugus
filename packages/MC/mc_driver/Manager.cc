@@ -18,36 +18,11 @@
 #include "comm/global.hh"
 #include "utils/Serial_HDF5_Writer.hh"
 #include "utils/Parallel_HDF5_Writer.hh"
-#include "solvers/LinAlgTypedefs.hh"
-#include "physics/Fission_Source.hh"
 #include "physics/Uniform_Source.hh"
-#include "physics/KCode_Solver.hh"
-#include "physics/Anderson_Solver.hh"
 #include "Manager.hh"
 
 namespace mc
 {
-
-//---------------------------------------------------------------------------//
-// PRIVATE TEMPLATE FUNCTIONS
-//---------------------------------------------------------------------------//
-/*!
- * \brief Build an Anderson solver.
- */
-template<class T>
-void Manager::build_anderson(SP_Transporter    transporter,
-                             SP_Fission_Source source)
-{
-    // make the solver
-    auto anderson = std::make_shared< profugus::Anderson_Solver<T> >(d_db);
-
-    // set the solver
-    anderson->set(transporter, source);
-
-    // assign the base solver
-    d_keff_solver = anderson;
-}
-
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
@@ -135,79 +110,23 @@ void Manager::setup(const std::string &xml_file)
     transporter->set(d_tallier);
     transporter->set(var_reduction);
 
-    // build the appropriate solver (default is eigenvalue)
-    if (prob_type == "eigenvalue")
-    {
-        // make the fission source
-        std::shared_ptr<profugus::Fission_Source> source(
-            std::make_shared<profugus::Fission_Source>(
-                d_db, d_geometry, d_physics, d_rnd_control));
+    REQUIRE(prob_type == "fixed");
 
-        // >>> determine eigensolver
+    // make the uniform source
+    std::shared_ptr<profugus::Uniform_Source> source(
+	std::make_shared<profugus::Uniform_Source>(
+	    d_db, d_geometry, d_physics, d_rnd_control));
+    source->build_source(shape);
 
-        // Anderson
-        if (d_db->isSublist("anderson_db"))
-        {
-            // determine the trilinos implementation
-            auto &adb  = d_db->sublist("anderson_db");
-            auto  impl = adb.get("trilinos_implementation",
-                                 std::string("epetra"));
+    // make the solver
+    d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>();
 
-            VALIDATE(impl == "epetra" || impl == "tpetra", "Invalid "
-                     << "trilinos_implementation " << impl << " must be "
-                     << "epetra or tpetra");
+    // set it
+    d_fixed_solver->set(transporter, source);
 
-            if (impl == "epetra")
-            {
-                build_anderson<profugus::EpetraTypes>(transporter, source);
-            }
-            else
-            {
-                build_anderson<profugus::TpetraTypes>(transporter, source);
-            }
-        }
+    // assign the base solver
+    d_solver = d_fixed_solver;
 
-        // Standard K-Code
-        else
-        {
-            // make the solver
-            auto kcode_solver = std::make_shared<profugus::KCode_Solver>(d_db);
-
-            // set the solver
-            kcode_solver->set(transporter, source);
-
-            // set hybrid acceleration
-            kcode_solver->set(builder.get_acceleration());
-
-            // assign the base solver
-            d_keff_solver = kcode_solver;
-        }
-
-        // assign the base solver
-        d_solver = d_keff_solver;
-    }
-    else if (prob_type == "fixed")
-    {
-        // make the uniform source
-        std::shared_ptr<profugus::Uniform_Source> source(
-            std::make_shared<profugus::Uniform_Source>(
-                d_db, d_geometry, d_physics, d_rnd_control));
-        source->build_source(shape);
-
-        // make the solver
-        d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>();
-
-        // set it
-        d_fixed_solver->set(transporter, source);
-
-        // assign the base solver
-        d_solver = d_fixed_solver;
-    }
-    else
-    {
-        throw profugus::assertion(
-            "Undefined problem type; choose eigenvalue or fixed");
-    }
 
 #ifdef USE_HDF5
     // Output filename
@@ -242,21 +161,8 @@ void Manager::solve()
 
         SCREEN_MSG("Executing solver");
 
-        // run the appropriate solver
-        if (d_keff_solver)
-        {
-            CHECK(!d_fixed_solver);
-            d_keff_solver->solve();
-        }
-        else if (d_fixed_solver)
-        {
-            CHECK(!d_keff_solver);
-            d_fixed_solver->solve();
-        }
-        else
-        {
-            throw profugus::assertion("No legitimate solver built");
-        }
+        REQUIRE(d_fixed_solver);
+	d_fixed_solver->solve();
     }
 }
 
@@ -289,42 +195,6 @@ void Manager::output()
     {
         return;
     }
-
-    // >>> OUTPUT SOLUTION (only available if HDF5 is on)
-#ifdef USE_HDF5
-
-    // scalar output for kcode
-    if (d_keff_solver)
-    {
-        // get the kcode tally
-        auto keff = d_keff_solver->keff_tally();
-        CHECK(keff);
-
-        // make the hdf5 file
-        profugus::Serial_HDF5_Writer writer;
-        writer.open(d_output_name, profugus::HDF5_IO::APPEND);
-
-        // output scalar quantities
-        writer.begin_group("keff");
-
-        writer.write(string("mean"), keff->mean());
-        writer.write(string("variance"), keff->variance());
-        writer.write(string("num_active_cycles"),
-                     static_cast<int>(keff->cycle_count()));
-        writer.write(string("cycle_estimates"), keff->all_keff());
-
-        // do diagnostics on acceleration if it exists
-        if (d_keff_solver->acceleration())
-        {
-            d_keff_solver->acceleration()->diagnostics(writer);
-        }
-
-        writer.end_group();
-
-        writer.close();
-    }
-
-#endif // USE_HDF5
 
     // Output all other end-of-problem tallies
     d_tallier->output(d_output_name);
