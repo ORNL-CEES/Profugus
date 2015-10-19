@@ -440,7 +440,7 @@ void RTK_Array<T>::update_state(Geo_State_t &state) const
  */
 template<class T>
 void RTK_Array<T>::cross_surface(const Space_Vector &r,
-                                 Geo_State_t        &state)
+                                 Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -747,7 +747,7 @@ int RTK_Array<T>::num_regions() const
  * \brief Determine boundary crossings at each level starting at the lowest.
  */
 template<class T>
-void RTK_Array<T>::determine_boundary_crossings(Geo_State_t &state)
+void RTK_Array<T>::determine_boundary_crossings(Geo_State_t &state) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -794,7 +794,7 @@ void RTK_Array<T>::determine_boundary_crossings(Geo_State_t &state)
  */
 template<class T>
 void RTK_Array<T>::update_coordinates(const Space_Vector &r,
-                                      Geo_State_t        &state)
+                                      Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
 

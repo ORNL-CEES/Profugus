@@ -34,7 +34,7 @@ int RTK_Array<RTK_Cell>::calc_level()
  * \brief Determine boundary crossing in array of pin cells.
  */
 template<>
-void RTK_Array<RTK_Cell>::determine_boundary_crossings(Geo_State_t &state)
+void RTK_Array<RTK_Cell>::determine_boundary_crossings(Geo_State_t &state) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -80,7 +80,7 @@ void RTK_Array<RTK_Cell>::determine_boundary_crossings(Geo_State_t &state)
  */
 template<>
 void RTK_Array<RTK_Cell>::update_coordinates(const Space_Vector &r,
-                                             Geo_State_t        &state)
+                                             Geo_State_t        &state) const
 {
     REQUIRE(d_level == 0);
 

@@ -65,7 +65,7 @@ class RTK_Array
     // >>> DATA
 
     // Array sizes
-    Vector_Lite<int, 3> d_N;
+    const Vector_Lite<int, 3> d_N;
 
     // Layout of objects in array.
     Vec_Int d_layout;
@@ -137,7 +137,7 @@ class RTK_Array
     void update_state(Geo_State_t &state) const;
 
     // Cross a surface.
-    void cross_surface(const Space_Vector &r, Geo_State_t &state);
+    void cross_surface(const Space_Vector &r, Geo_State_t &state) const;
 
     // Find the object a point is in.
     int find_object(const Space_Vector &r, Geo_State_t &state) const;
@@ -247,15 +247,15 @@ class RTK_Array
 
     // Cross surface into next array element.
     inline void calc_high_face(Geo_State_t &state, int face_type,
-                               int exiting_face);
+                               int exiting_face) const;
     inline void calc_low_face(Geo_State_t &state, int face_type,
-                              int exiting_face);
+                              int exiting_face) const;
 
     // Determine boundary crossings at each level in the array.
-    void determine_boundary_crossings(Geo_State_t &state);
+    void determine_boundary_crossings(Geo_State_t &state) const;
 
     // Update the coordinates of each level in the array.
-    void update_coordinates(const Space_Vector &r, Geo_State_t &state);
+    void update_coordinates(const Space_Vector &r, Geo_State_t &state) const;
 
     // Calculate level.
     int d_level;

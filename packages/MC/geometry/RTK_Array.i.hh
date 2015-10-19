@@ -171,7 +171,7 @@ RTK_Array<T>::object(const Geo_State_t &state) const
 template<class T>
 void RTK_Array<T>::calc_low_face(Geo_State_t &state,
                                  int          face_type,
-                                 int          exiting_face)
+                                 int          exiting_face) const
 {
     // update the coordinates in this array
     state.level_coord[d_level][face_type]--;
@@ -192,7 +192,7 @@ void RTK_Array<T>::calc_low_face(Geo_State_t &state,
 template<class T>
 void RTK_Array<T>::calc_high_face(Geo_State_t &state,
                                   int          face_type,
-                                  int          exiting_face)
+                                  int          exiting_face) const
 {
     // update the coordinates in this array
     state.level_coord[d_level][face_type]++;
@@ -368,11 +368,11 @@ template<>
 int RTK_Array<RTK_Cell>::calc_level();
 
 template<>
-void RTK_Array<RTK_Cell>::determine_boundary_crossings(Geo_State_t &state);
+void RTK_Array<RTK_Cell>::determine_boundary_crossings(Geo_State_t &state) const;
 
 template<>
 void RTK_Array<RTK_Cell>::update_coordinates(const Space_Vector &r,
-                                             Geo_State_t &state);
+                                             Geo_State_t &state) const;
 
 template<>
 void RTK_Array<RTK_Cell>::output(std::ostream &out, int level,
