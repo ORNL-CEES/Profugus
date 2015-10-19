@@ -9,7 +9,6 @@
 //---------------------------------------------------------------------------//
 
 #include "../Tallier.hh"
-#include "../Keff_Tally.hh"
 #include "../Physics.hh"
 
 #include "Teuchos_RCP.hpp"
@@ -133,7 +132,6 @@ class TallierTest : public testing::Test
     typedef Tallier_t::SP_Tally            SP_Tally;
     typedef profugus::Physics              Physics_t;
     typedef Physics_t::Geometry_t          Geometry_t;
-    typedef profugus::Keff_Tally           Keff_Tally_t;
     typedef Physics_t::Particle_t          Particle_t;
     typedef Physics_t::XS_t                XS_t;
     typedef Physics_t::RCP_XS              RCP_XS;
@@ -275,351 +273,13 @@ class TallierTest : public testing::Test
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-
-TEST_F(TallierTest, keff_tally)
-{
-    Tallier_t tallier;
-    tallier.set(geometry, physics);
-
-    EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(0, tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, tallier.num_source_tallies());
-    EXPECT_FALSE(tallier.is_built());
-    EXPECT_FALSE(tallier.is_finalized());
-
-    // make a keff tally
-    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
-
-    // add tallies
-    tallier.add_pathlength_tally(keff);
-    EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(1, tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, tallier.num_source_tallies());
-    EXPECT_FALSE(tallier.is_built());
-    EXPECT_FALSE(tallier.is_finalized());
-
-    // build the tallier
-    tallier.build();
-    EXPECT_EQ(1, tallier.num_tallies());
-    EXPECT_EQ(1, tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, tallier.num_source_tallies());
-    EXPECT_TRUE(tallier.is_built());
-    EXPECT_FALSE(tallier.is_finalized());
-
-    // Make a particle
-    auto p = std::make_shared<Particle_t>();
-
-    // Create reference variables
-    double ref_k     = 0.0;
-    double ref_kavg  = 0.0;
-    double ref_kmom1 = 0.0;
-    double ref_kmom2 = 0.0;
-    double ref_kvar  = 0.0;
-
-    /*** Begin INACTIVE CYCLE 1 ***/
-    tallier.begin_cycle();
-    EXPECT_EQ(0.0, keff->latest());
-
-    // Tally a particle
-    p->set_wt(0.65);
-    p->set_matid(1);
-    p->set_group(1);
-    tallier.path_length(1.4, *p);
-    ref_k = 1.4 * 0.65 * 2.4 * 4.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 2
-    p->set_group(2);  // no fission in group 2
-    tallier.path_length(1.8, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 0
-    p->set_group(0);
-    p->set_wt(0.4);
-    tallier.path_length(0.6, *p);
-    ref_k += 0.4 * 0.6 * 2.4 * 3.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in material 0
-    p->set_matid(0);
-    p->set_wt(0.55);
-    tallier.path_length(0.2, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    tallier.end_history(*p);
-
-    // End the cycle
-    tallier.end_cycle(3.0);
-    ref_k = nodes * ref_k / 3.0;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    /*** Begin INACTIVE CYCLE 2 ***/
-    tallier.begin_cycle();
-    EXPECT_EQ(0.0, keff->latest());
-
-    // Tally more particles
-    p->set_wt(0.55);
-    p->set_matid(1);
-    p->set_group(1);
-    tallier.path_length(1.4, *p);
-    ref_k = 1.4 * 0.55 * 2.4 * 4.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 2
-    p->set_group(2);  // no fission in group 2
-    tallier.path_length(1.8, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 0
-    p->set_group(0);
-    p->set_wt(0.2);
-    tallier.path_length(0.6, *p);
-    ref_k += 0.2 * 0.6 * 2.4 * 3.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in material 0
-    p->set_matid(0);
-    p->set_wt(0.55);
-    tallier.path_length(0.2, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    tallier.end_history(*p);
-
-    // End the cycle
-    tallier.end_cycle(3.0);
-    ref_k = nodes * ref_k / 3.0;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    /*** Begin ACTIVE CYCLE 1 ***/
-
-    tallier.begin_active_cycles();
-    tallier.begin_cycle();
-    EXPECT_EQ(0.0, keff->latest());
-    EXPECT_EQ(0.0, keff->keff_sum());
-    EXPECT_EQ(0.0, keff->keff_sum_sq());
-
-    // Tally some particles
-    p->set_wt(0.65);
-    p->set_matid(1);
-    p->set_group(1);
-    tallier.path_length(1.4, *p);
-    ref_k = 1.4 * 0.65 * 2.4 * 4.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 2
-    p->set_group(2);  // no fission in group 2
-    tallier.path_length(1.8, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 0
-    p->set_group(0);
-    p->set_wt(0.4);
-    tallier.path_length(0.6, *p);
-    ref_k += 0.4 * 0.6 * 2.4 * 3.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in material 0
-    p->set_matid(0);
-    p->set_wt(0.55);
-    tallier.path_length(0.2, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    tallier.end_history(*p);
-
-    // End the cycle
-    tallier.end_cycle(3.0);
-
-    ref_k = nodes * ref_k / 3.0;
-    ref_kmom1 += ref_k;
-    ref_kmom2 += ref_k * ref_k;
-    ref_kavg = ref_kmom1 / 1.0;
-
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-    EXPECT_SOFTEQ(ref_kavg, keff->mean(), 1.0e-6);
-
-    /*** Begin ACTIVE CYCLE 2 ***/
-
-    tallier.begin_cycle();
-    EXPECT_EQ(0.0, keff->latest());
-    EXPECT_NE(0.0, keff->keff_sum());
-    EXPECT_NE(0.0, keff->keff_sum_sq());
-
-    // Tally some more particles
-    p->set_wt(0.55);
-    p->set_matid(1);
-    p->set_group(1);
-    tallier.path_length(1.4, *p);
-    ref_k = 1.4 * 0.55 * 2.4 * 4.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 2
-    p->set_group(2);  // no fission in group 2
-        tallier.path_length(1.8, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 0
-    p->set_group(0);
-    p->set_wt(0.2);
-    tallier.path_length(0.6, *p);
-    ref_k += 0.2 * 0.6 * 2.4 * 3.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in material 0
-    p->set_matid(0);
-    p->set_wt(0.55);
-    tallier.path_length(0.2, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    tallier.end_history(*p);
-
-    // End the cycle
-    tallier.end_cycle(3.0);
-
-    ref_k = nodes * ref_k / 3.0;
-    ref_kmom1 += ref_k;
-    ref_kmom2 += ref_k * ref_k;
-    ref_kavg = ref_kmom1 / 2.0;
-    ref_kvar = (ref_kmom2 - 2.0 * ref_kavg * ref_kavg) / 2.0 / 1.0;
-
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-    EXPECT_SOFTEQ(ref_kavg, keff->mean(), 1.0e-6);
-    EXPECT_SOFTEQ(ref_kvar, keff->variance(), 1.0e-6);
-
-    /*** Begin ACTIVE CYCLE 3 ***/
-
-    tallier.begin_cycle();
-    EXPECT_EQ(0.0, keff->latest());
-    EXPECT_NE(0.0, keff->keff_sum());
-    EXPECT_NE(0.0, keff->keff_sum_sq());
-
-    // Tally some more particles
-    p->set_wt(0.8);
-    p->set_matid(1);
-    p->set_group(1);
-    tallier.path_length(1.4, *p);
-    ref_k = 1.4 * 0.8 * 2.4 * 4.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 2
-    p->set_group(2);  // no fission in group 2
-    tallier.path_length(1.8, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in group 0
-    p->set_group(0);
-    p->set_wt(0.65);
-    tallier.path_length(0.6, *p);
-    ref_k += 0.65 * 0.6 * 2.4 * 3.2;
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    // Put particle in material 0
-    p->set_matid(0);
-    p->set_wt(0.55);
-    tallier.path_length(0.2, *p);
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-
-    tallier.end_history(*p);
-
-    // End the cycle
-    tallier.end_cycle(3.0);
-
-    EXPECT_FALSE(tallier.is_finalized());
-    tallier.finalize(15.0);
-    EXPECT_TRUE(tallier.is_finalized());
-
-    ref_k = nodes * ref_k / 3.0;
-    ref_kmom1 += ref_k;
-    ref_kmom2 += ref_k * ref_k;
-    ref_kavg = ref_kmom1 / 3.0;
-    ref_kvar = (ref_kmom2 - 3.0 * ref_kavg * ref_kavg) / 3.0 / 2.0;
-
-    EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
-    EXPECT_SOFTEQ(ref_kavg, keff->mean(), 1.0e-6);
-    EXPECT_SOFTEQ(ref_kvar, keff->variance(), 1.0e-6);
-
-    tallier.reset();
-
-    EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(1, tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, tallier.num_source_tallies());
-    EXPECT_FALSE(tallier.is_built());
-    EXPECT_FALSE(tallier.is_finalized());
-
-    EXPECT_EQ(0., keff->keff_sum());
-    EXPECT_EQ(0., keff->keff_sum_sq());
-    EXPECT_EQ(0, keff->cycle_count());
-}
-
 //---------------------------------------------------------------------------//
-
-TEST_F(TallierTest, swap)
-{
-    Tallier_t tallier, inactive_tallier;
-    tallier.set(geometry, physics);
-    inactive_tallier.set(geometry, physics);
-
-    // make a keff tally
-    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
-
-    // add tallies
-    tallier.add_pathlength_tally(keff);
-
-    // build the talliers
-    tallier.build();
-    inactive_tallier.build();
-
-    EXPECT_EQ(1, tallier.num_tallies());
-    EXPECT_EQ(1, tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, tallier.num_source_tallies());
-    EXPECT_TRUE(tallier.is_built());
-    EXPECT_FALSE(tallier.is_finalized());
-
-    EXPECT_EQ(0, inactive_tallier.num_tallies());
-    EXPECT_EQ(0, inactive_tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, inactive_tallier.num_source_tallies());
-    EXPECT_TRUE(inactive_tallier.is_built());
-    EXPECT_FALSE(inactive_tallier.is_finalized());
-
-    // swap the talliers
-    swap(tallier, inactive_tallier);
-
-    EXPECT_EQ(1, inactive_tallier.num_tallies());
-    EXPECT_EQ(1, inactive_tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, inactive_tallier.num_source_tallies());
-    EXPECT_TRUE(inactive_tallier.is_built());
-    EXPECT_FALSE(inactive_tallier.is_finalized());
-
-    EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(0, tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, tallier.num_source_tallies());
-    EXPECT_TRUE(tallier.is_built());
-    EXPECT_FALSE(tallier.is_finalized());
-
-    // swap the talliers
-    swap(tallier, inactive_tallier);
-
-    EXPECT_EQ(1, tallier.num_tallies());
-    EXPECT_EQ(1, tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, tallier.num_source_tallies());
-    EXPECT_TRUE(tallier.is_built());
-    EXPECT_FALSE(tallier.is_finalized());
-
-    EXPECT_EQ(0, inactive_tallier.num_tallies());
-    EXPECT_EQ(0, inactive_tallier.num_pathlength_tallies());
-    EXPECT_EQ(0, inactive_tallier.num_source_tallies());
-    EXPECT_TRUE(inactive_tallier.is_built());
-    EXPECT_FALSE(inactive_tallier.is_finalized());
-}
-
-//---------------------------------------------------------------------------//
-
 TEST_F(TallierTest, add)
 {
     Tallier_t tallier;
     tallier.set(geometry, physics);
 
     // make tallies
-    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
     auto a(std::make_shared<A_Tally>(physics));
     auto p(std::make_shared<P_Tally>(physics));
     auto q(std::make_shared<Q_Tally>(physics));
@@ -627,21 +287,20 @@ TEST_F(TallierTest, add)
     auto c(std::make_shared<C_Tally>(physics));
 
     // add the tallies
-    tallier.add_pathlength_tally(keff);
     tallier.add_pathlength_tally(a);
     tallier.add_pathlength_tally(p);
     tallier.add_source_tally(q);
     tallier.add_source_tally(s);
 
     EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
     EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.build();
 
-    EXPECT_EQ(5, tallier.num_tallies());
-    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(4, tallier.num_tallies());
+    EXPECT_EQ(2, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
     EXPECT_EQ(0, tallier.num_compound_tallies());
 
@@ -649,24 +308,23 @@ TEST_F(TallierTest, add)
     tallier.reset();
 
     EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
     EXPECT_EQ(0, tallier.num_compound_tallies());
 
     // add duplicates
-    tallier.add_pathlength_tally(keff);
     tallier.add_pathlength_tally(a);
     tallier.add_source_tally(q);
 
     EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(5, tallier.num_pathlength_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(3, tallier.num_source_tallies());
     EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.build();
 
-    EXPECT_EQ(5, tallier.num_tallies());
-    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(4, tallier.num_tallies());
+    EXPECT_EQ(2, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
     EXPECT_EQ(0, tallier.num_compound_tallies());
 
@@ -674,7 +332,7 @@ TEST_F(TallierTest, add)
     tallier.reset();
 
     EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
     EXPECT_EQ(0, tallier.num_compound_tallies());
 
@@ -682,14 +340,14 @@ TEST_F(TallierTest, add)
     tallier.add_compound_tally(c);
 
     EXPECT_EQ(0, tallier.num_tallies());
-    EXPECT_EQ(4, tallier.num_pathlength_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(3, tallier.num_source_tallies());
     EXPECT_EQ(1, tallier.num_compound_tallies());
 
     tallier.build();
 
-    EXPECT_EQ(8, tallier.num_tallies());
-    EXPECT_EQ(4, tallier.num_pathlength_tallies());
+    EXPECT_EQ(7, tallier.num_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(3, tallier.num_source_tallies());
     EXPECT_EQ(1, tallier.num_compound_tallies());
 }

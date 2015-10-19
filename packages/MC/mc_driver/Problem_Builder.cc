@@ -18,12 +18,10 @@
 #include "utils/Definitions.hh"
 #include "utils/String_Functions.hh"
 #include "xs/XS_Builder.hh"
-#include "solvers/LinAlgTypedefs.hh"
 #include "geometry/Mesh_Geometry.hh"
 #include "physics/Box_Shape.hh"
 #include "physics/VR_Analog.hh"
 #include "physics/VR_Roulette.hh"
-#include "physics/Source_Diagnostic_Tally.hh"
 #include "physics/Cell_Tally.hh"
 #include "Problem_Builder.hh"
 
@@ -498,7 +496,6 @@ void Problem_Builder::build_source(const ParameterList &source_db)
 void Problem_Builder::build_tallies()
 {
     using profugus::Mesh_Geometry;
-    using profugus::Source_Diagnostic_Tally;
     using profugus::Cell_Tally;
 
     // make the tallier
