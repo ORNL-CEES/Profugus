@@ -77,7 +77,7 @@ void Mesh_Geometry::initialize(
 /*!
  * \brief Calculate distance to the next cell
  */
-double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
+double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
 {
     using def::I; using def::J; using def::K;
     using profugus::soft_equiv;
@@ -191,7 +191,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
  * breaking out when geo.cell_index == -1, because multiple distance_to_surface
  * calls will return surfaces outside the cartesian mesh domain.
  */
-double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
+double Mesh_Geometry::distance_to_interior(Geo_State_t& state) const
 {
     using def::I; using def::J; using def::K;
     using def::X; using def::Y; using def::Z;

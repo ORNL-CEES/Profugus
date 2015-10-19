@@ -46,13 +46,13 @@ class Tracking_Geometry
                             Geo_State_t       & state) = 0;
 
     //! Get distance to next boundary.
-    virtual double distance_to_boundary(Geo_State_t& state) = 0;
+    virtual double distance_to_boundary(Geo_State_t& state) const = 0;
 
     //! Move to and cross a surface in the current direction.
-    virtual void move_to_surface(Geo_State_t& state) = 0;
+    virtual void move_to_surface(Geo_State_t& state) const = 0;
 
     //! Move a distance \e d to a point in the current direction.
-    virtual void move_to_point(double d, Geo_State_t& state) = 0;
+    virtual void move_to_point(double d, Geo_State_t& state) const = 0;
 
     //! Number of cells (excluding "outside" cell)
     virtual geometry::cell_type num_cells() const = 0;
@@ -76,14 +76,14 @@ class Tracking_Geometry
 
     //! Change the direction to \p new_direction.
     virtual void change_direction(const Space_Vector& new_direction,
-                                  Geo_State_t& state) = 0;
+                                  Geo_State_t& state) const = 0;
 
     //! Change the direction through an angle
     virtual void change_direction(double costheta, double phi,
-                                  Geo_State_t& state) = 0;
+                                  Geo_State_t& state) const = 0;
 
     //! Reflect the direction at a reflecting surface.
-    virtual bool reflect(Geo_State_t& state) = 0;
+    virtual bool reflect(Geo_State_t& state) const = 0;
 
     //! Return the outward normal at the location dictated by the state.
     virtual Space_Vector normal(const Geo_State_t& state) const = 0;

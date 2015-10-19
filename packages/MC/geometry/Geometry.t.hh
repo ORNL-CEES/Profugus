@@ -109,7 +109,7 @@ void Geometry<Array>::initialize(const Space_Vector &r,
  * surface
  */
 template<class Array>
-bool Geometry<Array>::reflect(Geo_State_t &state)
+bool Geometry<Array>::reflect(Geo_State_t &state) const
 {
     using def::X; using def::Y; using def::Z;
 

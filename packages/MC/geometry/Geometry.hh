@@ -105,7 +105,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
                     Geo_State_t &state);
 
     //! Get distance to next boundary.
-    double distance_to_boundary(Geo_State_t &state)
+    double distance_to_boundary(Geo_State_t &state) const
     {
         REQUIRE(d_array);
         d_array->distance_to_boundary(state.d_r, state.d_dir, state);
@@ -114,7 +114,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
 
     //! Move to and cross a cell surface (do not reflect the particle, but
     //! indicate that the particle is on a reflecting surface).
-    void move_to_surface(Geo_State_t &state)
+    void move_to_surface(Geo_State_t &state) const
     {
         REQUIRE(d_array);
 
@@ -128,7 +128,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
     //! Move the particle to a point in the current direction.
     /// Clear any surface tags; the final point should \b not be a boundary
     /// surface.
-    void move_to_point(double d, Geo_State_t &state)
+    void move_to_point(double d, Geo_State_t &state) const
     {
         REQUIRE(d_array);
 
@@ -193,7 +193,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
     Space_Vector direction(const Geo_State_t &state) const {return state.d_dir;}
 
     //! Change the particle direction.
-    void change_direction(const Space_Vector &new_direction, Geo_State_t &state)
+    void change_direction(const Space_Vector &new_direction, Geo_State_t &state) const
     {
         // update the direction
         state.d_dir = new_direction;
@@ -203,13 +203,13 @@ class Geometry : public Tracking_Geometry<RTK_State>
     }
 
     // Change the direction through angles \f$(\theta,\phi)\f$.
-    void change_direction(double costheta, double phi, Geo_State_t &state)
+    void change_direction(double costheta, double phi, Geo_State_t &state) const
     {
         cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
     // Reflect the direction at a reflecting surface.
-    bool reflect(Geo_State_t &state);
+    bool reflect(Geo_State_t &state) const;
 
     // Return the outward normal.
     Space_Vector normal(const Geo_State_t &state) const;
@@ -237,7 +237,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
      * The direction vector of the particle must be a unit-vector, ie:
      *  \f$|\Omega| = 1\f$.
      */
-    void move(double d, Geo_State_t &state)
+    void move(double d, Geo_State_t &state) const
     {
         REQUIRE(d >= 0.0);
         REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));

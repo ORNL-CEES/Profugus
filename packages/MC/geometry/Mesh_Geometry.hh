@@ -79,17 +79,17 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
                     Geo_State_t       & state);
 
     //! Get distance to next boundary.
-    double distance_to_boundary(Geo_State_t& state);
+    double distance_to_boundary(Geo_State_t& state) const;
 
     //! Move to and cross a surface in the current direction.
-    void move_to_surface(Geo_State_t& state)
+    void move_to_surface(Geo_State_t& state) const
     {
         move(state.next_dist, state);
         state.ijk = state.next_ijk;
     }
 
     //! Move a distance \e d to a point in the current direction.
-    void move_to_point(double d, Geo_State_t& state)
+    void move_to_point(double d, Geo_State_t& state) const
     {
         move(d, state);
 
@@ -155,7 +155,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Change the direction to \p new_direction.
     void change_direction(
             const Space_Vector& new_direction,
-            Geo_State_t& state)
+            Geo_State_t& state) const
     {
         // update and mnormalizethe direction
         state.dir = new_direction;
@@ -166,13 +166,13 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     void change_direction(
             double       costheta,
             double       phi,
-            Geo_State_t& state)
+            Geo_State_t& state) const
     {
         cartesian_vector_transform(costheta, phi, state.dir);
     }
 
     //! Reflect the direction at a reflecting surface.
-    bool reflect(Geo_State_t& state)
+    bool reflect(Geo_State_t& state) const
     {
         NOT_IMPLEMENTED("reflect in mesh_geometry");
     }
@@ -189,7 +189,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     SP_Vec_Dbl get_cell_volumes();
 
     // If the particle is outside the geometry, find distance
-    double distance_to_interior(Geo_State_t &state);
+    double distance_to_interior(Geo_State_t &state) const;
 
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
