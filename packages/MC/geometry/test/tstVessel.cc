@@ -1115,7 +1115,7 @@ TEST_F(Lattice_Test, check_volumes)
 
     // make a random number generator
     profugus::RNG_Control control(seed);
-    auto rng = control.rng();
+    auto rng = control.rng(0);
 
     Vector    r, omega;
     Geo_State state;
@@ -1396,7 +1396,7 @@ TEST_F(Core_Baffle_Test, check_volumes)
 
     // make a random number generator
     profugus::RNG_Control control(seed);
-    auto rng = control.rng();
+    auto rng = control.rng(0);
 
     Vector    r, omega;
     Geo_State state;

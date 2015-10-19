@@ -58,44 +58,30 @@ class RNG_Control
     //! Random number type.
     typedef RNG RNG_t;
 
-    // Global RNG stream number counter.
-    static int rn_stream;
-
   private:
     // >>> DATA
 
     // Seed for initialization of random number streams.
-    int d_seed;
+    const int d_seed;
 
     // Total number of streams.
-    int d_number;
-
-    // Number of current stream.
-    int d_stream;
+    const int d_number;
 
     // Control parameter for stream inits.
-    int d_parameter;
+    const int d_parameter;
 
     // Size of packed stream state.
     int d_size;
 
   public:
     // Constructor.
-    RNG_Control(int seed, int number = 1000000000, int stream = 0,
-                int parameter = 1);
+    RNG_Control(int seed, int number = 1000000000, int parameter = 1);
 
     // Create SPRNG objects.
-    RNG_t rng();
-    RNG_t rng(int stream);
+    RNG_t rng(int stream) const;
 
     // Spawn a new random number object.
     RNG_t spawn(const RNG_t &) const;
-
-    //! Query for the current random number stream index.
-    int get_num() const { return d_stream; }
-
-    //! Set (reset) the random number stream index.
-    void set_num(int stream) { REQUIRE(stream < d_number); d_stream = stream; }
 
     //! Query size of a packed random number state.
     int get_size() const { return d_size; }
@@ -105,12 +91,6 @@ class RNG_Control
 
     //! Return the total number of current streams set.
     int get_number() const { return d_number; }
-
-  private:
-    // >>> IMPLEMENTATION
-
-    // Make a generator.
-    RNG_t make_random_number_generator() const;
 };
 
 } // end namespace profugus

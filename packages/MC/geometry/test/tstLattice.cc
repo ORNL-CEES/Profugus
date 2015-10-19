@@ -285,7 +285,7 @@ TEST(Lattice, Heuristic)
 
     // make a random number generator
     profugus::RNG_Control control(seed);
-    auto rng = control.rng();
+    auto rng = control.rng(0);
 
     // plot collision sites
     ofstream csites("csites.dat");
@@ -427,7 +427,7 @@ TEST(Multisegment, Pin)
 
     // make a random number generator
     profugus::RNG_Control control(seed);
-    auto rng = control.rng();
+    auto rng = control.rng(0);
 
     // geometry variables
     double costheta, sintheta, phi;

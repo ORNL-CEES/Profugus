@@ -33,25 +33,17 @@ TEST(RNG_Control, controller)
     // checks
     EXPECT_EQ(1000000000, control.get_number());
     EXPECT_EQ(2452423, control.get_seed());
-    EXPECT_EQ(0, control.get_num());
 
     // make some random numbers
-    RNG r0  = control.rng();
-    EXPECT_EQ(1, control.get_num());
-    RNG r1  = control.rng();
-    EXPECT_EQ(2, control.get_num());
-    RNG r2  = control.rng();
-    EXPECT_EQ(3, control.get_num());
+    RNG r0  = control.rng(0);
+    RNG r1  = control.rng(1);
+    RNG r2  = control.rng(2);
 
     RNG rr2 = control.rng(2);
-    EXPECT_EQ(3, control.get_num());
 
     RNG rr1 = control.rng(1);
-    EXPECT_EQ(2, control.get_num());
 
-    control.set_num(0);
-    RNG rr0 = control.rng();
-    EXPECT_EQ(1, control.get_num());
+    RNG rr0 = control.rng(0);
 
     for (int i = 0; i < 100; i++)
     {

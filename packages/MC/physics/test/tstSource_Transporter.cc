@@ -69,7 +69,7 @@ class DR_Source : public profugus::Source
         SP_Particle p(std::make_shared<Particle_t>());
 
         // get random number state for the particle
-        auto rng = b_rng_control->rng();
+        auto rng = b_rng_control->rng(0);
         p->set_rng(rng);
 
         // sample position

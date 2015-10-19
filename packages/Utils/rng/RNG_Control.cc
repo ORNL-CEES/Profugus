@@ -17,13 +17,6 @@
 
 namespace profugus
 {
-
-//---------------------------------------------------------------------------//
-// STATIC DATA
-//---------------------------------------------------------------------------//
-
-int RNG_Control::rn_stream = 0;
-
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
@@ -41,17 +34,14 @@ int RNG_Control::rn_stream = 0;
  */
 RNG_Control::RNG_Control(int seed,
                          int number,
-                         int stream,
                          int parameter)
     : d_seed(seed)
     , d_number(number)
-    , d_stream(stream)
     , d_parameter(parameter)
 {
-    REQUIRE(d_stream <= d_number);
-
     // make a spring object and pack it to determine the size
-    RNG temp = make_random_number_generator();
+    int *id = init_sprng(0, d_number, d_seed, d_parameter);
+    RNG temp( id, 0 );
 
     // pack it and set size
     std::vector<char> pack = temp.pack();
@@ -63,55 +53,22 @@ RNG_Control::RNG_Control(int seed,
 // MEMBER FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
- * \brief Create a SPRNG random number object at the current stream index.
- *
- * \return SPRNG random number object
- *
- * This function creates a SPRNG random number state at the current stream
- * index.  After creation, the stream index is automatically advanced by one.
- * Additionally, the created SPRNG object takes ownership of the random
- * number state from the SPRNG library.  No further work on the part of
- * RNG_Control is required.
- */
-RNG_Control::RNG_t RNG_Control::rng()
-{
-    REQUIRE(d_stream <= d_number);
-
-    // create a new Rnd object
-    RNG random = make_random_number_generator();
-
-    // advance the counter
-    d_stream++;
-
-    // return the object
-    return random;
-}
-
-//---------------------------------------------------------------------------//
-/*!
  * \brief Create a SPRNG random number object at a given stream index.
  *
  * \param stream a user-requested random number index
  * \return SPRNG random number object
  *
- * This function is identical to rtt_rng::RNG_Control::rng() with the
- * exception: the user enters a stream index for the random number state.
- * Note that the entered stream index becomes the new RNG_Control stream
- * index from which future random numbers are created.  The entered stream
- * index is incremented by one after creating the random number.
+ * Does not update the state of this object.
  */
-RNG_Control::RNG_t RNG_Control::rng(int stream)
+RNG_Control::RNG_t RNG_Control::rng(int stream) const
 {
     REQUIRE(stream <= d_number);
 
-    // reset streamnum
-    d_stream = stream;
+    // declare a stream
+    int *id = init_sprng(stream, d_number, d_seed, d_parameter);
 
-    // create a new Rnd object
-    RNG random = make_random_number_generator();
-
-    // advance the counter
-    d_stream++;
+    // create a new RNG object
+    RNG random( id, stream );
 
     // return the object
     return random;
@@ -152,29 +109,6 @@ RNG_Control::RNG_t RNG_Control::spawn(const RNG_t &random) const
 
     // return the new random object
     return ran;
-}
-
-//---------------------------------------------------------------------------//
-// PRIVATE FUNCTIONS
-//---------------------------------------------------------------------------//
-/*!
- * \brief Make a SPRNG random number object.
- *
- * This function is used by the public interface to get a SPRNG random number
- * object.
- */
-RNG_Control::RNG_t RNG_Control::make_random_number_generator() const
-{
-    REQUIRE(d_stream <= d_number);
-
-    // declare a stream
-    int *id = init_sprng(d_stream, d_number, d_seed, d_parameter);
-
-    // create a new RNG object
-    RNG random(id, d_stream);
-
-    // return the object
-    return random;
 }
 
 } // end namespace profugus

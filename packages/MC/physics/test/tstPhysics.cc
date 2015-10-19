@@ -78,7 +78,7 @@ class PhysicsTest : public testing::Test
         // make a rng
         int seed = 342412;
         profugus::RNG_Control control(seed);
-        rng = control.rng();
+        rng = control.rng(0);
 
         // make db
         db = Teuchos::rcp(new ParameterList_t("test"));

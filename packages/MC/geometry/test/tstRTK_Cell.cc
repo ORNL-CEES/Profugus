@@ -836,7 +836,7 @@ TEST(Multi, SegPin)
     }
 
     RNG_Control control(seed);
-    auto rng = control.rng();
+    auto rng = control.rng(0);
 
     // sample some points in the pin
     int N           = 1000;
