@@ -140,7 +140,7 @@ class Pathlength_Tally : public Tally
     // >>> TALLY INTERFACE
 
     //! Track particle and tally.
-    virtual void accumulate(double step, const Particle_t &p) = 0;
+    virtual void accumulate(const double step, Particle_t &p) const = 0;
 };
 
 //---------------------------------------------------------------------------//

@@ -245,8 +245,8 @@ void Cell_Tally::output(const std::string &out_file)
 /*
  * \brief Track particle and tally..
  */
-void Cell_Tally::accumulate(double            step,
-                            const Particle_t &p)
+void Cell_Tally::accumulate( const double step,
+			     Particle_t &p ) const
 {
     REQUIRE(Particle_t::Metadata::name(d_state_idx) == "cell_tally_state");
 

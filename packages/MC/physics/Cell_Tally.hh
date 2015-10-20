@@ -84,7 +84,7 @@ class Cell_Tally : public Pathlength_Tally
     // >>> PATHLENGTH TALLY INTERFACE
 
     // Track particle and tally.
-    void accumulate(double step, const Particle_t &p);
+    void accumulate( const double step, Particle_t &p) const;
 
   private:
     // >>> IMPLEMENTATION

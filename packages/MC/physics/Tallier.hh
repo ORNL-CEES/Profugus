@@ -118,7 +118,7 @@ class Tallier
     // >>> TALLY OPERATIONS
 
     // Process path-length tally events.
-    void path_length(double step, const Particle_t &p);
+    void path_length(const double step, Particle_t &p) const;
 
     // Tally any source events.
     void source(const Particle_t &p);

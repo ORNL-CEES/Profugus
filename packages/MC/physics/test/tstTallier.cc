@@ -30,7 +30,7 @@ class A_Tally : public profugus::Pathlength_Tally
         set_name("a_pl_tally");
     }
 
-    void accumulate(double step, const Particle_t &p) { /* * */ }
+    void accumulate(const double step, Particle_t &p) const { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
@@ -45,7 +45,7 @@ class P_Tally : public profugus::Pathlength_Tally
         set_name("p_pl_tally");
     }
 
-    void accumulate(double step, const Particle_t &p) { /* * */ }
+    void accumulate(const double step, Particle_t &p) const { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
@@ -94,7 +94,7 @@ class C_Tally : public profugus::Compound_Tally
             set_name("c_tally");
         }
 
-        void accumulate(double step, const Particle_t &p) { /* * */ }
+        void accumulate(const double step, Particle_t &p) const { /* * */ }
     };
 
     class C_SRC_Tally : public profugus::Source_Tally

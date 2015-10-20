@@ -183,8 +183,8 @@ void Tallier::build()
  * \param step step-length
  * \param p particle
  */
-void Tallier::path_length(double            step,
-                          const Particle_t &p)
+void Tallier::path_length( const double step,
+                           Particle_t &p ) const
 {
     REQUIRE(d_build_phase == BUILT);
     REQUIRE(step >= 0.0);
