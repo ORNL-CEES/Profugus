@@ -106,15 +106,6 @@ class Domain_Transporter
   private:
     // >>> IMPLEMENTATION
 
-    // Step selector.
-    Step_Selector d_step;
-
-    // Tracking distances.
-    double d_dist_mfp, d_dist_bnd, d_dist_col;
-
-    // Total cross section in region.
-    double d_xs_tot;
-
     // Flag indicating that fission sites should be sampled.
     bool d_sample_fission_sites;
 
@@ -126,7 +117,8 @@ class Domain_Transporter
 
     // Process collisions and boundaries.
     void process_boundary(Particle_t &particle, Bank_t &bank);
-    void process_collision(Particle_t &particle, Bank_t &bank);
+    void process_collision(const Step_Selector& step_selector,
+			   Particle_t &particle, Bank_t &bank);
 };
 
 } // end namespace profugus

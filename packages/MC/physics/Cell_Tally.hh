@@ -92,13 +92,8 @@ class Cell_Tally : public Pathlength_Tally
     // Index in the particles tally state.
     const unsigned int d_state_idx;
 
-    typedef std::unordered_map<int, double> History_Tally;
-
     // Clear local values.
     void clear_local();
-
-    // Tally for a history.
-    History_Tally d_hist;
 };
 
 //---------------------------------------------------------------------------//
