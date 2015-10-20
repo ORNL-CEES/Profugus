@@ -26,8 +26,6 @@ namespace profugus
  * \brief Constructor.
  */
 Domain_Transporter::Domain_Transporter()
-    : d_sample_fission_sites(false)
-    , d_keff(0.0)
 {
 }
 
@@ -88,42 +86,13 @@ void Domain_Transporter::set(SP_Tallier tallies)
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Set fission site sampling.
- *
- * \param fission_sites
- * \param keff
- */
-void Domain_Transporter::set(SP_Fission_Sites fission_sites,
-                             double           keff)
-{
-    // assign the container
-    d_fission_sites = fission_sites;
-
-    // initialize the sampling flag
-    d_sample_fission_sites = false;
-
-    // set the flag indicating whether fission sites should be sampled or not
-    if (d_fission_sites)
-    {
-        d_sample_fission_sites = true;
-    }
-
-    // assign current iterate of keff
-    d_keff = keff;
-
-    // initialize the number of fission sites to 0
-    d_num_fission_sites = 0;
-}
-
-//---------------------------------------------------------------------------//
-/*!
  * \brief Transport a particle through the domain.
  *
  * \param particle
  * \param bank
  */
 void Domain_Transporter::transport(Particle_t &particle,
-                                   Bank_t     &bank)
+                                   Bank_t     &bank) const
 {
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
@@ -222,7 +191,7 @@ void Domain_Transporter::transport(Particle_t &particle,
 //---------------------------------------------------------------------------//
 
 void Domain_Transporter::process_boundary(Particle_t &particle,
-                                          Bank_t     &bank)
+                                          Bank_t     &bank) const
 {
     REQUIRE(particle.alive());
     REQUIRE(particle.event() == events::BOUNDARY);
@@ -287,22 +256,13 @@ void Domain_Transporter::process_boundary(Particle_t &particle,
 
 void Domain_Transporter::process_collision(const Step_Selector& step_selector,
 					   Particle_t &particle,
-                                           Bank_t     &bank)
+                                           Bank_t     &bank) const
 {
     REQUIRE(d_var_reduction);
     REQUIRE(particle.event() == events::COLLISION);
 
     // move the particle to the collision site
     d_geometry->move_to_point(step_selector.step(), particle.geo_state());
-
-    // sample fission sites
-    if (d_sample_fission_sites)
-    {
-        CHECK(d_fission_sites);
-        CHECK(d_keff > 0.0);
-        d_num_fission_sites += d_physics->sample_fission_site(
-            particle, *d_fission_sites, d_keff);
-    }
 
     // use the physics package to process the collision
     d_physics->collide(particle, bank);

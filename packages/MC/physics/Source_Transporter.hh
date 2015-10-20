@@ -54,7 +54,6 @@ class Source_Transporter
     typedef Transporter_t::SP_Geometry           SP_Geometry;
     typedef Transporter_t::SP_Particle           SP_Particle;
     typedef Transporter_t::SP_Variance_Reduction SP_Variance_Reduction;
-    typedef Transporter_t::SP_Fission_Sites      SP_Fission_Sites;
     typedef Transporter_t::SP_Tallier            SP_Tallier;
     typedef std::shared_ptr<Source_t>            SP_Source;
     typedef Physics_t::RCP_Std_DB                RCP_Std_DB;
@@ -91,9 +90,6 @@ class Source_Transporter
 
     // Solve the fixed-source problem.
     void solve();
-
-    // Set fission sampling.
-    void sample_fission_sites(SP_Fission_Sites fis_sites, double keff);
 
     // Set the variance reduction.
     void set(SP_Variance_Reduction vr);

@@ -71,16 +71,6 @@ class Physics
     typedef Geometry_t::Space_Vector      Space_Vector;
     //@}
 
-    //! Fission site structure for storing fission sites in k-code.
-    struct Fission_Site
-    {
-        int          m;
-        Space_Vector r;
-    };
-
-    //! Fission_Site container.
-    typedef std::vector<Fission_Site> Fission_Site_Container;
-
   private:
     // >>> DATA
 
@@ -127,29 +117,14 @@ class Physics
     // Process a particle through a physical collision.
     void collide(Particle_t &particle, Bank_t &bank) const;
 
-    // Sample fission site.
-    int sample_fission_site(const Particle_t &p, Fission_Site_Container &fsc,
-                            double keff) const;
-
     // Sample fission spectrum and initialize the physics state.
     bool initialize_fission(unsigned int matid, Particle_t &p) const;
-
-    // Initialize a physics state at a fission site.
-    bool initialize_fission(Fission_Site &fs, Particle_t &p) const;
 
     // Return whether a given material is fissionable
     bool is_fissionable(unsigned int matid) const
     {
         return d_fissionable[d_mid2l[matid]];
     }
-
-    // >>> FISSION SITE CONTAINER OPERATIONS
-
-    //! Fission site position.
-    static Space_Vector fission_site(const Fission_Site &fs) { return fs.r; }
-
-    //! Size of fission sites in bytes.
-    static int fission_site_bytes() { return sizeof(Fission_Site); }
 
     // >>> CLASS FUNCTIONS
 

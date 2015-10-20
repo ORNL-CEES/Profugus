@@ -159,26 +159,6 @@ void Source_Transporter::solve()
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Set a fission site container and keff for sampling fission sites.
- *
- * Setting a fission site container tells the fixed-source solver to sample
- * fission sites that can be used in an outer k-code calculation.  Thus, this
- * function should be called if the fixed-source solver is used as the inner
- * part of a k-code eigenvalue calculation.  It should be called once per
- * k-code iteration to update the eigenvalue.
- *
- * Fission sites are added to the container, it is \b not emptied.
- */
-void Source_Transporter::sample_fission_sites(SP_Fission_Sites fis_sites,
-                                              double           keff)
-{
-    // set the transporter with the fission site container and the latest keff
-    // iterate
-    d_transporter.set(fis_sites, keff);
-}
-
-//---------------------------------------------------------------------------//
-/*!
  * \brief Set the variance reduction.
  */
 void Source_Transporter::set(SP_Variance_Reduction vr)

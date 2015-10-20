@@ -48,14 +48,12 @@ class Domain_Transporter
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef typename Physics_t::Particle_t             Particle_t;
     typedef typename Physics_t::Bank_t                 Bank_t;
-    typedef typename Physics_t::Fission_Site_Container Fission_Site_Container;
     typedef Variance_Reduction                         Variance_Reduction_t;
     typedef Tallier                                    Tallier_t;
     //@}
 
     //@{
     //! Smart pointers.
-    typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
     typedef std::shared_ptr<Geometry_t>             SP_Geometry;
     typedef std::shared_ptr<Physics_t>              SP_Physics;
     typedef std::shared_ptr<Particle_t>             SP_Particle;
@@ -78,9 +76,6 @@ class Domain_Transporter
     // Regular tallies.
     SP_Tallier d_tallier;
 
-    // Fission sites.
-    SP_Fission_Sites d_fission_sites;
-
   public:
     // Constructor.
     Domain_Transporter();
@@ -94,31 +89,16 @@ class Domain_Transporter
     // Set regular tallies.
     void set(SP_Tallier tallies);
 
-    // Set fission site sampling.
-    void set(SP_Fission_Sites fission_sites, double keff);
-
     // Transport a particle through the domain.
-    void transport(Particle_t &particle, Bank_t &bank);
-
-    //! Return the number of sampled fission sites.
-    int num_sampled_fission_sites() const { return d_num_fission_sites; }
+    void transport(Particle_t &particle, Bank_t &bank) const;
 
   private:
     // >>> IMPLEMENTATION
 
-    // Flag indicating that fission sites should be sampled.
-    bool d_sample_fission_sites;
-
-    // Number of fission sites sampled.
-    int d_num_fission_sites;
-
-    // Current keff iterate.
-    double d_keff;
-
     // Process collisions and boundaries.
-    void process_boundary(Particle_t &particle, Bank_t &bank);
+    void process_boundary(Particle_t &particle, Bank_t &bank) const;
     void process_collision(const Step_Selector& step_selector,
-			   Particle_t &particle, Bank_t &bank);
+			   Particle_t &particle, Bank_t &bank) const;
 };
 
 } // end namespace profugus
