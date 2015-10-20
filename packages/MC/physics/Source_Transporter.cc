@@ -13,8 +13,6 @@
 
 #include <boost/range/irange.hpp>
 
-#include <iomanip>
-#include <iostream>
 #include <cmath>
 
 #include "harness/Diagnostics.hh"
@@ -69,8 +67,6 @@ void Source_Transporter::assign_source(SP_Source source)
  */
 void Source_Transporter::solve()
 {
-    using std::cout; using std::endl;
-
     REQUIRE(d_source);
 
     SCOPED_TIMER("MC::Source_Transporter.solve");

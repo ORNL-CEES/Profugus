@@ -95,12 +95,6 @@ void Manager::setup(const std::string &xml_file)
     // set the problem type in the final db
     d_db->set("problem_type", prob_type);
 
-    // build the random controller
-    d_rnd_control = std::make_shared<RNG_Control_t>(
-        d_db->get<int>("seed", 32442) );
-
-    SCREEN_MSG("Building " << prob_type << " solver");
-
     // get the tallier
     d_tallier = builder.get_tallier();
 
@@ -115,7 +109,7 @@ void Manager::setup(const std::string &xml_file)
     // make the uniform source
     std::shared_ptr<profugus::Uniform_Source> source(
 	std::make_shared<profugus::Uniform_Source>(
-	    d_db, d_geometry, d_physics, d_rnd_control));
+	    d_db, d_geometry, d_physics));
     source->build_source(shape);
 
     // make the solver

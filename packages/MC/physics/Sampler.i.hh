@@ -131,7 +131,7 @@ template<class T, class RNG>
 inline T sample_linear(RNG& rng, const T left, const T right)
 {
     return sample_linear(
-            rng.template uniform<T>(), rng.template uniform<T>(),
+            rng.ran(), rng.ran(),
             left, right);
 }
 

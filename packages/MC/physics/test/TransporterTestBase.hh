@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "../Shape.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../Group_Bounds.hh"
 #include "../Physics.hh"
 #include "../Tallier.hh"
@@ -39,7 +39,7 @@ class TransporterTestBase : public testing::Test
   protected:
     typedef profugus::Physics                   Physics_t;
     typedef Physics_t::Geometry_t               Geometry_t;
-    typedef profugus::RNG_Control               RNG_Control_t;
+    typedef profugus::RNG                       RNG_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::SP_Particle              SP_Particle;
     typedef Physics_t::Bank_t                   Bank_t;
@@ -61,7 +61,7 @@ class TransporterTestBase : public testing::Test
 
     typedef std::shared_ptr<Geometry_t>             SP_Geometry;
     typedef std::shared_ptr<Physics_t>              SP_Physics;
-    typedef std::shared_ptr<RNG_Control_t>          SP_RNG_Control;
+    typedef std::shared_ptr<RNG_t>                  SP_RNG;
     typedef std::shared_ptr<profugus::Shape>        SP_Shape;
     typedef std::shared_ptr<Tallier_t>              SP_Tallier;
     typedef std::shared_ptr<Var_Reduction_t>        SP_Var_Reduction;
@@ -108,7 +108,7 @@ class TransporterTestBase : public testing::Test
     int node;
     int nodes;
 
-    SP_RNG_Control   rcon;
+    SP_RNG           rcon;
     RCP_Std_DB       db;
     SP_Geometry      geometry;
     SP_Physics       physics;

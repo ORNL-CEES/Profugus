@@ -66,8 +66,7 @@ class Uniform_Source : public Source
 
   public:
     // Constructor.
-    Uniform_Source(RCP_Std_DB db, SP_Geometry geometry, SP_Physics physics,
-                   SP_RNG_Control rng_control);
+    Uniform_Source(RCP_Std_DB db, SP_Geometry geometry, SP_Physics physics);
 
     // Build the initial source.
     void build_source(SP_Shape geometric_shape);

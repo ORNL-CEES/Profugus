@@ -15,7 +15,7 @@
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Lite.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 
 namespace profugus
 {
@@ -51,7 +51,7 @@ class Shape
     typedef def::Space_Vector Space_Vector;
 
     //! Random number generator.
-    typedef RNG_Control::RNG_t RNG_t;
+    typedef RNG RNG_t;
 
     //! Buffer typedef.
     typedef std::vector<char> Buffer;

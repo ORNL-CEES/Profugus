@@ -16,7 +16,7 @@
 
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../RTK_Cell.hh"
 #include "../RTK_Array.hh"
 
@@ -1114,8 +1114,7 @@ TEST_F(Lattice_Test, check_volumes)
     lattice->complete(0.0, 0.0, 0.0);
 
     // make a random number generator
-    profugus::RNG_Control control(seed);
-    auto rng = control.rng(0);
+    profugus::RNG rng(0);
 
     Vector    r, omega;
     Geo_State state;
@@ -1185,7 +1184,7 @@ TEST_F(Lattice_Test, check_volumes)
 
         double err = fabs(V-Vref[itr->first]) / Vref[itr->first];
 
-        EXPECT_SOFTEQ(Vref[itr->first], V, 5.0e-4);
+        EXPECT_SOFTEQ(Vref[itr->first], V, 5.0e-3);
 
         if (node == 0)
         {
@@ -1395,8 +1394,7 @@ TEST_F(Core_Baffle_Test, check_volumes)
     core->complete(0.0, 0.0, 0.0);
 
     // make a random number generator
-    profugus::RNG_Control control(seed);
-    auto rng = control.rng(0);
+    profugus::RNG rng(0);
 
     Vector    r, omega;
     Geo_State state;

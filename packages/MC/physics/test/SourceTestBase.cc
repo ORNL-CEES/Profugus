@@ -19,7 +19,7 @@
 //! Initialization that are performed for each test
 void SourceTestBase::SetUp()
 {
-    b_rcon = std::make_shared<RNG_Control_t>(this->get_seed());
+    b_rcon = std::make_shared<RNG_t>(this->get_seed());
 
     // set number of nodes
     node  = profugus::node();

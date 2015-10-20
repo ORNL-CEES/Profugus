@@ -19,7 +19,7 @@
 
 #include "Teuchos_RCP.hpp"
 #include "utils/Definitions.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../Sampler.hh"
 
 using namespace std;
@@ -33,7 +33,6 @@ using def::X; using def::Y; using def::Z;
 class PhysicsTest : public testing::Test
 {
   protected:
-    typedef profugus::RNG_Control             RNG_Control;
     typedef profugus::Physics                 Physics_t;
     typedef Physics_t::Geometry_t             Geometry_t;
     typedef Physics_t::SP_Geometry            SP_Geometry;
@@ -75,8 +74,7 @@ class PhysicsTest : public testing::Test
 
         // make a rng
         int seed = 342412;
-        profugus::RNG_Control control(seed);
-        rng = control.rng(0);
+	rng = profugus::RNG(seed);
 
         // make db
         db = Teuchos::rcp(new ParameterList_t("test"));
@@ -152,7 +150,7 @@ class PhysicsTest : public testing::Test
     RCP_XS xs;
     RCP_Std_DB db;
 
-    profugus::RNG_Control::RNG_t rng;
+    profugus::RNG rng;
 };
 
 //---------------------------------------------------------------------------//
@@ -180,7 +178,7 @@ TEST_F(PhysicsTest, Collisions)
         // make a bank
         Bank_t bank;
 
-        int Np = 100000;
+        int Np = 1000000;
 
         int scat[5]   = {0};
         int abs[5]    = {0};

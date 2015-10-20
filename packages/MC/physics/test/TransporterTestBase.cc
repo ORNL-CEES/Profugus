@@ -23,7 +23,7 @@
 
 void TransporterTestBase::SetUp()
 {
-    rcon = std::make_shared<profugus::RNG_Control>(349832);
+    rcon = std::make_shared<profugus::RNG>(349832);
 
     // set number of nodes
     node  = profugus::node();

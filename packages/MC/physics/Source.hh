@@ -15,7 +15,6 @@
 #include <cmath>
 
 #include "utils/Definitions.hh"
-#include "rng/RNG_Control.hh"
 #include "geometry/Geometry.hh"
 #include "Physics.hh"
 
@@ -39,8 +38,6 @@ class Source
     typedef Physics                  Physics_t;
     typedef Physics_t::Particle_t    Particle_t;
     typedef Geometry_t::Space_Vector Space_Vector;
-    typedef RNG_Control              RNG_Control_t;
-    typedef RNG_Control_t::RNG_t     RNG_t;
     typedef def::size_type           size_type;
     //@}
 
@@ -49,7 +46,6 @@ class Source
     typedef std::shared_ptr<Geometry_t>    SP_Geometry;
     typedef std::shared_ptr<Physics_t>     SP_Physics;
     typedef std::shared_ptr<Particle_t>    SP_Particle;
-    typedef std::shared_ptr<RNG_Control_t> SP_RNG_Control;
     //@}
 
   protected:
@@ -59,11 +55,8 @@ class Source
     SP_Geometry b_geometry;
     SP_Physics  b_physics;
 
-    // Random number controller.
-    SP_RNG_Control b_rng_control;
-
     // Sample isotropic angle.
-    void sample_angle(Space_Vector &omega, RNG_t rng)
+    void sample_angle(Space_Vector &omega, RNG& rng)
     {
         using def::X; using def::Y; using def::Z;
 
@@ -81,8 +74,7 @@ class Source
   public:
     // Constructor.
     Source(SP_Geometry    geometry,
-           SP_Physics     physics,
-           SP_RNG_Control rng_control);
+           SP_Physics     physics );
 
     //! Virtual destructor.
     virtual ~Source() = 0;
@@ -108,9 +100,6 @@ class Source
 
     //! Get the physics.
     const Physics_t& physics() const { return *b_physics; }
-
-    //! Get the RNG controller.
-    const RNG_Control_t& rng_control() const { return *b_rng_control; }
 };
 
 } // end namespace profugus

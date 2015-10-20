@@ -111,7 +111,7 @@ class Particle
     //! Access particle data.
     bool alive() const { return d_alive; }
     double wt() const { return d_wt; }
-    const RNG& rng() const { return d_rng; }
+    RNG& rng() { return d_rng; }
     Event_Type event() const { return d_event; }
     int matid() const { return d_matid; }
     int group() const { return d_group; }

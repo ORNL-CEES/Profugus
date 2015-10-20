@@ -99,7 +99,6 @@ void Domain_Transporter::transport(Particle_t &particle,
     REQUIRE(d_var_reduction);
     REQUIRE(d_tallier);
     REQUIRE(particle.alive());
-    REQUIRE(particle.rng().assigned());
 
     // particle state
     Geo_State_t &geo_state = particle.geo_state();

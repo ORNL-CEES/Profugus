@@ -22,17 +22,14 @@ namespace profugus
  * \brief Constructor.
  */
 Source::Source(SP_Geometry    geometry,
-               SP_Physics     physics,
-               SP_RNG_Control rng_control)
+               SP_Physics     physics)
     : b_geometry(geometry)
     , b_physics(physics)
-    , b_rng_control(rng_control)
     , b_node(profugus::node())
     , b_nodes(profugus::nodes())
 {
     REQUIRE(b_geometry);
     REQUIRE(b_physics);
-    REQUIRE(b_rng_control);
 }
 
 //---------------------------------------------------------------------------//

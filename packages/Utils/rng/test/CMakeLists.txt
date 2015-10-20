@@ -15,7 +15,6 @@ INCLUDE(UtilsTest)
 ##---------------------------------------------------------------------------##
 
 ADD_UTILS_TEST(tstRNG.cc         NP 1)
-ADD_UTILS_TEST(tstRNG_Control.cc NP 1)
 
 ##---------------------------------------------------------------------------##
 ##                      end of rng/test/CMakeLists.txt

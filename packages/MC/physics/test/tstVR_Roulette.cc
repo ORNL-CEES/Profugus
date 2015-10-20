@@ -14,7 +14,7 @@
 
 #include <vector>
 #include <memory>
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../Definitions.hh"
 
 //---------------------------------------------------------------------------//
@@ -43,10 +43,8 @@ class VR_RouletteTest : public testing::Test
         build_physics();
 
         seed = 23423;
-        profugus::RNG_Control control(seed);
-
-        auto ref = control.rng(12);
-        rng      = control.rng(12);
+	profugus::RNG ref(seed);
+        rng = profugus::RNG(seed);
 
         // reference random numbers
         refran.resize(10);
@@ -160,13 +158,6 @@ TEST_F(VR_RouletteTest, default_settings)
 
     p.live();
 
-    // below cutoff (particle survives)
-    p.set_wt(0.058);
-    vr.post_collision(p, b);
-    EXPECT_TRUE(p.alive());
-    EXPECT_EQ(0.5, p.wt());
-    EXPECT_EQ(profugus::events::ROULETTE_SURVIVE, p.event());
-
     // below cutoff (particle rouletted)
     p.set_wt(0.20);
     vr.post_collision(p, b);
@@ -175,6 +166,13 @@ TEST_F(VR_RouletteTest, default_settings)
     EXPECT_EQ(profugus::events::ROULETTE_KILLED, p.event());
 
     p.live();
+
+    // below cutoff (particle survives)
+    p.set_wt(0.24);
+    vr.post_collision(p, b);
+    EXPECT_TRUE(p.alive());
+    EXPECT_EQ(0.5, p.wt());
+    EXPECT_EQ(profugus::events::ROULETTE_SURVIVE, p.event());
 
     // below cutoff (particle rouletted)
     p.set_wt(0.212501);

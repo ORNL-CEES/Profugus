@@ -19,7 +19,7 @@
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../Definitions.hh"
 #include "../Geometry.hh"
 
@@ -151,8 +151,7 @@ TEST(Core, Heuristic)
     Geometry &geometry = rtk_core;
 
     // make a random number generator
-    profugus::RNG_Control control(seed);
-    auto rng = control.rng(0);
+    profugus::RNG rng(0);
 
     // plot collision sites
     ofstream csites("csites.dat");
@@ -162,7 +161,7 @@ TEST(Core, Heuristic)
     Vector r, omega;
     State  state;
     double d;
-    int    Np = 10000;
+    int    Np = 100000;
 
     int face_bin[6] = {0};
 
@@ -334,8 +333,7 @@ TEST(Core, Reflecting)
     Geometry &geometry = rtk_core;
 
     // make a random number generator
-    profugus::RNG_Control control(seed);
-    auto rng = control.rng(0);
+    profugus::RNG rng(0);
 
     // geometry variables
     double costheta, sintheta, phi;
@@ -432,12 +430,12 @@ TEST(Core, Reflecting)
     EXPECT_EQ(0, refl_bin[5]);
 
     // heuristicly stored data
-    EXPECT_EQ(2992, refl_bin[0]);
-    EXPECT_EQ(4563, face_bin[1]);
-    EXPECT_EQ(2989, refl_bin[2]);
-    EXPECT_EQ(4281, face_bin[3]);
-    EXPECT_EQ(1096, refl_bin[4]);
-    EXPECT_EQ(1156, face_bin[5]);
+    EXPECT_EQ(3032, refl_bin[0]);
+    EXPECT_EQ(4465, face_bin[1]);
+    EXPECT_EQ(3006, refl_bin[2]);
+    EXPECT_EQ(4397, face_bin[3]);
+    EXPECT_EQ(1051, refl_bin[4]);
+    EXPECT_EQ(1138, face_bin[5]);
 
     cout.precision(5);
     cout << endl;

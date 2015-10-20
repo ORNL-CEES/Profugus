@@ -20,7 +20,7 @@
 #include "utils/Definitions.hh"
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../Definitions.hh"
 #include "../Geometry.hh"
 
@@ -284,8 +284,7 @@ TEST(Lattice, Heuristic)
     Geometry &geometry = lattice;
 
     // make a random number generator
-    profugus::RNG_Control control(seed);
-    auto rng = control.rng(0);
+    profugus::RNG rng(0);
 
     // plot collision sites
     ofstream csites("csites.dat");
@@ -295,7 +294,7 @@ TEST(Lattice, Heuristic)
     Vector r, omega;
     State  state;
     double d;
-    int    Np = 10000;
+    int    Np = 100000;
 
     int face_bin[6] = {0};
 
@@ -426,8 +425,7 @@ TEST(Multisegment, Pin)
     Geometry &geometry = lattice;
 
     // make a random number generator
-    profugus::RNG_Control control(seed);
-    auto rng = control.rng(0);
+    profugus::RNG rng(0);
 
     // geometry variables
     double costheta, sintheta, phi;

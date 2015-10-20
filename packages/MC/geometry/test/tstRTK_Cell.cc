@@ -16,13 +16,12 @@
 #include <iomanip>
 
 #include "utils/Constants.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../RTK_Cell.hh"
 
 using namespace std;
 
 using profugus::RTK_Cell;
-using profugus::RNG_Control;
 
 typedef RTK_Cell::Space_Vector Vector;
 typedef RTK_Cell::Geo_State_t  Geo_State;
@@ -835,8 +834,7 @@ TEST(Multi, SegPin)
         EXPECT_EQ(Geo_State::MINUS_Y, state.exiting_face);
     }
 
-    RNG_Control control(seed);
-    auto rng = control.rng(0);
+    profugus::RNG rng(0);
 
     // sample some points in the pin
     int N           = 1000;

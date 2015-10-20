@@ -54,8 +54,8 @@ class DR_Source : public profugus::Source
     size_type d_running;
 
   public:
-    DR_Source(SP_Geometry geometry, SP_Physics physics, SP_RNG_Control rcon)
-        : Base(geometry, physics, rcon)
+    DR_Source(SP_Geometry geometry, SP_Physics physics)
+        : Base(geometry, physics)
     {
         /* * */
     }
@@ -69,7 +69,7 @@ class DR_Source : public profugus::Source
         SP_Particle p(std::make_shared<Particle_t>());
 
         // get random number state for the particle
-        auto rng = b_rng_control->rng(0);
+	profugus::RNG rng(0);
         p->set_rng(rng);
 
         // sample position
@@ -132,7 +132,7 @@ TEST_F(DRSourceTransporterTest, source)
 {
     // make the source
     std::shared_ptr<DR_Source> source(std::make_shared<DR_Source>(
-                                          geometry, physics, rcon));
+                                          geometry, physics));
     source->set_Np(11);
 
     Source_t& base = *source;
@@ -171,7 +171,7 @@ TEST_F(DRSourceTransporterTest, Heuristic)
 
     // make the source
     std::shared_ptr<DR_Source> source(std::make_shared<DR_Source>(
-                                          geometry, physics, rcon));
+                                          geometry, physics));
     source->set_Np(50);
 
     // assign the source

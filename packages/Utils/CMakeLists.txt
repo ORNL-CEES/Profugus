@@ -281,14 +281,6 @@ INSTALL(FILES ${UTILS_HEADERS} DESTINATION include/Utils/utils)
 
 FILE(GLOB RNG_HEADERS rng/*.hh)
 SET(RNG_SOURCES
-  rng/RNG.cc
-  rng/RNG_Control.cc
-  rng/sprng/checkid.c
-  rng/sprng/communicate.c
-  rng/sprng/lfg.c
-  rng/sprng/makeseed.c
-  rng/sprng/memory.c
-  rng/sprng/simple_mpi.c
 )
 
 LIST(APPEND HEADERS ${RNG_HEADERS})

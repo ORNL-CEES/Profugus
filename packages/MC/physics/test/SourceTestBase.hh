@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "harness/DBC.hh"
-#include "rng/RNG_Control.hh"
+#include "rng/RNG.hh"
 #include "../Group_Bounds.hh"
 #include "../Physics.hh"
 
@@ -36,7 +36,7 @@ class SourceTestBase : public testing::Test
   protected:
     typedef profugus::Physics                   Physics_t;
     typedef Physics_t::Geometry_t               Geometry_t;
-    typedef profugus::RNG_Control               RNG_Control_t;
+    typedef profugus::RNG                       RNG_t;
 
     typedef Physics_t::XS_t   XS_t;
     typedef Physics_t::RCP_XS RCP_XS;
@@ -46,7 +46,7 @@ class SourceTestBase : public testing::Test
 
     typedef std::shared_ptr<Geometry_t>    SP_Geometry;
     typedef std::shared_ptr<Physics_t>     SP_Physics;
-    typedef std::shared_ptr<RNG_Control_t> SP_RNG_Control;
+    typedef std::shared_ptr<RNG_t> SP_RNG;
 
     typedef std::shared_ptr<profugus::Group_Bounds> SP_Group_Bounds;
 
@@ -82,7 +82,7 @@ class SourceTestBase : public testing::Test
   protected:
     int             node;
     int             nodes;
-    SP_RNG_Control  b_rcon;
+    SP_RNG          b_rcon;
     RCP_Std_DB      b_db;
     SP_Geometry     b_geometry;
     SP_Physics      b_physics;

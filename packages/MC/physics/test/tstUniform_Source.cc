@@ -117,7 +117,7 @@ TEST_F(UniformSourceTest, build_and_run)
     b_db->set("Np", 48);
 
     // make a uniform source
-    Source source(b_db, b_geometry, b_physics, b_rcon);
+    Source source(b_db, b_geometry, b_physics);
 
     // make a sampling shape (uniform)
     SP_Shape box(std::make_shared<profugus::Box_Shape>(

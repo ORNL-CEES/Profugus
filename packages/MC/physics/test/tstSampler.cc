@@ -17,9 +17,6 @@
 #include "rng/RNG.hh"
 
 
-// Pull in C interface to explicitly initialize SPRNG (not recommended)
-#include "rng/sprng/sprng.h"
-
 using namespace std;
 
 using profugus::sampler::sample_discrete_CDF;
@@ -130,8 +127,7 @@ TEST(Watt, Samples)
     double sum = 0.0;     // sum of sampled energies
 
     // make a SPRNG object
-    int *id = init_sprng(0, 1, 141279835, 1);
-    RNG rng(id, 0);
+    RNG rng(0);
 
     // take samples, sum, tally
     for (int i = 0; i < N; i++)
@@ -172,8 +168,7 @@ TEST(SampleLinear, Samples)
     double mean;
 
     // make a RNG object
-    int *id = init_sprng(0, 1, 141279835, 1);
-    RNG rng(id, 0);
+    RNG rng(0);
 
     // Loop over samples
     for(int i = 0; i < N; ++i)
@@ -197,8 +192,7 @@ TEST(SampleArbLinear, Samples)
     double mean;
 
     // make a RNG object
-    int *id = init_sprng(0, 1, 141279835, 1);
-    RNG rng(id, 0);
+    RNG rng(0);
 
     // Loop over samples
     for(int i = 0; i < N; ++i)

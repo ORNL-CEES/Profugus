@@ -18,6 +18,7 @@
 #include "comm/global.hh"
 #include "Sampler.hh"
 #include "Uniform_Source.hh"
+#include "rng/RNG.hh"
 
 namespace profugus
 {
@@ -31,13 +32,12 @@ namespace profugus
  * \param db
  * \param geometry
  * \param physics
- * \param rng_control
+ * \param rng
  */
 Uniform_Source::Uniform_Source(RCP_Std_DB     db,
-                               SP_Geometry    geometry,
-                               SP_Physics     physics,
-                               SP_RNG_Control rng_control)
-    : Base(geometry, physics, rng_control)
+			       SP_Geometry    geometry,
+			       SP_Physics     physics)
+    : Base(geometry, physics)
     , d_erg_cdf(b_physics->num_groups(), 0.0)
     , d_np_requested(0)
     , d_np_total(0)
@@ -134,8 +134,8 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
     p = std::make_shared<Particle_t>();
 
     // create a unique rng for the particle
-    int stream_id = np_run*b_nodes + b_node;
-    p->set_rng( this->b_rng_control->rng(stream_id) );
+    int rng_seed = np_run*b_nodes + b_node;
+    p->set_rng( RNG(rng_seed) );
     auto rng = p->rng();
 
     // material id

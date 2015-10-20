@@ -130,7 +130,7 @@ TEST_F(Domain_TransporterTest, transport)
     Bank_t     bank;
 
     // make random number
-    auto rng = rcon->rng(15);
+    profugus::RNG rng(15);
     p.set_rng(rng);
 
     // geometry and physics state
@@ -196,8 +196,8 @@ TEST_F(Domain_TransporterTest, transport)
          << "\t" << esc << " escaping particles\n"
          << "\t" << rk  << " rouletted particles" << endl << endl;
 
-    EXPECT_EQ(67, rk);
-    EXPECT_EQ(33, esc);
+    EXPECT_EQ(60, rk);
+    EXPECT_EQ(40, esc);
 }
 
 //---------------------------------------------------------------------------//
@@ -214,7 +214,7 @@ TEST_F(Reflecting_Domain_TransporterTest, transport)
     Bank_t     bank;
 
     // make random number
-    auto rng = rcon->rng(15);
+    profugus::RNG rng(15);
     p.set_rng(rng);
 
     // geometry and physics state
