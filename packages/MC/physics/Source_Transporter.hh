@@ -112,11 +112,13 @@ class Source_Transporter
     // >>> IMPLEMENTATION
 
     // Nodes and node id.
-    int d_node, d_nodes;
+    const int d_node, d_nodes;
 
-    // Print out frequency for particle histories.
-    double d_print_fraction;
-    size_type d_print_count;
+  private:
+
+    // Transport a history in the source and any histories it may make from
+    // splitting.
+    void transport_history();
 };
 
 } // end namespace profugus

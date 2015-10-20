@@ -8,6 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <mutex>
 #include <cmath>
 #include <algorithm>
 
@@ -78,6 +79,10 @@ void Cell_Tally::set_cells(const std::vector<int> &cells)
  */
 void Cell_Tally::end_history(const Particle_t &p)
 {
+    // Lock the mutex so only one thread can write tally data at a time from a
+    // given particle.
+    std::lock_guard<hpx::lcos::local::spinlock> lock( d_mutex );
+
     // Get the particles private tally
     const State_t::History_Tally &hist =
         p.metadata().access<State_t>(d_state_idx).state();

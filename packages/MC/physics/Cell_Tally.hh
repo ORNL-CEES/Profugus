@@ -11,6 +11,8 @@
 #ifndef MC_mc_Cell_Tally_hh
 #define MC_mc_Cell_Tally_hh
 
+#include <hpx/include/lcos.hpp>
+
 #include <unordered_map>
 #include <vector>
 #include <memory>
@@ -94,6 +96,9 @@ class Cell_Tally : public Pathlength_Tally
 
     // Clear local values.
     void clear_local();
+
+    // Tally data mutex.
+    hpx::lcos::local::spinlock d_mutex;
 };
 
 //---------------------------------------------------------------------------//

@@ -12,7 +12,7 @@
 
 #include <cstdlib>
 #include <vector>
-
+#include <iostream>
 #include "sprng/sprng.h"
 
 namespace profugus
