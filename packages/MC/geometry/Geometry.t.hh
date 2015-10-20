@@ -48,7 +48,7 @@ Geometry<Array>::Geometry(SP_Array array)
 template<class Array>
 void Geometry<Array>::initialize(const Space_Vector &r,
                                  const Space_Vector &direction,
-                                 Geo_State_t        &state)
+                                 Geo_State_t        &state) const
 {
     REQUIRE(d_array);
 

@@ -102,7 +102,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
 
     //! Initialize a track.
     void initialize(const Space_Vector &r, const Space_Vector &direction,
-                    Geo_State_t &state);
+                    Geo_State_t &state) const;
 
     //! Get distance to next boundary.
     double distance_to_boundary(Geo_State_t &state) const

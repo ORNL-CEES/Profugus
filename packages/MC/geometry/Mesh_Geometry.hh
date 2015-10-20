@@ -76,7 +76,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Initialize track.
     void initialize(const Space_Vector& r,
                     const Space_Vector& direction,
-                    Geo_State_t       & state);
+                    Geo_State_t       & state) const;
 
     //! Get distance to next boundary.
     double distance_to_boundary(Geo_State_t& state) const;
