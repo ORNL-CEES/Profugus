@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='ASCII'?>
+<ParameterList name="Generic MC PWR Pin">
+  <ParameterList name="CORE">
+    <Parameter name="axial list" type="Array(string)" value="{Core}"/>
+    <Parameter name="axial height" type="Array(double)" value="{ 1.00000e+00}"/>
+    <Parameter name="Core" type="TwoDArray(int)" value="1x1:{0}"/>
+  </ParameterList>
+  <ParameterList name="ASSEMBLIES">
+    <Parameter name="assembly list" type="Array(string)" value="{Fuel}"/>
+    <Parameter name="Fuel" type="TwoDArray(int)" value="2x2:{0,0,0,0}"/>
+  </ParameterList>
+  <ParameterList name="PINS">
+    <Parameter name="pin list" type="Array(string)" value="{fuel}"/>
+    <ParameterList name="fuel">
+      <Parameter name="pitch" type="double" value="1.26"/>
+      <Parameter name="radii" type="Array(double)" value="{ 4.18000e-01, 4.75000e-01}"/>
+      <Parameter name="radial matids" type="Array(int)" value="{0,1}"/>
+      <Parameter name="matid" type="int" value="2"/>
+    </ParameterList>
+  </ParameterList>
+  <ParameterList name="SOURCE">
+    <Parameter name="box" type="Array(double)" value="{0.0,1.26,0.0,1.26,0.0,1.0}"/>
+    <Parameter name="spectrum" type="Array(double)" value="{1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00,1.00000e+00}"/>
+  </ParameterList>
+  <ParameterList name="MATERIAL">
+    <Parameter name="xs library" type="string" value="xs_56G.xml"/>
+    <Parameter name="mat list" type="Array(string)" value="{uo2,zirc,moderator}"/>
+  </ParameterList>
+  <ParameterList name="PROBLEM">
+    <Parameter name="Np" type="int" value="10"/>
+    <Parameter name="output_geometry" type="bool" value="true"/>
+    <Parameter name="do_transport" type="bool" value="true"/>
+    <ParameterList name="cell_tally_db">
+      <Parameter name="cells" type="Array(int)" value="{0}"/>
+    </ParameterList>
+    <Parameter name="boundary" type="string" value="reflect"/>
+    <ParameterList name="boundary_db">
+      <Parameter name="reflect" type="Array(int)" value="{1, 1, 1, 1, 0, 0}"/>
+    </ParameterList>
+  </ParameterList>
+</ParameterList>
