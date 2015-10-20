@@ -91,7 +91,8 @@ void Source_Transporter::solve()
 
     // run all the local histories while the source exists, there is no need
     // to communicate particles because the problem is replicated
-    while (!source.empty())
+    int np = source.num_to_transport();
+    for ( int i = 0; i < np; ++i )
     {
         // get a particle from the source
         SP_Particle p = source.get_particle();
@@ -142,6 +143,9 @@ void Source_Transporter::solve()
 
     // barrier at the end
     profugus::global_barrier();
+
+    // check that we transported all of the particles.
+    CHECK( source.empty() );
 
     // increment the particle counter
     DIAGNOSTICS_ONE(integers["particles_transported"] += counter);

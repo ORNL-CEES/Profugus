@@ -12,6 +12,7 @@
 #define mc_Uniform_Source_hh
 
 #include <vector>
+#include <atomic>
 
 #include "Shape.hh"
 #include "Source.hh"
@@ -77,7 +78,7 @@ class Uniform_Source : public Source
     SP_Particle get_particle();
 
     //! Boolean operator for source (true when source still has particles).
-    bool empty() const { return d_np_left == 0; }
+    bool empty() const { return d_np_run.load() == d_np_domain; }
 
     //! Number of particles to transport in the source on the current domain.
     size_type num_to_transport() const { return d_np_domain; }
@@ -91,10 +92,7 @@ class Uniform_Source : public Source
     size_type Np() const { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    size_type num_run() const { return d_np_run; }
-
-    //! Number left to transport on this domain.
-    size_type num_left() const { return d_np_left; }
+    size_type num_run() const { return d_np_run.load(); }
 
   private:
     // >>> IMPLEMENTATION
@@ -112,13 +110,10 @@ class Uniform_Source : public Source
     size_type d_np_domain;
 
     // Particle weight.
-    double d_wt;
-
-    // Number of source particles left in the current domain.
-    size_type d_np_left;
+    const double d_wt;
 
     // Number of particles run on the current domain.
-    size_type d_np_run;
+    std::atomic<size_type> d_np_run;
 };
 
 } // end namespace profugus

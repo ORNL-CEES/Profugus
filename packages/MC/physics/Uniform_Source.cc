@@ -43,7 +43,6 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     , d_np_total(0)
     , d_np_domain(0)
     , d_wt(1.0)
-    , d_np_left(0)
     , d_np_run(0)
 {
     REQUIRE(!db.is_null());
@@ -102,8 +101,7 @@ void Uniform_Source::build_source(SP_Shape geometric_shape)
     build_DR();
 
     // set counters
-    d_np_left = d_np_domain;
-    d_np_run  = 0;
+    d_np_run.store(0);
 
     profugus::global_barrier();
 }
@@ -119,22 +117,24 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
     REQUIRE(d_wt > 0.0);
     REQUIRE(d_geo_shape);
 
+    // Get how many particles we have run and add one for this one.
+    size_type np_run = d_np_run.fetch_add( 1 );
+
     // unassigned particle
     SP_Particle p;
 
-    // return a null particle if no source
-    if (!d_np_left)
+    // return a null particle if no source. this may be more than one if
+    // several threads have recently modified the run count atomic
+    if (np_run >= d_np_domain)
     {
         return p;
     }
-
-    SCOPED_TIMER_2("MC::Uniform_Source.get_particle");
 
     // make a particle
     p = std::make_shared<Particle_t>();
 
     // create a unique rng for the particle
-    int stream_id = d_np_run*b_nodes + b_node;
+    int stream_id = np_run*b_nodes + b_node;
     p->set_rng( this->b_rng_control->rng(stream_id) );
     auto rng = p->rng();
 
@@ -171,10 +171,6 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
 
     // make particle alive
     p->live();
-
-    // update counters
-    --d_np_left;
-    ++d_np_run;
 
     ENSURE(p->matid() == matid);
     return p;
