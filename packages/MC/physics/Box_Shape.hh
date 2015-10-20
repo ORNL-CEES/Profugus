@@ -77,7 +77,7 @@ class Box_Shape : public Shape
 
     // >>> DERIVED INTERFACE
     //! Sample a point in the shape.
-    Space_Vector sample(RNG_t &rng)
+    Space_Vector sample(RNG_t &rng) const
     {
         Space_Vector point(d_Dx * rng.ran() + d_lox,
                            d_Dy * rng.ran() + d_loy,

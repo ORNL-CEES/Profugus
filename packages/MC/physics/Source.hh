@@ -76,7 +76,7 @@ class Source
     }
 
     // Node ids.
-    int b_node, b_nodes;
+    const int b_node, b_nodes;
 
   public:
     // Constructor.
