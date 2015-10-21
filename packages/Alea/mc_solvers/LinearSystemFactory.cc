@@ -626,6 +626,9 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyBlockDiagScaling(
     Teuchos::RCP<Teuchos::ParameterList> pl )
 {
     int block_size = pl->get("block_size",1);
+    std::string pos_scale = pl->get<std::string>("position_scaling","left");
+
+    VALIDATE( (pos_scale == "left" || pos_scale=="right"), "invalid position specified to apply the preconditioner");
 
     REQUIRE( A->getNodeNumRows() % block_size == 0 );
     LO num_blocks = A->getNodeNumRows() / block_size;
@@ -693,13 +696,17 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory::applyBlockDiagScaling(
     // Form preconditioned matrix
     Teuchos::RCP<CRS_MATRIX> DA = Tpetra::createCrsMatrix<SCALAR>(
         A->getDomainMap());
-    Tpetra::MatrixMatrix::Multiply(*invD,false,*A,false,*DA,true);
+    if (pos_scale == "left")
+    {
+	    Tpetra::MatrixMatrix::Multiply(*invD,false,*A,false,*DA,true);
+            MV Prb = Tpetra::createCopy(*b);
+    	    invD->apply(Prb,*b);
+    }
+    else if(pos_scale == "right")
+	    Tpetra::MatrixMatrix::Multiply(*A,false,*invD,false,*DA,true);
+	
     CHECK( DA->isFillComplete() );
-
-    MV Prb = Tpetra::createCopy(*b);
-
-    invD->apply(Prb,*b);
-	    	 
+ 
     return DA;
 }
 
