@@ -18,6 +18,10 @@
 #include "comm/P_Stream.hh"
 #include "comm/global.hh"
 #include "utils/Definitions.hh"
+#include "geometry/Geometry.hh"
+#include "Shape.hh"
+#include "Uniform_Source.hh"
+#include "Box_Shape.hh"
 
 #include "TransporterTestBase.hh"
 
@@ -41,115 +45,34 @@ class DRSourceTransporterTest : public TransporterTestBase
 };
 
 //---------------------------------------------------------------------------//
-// Replicated source
-
-class DR_Source : public profugus::Source
-{
-    typedef profugus::Source Base;
-
-  private:
-    // number of particles per process
-    size_type d_Np;
-    size_type d_total;
-    size_type d_running;
-
-  public:
-    DR_Source(SP_Geometry geometry, SP_Physics physics)
-        : Base(geometry, physics)
-    {
-        /* * */
-    }
-
-    SP_Particle get_particle()
-    {
-        REQUIRE(d_Np);
-
-        using def::X; using def::Y; using def::Z;
-
-        SP_Particle p(std::make_shared<Particle_t>());
-
-        // get random number state for the particle
-	profugus::RNG rng(0);
-        p->set_rng(rng);
-
-        // sample position
-        Space_Vector r;
-        r[X] = 3.78  * p->rng().ran();
-        r[Y] = 3.78  * p->rng().ran();
-        r[Z] = 14.28 * p->rng().ran();
-
-        // sample direction
-        double costheta = 1.0 - 2.0 * rng.ran();
-        double phi      = profugus::constants::two_pi * rng.ran();
-        double sintheta = std::sqrt(1.0 - costheta * costheta);
-
-        Space_Vector omega;
-        omega[X] = sintheta * std::cos(phi);
-        omega[Y] = sintheta * std::sin(phi);
-        omega[Z] = costheta;
-
-        // set position and direction
-        p->set_wt(1.0);
-
-        // initialize the physics and geometry state
-        b_geometry->initialize(r, omega, p->geo_state());
-        p->set_matid(b_geometry->matid(p->geo_state()));
-        b_physics->initialize(1.1, *p);
-
-        // make particle alive
-        p->live();
-
-        // subtract from total
-        d_running--;
-
-        return p;
-    }
-
-    bool empty() const
-    {
-        return !d_running;
-    }
-
-    size_type num_to_transport() const { return d_Np; }
-    size_type num_to_transport_in_set() const { return d_Np; }
-    size_type total_num_to_transport() const { return d_total; }
-
-    void set_Np(size_type Np)
-    {
-        d_Np      = Np;
-        d_running = d_Np;
-        d_total   = d_Np * profugus::nodes();
-    }
-
-    size_type num_run() const { return d_Np - d_running; }
-};
-
-//---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 
 TEST_F(DRSourceTransporterTest, source)
 {
+    // make a sampling shape (uniform)
+    SP_Shape box(std::make_shared<profugus::Box_Shape>(
+                     0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
+
     // make the source
-    std::shared_ptr<DR_Source> source(std::make_shared<DR_Source>(
-                                          geometry, physics));
-    source->set_Np(11);
+    int np = 11;
+    db->set("Np", np);
+    std::shared_ptr<Source_t> source(std::make_shared<Source_t>(
+					 db,geometry, physics,box));
 
     Source_t& base = *source;
     EXPECT_EQ(11, source->num_to_transport());
     EXPECT_EQ(nodes * 11, source->total_num_to_transport());
-    EXPECT_EQ(0, source->num_run());
 
     int count = 0;
-    while (!base.empty())
+    for ( int n = 0; n < np; ++n )
     {
-        SP_Particle p = base.get_particle();
+        SP_Particle p = base.get_particle(n);
         EXPECT_TRUE(static_cast<bool>(p));
         count++;
     }
 
     EXPECT_EQ(11, count);
-    EXPECT_EQ(11, source->num_run());
     EXPECT_EQ(11, source->num_to_transport());
     EXPECT_EQ(nodes * 11, source->total_num_to_transport());
 }
@@ -159,6 +82,7 @@ TEST_F(DRSourceTransporterTest, source)
 TEST_F(DRSourceTransporterTest, Heuristic)
 {
     db->set("mc_diag_frac", 0.2);
+    db->set("Np", 11);
 
     // make the fixed source Transporter_t
     Transporter_t solver(db, geometry, physics);
@@ -169,10 +93,12 @@ TEST_F(DRSourceTransporterTest, Heuristic)
     // set the tally
     solver.set(tallier);
 
+    // make a sampling shape (uniform)
+    SP_Shape box(std::make_shared<profugus::Box_Shape>(
+                     0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
     // make the source
-    std::shared_ptr<DR_Source> source(std::make_shared<DR_Source>(
-                                          geometry, physics));
-    source->set_Np(50);
+    std::shared_ptr<Source_t> source(std::make_shared<Source_t>(
+					 db,geometry, physics,box));
 
     // assign the source
     solver.assign_source(source);

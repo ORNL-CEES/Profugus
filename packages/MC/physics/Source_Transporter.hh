@@ -15,7 +15,7 @@
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
-#include "Source.hh"
+#include "Uniform_Source.hh"
 #include "Domain_Transporter.hh"
 
 namespace profugus
@@ -47,7 +47,7 @@ class Source_Transporter
     //@{
     //! Typedefs.
     typedef Domain_Transporter                   Transporter_t;
-    typedef Source                               Source_t;
+    typedef Uniform_Source                       Source_t;
     typedef Transporter_t::Physics_t             Physics_t;
     typedef Transporter_t::Geometry_t            Geometry_t;
     typedef Transporter_t::SP_Physics            SP_Physics;
@@ -118,7 +118,7 @@ class Source_Transporter
 
     // Transport a history in the source and any histories it may make from
     // splitting.
-    void transport_history();
+    void transport_history( const int particle_lid );
 };
 
 } // end namespace profugus

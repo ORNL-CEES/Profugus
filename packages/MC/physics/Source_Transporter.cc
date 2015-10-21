@@ -75,16 +75,14 @@ void Source_Transporter::solve()
     // to communicate particles because the problem is replicated
     int np = d_source->num_to_transport();
     auto range = boost::irange( 0, np );
-    auto transport_func = [this](const int){ this->transport_history(); };
-    auto transport_task =
-	hpx::parallel::for_each( hpx::parallel::parallel_task_execution_policy(),
-				 std::begin(range),
-				 std::end(range),
-				 transport_func );
+    auto transport_func = 
+	[this](const int lid){ this->transport_history(lid); };
+    auto transport_task = hpx::parallel::for_each( 
+	hpx::parallel::parallel_task_execution_policy(),
+	std::begin(range),
+	std::end(range),
+	transport_func );
     transport_task.wait();
-
-    // check that we transported all of the particles.
-    CHECK( d_source->empty() );
 }
 
 //---------------------------------------------------------------------------//
@@ -122,14 +120,14 @@ void Source_Transporter::set(SP_Tallier tallier)
  * \brief Transport a history in the source and any histories it may make from
  * splitting.
  */
-void Source_Transporter::transport_history()
+void Source_Transporter::transport_history( const int particle_lid )
 {
     // make a particle bank
     typename Transporter_t::Bank_t bank;
     CHECK(bank.empty());
 
     // get a particle from the source
-    SP_Particle p = d_source->get_particle();
+    SP_Particle p = d_source->get_particle( particle_lid );
     CHECK(p);
     CHECK(p->alive());
 

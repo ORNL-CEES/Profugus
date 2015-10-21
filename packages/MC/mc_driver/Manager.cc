@@ -109,8 +109,7 @@ void Manager::setup(const std::string &xml_file)
     // make the uniform source
     std::shared_ptr<profugus::Uniform_Source> source(
 	std::make_shared<profugus::Uniform_Source>(
-	    d_db, d_geometry, d_physics));
-    source->build_source(shape);
+	    d_db, d_geometry, d_physics, shape));
 
     // make the solver
     d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>();

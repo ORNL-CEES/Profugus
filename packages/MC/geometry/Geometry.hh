@@ -237,7 +237,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
      * The direction vector of the particle must be a unit-vector, ie:
      *  \f$|\Omega| = 1\f$.
      */
-    void move(double d, Geo_State_t &state) const
+    static void move(double d, Geo_State_t &state)
     {
         REQUIRE(d >= 0.0);
         REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));

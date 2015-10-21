@@ -8,6 +8,15 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <hpx/include/async.hpp>
+#include <hpx/include/lcos.hpp>
+#include <hpx/include/util.hpp>
+#include <hpx/lcos/local/dataflow.hpp>
+#include <hpx/include/parallel_algorithm.hpp>
+#include <hpx/parallel/execution_policy.hpp>
+
+#include <boost/range/irange.hpp>
+
 #include <memory>
 
 #include "../Uniform_Source.hh"
@@ -114,30 +123,26 @@ class UniformSourceTest : public SourceTestBase
 
 TEST_F(UniformSourceTest, build_and_run)
 {
-    b_db->set("Np", 48);
-
-    // make a uniform source
-    Source source(b_db, b_geometry, b_physics);
+    int np = 48;
+    b_db->set("Np", np);
 
     // make a sampling shape (uniform)
     SP_Shape box(std::make_shared<profugus::Box_Shape>(
                      0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
 
-    // build the source
-    source.build_source(box);
+    // make a uniform source
+    Source source(b_db, b_geometry, b_physics, box);
 
-    EXPECT_TRUE(!source.empty());
     const int nodes = profugus::nodes();
     EXPECT_EQ(48 / nodes, source.num_to_transport());
     EXPECT_EQ(48, source.total_num_to_transport());
     EXPECT_EQ(48, source.Np());
-    EXPECT_EQ(0, source.num_run());
 
     int ctr = 0;
-    while (!source.empty())
+    for ( int i = 0; i < np; ++i )
     {
         // get a particle
-        SP_Particle p = source.get_particle();
+        SP_Particle p = source.get_particle(i);
 
         ctr++;
 
@@ -146,8 +151,44 @@ TEST_F(UniformSourceTest, build_and_run)
         EXPECT_EQ(3, p->matid());
     }
 
-    EXPECT_EQ(source.num_run(), ctr);
     EXPECT_EQ(source.num_to_transport(), ctr);
+}
+
+//---------------------------------------------------------------------------//
+TEST_F(UniformSourceTest, threading)
+{
+    int np = 10000;
+    b_db->set("Np", np);
+
+    // make a sampling shape (uniform)
+    SP_Shape box(std::make_shared<profugus::Box_Shape>(
+                     0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
+
+    // make a uniform source
+    profugus::Uniform_Source_Client source(
+	hpx::components::new_<profugus::Uniform_Source>(
+	    hpx::find_here(), b_db, b_geometry, b_physics, box ) );
+    
+    // create a basic transport loop. create a particle and kill it
+    auto kill_particle = []( SP_Particle p ){ p->kill(); return p->alive(); };
+    auto transport_func = [&](int i)
+			  {
+			      auto particle = source.get_particle_async(i);
+			      hpx::shared_future<bool> particle_is_alive =
+			      hpx::lcos::local::dataflow(
+				  hpx::util::unwrapped(kill_particle), particle );
+			      HPX_ASSERT( !particle_is_alive.get() );
+			  };
+
+    // run the transport loop
+    auto range = boost::irange( 0, np );
+    auto transport_task =
+	hpx::parallel::for_each( 
+	    hpx::parallel::parallel_task_execution_policy(),
+	    std::begin(range),
+	    std::end(range),
+	    transport_func );
+    transport_task.wait();
 }
 
 //---------------------------------------------------------------------------//

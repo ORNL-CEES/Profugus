@@ -55,7 +55,6 @@ SET(PHYSICS_SOURCES
   Physics.cc
   Sampler.cc
   Solver.cc
-  Source.cc
   Source_Transporter.cc
   Tallier.cc
   Tally.cc

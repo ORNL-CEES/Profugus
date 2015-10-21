@@ -114,13 +114,12 @@ class FixedSourceSolverTest : public TransporterTestBase
 
     void init_source()
     {
-        auto usource = std::make_shared<profugus::Uniform_Source>(
-            db, geometry, physics );
-
         auto box = std::make_shared<profugus::Box_Shape>(
             0.0, 5.0, 0.0, 5.0, 0.0, 5.0);
 
-        usource->build_source(box);
+        auto usource = std::make_shared<profugus::Uniform_Source>(
+            db, geometry, physics, box );
+
         source = usource;
     }
 
