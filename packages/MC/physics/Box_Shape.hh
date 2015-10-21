@@ -77,11 +77,12 @@ class Box_Shape : public Shape
 
     // >>> DERIVED INTERFACE
     //! Sample a point in the shape.
-    Space_Vector sample(RNG_t &rng) const
+    Space_Vector sample(
+	const double r1, const double r2, const double r3 ) const
     {
-        Space_Vector point(d_Dx * rng.ran() + d_lox,
-                           d_Dy * rng.ran() + d_loy,
-                           d_Dz * rng.ran() + d_loz);
+        Space_Vector point(d_Dx * r1 + d_lox,
+                           d_Dy * r2 + d_loy,
+                           d_Dz * r3 + d_loz);
         ENSURE(is_point_inside(point));
         return point;
     }

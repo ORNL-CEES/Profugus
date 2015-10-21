@@ -151,7 +151,7 @@ RTK_Array<T>::transform(const Space_Vector &r,
  * \brief Get an object.
  */
 template<class T>
-typename RTK_Array<T>::SP_Object
+const typename RTK_Array<T>::SP_Object&
 RTK_Array<T>::object(const Geo_State_t &state) const
 {
     using def::X; using def::Y; using def::Z;

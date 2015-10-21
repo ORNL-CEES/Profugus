@@ -68,7 +68,8 @@ class Shape
     virtual void pack(Buffer& buffer) const = 0;
 
     //! Sample a point in the shape.
-    virtual Space_Vector sample(RNG_t &rng) const = 0;
+    virtual Space_Vector sample(
+	const double r1, const double r2, const double r3 ) const = 0;
 
     //! Volume of shape.
     virtual double volume() const = 0;

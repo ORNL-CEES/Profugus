@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <hpx/hpx.hpp>
+
 #include <numeric>
 
 #include "Teuchos_Array.hpp"
@@ -68,7 +70,9 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
             << d_np_requested << ") must be positive");
 
     // initialize the total
-    d_np_total = d_np_requested;
+    d_np_total = std::ceil( d_np_requested / hpx::get_os_thread_count() ) *
+		 hpx::get_os_thread_count();
+    CHECK( d_np_total % hpx::get_os_thread_count() == 0 );
 
     // get the spectral shape
     const auto &shape = db->get(
@@ -133,7 +137,7 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle( const int lid )
 
     // sample the geometry shape-->we should not get here if there are no
     // particles on this domain
-    Space_Vector r = d_geo_shape->sample(rng);
+    Space_Vector r = d_geo_shape->sample(rng.ran(),rng.ran(),rng.ran());
 
     // intialize the geometry state
     d_geometry->initialize(r, omega, p->geo_state());

@@ -157,7 +157,7 @@ TEST_F(UniformSourceTest, build_and_run)
 //---------------------------------------------------------------------------//
 TEST_F(UniformSourceTest, threading)
 {
-    int np = 10000;
+    int np = 1000000;
     b_db->set("Np", np);
 
     // make a sampling shape (uniform)
@@ -168,27 +168,32 @@ TEST_F(UniformSourceTest, threading)
     profugus::Uniform_Source_Client source(
 	hpx::components::new_<profugus::Uniform_Source>(
 	    hpx::find_here(), b_db, b_geometry, b_physics, box ) );
-    
-    // create a basic transport loop. create a particle and kill it
-    auto kill_particle = []( SP_Particle p ){ p->kill(); return p->alive(); };
-    auto transport_func = [&](int i)
-			  {
-			      auto particle = source.get_particle_async(i);
-			      hpx::shared_future<bool> particle_is_alive =
-			      hpx::lcos::local::dataflow(
-				  hpx::util::unwrapped(kill_particle), particle );
-			      HPX_ASSERT( !particle_is_alive.get() );
-			  };
+
+    int conc = hpx::get_os_thread_count();
+    int num_to_run = std::ceil( np / conc );
+
+    auto transport_func = [&]( const int i )
+    {
+	auto particle = source.get_particle_async(i);
+	particle.wait();
+	particle.get()->kill();
+    };
+
+    auto worker_func = 
+	[&](const int i)
+	{
+	    for ( int n = 0; n < num_to_run; ++n ) 
+		transport_func( i*num_to_run + n );
+	};
 
     // run the transport loop
-    auto range = boost::irange( 0, np );
-    auto transport_task =
-	hpx::parallel::for_each( 
-	    hpx::parallel::parallel_task_execution_policy(),
-	    std::begin(range),
-	    std::end(range),
-	    transport_func );
-    transport_task.wait();
+    std::vector<hpx::future<void> > futures;
+    futures.reserve( conc );
+    for ( int t = 0; t < conc; ++t )
+    {
+	futures.push_back( hpx::async(worker_func,t) );
+    }
+    hpx::lcos::wait_all( futures );
 }
 
 //---------------------------------------------------------------------------//
