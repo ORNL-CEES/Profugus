@@ -24,13 +24,6 @@ namespace profugus
 {
 
 //---------------------------------------------------------------------------//
-// STATIC VARIABLES
-//---------------------------------------------------------------------------//
-
-Source::size_type Uniform_Source::d_np_left = 0;
-Source::size_type Uniform_Source::d_np_run  = 0;
-
-//---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 /*!
@@ -79,13 +72,6 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
         d_erg_cdf[n] = d_erg_cdf[n-1] + shape[n] * norm;
     }
     CHECK(profugus::soft_equiv(1.0, d_erg_cdf.back(), 1.0e-6));
-
-    // initialize timers in this class, which may be necessary because domains
-    // with no source will not make this timer otherwise
-#if UTILS_TIMING > 0
-    profugus::Timing_Diagnostics::update_timer(
-        "profugus::Uniform_Source.get_particle", 0.0);
-#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -111,27 +97,6 @@ void Uniform_Source::build_source(SP_Shape geometric_shape)
     // build the source based on domain replication
     build_DR();
 
-    // set counters
-    d_np_left = d_np_domain;
-    d_np_run  = 0;
-
-#pragma omp parallel copyin(d_np_left, d_np_run)
-    {
-        // store number of threads in the team and thread id
-        int nt = num_current_threads();
-        int id = thread_id();
-
-        // extra particles
-        int extra = d_np_left % nt;
-
-        // base number of particles per thread
-        d_np_left = d_np_left / nt;
-
-        // add extra to threads
-        if (id < extra)
-            ++d_np_left;
-    }
-
     profugus::global_barrier();
 }
 
@@ -149,14 +114,6 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
 
     // unassigned particle
     SP_Particle p;
-
-    // return a null particle if no source
-    if (!d_np_left)
-    {
-        return p;
-    }
-
-    SCOPED_TIMER_2("MC::Uniform_Source.get_particle");
 
     // make a particle
     p = std::make_shared<Particle_t>();
@@ -198,10 +155,6 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
 
     // make particle alive
     p->live();
-
-    // update counters
-    --d_np_left;
-    ++d_np_run;
 
     ENSURE(p->matid() == matid);
     return p;

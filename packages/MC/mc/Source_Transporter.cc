@@ -86,6 +86,9 @@ void Source_Transporter::solve()
     // get a base class reference to the source
     Source_t &source = *d_source;
 
+    // Get the number of particles to run on this domain
+    auto N = source.num_to_transport();
+
     // >>> ENTERING THREAD-PARALLEL TRANSPORT BLOCK
 #pragma omp parallel reduction(+:counter)
     {
@@ -93,9 +96,12 @@ void Source_Transporter::solve()
         typename Transporter_t::Bank_t bank;
         CHECK(bank.empty());
 
+        double begin = profugus::thread_time();
+
         // run all the local histories while the source exists, there is no
         // need to communicate particles because the problem is replicated
-        while (!source.empty())
+#pragma omp for
+        for (int n = 0; n < N; ++n)
         {
             // get a particle from the source
             SP_Particle p = source.get_particle();
@@ -145,6 +151,14 @@ void Source_Transporter::solve()
                          << d_node << endl;
                 }
             }
+        }
+
+        double end = profugus::thread_time();
+
+#pragma omp critical
+        {
+            cout << "Thread " << profugus::thread_id() << " = "
+                 << end - begin << endl;
         }
 
         ENSURE(bank.empty());

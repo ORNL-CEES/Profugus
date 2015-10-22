@@ -129,7 +129,6 @@ FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
   mc_driver/Manager.cc
   mc_driver/Problem_Builder.cc
-  mc_driver/mc.cc
   )
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
@@ -150,6 +149,13 @@ TRIBITS_ADD_EXECUTABLE(
   NOEXEPREFIX
   SOURCES mc_driver/mc.cc
   INSTALLABLE
+  )
+
+TRIBITS_ADD_EXECUTABLE(
+  xomp
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES mc_driver/omp.cc
   )
 
 ##---------------------------------------------------------------------------##

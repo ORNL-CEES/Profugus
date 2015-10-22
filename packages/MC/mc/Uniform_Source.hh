@@ -77,7 +77,7 @@ class Uniform_Source : public Source
     SP_Particle get_particle();
 
     //! Boolean operator for source (true when source still has particles).
-    bool empty() const { return d_np_left == 0; }
+    bool empty() const { return false; }
 
     //! Number of particles to transport in the source on the current domain.
     size_type num_to_transport() const { return d_np_domain; }
@@ -91,10 +91,10 @@ class Uniform_Source : public Source
     size_type Np() const { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    size_type num_run() const { return d_np_run; }
+    size_type num_run() const { return 0; }
 
     //! Number left to transport on this domain.
-    size_type num_left() const { return d_np_left; }
+    size_type num_left() const { return 0; }
 
   private:
     // >>> IMPLEMENTATION
@@ -113,19 +113,6 @@ class Uniform_Source : public Source
 
     // Particle weight.
     double d_wt;
-
-    // Number of source particles left in the current domain (thread).
-    static size_type d_np_left;
-
-    // Number of particles run on the current domain (thread).
-    static size_type d_np_run;
-
-    // Thread variables.
-#pragma omp threadprivate(d_np_run)
-#pragma omp threadprivate(d_np_left)
-
-    // Enforce singleton due to threading.
-    static int d_number;
 };
 
 } // end namespace profugus
