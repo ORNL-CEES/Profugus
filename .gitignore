@@ -40,3 +40,4 @@ autom4te.cache
 /doc/infobook/develop.vr
 cmake/dependencies/
 .DS_Store
+.fuse*
