@@ -217,7 +217,7 @@ class RTK_Array
     typedef Vec_Int_Pair::const_iterator       Vec_Int_Pair_Itr;
 
     // Get object.
-    inline SP_Object object(const Geo_State_t &state) const;
+    inline const SP_Object& object(const Geo_State_t &state) const;
 
     // Diagnostic output.
     void output(std::ostream &out, int level, int obj_id) const;
