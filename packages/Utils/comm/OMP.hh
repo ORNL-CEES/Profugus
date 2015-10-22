@@ -107,6 +107,16 @@ inline bool in_thread_parallel_region()
     return false;
 }
 
+//---------------------------------------------------------------------------//
+
+inline double thread_time()
+{
+#ifdef _OPENMP
+    return omp_get_wtime();
+#endif
+    return 0.0;
+}
+
 } // end namespace profugus
 
 #endif // Utils_comm_OMP_hh
