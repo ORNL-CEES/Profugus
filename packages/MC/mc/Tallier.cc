@@ -195,7 +195,7 @@ void Tallier::path_length(double            step,
     SCOPED_TIMER_3("MC::Tallier.path_length");
 
     // accumulate results for all pathlength tallies
-    for (auto t : d_pl)
+    for (const auto &t : d_pl)
     {
         t->accumulate(step, p);
     }
@@ -217,7 +217,7 @@ void Tallier::source(const Particle_t &p)
     SCOPED_TIMER_3("MC::Tallier.source");
 
     // accumulate results for all pathlength tallies
-    for (auto t : d_src)
+    for (const auto &t : d_src)
     {
         t->birth(p);
     }
@@ -234,7 +234,7 @@ void Tallier::begin_active_cycles()
     SCOPED_TIMER_2("MC::Tallier.begin_active_cycles");
 
     // begin active cycles for each tally
-    for (auto t : d_tallies)
+    for (const auto &t : d_tallies)
     {
         t->begin_active_cycles();
     }
@@ -251,7 +251,7 @@ void Tallier::begin_cycle()
     SCOPED_TIMER_2("MC::Tallier.begin_cycle");
 
     // begin active for each tally
-    for (auto t : d_tallies)
+    for (const auto &t : d_tallies)
     {
         t->begin_cycle();
     }
@@ -268,7 +268,7 @@ void Tallier::end_cycle(double num_particles)
     SCOPED_TIMER_2("MC::Tallier.end_cycle");
 
     // begin active for each tally
-    for (auto t : d_tallies)
+    for (const auto &t : d_tallies)
     {
         t->end_cycle(num_particles);
     }
@@ -285,7 +285,7 @@ void Tallier::end_history(const Particle_t &p)
     SCOPED_TIMER_2("MC::Tallier.end_history");
 
     // begin active for each tally
-    for (auto t : d_tallies)
+    for (const auto &t : d_tallies)
     {
         t->end_history(p);
     }
@@ -307,7 +307,7 @@ void Tallier::finalize(double num_particles)
     SCOPED_TIMER_2("MC::Tallier.finalize");
 
     // begin active for each tally
-    for (auto t : d_tallies)
+    for (const auto &t : d_tallies)
     {
         t->finalize(num_particles);
     }
@@ -337,7 +337,7 @@ void Tallier::reset()
     SCOPED_TIMER_2("MC::Tallier.reset");
 
     // begin active for each tally
-    for (auto t : d_tallies)
+    for (const auto &t : d_tallies)
     {
         t->reset();
     }
@@ -385,7 +385,7 @@ void Tallier::output(const std::string &out_file)
     SCOPED_TIMER_2("MC::Tallier.output");
 
     // begin active for each tally
-    for (auto t : d_tallies)
+    for (const auto &t : d_tallies)
     {
         t->output(out_file);
     }
