@@ -54,7 +54,7 @@ class Cell_Tally_State
     //@}
 
     //! Return the data.
-    std::shared_ptr<History_Tally> data() const { return d_hist; }
+    const std::shared_ptr<History_Tally>& data() const { return d_hist; }
 };
 
 //---------------------------------------------------------------------------//

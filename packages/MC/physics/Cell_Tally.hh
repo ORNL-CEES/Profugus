@@ -17,6 +17,7 @@
 #include <vector>
 #include <memory>
 #include <utility>
+#include <mutex>
 
 #include "Cell_Tally_State.hh"
 #include "Tally.hh"
@@ -38,7 +39,39 @@ namespace profugus
 
 class Cell_Tally : public Pathlength_Tally
 {
+  private:
+
+    // Base typedef.
     typedef Pathlength_Tally Base;
+
+    // Atomic tally moment.
+    class Atomic_Moment
+    {
+      private:
+	double d_first_moment;
+	double d_second_moment;
+	hpx::lcos::local::spinlock d_mutex;
+      public:
+	Atomic_Moment() { /* ... */ }
+	Atomic_Moment( const double first_moment, const double second_moment )
+	    : d_first_moment( first_moment )
+	    , d_second_moment( second_moment )
+	{ /* ... */ }
+	Atomic_Moment( const Atomic_Moment& rhs )
+	    : d_first_moment( rhs.d_first_moment )
+	    , d_second_moment( rhs.d_second_moment )
+	{ /* ... */ }
+	inline double first() const { return d_first_moment; }
+	inline double& first() { return d_first_moment; }
+	inline double second() const { return d_second_moment; }
+	inline double& second() { return d_second_moment; }
+	inline void atomic_sum_into( const double first, const double second )
+	{
+	    std::lock_guard<hpx::lcos::local::spinlock> lock( d_mutex );
+	    d_first_moment += first;
+	    d_second_moment += second;
+	}
+    };
 
   public:
     //@{
@@ -46,7 +79,7 @@ class Cell_Tally : public Pathlength_Tally
     typedef Cell_Tally_State                 State_t;
     typedef Physics_t::Geometry_t            Geometry_t;
     typedef std::shared_ptr<Geometry_t>      SP_Geometry;
-    typedef std::pair<double, double>        Moments;
+    typedef Atomic_Moment                    Moments;
     typedef std::unordered_map<int, Moments> Result;
     //@}
 
@@ -96,9 +129,6 @@ class Cell_Tally : public Pathlength_Tally
 
     // Clear local values.
     void clear_local();
-
-    // Tally data mutex.
-    hpx::lcos::local::spinlock d_mutex;
 };
 
 //---------------------------------------------------------------------------//

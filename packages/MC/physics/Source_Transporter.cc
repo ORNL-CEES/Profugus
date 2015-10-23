@@ -140,23 +140,23 @@ void Source_Transporter::transport_history( const int particle_lid )
     while (!bank.empty())
     {
 	// get a particle from the bank
-	SP_Particle bank_particle = bank.pop();
-	CHECK(bank_particle);
-	CHECK(bank_particle->alive());
+	p = bank.pop();
+	CHECK(p);
+	CHECK(p->alive());
 
 	// make particle alive
-	bank_particle->live();
+	p->live();
 
 	// transport it
-	d_transporter.transport(*bank_particle, bank);
-	CHECK(!bank_particle->alive());
+	d_transporter.transport(*p, bank);
+	CHECK(!p->alive());
     }
-
-    // indicate completion of particle history
-    d_tallier->end_history(*p);
 
     // Make sure the bank is empty.
     ENSURE(bank.empty());
+
+    // indicate completion of particle history
+    d_tallier->end_history(*p);
 }
 
 //---------------------------------------------------------------------------//

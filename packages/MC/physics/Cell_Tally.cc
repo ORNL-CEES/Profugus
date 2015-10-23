@@ -8,7 +8,6 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <mutex>
 #include <cmath>
 #include <algorithm>
 
@@ -79,10 +78,6 @@ void Cell_Tally::set_cells(const std::vector<int> &cells)
  */
 void Cell_Tally::end_history(const Particle_t &p)
 {
-    // Lock the mutex so only one thread can write tally data at a time from a
-    // given particle.
-    std::lock_guard<hpx::lcos::local::spinlock> lock( d_mutex );
-
     // Get the particles private tally
     const State_t::History_Tally &hist =
         p.metadata().access<State_t>(d_state_idx).state();
@@ -97,8 +92,7 @@ void Cell_Tally::end_history(const Particle_t &p)
         auto &r = d_tally[t.first];
 
         // Store the moments
-        r.first  += t.second;
-        r.second += t.second * t.second;
+	r.atomic_sum_into( t.second, t.second*t.second );
     }
 }
 
@@ -121,8 +115,8 @@ void Cell_Tally::finalize(double num_particles)
         auto &moments = t.second;
 
         // Copy the moments into the communciation buffer
-        first[ctr]  = moments.first;
-        second[ctr] = moments.second;
+        first[ctr]  = moments.first();
+        second[ctr] = moments.second();
 
         // Update the counter
         ++ctr;
@@ -155,14 +149,14 @@ void Cell_Tally::finalize(double num_particles)
         auto &moments = t.second;
 
         // Store the sample mean
-        moments.first = avg_l * inv_V;
+        moments.first() = avg_l * inv_V;
 
         // Calculate the variance
         double var = num_particles / (num_particles - 1) * inv_V * inv_V *
                      (avg_l2 - avg_l * avg_l);
 
         // Store the error of the sample mean
-        moments.second = std::sqrt(var * inv_N);
+        moments.second() = std::sqrt(var * inv_N);
 
         // Update the counter
         ++ctr;
@@ -179,8 +173,8 @@ void Cell_Tally::reset()
     // Clear all current tally results (but keep existing cells in place)
     for (auto &t : d_tally)
     {
-        t.second.first  = 0.0;
-        t.second.second = 0.0;
+	t.second.first() = 0.0;
+	t.second.second() = 0.0;
     }
 }
 
@@ -211,11 +205,11 @@ void Cell_Tally::output(const std::string &out_file)
         const auto &moments = t.second;
 
         // Mean
-        results[ctr] = moments.first;
+        results[ctr] = moments.first();
         ++ctr;
 
         // Error
-        results[ctr] = moments.second;
+        results[ctr] = moments.second();
         ++ctr;
     }
     CHECK(ctr == results.size());
