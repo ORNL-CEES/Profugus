@@ -23,13 +23,20 @@
 #include "utils/Definitions.hh"
 #include "Manager.hh"
 
-// Parallel specs.
-int node  = 0;
-int nodes = 0;
-
 //---------------------------------------------------------------------------//
 int hpx_main( boost::program_options::variables_map& vm )
 {
+    profugus::pcout << "=======================================\n"
+                    << "    Profugus MC Mini-APP               \n"
+                    << "    (C) ORNL, Battelle, 2014           \n"
+                    << "=======================================\n"
+                    << profugus::endl;
+
+    // start timing
+    profugus::global_barrier();
+    profugus::Timer timer;
+    timer.start();
+
     // Get the XML input file.
     std::string xml_file = vm["input"].as<std::string>();
 
@@ -64,41 +71,6 @@ int hpx_main( boost::program_options::variables_map& vm )
         exit(1);
     }
 
-    // Finalize hpx.
-    return hpx::finalize();
-}
-
-//---------------------------------------------------------------------------//
-int main(int argc, char *argv[])
-{
-    profugus::initialize(argc, argv);
-
-    // start timing
-    profugus::global_barrier();
-    profugus::Timer timer;
-    timer.start();
-
-    // nodes
-    node  = profugus::node();
-    nodes = profugus::nodes();
-
-    profugus::pcout << "=======================================\n"
-                    << "    Profugus MC Mini-APP               \n"
-                    << "    (C) ORNL, Battelle, 2014           \n"
-                    << "=======================================\n"
-                    << profugus::endl;
-
-    // process input arguments
-    boost::program_options::options_description
-	desc_commandline("Usage: " HPX_APPLICATION_STRING " [options]");
-    desc_commandline.add_options()
-	( "input",
-	  boost::program_options::value<std::string>()->default_value("mc.xml"),
-	  "Profugus XML input file");
-
-    // initalize hpx. will call hpx_main and run the problem.
-    int hpx_result = hpx::init( desc_commandline, argc, argv );
-
     // process and output timing diagnostics
     profugus::global_barrier();
     timer.stop();
@@ -111,6 +83,28 @@ int main(int argc, char *argv[])
                     << profugus::setprecision(4)
                     << total << " seconds." << profugus::endl;
 
+    // Finalize hpx.
+    return hpx::finalize();
+}
+
+//---------------------------------------------------------------------------//
+int main(int argc, char *argv[])
+{
+    // initialize mpi
+    profugus::initialize(argc, argv);
+
+    // process input arguments
+    boost::program_options::options_description
+	desc_commandline("Usage: " HPX_APPLICATION_STRING " [options]");
+    desc_commandline.add_options()
+	( "input",
+	  boost::program_options::value<std::string>()->default_value("mc.xml"),
+	  "Profugus XML input file");
+
+    // initalize hpx. will call hpx_main and run the problem.
+    int hpx_result = hpx::init( desc_commandline, argc, argv );
+
+    // finalize mpi
     profugus::finalize();
 
     // Return the result from hpx.

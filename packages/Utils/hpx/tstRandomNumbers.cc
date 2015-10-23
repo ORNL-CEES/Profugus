@@ -76,7 +76,7 @@ TEST( xorshift, array_test_1 )
     using Result = Testing::Xorshift::result_type;
     Result seed = 39439237;
 
-    int num_ran = 10000000;
+    int num_ran = 100000000;
     std::vector<Result> ran_vec( num_ran, seed );
 
     auto fill_op = [&](int i){ Testing::Xorshift::update_state(ran_vec[i]); };
@@ -94,11 +94,38 @@ TEST( xorshift, array_test_2 )
     using Result = Testing::Xorshift::result_type;
     Result seed = 39439237;
 
-    int num_ran = 10000000;
+    int num_ran = 100000000;
     std::vector<Result> ran_vec( num_ran, seed );
 
     auto fill_op = [&](int i){ Testing::Xorshift::update_state(ran_vec[i]); };
 
+    auto range = boost::irange( 0, num_ran );
+    auto fill_task =
+	hpx::parallel::for_each( hpx::parallel::parallel_task_execution_policy(),
+				 std::begin(range),
+				 std::end(range),
+				 fill_op );
+    fill_task.wait();    
+}
+
+//---------------------------------------------------------------------------//
+TEST( xorshift, array_test_3 )
+{
+    using Result = Testing::Xorshift::result_type;
+    Result seed = 39439237;
+
+    int num_ran = 100000000;
+    std::vector<Result> ran_vec( num_ran, seed );
+
+    auto fill_op = [&](const int n)
+		   { 
+		       double temp = 0.0;
+		       temp = 343.3*n + n*n - 343.3 / (n+3.3);
+		       temp = 343.3*temp + n*n - 343.3 / temp;
+		       temp = 343.3*n + temp*temp - 343.3 / temp;
+		       temp = 343.3*temp + n*n - 343.3 / (n+3.3);
+		       temp = 343.3*n + temp*temp - 343.3 / (n+3.3);
+		   };
     auto range = boost::irange( 0, num_ran );
     auto fill_task =
 	hpx::parallel::for_each( hpx::parallel::parallel_task_execution_policy(),
