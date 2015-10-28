@@ -38,7 +38,6 @@ class Particle
     //@{
     //! Typedefs.
     typedef def::Space_Vector   Space_Vector;
-    typedef events::Event       Event_Type;
     typedef RNG                 RNG_t;
     typedef RTK_State           Geo_State_t;
     typedef Metaclass<Particle> Metadata;
@@ -61,9 +60,6 @@ class Particle
 
     // Alive/dead status.
     bool d_alive;
-
-    // Latest particle event.
-    Event_Type d_event;
 
     // Particle geometric state.
     Geo_State_t d_geo_state;
@@ -89,9 +85,6 @@ class Particle
     //! Set a new random number generator.
     void set_rng(const RNG &rng) { d_rng = rng; }
 
-    //! Set the particle event flag.
-    void set_event(Event_Type event) { d_event = event; }
-
     //! Set the material id of the region occupied by the particle.
     void set_matid(int matid) { d_matid = matid; }
 
@@ -112,7 +105,6 @@ class Particle
     bool alive() const { return d_alive; }
     double wt() const { return d_wt; }
     RNG& rng() { return d_rng; }
-    Event_Type event() const { return d_event; }
     int matid() const { return d_matid; }
     int group() const { return d_group; }
     //@}

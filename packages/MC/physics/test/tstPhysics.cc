@@ -38,7 +38,6 @@ class PhysicsTest : public testing::Test
     typedef Physics_t::SP_Geometry            SP_Geometry;
     typedef Physics_t::Particle_t             Particle;
     typedef Physics_t::Bank_t                 Bank_t;
-    typedef Physics_t::SP_Particle            SP_Particle;
     typedef Physics_t::ParameterList_t        ParameterList_t;
     typedef Physics_t::RCP_Std_DB             RCP_Std_DB;
     typedef Physics_t::XS_t                   XS_t;
@@ -160,12 +159,12 @@ class PhysicsTest : public testing::Test
 TEST_F(PhysicsTest, Collisions)
 {
     // make a particle
-    SP_Particle p(make_shared<Particle>());
+    Particle p;
     geometry->initialize(
         Space_Vector(50.0, 50.0, 50.0), Space_Vector(1.0, 1.0, 1.0),
-        p->geo_state());
-    p->set_rng(rng);
-    p->set_matid(0);
+        p.geo_state());
+    p.set_rng(rng);
+    p.set_matid(0);
 
     // check distributions from analog collisions
     {
@@ -195,33 +194,33 @@ TEST_F(PhysicsTest, Collisions)
         for (int n = 0; n < Np; ++n)
         {
             // setup particle to do analog collision
-            p->set_wt(1.0);
-            p->set_event(profugus::events::COLLISION);
+            p.set_wt(1.0);
+	    profugus::events::Event event = profugus::events::COLLISION;
 
             // sample a group
             double rn = rng.ran();
             int group = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
 
-            p->set_group(group);
+            p.set_group(group);
 
             ing = group;
             ng[ing]++;
 
             // do the collision
-            physics->collide(*p, bank);
+            physics->collide(p, event, bank);
 
-            outg = p->group();
+            outg = p.group();
 
-            if (p->event() == profugus::events::ABSORPTION)
+            if (event == profugus::events::ABSORPTION)
             {
                 abs[ing]++;
             }
-            else if (p->event() == profugus::events::SCATTER)
+            else if (event == profugus::events::SCATTER)
             {
                 scat[ing]++;
                 g2g[ing][outg]++;
 
-                const Space_Vector &omega = geometry->direction(p->geo_state());
+                const Space_Vector &omega = geometry->direction(p.geo_state());
 
                 // check octant distribution (isotropic scattering)
                 if (omega[Z] > 0.0)
@@ -371,24 +370,24 @@ TEST_F(PhysicsTest, Collisions)
         for (int n = 0; n < Np; ++n)
         {
             // setup particle to do implicit capture
-            p->set_wt(0.9);
-            p->set_event(profugus::events::COLLISION);
+            p.set_wt(0.9);
+            profugus::events::Event event = profugus::events::COLLISION;
 
             // sample a group
             double rn   = rng.ran();
             int group   = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
 
-            p->set_group(group);
+            p.set_group(group);
 
             int g = group;
 
             // do the collision
-            physics->collide(*p, bank);
+            physics->collide(p, event, bank);
 
-            EXPECT_EQ(profugus::events::IMPLICIT_CAPTURE, p->event());
-            EXPECT_TRUE(soft_equiv(p->wt(), c[g] * 0.9, 1.0e-4));
+            EXPECT_EQ(profugus::events::IMPLICIT_CAPTURE, event);
+            EXPECT_TRUE(soft_equiv(p.wt(), c[g] * 0.9, 1.0e-4));
 
-            const Space_Vector &omega = geometry->direction(p->geo_state());
+            const Space_Vector &omega = geometry->direction(p.geo_state());
 
             // check octant distribution (isotropic scattering)
             if (omega[Z] > 0.0)
@@ -471,7 +470,7 @@ TEST_F(PhysicsTest, Access)
     using profugus::physics::FISSION;
 
     // make a particle
-    SP_Particle p(make_shared<Particle>());
+    Particle p;
 
     // physics
     Physics_t physics(db, xs);
@@ -479,66 +478,66 @@ TEST_F(PhysicsTest, Access)
     EXPECT_FALSE(physics.is_fissionable(0));
     EXPECT_TRUE(physics.is_fissionable(1));
 
-    p->set_matid(0);
+    p.set_matid(0);
 
     // test data access without fission
     {
 
-        p->set_group(0);
-        EXPECT_SOFTEQ(5.2, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(0);
+        EXPECT_SOFTEQ(5.2, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(1);
-        EXPECT_SOFTEQ(11.4, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(1);
+        EXPECT_SOFTEQ(11.4, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(2);
-        EXPECT_SOFTEQ(18.2, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(2);
+        EXPECT_SOFTEQ(18.2, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(3);
-        EXPECT_SOFTEQ(29.9, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(3);
+        EXPECT_SOFTEQ(29.9, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(4);
-        EXPECT_SOFTEQ(27.3, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(4);
+        EXPECT_SOFTEQ(27.3, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(0.0, physics.total(FISSION, p), 1.e-12);
 
     }
 
-    p->set_matid(1);
+    p.set_matid(1);
 
     // test data access with fission
     {
-        p->set_group(0);
-        EXPECT_SOFTEQ(5.3, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.1, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(0);
+        EXPECT_SOFTEQ(5.3, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(0.1, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(1);
-        EXPECT_SOFTEQ(11.8, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.4, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(1);
+        EXPECT_SOFTEQ(11.8, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(0.4, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(2);
-        EXPECT_SOFTEQ(20.0, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(1.8, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(2);
+        EXPECT_SOFTEQ(20.0, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(1.8, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(3);
-        EXPECT_SOFTEQ(35.6, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(5.7, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(3);
+        EXPECT_SOFTEQ(35.6, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(5.7, physics.total(FISSION, p), 1.e-12);
 
-        p->set_group(4);
-        EXPECT_SOFTEQ(37.1, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(9.8, physics.total(FISSION, *p), 1.e-12);
+        p.set_group(4);
+        EXPECT_SOFTEQ(37.1, physics.total(TOTAL, p), 1.e-12);
+        EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, p), 1.e-12);
+        EXPECT_SOFTEQ(9.8, physics.total(FISSION, p), 1.e-12);
     }
 }
 
@@ -547,7 +546,7 @@ TEST_F(PhysicsTest, Access)
 TEST_F(PhysicsTest, initialization)
 {
     // make a particle
-    SP_Particle p(make_shared<Particle>());
+    Particle p;
 
     // physics
     Physics_t physics(db, xs);
@@ -556,53 +555,53 @@ TEST_F(PhysicsTest, initialization)
     EXPECT_TRUE(physics.is_fissionable(1));
 
     // check initializations
-    physics.initialize(100.0, *p);
-    EXPECT_EQ(0, p->group());
+    physics.initialize(100.0, p);
+    EXPECT_EQ(0, p.group());
 
-    physics.initialize(99.99, *p);
-    EXPECT_EQ(0, p->group());
+    physics.initialize(99.99, p);
+    EXPECT_EQ(0, p.group());
 
-    physics.initialize(10.01, *p);
-    EXPECT_EQ(0, p->group());
+    physics.initialize(10.01, p);
+    EXPECT_EQ(0, p.group());
 
-    physics.initialize(10.0, *p);
-    EXPECT_EQ(0, p->group());
+    physics.initialize(10.0, p);
+    EXPECT_EQ(0, p.group());
 
-    physics.initialize(9.99, *p);
-    EXPECT_EQ(1, p->group());
+    physics.initialize(9.99, p);
+    EXPECT_EQ(1, p.group());
 
-    physics.initialize(1.01, *p);
-    EXPECT_EQ(1, p->group());
+    physics.initialize(1.01, p);
+    EXPECT_EQ(1, p.group());
 
-    physics.initialize(1.0, *p);
-    EXPECT_EQ(1, p->group());
+    physics.initialize(1.0, p);
+    EXPECT_EQ(1, p.group());
 
-    physics.initialize(0.99, *p);
-    EXPECT_EQ(2, p->group());
+    physics.initialize(0.99, p);
+    EXPECT_EQ(2, p.group());
 
-    physics.initialize(0.101, *p);
-    EXPECT_EQ(2, p->group());
+    physics.initialize(0.101, p);
+    EXPECT_EQ(2, p.group());
 
-    physics.initialize(0.1, *p);
-    EXPECT_EQ(2, p->group());
+    physics.initialize(0.1, p);
+    EXPECT_EQ(2, p.group());
 
-    physics.initialize(0.099, *p);
-    EXPECT_EQ(3, p->group());
+    physics.initialize(0.099, p);
+    EXPECT_EQ(3, p.group());
 
-    physics.initialize(0.011, *p);
-    EXPECT_EQ(3, p->group());
+    physics.initialize(0.011, p);
+    EXPECT_EQ(3, p.group());
 
-    physics.initialize(0.01, *p);
-    EXPECT_EQ(3, p->group());
+    physics.initialize(0.01, p);
+    EXPECT_EQ(3, p.group());
 
-    physics.initialize(0.0099, *p);
-    EXPECT_EQ(4, p->group());
+    physics.initialize(0.0099, p);
+    EXPECT_EQ(4, p.group());
 
-    physics.initialize(0.0011, *p);
-    EXPECT_EQ(4, p->group());
+    physics.initialize(0.0011, p);
+    EXPECT_EQ(4, p.group());
 
-    physics.initialize(0.001, *p);
-    EXPECT_EQ(4, p->group());
+    physics.initialize(0.001, p);
+    EXPECT_EQ(4, p.group());
 
     // Check energy bounds
     EXPECT_EQ(0.001, physics.min_energy());
@@ -612,7 +611,7 @@ TEST_F(PhysicsTest, initialization)
     bool caught = false;
     try
     {
-        physics.initialize(0.00099, *p);
+        physics.initialize(0.00099, p);
     }
     catch (const profugus::assertion &a)
     {

@@ -11,12 +11,6 @@
 #ifndef mc_Uniform_Source_hh
 #define mc_Uniform_Source_hh
 
-#include <hpx/include/components.hpp>
-#include <hpx/include/actions.hpp>
-#include <hpx/include/async.hpp>
-#include <hpx/include/lcos.hpp>
-#include <hpx/include/util.hpp>
-
 #include <vector>
 #include <memory>
 #include <cmath>
@@ -53,8 +47,7 @@ namespace profugus
  * Test of Uniform_Source.
  */
 //===========================================================================//
-class Uniform_Source : public hpx::components::locking_hook<
-    hpx::components::managed_component_base<Uniform_Source> >
+class Uniform_Source
 {
   public:
     //@{
@@ -71,7 +64,6 @@ class Uniform_Source : public hpx::components::locking_hook<
     //! Smart pointers
     typedef std::shared_ptr<Geometry_t>    SP_Geometry;
     typedef std::shared_ptr<Physics_t>     SP_Physics;
-    typedef std::shared_ptr<Particle_t>    SP_Particle;
     //@}
 
     //@{
@@ -107,7 +99,7 @@ class Uniform_Source : public hpx::components::locking_hook<
     // >>> DERIVED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    SP_Particle get_particle( const int lid );
+    Particle_t get_particle( const int lid );
 
     //! Number of particles to transport in the source on the current domain.
     size_type num_to_transport() const { return d_np_domain; }
@@ -125,11 +117,6 @@ class Uniform_Source : public hpx::components::locking_hook<
 
     //! Total number of requested particles.
     size_type Np() const { return d_np_requested; }
-
-    // >>> HPX DEFINITIONS
-
-    // Register the get particle function as an action.
-    HPX_DEFINE_COMPONENT_ACTION( Uniform_Source, get_particle );
 
   private:
 
@@ -168,46 +155,6 @@ class Uniform_Source : public hpx::components::locking_hook<
 };
 
 } // end namespace profugus
-
-//---------------------------------------------------------------------------//
-// HPX GLOBAL NAMESPACE DECLARATION
-//---------------------------------------------------------------------------//
-// Register the get_particle function.
-HPX_REGISTER_ACTION_DECLARATION( profugus::Uniform_Source::get_particle_action,
-				 uniform_source_get_particle_action );
-
-//---------------------------------------------------------------------------//
-// HPX CLIENT CLASS
-//---------------------------------------------------------------------------//
-namespace profugus
-{
-class Uniform_Source_Client : public hpx::components::client_base<
-    Uniform_Source_Client,Uniform_Source>
-{
-  public:
-
-    using base_type =
-	hpx::components::client_base<Uniform_Source_Client,Uniform_Source>;
-
-    // Default constructor.
-    Uniform_Source_Client()
-    { /* ... */ }
-
-    // Create a client for an existing server with a given GID.
-    Uniform_Source_Client( hpx::future<hpx::naming::id_type>&& gid )
-	: base_type( std::move(gid) )
-    { /* ... */ }
-
-    // Get a particle as an asynchronous task.
-    hpx::future<Uniform_Source::SP_Particle> get_particle_async( const int lid )
-    {
-	HPX_ASSERT( this->get_id() );
-	return hpx::async<Uniform_Source::get_particle_action>( 
-	    this->get_id(), lid );
-    }
-};
-
-} // and namespace profugus
 
 //---------------------------------------------------------------------------//
 

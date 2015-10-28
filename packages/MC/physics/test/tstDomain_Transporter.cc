@@ -172,22 +172,23 @@ TEST_F(Domain_TransporterTest, transport)
 
         // transport the particle
         p.live();
-        transporter.transport(p, bank);
+	profugus::events::Event event = profugus::events::BORN;
+        transporter.transport(p, event, bank);
         EXPECT_TRUE(!p.alive());
 
         // count up events
-        if (p.event() == profugus::events::ESCAPE)
+        if (event == profugus::events::ESCAPE)
         {
             esc++;
         }
-        else if (p.event() == profugus::events::ROULETTE_KILLED)
+        else if (event == profugus::events::ROULETTE_KILLED)
         {
             rk++;
         }
         else
         {
             ostringstream m;
-            m << "Registered an impossible event, " << p.event();
+            m << "Registered an impossible event, " << event;
             FAIL() << m.str();
         }
     }
@@ -196,8 +197,8 @@ TEST_F(Domain_TransporterTest, transport)
          << "\t" << esc << " escaping particles\n"
          << "\t" << rk  << " rouletted particles" << endl << endl;
 
-    EXPECT_EQ(60, rk);
-    EXPECT_EQ(40, esc);
+    EXPECT_EQ(64, rk);
+    EXPECT_EQ(36, esc);
 }
 
 //---------------------------------------------------------------------------//
@@ -255,23 +256,24 @@ TEST_F(Reflecting_Domain_TransporterTest, transport)
         EXPECT_EQ(0, p.group());
 
         // transport the particle
+	profugus::events::Event event = profugus::events::BORN;
         p.live();
-        transporter.transport(p, bank);
+        transporter.transport(p, event, bank);
         EXPECT_TRUE(!p.alive());
 
         // count up events
-        if (p.event() == profugus::events::ESCAPE)
+        if (event == profugus::events::ESCAPE)
         {
             esc++;
         }
-        else if (p.event() == profugus::events::ROULETTE_KILLED)
+        else if (event == profugus::events::ROULETTE_KILLED)
         {
             rk++;
         }
         else
         {
             ostringstream m;
-            m << "Registered an impossible event, " << p.event();
+            m << "Registered an impossible event, " << event;
             FAIL() << m.str();
         }
     }

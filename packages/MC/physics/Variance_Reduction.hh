@@ -39,7 +39,6 @@ class Variance_Reduction
     typedef Physics                          Physics_t;
     typedef std::shared_ptr<Physics_t>       SP_Physics;
     typedef Physics_t::Particle_t            Particle_t;
-    typedef Physics_t::SP_Particle           SP_Particle;
     typedef Physics_t::Bank_t                Bank_t;
     //@}
 
@@ -62,10 +61,10 @@ class Variance_Reduction
     // >>> VARIANCE REDUCTION INTERFACE
 
     //! Apply variance reduction method after a surface crossing
-    virtual void post_surface(Particle_t& particle, Bank_t& bank) const = 0;
+    virtual void post_surface(Particle_t& particle, events::Event& event, Bank_t& bank) const = 0;
 
     //! Apply variance reduction method after a collision
-    virtual void post_collision(Particle_t& particle, Bank_t& bank) const = 0;
+    virtual void post_collision(Particle_t& particle, events::Event& event, Bank_t& bank) const = 0;
 
   protected:
     // Problem geometry implementation.

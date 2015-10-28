@@ -104,65 +104,57 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
 /*!
  * \brief Get a particle from the source given a particle local id.
  */
-Uniform_Source::SP_Particle Uniform_Source::get_particle( const int lid )
+Uniform_Source::Particle_t Uniform_Source::get_particle( const int lid )
 {
     using def::I; using def::J; using def::K;
 
     REQUIRE(d_wt > 0.0);
     REQUIRE(d_geo_shape);
 
-    // unassigned particle
-    SP_Particle p;
-
-    // return a null particle if no source. this may be more than one if
-    // several threads have recently modified the run count atomic
-    if (lid >= d_np_domain)
-    {
-        return p;
-    }
+    // throw if no source.
+    HPX_ASSERT(lid <= d_np_domain);
 
     // make a particle
-    p = std::make_shared<Particle_t>();
+    Particle_t p;
 
     // create a unique rng for the particle
     int rng_seed = lid*d_nodes + d_node;
-    p->set_rng( RNG(rng_seed) );
-    auto rng = p->rng();
+    p.set_rng( RNG(rng_seed) );
 
     // material id
     int matid = 0;
 
     // sample the angle isotropically
-    Space_Vector omega = sample_angle(rng.ran(), rng.ran() );
+    Space_Vector omega = sample_angle(p.rng().ran(), p.rng().ran() );
 
     // sample the geometry shape-->we should not get here if there are no
     // particles on this domain
-    Space_Vector r = d_geo_shape->sample(rng.ran(),rng.ran(),rng.ran());
+    Space_Vector r = d_geo_shape->sample(p.rng().ran(),p.rng().ran(),p.rng().ran());
 
     // intialize the geometry state
-    d_geometry->initialize(r, omega, p->geo_state());
+    d_geometry->initialize(r, omega, p.geo_state());
 
     // get the material id
-    matid = d_geometry->matid(p->geo_state());
+    matid = d_geometry->matid(p.geo_state());
 
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
-        d_erg_cdf.size(), &d_erg_cdf[0], rng.ran());
+        d_erg_cdf.size(), &d_erg_cdf[0], p.rng().ran());
     CHECK(group < d_physics->num_groups());
 
     // set the group
-    p->set_group(group);
+    p.set_group(group);
 
     // set the material id in the particle
-    p->set_matid(matid);
+    p.set_matid(matid);
 
     // set particle weight
-    p->set_wt(d_wt);
+    p.set_wt(d_wt);
 
     // make particle alive
-    p->live();
+    p.live();
 
-    ENSURE(p->matid() == matid);
+    ENSURE(p.matid() == matid);
     return p;
 }
 
@@ -184,19 +176,6 @@ void Uniform_Source::build_DR()
 }
 
 } // end namespace profugus
-
-//---------------------------------------------------------------------------//
-// HPX GLOBAL NAMESPACE REGISTRATION
-//---------------------------------------------------------------------------//
-// Register the Uniform_Source as a component.
-HPX_REGISTER_COMPONENT_MODULE();
-HPX_REGISTER_COMPONENT( 
-    hpx::components::managed_component<profugus::Uniform_Source>, 
-    uniform_source );
-
-// Register the source functions.
-HPX_REGISTER_ACTION( profugus::Uniform_Source::get_particle_action,
-		     uniform_source_get_particle_action );
 
 //---------------------------------------------------------------------------//
 //                 end of Uniform_Source.cc

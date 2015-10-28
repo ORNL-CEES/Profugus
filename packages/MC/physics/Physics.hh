@@ -61,7 +61,6 @@ class Physics
     typedef Particle                    Particle_t;
     typedef Bank                        Bank_t;
     typedef std::shared_ptr<Geometry_t> SP_Geometry;
-    typedef std::shared_ptr<Particle_t> SP_Particle;
 
     typedef Particle_t::RNG_t             RNG;
     typedef XS                            XS_t;
@@ -115,7 +114,7 @@ class Physics
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process a particle through a physical collision.
-    void collide(Particle_t &particle, Bank_t &bank) const;
+    void collide(Particle_t &particle, events::Event& event, Bank_t &bank) const;
 
     // Sample fission spectrum and initialize the physics state.
     bool initialize_fission(unsigned int matid, Particle_t &p) const;

@@ -140,46 +140,46 @@ TEST_F(VR_RouletteTest, default_settings)
     EXPECT_EQ(0.25, vr.weight_cutoff());
 
     p.live();
-    p.set_event(profugus::events::COLLISION);
+    profugus::events::Event event = profugus::events::COLLISION;
 
     // above cutoff
     p.set_wt(0.2501);
-    vr.post_collision(p, b);
+    vr.post_collision(p, event, b);
     EXPECT_TRUE(p.alive());
     EXPECT_EQ(0.2501, p.wt());
-    EXPECT_EQ(profugus::events::COLLISION, p.event());
+    EXPECT_EQ(profugus::events::COLLISION, event);
 
     // below cutoff (particle rouletted)
     p.set_wt(0.2499);
-    vr.post_collision(p, b);
+    vr.post_collision(p, event, b);
     EXPECT_FALSE(p.alive());
     EXPECT_EQ(0.2499, p.wt());
-    EXPECT_EQ(profugus::events::ROULETTE_KILLED, p.event());
+    EXPECT_EQ(profugus::events::ROULETTE_KILLED, event);
 
     p.live();
 
     // below cutoff (particle rouletted)
     p.set_wt(0.20);
-    vr.post_collision(p, b);
+    vr.post_collision(p, event, b);
     EXPECT_FALSE(p.alive());
     EXPECT_EQ(0.20, p.wt());
-    EXPECT_EQ(profugus::events::ROULETTE_KILLED, p.event());
+    EXPECT_EQ(profugus::events::ROULETTE_KILLED, event);
 
     p.live();
 
     // below cutoff (particle survives)
     p.set_wt(0.24);
-    vr.post_collision(p, b);
+    vr.post_collision(p, event, b);
     EXPECT_TRUE(p.alive());
     EXPECT_EQ(0.5, p.wt());
-    EXPECT_EQ(profugus::events::ROULETTE_SURVIVE, p.event());
+    EXPECT_EQ(profugus::events::ROULETTE_SURVIVE, event);
 
     // below cutoff (particle rouletted)
     p.set_wt(0.212501);
-    vr.post_collision(p, b);
+    vr.post_collision(p, event, b);
     EXPECT_FALSE(p.alive());
     EXPECT_EQ(0.212501, p.wt());
-    EXPECT_EQ(profugus::events::ROULETTE_KILLED, p.event());
+    EXPECT_EQ(profugus::events::ROULETTE_KILLED, event);
 
     EXPECT_EQ(0, b.num_particles());
 }
@@ -194,21 +194,21 @@ TEST_F(VR_RouletteTest, zero_cutoff)
     EXPECT_EQ(0.0, vr.weight_cutoff());
 
     p.live();
-    p.set_event(profugus::events::COLLISION);
+    profugus::events::Event event = profugus::events::COLLISION;
 
     // above cutoff
     p.set_wt(0.2501);
-    vr.post_collision(p, b);
+    vr.post_collision(p, event, b);
     EXPECT_TRUE(p.alive());
     EXPECT_EQ(0.2501, p.wt());
-    EXPECT_EQ(profugus::events::COLLISION, p.event());
+    EXPECT_EQ(profugus::events::COLLISION, event);
 
     // above cutoff
     p.set_wt(0.000001);
-    vr.post_collision(p, b);
+    vr.post_collision(p, event, b);
     EXPECT_TRUE(p.alive());
     EXPECT_EQ(0.000001, p.wt());
-    EXPECT_EQ(profugus::events::COLLISION, p.event());
+    EXPECT_EQ(profugus::events::COLLISION, event);
 
     // should be no particles in the bank
     EXPECT_EQ(0, b.num_particles());

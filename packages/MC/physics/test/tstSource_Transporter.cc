@@ -67,8 +67,7 @@ TEST_F(DRSourceTransporterTest, source)
     int count = 0;
     for ( int n = 0; n < np; ++n )
     {
-        SP_Particle p = base.get_particle(n);
-        EXPECT_TRUE(static_cast<bool>(p));
+        Particle_t p = base.get_particle(n);
         count++;
     }
 

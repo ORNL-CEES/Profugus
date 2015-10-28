@@ -40,17 +40,16 @@ class Bank
   public:
     //@{
     //! Useful typedefs.
-    typedef Particle                    Particle_t;
-    typedef std::shared_ptr<Particle_t> SP_Particle;
-    typedef SP_Particle                 value_type;
-    typedef size_t                      size_type;
-    typedef SP_Particle&                reference;
-    typedef const SP_Particle&          const_reference;
+    typedef Particle                   Particle_t;
+    typedef Particle_t                 value_type;
+    typedef size_t                     size_type;
+    typedef Particle_t&                reference;
+    typedef const Particle_t&          const_reference;
     //@}
 
   private:
     // Container type for particles
-    typedef std::vector<SP_Particle> Stack_Particle;
+    typedef std::vector<Particle_t> Stack_Particle;
 
     // Container type for number of copies per particle
     typedef std::vector<size_type> Stack_Count;
@@ -86,38 +85,37 @@ class Bank
     size_type num_particles() const { return size(); }
 
     //! View the particle on the top of the stack
-    const SP_Particle& top() const
+    const Particle_t& top() const
     {
         REQUIRE(!empty());
         REQUIRE(!d_particles.empty());
         return d_particles.back();
     }
-    const SP_Particle& back() const { return top(); }
+    const Particle_t& back() const { return top(); }
 
     //! Just pushing a particle
-    void basic_push(const SP_Particle& p, size_type count)
+    void basic_push(const Particle_t& p, size_type count)
     {
-        REQUIRE(p);
         REQUIRE(count > 0);
 
         // Add a copy of the particle to the stack
-        d_particles.push_back(std::make_shared<Particle_t>(*p));
+        d_particles.push_back(p);
         d_count.push_back(count);
 
         d_total += count;
     }
 
     //! Push a particle (default to basic push)
-    void push(const SP_Particle& p, size_type count = 1)
+    void push(const Particle_t& p, size_type count = 1)
     {
         basic_push(p, count);
     }
 
-    void push_back(const SP_Particle& p) { push(p, 1); }
+    void push_back(const Particle_t& p) { push(p, 1); }
 
     //! Emit the topmost particle from the stack
-    SP_Particle pop() { return basic_pop(); }
-    SP_Particle pop_back() { return pop(); }
+    Particle_t pop() { return basic_pop(); }
+    Particle_t pop_back() { return pop(); }
 
     //@}
 
@@ -140,7 +138,7 @@ class Bank
     // >>> IMPLEMENTATION
 
     //! Just emitting the topmost particle from the stack
-    inline SP_Particle basic_pop();
+    inline Particle_t basic_pop();
 };
 
 } // end namespace profugus

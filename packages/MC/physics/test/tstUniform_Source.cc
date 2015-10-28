@@ -36,7 +36,7 @@ class UniformSourceTest : public SourceTestBase
 
   protected:
     typedef profugus::Uniform_Source         Source;
-    typedef Source::SP_Particle              SP_Particle;
+    typedef Source::Particle_t              Particle_t;
     typedef std::shared_ptr<profugus::Shape> SP_Shape;
 
     virtual int get_seed() const
@@ -142,58 +142,16 @@ TEST_F(UniformSourceTest, build_and_run)
     for ( int i = 0; i < np; ++i )
     {
         // get a particle
-        SP_Particle p = source.get_particle(i);
+        Particle_t p = source.get_particle(i);
 
         ctr++;
 
-        EXPECT_TRUE(p->alive());
-        EXPECT_EQ(1.0, p->wt());
-        EXPECT_EQ(3, p->matid());
+        EXPECT_TRUE(p.alive());
+        EXPECT_EQ(1.0, p.wt());
+        EXPECT_EQ(3, p.matid());
     }
 
     EXPECT_EQ(source.num_to_transport(), ctr);
-}
-
-//---------------------------------------------------------------------------//
-TEST_F(UniformSourceTest, threading)
-{
-    int np = 1000000;
-    b_db->set("Np", np);
-
-    // make a sampling shape (uniform)
-    SP_Shape box(std::make_shared<profugus::Box_Shape>(
-                     0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
-
-    // make a uniform source
-    profugus::Uniform_Source_Client source(
-	hpx::components::new_<profugus::Uniform_Source>(
-	    hpx::find_here(), b_db, b_geometry, b_physics, box ) );
-
-    int conc = hpx::get_os_thread_count();
-    int num_to_run = std::ceil( np / conc );
-
-    auto transport_func = [&]( const int i )
-    {
-	auto particle = source.get_particle_async(i);
-	particle.wait();
-	particle.get()->kill();
-    };
-
-    auto worker_func = 
-	[&](const int i)
-	{
-	    for ( int n = 0; n < num_to_run; ++n ) 
-		transport_func( i*num_to_run + n );
-	};
-
-    // run the transport loop
-    std::vector<hpx::future<void> > futures;
-    futures.reserve( conc );
-    for ( int t = 0; t < conc; ++t )
-    {
-	futures.push_back( hpx::async(worker_func,t) );
-    }
-    hpx::lcos::wait_all( futures );
 }
 
 //---------------------------------------------------------------------------//

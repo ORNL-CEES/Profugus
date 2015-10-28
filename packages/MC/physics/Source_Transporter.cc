@@ -71,12 +71,36 @@ void Source_Transporter::solve()
 
     SCOPED_TIMER("MC::Source_Transporter.solve");
 
-    // run all the local histories while the source exists, there is no need
-    // to communicate particles because the problem is replicated
+    // Build a vector of particles.
     int np = d_source->num_to_transport();
+    std::vector<Particle_t> particles( np );
     auto range = boost::irange( 0, np );
-    auto transport_func = 
-	[this](const int lid){ this->transport_history(lid); };
+    auto source_func = [&,this]( const int lid )
+		       { particles[lid] = this->d_source->get_particle(lid); };
+    auto source_task = hpx::parallel::for_each( 
+	hpx::parallel::parallel_task_execution_policy(),
+	std::begin(range),
+	std::end(range),
+	source_func );
+
+    // Make a vector of event references.
+    std::vector<std::pair<std::size_t,events::Event> > events( np );
+    auto event_fill_func = [&]( const int lid ) 
+			   { events[lid] = std::make_pair(lid,events::BORN); };
+    auto event_fill_task = hpx::parallel::for_each( 
+	hpx::parallel::parallel_task_execution_policy(),
+	std::begin(range),
+	std::end(range),
+	event_fill_func );
+
+    // Wait to finish making particles and events.
+    source_task.wait();
+    event_fill_task.wait();
+
+    // Transport all particles in the vector.
+    auto transport_func = [&,this](const int lid)
+			  { this->transport_history(particles[events[lid].first],
+						    events[lid].second); };
     auto transport_task = hpx::parallel::for_each( 
 	hpx::parallel::parallel_task_execution_policy(),
 	std::begin(range),
@@ -120,20 +144,19 @@ void Source_Transporter::set(SP_Tallier tallier)
  * \brief Transport a history in the source and any histories it may make from
  * splitting.
  */
-void Source_Transporter::transport_history( const int particle_lid )
+void Source_Transporter::transport_history( Particle_t& p, 
+					    events::Event& event )
 {
+    // Make sure the particle is alive.
+    REQUIRE(p.alive());
+
     // make a particle bank
     typename Transporter_t::Bank_t bank;
     CHECK(bank.empty());
 
-    // get a particle from the source
-    SP_Particle p = d_source->get_particle( particle_lid );
-    CHECK(p);
-    CHECK(p->alive());
-
     // transport the particle through this (replicated) domain
-    d_transporter.transport(*p, bank);
-    CHECK(!p->alive());
+    d_transporter.transport(p, event, bank);
+    CHECK(!p.alive());
 
     // transport any secondary particles that are part of this history
     // (from splitting or physics) that get put into the bank
@@ -141,22 +164,21 @@ void Source_Transporter::transport_history( const int particle_lid )
     {
 	// get a particle from the bank
 	p = bank.pop();
-	CHECK(p);
-	CHECK(p->alive());
+	CHECK(p.alive());
 
 	// make particle alive
-	p->live();
+	p.live();
 
 	// transport it
-	d_transporter.transport(*p, bank);
-	CHECK(!p->alive());
+	d_transporter.transport(p, event, bank);
+	CHECK(!p.alive());
     }
 
     // Make sure the bank is empty.
     ENSURE(bank.empty());
 
     // indicate completion of particle history
-    d_tallier->end_history(*p);
+    d_tallier->end_history(p);
 }
 
 //---------------------------------------------------------------------------//

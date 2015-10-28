@@ -48,6 +48,7 @@ VR_Roulette::VR_Roulette(RCP_Std_DB db)
  * \brief Process a particle for weight roulette.
  */
 void VR_Roulette::post_collision(Particle_t& particle,
+				 events::Event& event,
                                  Bank_t&     bank) const
 {
     if (!particle.alive())
@@ -75,7 +76,7 @@ void VR_Roulette::post_collision(Particle_t& particle,
             CHECK(particle.wt() == d_Ws);
 
             // update the event
-            particle.set_event(events::ROULETTE_SURVIVE);
+	    event = events::ROULETTE_SURVIVE;
 
             // add the event to the diagnostics
             DIAGNOSTICS_TWO(integers["roulette_survive"]++);
@@ -88,7 +89,7 @@ void VR_Roulette::post_collision(Particle_t& particle,
             particle.kill();
 
             // update the event
-            particle.set_event(events::ROULETTE_KILLED);
+	    event = events::ROULETTE_KILLED;
 
             // add the event to the diagnostics
             DIAGNOSTICS_TWO(integers["roulette_killed"]++);

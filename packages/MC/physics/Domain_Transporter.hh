@@ -56,7 +56,6 @@ class Domain_Transporter
     //! Smart pointers.
     typedef std::shared_ptr<Geometry_t>             SP_Geometry;
     typedef std::shared_ptr<Physics_t>              SP_Physics;
-    typedef std::shared_ptr<Particle_t>             SP_Particle;
     typedef std::shared_ptr<Variance_Reduction_t>   SP_Variance_Reduction;
     typedef std::shared_ptr<Tallier_t>              SP_Tallier;
     //@}
@@ -90,15 +89,18 @@ class Domain_Transporter
     void set(SP_Tallier tallies);
 
     // Transport a particle through the domain.
-    void transport(Particle_t &particle, Bank_t &bank) const;
+    void transport(Particle_t &particle, 
+		   events::Event& event, 
+		   Bank_t &bank) const;
 
   private:
     // >>> IMPLEMENTATION
 
     // Process collisions and boundaries.
-    void process_boundary(Particle_t &particle, Bank_t &bank) const;
-    void process_collision(const Step_Selector& step_selector,
-			   Particle_t &particle, Bank_t &bank) const;
+    void get_next_event( Particle_t& particle, events::Event& event, double& dist_mfp ) const;
+    void process_boundary(Particle_t &particle, events::Event& event, Bank_t &bank) const;
+    void process_collision(
+	const double step, Particle_t &particle, events::Event& event, Bank_t &bank) const;
 };
 
 } // end namespace profugus

@@ -81,10 +81,14 @@ class VR_Roulette : public Variance_Reduction
     // >>> VARIANCE REDUCTION INTERFACE
 
     //! Do nothing at surfaces
-    void post_surface(Particle_t& particle, Bank_t& bank) const { /* * */ }
+    void post_surface(
+	Particle_t& particle, events::Event& event, Bank_t& bank) const 
+    { /* * */ }
 
     // Do weight roulette at collisions
-    void post_collision(Particle_t& particle, Bank_t& bank) const;
+    void post_collision(Particle_t& particle, 
+			events::Event& event,
+			Bank_t& bank) const;
 
     // >>> ACCESSORS
 

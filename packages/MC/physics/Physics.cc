@@ -163,10 +163,11 @@ void Physics::initialize(double      energy,
  * \brief Process a particle through a physical collision.
  */
 void Physics::collide(Particle_t &particle,
+		      events::Event& event,
                       Bank_t     &bank) const
 {
     REQUIRE(d_geometry);
-    REQUIRE(particle.event() == events::COLLISION);
+    REQUIRE(event == events::COLLISION);
     REQUIRE(!d_mat.is_null());
     REQUIRE(d_mat->num_mat() == d_Nm);
     REQUIRE(d_mat->num_groups() == d_Ng);
@@ -192,7 +193,7 @@ void Physics::collide(Particle_t &particle,
     if (d_implicit_capture && c > 0.0)
     {
         // set the event
-        particle.set_event(events::IMPLICIT_CAPTURE);
+        event = events::IMPLICIT_CAPTURE;
 
         // do implicit absorption
         particle.multiply_wt(c);
@@ -205,7 +206,7 @@ void Physics::collide(Particle_t &particle,
         if (particle.rng().ran() > c)
         {
             // set event indicator
-            particle.set_event(events::ABSORPTION);
+            event = events::ABSORPTION;
 
             // kill particle
             particle.kill();
@@ -213,12 +214,12 @@ void Physics::collide(Particle_t &particle,
         else
         {
             // set event indicator
-            particle.set_event(events::SCATTER);
+            event = events::SCATTER;
         }
     }
 
     // process scattering events
-    if (particle.event() != events::ABSORPTION)
+    if (event != events::ABSORPTION)
     {
         // determine new group of particle
         group = sample_group(matid, group, particle.rng().ran());

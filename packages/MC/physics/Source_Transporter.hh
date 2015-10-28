@@ -52,9 +52,9 @@ class Source_Transporter
     typedef Transporter_t::Geometry_t            Geometry_t;
     typedef Transporter_t::SP_Physics            SP_Physics;
     typedef Transporter_t::SP_Geometry           SP_Geometry;
-    typedef Transporter_t::SP_Particle           SP_Particle;
     typedef Transporter_t::SP_Variance_Reduction SP_Variance_Reduction;
     typedef Transporter_t::SP_Tallier            SP_Tallier;
+    typedef Physics_t::Particle_t                Particle_t;
     typedef std::shared_ptr<Source_t>            SP_Source;
     typedef Physics_t::RCP_Std_DB                RCP_Std_DB;
     typedef def::size_type                       size_type;
@@ -118,7 +118,7 @@ class Source_Transporter
 
     // Transport a history in the source and any histories it may make from
     // splitting.
-    void transport_history( const int particle_lid );
+    void transport_history( Particle_t& p, events::Event& event );
 };
 
 } // end namespace profugus

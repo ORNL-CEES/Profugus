@@ -18,18 +18,18 @@ namespace profugus
 // INLINE FUNCTIONS
 //---------------------------------------------------------------------------//
 
-Bank::SP_Particle Bank::basic_pop()
+Bank::Particle_t Bank::basic_pop()
 {
     REQUIRE(!empty());
     REQUIRE(!d_particles.empty());
     REQUIRE(!d_count.empty());
 
-    SP_Particle new_particle;
+    Particle_t new_particle;
 
     if (d_count.back() > 1)
     {
         // Make a new copy to return
-        new_particle = std::make_shared<Particle_t>(*d_particles.back());
+        new_particle = d_particles.back();
 
         --d_count.back();
     }
