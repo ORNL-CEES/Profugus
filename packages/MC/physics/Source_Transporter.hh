@@ -49,6 +49,7 @@ class Source_Transporter
     typedef Domain_Transporter                   Transporter_t;
     typedef Uniform_Source                       Source_t;
     typedef Transporter_t::Physics_t             Physics_t;
+    typedef typename Physics_t::Bank_t           Bank_t;
     typedef Transporter_t::Geometry_t            Geometry_t;
     typedef Transporter_t::SP_Physics            SP_Physics;
     typedef Transporter_t::SP_Geometry           SP_Geometry;
@@ -113,12 +114,6 @@ class Source_Transporter
 
     // Nodes and node id.
     const int d_node, d_nodes;
-
-  private:
-
-    // Transport a history in the source and any histories it may make from
-    // splitting.
-    void transport_history( Particle_t& p, events::Event& event );
 };
 
 } // end namespace profugus

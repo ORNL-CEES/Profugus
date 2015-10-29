@@ -93,20 +93,28 @@ void Source_Transporter::solve()
 	std::end(range),
 	event_fill_func );
 
+    // Make a vector of banks.
+    std::vector<Bank_t> banks( np );    
+
     // Wait to finish making particles and events.
     source_task.wait();
     event_fill_task.wait();
 
     // Transport all particles in the vector.
-    auto transport_func = [&,this](const int lid)
-			  { this->transport_history(particles[events[lid].first],
-						    events[lid].second); };
-    auto transport_task = hpx::parallel::for_each( 
+    d_transporter.transport( particles, events, banks );
+
+    // Check that all of the banks are empty.
+    REMEMBER( for ( auto& b : banks ) CHECK( b.empty() ); );
+
+    // Tally all the particles.
+    auto tally_func = [&,this]( const int lid )
+		      { this->d_tallier->end_history( particles[lid] ); };
+    auto tally_task = hpx::parallel::for_each( 
 	hpx::parallel::parallel_task_execution_policy(),
 	std::begin(range),
 	std::end(range),
-	transport_func );
-    transport_task.wait();
+	tally_func );
+    tally_task.wait();
 }
 
 //---------------------------------------------------------------------------//
@@ -126,59 +134,17 @@ void Source_Transporter::set(SP_Variance_Reduction vr)
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Set the tally controller
+ * \brief Set the tallier.
  */
 void Source_Transporter::set(SP_Tallier tallier)
 {
     REQUIRE(tallier);
 
-    // set the tally controller in the domain transporter and locally
+    // set the tally in the domain transporter and locally
     d_transporter.set(tallier);
     d_tallier = tallier;
 
     ENSURE(d_tallier);
-}
-
-//---------------------------------------------------------------------------//
-/*! 
- * \brief Transport a history in the source and any histories it may make from
- * splitting.
- */
-void Source_Transporter::transport_history( Particle_t& p, 
-					    events::Event& event )
-{
-    // Make sure the particle is alive.
-    REQUIRE(p.alive());
-
-    // make a particle bank
-    typename Transporter_t::Bank_t bank;
-    CHECK(bank.empty());
-
-    // transport the particle through this (replicated) domain
-    d_transporter.transport(p, event, bank);
-    CHECK(!p.alive());
-
-    // transport any secondary particles that are part of this history
-    // (from splitting or physics) that get put into the bank
-    while (!bank.empty())
-    {
-	// get a particle from the bank
-	p = bank.pop();
-	CHECK(p.alive());
-
-	// make particle alive
-	p.live();
-
-	// transport it
-	d_transporter.transport(p, event, bank);
-	CHECK(!p.alive());
-    }
-
-    // Make sure the bank is empty.
-    ENSURE(bank.empty());
-
-    // indicate completion of particle history
-    d_tallier->end_history(p);
 }
 
 //---------------------------------------------------------------------------//

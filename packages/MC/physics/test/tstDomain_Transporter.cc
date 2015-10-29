@@ -125,70 +125,77 @@ TEST_F(Domain_TransporterTest, transport)
     transporter.set(var_red);
     transporter.set(tallier);
 
-    // make a particle and bank
-    Particle_t p;
-    Bank_t     bank;
-
-    // make random number
-    profugus::RNG rng(15);
-    p.set_rng(rng);
-
-    // geometry and physics state
-    Particle_t::Geo_State_t &geo = p.geo_state();
-
     // events
     int esc = 0, rk = 0;
 
     // number of particles
     int Np = 100;
 
+    // make a particles, events, and banks
+    std::vector<Particle_t> particles( Np );
+    std::vector<std::pair<std::size_t,profugus::events::Event> > events( Np );
+    std::vector<Bank_t> banks( Np );
+
     // set the particle direction and position
     for (int n = 0; n < Np; ++n)
     {
-        // sample a position WITHIN the geometry
-        double x = 3.78 * p.rng().ran();
-        double y = 3.78 * p.rng().ran();
-        double z = 14.28 * p.rng().ran();
+	// make random number
+	profugus::RNG rng(n + 324323);
+	particles[n].set_rng(rng);
 
-        double costheta = 1.0 - 2.0 * rng.ran();
-        double phi      = profugus::constants::two_pi * rng.ran();
+	// geometry and physics state
+	Particle_t::Geo_State_t &geo = particles[n].geo_state();
+
+        // sample a position WITHIN the geometry
+        double x = 3.78 * particles[n].rng().ran();
+        double y = 3.78 * particles[n].rng().ran();
+        double z = 14.28 * particles[n].rng().ran();
+
+        double costheta = 1.0 - 2.0 * particles[n].rng().ran();
+        double phi      = profugus::constants::two_pi * particles[n].rng().ran();
         double sintheta = sqrt(1.0 - costheta * costheta);
 
         double Ox = sintheta * cos(phi);
         double Oy = sintheta * sin(phi);
         double Oz = costheta;
 
-        p.set_wt(1.0);
+        particles[n].set_wt(1.0);
 
         // initialize geometry state
         geometry->initialize(Vector(x, y, z), Vector(Ox, Oy, Oz), geo);
-        p.set_matid(geometry->matid(geo));
+        particles[n].set_matid(geometry->matid(geo));
         EXPECT_TRUE(geometry->boundary_state(geo) ==
                     profugus::geometry::INSIDE);
 
         // initialize physics state
-        physics->initialize(1.1, p);
-        EXPECT_EQ(0, p.group());
+        physics->initialize(1.1, particles[n]);
+        EXPECT_EQ(0, particles[n].group());
 
         // transport the particle
-        p.live();
-	profugus::events::Event event = profugus::events::BORN;
-        transporter.transport(p, event, bank);
-        EXPECT_TRUE(!p.alive());
+        particles[n].live();
+	events[n] = std::make_pair( static_cast<std::size_t>(n), 
+				    profugus::events::BORN );
+    }
 
+    transporter.transport(particles, events, banks);
+
+    // check the results of the transport
+    for (int n = 0; n < Np; ++n)
+    {
+        EXPECT_TRUE(!particles[n].alive());
         // count up events
-        if (event == profugus::events::ESCAPE)
+        if (events[n].second == profugus::events::ESCAPE)
         {
             esc++;
         }
-        else if (event == profugus::events::ROULETTE_KILLED)
+        else if (events[n].second == profugus::events::ROULETTE_KILLED)
         {
             rk++;
         }
         else
         {
             ostringstream m;
-            m << "Registered an impossible event, " << event;
+            m << "Registered an impossible event, " << events[n].second;
             FAIL() << m.str();
         }
     }
@@ -197,8 +204,8 @@ TEST_F(Domain_TransporterTest, transport)
          << "\t" << esc << " escaping particles\n"
          << "\t" << rk  << " rouletted particles" << endl << endl;
 
-    EXPECT_EQ(64, rk);
-    EXPECT_EQ(36, esc);
+    EXPECT_EQ(67, rk);
+    EXPECT_EQ(33, esc);
 }
 
 //---------------------------------------------------------------------------//
@@ -210,70 +217,78 @@ TEST_F(Reflecting_Domain_TransporterTest, transport)
     transporter.set(var_red);
     transporter.set(tallier);
 
-    // make a particle and bank
-    Particle_t p;
-    Bank_t     bank;
+    // number of particles
+    int Np = 100;
 
-    // make random number
-    profugus::RNG rng(15);
-    p.set_rng(rng);
-
-    // geometry and physics state
-    Particle_t::Geo_State_t &geo = p.geo_state();
+    // make a particles, events, and banks
+    std::vector<Particle_t> particles( Np );
+    std::vector<std::pair<std::size_t,profugus::events::Event> > events( Np );
+    std::vector<Bank_t> banks( Np );
 
     // events
     int esc = 0, rk = 0;
 
-    // number of particles
-    int Np = 100;
-
     // set the particle direction and position
     for (int n = 0; n < Np; ++n)
     {
-        // sample a position WITHIN the geometry
-        double x = 3.78 * p.rng().ran();
-        double y = 3.78 * p.rng().ran();
-        double z = 14.28 * p.rng().ran();
+	// make random number
+	profugus::RNG rng( n + 2343223 );
+	particles[n].set_rng(rng);
 
-        double costheta = 1.0 - 2.0 * rng.ran();
-        double phi      = profugus::constants::two_pi * rng.ran();
+	// geometry and physics state
+	Particle_t::Geo_State_t &geo = particles[n].geo_state();
+
+        // sample a position WITHIN the geometry
+        double x = 3.78 * particles[n].rng().ran();
+        double y = 3.78 * particles[n].rng().ran();
+        double z = 14.28 * particles[n].rng().ran();
+
+        double costheta = 1.0 - 2.0 * particles[n].rng().ran();
+        double phi      = profugus::constants::two_pi * particles[n].rng().ran();
         double sintheta = sqrt(1.0 - costheta * costheta);
 
         double Ox = sintheta * cos(phi);
         double Oy = sintheta * sin(phi);
         double Oz = costheta;
 
-        p.set_wt(1.0);
+        particles[n].set_wt(1.0);
 
         // initialize geometry state
         geometry->initialize(Vector(x, y, z), Vector(Ox, Oy, Oz), geo);
-        p.set_matid(geometry->matid(geo));
+        particles[n].set_matid(geometry->matid(geo));
         EXPECT_TRUE(geometry->boundary_state(geo) ==
                     profugus::geometry::INSIDE);
 
         // initialize physics state
-        physics->initialize(1.1, p);
-        EXPECT_EQ(0, p.group());
+        physics->initialize(1.1, particles[n]);
+        EXPECT_EQ(0, particles[n].group());
 
         // transport the particle
-	profugus::events::Event event = profugus::events::BORN;
-        p.live();
-        transporter.transport(p, event, bank);
-        EXPECT_TRUE(!p.alive());
+	events[n] = std::make_pair( static_cast<std::size_t>(n), 
+				    profugus::events::BORN );
+        particles[n].live();
+    }
+
+    transporter.transport(particles, events, banks);
+
+    // check the results of the transport
+    for (int n = 0; n < Np; ++n)
+    {
+        EXPECT_TRUE(!particles[n].alive());
 
         // count up events
-        if (event == profugus::events::ESCAPE)
+        if (events[n].second == profugus::events::ESCAPE)
         {
             esc++;
         }
-        else if (event == profugus::events::ROULETTE_KILLED)
+        else if (events[n].second == profugus::events::ROULETTE_KILLED)
         {
             rk++;
         }
         else
         {
             ostringstream m;
-            m << "Registered an impossible event, " << event;
+            m << "Registered an impossible event, " << events[n].second;
             FAIL() << m.str();
         }
     }

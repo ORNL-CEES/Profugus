@@ -8,7 +8,13 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <hpx/parallel/execution_policy.hpp>
+#include <hpx/include/parallel_algorithm.hpp>
+
+#include <boost/range/irange.hpp>
+
 #include <cmath>
+#include <algorithm>
 
 #include "harness/DBC.hh"
 #include "harness/Diagnostics.hh"
@@ -91,25 +97,77 @@ void Domain_Transporter::set(SP_Tallier tallies)
  * \param particle
  * \param bank
  */
-void Domain_Transporter::transport(Particle_t &particle,
-				   events::Event& event,
-                                   Bank_t     &bank) const
+void Domain_Transporter::transport( 
+    std::vector<Particle_t>& particles,
+    std::vector<std::pair<std::size_t,events::Event> >& events, 
+    std::vector<Bank_t>& banks ) const
 {
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
     REQUIRE(d_var_reduction);
     REQUIRE(d_tallier);
-    REQUIRE(particle.alive());
 
-    // step selector and distances
-    double dist_mfp = -std::log(particle.rng().ran());
+    // Get the number of particles
+    int np = particles.size();
+    CHECK( np > 0 );
+    auto range = boost::irange( 0, np );
 
-    // step particle through domain while particle is alive; life is relative
-    // to the domain, so a particle leaving the domain would be no longer
-    // alive wrt the current domain even though the particle might be alive to
-    // another domain
-    while (particle.alive())
+    // initialize the particle distances.
+    auto init_func = [&]( const int lid )
+		     { particles[lid].set_dist_mfp( 
+			     -std::log(particles[lid].rng().ran()) ); };
+    auto init_task = hpx::parallel::for_each( 
+	hpx::parallel::parallel_task_execution_policy(),
+	std::begin(range),
+	std::end(range),
+	init_func );
+    init_task.wait();
+
+    // Create an event sorting and searching predicate.
+    auto event_pred = []( const std::pair<std::size_t,events::Event>& e1,
+			  const std::pair<std::size_t,events::Event>& e2 )
+		      { return e1.second < e2.second; };
+
+    // Create a function for getting the next event.
+    auto get_next_event_func = 
+	[&]( std::pair<std::size_t,events::Event>& e )
+	{ 
+	    get_next_event( particles[e.first], e.second );
+	};
+
+    // Create a function for processing a boundary.
+    auto process_boundary_func =
+	[&]( std::pair<std::size_t,events::Event>& e )
+	{ 
+	    process_boundary( particles[e.first], e.second, banks[e.first] );
+	};
+
+    // Create a function for processing a collision.
+    auto process_collision_func = 
+	[&]( std::pair<std::size_t,events::Event>& e )
+	{ 
+	    process_collision( particles[e.first], e.second, banks[e.first] );
+	    particles[e.first].set_dist_mfp( -std::log(particles[e.first].rng().ran()) );
+	};
+
+    // Create event pairs that we will be looking for.
+    std::pair<std::size_t,events::Event> alive_pair( 0, events::STILL_ALIVE );
+    std::pair<std::size_t,events::Event> collision_pair( 0, events::COLLISION );
+    std::pair<std::size_t,events::Event> boundary_pair( 0, events::BOUNDARY );
+
+    // Create an iterator to the end of the active particles. The whole array
+    // is alive to start.
+    std::vector<std::pair<std::size_t,events::Event> >::iterator alive_end
+	= events.end();
+
+    // Run the kernels until the first particle in the list is no longer
+    // alive. The sorting will make sure this is the case.
+    while ( events[0].second < events::STILL_ALIVE )
     {
+	// Find the first particle that has been killed.
+	alive_end = std::lower_bound( events.begin(), alive_end,
+				      alive_pair, event_pred );
+
         // process particles through internal boundaries until it hits a
         // collision site or leaves the domain
         //
@@ -120,38 +178,61 @@ void Domain_Transporter::transport(Particle_t &particle,
         // up with a small, negative distance to boundary mesh on the
         // subsequent step, but who cares)
         // >>>>>>>>>>>>-<<<<<<<<<<<<<
-	get_next_event( particle, event, dist_mfp );
+	auto get_next_event_task = hpx::parallel::for_each( 
+	    hpx::parallel::parallel_task_execution_policy(),
+	    events.begin(),
+	    alive_end,
+	    get_next_event_func );
+	get_next_event_task.wait();
+	
+	// Sort the events.
+	std::sort( events.begin(), alive_end, event_pred );
 
-	// process a particle through the geometric boundary
-	if (event == events::BOUNDARY)
-	{
-	    process_boundary(particle, event, bank);
-	}
+	// Get the range of particles that have had a collision.
+	auto collision_range = std::equal_range( events.begin(),
+						 alive_end,
+						 collision_pair,
+						 event_pred );
 
-        // process particle at a collision
-        else if (event == events::COLLISION)
-	{
-	    // process collision
-            process_collision(dist_mfp, particle, event, bank);
+	// Get the range of particles that have hit a boundary.
+	auto boundary_range = std::equal_range( events.begin(),
+						alive_end,
+						boundary_pair,
+						event_pred );
 
-	    // reset mean free path distance
-	    dist_mfp = -std::log(particle.rng().ran());
-	}
+	// Process collision events.
+	auto process_collision_task = hpx::parallel::for_each( 
+	    hpx::parallel::parallel_task_execution_policy(),
+	    collision_range.first,
+	    collision_range.second,
+	    process_collision_func );
 
-        // any future events go here ...
-    }
+	// Process boundary events.
+	auto process_boundary_task = hpx::parallel::for_each( 
+	    hpx::parallel::parallel_task_execution_policy(),
+	    boundary_range.first,
+	    boundary_range.second,
+	    process_boundary_func );
+
+	// Wait on events to process.
+	process_collision_task.wait();
+	process_boundary_task.wait();
+
+	// Sort the events again to get the active particles.
+	std::sort( events.begin(), alive_end, event_pred );
+    } 
 }
 
 //---------------------------------------------------------------------------//
 // PRIVATE FUNCTIONS
 //---------------------------------------------------------------------------//
 void Domain_Transporter::get_next_event( 
-    Particle_t& particle, events::Event& event, double& dist_mfp ) const
+    Particle_t& particle, events::Event& event ) const
 {
     Step_Selector step_selector;
 
     CHECK(particle.alive());
-    CHECK(dist_mfp > 0.0);
+    CHECK(particle.dist_mfp() > 0.0);
 
     // total interaction cross section
     double xs_total = d_physics->total(physics::TOTAL, particle);
@@ -159,7 +240,7 @@ void Domain_Transporter::get_next_event(
 
     // sample distance to next collision
     double dist_col = 
-	(xs_total > 0.0) ? (dist_mfp / xs_total) : constants::huge;
+	(xs_total > 0.0) ? (particle.dist_mfp() / xs_total) : constants::huge;
 
     // initialize the distance to collision in the step selector
     step_selector.initialize(dist_col, events::COLLISION);
@@ -177,9 +258,14 @@ void Domain_Transporter::get_next_event(
     d_tallier->path_length(step_selector.step(), particle);
 
     // update the mfp distance travelled
-    dist_mfp = (events::COLLISION == event)
-	       ? step_selector.step()
-	       : (dist_mfp - step_selector.step() * xs_total);
+    if (events::COLLISION == event)
+    {
+	particle.set_dist_mfp( step_selector.step() );
+    }
+    else
+    {
+	particle.add_dist_mfp( -step_selector.step()*xs_total );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -248,8 +334,7 @@ void Domain_Transporter::process_boundary(Particle_t &particle,
 
 //---------------------------------------------------------------------------//
 
-void Domain_Transporter::process_collision(const double step,
-					   Particle_t &particle,
+void Domain_Transporter::process_collision(Particle_t &particle,
 					   events::Event& event,
                                            Bank_t     &bank) const
 {
@@ -257,7 +342,7 @@ void Domain_Transporter::process_collision(const double step,
     REQUIRE(event == events::COLLISION);
 
     // move the particle to the collision site
-    d_geometry->move_to_point(step, particle.geo_state());
+    d_geometry->move_to_point(particle.dist_mfp(), particle.geo_state());
 
     // use the physics package to process the collision
     d_physics->collide(particle, event, bank);

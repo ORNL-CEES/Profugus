@@ -43,10 +43,12 @@ class VR_Analog : public Variance_Reduction
     }
 
     //! Do nothing at surfaces
-    void post_surface(Particle_t& particle, Bank_t& bank) const { /* * */ }
+    void post_surface(Particle_t& particle, events::Event& event, Bank_t& bank) 
+	const { /* * */ }
 
     //! Do nothing at collisions
-    void post_collision(Particle_t& particle, Bank_t& bank) const { /* * */ }
+    void post_collision(Particle_t& particle, events::Event& event, Bank_t& bank) 
+	const { /* * */ }
 };
 
 } // end namespace profugus

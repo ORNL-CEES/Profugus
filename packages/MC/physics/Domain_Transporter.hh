@@ -89,18 +89,19 @@ class Domain_Transporter
     void set(SP_Tallier tallies);
 
     // Transport a particle through the domain.
-    void transport(Particle_t &particle, 
-		   events::Event& event, 
-		   Bank_t &bank) const;
+    void transport( std::vector<Particle_t>& particles,
+		    std::vector<std::pair<std::size_t,events::Event> >& events, 
+		    std::vector<Bank_t>& banks ) const;
 
   private:
     // >>> IMPLEMENTATION
 
     // Process collisions and boundaries.
-    void get_next_event( Particle_t& particle, events::Event& event, double& dist_mfp ) const;
-    void process_boundary(Particle_t &particle, events::Event& event, Bank_t &bank) const;
+    void get_next_event( Particle_t& particle, events::Event& event ) const;
+    void process_boundary(
+	Particle_t &particle, events::Event& event, Bank_t &bank) const;
     void process_collision(
-	const double step, Particle_t &particle, events::Event& event, Bank_t &bank) const;
+	Particle_t &particle, events::Event& event, Bank_t &bank) const;
 };
 
 } // end namespace profugus

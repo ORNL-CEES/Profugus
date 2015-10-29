@@ -22,15 +22,17 @@ namespace events
 //! Monte Carlo event descriptors.
 enum Event {
     COLLISION = 0,    //!< Collided
-    SCATTER,          //!< Scattered
     BOUNDARY,         //!< Hit internal boundary
+    SCATTER,          //!< Scattered
     IMPLICIT_CAPTURE, //!< Weight decreased through implicit absorption
     WEIGHT_WINDOW,    //!< Passed through weight window successfully
     ROULETTE_SURVIVE, //!< Survived Russian roulette
     BOUNDARY_MESH,    //!< Encountered domain decomposition boundary
     BORN,             //!< Born
     SPLIT,            //!< Split by weight window
+                       
     STILL_ALIVE,      //!< Particle is still alive. Used for event-based sort.
+
     CUTOFF,           //!< Cutoff by energy
     ABSORPTION,       //!< Was absorbed
     ESCAPE,           //!< Left problem through external boundary

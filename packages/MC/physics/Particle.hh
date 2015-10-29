@@ -64,6 +64,9 @@ class Particle
     // Particle geometric state.
     Geo_State_t d_geo_state;
 
+    // Particle distance to travel in mean free paths
+    double d_dist_mfp;
+
     // Problem/application specific metadata.
     Metadata d_metadata;
 
@@ -88,6 +91,12 @@ class Particle
     //! Set the material id of the region occupied by the particle.
     void set_matid(int matid) { d_matid = matid; }
 
+    //! Set a new distance to travel in mean free paths
+    void set_dist_mfp( const double dist_mfp ) { d_dist_mfp = dist_mfp; }
+
+    //! Add a value to the distance to travel in mean free paths.
+    void add_dist_mfp( const double dist ) { d_dist_mfp += dist; }
+
     //! Kill the particle.
     void kill() { d_alive = false; }
 
@@ -107,6 +116,7 @@ class Particle
     RNG& rng() { return d_rng; }
     int matid() const { return d_matid; }
     int group() const { return d_group; }
+    double dist_mfp() const { return d_dist_mfp; }
     //@}
 
     //@{
