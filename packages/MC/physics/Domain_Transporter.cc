@@ -127,7 +127,6 @@ void Domain_Transporter::transport(
     auto range = boost::irange( 0, batch_size );
 
     // initialize the source run count.
-    std::atomic<def::size_type> num_run_check( batch_size );
     std::atomic<def::size_type> num_run( batch_size );
     def::size_type num_to_run = d_source->num_to_transport();
 
@@ -174,13 +173,12 @@ void Domain_Transporter::transport(
     auto end_history_func = [&,this]( std::pair<std::size_t,events::Event>& e )
 			    { 
 				this->d_tallier->end_history( particles[e.first] );
-				int count = num_run_check.fetch_add(1);
+				int count = num_run.fetch_add(1);
 
 				// If we still have particles to run create a
 				// new one.
 				if ( count < num_to_run )
 				{
-				    num_run.fetch_add(1);
 				    particles[e.first] = 
 					this->d_source->get_particle(count);
 				    e.second = events::BORN;
@@ -189,6 +187,7 @@ void Domain_Transporter::transport(
 				// Otherwise this element in the vector is done.
 				else
 				{
+				    num_run.fetch_add(-1);
 				    e.second = events::END_EVENT;
 				}
 			    };
