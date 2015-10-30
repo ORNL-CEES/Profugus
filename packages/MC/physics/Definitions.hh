@@ -21,24 +21,24 @@ namespace events
 
 //! Monte Carlo event descriptors.
 enum Event {
-    COLLISION = 0,    //!< Collided
-    BOUNDARY,         //!< Hit internal boundary
-    SCATTER,          //!< Scattered
-    IMPLICIT_CAPTURE, //!< Weight decreased through implicit absorption
-    WEIGHT_WINDOW,    //!< Passed through weight window successfully
-    ROULETTE_SURVIVE, //!< Survived Russian roulette
-    BOUNDARY_MESH,    //!< Encountered domain decomposition boundary
-    BORN,             //!< Born
-    SPLIT,            //!< Split by weight window
+    COLLISION = 0,          //!< Collided
+    BOUNDARY = 1,           //!< Hit internal boundary
+    SCATTER = 2,            //!< Scattered
+    IMPLICIT_CAPTURE = 3,   //!< Weight decreased through implicit absorption
+    WEIGHT_WINDOW = 4,      //!< Passed through weight window successfully
+    ROULETTE_SURVIVE = 5,   //!< Survived Russian roulette
+    BOUNDARY_MESH = 6,      //!< Encountered domain decomposition boundary
+    BORN = 7,               //!< Born
+    SPLIT = 8,              //!< Split by weight window
                        
-    STILL_ALIVE,      //!< Particle is still alive. Used for event-based sort.
+    STILL_ALIVE = 9,        //!< Particle is still alive. Used for event-based sort.
 
-    CUTOFF,           //!< Cutoff by energy
-    ABSORPTION,       //!< Was absorbed
-    ESCAPE,           //!< Left problem through external boundary
-    ERROR_KILLED,     //!< Encountered unexpected error
-    ROULETTE_KILLED,  //!< Killed by Russian roulette
-    END_EVENT
+    CUTOFF = 10,            //!< Cutoff by energy
+    ABSORPTION = 11,        //!< Was absorbed
+    ESCAPE = 12,            //!< Left problem through external boundary
+    ERROR_KILLED = 13,      //!< Encountered unexpected error
+    ROULETTE_KILLED = 14,   //!< Killed by Russian roulette
+    END_EVENT = 15
 };
 
 } // end namespace events

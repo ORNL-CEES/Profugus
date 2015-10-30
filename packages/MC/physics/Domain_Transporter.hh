@@ -18,6 +18,7 @@
 #include "Step_Selector.hh"
 #include "Variance_Reduction.hh"
 #include "Tallier.hh"
+#include "Uniform_Source.hh"
 
 namespace profugus
 {
@@ -44,6 +45,7 @@ class Domain_Transporter
     //! Useful typedefs.
     typedef Core                                       Geometry_t;
     typedef Physics                                    Physics_t;
+    typedef Uniform_Source                             Source_t;
     typedef typename Geometry_t::Space_Vector          Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef typename Physics_t::Particle_t             Particle_t;
@@ -58,6 +60,7 @@ class Domain_Transporter
     typedef std::shared_ptr<Physics_t>              SP_Physics;
     typedef std::shared_ptr<Variance_Reduction_t>   SP_Variance_Reduction;
     typedef std::shared_ptr<Tallier_t>              SP_Tallier;
+    typedef std::shared_ptr<Source_t>               SP_Source;
     //@}
 
   private:
@@ -75,6 +78,9 @@ class Domain_Transporter
     // Regular tallies.
     SP_Tallier d_tallier;
 
+    // Particle source.
+    SP_Source d_source;
+
   public:
     // Constructor.
     Domain_Transporter();
@@ -87,6 +93,9 @@ class Domain_Transporter
 
     // Set regular tallies.
     void set(SP_Tallier tallies);
+
+    // Set the source.
+    void set(SP_Source source);
 
     // Transport a particle through the domain.
     void transport( std::vector<Particle_t>& particles,

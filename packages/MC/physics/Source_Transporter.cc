@@ -59,6 +59,7 @@ void Source_Transporter::assign_source(SP_Source source)
 
     // assign the source
     d_source = source;
+    d_transporter.set( d_source );
 }
 
 //---------------------------------------------------------------------------//
@@ -72,9 +73,10 @@ void Source_Transporter::solve()
     SCOPED_TIMER("MC::Source_Transporter.solve");
 
     // Build a vector of particles.
-    int np = d_source->num_to_transport();
-    std::vector<Particle_t> particles( np );
-    auto range = boost::irange( 0, np );
+    int batch_size = d_source->batch_size();
+    CHECK( batch_size > 0 );
+    std::vector<Particle_t> particles( batch_size );
+    auto range = boost::irange( 0, batch_size );
     auto source_func = [&,this]( const int lid )
 		       { particles[lid] = this->d_source->get_particle(lid); };
     auto source_task = hpx::parallel::for_each( 
@@ -84,7 +86,7 @@ void Source_Transporter::solve()
 	source_func );
 
     // Make a vector of event references.
-    std::vector<std::pair<std::size_t,events::Event> > events( np );
+    std::vector<std::pair<std::size_t,events::Event> > events( batch_size );
     auto event_fill_func = [&]( const int lid ) 
 			   { events[lid] = std::make_pair(lid,events::BORN); };
     auto event_fill_task = hpx::parallel::for_each( 
@@ -94,7 +96,7 @@ void Source_Transporter::solve()
 	event_fill_func );
 
     // Make a vector of banks.
-    std::vector<Bank_t> banks( np );    
+    std::vector<Bank_t> banks( batch_size );    
 
     // Wait to finish making particles and events.
     source_task.wait();
@@ -105,16 +107,6 @@ void Source_Transporter::solve()
 
     // Check that all of the banks are empty.
     REMEMBER( for ( auto& b : banks ) CHECK( b.empty() ); );
-
-    // Tally all the particles.
-    auto tally_func = [&,this]( const int lid )
-		      { this->d_tallier->end_history( particles[lid] ); };
-    auto tally_task = hpx::parallel::for_each( 
-	hpx::parallel::parallel_task_execution_policy(),
-	std::begin(range),
-	std::end(range),
-	tally_func );
-    tally_task.wait();
 }
 
 //---------------------------------------------------------------------------//

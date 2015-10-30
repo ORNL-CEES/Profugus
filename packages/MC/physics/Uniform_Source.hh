@@ -107,6 +107,9 @@ class Uniform_Source
     //! Total number of particles to transport in the entire problem/cycle.
     size_type total_num_to_transport() const { return d_np_total; }
 
+    //! Get the local batch size.
+    size_type batch_size() const { return d_batch_size; }
+
     //! Get the geometry.
     const Geometry_t& geometry() const { return *d_geometry; }
 
@@ -145,6 +148,9 @@ class Uniform_Source
 
     // Requested particles.
     size_type d_np_requested;
+
+    // Batch size.
+    size_type d_batch_size;
 
     // Number of particles: total, domain
     size_type d_np_total;

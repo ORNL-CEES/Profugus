@@ -65,14 +65,14 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     REQUIRE(!db.is_null());
 
     // store the total number of requested particles
+    d_batch_size = static_cast<size_type>(db->get("Batch Size", 1000));
     d_np_requested = static_cast<size_type>(db->get("Np", 1000));
     VALIDATE(d_np_requested > 0., "Number of source particles ("
             << d_np_requested << ") must be positive");
+    REQUIRE( d_batch_size <= d_np_requested );
 
     // initialize the total
-    d_np_total = std::ceil( d_np_requested / hpx::get_os_thread_count() ) *
-		 hpx::get_os_thread_count();
-    CHECK( d_np_total % hpx::get_os_thread_count() == 0 );
+    d_np_total = d_np_requested;
 
     // get the spectral shape
     const auto &shape = db->get(

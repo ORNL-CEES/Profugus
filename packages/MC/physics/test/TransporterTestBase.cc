@@ -42,6 +42,9 @@ void TransporterTestBase::SetUp()
     CHECK(physics);
     physics->set_geometry(geometry);
 
+    // Create source.
+    this->init_source();
+
     // Create VR
     this->init_vr();
     CHECK(var_red);

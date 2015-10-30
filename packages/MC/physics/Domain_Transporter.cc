@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <atomic>
 
 #include "harness/DBC.hh"
 #include "harness/Diagnostics.hh"
@@ -92,6 +93,19 @@ void Domain_Transporter::set(SP_Tallier tallies)
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Set regular source.
+ *
+ * \param source
+ */
+void Domain_Transporter::set(SP_Source source)
+{
+    REQUIRE(source);
+    d_source = source;
+    ENSURE(d_source);
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Transport a particle through the domain.
  *
  * \param particle
@@ -108,9 +122,14 @@ void Domain_Transporter::transport(
     REQUIRE(d_tallier);
 
     // Get the number of particles
-    int np = particles.size();
-    CHECK( np > 0 );
-    auto range = boost::irange( 0, np );
+    int batch_size = particles.size();
+    CHECK( batch_size > 0 );
+    auto range = boost::irange( 0, batch_size );
+
+    // initialize the source run count.
+    std::atomic<def::size_type> num_run_check( batch_size );
+    std::atomic<def::size_type> num_run( batch_size );
+    def::size_type num_to_run = d_source->num_to_transport();
 
     // initialize the particle distances.
     auto init_func = [&]( const int lid )
@@ -150,24 +169,67 @@ void Domain_Transporter::transport(
 	    particles[e.first].set_dist_mfp( -std::log(particles[e.first].rng().ran()) );
 	};
 
+    // Create a function for tallying particles after they have died and
+    // spawning a new particle if necesseary.
+    auto end_history_func = [&,this]( std::pair<std::size_t,events::Event>& e )
+			    { 
+				this->d_tallier->end_history( particles[e.first] );
+				int count = num_run_check.fetch_add(1);
+				if ( count < num_to_run )
+				{
+				    num_run.fetch_add(1);
+				    particles[e.first] = 
+					this->d_source->get_particle(count);
+				    e.second = events::BORN;
+				}
+				else
+				{
+				    e.second = events::END_EVENT;
+				}
+			    };
+
+    // Create a functions for find the range of collision events.
+    auto find_collision_begin = []( const std::pair<std::size_t,events::Event>& e )
+				{ return e.second == events::COLLISION; };
+    auto find_collision_end = []( const std::pair<std::size_t,events::Event>& e )
+				{ return e.second > events::COLLISION; };
+
+    // Create a functions for find the range of boundary events.
+    auto find_boundary_begin = []( const std::pair<std::size_t,events::Event>& e )
+				{ return e.second == events::BOUNDARY; };
+    auto find_boundary_end = []( const std::pair<std::size_t,events::Event>& e )
+				{ return e.second > events::BOUNDARY; };
+
+    // Create a functions for find the range of end history events.
+    auto find_end_history_begin = []( const std::pair<std::size_t,events::Event>& e )
+				{ return e.second > events::STILL_ALIVE; };
+    auto find_end_history_end = []( const std::pair<std::size_t,events::Event>& e )
+				{ return e.second == events::END_EVENT; };
+
     // Create event pairs that we will be looking for.
     std::pair<std::size_t,events::Event> alive_pair( 0, events::STILL_ALIVE );
     std::pair<std::size_t,events::Event> collision_pair( 0, events::COLLISION );
     std::pair<std::size_t,events::Event> boundary_pair( 0, events::BOUNDARY );
+    std::pair<std::size_t,events::Event> end_pair( 0, events::END_EVENT );
 
     // Create an iterator to the end of the active particles. The whole array
     // is alive to start.
     std::vector<std::pair<std::size_t,events::Event> >::iterator alive_end
 	= events.end();
+    std::vector<std::pair<std::size_t,events::Event> >::iterator dead_end
+	= events.end();
+
+    // create a range for particles that have just been killed.
+    std::pair<std::vector<std::pair<std::size_t,events::Event> >::iterator,
+	      std::vector<std::pair<std::size_t,events::Event> >::iterator>
+	end_history_range;
 
     // Run the kernels until the first particle in the list is no longer
-    // alive. The sorting will make sure this is the case.
+    // alive. The sorting will make sure that when this is the case, all
+    // particles have been finished.
+    int counter = 0;
     while ( events[0].second < events::STILL_ALIVE )
     {
-	// Find the first particle that has been killed.
-	alive_end = std::lower_bound( events.begin(), alive_end,
-				      alive_pair, event_pred );
-
         // process particles through internal boundaries until it hits a
         // collision site or leaves the domain
         //
@@ -185,20 +247,43 @@ void Domain_Transporter::transport(
 	    get_next_event_func );
 	get_next_event_task.wait();
 	
-	// Sort the events.
-	std::sort( events.begin(), alive_end, event_pred );
+	// Sort the events so we can get equal ranges of particles.
+	std::sort( events.begin(), dead_end, event_pred );
+	
+	// // Get the range of particles that have had a collision.
+	// auto collision_range_begin =
+	//     hpx::parallel::find_if(
+	// 	hpx::parallel_task_execution_policy(),
+	// 	events.begin(),
+	// 	alive_end,
+	// 	find_collision_begin );
+	// auto collision_range_end =
+	//     hpx::parallel::find_if(
+	// 	hpx::parallel_task_execution_policy(),
+	// 	events.end(),
+	// 	alive_end,
+	// 	find_collision_end );
 
-	// Get the range of particles that have had a collision.
 	auto collision_range = std::equal_range( events.begin(),
-						 alive_end,
+						 dead_end,
 						 collision_pair,
 						 event_pred );
 
 	// Get the range of particles that have hit a boundary.
 	auto boundary_range = std::equal_range( events.begin(),
-						alive_end,
+						dead_end,
 						boundary_pair,
 						event_pred );
+
+	// Get the range of particles that have just been killed.
+	end_history_range.first = std::upper_bound( events.begin(),
+						    dead_end,
+						    alive_pair,
+						    event_pred );
+	end_history_range.second = std::lower_bound( events.begin(),
+						     dead_end,
+						     end_pair,
+						     event_pred );
 
 	// Process collision events.
 	auto process_collision_task = hpx::parallel::for_each( 
@@ -214,13 +299,45 @@ void Domain_Transporter::transport(
 	    boundary_range.second,
 	    process_boundary_func );
 
+	// Tally particles that died on the last event cycle and spawn a new
+	// one if needed.
+	auto process_end_history_task = hpx::parallel::for_each( 
+	    hpx::parallel::parallel_task_execution_policy(),
+	    end_history_range.first,
+	    end_history_range.second,
+	    end_history_func );
+
 	// Wait on events to process.
 	process_collision_task.wait();
 	process_boundary_task.wait();
+	process_end_history_task.wait();
 
-	// Sort the events again to get the active particles.
-	std::sort( events.begin(), alive_end, event_pred );
+	// Sort the events again to get the active particles and dead particles.
+	std::sort( events.begin(), events.end(), event_pred );
+
+	// Find the first particle that is still alive.
+	alive_end = std::lower_bound( events.begin(), events.end(),
+				      alive_pair, event_pred );
+
+	// Find the first particle that is completely dead and will not
+	// respawn with a new source particle.
+	dead_end = std::lower_bound( events.begin(), events.end(),
+				     end_pair, event_pred );
+
+	++counter;
     } 
+
+    // Process any remaining particles.
+    auto process_end_history_task = hpx::parallel::for_each( 
+	hpx::parallel::parallel_task_execution_policy(),
+	events.begin(),
+	dead_end,
+	end_history_func );
+    process_end_history_task.wait();
+    
+    std::cout << "NUM RUN " << num_run.load() << std::endl;
+    std::cout << "NUM CYCLE " << counter << std::endl;
+    ENSURE( num_run.load() == num_to_run );
 }
 
 //---------------------------------------------------------------------------//

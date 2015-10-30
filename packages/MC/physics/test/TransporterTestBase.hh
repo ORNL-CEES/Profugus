@@ -60,6 +60,7 @@ class TransporterTestBase : public testing::Test
 
     typedef std::shared_ptr<Geometry_t>             SP_Geometry;
     typedef std::shared_ptr<Physics_t>              SP_Physics;
+    typedef std::shared_ptr<Source_t>               SP_Source;
     typedef std::shared_ptr<RNG_t>                  SP_RNG;
     typedef std::shared_ptr<profugus::Shape>        SP_Shape;
     typedef std::shared_ptr<Tallier_t>              SP_Tallier;
@@ -91,6 +92,9 @@ class TransporterTestBase : public testing::Test
     // Create russian roulette VR by default
     virtual void init_vr();
 
+    // Create source.
+    virtual void init_source();
+
     // Set tallies
     virtual void init_tallies()
     {
@@ -114,6 +118,7 @@ class TransporterTestBase : public testing::Test
     SP_Group_Bounds  group_bounds;
     SP_Var_Reduction var_red;
     SP_Tallier       tallier;
+    SP_Source        source;
 };
 
 #endif // mc_test_TransporterTestBase_hh
