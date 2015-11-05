@@ -46,7 +46,8 @@ class Anderson_Operator : public OperatorAdapter<T>
     typedef OperatorAdapter<T> Base;
 
 public:
-    typedef Source_Transporter                      Source_Transporter_t;
+    typedef profugus::Core                          Geometry_t;
+    typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
     typedef Fission_Source<Core>                    FS_t;
     typedef std::shared_ptr<FS_t>                   SP_Fission_Source;

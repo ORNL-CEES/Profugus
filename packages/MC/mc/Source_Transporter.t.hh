@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Transporter.cc
+ * \file   mc/Source_Transporter.t.hh
  * \author Thomas M. Evans
  * \date   Tue May 13 09:20:07 2014
- * \brief  Source_Transporter member definitions.
+ * \brief  Source_Transporter template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Source_Transporter_t_hh
+#define mc_Source_Transporter_t_hh
 
 #include <iomanip>
 #include <iostream>
@@ -26,9 +29,10 @@ namespace profugus
 /*!
  * \brief Constructor/
  */
-Source_Transporter::Source_Transporter(RCP_Std_DB  db,
-                                       SP_Geometry geometry,
-                                       SP_Physics  physics)
+template <class Geometry>
+Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB  db,
+                                                 SP_Geometry geometry,
+                                                 SP_Physics  physics)
     : d_geometry(geometry)
     , d_physics(physics)
     , d_node(profugus::node())
@@ -51,7 +55,8 @@ Source_Transporter::Source_Transporter(RCP_Std_DB  db,
 /*!
  * \brief Assign the source.
  */
-void Source_Transporter::assign_source(SP_Source source)
+template <class Geometry>
+void Source_Transporter<Geometry>::assign_source(SP_Source source)
 {
     using std::ceil;
 
@@ -68,7 +73,8 @@ void Source_Transporter::assign_source(SP_Source source)
 /*!
  * \brief Solve the fixed-source problem.
  */
-void Source_Transporter::solve()
+template <class Geometry>
+void Source_Transporter<Geometry>::solve()
 {
     using std::cout; using std::endl;
 
@@ -165,7 +171,8 @@ void Source_Transporter::solve()
  *
  * Fission sites are added to the container, it is \b not emptied.
  */
-void Source_Transporter::sample_fission_sites(SP_Fission_Sites fis_sites,
+template <class Geometry>
+void Source_Transporter<Geometry>::sample_fission_sites(SP_Fission_Sites fis_sites,
                                               double           keff)
 {
     // set the transporter with the fission site container and the latest keff
@@ -177,7 +184,8 @@ void Source_Transporter::sample_fission_sites(SP_Fission_Sites fis_sites,
 /*!
  * \brief Set the variance reduction.
  */
-void Source_Transporter::set(SP_Variance_Reduction vr)
+template <class Geometry>
+void Source_Transporter<Geometry>::set(SP_Variance_Reduction vr)
 {
     REQUIRE(vr);
 
@@ -192,7 +200,8 @@ void Source_Transporter::set(SP_Variance_Reduction vr)
 /*!
  * \brief Set the tally controller
  */
-void Source_Transporter::set(SP_Tallier tallier)
+template <class Geometry>
+void Source_Transporter<Geometry>::set(SP_Tallier tallier)
 {
     REQUIRE(tallier);
 
@@ -205,6 +214,8 @@ void Source_Transporter::set(SP_Tallier tallier)
 
 } // end namespace profugus
 
+#endif // mc_Source_Transporter_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Source_Transporter.cc
+//                 end of Source_Transporter.t.hh
 //---------------------------------------------------------------------------//

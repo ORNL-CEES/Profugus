@@ -31,7 +31,8 @@ class DRSourceTransporterTest : public TransporterTestBase
 
   public:
 
-    typedef profugus::Source_Transporter Transporter_t;
+    typedef profugus::Core                           Geometry_t;
+    typedef profugus::Source_Transporter<Geometry_t> Transporter_t;
 
     void init_tallies()
     {

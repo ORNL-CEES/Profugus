@@ -58,10 +58,11 @@ class KCode_Solver : public Keff_Solver
   public:
     //@{
     //! Typedefs.
-    typedef Source_Transporter                      Source_Transporter_t;
+    typedef profugus::Core                          Geometry_t;
+    typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
     typedef Source_Transporter_t::RCP_Std_DB        RCP_Std_DB;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
-    typedef Fission_Source<Core>                    FS_t;
+    typedef Fission_Source<Geometry_t>              FS_t;
     typedef typename FS_t::SP_Fission_Sites         SP_Fission_Sites;
 
   private:

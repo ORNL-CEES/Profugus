@@ -37,7 +37,8 @@ class Fixed_Source_Solver : public Solver
   public:
     //@{
     //! Typedefs.
-    typedef Source_Transporter                    Source_Transporter_t;
+    typedef profugus::Core                        Geometry_t;
+    typedef Source_Transporter<Geometry_t>        Source_Transporter_t;
     typedef std::shared_ptr<Source_Transporter_t> SP_Source_Transporter;
     typedef Source_Transporter_t::SP_Source       SP_Source;
     //@}

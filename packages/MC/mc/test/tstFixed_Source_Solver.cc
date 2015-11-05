@@ -29,12 +29,12 @@ class FixedSourceSolverTest : public TransporterTestBase
     typedef TransporterTestBase Base;
 
   public:
-    typedef profugus::Core                          Geometry_t;
-    typedef profugus::Source_Transporter            Transporter_t;
-    typedef profugus::Fixed_Source_Solver           Solver_t;
-    typedef Transporter_t::Source_t                 Source_t;
-    typedef Solver_t::SP_Source                     SP_Source;
-    typedef profugus::Uniform_Source<Geometry_t>    Uniform_Source_t;
+    typedef profugus::Core                           Geometry_t;
+    typedef profugus::Source_Transporter<Geometry_t> Transporter_t;
+    typedef profugus::Fixed_Source_Solver            Solver_t;
+    typedef Transporter_t::Source_t                  Source_t;
+    typedef Solver_t::SP_Source                      SP_Source;
+    typedef profugus::Uniform_Source<Geometry_t>     Uniform_Source_t;
 
     typedef std::shared_ptr<Transporter_t> SP_Transporter;
 

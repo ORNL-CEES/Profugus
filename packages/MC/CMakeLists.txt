@@ -114,7 +114,7 @@ SET(MC_SOURCES
   mc/Solver.cc
   mc/Source.pt.cc
   mc/Source_Diagnostic_Tally.cc
-  mc/Source_Transporter.cc
+  mc/Source_Transporter.pt.cc
   mc/Tallier.cc
   mc/Tally.cc
   mc/Uniform_Source.pt.cc
