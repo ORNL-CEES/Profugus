@@ -1,17 +1,17 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Geometry.t.hh
+ * \file   geometry/RTK_Geometry.t.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:43:42 2014
- * \brief  Geometry template member definitions.
+ * \brief  RTK_Geometry template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Geometry_t_hh
-#define geometry_Geometry_t_hh
+#ifndef geometry_RTK_Geometry_t_hh
+#define geometry_RTK_Geometry_t_hh
 
-#include "Geometry.hh"
+#include "RTK_Geometry.hh"
 #include "RTK_Functions.hh"
 
 namespace profugus
@@ -24,7 +24,7 @@ namespace profugus
  * \brief Constructor.
  */
 template<class Array>
-Geometry<Array>::Geometry(SP_Array array)
+RTK_Geometry<Array>::RTK_Geometry(SP_Array array)
     : d_array(array)
     , d_volumes(d_array->get_volumes())
     , d_level(d_array->level())
@@ -46,7 +46,7 @@ Geometry<Array>::Geometry(SP_Array array)
  * (possible for sources and especially meshing).
  */
 template<class Array>
-void Geometry<Array>::initialize(const Space_Vector &r,
+void RTK_Geometry<Array>::initialize(const Space_Vector &r,
                                  const Space_Vector &direction,
                                  Geo_State_t        &state)
 {
@@ -109,7 +109,7 @@ void Geometry<Array>::initialize(const Space_Vector &r,
  * surface
  */
 template<class Array>
-bool Geometry<Array>::reflect(Geo_State_t &state)
+bool RTK_Geometry<Array>::reflect(Geo_State_t &state)
 {
     using def::X; using def::Y; using def::Z;
 
@@ -142,8 +142,8 @@ bool Geometry<Array>::reflect(Geo_State_t &state)
  * \brief Return the outward normal for points on a face.
  */
 template<class Array>
-typename Geometry<Array>::Space_Vector
-Geometry<Array>::normal(const Geo_State_t &state) const
+typename RTK_Geometry<Array>::Space_Vector
+RTK_Geometry<Array>::normal(const Geo_State_t &state) const
 {
     // query is based on position of particle on a face; otherwise we return a
     // zero vector
@@ -177,8 +177,8 @@ Geometry<Array>::normal(const Geo_State_t &state) const
 
 } // end namespace profugus
 
-#endif // geometry_Geometry_t_hh
+#endif // geometry_RTK_Geometry_t_hh
 
 //---------------------------------------------------------------------------//
-//                   end of geometry/Geometry.t.hh
+//                   end of geometry/RTK_Geometry.t.hh
 //---------------------------------------------------------------------------//

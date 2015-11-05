@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Geometry.pt.cc
+ * \file   geometry/RTK_Geometry.pt.cc
  * \author Thomas M. Evans
  * \date   Tue Jan 25 10:02:33 2011
  * \brief  Explicit instantiations of RTK_Geometry types.
@@ -8,13 +8,13 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Geometry.t.hh"
+#include "RTK_Geometry.t.hh"
 
 namespace profugus
 {
 
-template class Geometry< RTK_Array<RTK_Cell> >;
-template class Geometry< RTK_Array< RTK_Array<RTK_Cell> > >;
+template class RTK_Geometry< RTK_Array<RTK_Cell> >;
+template class RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > >;
 
 } // end namespace profugus
 

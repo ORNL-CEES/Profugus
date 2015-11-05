@@ -16,7 +16,7 @@
 
 #include "utils/Definitions.hh"
 #include "rng/RNG_Control.hh"
-#include "geometry/Geometry.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "Physics.hh"
 
 namespace profugus

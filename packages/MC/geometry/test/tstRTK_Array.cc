@@ -22,7 +22,7 @@
 #include "geometry/Definitions.hh"
 #include "../RTK_Cell.hh"
 #include "../RTK_Array.hh"
-#include "../Geometry.hh"
+#include "../RTK_Geometry.hh"
 
 using namespace std;
 
@@ -1744,7 +1744,7 @@ class LatticeInitTest : public ::testing::Test
   protected:
     typedef profugus::RTK_Array<profugus::RTK_Cell> Lattice ;
     typedef Lattice::Object_t                       Object_t;
-    typedef profugus::Geometry<Lattice>             Geometry_t;
+    typedef profugus::RTK_Geometry<Lattice>         Geometry_t;
 
     typedef Lattice::SP_Object     SP_Object  ;
     typedef shared_ptr<Lattice>    SP_Lattice ;

@@ -13,7 +13,7 @@
 
 #include <memory>
 
-#include "geometry/Geometry.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "Physics.hh"
 #include "Step_Selector.hh"
 #include "Variance_Reduction.hh"

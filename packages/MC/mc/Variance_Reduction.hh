@@ -15,7 +15,7 @@
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
-#include "geometry/Geometry.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "Physics.hh"
 
 namespace profugus

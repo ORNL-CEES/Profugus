@@ -21,7 +21,7 @@
 #include "utils/Definitions.hh"
 #include "utils/Static_Map.hh"
 #include "xs/XS.hh"
-#include "geometry/Geometry.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "Definitions.hh"
 #include "Group_Bounds.hh"
 #include "Particle.hh"

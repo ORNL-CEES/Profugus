@@ -1,15 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Geometry.hh
+ * \file   geometry/RTK_Geometry.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:43:25 2014
- * \brief  Geometry class definition.
+ * \brief  RTK_Geometry class definition.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Geometry_hh
-#define geometry_Geometry_hh
+#ifndef geometry_RTK_Geometry_hh
+#define geometry_RTK_Geometry_hh
 
 #include <cmath>
 #include <memory>
@@ -28,21 +28,21 @@ namespace profugus
 
 //===========================================================================//
 /*!
- * \class Geometry
+ * \class RTK_Geometry
  * \brief Defines geometry implementations for the RTK MC geometry.
  *
  * The profugus::RTK_Array and profugus::RTK_Cell classes allow clients to
  * build hierarchical arrays of pin-cells, arrays of arrays of pin-cells, etc.
  * In this way, simple LWR reactor geometries can be constructed quickly.
  * However, in order to use these classes in the profugus MC framework, they
- * must be defined as a profugus::Geometry.  The Geometry class provides the
- * correct publicly derived interface to profugus::Geometry so that the
- * profugus MC classes can use this as a geometry implementation.  This class
- * is parameterized on Array so that different types of geometries can be
- * constructed from the same code, ie.
+ * must be defined as a profugus::RTK_Geometry.  The RTK_Geometry class
+ * provides the correct publicly derived interface to profugus::RTK_Geometry
+ * so that the profugus MC classes can use this as a geometry implementation.
+ * This class is parameterized on Array so that different types of geometries
+ * can be constructed from the same code, ie.
  * \code
- typedef Geometry< RTK_Array<RTK_Cell> >              Lattice;
- typedef Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
+ typedef RTK_Geometry< RTK_Array<RTK_Cell> >              Lattice;
+ typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
 
  // make an RTK_Core core reactor geometry
  typedef profugus::Core          Core_Geometry;
@@ -66,12 +66,12 @@ namespace profugus
  * \example geometry/rtk/test/tstLattice.cc
  * \example geometry/rtk/test/tstCore.cc
  *
- * Test of Geometry implementations.
+ * Test of RTK_Geometry implementations.
  */
 //===========================================================================//
 
 template<class Array>
-class Geometry : public Tracking_Geometry<RTK_State>
+class RTK_Geometry : public Tracking_Geometry<RTK_State>
 {
   public:
     //@{
@@ -96,7 +96,7 @@ class Geometry : public Tracking_Geometry<RTK_State>
 
   public:
     // Constructor.
-    explicit Geometry(SP_Array array);
+    explicit RTK_Geometry(SP_Array array);
 
     // >>> DERIVED INTERFACE from Geometry_Base
 
@@ -260,14 +260,14 @@ class Geometry : public Tracking_Geometry<RTK_State>
 
 //@{
 //! Single-level lattice/core geometries.
-typedef Geometry< RTK_Array<RTK_Cell> >              Lattice;
-typedef Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
+typedef RTK_Geometry< RTK_Array<RTK_Cell> >              Lattice;
+typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
 //@}
 
 } // end namespace profugus
 
-#endif // geometry_Geometry_hh
+#endif // geometry_RTK_Geometry_hh
 
 //---------------------------------------------------------------------------//
-//              end of geometry/Geometry.hh
+//              end of geometry/RTK_Geometry.hh
 //---------------------------------------------------------------------------//
