@@ -18,6 +18,9 @@
 #include "Definitions.hh"
 #include "harness/DBC.hh"
 
+// Remove this once templated
+#include "geometry/RTK_Geometry.hh"
+
 namespace profugus
 {
 
@@ -33,7 +36,7 @@ class Tally
   public:
     //@{
     //! Typedefs.
-    typedef Physics                    Physics_t;
+    typedef Physics<Core>              Physics_t;
     typedef Physics_t::Particle_t      Particle_t;
     typedef std::shared_ptr<Physics_t> SP_Physics;
     //@}

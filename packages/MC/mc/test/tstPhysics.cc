@@ -20,6 +20,7 @@
 #include "Teuchos_RCP.hpp"
 #include "utils/Definitions.hh"
 #include "rng/RNG_Control.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "../Sampler.hh"
 
 using namespace std;
@@ -34,7 +35,7 @@ class PhysicsTest : public testing::Test
 {
   protected:
     typedef profugus::RNG_Control             RNG_Control;
-    typedef profugus::Physics                 Physics_t;
+    typedef profugus::Physics<profugus::Core> Physics_t;
     typedef Physics_t::Geometry_t             Geometry_t;
     typedef Physics_t::SP_Geometry            SP_Geometry;
     typedef Physics_t::Particle_t             Particle;

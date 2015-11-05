@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Physics.cc
+ * \file   mc/Physics.t.hh
  * \author Thomas M. Evans
  * \date   Thursday May 1 11:14:55 2014
- * \brief  MG_Physics member definitions.
+ * \brief  MG_Physics template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Physics_t_hh
+#define mc_Physics_t_hh
 
 #include <sstream>
 #include <algorithm>
@@ -26,8 +29,9 @@ namespace profugus
 /*!
  * \brief Constructor that implicitly creates Group_Bounds
  */
-Physics::Physics(RCP_Std_DB db,
-                 RCP_XS     mat)
+template <class Geometry>
+Physics<Geometry>::Physics(RCP_Std_DB db,
+                           RCP_XS     mat)
     : d_mat(mat)
     , d_Ng(d_mat->num_groups())
     , d_Nm(d_mat->num_mat())
@@ -142,8 +146,9 @@ Physics::Physics(RCP_Std_DB db,
  * \param energy energy in eV
  * \param p particle
  */
-void Physics::initialize(double      energy,
-                         Particle_t &p)
+template <class Geometry>
+void Physics<Geometry>::initialize(double      energy,
+                                   Particle_t &p)
 {
     // check to make sure the energy is in the group structure and get the
     // group index
@@ -162,8 +167,9 @@ void Physics::initialize(double      energy,
 /*!
  * \brief Process a particle through a physical collision.
  */
-void Physics::collide(Particle_t &particle,
-                      Bank_t     &bank)
+template <class Geometry>
+void Physics<Geometry>::collide(Particle_t &particle,
+                                Bank_t     &bank)
 {
     REQUIRE(d_geometry);
     REQUIRE(particle.event() == events::COLLISION);
@@ -240,8 +246,9 @@ void Physics::collide(Particle_t &particle,
 /*!
  * \brief Get a total cross section from the physics library.
  */
-double Physics::total(physics::Reaction_Type  type,
-                      const Particle_t       &p)
+template <class Geometry>
+double Physics<Geometry>::total(physics::Reaction_Type  type,
+                                const Particle_t       &p)
 {
     REQUIRE(d_mat->num_mat() == d_Nm);
     REQUIRE(d_mat->num_groups() == d_Ng);
@@ -286,8 +293,9 @@ double Physics::total(physics::Reaction_Type  type,
  * \return true if fissionable material and spectrum sampled; false if no
  * fissionable material present
  */
-bool Physics::initialize_fission(unsigned int  matid,
-                                 Particle_t   &p)
+template <class Geometry>
+bool Physics<Geometry>::initialize_fission(unsigned int  matid,
+                                           Particle_t   &p)
 {
     REQUIRE(d_mat->has(matid));
 
@@ -333,9 +341,10 @@ bool Physics::initialize_fission(unsigned int  matid,
  *
  * \return the number of fission events added at the site
  */
-int Physics::sample_fission_site(const Particle_t       &p,
-                                 Fission_Site_Container &fsc,
-                                 double                  keff)
+template <class Geometry>
+int Physics<Geometry>::sample_fission_site(const Particle_t       &p,
+                                           Fission_Site_Container &fsc,
+                                           double                  keff)
 {
     REQUIRE(d_geometry);
     REQUIRE(d_mat->has(p.matid()));
@@ -385,8 +394,9 @@ int Physics::sample_fission_site(const Particle_t       &p,
  * \return true if physics state initialized; false if no particles are left
  * at the site
  */
-bool Physics::initialize_fission(Fission_Site &fs,
-                                 Particle_t   &p)
+template <class Geometry>
+bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
+                                           Particle_t   &p)
 {
     REQUIRE(d_mat->has(fs.m));
     REQUIRE(is_fissionable(fs.m));
@@ -408,9 +418,10 @@ bool Physics::initialize_fission(Fission_Site &fs,
 /*!
  * \brief Sample a group after a scattering event.
  */
-int Physics::sample_group(int    matid,
-                          int    g,
-                          double rnd) const
+template <class Geometry>
+int Physics<Geometry>::sample_group(int    matid,
+                                    int    g,
+                                    double rnd) const
 {
     REQUIRE(!d_mat.is_null());
     REQUIRE(d_mat->num_groups() == d_Ng);
@@ -454,8 +465,9 @@ int Physics::sample_group(int    matid,
  * This function is optimized based on the assumption that nearly all of the
  * fission emission is in the first couple of groups.
  */
-int Physics::sample_fission_group(unsigned int matid,
-                                  double       rnd) const
+template <class Geometry>
+int Physics<Geometry>::sample_fission_group(unsigned int matid,
+                                            double       rnd) const
 {
     REQUIRE(d_mat->has(matid));
     REQUIRE(is_fissionable(matid));
@@ -490,6 +502,8 @@ int Physics::sample_fission_group(unsigned int matid,
 
 } // end namespace profugus
 
+#endif // mc_Physics_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Physics.cc
+//                 end of Physics.t.hh
 //---------------------------------------------------------------------------//

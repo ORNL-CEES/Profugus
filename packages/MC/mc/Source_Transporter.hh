@@ -18,6 +18,9 @@
 #include "Source.hh"
 #include "Domain_Transporter.hh"
 
+// Remove this once templated
+#include "geometry/RTK_Geometry.hh"
+
 namespace profugus
 {
 
@@ -46,7 +49,7 @@ class Source_Transporter
   public:
     //@{
     //! Typedefs.
-    typedef Domain_Transporter                   Transporter_t;
+    typedef Domain_Transporter<Core>             Transporter_t;
     typedef Source                               Source_t;
     typedef Transporter_t::Physics_t             Physics_t;
     typedef Transporter_t::Geometry_t            Geometry_t;

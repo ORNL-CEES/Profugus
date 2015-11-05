@@ -37,7 +37,7 @@ Fission_Rebalance::Fission_Rebalance()
     , d_num_nbors(0)
     , d_target_set(0)
     , d_sites_set(d_num_sets)
-    , d_size_fs(Physics::fission_site_bytes())
+    , d_size_fs(Physics_t::fission_site_bytes())
 {
     // return if we are on 1 set
     if (d_num_sets == 1)

@@ -16,6 +16,7 @@
 #include "Teuchos_ParameterList.hpp"
 
 #include "gtest/utils_gtest.hh"
+#include "geometry/RTK_Geometry.hh"
 
 //---------------------------------------------------------------------------//
 // Tally Types
@@ -129,20 +130,20 @@ class C_Tally : public profugus::Compound_Tally
 class TallierTest : public testing::Test
 {
   protected:
-    typedef profugus::Tallier              Tallier_t;
-    typedef Tallier_t::SP_Tally            SP_Tally;
-    typedef profugus::Physics              Physics_t;
-    typedef Physics_t::Geometry_t          Geometry_t;
-    typedef profugus::Keff_Tally           Keff_Tally_t;
-    typedef Physics_t::Particle_t          Particle_t;
-    typedef Physics_t::XS_t                XS_t;
-    typedef Physics_t::RCP_XS              RCP_XS;
-    typedef Physics_t::SP_Geometry         SP_Geometry;
-    typedef Tallier_t::SP_Physics          SP_Physics;
-    typedef Tallier_t::Pathlength_Tally_t  Pathlength_Tally_t;
-    typedef Tallier_t::Source_Tally_t      Source_Tally_t;
-    typedef Tallier_t::SP_Pathlength_Tally SP_Pathlength_Tally;
-    typedef Tallier_t::SP_Source_Tally     SP_Source_Tally;
+    typedef profugus::Tallier                   Tallier_t;
+    typedef Tallier_t::SP_Tally                 SP_Tally;
+    typedef profugus::Physics<profugus::Core>   Physics_t;
+    typedef Physics_t::Geometry_t               Geometry_t;
+    typedef profugus::Keff_Tally                Keff_Tally_t;
+    typedef Physics_t::Particle_t               Particle_t;
+    typedef Physics_t::XS_t                     XS_t;
+    typedef Physics_t::RCP_XS                   RCP_XS;
+    typedef Physics_t::SP_Geometry              SP_Geometry;
+    typedef Tallier_t::SP_Physics               SP_Physics;
+    typedef Tallier_t::Pathlength_Tally_t       Pathlength_Tally_t;
+    typedef Tallier_t::Source_Tally_t           Source_Tally_t;
+    typedef Tallier_t::SP_Pathlength_Tally      SP_Pathlength_Tally;
+    typedef Tallier_t::SP_Source_Tally          SP_Source_Tally;
 
     typedef Teuchos::ParameterList        ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;

@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Domain_Transporter.cc
+ * \file   mc/Domain_Transporter.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 12 12:02:13 2014
- * \brief  Domain_Transporter member definitions.
+ * \brief  Domain_Transporter template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Domain_Transporter_t_hh
+#define mc_Domain_Transporter_t_hh
 
 #include <cmath>
 
@@ -25,7 +28,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Domain_Transporter::Domain_Transporter()
+template <class Geometry>
+Domain_Transporter<Geometry>::Domain_Transporter()
     : d_sample_fission_sites(false)
     , d_keff(0.0)
 {
@@ -40,8 +44,9 @@ Domain_Transporter::Domain_Transporter()
  * \param geometry
  * \param physics
  */
-void Domain_Transporter::set(SP_Geometry geometry,
-                             SP_Physics  physics)
+template <class Geometry>
+void Domain_Transporter<Geometry>::set(SP_Geometry geometry,
+                                       SP_Physics  physics)
 {
     REQUIRE(geometry);
     REQUIRE(physics);
@@ -62,7 +67,8 @@ void Domain_Transporter::set(SP_Geometry geometry,
  *
  * \param reduction
  */
-void Domain_Transporter::set(SP_Variance_Reduction reduction)
+template <class Geometry>
+void Domain_Transporter<Geometry>::set(SP_Variance_Reduction reduction)
 {
     REQUIRE(reduction);
     d_var_reduction = reduction;
@@ -79,7 +85,8 @@ void Domain_Transporter::set(SP_Variance_Reduction reduction)
  *
  * \param tallies
  */
-void Domain_Transporter::set(SP_Tallier tallies)
+template <class Geometry>
+void Domain_Transporter<Geometry>::set(SP_Tallier tallies)
 {
     REQUIRE(tallies);
     d_tallier = tallies;
@@ -93,8 +100,9 @@ void Domain_Transporter::set(SP_Tallier tallies)
  * \param fission_sites
  * \param keff
  */
-void Domain_Transporter::set(SP_Fission_Sites fission_sites,
-                             double           keff)
+template <class Geometry>
+void Domain_Transporter<Geometry>::set(SP_Fission_Sites fission_sites,
+                                       double           keff)
 {
     // assign the container
     d_fission_sites = fission_sites;
@@ -122,8 +130,9 @@ void Domain_Transporter::set(SP_Fission_Sites fission_sites,
  * \param particle
  * \param bank
  */
-void Domain_Transporter::transport(Particle_t &particle,
-                                   Bank_t     &bank)
+template <class Geometry>
+void Domain_Transporter<Geometry>::transport(Particle_t &particle,
+                                             Bank_t     &bank)
 {
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
@@ -212,8 +221,9 @@ void Domain_Transporter::transport(Particle_t &particle,
 // PRIVATE FUNCTIONS
 //---------------------------------------------------------------------------//
 
-void Domain_Transporter::process_boundary(Particle_t &particle,
-                                          Bank_t     &bank)
+template <class Geometry>
+void Domain_Transporter<Geometry>::process_boundary(Particle_t &particle,
+                                                    Bank_t     &bank)
 {
     REQUIRE(particle.alive());
     REQUIRE(particle.event() == events::BOUNDARY);
@@ -276,8 +286,9 @@ void Domain_Transporter::process_boundary(Particle_t &particle,
 
 //---------------------------------------------------------------------------//
 
-void Domain_Transporter::process_collision(Particle_t &particle,
-                                           Bank_t     &bank)
+template <class Geometry>
+void Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
+                                                     Bank_t     &bank)
 {
     REQUIRE(d_var_reduction);
     REQUIRE(particle.event() == events::COLLISION);
@@ -303,6 +314,8 @@ void Domain_Transporter::process_collision(Particle_t &particle,
 
 } // end namespace profugus
 
+#endif // mc_Domain_Transporter_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Domain_Transporter.cc
+//                 end of Domain_Transporter.t.hh
 //---------------------------------------------------------------------------//

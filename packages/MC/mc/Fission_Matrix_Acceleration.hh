@@ -31,6 +31,9 @@
 #include "Fission_Source.hh"
 #include "Physics.hh"
 
+// Remove this once templated
+#include "geometry/RTK_Geometry.hh"
+
 namespace profugus
 {
 
@@ -50,16 +53,17 @@ class Fission_Matrix_Acceleration
 {
   public:
     // Typedefs.
-    typedef spn::Problem_Builder                 Problem_Builder_t;
-    typedef Problem_Builder_t::ParameterList     ParameterList;
-    typedef Problem_Builder_t::RCP_ParameterList RCP_ParameterList;
-    typedef Problem_Builder_t::RCP_Mesh          RCP_Mesh;
-    typedef Problem_Builder_t::RCP_Indexer       RCP_Indexer;
-    typedef Problem_Builder_t::RCP_Global_Data   RCP_Global_Data;
-    typedef Problem_Builder_t::RCP_Mat_DB        RCP_Mat_DB;
-    typedef Physics::Fission_Site                Fission_Site;
-    typedef Physics::Fission_Site_Container      Fission_Site_Container;
-    typedef std::shared_ptr<Cartesian_Mesh>      SP_Cart_Mesh;
+    typedef spn::Problem_Builder                        Problem_Builder_t;
+    typedef Problem_Builder_t::ParameterList            ParameterList;
+    typedef Problem_Builder_t::RCP_ParameterList        RCP_ParameterList;
+    typedef Problem_Builder_t::RCP_Mesh                 RCP_Mesh;
+    typedef Problem_Builder_t::RCP_Indexer              RCP_Indexer;
+    typedef Problem_Builder_t::RCP_Global_Data          RCP_Global_Data;
+    typedef Problem_Builder_t::RCP_Mat_DB               RCP_Mat_DB;
+    typedef Physics<Core>                               Physics_t;
+    typedef typename Physics_t::Fission_Site            Fission_Site;
+    typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
+    typedef std::shared_ptr<Cartesian_Mesh>             SP_Cart_Mesh;
 
   protected:
     // >>> DATA

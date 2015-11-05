@@ -28,6 +28,9 @@
 #include "mc/Tallier.hh"
 #include "mc/Fission_Matrix_Acceleration.hh"
 
+// Remove this once templated
+#include "geometry/RTK_Geometry.hh"
+
 namespace mc
 {
 
@@ -45,7 +48,7 @@ class Problem_Builder
     //! Typedefs.
     typedef Teuchos::ParameterList                        ParameterList;
     typedef Teuchos::RCP<ParameterList>                   RCP_ParameterList;
-    typedef profugus::Physics                             Physics_t;
+    typedef profugus::Physics<profugus::Core>             Physics_t;
     typedef Physics_t::Geometry_t                         Geometry_t;
     typedef profugus::Tallier                             Tallier_t;
     typedef profugus::Fission_Matrix_Acceleration         FM_Acceleration_t;

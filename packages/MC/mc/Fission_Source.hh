@@ -17,6 +17,9 @@
 #include "Fission_Rebalance.hh"
 #include "Source.hh"
 
+// Remove this once templated
+#include "geometry/RTK_Geometry.hh"
+
 namespace profugus
 {
 
@@ -69,15 +72,16 @@ class Fission_Source : public Source
   public:
     //@{
     //! Typedefs.
-    typedef Physics_t::RCP_Std_DB                   RCP_Std_DB;
-    typedef Physics_t::Fission_Site                 Fission_Site;
-    typedef Physics_t::Fission_Site_Container       Fission_Site_Container;
-    typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
-    typedef std::shared_ptr<Fission_Rebalance>      SP_Fission_Rebalance;
-    typedef std::shared_ptr<Cartesian_Mesh>         SP_Cart_Mesh;
-    typedef Teuchos::ArrayView<const double>        Const_Array_View;
-    typedef def::Vec_Dbl                            Vec_Dbl;
-    typedef def::Vec_Int                            Vec_Int;
+    typedef Physics<Core>                               Physics_t;
+    typedef typename Physics_t::RCP_Std_DB              RCP_Std_DB;
+    typedef typename Physics_t::Fission_Site            Fission_Site;
+    typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
+    typedef std::shared_ptr<Fission_Site_Container>     SP_Fission_Sites;
+    typedef std::shared_ptr<Fission_Rebalance>          SP_Fission_Rebalance;
+    typedef std::shared_ptr<Cartesian_Mesh>             SP_Cart_Mesh;
+    typedef Teuchos::ArrayView<const double>            Const_Array_View;
+    typedef def::Vec_Dbl                                Vec_Dbl;
+    typedef def::Vec_Int                                Vec_Int;
     //@}
 
   private:

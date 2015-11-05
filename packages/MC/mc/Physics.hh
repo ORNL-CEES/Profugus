@@ -21,7 +21,6 @@
 #include "utils/Definitions.hh"
 #include "utils/Static_Map.hh"
 #include "xs/XS.hh"
-#include "geometry/RTK_Geometry.hh"
 #include "Definitions.hh"
 #include "Group_Bounds.hh"
 #include "Particle.hh"
@@ -51,24 +50,25 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Physics
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef Core                        Geometry_t;
-    typedef Geometry_t::Geo_State_t     Geo_State_t;
-    typedef Particle                    Particle_t;
-    typedef Bank                        Bank_t;
-    typedef std::shared_ptr<Geometry_t> SP_Geometry;
-    typedef std::shared_ptr<Particle_t> SP_Particle;
+    typedef Geometry                            Geometry_t;
+    typedef typename Geometry_t::Geo_State_t    Geo_State_t;
+    typedef Particle                            Particle_t;
+    typedef Bank                                Bank_t;
+    typedef std::shared_ptr<Geometry_t>         SP_Geometry;
+    typedef std::shared_ptr<Particle_t>         SP_Particle;
 
-    typedef Particle_t::RNG_t             RNG;
-    typedef XS                            XS_t;
-    typedef Teuchos::RCP<XS_t>            RCP_XS;
-    typedef Teuchos::ParameterList        ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;
-    typedef Geometry_t::Space_Vector      Space_Vector;
+    typedef Particle_t::RNG_t                   RNG;
+    typedef XS                                  XS_t;
+    typedef Teuchos::RCP<XS_t>                  RCP_XS;
+    typedef Teuchos::ParameterList              ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
+    typedef typename Geometry_t::Space_Vector   Space_Vector;
     //@}
 
     //! Fission site structure for storing fission sites in k-code.

@@ -95,7 +95,7 @@ SET(MC_SOURCES
   mc/Anderson_Solver.pt.cc
   mc/Box_Shape.cc
   mc/Cell_Tally.cc
-  mc/Domain_Transporter.cc
+  mc/Domain_Transporter.pt.cc
   mc/Fission_Matrix_Acceleration.pt.cc
   mc/Fission_Matrix_Processor.cc
   mc/Fission_Matrix_Solver.pt.cc
@@ -109,7 +109,7 @@ SET(MC_SOURCES
   mc/Keff_Tally.cc
   mc/Particle.cc
   mc/Particle_Metaclass.pt.cc
-  mc/Physics.cc
+  mc/Physics.pt.cc
   mc/Sampler.cc
   mc/Solver.cc
   mc/Source.cc

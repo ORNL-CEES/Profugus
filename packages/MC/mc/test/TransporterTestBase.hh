@@ -24,6 +24,7 @@
 #include "../Tallier.hh"
 #include "../Source.hh"
 #include "../Variance_Reduction.hh"
+#include "geometry/RTK_Geometry.hh"
 
 //===========================================================================//
 /*!
@@ -37,7 +38,7 @@ class TransporterTestBase : public testing::Test
     typedef testing::Test Base;
 
   protected:
-    typedef profugus::Physics                   Physics_t;
+    typedef profugus::Physics<profugus::Core>   Physics_t;
     typedef Physics_t::Geometry_t               Geometry_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;

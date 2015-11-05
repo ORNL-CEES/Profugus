@@ -16,8 +16,10 @@
 
 #include "utils/Definitions.hh"
 #include "rng/RNG_Control.hh"
-#include "geometry/RTK_Geometry.hh"
 #include "Physics.hh"
+
+// Remove this once templated
+#include "geometry/RTK_Geometry.hh"
 
 namespace profugus
 {
@@ -34,14 +36,14 @@ class Source
   public:
     //@{
     //! Useful typedefs.
-    typedef Core                     Geometry_t;
-    typedef Geometry_t::Geo_State_t  Geo_State_t;
-    typedef Physics                  Physics_t;
-    typedef Physics_t::Particle_t    Particle_t;
-    typedef Geometry_t::Space_Vector Space_Vector;
-    typedef RNG_Control              RNG_Control_t;
-    typedef RNG_Control_t::RNG_t     RNG_t;
-    typedef def::size_type           size_type;
+    typedef Core                            Geometry_t;
+    typedef Geometry_t::Geo_State_t         Geo_State_t;
+    typedef Physics<Core>                   Physics_t;
+    typedef typename Physics_t::Particle_t  Particle_t;
+    typedef Geometry_t::Space_Vector        Space_Vector;
+    typedef RNG_Control                     RNG_Control_t;
+    typedef RNG_Control_t::RNG_t            RNG_t;
+    typedef def::size_type                  size_type;
     //@}
 
     //@{

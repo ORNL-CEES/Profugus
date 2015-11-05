@@ -15,6 +15,7 @@
 #include "../VR_Roulette.hh"
 
 #include "gtest/utils_gtest.hh"
+#include "geometry/RTK_Geometry.hh"
 
 #include "TransporterTestBase.hh"
 
@@ -27,9 +28,9 @@ using namespace std;
 class Domain_TransporterTest : public TransporterTestBase
 {
   protected:
-    typedef profugus::Domain_Transporter       Transporter;
-    typedef Physics_t::Fission_Site_Container  Fission_Site_Container;
-    typedef shared_ptr<Fission_Site_Container> SP_Fission_Sites;
+    typedef profugus::Domain_Transporter<Geometry_t>    Transporter;
+    typedef Physics_t::Fission_Site_Container           Fission_Site_Container;
+    typedef shared_ptr<Fission_Site_Container>          SP_Fission_Sites;
 
   protected:
 
@@ -51,7 +52,7 @@ class Domain_TransporterTest : public TransporterTestBase
 class Reflecting_Domain_TransporterTest : public TransporterTestBase
 {
   protected:
-    typedef profugus::Domain_Transporter Transporter;
+    typedef profugus::Domain_Transporter<Geometry_t> Transporter;
 
   protected:
 
