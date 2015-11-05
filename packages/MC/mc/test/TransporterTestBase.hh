@@ -58,7 +58,7 @@ class TransporterTestBase : public testing::Test
 
     typedef profugus::Tallier            Tallier_t;
     typedef profugus::Variance_Reduction Var_Reduction_t;
-    typedef profugus::Source             Source_t;
+    typedef profugus::Source<Geometry_t> Source_t;
 
     typedef std::shared_ptr<Geometry_t>             SP_Geometry;
     typedef std::shared_ptr<Physics_t>              SP_Physics;

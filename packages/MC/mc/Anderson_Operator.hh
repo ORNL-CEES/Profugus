@@ -46,16 +46,17 @@ class Anderson_Operator : public OperatorAdapter<T>
     typedef OperatorAdapter<T> Base;
 
 public:
-    typedef Source_Transporter                        Source_Transporter_t;
-    typedef std::shared_ptr<Source_Transporter_t>     SP_Source_Transporter;
-    typedef std::shared_ptr<Fission_Source>           SP_Fission_Source;
-    typedef typename Fission_Source::SP_Fission_Sites SP_Fission_Sites;
-    typedef std::shared_ptr<Tallier>                  SP_Tallier;
-    typedef typename T::MV                            MV;
-    typedef typename T::MAP                           MAP;
-    typedef Teuchos::RCP<MAP>                         RCP_MAP;
-    typedef Teuchos::RCP<MV>                          RCP_MV;
-    typedef std::shared_ptr<Cartesian_Mesh>           SP_Cart_Mesh;
+    typedef Source_Transporter                      Source_Transporter_t;
+    typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
+    typedef Fission_Source<Core>                    FS_t;
+    typedef std::shared_ptr<FS_t>                   SP_Fission_Source;
+    typedef typename FS_t::SP_Fission_Sites         SP_Fission_Sites;
+    typedef std::shared_ptr<Tallier>                SP_Tallier;
+    typedef typename T::MV                          MV;
+    typedef typename T::MAP                         MAP;
+    typedef Teuchos::RCP<MAP>                       RCP_MAP;
+    typedef Teuchos::RCP<MV>                        RCP_MV;
+    typedef std::shared_ptr<Cartesian_Mesh>         SP_Cart_Mesh;
 
   private:
     // >>> DATA
@@ -114,7 +115,6 @@ public:
 
     typedef Teuchos::ArrayView<double>            View;
     typedef Teuchos::ArrayView<const double>      const_View;
-    typedef Fission_Source                        FS_t;
     typedef typename FS_t::Fission_Site_Container Fission_Site_Container;
 
     // Number of particles per cycle (constant weight).

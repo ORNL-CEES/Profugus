@@ -50,7 +50,7 @@ class Source_Transporter
     //@{
     //! Typedefs.
     typedef Domain_Transporter<Core>             Transporter_t;
-    typedef Source                               Source_t;
+    typedef Source<Core>                         Source_t;
     typedef Transporter_t::Physics_t             Physics_t;
     typedef Transporter_t::Geometry_t            Geometry_t;
     typedef Transporter_t::SP_Physics            SP_Physics;

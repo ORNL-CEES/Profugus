@@ -51,6 +51,8 @@ class Manager
     typedef std::shared_ptr<Transporter_t>         SP_Transporter;
     typedef profugus::Global_RNG::RNG_Control_t    RNG_Control_t;
     typedef std::shared_ptr<RNG_Control_t>         SP_RNG_Control;
+    typedef profugus::Fission_Source<profugus::Core> Fission_Source_t;
+    typedef std::shared_ptr<Fission_Source_t>      SP_Fission_Source;
 
     // >>> DATA
 
@@ -86,8 +88,6 @@ class Manager
 
   private:
     // >>> IMPLEMENTATION
-
-    typedef Keff_Solver_t::SP_Fission_Source SP_Fission_Source;
 
     // Build an Anderson solver.
     template<class T>

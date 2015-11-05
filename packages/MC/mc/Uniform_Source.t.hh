@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Uniform_Source.cc
+ * \file   mc/Uniform_Source.t.hh
  * \author Thomas M. Evans
  * \date   Tue May 06 16:43:26 2014
  * \brief  Uniform_Source member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Uniform_Source_t_hh
+#define mc_Uniform_Source_t_hh
 
 #include <numeric>
 
@@ -34,10 +37,11 @@ namespace profugus
  * \param physics
  * \param rng_control
  */
-Uniform_Source::Uniform_Source(RCP_Std_DB     db,
-                               SP_Geometry    geometry,
-                               SP_Physics     physics,
-                               SP_RNG_Control rng_control)
+template <class Geometry>
+Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
+                                         SP_Geometry    geometry,
+                                         SP_Physics     physics,
+                                         SP_RNG_Control rng_control)
     : Base(geometry, physics, rng_control)
     , d_erg_cdf(b_physics->num_groups(), 0.0)
     , d_np_requested(0)
@@ -93,7 +97,8 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
  * \brief Build the initial source.
  * \param geometric_shape
  */
-void Uniform_Source::build_source(SP_Shape geometric_shape)
+template <class Geometry>
+void Uniform_Source<Geometry>::build_source(SP_Shape geometric_shape)
 {
     REQUIRE(geometric_shape);
 
@@ -119,7 +124,8 @@ void Uniform_Source::build_source(SP_Shape geometric_shape)
 /*!
  * \brief Get a particle from the source.
  */
-Uniform_Source::SP_Particle Uniform_Source::get_particle()
+template <class Geometry>
+auto Uniform_Source<Geometry>::get_particle() -> SP_Particle
 {
     using def::I; using def::J; using def::K;
 
@@ -193,7 +199,8 @@ Uniform_Source::SP_Particle Uniform_Source::get_particle()
 /*!
  * \brief Build domain replicated source.
  */
-void Uniform_Source::build_DR()
+template <class Geometry>
+void Uniform_Source<Geometry>::build_DR()
 {
     // calculate the number of particles per domain and set (equivalent)
     d_np_domain = d_np_total / b_nodes;
@@ -206,6 +213,8 @@ void Uniform_Source::build_DR()
 
 } // end namespace profugus
 
+#endif // mc_Uniform_Source_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Uniform_Source.cc
+//                 end of Uniform_Source.t.hh
 //---------------------------------------------------------------------------//

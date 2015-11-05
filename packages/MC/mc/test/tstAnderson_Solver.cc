@@ -214,7 +214,7 @@ TEST_F(Anderson_SolverTest, api)
     adb.set("z_bounds", OneDArray(z));
 
     // make fission source
-    auto fs = std::make_shared<profugus::Fission_Source>(
+    auto fs = std::make_shared<profugus::Fission_Source<profugus::Core> >(
         db, geometry, physics, rcon);
 
     // Make the operator

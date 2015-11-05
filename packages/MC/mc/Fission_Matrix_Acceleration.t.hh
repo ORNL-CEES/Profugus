@@ -395,7 +395,7 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
  */
 template<class T>
 void Fission_Matrix_Acceleration_Impl<T>::build_initial_source(
-    Fission_Source &source)
+    Fission_Source_t &source)
 {
     // if we aren't using an initial source, then do "standard" fission source
     // initialization and return

@@ -37,7 +37,8 @@ class Keff_Solver : public Solver
     //@{
     //! Typedefs.
     typedef std::shared_ptr<Keff_Tally>        SP_Keff_Tally;
-    typedef std::shared_ptr<Fission_Source>    SP_Fission_Source;
+    typedef Fission_Source<Core>               Fission_Source_t;
+    typedef std::shared_ptr<Fission_Source_t>  SP_Fission_Source;
     typedef Fission_Matrix_Acceleration        FM_Acceleration_t;
     typedef std::shared_ptr<FM_Acceleration_t> SP_FM_Acceleration;
     //@}

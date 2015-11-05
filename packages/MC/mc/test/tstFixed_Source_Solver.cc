@@ -29,10 +29,12 @@ class FixedSourceSolverTest : public TransporterTestBase
     typedef TransporterTestBase Base;
 
   public:
-    typedef profugus::Source_Transporter  Transporter_t;
-    typedef profugus::Fixed_Source_Solver Solver_t;
-    typedef Transporter_t::Source_t       Source_t;
-    typedef Solver_t::SP_Source           SP_Source;
+    typedef profugus::Core                          Geometry_t;
+    typedef profugus::Source_Transporter            Transporter_t;
+    typedef profugus::Fixed_Source_Solver           Solver_t;
+    typedef Transporter_t::Source_t                 Source_t;
+    typedef Solver_t::SP_Source                     SP_Source;
+    typedef profugus::Uniform_Source<Geometry_t>    Uniform_Source_t;
 
     typedef std::shared_ptr<Transporter_t> SP_Transporter;
 
@@ -114,7 +116,7 @@ class FixedSourceSolverTest : public TransporterTestBase
 
     void init_source()
     {
-        auto usource = std::make_shared<profugus::Uniform_Source>(
+        auto usource = std::make_shared<Uniform_Source_t>(
             db, geometry, physics, rcon);
 
         auto box = std::make_shared<profugus::Box_Shape>(

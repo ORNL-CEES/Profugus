@@ -43,9 +43,10 @@ class DRSourceTransporterTest : public TransporterTestBase
 //---------------------------------------------------------------------------//
 // Replicated source
 
-class DR_Source : public profugus::Source
+class DR_Source : public profugus::Source<profugus::Core>
 {
-    typedef profugus::Source Base;
+    typedef profugus::Source<profugus::Core> Base;
+    using Base::size_type;
 
   private:
     // number of particles per process

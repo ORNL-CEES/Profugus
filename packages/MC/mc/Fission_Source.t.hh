@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Source.cc
+ * \file   mc/Fission_Source.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 05 14:22:46 2014
- * \brief  Fission_Source member definitions.
+ * \brief  Fission_Source template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Fission_Source_t_hh
+#define mc_Fission_Source_t_hh
 
 #include <algorithm>
 #include <numeric>
@@ -31,10 +34,11 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Fission_Source::Fission_Source(RCP_Std_DB     db,
-                               SP_Geometry    geometry,
-                               SP_Physics     physics,
-                               SP_RNG_Control rng_control)
+template <class Geometry>
+Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
+                                         SP_Geometry    geometry,
+                                         SP_Physics     physics,
+                                         SP_RNG_Control rng_control)
     : Base(geometry, physics, rng_control)
     , d_fission_rebalance(std::make_shared<Fission_Rebalance>())
     , d_np_requested(0)
@@ -104,7 +108,8 @@ Fission_Source::Fission_Source(RCP_Std_DB     db,
 /*!
  * \brief Build the initial fission source.
  */
-void Fission_Source::build_initial_source()
+template <class Geometry>
+void Fission_Source<Geometry>::build_initial_source()
 {
     // send an empty mesh and view
     SP_Cart_Mesh     mesh;
@@ -118,8 +123,9 @@ void Fission_Source::build_initial_source()
 /*!
  * \brief Build the initial source from a mesh distribution.
  */
-void Fission_Source::build_initial_source(SP_Cart_Mesh     mesh,
-                                          Const_Array_View fis_dens)
+template <class Geometry>
+void Fission_Source<Geometry>::build_initial_source(SP_Cart_Mesh     mesh,
+                                                    Const_Array_View fis_dens)
 {
     REQUIRE(d_np_total > 0);
 
@@ -157,7 +163,8 @@ void Fission_Source::build_initial_source(SP_Cart_Mesh     mesh,
  *
  * \param fission_sites
  */
-void Fission_Source::build_source(SP_Fission_Sites &fission_sites)
+template <class Geometry>
+void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
 {
     REQUIRE(fission_sites);
 
@@ -212,8 +219,9 @@ void Fission_Source::build_source(SP_Fission_Sites &fission_sites)
 /*!
  * \brief Create a fission site container.
  */
-Fission_Source::SP_Fission_Sites
-Fission_Source::create_fission_site_container() const
+template <class Geometry>
+auto Fission_Source<Geometry>::create_fission_site_container() const
+    -> SP_Fission_Sites
 {
     SP_Fission_Sites fs(std::make_shared<Fission_Site_Container>());
     ENSURE(fs);
@@ -225,7 +233,8 @@ Fission_Source::create_fission_site_container() const
 /*!
  * \brief Get a particle from the source.
 */
-Fission_Source::SP_Particle Fission_Source::get_particle()
+template <class Geometry>
+auto Fission_Source<Geometry>::get_particle() -> SP_Particle
 {
     using def::I; using def::J; using def::K;
 
@@ -321,8 +330,9 @@ Fission_Source::SP_Particle Fission_Source::get_particle()
  * (1 block per set).  Thus, the number of particles per set is equal to the
  * number of particles per domain.
  */
-void Fission_Source::build_DR(SP_Cart_Mesh     mesh,
-                              Const_Array_View fis_dens)
+template <class Geometry>
+void Fission_Source<Geometry>::build_DR(SP_Cart_Mesh     mesh,
+                                        Const_Array_View fis_dens)
 {
     // calculate the number of particles per domain and set (equivalent)
     d_np_domain = d_np_total / b_nodes;
@@ -390,10 +400,11 @@ void Fission_Source::build_DR(SP_Cart_Mesh     mesh,
 /*!
  * \brief Sample geometry to get a particle.
  */
-int Fission_Source::sample_geometry(Space_Vector       &r,
-                                    const Space_Vector &omega,
-                                    Particle_t         &p,
-                                    RNG_t               rng)
+template <class Geometry>
+int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
+                                              const Space_Vector &omega,
+                                              Particle_t         &p,
+                                              RNG_t               rng)
 {
     using def::I; using def::J; using def::K;
 
@@ -494,6 +505,8 @@ int Fission_Source::sample_geometry(Space_Vector       &r,
 
 } // end namespace profugus
 
+#endif // mc_Fission_Source_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Fission_Source.cc
+//                 end of Fission_Source.t.hh
 //---------------------------------------------------------------------------//

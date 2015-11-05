@@ -61,6 +61,7 @@ class Fission_Matrix_Acceleration
     typedef Problem_Builder_t::RCP_Global_Data          RCP_Global_Data;
     typedef Problem_Builder_t::RCP_Mat_DB               RCP_Mat_DB;
     typedef Physics<Core>                               Physics_t;
+    typedef Fission_Source<Core>                        Fission_Source_t;
     typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
     typedef std::shared_ptr<Cartesian_Mesh>             SP_Cart_Mesh;
@@ -109,7 +110,7 @@ class Fission_Matrix_Acceleration
     virtual void end_cycle(Fission_Site_Container &f) = 0;
 
     //! Build the initial fission source.
-    virtual void build_initial_source(Fission_Source &source) = 0;
+    virtual void build_initial_source(Fission_Source_t &source) = 0;
 
     // >>> ACCESSORS
 
@@ -204,7 +205,7 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     void end_cycle(Fission_Site_Container &f);
 
     //! Build the initial fission source.
-    void build_initial_source(Fission_Source &source);
+    void build_initial_source(Fission_Source_t &source);
 
     // >>> ACCESSORS
 

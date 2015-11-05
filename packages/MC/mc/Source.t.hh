@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source.cc
+ * \file   mc/Source.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 05 14:28:41 2014
  * \brief  Source member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Source_t_hh
+#define mc_Source_t_hh
 
 #include "Source.hh"
 #include "harness/DBC.hh"
@@ -22,9 +25,10 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Source::Source(SP_Geometry    geometry,
-               SP_Physics     physics,
-               SP_RNG_Control rng_control)
+template <class Geometry>
+Source<Geometry>::Source(SP_Geometry    geometry,
+                         SP_Physics     physics,
+                         SP_RNG_Control rng_control)
     : b_geometry(geometry)
     , b_physics(physics)
     , b_rng_control(rng_control)
@@ -41,7 +45,8 @@ Source::Source(SP_Geometry    geometry,
 /*!
  * \brief Virtual destructor.
  */
-Source::~Source()
+template <class Geometry>
+Source<Geometry>::~Source()
 {
 }
 
@@ -51,7 +56,8 @@ Source::~Source()
 /*!
  * \brief Calculate offsets for random numbers.
  */
-void Source::make_RNG()
+template <class Geometry>
+void Source<Geometry>::make_RNG()
 {
     // calculate offsets for generating random numbers on each processor (so
     // we don't use the same rng streams)
@@ -70,6 +76,8 @@ void Source::make_RNG()
 
 } // end namespace profugus
 
+#endif // mc_Source_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Source.cc
+//                 end of Source.t.hh
 //---------------------------------------------------------------------------//

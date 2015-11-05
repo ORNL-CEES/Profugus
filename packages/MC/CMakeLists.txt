@@ -101,7 +101,7 @@ SET(MC_SOURCES
   mc/Fission_Matrix_Solver.pt.cc
   mc/Fission_Matrix_Tally.cc
   mc/Fission_Rebalance.cc
-  mc/Fission_Source.cc
+  mc/Fission_Source.pt.cc
   mc/Fixed_Source_Solver.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
@@ -112,12 +112,12 @@ SET(MC_SOURCES
   mc/Physics.pt.cc
   mc/Sampler.cc
   mc/Solver.cc
-  mc/Source.cc
+  mc/Source.pt.cc
   mc/Source_Diagnostic_Tally.cc
   mc/Source_Transporter.cc
   mc/Tallier.cc
   mc/Tally.cc
-  mc/Uniform_Source.cc
+  mc/Uniform_Source.pt.cc
   mc/VR_Roulette.cc
   )
 LIST(APPEND HEADERS ${MC_HEADERS})

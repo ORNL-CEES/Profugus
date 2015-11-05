@@ -26,9 +26,9 @@ class UniformSourceTest : public SourceTestBase
     typedef SourceTestBase Base;
 
   protected:
-    typedef profugus::Uniform_Source         Source;
-    typedef Source::SP_Particle              SP_Particle;
-    typedef std::shared_ptr<profugus::Shape> SP_Shape;
+    typedef profugus::Uniform_Source<profugus::Core> Source;
+    typedef Source::SP_Particle                      SP_Particle;
+    typedef std::shared_ptr<profugus::Shape>         SP_Shape;
 
     virtual int get_seed() const
     {

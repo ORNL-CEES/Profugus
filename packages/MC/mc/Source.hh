@@ -15,11 +15,9 @@
 #include <cmath>
 
 #include "utils/Definitions.hh"
+#include "utils/Constants.hh"
 #include "rng/RNG_Control.hh"
 #include "Physics.hh"
-
-// Remove this once templated
-#include "geometry/RTK_Geometry.hh"
 
 namespace profugus
 {
@@ -31,19 +29,20 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Source
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef Core                            Geometry_t;
-    typedef Geometry_t::Geo_State_t         Geo_State_t;
-    typedef Physics<Core>                   Physics_t;
-    typedef typename Physics_t::Particle_t  Particle_t;
-    typedef Geometry_t::Space_Vector        Space_Vector;
-    typedef RNG_Control                     RNG_Control_t;
-    typedef RNG_Control_t::RNG_t            RNG_t;
-    typedef def::size_type                  size_type;
+    typedef Geometry                            Geometry_t;
+    typedef typename Geometry_t::Geo_State_t    Geo_State_t;
+    typedef Physics<Geometry>                   Physics_t;
+    typedef typename Physics_t::Particle_t      Particle_t;
+    typedef typename Geometry_t::Space_Vector   Space_Vector;
+    typedef RNG_Control                         RNG_Control_t;
+    typedef RNG_Control_t::RNG_t                RNG_t;
+    typedef def::size_type                      size_type;
     //@}
 
     //@{

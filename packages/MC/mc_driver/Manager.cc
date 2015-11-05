@@ -139,8 +139,8 @@ void Manager::setup(const std::string &xml_file)
     if (prob_type == "eigenvalue")
     {
         // make the fission source
-        std::shared_ptr<profugus::Fission_Source> source(
-            std::make_shared<profugus::Fission_Source>(
+        SP_Fission_Source source(
+            std::make_shared<Fission_Source_t>(
                 d_db, d_geometry, d_physics, d_rnd_control));
 
         // >>> determine eigensolver
@@ -189,8 +189,8 @@ void Manager::setup(const std::string &xml_file)
     else if (prob_type == "fixed")
     {
         // make the uniform source
-        std::shared_ptr<profugus::Uniform_Source> source(
-            std::make_shared<profugus::Uniform_Source>(
+        std::shared_ptr<profugus::Uniform_Source<profugus::Core> > source(
+            std::make_shared<profugus::Uniform_Source<profugus::Core> >(
                 d_db, d_geometry, d_physics, d_rnd_control));
         source->build_source(shape);
 

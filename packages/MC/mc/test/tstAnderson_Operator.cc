@@ -224,7 +224,7 @@ TEST_F(Anderson_OperatorTest, api)
     profugus::reset_internal_comm();
 
     // make fission source
-    auto fs = std::make_shared<profugus::Fission_Source>(
+    auto fs = std::make_shared<profugus::Fission_Source<profugus::Core> >(
         db, geometry, physics, rcon);
 
     // Make the operator

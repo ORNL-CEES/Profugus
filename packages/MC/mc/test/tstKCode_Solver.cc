@@ -104,14 +104,15 @@ class KCode_SolverTest : public testing::Test
     typedef Physics_t::ParameterList_t ParameterList_t;
     typedef Physics_t::RCP_Std_DB      RCP_Std_DB;
 
-    typedef std::shared_ptr<Physics_t>       SP_Physics;
-    typedef std::shared_ptr<Geometry_t>      SP_Geometry;
-    typedef Physics_t::SP_Particle           SP_Particle;
-    typedef std::shared_ptr<RNG_Control_t>   SP_RNG_Control;
-    typedef Solver_t::SP_Tallier             SP_Tallier;
-    typedef Solver_t::SP_Fission_Source      SP_Fission_Source;
-    typedef Solver_t::SP_Source_Transporter  SP_Transporter;
-    typedef std::shared_ptr<Var_Reduction_t> SP_Var_Reduction;
+    typedef profugus::Fission_Source<Geometry_t>    Fission_Source_t;
+    typedef std::shared_ptr<Physics_t>              SP_Physics;
+    typedef std::shared_ptr<Geometry_t>             SP_Geometry;
+    typedef Physics_t::SP_Particle                  SP_Particle;
+    typedef std::shared_ptr<RNG_Control_t>          SP_RNG_Control;
+    typedef Solver_t::SP_Tallier                    SP_Tallier;
+    typedef Solver_t::SP_Fission_Source             SP_Fission_Source;
+    typedef Solver_t::SP_Source_Transporter         SP_Transporter;
+    typedef std::shared_ptr<Var_Reduction_t>        SP_Var_Reduction;
 
   protected:
     void SetUp()
@@ -259,7 +260,7 @@ TEST_F(KCode_SolverTest, pin_cell)
     Solver_t solver(db);
 
     // make fission source
-    SP_Fission_Source fsrc(std::make_shared<profugus::Fission_Source>(
+    SP_Fission_Source fsrc(std::make_shared<Fission_Source_t>(
                                db, geometry, physics, rcon));
 
     // set it
@@ -322,7 +323,7 @@ TEST_F(KCode_SolverTest, active_cycle_test)
     Solver_t solver(db);
 
     // make fission source
-    SP_Fission_Source fsrc(std::make_shared<profugus::Fission_Source>(
+    SP_Fission_Source fsrc(std::make_shared<Fission_Source_t>(
                                db, geometry, physics, rcon));
 
     // set it
