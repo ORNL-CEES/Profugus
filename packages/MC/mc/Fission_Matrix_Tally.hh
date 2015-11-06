@@ -58,6 +58,7 @@ class Fission_Matrix_Tally : public Compound_Tally<Geometry>
     typedef Fission_Matrix_Processor::Idx           Idx;
     typedef Fission_Matrix_Processor::Sparse_Matrix Sparse_Matrix;
     typedef Fission_Matrix_Processor::Denominator   Denominator;
+    typedef typename Particle_t::Metadata           Metadata_t;
     //@}
 
     //! Fission matrix tally data struct.
@@ -87,7 +88,7 @@ class Fission_Matrix_Tally : public Compound_Tally<Geometry>
         // Constructor.
         FM_Data()
             : d_birth_idx(
-                Particle::Metadata::new_pod_member<int>("fm_birth_cell"))
+                Metadata_t::template new_pod_member<int>("fm_birth_cell"))
         {/* * */}
     };
 

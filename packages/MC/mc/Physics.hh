@@ -58,12 +58,12 @@ class Physics
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
-    typedef Particle                            Particle_t;
-    typedef Bank                                Bank_t;
+    typedef Particle<Geometry_t>                Particle_t;
+    typedef Bank<Geometry_t>                    Bank_t;
     typedef std::shared_ptr<Geometry_t>         SP_Geometry;
     typedef std::shared_ptr<Particle_t>         SP_Particle;
 
-    typedef Particle_t::RNG_t                   RNG;
+    typedef typename Particle_t::RNG_t          RNG;
     typedef XS                                  XS_t;
     typedef Teuchos::RCP<XS_t>                  RCP_XS;
     typedef Teuchos::ParameterList              ParameterList_t;

@@ -107,7 +107,7 @@ SET(MC_SOURCES
   mc/Group_Bounds.cc
   mc/KCode_Solver.pt.cc
   mc/Keff_Tally.pt.cc
-  mc/Particle.cc
+  mc/Particle.pt.cc
   mc/Particle_Metaclass.pt.cc
   mc/Physics.pt.cc
   mc/Sampler.cc
