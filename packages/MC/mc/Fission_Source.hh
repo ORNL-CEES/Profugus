@@ -84,7 +84,8 @@ class Fission_Source : public Source<Geometry>
     typedef std::shared_ptr<Particle_t>                 SP_Particle;
     typedef std::shared_ptr<RNG_Control>                SP_RNG_Control;
     typedef std::shared_ptr<Fission_Site_Container>     SP_Fission_Sites;
-    typedef std::shared_ptr<Fission_Rebalance>          SP_Fission_Rebalance;
+    typedef Fission_Rebalance<Geometry_t>               Fission_Rebalance_t;
+    typedef std::shared_ptr<Fission_Rebalance_t>        SP_Fission_Rebalance;
     typedef std::shared_ptr<Cartesian_Mesh>             SP_Cart_Mesh;
     typedef Teuchos::ArrayView<const double>            Const_Array_View;
     typedef def::Vec_Dbl                                Vec_Dbl;

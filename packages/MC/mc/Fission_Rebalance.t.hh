@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Rebalance.cc
+ * \file   mc/Fission_Rebalance.t.hh
  * \author Thomas M. Evans
  * \date   Monday May 5 11:37:31 2014
  * \brief  Fission_Rebalance template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Rebalance_cc
-#define mc_Fission_Rebalance_cc
+#ifndef mc_Fission_Rebalance_t_hh
+#define mc_Fission_Rebalance_t_hh
 
 #include "Fission_Rebalance.hh"
 
@@ -29,7 +29,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Fission_Rebalance::Fission_Rebalance()
+template <class Geometry>
+Fission_Rebalance<Geometry>::Fission_Rebalance()
     : d_num_sets(profugus::nodes())
     , d_set(profugus::node())
     , d_left(-1)
@@ -72,7 +73,9 @@ Fission_Rebalance::Fission_Rebalance()
  * \param fission_bank on entry the fission bank on this set/block; on exit a
  * rebalanced fission bank
  */
-void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
+template <class Geometry>
+void Fission_Rebalance<Geometry>::rebalance(
+        Fission_Site_Container_t &fission_bank)
 {
     SCOPED_TIMER("MC::Fission_Rebalance.rebalance");
 
@@ -147,7 +150,8 @@ void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
 /*!
  * \brief Calculate the global/local parameters of the fission bank.
  */
-void Fission_Rebalance::fission_bank_parameters(
+template <class Geometry>
+void Fission_Rebalance<Geometry>::fission_bank_parameters(
     const Fission_Site_Container_t &fission_bank)
 {
     REQUIRE(d_num_sets > 1);
@@ -199,7 +203,9 @@ void Fission_Rebalance::fission_bank_parameters(
 /*!
  * \brief Communicate fission bank sites during a rebalance step.
  */
-void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
+template <class Geometry>
+void Fission_Rebalance<Geometry>::communicate(
+        Fission_Site_Container_t &fission_bank)
 {
     REQUIRE(d_recv_left.empty());
     REQUIRE(d_recv_right.empty());
@@ -272,7 +278,8 @@ void Fission_Rebalance::communicate(Fission_Site_Container_t &fission_bank)
  * \brief Calculate the number of physics sites on each set and the current
  * fission bank array bounds.
  */
-void Fission_Rebalance::calc_num_sites(
+template <class Geometry>
+void Fission_Rebalance<Geometry>::calc_num_sites(
     const Fission_Site_Container_t &fission_bank)
 {
     REQUIRE(d_sites_set.size() == d_num_sets);
@@ -294,11 +301,13 @@ void Fission_Rebalance::calc_num_sites(
 /*!
  * \brief Post receives.
  */
-void Fission_Rebalance::post_receives(int                       num_recv,
-                                      Fission_Site_Container_t &recv_bank,
-                                      int                       destination,
-                                      profugus::Request         &handle,
-                                      int                       tag)
+template <class Geometry>
+void Fission_Rebalance<Geometry>::post_receives(
+        int                       num_recv,
+        Fission_Site_Container_t &recv_bank,
+        int                       destination,
+        profugus::Request         &handle,
+        int                       tag)
 {
     if (num_recv)
     {
@@ -323,10 +332,12 @@ void Fission_Rebalance::post_receives(int                       num_recv,
 /*!
  * \brief Send sites.
  */
-void Fission_Rebalance::send(int                       num_send,
-                             Fission_Site_Container_t &bank,
-                             int                       destination,
-                             int                       tag)
+template <class Geometry>
+void Fission_Rebalance<Geometry>::send(
+        int                       num_send,
+        Fission_Site_Container_t &bank,
+        int                       destination,
+        int                       tag)
 {
     REQUIRE(bank.size() >= num_send);
     REMEMBER(int size = bank.size());
@@ -362,12 +373,14 @@ void Fission_Rebalance::send(int                       num_send,
 /*!
  * \brief Receive sites.
  */
-void Fission_Rebalance::receive(int                       num_recv,
-                                Fission_Site_Container_t &bank,
-                                Fission_Site_Container_t &recv_bank,
-                                int                       destination,
-                                profugus::Request        &handle,
-                                int                       tag)
+template <class Geometry>
+void Fission_Rebalance<Geometry>::receive(
+        int                       num_recv,
+        Fission_Site_Container_t &bank,
+        Fission_Site_Container_t &recv_bank,
+        int                       destination,
+        profugus::Request        &handle,
+        int                       tag)
 {
     REMEMBER(int size = bank.size());
 
@@ -395,8 +408,8 @@ void Fission_Rebalance::receive(int                       num_recv,
 
 } // end namespace profugus
 
-#endif // mc_Fission_Rebalance_cc
+#endif // mc_Fission_Rebalance_t.hh
 
 //---------------------------------------------------------------------------//
-//                 end of Fission_Rebalance.cc
+//                 end of Fission_Rebalance.t.hh
 //---------------------------------------------------------------------------//

@@ -123,12 +123,13 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Fission_Rebalance
 {
   public:
     //@{
     //! Typedefs.
-    typedef Core                                        Geometry_t;
+    typedef Geometry                                    Geometry_t;
     typedef Physics<Geometry_t>                         Physics_t;
     typedef typename Physics_t::Fission_Site            Fission_Site_t;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container_t;

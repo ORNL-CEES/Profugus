@@ -40,7 +40,7 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
                                          SP_Physics     physics,
                                          SP_RNG_Control rng_control)
     : Base(geometry, physics, rng_control)
-    , d_fission_rebalance(std::make_shared<Fission_Rebalance>())
+    , d_fission_rebalance(std::make_shared<Fission_Rebalance_t>())
     , d_np_requested(0)
     , d_np_total(0)
     , d_np_domain(0)

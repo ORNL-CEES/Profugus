@@ -100,7 +100,7 @@ SET(MC_SOURCES
   mc/Fission_Matrix_Processor.cc
   mc/Fission_Matrix_Solver.pt.cc
   mc/Fission_Matrix_Tally.pt.cc
-  mc/Fission_Rebalance.cc
+  mc/Fission_Rebalance.pt.cc
   mc/Fission_Source.pt.cc
   mc/Fixed_Source_Solver.pt.cc
   mc/Global_RNG.cc
