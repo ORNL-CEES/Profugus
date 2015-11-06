@@ -8,14 +8,18 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "geometry/RTK_Geometry.hh"
+#include "geometry/Mesh_Geometry.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "Anderson_Solver.t.hh"
 
 namespace profugus
 {
 
-template class Anderson_Solver<EpetraTypes>;
-template class Anderson_Solver<TpetraTypes>;
+template class Anderson_Solver<Core,EpetraTypes>;
+template class Anderson_Solver<Core,TpetraTypes>;
+//template class Anderson_Solver<Mesh_Geometry,EpetraTypes>;
+//template class Anderson_Solver<Mesh_Geometry,TpetraTypes>;
 
 } // end namespace profugus
 

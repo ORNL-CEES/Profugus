@@ -91,9 +91,9 @@ class KCode_SolverTest : public testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::KCode_Solver              Solver_t;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::KCode_Solver<Geometry_t>  Solver_t;
     typedef Solver_t::Physics_t                 Physics_t;
-    typedef Solver_t::Geometry_t                Geometry_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::Bank_t                   Bank_t;

@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fixed_Source_Solver.cc
+ * \file   mc/Fixed_Source_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Tue May 13 14:40:06 2014
  * \brief  Fixed_Source_Solver member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Fixed_Source_Solver_t_hh
+#define mc_Fixed_Source_Solver_t_hh
 
 #include "Fixed_Source_Solver.hh"
 
@@ -24,7 +27,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Fixed_Source_Solver::Fixed_Source_Solver()
+template <class Geometry>
+Fixed_Source_Solver<Geometry>::Fixed_Source_Solver()
     : d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
@@ -36,8 +40,9 @@ Fixed_Source_Solver::Fixed_Source_Solver()
 /*!
  * \brief Set the underlying source transporter and source.
  */
-void Fixed_Source_Solver::set(SP_Source_Transporter transporter,
-                              SP_Source             source)
+template <class Geometry>
+void Fixed_Source_Solver<Geometry>::set(SP_Source_Transporter transporter,
+                                        SP_Source             source)
 {
     REQUIRE(transporter);
     REQUIRE(source);
@@ -64,7 +69,8 @@ void Fixed_Source_Solver::set(SP_Source_Transporter transporter,
  *
  * This also finalizes tallies.
  */
-void Fixed_Source_Solver::solve()
+template <class Geometry>
+void Fixed_Source_Solver<Geometry>::solve()
 {
     using profugus::endl; using profugus::pcout;
 
@@ -112,6 +118,8 @@ void Fixed_Source_Solver::solve()
 
 } // end namespace profugus
 
+#endif // mc_Fixed_Source_Solver_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Fixed_Source_Solver.cc
+//                 end of Fixed_Source_Solver.t.hh
 //---------------------------------------------------------------------------//

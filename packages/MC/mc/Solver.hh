@@ -16,9 +16,6 @@
 #include "Tallier.hh"
 #include "Physics.hh"
 
-// Remove this once templated
-#include "geometry/RTK_Geometry.hh"
-
 namespace profugus
 {
 
@@ -29,12 +26,13 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Solver
 {
   public:
     //@{
     //! Typedefs.
-    typedef Core                       Geometry_t;
+    typedef Geometry                   Geometry_t;
     typedef Physics<Geometry_t>        Physics_t;
     typedef Tallier<Geometry_t>        Tallier_t;
     typedef std::shared_ptr<Tallier_t> SP_Tallier;

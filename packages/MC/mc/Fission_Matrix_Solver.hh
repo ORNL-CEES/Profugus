@@ -27,9 +27,6 @@
 #include "spn/VectorTraits.hh"
 #include "Physics.hh"
 
-// Remove this once templated
-#include "geometry/RTK_Geometry.hh"
-
 namespace profugus
 {
 
@@ -42,7 +39,7 @@ namespace profugus
  */
 //===========================================================================//
 
-template<class T>
+template<class Geometry, class T>
 class Fission_Matrix_Solver
 {
   public:
@@ -51,7 +48,7 @@ class Fission_Matrix_Solver
     typedef ShiftedOperator<T>                          ShiftedOperator_t;
     typedef Teuchos::RCP<ShiftedOperator_t>             RCP_ShiftedOperator;
     typedef Teuchos::RCP<LinearSolver<T>>               RCP_LinearSolver;
-    typedef Physics<Core>                               Physics_t;
+    typedef Physics<Geometry>                           Physics_t;
     typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
     typedef profugus::Linear_System<T>                  Linear_System_t;

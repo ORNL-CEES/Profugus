@@ -36,18 +36,18 @@ class Anderson_SolverTest : public testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::Core                      Geometry_t;
-    typedef profugus::EpetraTypes               LinAlg_t;
-    typedef profugus::Anderson_Solver<LinAlg_t> Solver_t;
-    typedef Solver_t::Operator                  Operator;
-    typedef Operator::Source_Transporter_t      Transporter_t;
-    typedef profugus::Tallier<Geometry_t>       Tallier_t;
-    typedef Transporter_t::Physics_t            Physics_t;
-    typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
-    typedef Physics_t::Particle_t               Particle_t;
-    typedef Physics_t::Bank_t                   Bank_t;
-    typedef profugus::VR_Roulette<Geometry_t>   Var_Reduction_t;
-    typedef profugus::Cartesian_Mesh            Mesh_t;
+    typedef profugus::Core                                  Geometry_t;
+    typedef profugus::EpetraTypes                           LinAlg_t;
+    typedef profugus::Anderson_Solver<Geometry_t,LinAlg_t>  Solver_t;
+    typedef Solver_t::Operator                              Operator;
+    typedef Operator::Source_Transporter_t                  Transporter_t;
+    typedef profugus::Tallier<Geometry_t>                   Tallier_t;
+    typedef Transporter_t::Physics_t                        Physics_t;
+    typedef profugus::Global_RNG::RNG_Control_t             RNG_Control_t;
+    typedef Physics_t::Particle_t                           Particle_t;
+    typedef Physics_t::Bank_t                               Bank_t;
+    typedef profugus::VR_Roulette<Geometry_t>               Var_Reduction_t;
+    typedef profugus::Cartesian_Mesh                        Mesh_t;
 
     typedef Physics_t::XS_t   XS_t;
     typedef Physics_t::RCP_XS RCP_XS;

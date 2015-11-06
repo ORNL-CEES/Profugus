@@ -49,13 +49,13 @@ class Problem_Builder
     typedef Teuchos::ParameterList                        ParameterList;
     typedef Teuchos::RCP<ParameterList>                   RCP_ParameterList;
     typedef profugus::Physics<profugus::Core>             Physics_t;
-    typedef Physics_t::Geometry_t                         Geometry_t;
-    typedef profugus::Tallier<Geometry_t>                 Tallier_t;
-    typedef profugus::Fission_Matrix_Acceleration         FM_Acceleration_t;
+    typedef Physics_t::Geometry_t                         Geom_t;
+    typedef profugus::Tallier<Geom_t>                     Tallier_t;
+    typedef profugus::Fission_Matrix_Acceleration<Geom_t> FM_Acceleration_t;
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
-    typedef std::shared_ptr<Geometry_t>                   SP_Geometry;
+    typedef std::shared_ptr<Geom_t>                       SP_Geometry;
     typedef std::shared_ptr<profugus::Shape>              SP_Shape;
-    typedef profugus::Variance_Reduction<Geometry_t>      VR_t;
+    typedef profugus::Variance_Reduction<Geom_t>          VR_t;
     typedef std::shared_ptr<VR_t>                         SP_Var_Reduction;
     typedef std::shared_ptr<Tallier_t>                    SP_Tallier;
     typedef Tallier_t::SP_Tally                           SP_Tally;
@@ -127,8 +127,8 @@ class Problem_Builder
     typedef Teuchos::TwoDArray<double>  TwoDArray_dbl;
 
     // Geometry typedefs.
-    typedef Geometry_t::SP_Array SP_Core;
-    typedef Geometry_t::Array_t  Core_t;
+    typedef Geom_t::SP_Array     SP_Core;
+    typedef Geom_t::Array_t      Core_t;
     typedef Core_t::SP_Object    SP_Lattice;
     typedef Core_t::Object_t     Lattice_t;
     typedef Lattice_t::SP_Object SP_Pin_Cell;

@@ -36,17 +36,17 @@ class Anderson_OperatorTest : public testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::Core                        Geometry_t;
-    typedef profugus::EpetraTypes                 LinAlg_t;
-    typedef profugus::Anderson_Operator<LinAlg_t> Operator_t;
-    typedef Operator_t::Source_Transporter_t      Transporter_t;
-    typedef profugus::Tallier<Geometry_t>         Tallier_t;
-    typedef Transporter_t::Physics_t              Physics_t;
-    typedef profugus::Global_RNG::RNG_Control_t   RNG_Control_t;
-    typedef Physics_t::Particle_t                 Particle_t;
-    typedef Physics_t::Bank_t                     Bank_t;
-    typedef profugus::VR_Roulette<Geometry_t>     Var_Reduction_t;
-    typedef profugus::Cartesian_Mesh              Mesh_t;
+    typedef profugus::Core                                   Geometry_t;
+    typedef profugus::EpetraTypes                            LinAlg_t;
+    typedef profugus::Anderson_Operator<Geometry_t,LinAlg_t> Operator_t;
+    typedef Operator_t::Source_Transporter_t                 Transporter_t;
+    typedef profugus::Tallier<Geometry_t>                    Tallier_t;
+    typedef Transporter_t::Physics_t                         Physics_t;
+    typedef profugus::Global_RNG::RNG_Control_t              RNG_Control_t;
+    typedef Physics_t::Particle_t                            Particle_t;
+    typedef Physics_t::Bank_t                                Bank_t;
+    typedef profugus::VR_Roulette<Geometry_t>                Var_Reduction_t;
+    typedef profugus::Cartesian_Mesh                         Mesh_t;
 
     typedef Physics_t::XS_t   XS_t;
     typedef Physics_t::RCP_XS RCP_XS;

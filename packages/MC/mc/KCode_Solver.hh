@@ -53,24 +53,34 @@ namespace profugus
  */
 //===========================================================================//
 
-class KCode_Solver : public Keff_Solver
+template <class Geometry>
+class KCode_Solver : public Keff_Solver<Geometry>
 {
+    typedef Keff_Solver<Geometry> Base;
+
   public:
     //@{
     //! Typedefs.
-    typedef profugus::Core                          Geometry_t;
-    typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
-    typedef Source_Transporter_t::RCP_Std_DB        RCP_Std_DB;
-    typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
-    typedef Fission_Source<Geometry_t>              FS_t;
-    typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
-    typedef Pathlength_Tally<Geometry_t>            Pathlength_Tally_t;
-    typedef Source_Tally<Geometry_t>                Source_Tally_t;
-    typedef Compound_Tally<Geometry_t>              Compound_Tally_t;
-    typedef typename FS_t::SP_Fission_Sites         SP_Fission_Sites;
+    typedef Geometry                                    Geometry_t;
+    typedef Source_Transporter<Geometry_t>              Source_Transporter_t;
+    typedef typename Source_Transporter_t::RCP_Std_DB   RCP_Std_DB;
+    typedef std::shared_ptr<Source_Transporter_t>       SP_Source_Transporter;
+    typedef Fission_Source<Geometry_t>                  FS_t;
+    typedef Tallier<Geometry_t>                         Tallier_t;
+    typedef Keff_Tally<Geometry_t>                      Keff_Tally_t;
+    typedef Pathlength_Tally<Geometry_t>                Pathlength_Tally_t;
+    typedef Source_Tally<Geometry_t>                    Source_Tally_t;
+    typedef Compound_Tally<Geometry_t>                  Compound_Tally_t;
+    typedef typename FS_t::SP_Fission_Sites             SP_Fission_Sites;
+    typedef typename Base::SP_Fission_Source            SP_Fission_Source;
+    typedef typename Base::SP_FM_Acceleration           SP_FM_Acceleration;
+    typedef typename Base::SP_Tallier                   SP_Tallier;
 
   private:
     // >>> DATA
+
+    using Base::b_keff_tally;
+    using Base::b_tallier;
 
     // Problem database.
     RCP_Std_DB d_db;

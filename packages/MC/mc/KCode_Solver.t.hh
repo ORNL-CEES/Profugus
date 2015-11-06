@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/KCode_Solver.cc
+ * \file   mc/KCode_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 19 10:30:32 2014
  * \brief  KCode_Solver member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_KCode_Solver_t_hh
+#define mc_KCode_Solver_t_hh
 
 #include "KCode_Solver.hh"
 
@@ -26,7 +29,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-KCode_Solver::KCode_Solver(RCP_Std_DB db)
+template <class Geometry>
+KCode_Solver<Geometry>::KCode_Solver(RCP_Std_DB db)
     : d_db(db)
     , d_build_phase(CONSTRUCTED)
     , d_quiet(db->get("quiet", false))
@@ -42,8 +46,9 @@ KCode_Solver::KCode_Solver(RCP_Std_DB db)
 /*!
  * \brief Set the underlying fixed-source transporter and fission source.
  */
-void KCode_Solver::set(SP_Source_Transporter transporter,
-                       SP_Fission_Source     source)
+template <class Geometry>
+void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
+                                 SP_Fission_Source     source)
 {
     REQUIRE(d_build_phase == CONSTRUCTED);
     REQUIRE(transporter);
@@ -93,7 +98,8 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
 /*!
  * \brief Set the acceleration method.
  */
-void KCode_Solver::set(SP_FM_Acceleration acceleration)
+template <class Geometry>
+void KCode_Solver<Geometry>::set(SP_FM_Acceleration acceleration)
 {
     d_acceleration = acceleration;
 }
@@ -107,7 +113,8 @@ void KCode_Solver::set(SP_FM_Acceleration acceleration)
  * This runs the initialize/iterate/finalize process, and also prints user
  * output.
  */
-void KCode_Solver::solve()
+template <class Geometry>
+void KCode_Solver<Geometry>::solve()
 {
     using std::endl; using std::cout;
     using std::setw; using std::fixed; using std::scientific;
@@ -223,7 +230,8 @@ void KCode_Solver::solve()
 /*!
  * \brief Call to reset the solver and tallies for another kcode run
  */
-void KCode_Solver::reset()
+template <class Geometry>
+void KCode_Solver<Geometry>::reset()
 {
     INSIST(d_build_phase == FINALIZED,
             "Reset may be called only after finalizing.");
@@ -256,7 +264,8 @@ void KCode_Solver::reset()
  * added to the 'inactive' tallier) are the only ones that will be called by the
  * transporter.
  */
-void KCode_Solver::initialize()
+template <class Geometry>
+void KCode_Solver<Geometry>::initialize()
 {
     INSIST(d_build_phase == ASSIGNED,
             "initialize must be called only after calling set()");
@@ -355,7 +364,8 @@ void KCode_Solver::initialize()
 /*!
  * \brief Perform one k-eigenvalue cycle.
  */
-void KCode_Solver::iterate()
+template <class Geometry>
+void KCode_Solver<Geometry>::iterate()
 {
     REQUIRE(d_fission_sites && d_fission_sites->empty());
     REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
@@ -425,7 +435,8 @@ void KCode_Solver::iterate()
  * This reinstates the original tallies and calls "finalize" on the inactive
  * tallies.
  */
-void KCode_Solver::begin_active_cycles()
+template <class Geometry>
+void KCode_Solver<Geometry>::begin_active_cycles()
 {
     REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
     REQUIRE(d_inactive_tallier);
@@ -464,7 +475,8 @@ void KCode_Solver::begin_active_cycles()
  * This calls "finalize" on the active tallies, doing global sums,
  * redistributions, etc.
  */
-void KCode_Solver::finalize()
+template <class Geometry>
+void KCode_Solver<Geometry>::finalize()
 {
     INSIST(d_build_phase == ACTIVE_SOLVE,
             "Finalize can only be called after iterating with active cycles.");
@@ -482,6 +494,8 @@ void KCode_Solver::finalize()
 
 } // end namespace profugus
 
+#endif // mc_KCode_Solver_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of KCode_Solver.cc
+//                 end of KCode_Solver.t.hh
 //---------------------------------------------------------------------------//

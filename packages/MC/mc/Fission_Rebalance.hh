@@ -17,7 +17,6 @@
 #include "utils/Definitions.hh"
 #include "Physics.hh"
 
-// Remove this once templated
 #include "geometry/RTK_Geometry.hh"
 
 namespace profugus
@@ -129,7 +128,8 @@ class Fission_Rebalance
   public:
     //@{
     //! Typedefs.
-    typedef Physics<Core>                               Physics_t;
+    typedef Core                                        Geometry_t;
+    typedef Physics<Geometry_t>                         Physics_t;
     typedef typename Physics_t::Fission_Site            Fission_Site_t;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container_t;
     typedef typename Physics_t::Space_Vector            Space_Vector;

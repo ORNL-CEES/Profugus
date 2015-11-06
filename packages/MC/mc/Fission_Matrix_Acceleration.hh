@@ -31,9 +31,6 @@
 #include "Fission_Source.hh"
 #include "Physics.hh"
 
-// Remove this once templated
-#include "geometry/RTK_Geometry.hh"
-
 namespace profugus
 {
 
@@ -49,10 +46,12 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Fission_Matrix_Acceleration
 {
   public:
     // Typedefs.
+    typedef Geometry                                    Geometry_t;
     typedef spn::Problem_Builder                        Problem_Builder_t;
     typedef Problem_Builder_t::ParameterList            ParameterList;
     typedef Problem_Builder_t::RCP_ParameterList        RCP_ParameterList;
@@ -60,8 +59,8 @@ class Fission_Matrix_Acceleration
     typedef Problem_Builder_t::RCP_Indexer              RCP_Indexer;
     typedef Problem_Builder_t::RCP_Global_Data          RCP_Global_Data;
     typedef Problem_Builder_t::RCP_Mat_DB               RCP_Mat_DB;
-    typedef Physics<Core>                               Physics_t;
-    typedef Fission_Source<Core>                        Fission_Source_t;
+    typedef Physics<Geometry_t>                         Physics_t;
+    typedef Fission_Source<Geometry_t>                  Fission_Source_t;
     typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
     typedef std::shared_ptr<Cartesian_Mesh>             SP_Cart_Mesh;
@@ -143,9 +142,12 @@ class Fission_Matrix_Acceleration
  */
 //===========================================================================//
 
-template<class T>
-class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
+template<class Geometry, class T>
+class Fission_Matrix_Acceleration_Impl :
+    public Fission_Matrix_Acceleration<Geometry>
 {
+    typedef Fission_Matrix_Acceleration<Geometry> Base;
+
   public:
     // Typedefs.
     typedef profugus::Linear_System<T>               Linear_System_t;
@@ -158,10 +160,24 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     typedef Teuchos::ArrayView<const double>         Const_Array_View;
     typedef Teuchos::ArrayRCP<const double>          Const_ArrayRCP;
     typedef Teuchos::RCP<const Vector_t>             RCP_Const_Vector;
-    typedef Teuchos::RCP<Fission_Matrix_Solver<T>>   RCP_Fission_Matrix_Solver;
+    typedef Fission_Matrix_Solver<Geometry,T>        FM_Solver_t;
+    typedef Teuchos::RCP<FM_Solver_t>                RCP_Fission_Matrix_Solver;
+    typedef Teuchos::RCP<Teuchos::ParameterList>     RCP_ParameterList;
+    typedef typename Base::Problem_Builder_t         Problem_Builder_t;
+    typedef typename Base::Fission_Site_Container    Fission_Site_Container;
+    typedef typename Base::Fission_Source_t          Fission_Source_t;
 
   private:
     // >>> DATA
+
+    using Base::b_db;
+    using Base::b_mesh;
+    using Base::b_indexer;
+    using Base::b_gdata;
+    using Base::b_global_mesh;
+    using Base::b_mat;
+    using Base::b_update_Np;
+    using Base::b_current_Np;
 
     // Problem dimensions.
     RCP_Dimensions d_dim;
@@ -213,7 +229,7 @@ class Fission_Matrix_Acceleration_Impl : public Fission_Matrix_Acceleration
     const Linear_System_t& spn_system() const { return *d_system; }
 
     //! Get the fission matrix solver.
-    const Fission_Matrix_Solver<T>& solver() const { return *d_fm_solver; }
+    const FM_Solver_t & solver() const { return *d_fm_solver; }
 
     //! Get the eigenvalue of the SPN system.
     double keff() const { return d_keff; }

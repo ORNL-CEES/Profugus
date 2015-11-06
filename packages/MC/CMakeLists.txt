@@ -102,16 +102,16 @@ SET(MC_SOURCES
   mc/Fission_Matrix_Tally.pt.cc
   mc/Fission_Rebalance.cc
   mc/Fission_Source.pt.cc
-  mc/Fixed_Source_Solver.cc
+  mc/Fixed_Source_Solver.pt.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
-  mc/KCode_Solver.cc
+  mc/KCode_Solver.pt.cc
   mc/Keff_Tally.pt.cc
   mc/Particle.cc
   mc/Particle_Metaclass.pt.cc
   mc/Physics.pt.cc
   mc/Sampler.cc
-  mc/Solver.cc
+  mc/Solver.pt.cc
   mc/Source.pt.cc
   mc/Source_Diagnostic_Tally.pt.cc
   mc/Source_Transporter.pt.cc

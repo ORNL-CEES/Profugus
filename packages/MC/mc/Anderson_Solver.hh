@@ -35,13 +35,14 @@ namespace profugus
  */
 //===========================================================================//
 
-template<class T>
-class Anderson_Solver : public Keff_Solver
+template<class Geometry, class T>
+class Anderson_Solver : public Keff_Solver<Geometry>
 {
-    typedef Keff_Solver Base;
+    typedef Keff_Solver<Geometry> Base;
 
   public:
-    typedef Anderson_Operator<T>                     Operator;
+    typedef Geometry                                 Geometry_t;
+    typedef Anderson_Operator<Geometry_t,T>          Operator;
     typedef Teuchos::RCP<Teuchos::ParameterList>     RCP_Std_DB;
     typedef typename Operator::RCP_MAP               RCP_MAP;
     typedef Teuchos::RCP<Operator>                   RCP_Operator;
@@ -49,11 +50,15 @@ class Anderson_Solver : public Keff_Solver
     typedef std::shared_ptr<Anderson_t>              SP_Anderson;
     typedef typename Operator::SP_Source_Transporter SP_Source_Transporter;
     typedef typename Base::SP_Fission_Source         SP_Fission_Source;
-    typedef Core                                     Geometry_t;
     typedef Keff_Tally<Geometry_t>                   Keff_Tally_t;
+    typedef Fission_Matrix_Acceleration<Geometry_t>  FM_Acceleration;
+    typedef std::shared_ptr<FM_Acceleration>         SP_FM_Acceleration;
+    typedef typename Base::Tallier_t                 Tallier_t;
 
   private:
     // >>> DATA
+
+    using Base::b_tallier;
 
     // Problem database.
     RCP_Std_DB d_db;

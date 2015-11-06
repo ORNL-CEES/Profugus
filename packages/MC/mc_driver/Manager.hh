@@ -36,24 +36,24 @@ class Manager
 {
   private:
     // Typedefs.
-    typedef Problem_Builder::RCP_ParameterList       RCP_ParameterList;
-    typedef Problem_Builder::SP_Physics              SP_Physics;
-    typedef Problem_Builder::SP_Geometry             SP_Geometry;
-    typedef profugus::Solver                         Solver_t;
-    typedef std::shared_ptr<Solver_t>                SP_Solver;
-    typedef profugus::Keff_Solver                    Keff_Solver_t;
-    typedef std::shared_ptr<Keff_Solver_t>           SP_Keff_Solver;
-    typedef profugus::Fixed_Source_Solver            Fixed_Source_Solver_t;
-    typedef std::shared_ptr<Fixed_Source_Solver_t>   SP_Fixed_Source_Solver;
-    typedef Solver_t::Tallier_t                      Tallier_t;
-    typedef Solver_t::SP_Tallier                     SP_Tallier;
-    typedef profugus::Core                           Geometry_t;
-    typedef profugus::Source_Transporter<Geometry_t> Transporter_t;
-    typedef std::shared_ptr<Transporter_t>           SP_Transporter;
-    typedef profugus::Global_RNG::RNG_Control_t      RNG_Control_t;
-    typedef std::shared_ptr<RNG_Control_t>           SP_RNG_Control;
-    typedef profugus::Fission_Source<Geometry_t>     Fission_Source_t;
-    typedef std::shared_ptr<Fission_Source_t>        SP_Fission_Source;
+    typedef profugus::Core                          Geom_t;
+    typedef Problem_Builder::RCP_ParameterList      RCP_ParameterList;
+    typedef Problem_Builder::SP_Physics             SP_Physics;
+    typedef Problem_Builder::SP_Geometry            SP_Geometry;
+    typedef profugus::Solver<Geom_t>                Solver_t;
+    typedef std::shared_ptr<Solver_t>               SP_Solver;
+    typedef profugus::Keff_Solver<Geom_t>           Keff_Solver_t;
+    typedef std::shared_ptr<Keff_Solver_t>          SP_Keff_Solver;
+    typedef profugus::Fixed_Source_Solver<Geom_t>   Fixed_Source_Solver_t;
+    typedef std::shared_ptr<Fixed_Source_Solver_t>  SP_Fixed_Source_Solver;
+    typedef Solver_t::Tallier_t                     Tallier_t;
+    typedef Solver_t::SP_Tallier                    SP_Tallier;
+    typedef profugus::Source_Transporter<Geom_t>    Transporter_t;
+    typedef std::shared_ptr<Transporter_t>          SP_Transporter;
+    typedef profugus::Global_RNG::RNG_Control_t     RNG_Control_t;
+    typedef std::shared_ptr<RNG_Control_t>          SP_RNG_Control;
+    typedef profugus::Fission_Source<Geom_t>        Fission_Source_t;
+    typedef std::shared_ptr<Fission_Source_t>       SP_Fission_Source;
 
     // >>> DATA
 

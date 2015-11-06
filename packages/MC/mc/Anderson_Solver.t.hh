@@ -30,8 +30,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-template<class T>
-Anderson_Solver<T>::Anderson_Solver(RCP_Std_DB db)
+template<class Geometry, class T>
+Anderson_Solver<Geometry,T>::Anderson_Solver(RCP_Std_DB db)
     : d_db(db)
     , d_nodes(profugus::nodes())
     , d_node(profugus::node())
@@ -80,9 +80,9 @@ Anderson_Solver<T>::Anderson_Solver(RCP_Std_DB db)
 /*!
  * \brief Set the underlying fixed-source transporter and fission source.
  */
-template<class T>
-void Anderson_Solver<T>::set(SP_Source_Transporter transporter,
-                             SP_Fission_Source     source)
+template<class Geometry, class T>
+void Anderson_Solver<Geometry,T>::set(SP_Source_Transporter transporter,
+                                      SP_Fission_Source     source)
 {
     typedef Teuchos::Array<double> OneDArray_dbl;
 
@@ -137,8 +137,8 @@ void Anderson_Solver<T>::set(SP_Source_Transporter transporter,
 /*!
  * \brief Solve the problem..
  */
-template<class T>
-void Anderson_Solver<T>::solve()
+template<class Geometry, class T>
+void Anderson_Solver<Geometry,T>::solve()
 {
     using std::cout;
 
@@ -167,8 +167,8 @@ void Anderson_Solver<T>::solve()
 /*!
  * \brief Call to reset the solver and tallies for another calculation.
  */
-template<class T>
-void Anderson_Solver<T>::reset()
+template<class Geometry, class T>
+void Anderson_Solver<Geometry,T>::reset()
 {
     NOT_IMPLEMENTED("Reset not available.");
 }
@@ -182,8 +182,8 @@ void Anderson_Solver<T>::reset()
  * The initialize method adds the keffective tally to the tallier and builds
  * the initial/fission source.
  */
-template<class T>
-void Anderson_Solver<T>::initialize()
+template<class Geometry, class T>
+void Anderson_Solver<Geometry,T>::initialize()
 {
     INSIST(!b_tallier->is_built(), "The given tallier can only be built once.");
     INSIST(!b_tallier->is_finalized(), "The given tallier was used in "
@@ -213,8 +213,8 @@ void Anderson_Solver<T>::initialize()
 /*!
  * \brief Run inactive cycle(s).
  */
-template<class T>
-void Anderson_Solver<T>::run_inactive()
+template<class Geometry, class T>
+void Anderson_Solver<Geometry,T>::run_inactive()
 {
     using std::endl; using std::cout;
     using std::setw; using std::fixed; using std::scientific;
@@ -259,8 +259,8 @@ void Anderson_Solver<T>::run_inactive()
 /*!
  * \brief Do Anderson solve.
  */
-template<class T>
-void Anderson_Solver<T>::anderson_solve()
+template<class Geometry, class T>
+void Anderson_Solver<Geometry,T>::anderson_solve()
 {
     using std::endl; using std::cout;
     using std::setw; using std::fixed; using std::scientific;
@@ -292,8 +292,8 @@ void Anderson_Solver<T>::anderson_solve()
 /*!
  * \brief Run active cycles.
  */
-template<class T>
-void Anderson_Solver<T>::run_active()
+template<class Geometry, class T>
+void Anderson_Solver<Geometry,T>::run_active()
 {
     using std::endl; using std::cout;
     using std::setw; using std::fixed; using std::scientific;

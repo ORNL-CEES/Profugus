@@ -263,7 +263,7 @@ void Problem_Builder::build_geometry()
     core->complete(0.0, 0.0, 0.0);
 
     // make the geometry
-    d_geometry = std::make_shared<Geometry_t>(core);
+    d_geometry = std::make_shared<Geom_t>(core);
 }
 
 //---------------------------------------------------------------------------//
@@ -450,12 +450,12 @@ void Problem_Builder::build_var_reduction()
     if (to_lower(var) == "roulette")
     {
         d_var_reduction =
-            std::make_shared<profugus::VR_Roulette<Geometry_t> >(d_db);
+            std::make_shared<profugus::VR_Roulette<Geom_t> >(d_db);
     }
     else if (to_lower(var) == "analog")
     {
         d_var_reduction =
-            std::make_shared<profugus::VR_Analog<Geometry_t> >();
+            std::make_shared<profugus::VR_Analog<Geom_t> >();
     }
     else
     {
@@ -504,8 +504,8 @@ void Problem_Builder::build_tallies()
 {
     using profugus::Mesh_Geometry;
 
-    typedef profugus::Fission_Matrix_Tally<Geometry_t>    FM_Tally_t;
-    typedef profugus::Source_Diagnostic_Tally<Geometry_t> SD_Tally_t;
+    typedef profugus::Fission_Matrix_Tally<Geom_t>    FM_Tally_t;
+    typedef profugus::Source_Diagnostic_Tally<Geom_t> SD_Tally_t;
 
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
@@ -597,8 +597,8 @@ void Problem_Builder::build_spn_problem()
 {
     typedef profugus::EpetraTypes                          ET;
     typedef profugus::TpetraTypes                          TT;
-    typedef profugus::Fission_Matrix_Acceleration_Impl<ET> FM_ET;
-    typedef profugus::Fission_Matrix_Acceleration_Impl<TT> FM_TT;
+    typedef profugus::Fission_Matrix_Acceleration_Impl<Geom_t,ET> FM_ET;
+    typedef profugus::Fission_Matrix_Acceleration_Impl<Geom_t,TT> FM_TT;
 
     // check for fission matrix acceleration
     if (d_db->isSublist("fission_matrix_db"))

@@ -37,11 +37,11 @@ class Variance_Reduction
     typedef Geometry                         Geometry_t;
     typedef std::shared_ptr<Geometry_t>      SP_Geometry;
     typedef typename Geometry_t::Geo_State_t Geo_State_t;
-    typedef Physics<Core>                    Physics_t;
+    typedef Physics<Geometry>                Physics_t;
     typedef std::shared_ptr<Physics_t>       SP_Physics;
-    typedef Physics_t::Particle_t            Particle_t;
-    typedef Physics_t::SP_Particle           SP_Particle;
-    typedef Physics_t::Bank_t                Bank_t;
+    typedef typename Physics_t::Particle_t   Particle_t;
+    typedef typename Physics_t::SP_Particle  SP_Particle;
+    typedef typename Physics_t::Bank_t       Bank_t;
     //@}
 
   public:

@@ -39,7 +39,8 @@ void Manager::build_anderson(SP_Transporter    transporter,
                              SP_Fission_Source source)
 {
     // make the solver
-    auto anderson = std::make_shared< profugus::Anderson_Solver<T> >(d_db);
+    auto anderson =
+        std::make_shared< profugus::Anderson_Solver<Geom_t,T> >(d_db);
 
     // set the solver
     anderson->set(transporter, source);
@@ -171,7 +172,8 @@ void Manager::setup(const std::string &xml_file)
         else
         {
             // make the solver
-            auto kcode_solver = std::make_shared<profugus::KCode_Solver>(d_db);
+            auto kcode_solver =
+                std::make_shared<profugus::KCode_Solver<Geom_t> >(d_db);
 
             // set the solver
             kcode_solver->set(transporter, source);

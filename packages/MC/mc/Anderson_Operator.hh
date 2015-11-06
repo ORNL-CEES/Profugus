@@ -41,16 +41,16 @@ namespace profugus
  */
 //===========================================================================//
 
-template<class T>
+template<class Geometry, class T>
 class Anderson_Operator : public OperatorAdapter<T>
 {
     typedef OperatorAdapter<T> Base;
 
 public:
-    typedef profugus::Core                          Geometry_t;
+    typedef Geometry                                Geometry_t;
     typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
-    typedef Fission_Source<Core>                    FS_t;
+    typedef Fission_Source<Geometry_t>              FS_t;
     typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
     typedef std::shared_ptr<FS_t>                   SP_Fission_Source;
     typedef typename FS_t::SP_Fission_Sites         SP_Fission_Sites;
