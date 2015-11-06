@@ -28,12 +28,13 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Variance_Reduction
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef Core                             Geometry_t;
+    typedef Geometry                         Geometry_t;
     typedef std::shared_ptr<Geometry_t>      SP_Geometry;
     typedef typename Geometry_t::Geo_State_t Geo_State_t;
     typedef Physics<Core>                    Physics_t;

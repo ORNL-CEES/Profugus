@@ -56,9 +56,9 @@ class TransporterTestBase : public testing::Test
 
     typedef std::vector<double> Vec_Dbl;
 
-    typedef profugus::Tallier<Geometry_t> Tallier_t;
-    typedef profugus::Variance_Reduction Var_Reduction_t;
-    typedef profugus::Source<Geometry_t> Source_t;
+    typedef profugus::Tallier<Geometry_t>            Tallier_t;
+    typedef profugus::Variance_Reduction<Geometry_t> Var_Reduction_t;
+    typedef profugus::Source<Geometry_t>             Source_t;
 
     typedef std::shared_ptr<Geometry_t>             SP_Geometry;
     typedef std::shared_ptr<Physics_t>              SP_Physics;

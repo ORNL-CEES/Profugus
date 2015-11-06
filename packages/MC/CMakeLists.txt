@@ -118,7 +118,7 @@ SET(MC_SOURCES
   mc/Tallier.pt.cc
   mc/Tally.pt.cc
   mc/Uniform_Source.pt.cc
-  mc/VR_Roulette.cc
+  mc/VR_Roulette.pt.cc
   )
 LIST(APPEND HEADERS ${MC_HEADERS})
 LIST(APPEND SOURCES ${MC_SOURCES})

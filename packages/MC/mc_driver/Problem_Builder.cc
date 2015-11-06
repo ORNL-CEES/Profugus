@@ -449,11 +449,13 @@ void Problem_Builder::build_var_reduction()
     // build the appropriate variance reduction
     if (to_lower(var) == "roulette")
     {
-        d_var_reduction = std::make_shared<profugus::VR_Roulette>(d_db);
+        d_var_reduction =
+            std::make_shared<profugus::VR_Roulette<Geometry_t> >(d_db);
     }
     else if (to_lower(var) == "analog")
     {
-        d_var_reduction = std::make_shared<profugus::VR_Analog>();
+        d_var_reduction =
+            std::make_shared<profugus::VR_Analog<Geometry_t> >();
     }
     else
     {

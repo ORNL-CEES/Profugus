@@ -55,7 +55,8 @@ class Problem_Builder
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
     typedef std::shared_ptr<Geometry_t>                   SP_Geometry;
     typedef std::shared_ptr<profugus::Shape>              SP_Shape;
-    typedef std::shared_ptr<profugus::Variance_Reduction> SP_Var_Reduction;
+    typedef profugus::Variance_Reduction<Geometry_t>      VR_t;
+    typedef std::shared_ptr<VR_t>                         SP_Var_Reduction;
     typedef std::shared_ptr<Tallier_t>                    SP_Tallier;
     typedef Tallier_t::SP_Tally                           SP_Tally;
     typedef std::shared_ptr<FM_Acceleration_t>            SP_FM_Acceleration;

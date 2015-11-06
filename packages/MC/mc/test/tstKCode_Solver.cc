@@ -99,7 +99,7 @@ class KCode_SolverTest : public testing::Test
     typedef Physics_t::Bank_t                   Bank_t;
     typedef Solver_t::Tallier_t                 Tallier_t;
     typedef Solver_t::Source_Transporter_t      Transporter_t;
-    typedef profugus::VR_Roulette               Var_Reduction_t;
+    typedef profugus::VR_Roulette<Geometry_t>   Var_Reduction_t;
 
     typedef Physics_t::XS_t   XS_t;
     typedef Physics_t::RCP_XS RCP_XS;

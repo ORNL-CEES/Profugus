@@ -46,7 +46,7 @@ class Anderson_SolverTest : public testing::Test
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::Bank_t                   Bank_t;
-    typedef profugus::VR_Roulette               Var_Reduction_t;
+    typedef profugus::VR_Roulette<Geometry_t>   Var_Reduction_t;
     typedef profugus::Cartesian_Mesh            Mesh_t;
 
     typedef Physics_t::XS_t   XS_t;

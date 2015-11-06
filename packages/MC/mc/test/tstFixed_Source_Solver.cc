@@ -36,7 +36,8 @@ class FixedSourceSolverTest : public TransporterTestBase
     typedef Solver_t::SP_Source                      SP_Source;
     typedef profugus::Uniform_Source<Geometry_t>     Uniform_Source_t;
 
-    typedef std::shared_ptr<Transporter_t> SP_Transporter;
+    typedef std::shared_ptr<Transporter_t>    SP_Transporter;
+    typedef profugus::VR_Roulette<Geometry_t> VR_Roulette;
 
   protected:
     void SetUp()
@@ -128,7 +129,7 @@ class FixedSourceSolverTest : public TransporterTestBase
 
     void init_vr()
     {
-        var_red = std::make_shared<profugus::VR_Roulette>(db);
+        var_red = std::make_shared<VR_Roulette>(db);
     }
 
   protected:

@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/VR_Roulette.cc
+ * \file   mc/VR_Roulette.t.hh
  * \author Thomas M. Evans
  * \date   Fri May 09 13:09:37 2014
  * \brief  VR_Roulette member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_VR_Roulette_t_hh
+#define mc_VR_Roulette_t_hh
 
 #include "VR_Roulette.hh"
 #include "harness/Diagnostics.hh"
@@ -21,7 +24,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-VR_Roulette::VR_Roulette(RCP_Std_DB db)
+template <class Geometry>
+VR_Roulette<Geometry>::VR_Roulette(RCP_Std_DB db)
     : Base()
 {
     REQUIRE(!db.is_null());
@@ -47,7 +51,8 @@ VR_Roulette::VR_Roulette(RCP_Std_DB db)
 /*!
  * \brief Process a particle for weight roulette.
  */
-void VR_Roulette::post_collision(Particle_t& particle,
+template <class Geometry>
+void VR_Roulette<Geometry>::post_collision(Particle_t& particle,
                                  Bank_t&     bank) const
 {
     if (!particle.alive())
@@ -100,6 +105,8 @@ void VR_Roulette::post_collision(Particle_t& particle,
 
 } // end namespace profugus
 
+#endif // mc_VR_Roulette_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of VR_Roulette.cc
+//                 end of VR_Roulette.t.hh
 //---------------------------------------------------------------------------//

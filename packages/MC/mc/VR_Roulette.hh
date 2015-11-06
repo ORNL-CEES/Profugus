@@ -54,21 +54,27 @@ namespace profugus
  */
 //===========================================================================//
 
-class VR_Roulette : public Variance_Reduction
+template <class Geometry>
+class VR_Roulette : public Variance_Reduction<Geometry>
 {
-    typedef Variance_Reduction Base;
+    typedef Variance_Reduction<Geometry> Base;
 
   public:
     //@{
     //! Useful typedefs.
-    typedef Geometry_t::Space_Vector      Space_Vector;
-    typedef Particle_t::RNG_t             RNG_t;
-    typedef Teuchos::ParameterList        ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;
+    typedef Geometry                            Geometry_t;
+    typedef typename Geometry_t::Space_Vector   Space_Vector;
+    typedef typename Base::Particle_t           Particle_t;
+    typedef typename Particle_t::RNG_t          RNG_t;
+    typedef typename Base::Bank_t               Bank_t;
+    typedef Teuchos::ParameterList              ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     //@}
 
   private:
     // >>> DATA
+
+    using Base::b_splitting;
 
     // Weight-roulette parameters.
     double d_Wc; // weight-cutoff

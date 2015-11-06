@@ -31,13 +31,14 @@ class Domain_TransporterTest : public TransporterTestBase
     typedef profugus::Domain_Transporter<Geometry_t>    Transporter;
     typedef Physics_t::Fission_Site_Container           Fission_Site_Container;
     typedef shared_ptr<Fission_Site_Container>          SP_Fission_Sites;
+    typedef profugus::VR_Roulette<Geometry_t>           VR_Roulette;
 
   protected:
 
     void init_vr()
     {
         db->set("weight_cutoff", 0.001);
-        var_red = std::make_shared<profugus::VR_Roulette>(db);
+        var_red = std::make_shared<VR_Roulette>(db);
     }
 
     void init_tallies()
@@ -53,13 +54,14 @@ class Reflecting_Domain_TransporterTest : public TransporterTestBase
 {
   protected:
     typedef profugus::Domain_Transporter<Geometry_t> Transporter;
+    typedef profugus::VR_Roulette<Geometry_t>        VR_Roulette;
 
   protected:
 
     void init_vr()
     {
         db->set("weight_cutoff", 0.001);
-        var_red = std::make_shared<profugus::VR_Roulette>(db);
+        var_red = std::make_shared<VR_Roulette>(db);
     }
 
     void init_tallies()
