@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Keff_Tally.cc
+ * \file   mc/Keff_Tally.t.hh
  * \author Thomas M. Evans
  * \date   Wed May 14 13:29:40 2014
  * \brief  Keff_Tally member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Keff_Tally_t_hh
+#define mc_Keff_Tally_t_hh
 
 #include "Keff_Tally.hh"
 
@@ -23,15 +26,16 @@ namespace profugus
 /*!
  * \brief Kcode solver should construct this with initial keff estimate.
  */
-Keff_Tally::Keff_Tally(double     keff_init,
-                       SP_Physics physics)
+template <class Geometry>
+Keff_Tally<Geometry>::Keff_Tally(double     keff_init,
+                                 SP_Physics physics)
     : Base(physics, true)
     , d_keff_cycle(keff_init)
 {
     REQUIRE(physics);
 
     // set the tally name
-    set_name("keff");
+    this->set_name("keff");
 
     // reset tally
     reset();
@@ -50,7 +54,8 @@ Keff_Tally::Keff_Tally(double     keff_init,
  * This is only meaningful after one complete cycle. If called before then,
  * we'll return an arbitrary value.
  */
-double Keff_Tally::mean() const
+template <class Geometry>
+double Keff_Tally<Geometry>::mean() const
 {
     if (d_cycle < 1)
         return -1.;
@@ -68,7 +73,8 @@ double Keff_Tally::mean() const
  * This is only meaningful after two complete cycles. If called before then,
  * we'll return an arbitrary value.
  */
-double Keff_Tally::variance() const
+template <class Geometry>
+double Keff_Tally<Geometry>::variance() const
 {
     if (d_cycle < 2)
         return d_keff_sum * d_keff_sum;
@@ -92,7 +98,8 @@ double Keff_Tally::variance() const
  * \f]
  * where \f$l\f$ is the step-length.
  */
-void Keff_Tally::accumulate(double            step,
+template <class Geometry>
+void Keff_Tally<Geometry>::accumulate(double            step,
                             const Particle_t &p)
 {
     REQUIRE(b_physics);
@@ -106,7 +113,8 @@ void Keff_Tally::accumulate(double            step,
  *
  * This resets the accumulated keff statistics.
  */
-void Keff_Tally::begin_active_cycles()
+template <class Geometry>
+void Keff_Tally<Geometry>::begin_active_cycles()
 {
     d_cycle       = 0;
     d_keff_sum    = 0.;
@@ -119,7 +127,8 @@ void Keff_Tally::begin_active_cycles()
  *
  * This clears the current accumulated path lengths.
  */
-void Keff_Tally::begin_cycle()
+template <class Geometry>
+void Keff_Tally<Geometry>::begin_cycle()
 {
     d_keff_cycle = 0.;
 }
@@ -134,7 +143,8 @@ void Keff_Tally::begin_cycle()
  * We accumulate the sum and sum-of-squares of the keff so that we can calculate
  * averages and variances.
  */
-void Keff_Tally::end_cycle(double num_particles)
+template <class Geometry>
+void Keff_Tally<Geometry>::end_cycle(double num_particles)
 {
     REQUIRE(num_particles > 0.);
 
@@ -160,7 +170,8 @@ void Keff_Tally::end_cycle(double num_particles)
  * This will still preserve the latest keff value so that existing fission sites
  * will be sampled correctly.
  */
-void Keff_Tally::reset()
+template <class Geometry>
+void Keff_Tally<Geometry>::reset()
 {
     d_cycle       = 0;
     d_keff_sum    = 0.;
@@ -171,6 +182,8 @@ void Keff_Tally::reset()
 
 } // end namespace profugus
 
+#endif // mc_Keff_Tally_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Keff_Tally.cc
+//                 end of Keff_Tally.t.hh
 //---------------------------------------------------------------------------//

@@ -63,6 +63,10 @@ class KCode_Solver : public Keff_Solver
     typedef Source_Transporter_t::RCP_Std_DB        RCP_Std_DB;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
     typedef Fission_Source<Geometry_t>              FS_t;
+    typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
+    typedef Pathlength_Tally<Geometry_t>            Pathlength_Tally_t;
+    typedef Source_Tally<Geometry_t>                Source_Tally_t;
+    typedef Compound_Tally<Geometry_t>              Compound_Tally_t;
     typedef typename FS_t::SP_Fission_Sites         SP_Fission_Sites;
 
   private:

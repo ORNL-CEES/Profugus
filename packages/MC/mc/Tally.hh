@@ -18,9 +18,6 @@
 #include "Definitions.hh"
 #include "harness/DBC.hh"
 
-// Remove this once templated
-#include "geometry/RTK_Geometry.hh"
-
 namespace profugus
 {
 
@@ -31,14 +28,15 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Tally
 {
   public:
     //@{
     //! Typedefs.
-    typedef Physics<Core>              Physics_t;
-    typedef Physics_t::Particle_t      Particle_t;
-    typedef std::shared_ptr<Physics_t> SP_Physics;
+    typedef Physics<Geometry>               Physics_t;
+    typedef typename Physics_t::Particle_t  Particle_t;
+    typedef std::shared_ptr<Physics_t>      SP_Physics;
     //@}
 
   protected:
@@ -100,9 +98,13 @@ class Tally
  * \class Source_Tally
  * \brief Defines source tally interfaces.
  */
-class Source_Tally : public Tally
+template <class Geometry>
+class Source_Tally : public Tally<Geometry>
 {
-    typedef Tally Base;
+    typedef Tally<Geometry>                 Base;
+    typedef Physics<Geometry>               Physics_t;
+    typedef typename Physics_t::Particle_t  Particle_t;
+    typedef std::shared_ptr<Physics_t>      SP_Physics;
 
   public:
     // Constructor.
@@ -124,9 +126,13 @@ class Source_Tally : public Tally
  * \class Pathlength_Tally
  * \brief Defines source tally interfaces.
  */
-class Pathlength_Tally : public Tally
+template <class Geometry>
+class Pathlength_Tally : public Tally<Geometry>
 {
-    typedef Tally Base;
+    typedef Tally<Geometry>                 Base;
+    typedef Physics<Geometry>               Physics_t;
+    typedef typename Physics_t::Particle_t  Particle_t;
+    typedef std::shared_ptr<Physics_t>      SP_Physics;
 
   public:
     // Constructor.
@@ -148,15 +154,21 @@ class Pathlength_Tally : public Tally
  * \class Compound_Tally
  * \brief Tally that is multiple types (source and/or pathlength).
  */
-class Compound_Tally : public Tally
+template <class Geometry>
+class Compound_Tally : public Tally<Geometry>
 {
-    typedef Tally Base;
+    typedef Tally<Geometry>                 Base;
 
   public:
     //@{
     //! Tally typedefs.aaa
-    typedef std::shared_ptr<Pathlength_Tally> SP_Pathlength_Tally;
-    typedef std::shared_ptr<Source_Tally>     SP_Source_Tally;
+    typedef Pathlength_Tally<Geometry>          Pathlength_Tally_t;
+    typedef std::shared_ptr<Pathlength_Tally_t> SP_Pathlength_Tally;
+    typedef Source_Tally<Geometry>              Source_Tally_t;
+    typedef std::shared_ptr<Source_Tally_t>     SP_Source_Tally;
+    typedef Physics<Geometry>                   Physics_t;
+    typedef typename Physics_t::Particle_t      Particle_t;
+    typedef std::shared_ptr<Physics_t>          SP_Physics;
     //@}
 
   protected:

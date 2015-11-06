@@ -38,8 +38,8 @@ class TransporterTestBase : public testing::Test
     typedef testing::Test Base;
 
   protected:
-    typedef profugus::Physics<profugus::Core>   Physics_t;
-    typedef Physics_t::Geometry_t               Geometry_t;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::Physics<Geometry_t>       Physics_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::SP_Particle              SP_Particle;
@@ -56,7 +56,7 @@ class TransporterTestBase : public testing::Test
 
     typedef std::vector<double> Vec_Dbl;
 
-    typedef profugus::Tallier            Tallier_t;
+    typedef profugus::Tallier<Geometry_t> Tallier_t;
     typedef profugus::Variance_Reduction Var_Reduction_t;
     typedef profugus::Source<Geometry_t> Source_t;
 

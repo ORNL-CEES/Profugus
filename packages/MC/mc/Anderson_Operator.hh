@@ -24,6 +24,7 @@
 #include "Source_Transporter.hh"
 #include "Fission_Source.hh"
 #include "Tallier.hh"
+#include "Keff_Tally.hh"
 
 namespace profugus
 {
@@ -50,9 +51,10 @@ public:
     typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
     typedef Fission_Source<Core>                    FS_t;
+    typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
     typedef std::shared_ptr<FS_t>                   SP_Fission_Source;
     typedef typename FS_t::SP_Fission_Sites         SP_Fission_Sites;
-    typedef std::shared_ptr<Tallier>                SP_Tallier;
+    typedef std::shared_ptr<Tallier<Geometry_t> >   SP_Tallier;
     typedef typename T::MV                          MV;
     typedef typename T::MAP                         MAP;
     typedef Teuchos::RCP<MAP>                       RCP_MAP;

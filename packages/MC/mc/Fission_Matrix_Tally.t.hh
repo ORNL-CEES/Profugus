@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Tally.cc
+ * \file   mc/Fission_Matrix_Tally.t.hh
  * \author Thomas M. Evans
  * \date   Tue Jul 22 15:09:01 2014
  * \brief  Fission_Matrix_Tally member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Fission_Matrix_Tally_t_hh
+#define mc_Fission_Matrix_Tally_t_hh
 
 #include "Fission_Matrix_Tally.hh"
 
@@ -25,9 +28,10 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
-                                           SP_Physics       physics,
-                                           SP_Mesh_Geometry fm_mesh)
+template <class Geometry>
+Fission_Matrix_Tally<Geometry>::Fission_Matrix_Tally(RCP_Std_DB       db,
+                                                     SP_Physics       physics,
+                                                     SP_Mesh_Geometry fm_mesh)
     : Base(physics, true)
     , d_data(std::make_shared<FM_Data>())
 {
@@ -109,7 +113,8 @@ Fission_Matrix_Tally::Fission_Matrix_Tally(RCP_Std_DB       db,
  * The client can access (and reset) the global fission matrix through the
  * processor by accessing the processor() function.
  */
-void Fission_Matrix_Tally::build_matrix()
+template <class Geometry>
+void Fission_Matrix_Tally<Geometry>::build_matrix()
 {
     // return if we haven't started tallying, as we assume that all domains
     // will have entries in the fission matrix (for replicated) in order for
@@ -127,7 +132,8 @@ void Fission_Matrix_Tally::build_matrix()
 /*!
  * \brief End cycle processing of fission matrix.
  */
-void Fission_Matrix_Tally::end_cycle(double num_particles)
+template <class Geometry>
+void Fission_Matrix_Tally<Geometry>::end_cycle(double num_particles)
 {
 #ifdef USE_HDF5
 
@@ -197,7 +203,8 @@ void Fission_Matrix_Tally::end_cycle(double num_particles)
 /*!
  * \brief Reset the tallies.
  */
-void Fission_Matrix_Tally::reset()
+template <class Geometry>
+void Fission_Matrix_Tally<Geometry>::reset()
 {
     // clear all the tallies
     std::fill(d_data->d_denominator.begin(), d_data->d_denominator.end(), 0.0);
@@ -223,7 +230,8 @@ void Fission_Matrix_Tally::reset()
 /*!
  * \brief Setup fission matrix tallying at birth.
  */
-void Fission_Matrix_Tally::Src_Tally::birth(const Particle_t &p)
+template <class Geometry>
+void Fission_Matrix_Tally<Geometry>::Src_Tally::birth(const Particle_t &p)
 {
     // return if we haven't started tallying yet
     if (d_data->d_cycle_start > d_data->d_cycle_ctr)
@@ -247,8 +255,8 @@ void Fission_Matrix_Tally::Src_Tally::birth(const Particle_t &p)
     CHECK(mesh_idx >= 0 && mesh_idx < d_data->d_fm_mesh->num_cells());
 
     // set it in the particle's metadata
-    const_cast<Particle_t &>(p).metadata().access<int>(d_data->d_birth_idx)
-        = mesh_idx;
+    const_cast<Particle_t &>(p).metadata().template access<int>(
+        d_data->d_birth_idx) = mesh_idx;
 
     // tally the birth weight
     d_data->d_denominator[mesh_idx] += p.wt();
@@ -260,8 +268,10 @@ void Fission_Matrix_Tally::Src_Tally::birth(const Particle_t &p)
 /*!
  * \brief Accumulate fission matrix pathlength tally.
  */
-void Fission_Matrix_Tally::PL_Tally::accumulate(double            step,
-                                                const Particle_t &p)
+template <class Geometry>
+void Fission_Matrix_Tally<Geometry>::PL_Tally::accumulate(
+        double            step,
+        const Particle_t &p)
 {
     using geometry::INSIDE;
 
@@ -286,7 +296,7 @@ void Fission_Matrix_Tally::PL_Tally::accumulate(double            step,
     int i = 0;
 
     // cell particle was born in (j)
-    int j = p.metadata().access<int>(d_data->d_birth_idx);
+    int j = p.metadata().template access<int>(d_data->d_birth_idx);
 
     // distance of current step through the fission matrix
     double d = 0.0;
@@ -325,6 +335,8 @@ void Fission_Matrix_Tally::PL_Tally::accumulate(double            step,
 
 } // end namespace profugus
 
+#endif // mc_Fission_Matrix_Tally_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Fission_Matrix_Tally.cc
+//                 end of Fission_Matrix_Tally.t.hh
 //---------------------------------------------------------------------------//

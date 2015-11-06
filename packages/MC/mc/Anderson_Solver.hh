@@ -49,6 +49,8 @@ class Anderson_Solver : public Keff_Solver
     typedef std::shared_ptr<Anderson_t>              SP_Anderson;
     typedef typename Operator::SP_Source_Transporter SP_Source_Transporter;
     typedef typename Base::SP_Fission_Source         SP_Fission_Source;
+    typedef Core                                     Geometry_t;
+    typedef Keff_Tally<Geometry_t>                   Keff_Tally_t;
 
   private:
     // >>> DATA

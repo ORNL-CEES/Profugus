@@ -96,7 +96,7 @@ void Anderson_Solver<T>::set(SP_Source_Transporter transporter,
     double init_keff = d_db->get("keff_init", 1.0);
     VALIDATE(init_keff >= 0., "Initial keff guess (keff_init="
              << init_keff << ") must be nonnegative.");
-    b_keff_tally = std::make_shared<Keff_Tally>(
+    b_keff_tally = std::make_shared<Keff_Tally_t>(
         init_keff, b_tallier->physics());
 
     // Get the anderson mesh boundaries

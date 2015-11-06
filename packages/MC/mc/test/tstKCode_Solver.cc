@@ -19,6 +19,7 @@
 #include "harness/DBC.hh"
 #include "comm/P_Stream.hh"
 #include "xs/XS_Builder.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "../Fission_Source.hh"
 #include "../Global_RNG.hh"
 #include "../Tally.hh"
@@ -29,10 +30,15 @@
 // Helpers
 //---------------------------------------------------------------------------//
 
-class Dummy_Tally : public profugus::Pathlength_Tally
+class Dummy_Tally : public profugus::Pathlength_Tally<profugus::Core>
 {
-    typedef profugus::Tally     Base;
-    typedef std::vector<double> Vec_Dbl;
+    typedef profugus::Core                          Geometry_t;
+    typedef profugus::Tally<Geometry_t>             Base;
+    typedef std::vector<double>                     Vec_Dbl;
+    typedef profugus::Physics<Geometry_t>           Physics_t;
+    typedef std::shared_ptr<Physics_t>              SP_Physics;
+    typedef Physics_t::Particle_t                   Particle_t;
+    typedef profugus::Pathlength_Tally<Geometry_t>  Pathlength_Tally_t;
 
   private:
     int    d_pl_counter;
@@ -43,7 +49,7 @@ class Dummy_Tally : public profugus::Pathlength_Tally
 
     // Constructor
     Dummy_Tally(SP_Physics physics)
-        : profugus::Pathlength_Tally(physics, false)
+        : Pathlength_Tally_t(physics, false)
         , d_pl_counter(1)
         , d_finalized_np(-1.)
     {

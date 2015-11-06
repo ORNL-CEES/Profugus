@@ -142,7 +142,7 @@ auto Anderson_Operator<T>::initialize_Anderson() -> RCP_MV
     std::copy(gp.begin(), gp.end(), v.begin());
 
     // Get the k from the initialization cycles
-    auto k_tally = std::dynamic_pointer_cast<Keff_Tally>(
+    auto k_tally = std::dynamic_pointer_cast<Keff_Tally_t>(
         *d_transporter->tallier()->begin());
     CHECK(k_tally);
 

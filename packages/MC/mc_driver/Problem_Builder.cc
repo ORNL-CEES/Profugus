@@ -501,8 +501,9 @@ void Problem_Builder::build_source(const ParameterList &source_db)
 void Problem_Builder::build_tallies()
 {
     using profugus::Mesh_Geometry;
-    using profugus::Fission_Matrix_Tally;
-    using profugus::Source_Diagnostic_Tally;
+
+    typedef profugus::Fission_Matrix_Tally<Geometry_t>    FM_Tally_t;
+    typedef profugus::Source_Diagnostic_Tally<Geometry_t> SD_Tally_t;
 
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
@@ -535,11 +536,11 @@ void Problem_Builder::build_tallies()
             auto xb = tdb.get<OneDArray_dbl>("x_bounds").toVector();
             auto yb = tdb.get<OneDArray_dbl>("y_bounds").toVector();
             auto zb = tdb.get<OneDArray_dbl>("z_bounds").toVector();
-            Fission_Matrix_Tally::SP_Mesh_Geometry geo(
+            FM_Tally_t::SP_Mesh_Geometry geo(
                 std::make_shared<Mesh_Geometry>(xb, yb, zb));
 
             // build the fission matrix
-            auto fm_tally(std::make_shared<Fission_Matrix_Tally>(
+            auto fm_tally(std::make_shared<FM_Tally_t>(
                               d_db, d_physics, geo));
             CHECK(fm_tally);
 
@@ -569,13 +570,13 @@ void Problem_Builder::build_tallies()
         auto xb = sdb.get<OneDArray_dbl>("x_bounds").toVector();
         auto yb = sdb.get<OneDArray_dbl>("y_bounds").toVector();
         auto zb = sdb.get<OneDArray_dbl>("z_bounds").toVector();
-        Source_Diagnostic_Tally::SP_Mesh_Geometry geo(
+        SD_Tally_t::SP_Mesh_Geometry geo(
             std::make_shared<Mesh_Geometry>(xb, yb, zb));
 
         // the default is to tally during inactive cycles
 
         // build the source tally
-        auto src_tally(std::make_shared<Source_Diagnostic_Tally>(
+        auto src_tally(std::make_shared<SD_Tally_t>(
                            d_db, d_physics, geo, true));
         CHECK(src_tally);
 

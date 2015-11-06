@@ -50,13 +50,13 @@ class Problem_Builder
     typedef Teuchos::RCP<ParameterList>                   RCP_ParameterList;
     typedef profugus::Physics<profugus::Core>             Physics_t;
     typedef Physics_t::Geometry_t                         Geometry_t;
-    typedef profugus::Tallier                             Tallier_t;
+    typedef profugus::Tallier<Geometry_t>                 Tallier_t;
     typedef profugus::Fission_Matrix_Acceleration         FM_Acceleration_t;
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
     typedef std::shared_ptr<Geometry_t>                   SP_Geometry;
     typedef std::shared_ptr<profugus::Shape>              SP_Shape;
     typedef std::shared_ptr<profugus::Variance_Reduction> SP_Var_Reduction;
-    typedef std::shared_ptr<profugus::Tallier>            SP_Tallier;
+    typedef std::shared_ptr<Tallier_t>                    SP_Tallier;
     typedef Tallier_t::SP_Tally                           SP_Tally;
     typedef std::shared_ptr<FM_Acceleration_t>            SP_FM_Acceleration;
     //@}

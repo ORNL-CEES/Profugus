@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tallier.cc
+ * \file   mc/Tallier.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 12 12:15:30 2014
  * \brief  Tallier member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Tallier_t_hh
+#define mc_Tallier_t_hh
 
 #include <algorithm>
 #include <utility>
@@ -25,8 +28,9 @@ namespace profugus
 /*!
  * \brief Prune added tallies for doubles.
  */
-template<class Vec_T>
-void Tallier::prune(Vec_T &tallies)
+template <class Geometry>
+template <class Vec_T>
+void Tallier<Geometry>::prune(Vec_T &tallies)
 {
     // sort the tally container based on the tally name
     auto sort_f = [](const SP_Tally &a, const SP_Tally &b)
@@ -70,7 +74,8 @@ void Tallier::prune(Vec_T &tallies)
 /*!
  * \brief Constructor.
  */
-Tallier::Tallier()
+template <class Geometry>
+Tallier<Geometry>::Tallier()
     : d_build_phase(CONSTRUCTED)
 {
 }
@@ -84,8 +89,9 @@ Tallier::Tallier()
  * \param geometry
  * \param physics
  */
-void Tallier::set(SP_Geometry geometry,
-                  SP_Physics  physics)
+template <class Geometry>
+void Tallier<Geometry>::set(SP_Geometry geometry,
+                            SP_Physics  physics)
 {
     REQUIRE(geometry);
     REQUIRE(physics);
@@ -104,7 +110,8 @@ void Tallier::set(SP_Geometry geometry,
 /*!
  * \brief Add a pathlength tally.
  */
-void Tallier::add_pathlength_tally(SP_Pathlength_Tally tally)
+template <class Geometry>
+void Tallier<Geometry>::add_pathlength_tally(SP_Pathlength_Tally tally)
 {
     REQUIRE(tally);
     REQUIRE(d_build_phase < BUILT);
@@ -117,7 +124,8 @@ void Tallier::add_pathlength_tally(SP_Pathlength_Tally tally)
 /*!
  * \brief Add a source tally.
  */
-void Tallier::add_source_tally(SP_Source_Tally tally)
+template <class Geometry>
+void Tallier<Geometry>::add_source_tally(SP_Source_Tally tally)
 {
     REQUIRE(tally);
     REQUIRE(d_build_phase < BUILT);
@@ -130,7 +138,8 @@ void Tallier::add_source_tally(SP_Source_Tally tally)
 /*!
  * \brief Add a compound tally.
  */
-void Tallier::add_compound_tally(SP_Compound_Tally tally)
+template <class Geometry>
+void Tallier<Geometry>::add_compound_tally(SP_Compound_Tally tally)
 {
     REQUIRE(tally);
     REQUIRE(d_build_phase < BUILT);
@@ -147,7 +156,8 @@ void Tallier::add_compound_tally(SP_Compound_Tally tally)
 /*!
  * \brief Initialize internal data structures after adding tallies.
  */
-void Tallier::build()
+template <class Geometry>
+void Tallier<Geometry>::build()
 {
     REQUIRE(d_build_phase == ASSIGNED);
     REQUIRE(d_tallies.empty());
@@ -183,8 +193,9 @@ void Tallier::build()
  * \param step step-length
  * \param p particle
  */
-void Tallier::path_length(double            step,
-                          const Particle_t &p)
+template <class Geometry>
+void Tallier<Geometry>::path_length(double            step,
+                                    const Particle_t &p)
 {
     REQUIRE(d_build_phase == BUILT);
     REQUIRE(step >= 0.0);
@@ -207,7 +218,8 @@ void Tallier::path_length(double            step,
  *
  * \param p particle
  */
-void Tallier::source(const Particle_t &p)
+template <class Geometry>
+void Tallier<Geometry>::source(const Particle_t &p)
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -227,7 +239,8 @@ void Tallier::source(const Particle_t &p)
 /*!
  * \brief Tell the tallies to begin active kcode cycles.
  */
-void Tallier::begin_active_cycles()
+template <class Geometry>
+void Tallier<Geometry>::begin_active_cycles()
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -244,7 +257,8 @@ void Tallier::begin_active_cycles()
 /*!
  * \brief Tell the tallies to begin a new cycle in a kcode calculation.
  */
-void Tallier::begin_cycle()
+template <class Geometry>
+void Tallier<Geometry>::begin_cycle()
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -261,7 +275,8 @@ void Tallier::begin_cycle()
 /*!
  * \brief Tell the tallies to end a cycle in a kcode calculation.
  */
-void Tallier::end_cycle(double num_particles)
+template <class Geometry>
+void Tallier<Geometry>::end_cycle(double num_particles)
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -278,7 +293,8 @@ void Tallier::end_cycle(double num_particles)
 /*!
  * \brief Perform all end-history tally tasks.
  */
-void Tallier::end_history()
+template <class Geometry>
+void Tallier<Geometry>::end_history()
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -300,7 +316,8 @@ void Tallier::end_history()
  *
  * \post is_finalized() == true
  */
-void Tallier::finalize(double num_particles)
+template <class Geometry>
+void Tallier<Geometry>::finalize(double num_particles)
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -330,7 +347,8 @@ void Tallier::finalize(double num_particles)
  * \pre \c finalize() was called on tallies
  * \post \c is_finalized() returns false
  */
-void Tallier::reset()
+template <class Geometry>
+void Tallier<Geometry>::reset()
 {
     REQUIRE(d_build_phase == FINALIZED);
 
@@ -358,7 +376,8 @@ void Tallier::reset()
  * This is useful for temporarily deactivating tallying (say, during inactive
  * cycles in a kcode calculation).
  */
-void Tallier::swap(Tallier &rhs)
+template <class Geometry>
+void Tallier<Geometry>::swap(Tallier<Geometry> &rhs)
 {
     // swap vector internals
     d_pl.swap(rhs.d_pl);
@@ -376,6 +395,8 @@ void Tallier::swap(Tallier &rhs)
 
 } // end namespace profugus
 
+#endif // mc_Tallier_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Tallier.cc
+//                 end of Tallier.t.hh
 //---------------------------------------------------------------------------//

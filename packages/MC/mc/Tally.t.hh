@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tally.cc
+ * \file   mc/Tally.t.hh
  * \author Thaoms M. Evans
  * \date   Thu May 15 13:27:04 2014
- * \brief  Tally member definitions.
+ * \brief  Tally template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Tally_t_hh
+#define mc_Tally_t_hh
 
 #include "Tally.hh"
 
@@ -19,7 +22,8 @@ namespace profugus
 /*!
  * \brief Pure virtual destructor definition.
  */
-Tally::~Tally()
+template <class Geometry>
+Tally<Geometry>::~Tally()
 {
 }
 
@@ -29,7 +33,8 @@ Tally::~Tally()
 /*!
  * \brief Pure virtual destructor definition.
  */
-Source_Tally::~Source_Tally()
+template <class Geometry>
+Source_Tally<Geometry>::~Source_Tally()
 {
 }
 
@@ -37,7 +42,8 @@ Source_Tally::~Source_Tally()
 /*!
  * \brief Pure virtual destructor definition.
  */
-Pathlength_Tally::~Pathlength_Tally()
+template <class Geometry>
+Pathlength_Tally<Geometry>::~Pathlength_Tally()
 {
 }
 
@@ -45,12 +51,15 @@ Pathlength_Tally::~Pathlength_Tally()
 /*!
  * \brief Pure virtual destructor definition.
  */
-Compound_Tally::~Compound_Tally()
+template <class Geometry>
+Compound_Tally<Geometry>::~Compound_Tally()
 {
 }
 
 } // end namespace profugus
 
+#endif // mc_Tally_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Tally.cc
+//                 end of Tally.t.hh
 //---------------------------------------------------------------------------//

@@ -20,6 +20,7 @@
 #include "solvers/LinAlgTypedefs.hh"
 #include "spn/MatrixTraits.hh"
 #include "geometry/Cartesian_Mesh.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "../Fission_Source.hh"
 #include "../Global_RNG.hh"
 #include "../Tally.hh"
@@ -35,13 +36,13 @@ class Anderson_SolverTest : public testing::Test
 {
   protected:
     // >>> TYPEDEFS
+    typedef profugus::Core                      Geometry_t;
     typedef profugus::EpetraTypes               LinAlg_t;
     typedef profugus::Anderson_Solver<LinAlg_t> Solver_t;
     typedef Solver_t::Operator                  Operator;
     typedef Operator::Source_Transporter_t      Transporter_t;
-    typedef profugus::Tallier                   Tallier_t;
+    typedef profugus::Tallier<Geometry_t>       Tallier_t;
     typedef Transporter_t::Physics_t            Physics_t;
-    typedef Transporter_t::Geometry_t           Geometry_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::Bank_t                   Bank_t;

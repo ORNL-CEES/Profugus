@@ -22,14 +22,18 @@
 // Tally Types
 //---------------------------------------------------------------------------//
 
-class A_Tally : public profugus::Pathlength_Tally
+class A_Tally : public profugus::Pathlength_Tally<profugus::Core>
 {
-    typedef profugus::Pathlength_Tally Base;
+    typedef profugus::Pathlength_Tally<profugus::Core> Base;
+    typedef profugus::Physics<profugus::Core>          Physics_t;
+    typedef std::shared_ptr<Physics_t>                 SP_Physics;
+    typedef Physics_t::Particle_t                      Particle_t;
+
   public:
     A_Tally(SP_Physics physics)
         : Base(physics, false)
     {
-        set_name("a_pl_tally");
+        this->set_name("a_pl_tally");
     }
 
     void accumulate(double step, const Particle_t &p) { /* * */ }
@@ -37,14 +41,18 @@ class A_Tally : public profugus::Pathlength_Tally
 
 //---------------------------------------------------------------------------//
 
-class P_Tally : public profugus::Pathlength_Tally
+class P_Tally : public profugus::Pathlength_Tally<profugus::Core>
 {
-    typedef profugus::Pathlength_Tally Base;
+    typedef profugus::Pathlength_Tally<profugus::Core> Base;
+    typedef profugus::Physics<profugus::Core>          Physics_t;
+    typedef std::shared_ptr<Physics_t>                 SP_Physics;
+    typedef Physics_t::Particle_t                      Particle_t;
+
   public:
     P_Tally(SP_Physics physics)
         : Base(physics, false)
     {
-        set_name("p_pl_tally");
+        this->set_name("p_pl_tally");
     }
 
     void accumulate(double step, const Particle_t &p) { /* * */ }
@@ -52,14 +60,18 @@ class P_Tally : public profugus::Pathlength_Tally
 
 //---------------------------------------------------------------------------//
 
-class Q_Tally : public profugus::Source_Tally
+class Q_Tally : public profugus::Source_Tally<profugus::Core>
 {
-    typedef profugus::Source_Tally Base;
+    typedef profugus::Source_Tally<profugus::Core> Base;
+    typedef profugus::Physics<profugus::Core>      Physics_t;
+    typedef std::shared_ptr<Physics_t>             SP_Physics;
+    typedef Physics_t::Particle_t                  Particle_t;
+
   public:
     Q_Tally(SP_Physics physics)
         : Base(physics, false)
     {
-        set_name("q_src_tally");
+        this->set_name("q_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
@@ -67,14 +79,18 @@ class Q_Tally : public profugus::Source_Tally
 
 //---------------------------------------------------------------------------//
 
-class S_Tally : public profugus::Source_Tally
+class S_Tally : public profugus::Source_Tally<profugus::Core>
 {
-    typedef profugus::Source_Tally Base;
+    typedef profugus::Source_Tally<profugus::Core> Base;
+    typedef profugus::Physics<profugus::Core>      Physics_t;
+    typedef std::shared_ptr<Physics_t>             SP_Physics;
+    typedef Physics_t::Particle_t                  Particle_t;
+
   public:
     S_Tally(SP_Physics physics)
         : Base(physics, false)
     {
-        set_name("s_src_tally");
+        this->set_name("s_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
@@ -82,30 +98,42 @@ class S_Tally : public profugus::Source_Tally
 
 //---------------------------------------------------------------------------//
 
-class C_Tally : public profugus::Compound_Tally
+class C_Tally : public profugus::Compound_Tally<profugus::Core>
 {
-    typedef profugus::Compound_Tally Base;
+    typedef profugus::Compound_Tally<profugus::Core> Base;
+    typedef profugus::Physics<profugus::Core>        Physics_t;
+    typedef std::shared_ptr<Physics_t>               SP_Physics;
+    typedef Physics_t::Particle_t                    Particle_t;
 
   public:
-    class C_PL_Tally : public profugus::Pathlength_Tally
+
+    class C_PL_Tally : public profugus::Pathlength_Tally<profugus::Core>
     {
+        typedef profugus::Physics<profugus::Core>        Physics_t;
+        typedef std::shared_ptr<Physics_t>               SP_Physics;
+        typedef Physics_t::Particle_t                    Particle_t;
+
       public:
         C_PL_Tally(SP_Physics physics)
-            : profugus::Pathlength_Tally(physics, false)
+            : profugus::Pathlength_Tally<profugus::Core>(physics, false)
         {
-            set_name("c_tally");
+            this->set_name("c_tally");
         }
 
         void accumulate(double step, const Particle_t &p) { /* * */ }
     };
 
-    class C_SRC_Tally : public profugus::Source_Tally
+    class C_SRC_Tally : public profugus::Source_Tally<profugus::Core>
     {
+        typedef profugus::Physics<profugus::Core>        Physics_t;
+        typedef std::shared_ptr<Physics_t>               SP_Physics;
+        typedef Physics_t::Particle_t                    Particle_t;
+
       public:
         C_SRC_Tally(SP_Physics physics)
-            : profugus::Source_Tally(physics, false)
+            : profugus::Source_Tally<profugus::Core>(physics, false)
         {
-            set_name("c_tally");
+            this->set_name("c_tally");
         }
 
         void birth(const Particle_t &p) { /* * */ }
@@ -115,7 +143,7 @@ class C_Tally : public profugus::Compound_Tally
     C_Tally(SP_Physics physics)
         : Base(physics, false)
     {
-        set_name("c_tally");
+        this->set_name("c_tally");
 
         // make compound tallies
         b_pl_tally  = std::make_shared<C_PL_Tally>(physics);
@@ -130,11 +158,11 @@ class C_Tally : public profugus::Compound_Tally
 class TallierTest : public testing::Test
 {
   protected:
-    typedef profugus::Tallier                   Tallier_t;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::Tallier<Geometry_t>       Tallier_t;
     typedef Tallier_t::SP_Tally                 SP_Tally;
-    typedef profugus::Physics<profugus::Core>   Physics_t;
-    typedef Physics_t::Geometry_t               Geometry_t;
-    typedef profugus::Keff_Tally                Keff_Tally_t;
+    typedef profugus::Physics<Geometry_t>       Physics_t;
+    typedef profugus::Keff_Tally<Geometry_t>    Keff_Tally_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::XS_t                     XS_t;
     typedef Physics_t::RCP_XS                   RCP_XS;

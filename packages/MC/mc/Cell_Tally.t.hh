@@ -1,12 +1,15 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/Cell_Tally.cc
+ * \file   MC/mc/Cell_Tally.t.hh
  * \author Thomas M. Evans
  * \date   Fri Aug 21 15:29:14 2015
  * \brief  Cell_Tally class definitions.
  * \note   Copyright (c) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef MC_mc_Cell_Tally_t_hh
+#define MC_mc_Cell_Tally_t_hh
 
 #include <cmath>
 #include <algorithm>
@@ -23,7 +26,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Cell_Tally::Cell_Tally(SP_Physics physics)
+template <class Geometry>
+Cell_Tally<Geometry>::Cell_Tally(SP_Physics physics)
     : Base(physics, false)
     , d_geometry(b_physics->get_geometry())
 {
@@ -42,7 +46,8 @@ Cell_Tally::Cell_Tally(SP_Physics physics)
 /*!
  * \brief Add a list of cells to tally.
  */
-void Cell_Tally::set_cells(const std::vector<int> &cells)
+template <class Geometry>
+void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
 {
     // Make a new tally results
     Result tally;
@@ -63,7 +68,8 @@ void Cell_Tally::set_cells(const std::vector<int> &cells)
 /*
  * \brief Accumulate first and second moments.
  */
-void Cell_Tally::end_history()
+template <class Geometry>
+void Cell_Tally<Geometry>::end_history()
 {
     // Iterate through local tally results and add them to the permanent
     // results
@@ -87,7 +93,8 @@ void Cell_Tally::end_history()
 /*
  * \brief Do post-processing on first and second moments.
  */
-void Cell_Tally::finalize(double num_particles)
+template <class Geometry>
+void Cell_Tally<Geometry>::finalize(double num_particles)
 {
     REQUIRE(num_particles > 1);
 
@@ -155,7 +162,8 @@ void Cell_Tally::finalize(double num_particles)
 /*
  * \brief Clear/re-initialize all tally values between solves.
  */
-void Cell_Tally::reset()
+template <class Geometry>
+void Cell_Tally<Geometry>::reset()
 {
     // Clear the local tally
     clear_local();
@@ -174,8 +182,9 @@ void Cell_Tally::reset()
 /*
  * \brief Track particle and tally..
  */
-void Cell_Tally::accumulate(double            step,
-                            const Particle_t &p)
+template <class Geometry>
+void Cell_Tally<Geometry>::accumulate(double            step,
+                                      const Particle_t &p)
 {
     // Get the cell index
     int cell = d_geometry->cell(p.geo_state());
@@ -196,7 +205,8 @@ void Cell_Tally::accumulate(double            step,
 /*
  * \brief Clear local values.
  */
-void Cell_Tally::clear_local()
+template <class Geometry>
+void Cell_Tally<Geometry>::clear_local()
 {
     // Clear the local tally
     History_Tally tally;
@@ -207,6 +217,8 @@ void Cell_Tally::clear_local()
 
 } // end namespace profugus
 
+#endif // MC_mc_Cell_Tally_t_hh
+
 //---------------------------------------------------------------------------//
-// end of MC/mc/Cell_Tally.cc
+// end of MC/mc/Cell_Tally.t.hh
 //---------------------------------------------------------------------------//

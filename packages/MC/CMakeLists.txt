@@ -94,29 +94,29 @@ SET(MC_SOURCES
   mc/Anderson_Operator.pt.cc
   mc/Anderson_Solver.pt.cc
   mc/Box_Shape.cc
-  mc/Cell_Tally.cc
+  mc/Cell_Tally.pt.cc
   mc/Domain_Transporter.pt.cc
   mc/Fission_Matrix_Acceleration.pt.cc
   mc/Fission_Matrix_Processor.cc
   mc/Fission_Matrix_Solver.pt.cc
-  mc/Fission_Matrix_Tally.cc
+  mc/Fission_Matrix_Tally.pt.cc
   mc/Fission_Rebalance.cc
   mc/Fission_Source.pt.cc
   mc/Fixed_Source_Solver.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
   mc/KCode_Solver.cc
-  mc/Keff_Tally.cc
+  mc/Keff_Tally.pt.cc
   mc/Particle.cc
   mc/Particle_Metaclass.pt.cc
   mc/Physics.pt.cc
   mc/Sampler.cc
   mc/Solver.cc
   mc/Source.pt.cc
-  mc/Source_Diagnostic_Tally.cc
+  mc/Source_Diagnostic_Tally.pt.cc
   mc/Source_Transporter.pt.cc
-  mc/Tallier.cc
-  mc/Tally.cc
+  mc/Tallier.pt.cc
+  mc/Tally.pt.cc
   mc/Uniform_Source.pt.cc
   mc/VR_Roulette.cc
   )

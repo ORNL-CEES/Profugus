@@ -50,7 +50,7 @@ class Domain_Transporter
     typedef typename Physics_t::Bank_t                 Bank_t;
     typedef typename Physics_t::Fission_Site_Container Fission_Site_Container;
     typedef Variance_Reduction                         Variance_Reduction_t;
-    typedef Tallier                                    Tallier_t;
+    typedef Tallier<Geometry_t>                        Tallier_t;
     //@}
 
     //@{

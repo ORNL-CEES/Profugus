@@ -74,7 +74,7 @@ void KCode_Solver::set(SP_Source_Transporter transporter,
     double init_keff = d_db->get("keff_init", 1.0);
     VALIDATE(init_keff >= 0., "Initial keff guess (keff_init="
             << init_keff << ") must be nonnegative.");
-    b_keff_tally = std::make_shared<Keff_Tally>(init_keff,
+    b_keff_tally = std::make_shared<Keff_Tally_t>(init_keff,
                                                 b_tallier->physics());
 
     // create our "disabled" (inactive cycle) tallier
@@ -285,9 +285,9 @@ void KCode_Solver::initialize()
         if (tally->inactive_cycle_tally())
         {
             // create tallies (only 1 can be valid)
-            auto pl_t  = std::dynamic_pointer_cast<Pathlength_Tally>(tally);
-            auto src_t = std::dynamic_pointer_cast<Source_Tally>(tally);
-            auto cpd_t = std::dynamic_pointer_cast<Compound_Tally>(tally);
+            auto pl_t  = std::dynamic_pointer_cast<Pathlength_Tally_t>(tally);
+            auto src_t = std::dynamic_pointer_cast<Source_Tally_t>(tally);
+            auto cpd_t = std::dynamic_pointer_cast<Compound_Tally_t>(tally);
 
             // attempt to cast to valid tally types and add the tally
             if (pl_t)

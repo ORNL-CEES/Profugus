@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Diagnostic_Tally.cc
+ * \file   mc/Source_Diagnostic_Tally.t.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 09 16:32:04 2014
  * \brief  Source_Diagnostic_Tally member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_Source_Diagnostic_Tally_t_hh
+#define mc_Source_Diagnostic_Tally_t_hh
 
 #include <algorithm>
 #include <sstream>
@@ -27,10 +30,12 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-Source_Diagnostic_Tally::Source_Diagnostic_Tally(RCP_Std_DB       db,
-                                                 SP_Physics       physics,
-                                                 SP_Mesh_Geometry mesh,
-                                                 bool             inactive)
+template <class Geometry>
+Source_Diagnostic_Tally<Geometry>::Source_Diagnostic_Tally(
+        RCP_Std_DB       db,
+        SP_Physics       physics,
+        SP_Mesh_Geometry mesh,
+        bool             inactive)
     : Base(physics, inactive)
     , d_mesh(mesh)
     , d_geometry(b_physics->get_geometry())
@@ -82,7 +87,8 @@ Source_Diagnostic_Tally::Source_Diagnostic_Tally(RCP_Std_DB       db,
 /*!
  * \brief Tally particles at birth.
  */
-void Source_Diagnostic_Tally::birth(const Particle_t &p)
+template <class Geometry>
+void Source_Diagnostic_Tally<Geometry>::birth(const Particle_t &p)
 {
 #ifdef USE_HDF5
     // get the particle's geometric state
@@ -109,7 +115,8 @@ void Source_Diagnostic_Tally::birth(const Particle_t &p)
 /*!
  * \brief End a cycle in a kcode calculation.
  */
-void Source_Diagnostic_Tally::end_cycle(double num_particles)
+template <class Geometry>
+void Source_Diagnostic_Tally<Geometry>::end_cycle(double num_particles)
 {
 #ifdef USE_HDF5
     REQUIRE(d_source_density.size() == d_mesh->num_cells());
@@ -170,7 +177,8 @@ void Source_Diagnostic_Tally::end_cycle(double num_particles)
 /*!
  * \brief Clear/re-initialize all tally values.
  */
-void Source_Diagnostic_Tally::reset()
+template <class Geometry>
+void Source_Diagnostic_Tally<Geometry>::reset()
 {
     std::fill(d_source_density.begin(), d_source_density.end(), 0.0);
     d_num_per_cycle = 0;
@@ -178,6 +186,8 @@ void Source_Diagnostic_Tally::reset()
 
 } // end namespace profugus
 
+#endif // mc_Source_Diagnostic_Tally_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Source_Diagnostic_Tally.cc
+//                 end of Source_Diagnostic_Tally.t.hh
 //---------------------------------------------------------------------------//
