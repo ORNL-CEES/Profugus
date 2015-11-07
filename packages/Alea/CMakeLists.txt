@@ -145,6 +145,14 @@ TRIBITS_ADD_EXECUTABLE(
   SOURCES mc_solvers/aleae_multae.cc
   INSTALLABLE
   )
+  
+TRIBITS_ADD_EXECUTABLE(
+  xalea_multisplit
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES mc_solvers/alea_multisplitting.cc
+  INSTALLABLE
+  )  
 
 # MCLS executable
 IF (${PROJECT_NAME}_ENABLE_MCLS)

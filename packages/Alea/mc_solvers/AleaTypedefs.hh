@@ -61,6 +61,9 @@ typedef Teuchos::OrdinalTraits<GO>              GO_TRAITS;
 //! Type specifying magnitude corresponding to specified scalar
 typedef SCALAR_TRAITS::magnitudeType            MAGNITUDE;
 
+//type introduced by Max to deal with the partitions of subdomains for MultiSplitting
+typedef Teuchos::ArrayRCP< SCALAR >(2, 0) ENDPOINTS;
+
 // Kokkos View types
 using Kokkos::View;
 typedef Kokkos::MemoryTraits<Kokkos::RandomAccess>        RandomMemory;
