@@ -137,6 +137,7 @@ class MonteCarloSolver : public AleaSolver,
     SCALAR  d_start_wt_factor;
     SCALAR d_rhoH;
     SCALAR d_rhoHtilde;
+    bool d_compute_spectral_radii;
     bool d_radii_computed;
 
 
