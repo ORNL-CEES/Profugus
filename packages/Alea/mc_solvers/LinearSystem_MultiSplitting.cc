@@ -278,7 +278,11 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
             if( row_inds[j] == index )
                 diag_val = row_vals[j];
         }
-        invD->insertGlobalValues(index, index, 1.0/diag_val);
+        Teuchos::ArrayRCP<GO>     diag_entry_ind(1);
+        Teuchos::ArrayRCP<SCALAR> diag_entry_val(1);
+        diag_entry_ind[0] = index;
+        diag_entry_val[0] = 1.0/diag_val;
+        invD->insertGlobalValues(index, diag_entry_ind, diag_entry_val);
     }
     
     unsigned int block_start = d_partitions[p][0];
@@ -331,7 +335,11 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
             if( row_inds[j] == index )
                 diag_val = row_vals[j];
         }
-        invD->insertGlobalValues(index, index, 1.0/diag_val);
+        Teuchos::ArrayRCP<GO>     diag_entry_ind(1);
+        Teuchos::ArrayRCP<SCALAR> diag_entry_val(1);
+        diag_entry_ind[0] = index;
+        diag_entry_val[0] = 1.0/diag_val;
+        invD->insertGlobalValues(index, diag_entry_ind, diag_entry_val);
     }
 
     invD->fillComplete();
