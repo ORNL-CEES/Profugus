@@ -271,7 +271,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
     int err;
     for( int index=0; index < d_partitions[p][0]; ++index )
     {
-        SCALAR diag_val;
+        SCALAR diag_val=0.0;
         d_A->getLocalRowCopy(index,row_inds(),row_vals(),num_entries);
         for( size_t j=0; j<num_entries; ++j )
         {
@@ -281,8 +281,9 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
         Teuchos::ArrayRCP<GO>     diag_entry_ind(1);
         Teuchos::ArrayRCP<SCALAR> diag_entry_val(1);
         diag_entry_ind[0] = index;
+        VALIDATE (diag_val !=0.0, "zero diagonal entry: cannot invert");
         diag_entry_val[0] = 1.0/diag_val;
-        invD->insertGlobalValues(index, diag_entry_ind, diag_entry_val);
+        invD->insertGlobalValues(index, diag_entry_ind(0,1), diag_entry_val(0,1));
     }
     
     unsigned int block_start = d_partitions[p][0];
@@ -328,7 +329,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
 
     for( int index=d_partitions[p][1] + 1; index < N; ++index )
     {
-        SCALAR diag_val;
+        SCALAR diag_val = 0.0;
         d_A->getLocalRowCopy(index,row_inds(),row_vals(),num_entries);
         for( size_t j=0; j<num_entries; ++j )
         {
@@ -338,8 +339,10 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
         Teuchos::ArrayRCP<GO>     diag_entry_ind(1);
         Teuchos::ArrayRCP<SCALAR> diag_entry_val(1);
         diag_entry_ind[0] = index;
+
+        VALIDATE (diag_val !=0.0, "zero diagonal entry: cannot invert");
         diag_entry_val[0] = 1.0/diag_val;
-        invD->insertGlobalValues(index, diag_entry_ind, diag_entry_val);
+        invD->insertGlobalValues(index, diag_entry_ind(0,1), diag_entry_val(0,1));
     }
 
     invD->fillComplete();
@@ -354,24 +357,29 @@ LinearSystem_MultiSplitting::buildSplitting(
     splitting split;
     
     Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
-    Teuchos::RCP<CRS_MATRIX> A = d_A.clone(node);
+    //Teuchos::RCP<CRS_MATRIX> A;
+    auto A = d_A->clone(node);
 
     VALIDATE( p<= d_partitions.size(), 
-    "Trying to access to a partition with an index bigger than the \# of total partitions." );
+    "Trying to access to a partition with an index bigger than the n. of total partitions." );
 	
-	unsigned int start = d_partitions[p][0];
-	unsigned int end = d_partitions[p][1];
+    unsigned int start = d_partitions[p][0];
+    unsigned int end = d_partitions[p][1];
 	
-	Teuchos::RCP<CRS_MATRIX>  invD = Tpetra::createCrsMatrix<SCALAR>(
-        d_A->getDomainMap());
-	invD = computeBlockDiagPrec(p);
+    Teuchos::RCP<CRS_MATRIX>  invD = Tpetra::createCrsMatrix<SCALAR>(
+    d_A->getDomainMap());
+    invD = computeBlockDiagPrec(p);
 	
-	Tpetra::MatrixMatrix::Multiply(*invD,false,*d_A,false,*A,true);
-    MV Prb = Tpetra::createCopy(*b);
-    invD->apply(*b,Prb);	
+    Tpetra::MatrixMatrix::Multiply(*invD,false,*d_A,false,*A,true);
+    MV Prb = Tpetra::createCopy(*d_b);
+    invD->apply(*d_b,Prb);	
+
+    Teuchos::RCP<MV> Prb_pointer(&Prb); 
 
     split.A = A;
-    split.b = Prb;
+    split.b = Prb_pointer;
+
+    return split;
 
 }
 
