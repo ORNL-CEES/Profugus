@@ -6,6 +6,7 @@
 #include "LinearSystem.hh"
 #include "LinearSystemFactory.hh"
 #include "LinearSolverFactory.hh"
+#include "LinearSystem_MultiSplitting.hh"
 #include "AleaTypedefs.hh"
 #include "DeviceTraits.hh"
 
@@ -57,56 +58,7 @@ int main( int argc, char *argv[] )
             << " milliseconds" << std::endl;
     }
 
-    time_start = high_resolution_clock::now();
-
-    unsigned int num_blocks   = pl->get("num_blocks",10);
-    VALIDATE( num_blocks >= 2, "Minimal number of partitions is 2" );
-    
-    SCALAR overlap      = pl->get("overlap",0.0);
-    VALIDATE( overlap>= 0.0 && overlap<=1.0, 
-            "The percentage of overlapping must be a number between 0 and 1");
-    
-    std::string inner_solver = pl->get("inner_solver","richardson");
-    VALIDATE( inner_solver == "richardson" || inner_solver =="monte_carlo", 
-             "The type of inner solver provided is not valid for Multi-Splitting" );
-             
-             
-    //measure the size of the problem 
-    unsigned int N = myA -> getGlobalNumRows();
-
-    //temporary block size to deremine the entity of the overlapping
-    unsigned int size_temp = N / num_blocks;
-             
-    //determine the number of rows that overlaps between adjacent subdomains         
-    unsigned int overlapping = overlap * size_temp;        
-    std::cout<<"overlapping= "<<overlapping<<std::endl;
-    
-    //determine the number of rows for each subdomain
-    unsigned int block_size = ( N + (num_blocks-1)*overlapping ) / num_blocks;        
-     
-    Teuchos::ArrayRCP< ENDPOINTS > partitions(num_blocks);
-
-    for(unsigned int i =0; i!=num_blocks; ++i)
-        partitions[i].resize(2);
-       
-    unsigned int p = 0;
-    
-    partitions[p][0]=0;
-    partitions[p][1]=block_size - 1;
-    p=1;
-    
-    while(p!=num_blocks - 1)
-    {
-    	partitions[p][0] = partitions[p-1][1] + 1 - overlapping;
-    	partitions[p][1] = partitions[p-1][1] + 1 - overlapping + block_size;
-        p++;
-    }
-             
-    partitions[p][0] = partitions[p-1][1] + 1 - overlapping;
-    partitions[p][1] = N-1;
-
-    for(unsigned int i =0; i!=num_blocks; ++i)
-        std::cout<<partitions[i][0]<<"\t"<<partitions[i][1]<<std::endl;
+    LinearSystem_MultiSplitting MS(pl);
 
     Kokkos::finalize();
     profugus::finalize();

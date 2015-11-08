@@ -53,6 +53,7 @@ LinearSystem_MultiSplitting::
 	LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> pl)
 {
 	buildSystem(pl, d_A, d_b);
+	createPartitions(pl);
 }
 
 

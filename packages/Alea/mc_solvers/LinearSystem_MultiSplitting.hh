@@ -46,6 +46,8 @@ class LinearSystem_MultiSplitting
     void buildSystem(Teuchos::RCP<Teuchos::ParameterList>,   
         Teuchos::RCP<CRS_MATRIX> &,
         Teuchos::RCP<MV>         &);
+        
+    inline std::string getInnerSolverType( return d_inner_solver);
 
   private:
 
