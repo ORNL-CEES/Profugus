@@ -1,8 +1,8 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
  * \file   LinearSystemFactory_MultiSplitting.hh
- * \author Steven Hamilton
- * \brief  Construct EpetraCrsMatrix from ParameterList.
+ * \author Massimiliano Lupo Pasini
+ * \brief  Construct MultiSplitting.
  */
 //---------------------------------------------------------------------------//
 

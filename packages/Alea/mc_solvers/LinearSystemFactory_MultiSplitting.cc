@@ -10,7 +10,7 @@
 #include <cmath>
 #include <Alea/config.h>
 
-#include "LinearSystemFactory.hh"
+#include "LinearSystemFactory_MultiSplitting.hh"
 
 // Trilinos includes
 #include "Teuchos_DefaultComm.hpp"
@@ -98,7 +98,7 @@ void LinearSystemFactory_MultiSplitting::buildMatrixMarketSystem(
         A->apply(*x0,*b,Teuchos::NO_TRANS,-1.0,1.0);
     }
     
-    A = applyShift(A,mat_pl);
+    A = applyShift(A,pl);
 }
 
 
@@ -186,32 +186,32 @@ LinearSystemFactory_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::Para
         Teuchos::sublist(pl,"Multi_Splitting");
 
     d_num_blocks   = multisplit_pl->get("num_blocks",10);
-    VALIDATE( num_blocks >= 2, "Minimal number of partitions is 2" );
+    VALIDATE( d_num_blocks >= 2, "Minimal number of partitions is 2" );
     
     d_overlap      = multisplit_pl->get("overlap",0.0);
-    VALIDATE( overlap>= 0.0 && overlap<=1.0, 
+    VALIDATE( d_overlap>= 0.0 && d_overlap<=1.0, 
             "The percentage of overlapping must be a number between 0 and 1");
     
     d_inner_solver = multisplit_pl->get("inner_solver","richardson");
-    VALIDATE( inner_solver == "richardson" || inner_solver =="monte_carlo", 
+    VALIDATE( d_inner_solver == "richardson" || d_inner_solver =="monte_carlo", 
              "The type of inner solver provided is not valid for Multi-Splitting" );
                           
     //measure the size of the problem 
     unsigned int N = d_A -> getGlobalNumRows();
 
     //temporary block size to deremine the entity of the overlapping
-    unsigned int size_temp = N / num_blocks;
+    unsigned int size_temp = N / d_num_blocks;
              
     //determine the number of rows that overlaps between adjacent subdomains         
-    unsigned int overlapping = overlap * size_temp;        
+    unsigned int overlapping = d_overlap * size_temp;        
     std::cout<<"overlapping= "<<overlapping<<std::endl;
     
     //determine the number of rows for each subdomain
-    unsigned int block_size = ( N + (num_blocks-1)*overlapping ) / num_blocks;        
+    unsigned int block_size = ( N + (d_num_blocks-1)*overlapping ) / d_num_blocks;        
      
-    d_partitions.resize(num_blocks);
+    d_partitions.resize(d_num_blocks);
 
-    for(unsigned int i =0; i!=num_blocks; ++i)
+    for(unsigned int i =0; i!=d_num_blocks; ++i)
         d_partitions[i].resize(2);
        
     unsigned int p = 0;
@@ -220,7 +220,7 @@ LinearSystemFactory_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::Para
     d_partitions[p][1]=block_size - 1;
     p=1;
     
-    while(p!=num_blocks - 1)
+    while(p!=d_num_blocks - 1)
     {
     	d_partitions[p][0] = d_partitions[p-1][1] + 1 - overlapping;
     	d_partitions[p][1] = d_partitions[p-1][1] + 1 - overlapping + block_size;
@@ -230,7 +230,7 @@ LinearSystemFactory_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::Para
     d_partitions[p][0] = d_partitions[p-1][1] + 1 - overlapping;
     d_partitions[p][1] = N-1;
 
-    for(unsigned int i =0; i!=num_blocks; ++i)
+    for(unsigned int i =0; i!=d_num_blocks; ++i)
         std::cout<<d_partitions[i][0]<<"\t"<<d_partitions[i][1]<<std::endl;
 
 }
