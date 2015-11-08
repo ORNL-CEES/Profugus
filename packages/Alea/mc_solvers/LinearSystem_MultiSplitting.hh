@@ -32,7 +32,7 @@ namespace alea
  * meaningful vector is available.
  */
 //---------------------------------------------------------------------------//
-class LinearSystemFactory_MultiSplitting
+class LinearSystem_MultiSplitting
 {
  
   public:
@@ -43,7 +43,9 @@ class LinearSystemFactory_MultiSplitting
 
     splitting buildSplitting(unsigned int);
        
-    void buildSystem(Teuchos::RCP<Teuchos::ParameterList>);    
+    void buildSystem(Teuchos::RCP<Teuchos::ParameterList>,   
+        Teuchos::RCP<CRS_MATRIX> &,
+        Teuchos::RCP<MV>         &);
 
   private:
 

@@ -62,7 +62,7 @@ LinearSystem_MultiSplitting::
  */
 //---------------------------------------------------------------------------//
 void LinearSystem_MultiSplitting::buildMatrixMarketSystem(
-        Teuchos::RCP<Teuchos::ParameterList> pl
+        Teuchos::RCP<Teuchos::ParameterList> pl,
         Teuchos::RCP<CRS_MATRIX>             &A,
         Teuchos::RCP<MV>                     &b )
 {
@@ -119,6 +119,8 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::applyShift(
 {
     VECTOR diag(A->getDomainMap());
     A->getLocalDiagCopy(diag);
+
+    SCALAR shift = pl->get<SCALAR>("diagonal_shift", 0.0);
 
     Teuchos::ArrayRCP<SCALAR> diag_vec = diag.getDataNonConst();
       
