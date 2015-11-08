@@ -87,7 +87,7 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/LinearSolverFactory.cc
   mc_solvers/LinearSystem.cc
   mc_solvers/LinearSystemFactory.cc
-  mc_solvers/LinearSystemFactory_MultiSplitting.cc
+  mc_solvers/LinearSystem_MultiSplitting.cc
   mc_solvers/MC_Data.cc
   mc_solvers/MonteCarloSolver.cc
   mc_solvers/SequentialMC.cc
