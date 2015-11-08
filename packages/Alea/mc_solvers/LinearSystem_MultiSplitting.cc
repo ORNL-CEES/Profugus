@@ -379,7 +379,7 @@ LinearSystem_MultiSplitting::buildSplitting(
     split.A = A;
     split.b = Prb_pointer;
     Teuchos::RCP<MV> E( new MV(d_A->getDomainMap(),1) );
-    Teuchos::ArrayRCP<const double> E_data = E.getData(0);
+    Teuchos::ArrayRCP<SCALAR> E_data = E->getDataNonConst(0);
  
     unsigned int N = d_A -> getGlobalNumRows();
     for( unsigned int i=0;  i<N; ++i)
