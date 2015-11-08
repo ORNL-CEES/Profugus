@@ -10,7 +10,7 @@
 #include <cmath>
 #include <Alea/config.h>
 
-#include "LinearSystemFactory_MultiSplitting.hh"
+#include "LinearSystem_MultiSplitting.hh"
 
 // Trilinos includes
 #include "Teuchos_DefaultComm.hpp"
@@ -49,15 +49,21 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 
+LinearSystem_MultiSplitting::
+	LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> pl)
+{
+	buildSystem(pl, d_A, d_b);
+}
+
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Read matrix from Matrix Market file.
  */
 //---------------------------------------------------------------------------//
-void LinearSystemFactory_MultiSplitting::buildMatrixMarketSystem(
-        Teuchos::RCP<Teuchos::ParameterList> pl,
-        Teuchos::RCP<CRS_MATRIX>                 &A,
+void LinearSystem_MultiSplitting::buildMatrixMarketSystem(
+        Teuchos::RCP<Teuchos::ParameterList> pl
+        Teuchos::RCP<CRS_MATRIX>             &A,
         Teuchos::RCP<MV>                     &b )
 {
     VALIDATE( pl->isType<std::string>("matrix_filename"),
@@ -107,7 +113,7 @@ void LinearSystemFactory_MultiSplitting::buildMatrixMarketSystem(
 * \brief Apply specified shift to matrix
   */
 //--------------------------------------------------------------------------
-Teuchos::RCP<CRS_MATRIX> LinearSystemFactory_MultiSplitting::applyShift(
+Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::applyShift(
     Teuchos::RCP<CRS_MATRIX>                 A,
     Teuchos::RCP<Teuchos::ParameterList> pl )
 {
@@ -149,7 +155,9 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory_MultiSplitting::applyShift(
  */
 //---------------------------------------------------------------------------//
 void
-LinearSystemFactory_MultiSplitting::buildSystem( Teuchos::RCP<Teuchos::ParameterList> pl )
+LinearSystem_MultiSplitting::buildSystem( Teuchos::RCP<Teuchos::ParameterList> pl,
+        Teuchos::RCP<CRS_MATRIX>             &A,
+        Teuchos::RCP<MV>                     &b)
 {
 
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
@@ -161,14 +169,9 @@ LinearSystemFactory_MultiSplitting::buildSystem( Teuchos::RCP<Teuchos::Parameter
     VALIDATE(matrix_type=="matrix_market",
                  "Invalid matrix_type specified.");
 
-    Teuchos::RCP<CRS_MATRIX> A = Teuchos::null;
-    Teuchos::RCP<MV>     b = Teuchos::null;
     buildMatrixMarketSystem(mat_pl,A,b);
 
     A = applyShift(A,mat_pl);
-
-    d_A = A;
-    d_b = b; 
         
 }
 
@@ -179,7 +182,7 @@ LinearSystemFactory_MultiSplitting::buildSystem( Teuchos::RCP<Teuchos::Parameter
  */
 //---------------------------------------------------------------------------//
 void
-LinearSystemFactory_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterList> pl )
+LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterList> pl )
 {    
 
     Teuchos::RCP<Teuchos::ParameterList> multisplit_pl =
@@ -241,7 +244,7 @@ LinearSystemFactory_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::Para
  * \brief Apply block diagonal scaling to matrix
  */
 //---------------------------------------------------------------------------//
-Teuchos::RCP<CRS_MATRIX> LinearSystemFactory_MultiSplitting::computeBlockDiagPrec(unsigned int p)
+Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsigned int p)
 {
 
     //measure the size of the problem 
@@ -335,7 +338,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystemFactory_MultiSplitting::computeBlockDiagPre
 
 
 splitting
-LinearSystemFactory_MultiSplitting::buildSplitting(
+LinearSystem_MultiSplitting::buildSplitting(
     unsigned int p)
 {
     splitting split;

@@ -6,8 +6,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_LinearSystemFactory_MultiSplitting_hh
-#define mc_solvers_LinearSystemFactory_MultiSplitting_hh
+#ifndef mc_solvers_LinearSystem_MultiSplitting_hh
+#define mc_solvers_LinearSystem_MultiSplitting_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -34,44 +34,41 @@ namespace alea
 //---------------------------------------------------------------------------//
 class LinearSystemFactory_MultiSplitting
 {
-  private:
-
-    // Pure static, disallow construction
-    LinearSystemFactory_MultiSplitting(){};
-
+ 
   public:
 
-    static void LinearSystemFactory_MultiSplitting::createPartitions( 
-          Teuchos::RCP<Teuchos::ParameterList>);    
+    LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList>);
 
-    static splitting buildSplitting(unsigned int);
-        
-    static void LinearSystemFactory_MultiSplitting::buildSystem( 
-        Teuchos::RCP<Teuchos::ParameterList>);    
+    void createPartitions(Teuchos::RCP<Teuchos::ParameterList>);    
+
+    splitting buildSplitting(unsigned int);
+       
+    void buildSystem(Teuchos::RCP<Teuchos::ParameterList>);    
 
   private:
 
+    //Data
     Teuchos::RCP<CRS_MATRIX> d_A;
     Teuchos::RCP<MV> d_b; 
     
+    unsigned int d_num_blocks;
+    SCALAR d_overlap;
+    std::string d_inner_solver;  
+    
     Teuchos::ArrayRCP< ENDPOINTS > d_partitions;
 
-	static void LinearSystemFactory_MultiSplitting::buildMatrixMarketSystem(
-        Teuchos::RCP<Teuchos::ParameterList>,
-        Teuchos::RCP<CRS_MATRIX> &,
-        Teuchos::RCP<MV>         &);
+
+    //Methods
+	void buildMatrixMarketSystem(Teuchos::RCP<Teuchos::ParameterList>, 
+	    Teuchos::RCP<CRS_MATRIX>             &A,
+        Teuchos::RCP<MV>                     &b );
         
-	static Teuchos::RCP<CRS_MATRIX> LinearSystemFactory_MultiSplitting::applyShift(
+	Teuchos::RCP<CRS_MATRIX> applyShift(
     	Teuchos::RCP<CRS_MATRIX>,
     	Teuchos::RCP<Teuchos::ParameterList>);
      
-
-    static Teuchos::RCP<CRS_MATRIX> 
-        LinearSystemFactory_MultiSplitting::computeBlockDiagPrec(unsigned int);
-                
-    unsigned int d_num_blocks;
-    SCALAR d_overlap;
-    std::string d_inner_solver;    
+    Teuchos::RCP<CRS_MATRIX> computeBlockDiagPrec(unsigned int);
+                 
 };
 
 }
