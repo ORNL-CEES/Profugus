@@ -380,10 +380,10 @@ LinearSystem_MultiSplitting::buildSplitting(
     MV Prb = Tpetra::createCopy(*d_b);
     invD->apply(*d_b,Prb);	
 
-    Teuchos::RCP<MV> Prb_pointer(&Prb); 
+    Teuchos::RCP<MV> Prb_pointer(new MV(Prb));
 
     split.A = DA;
-    split.b = Prb_pointer;
+
     Teuchos::RCP<MV> E( new MV(d_A->getDomainMap(),1) );
     Teuchos::ArrayRCP<SCALAR> E_data = E->getDataNonConst(0);
  
@@ -406,7 +406,6 @@ LinearSystem_MultiSplitting::buildSplitting(
 		    E_data[i] = 0.5;
     }   
 
-    std::cout<<"CAZZO"<<std::endl;
     split.E = E;
 
     return split;
