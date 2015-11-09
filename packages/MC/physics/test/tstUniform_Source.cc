@@ -8,15 +8,6 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <hpx/include/async.hpp>
-#include <hpx/include/lcos.hpp>
-#include <hpx/include/util.hpp>
-#include <hpx/lcos/local/dataflow.hpp>
-#include <hpx/include/parallel_algorithm.hpp>
-#include <hpx/parallel/execution_policy.hpp>
-
-#include <boost/range/irange.hpp>
-
 #include <memory>
 
 #include "../Uniform_Source.hh"

@@ -14,8 +14,6 @@
 #ifndef gtest_utils_gtest_hh
 #define gtest_utils_gtest_hh
 
-#include <hpx/hpx_init.hpp>
-
 #include <Utils/config.h>
 #include "gtest.h"
 #include "Gtest_Functions.hh"
@@ -65,18 +63,6 @@ using profugus::soft_equiv;
     } while (0)
 
 //---------------------------------------------------------------------------//
-// HPX main
-//---------------------------------------------------------------------------//
-int hpx_main( boost::program_options::variables_map& )
-{
-    // Run the tests.
-    profugus::gtest_main();
-
-    // Finalize hpx.
-    return hpx::finalize();
-}
-
-//---------------------------------------------------------------------------//
 // MAIN FUNCTION
 //---------------------------------------------------------------------------//
 /*!
@@ -98,12 +84,9 @@ int main( int argc, char *argv[] )
     // Initialize google test
     ::testing::InitGoogleTest(&argc, argv);
 
-    // create dummy options
-    boost::program_options::options_description dummy;
-
-    // initalize hpx. will call hpx_main.
-    int hpx_result = hpx::init( dummy, argc, argv );
-
+    // Run the tests.
+    profugus::gtest_main();
+    
     // Finish MPI
     profugus::global_barrier();
     profugus::finalize();    

@@ -8,11 +8,6 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <hpx/parallel/execution_policy.hpp>
-#include <hpx/include/parallel_algorithm.hpp>
-
-#include <boost/range/irange.hpp>
-
 #include <cmath>
 
 #include "harness/Diagnostics.hh"
@@ -76,31 +71,19 @@ void Source_Transporter::solve()
     int batch_size = d_source->batch_size();
     CHECK( batch_size > 0 );
     std::vector<Particle_t> particles( batch_size );
-    auto range = boost::irange( 0, batch_size );
-    auto source_func = [&,this]( const int lid )
-		       { particles[lid] = this->d_source->get_particle(lid); };
-    auto source_task = hpx::parallel::for_each( 
-	hpx::parallel::parallel_task_execution_policy(),
-	std::begin(range),
-	std::end(range),
-	source_func );
-
+    for ( int n = 0; n < batch_size; ++n )
+    {
+	particles[n] = d_source->get_particle[n];
+    }
     // Make a vector of event references.
     std::vector<std::pair<std::size_t,events::Event> > events( batch_size );
-    auto event_fill_func = [&]( const int lid ) 
-			   { events[lid] = std::make_pair(lid,events::BORN); };
-    auto event_fill_task = hpx::parallel::for_each( 
-	hpx::parallel::parallel_task_execution_policy(),
-	std::begin(range),
-	std::end(range),
-	event_fill_func );
+    for ( int n = 0; n < batch_size; ++n )
+    {
+	events[n] = std::make_pair( n, events::BORN );
+    }
 
     // Make a vector of banks.
     std::vector<Bank_t> banks( batch_size );    
-
-    // Wait to finish making particles and events.
-    source_task.wait();
-    event_fill_task.wait();
 
     // Transport all particles in the vector.
     d_transporter.transport( particles, events, banks );

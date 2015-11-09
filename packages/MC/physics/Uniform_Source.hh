@@ -90,7 +90,7 @@ class Uniform_Source
     const int d_node, d_nodes;
 
   public:
-    // Default constructor for HPX.
+    // Default constructor.
     Uniform_Source();
 
     // Constructor.

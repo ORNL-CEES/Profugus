@@ -13,7 +13,6 @@
 SET(Profugus_TPLS_FINDMODS_CLASSIFICATIONS
   SILO   "cmake/TPLs/"   SS
   HDF5   "cmake/TPLs/"   SS
-  HPX   "cmake/TPLs/"   SS
   )
 
 ##---------------------------------------------------------------------------##

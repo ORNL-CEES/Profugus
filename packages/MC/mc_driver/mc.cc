@@ -8,9 +8,6 @@
  */
 //---------------------------------------------------------------------------//
 
-#include <hpx/hpx_init.hpp>
-#include <boost/program_options.hpp>
-
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -23,24 +20,94 @@
 #include "utils/Definitions.hh"
 #include "Manager.hh"
 
+// Parallel specs.
+int node  = 0;
+int nodes = 0;
+
 //---------------------------------------------------------------------------//
-int hpx_main( boost::program_options::variables_map& vm )
+// Print instructions on how to run the neutronics executable
+
+void print_usage()
 {
-    profugus::pcout << "=======================================\n"
-                    << "    Profugus MC Mini-APP               \n"
-                    << "    (C) ORNL, Battelle, 2014           \n"
-                    << "=======================================\n"
-                    << profugus::endl;
+    if (node == 0)
+    {
+        std::cout << "Usage: xmc -i XMLFILE" << std::endl;
+        std::cout << "Executes the xmc executable using XMLFILE "
+                  << "as the input file." << std::endl;
+        exit(1);
+    }
+}
+
+//---------------------------------------------------------------------------//
+// Parse the input arguments
+
+std::string parse_input_arguments(const def::Vec_String &arguments)
+{
+    // First, search for "-h" or "--help"
+    if (std::find(arguments.begin(), arguments.end(), "-h") != arguments.end()
+        || std::find(arguments.begin(), arguments.end(), "--help") !=
+       arguments.end())
+    {
+        print_usage();
+    }
+
+    // Search for "-i"
+    auto iter = std::find(arguments.begin(), arguments.end(), "-i");
+    if (iter == arguments.end() || iter == arguments.end()-1)
+    {
+        if (node == 0)
+        {
+            std::cout << std::endl << "ERROR: Missing xml input filename."
+                      << std::endl << std::endl;
+        }
+        print_usage();
+    }
+
+    // Get the xml filename
+    const std::string &xml_filename = *(iter+1);
+    if (xml_filename.empty())
+    {
+        if (node == 0)
+        {
+            std::cout << std::endl << "ERROR: Missing xml input filename."
+                      << std::endl << std::endl;
+        }
+        print_usage();
+    }
+
+    return xml_filename;
+}
+
+//---------------------------------------------------------------------------//
+
+int main(int argc, char *argv[])
+{
+    profugus::initialize(argc, argv);
 
     // start timing
     profugus::global_barrier();
     profugus::Timer timer;
     timer.start();
 
-    // Get the XML input file.
-    std::string xml_file = vm["input"].as<std::string>();
+    // nodes
+    node  = profugus::node();
+    nodes = profugus::nodes();
 
-    // Run the problem.
+    profugus::pcout << "=======================================\n"
+                    << "    Profugus MC Mini-APP               \n"
+                    << "    (C) ORNL, Battelle, 2014           \n"
+                    << "=======================================\n"
+                    << profugus::endl;
+
+    // process input arguments
+    def::Vec_String arguments(argc - 1);
+    std::string     xml_file;
+    for (int c = 1; c < argc; c++)
+    {
+        arguments[c - 1] = argv[c];
+    }
+    xml_file = parse_input_arguments(arguments);
+
     try
     {
         // make the manager
@@ -83,32 +150,8 @@ int hpx_main( boost::program_options::variables_map& vm )
                     << profugus::setprecision(4)
                     << total << " seconds." << profugus::endl;
 
-    // Finalize hpx.
-    return hpx::finalize();
-}
-
-//---------------------------------------------------------------------------//
-int main(int argc, char *argv[])
-{
-    // initialize mpi
-    profugus::initialize(argc, argv);
-
-    // process input arguments
-    boost::program_options::options_description
-	desc_commandline("Usage: " HPX_APPLICATION_STRING " [options]");
-    desc_commandline.add_options()
-	( "input",
-	  boost::program_options::value<std::string>()->default_value("mc.xml"),
-	  "Profugus XML input file");
-
-    // initalize hpx. will call hpx_main and run the problem.
-    int hpx_result = hpx::init( desc_commandline, argc, argv );
-
-    // finalize mpi
     profugus::finalize();
-
-    // Return the result from hpx.
-    return hpx_result;
+    return 0;
 }
 
 //---------------------------------------------------------------------------//

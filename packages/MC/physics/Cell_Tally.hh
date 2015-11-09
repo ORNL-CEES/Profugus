@@ -11,13 +11,10 @@
 #ifndef MC_mc_Cell_Tally_hh
 #define MC_mc_Cell_Tally_hh
 
-#include <hpx/include/lcos.hpp>
-
 #include <unordered_map>
 #include <vector>
 #include <memory>
 #include <utility>
-#include <mutex>
 
 #include "Cell_Tally_State.hh"
 #include "Tally.hh"
@@ -50,7 +47,6 @@ class Cell_Tally : public Pathlength_Tally
       private:
 	double d_first_moment;
 	double d_second_moment;
-	hpx::lcos::local::spinlock d_mutex;
       public:
 	Atomic_Moment() { /* ... */ }
 	Atomic_Moment( const double first_moment, const double second_moment )
@@ -67,7 +63,6 @@ class Cell_Tally : public Pathlength_Tally
 	inline double& second() { return d_second_moment; }
 	inline void atomic_sum_into( const double first, const double second )
 	{
-	    std::lock_guard<hpx::lcos::local::spinlock> lock( d_mutex );
 	    d_first_moment += first;
 	    d_second_moment += second;
 	}

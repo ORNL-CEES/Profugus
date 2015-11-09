@@ -315,7 +315,6 @@ TRIBITS_ADD_TEST_DIRECTORIES(
   utils/test
   rng/test
   cxx11
-  hpx
   )
 
 ##---------------------------------------------------------------------------##
