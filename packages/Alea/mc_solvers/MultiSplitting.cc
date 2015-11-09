@@ -40,11 +40,17 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
 {
     // Get MultiSplitting pl
     Teuchos::RCP<Teuchos::ParameterList> b_pl = pl;
-    Teuchos::RCP<LinearSystem_MultiSplitting> ms( new LinearSystem_MultiSplitting(pl) );
+    Teuchos::RCP<LinearSystem_MultiSplitting> ms( new LinearSystem_MultiSplitting(b_pl) );
     d_multisplitting = ms;                
              
+    d_A = d_multisplitting->getMatrix();
+    d_b = d_multisplitting->getRhs();         
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
-        Teuchos::sublist(pl,"MultiSplitting");             
+        Teuchos::sublist(b_pl,"MultiSplitting");             
+             
+    d_inner_solver = d_multisplitting->getInnerSolverType();
+    VALIDATE( d_inner_solver == "richardson" || d_inner_solver == "monte_carlo",
+         "the only iterative solvers admitted are Richardson and MonteCarlo" );         
              
     d_divergence_tol = mat_pl->get("divergence_tolerance",1.0e4);
     std::cout<<"divergence tolerance "<<d_divergence_tol<<std::endl;
@@ -63,6 +69,10 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
 //---------------------------------------------------------------------------//
 void MultiSplitting::applyImpl(const MV &x, MV &y) const
 {
+
+    Teuchos::RCP<alea::AleaSolver> solver =
+        alea::LinearSolverFactory::buildSolver(solver_type,myA,pl);
+
 }
 
 } // namespace alea

@@ -34,12 +34,12 @@ class MultiSplitting
 
     MultiSplitting(Teuchos::RCP<Teuchos::ParameterList>);
          
-	Teuchos::RCP<const MATRIX> getMatrix() const { return b_A; }     
+	Teuchos::RCP<const MATRIX> getMatrix() const { return d_A; }     
 
   private:
 
-    Teuchos::RCP<MATRIX> b_A;
-    Teuchos::RCP<MV> b_rhs;
+    Teuchos::RCP<MATRIX> d_A;
+    Teuchos::RCP<MV> d_b;
 
     // Implementation of apply
     void applyImpl(const MV &x, MV &y) const;
