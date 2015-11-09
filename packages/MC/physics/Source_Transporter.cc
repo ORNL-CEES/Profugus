@@ -75,6 +75,7 @@ void Source_Transporter::solve()
     {
 	particles[n] = d_source->get_particle(n);
     }
+
     // Make a vector of event references.
     std::vector<std::pair<std::size_t,events::Event> > events( batch_size );
     for ( int n = 0; n < batch_size; ++n )

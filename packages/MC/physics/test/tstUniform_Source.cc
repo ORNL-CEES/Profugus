@@ -141,8 +141,6 @@ TEST_F(UniformSourceTest, build_and_run)
         EXPECT_EQ(1.0, p.wt());
         EXPECT_EQ(3, p.matid());
     }
-
-    EXPECT_EQ(source.num_to_transport(), ctr);
 }
 
 //---------------------------------------------------------------------------//

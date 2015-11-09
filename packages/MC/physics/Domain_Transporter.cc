@@ -210,8 +210,7 @@ void Domain_Transporter::transport(
 	{
 	    d_tallier->end_history( particles[e->first] );
 
-	    // If we still have particles to run create a
-	    // new one.
+	    // If we still have particles to run create a new one.
 	    if ( num_run < num_to_run )
 	    {
 		particles[e->first] = d_source->get_particle(num_run);
@@ -250,6 +249,7 @@ void Domain_Transporter::transport(
     for ( auto e = alive_end; e != dead_end; ++e )
     {
 	d_tallier->end_history( particles[e->first] );
+	e->second = events::END_EVENT;
     } 
     
     std::cout << "NUM RUN " << num_run << std::endl;

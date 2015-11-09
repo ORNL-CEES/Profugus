@@ -112,7 +112,7 @@ Uniform_Source::Particle_t Uniform_Source::get_particle( const int lid )
     REQUIRE(d_geo_shape);
 
     // throw if no source.
-    REQUIRE(lid <= d_np_domain);
+    REQUIRE(lid <= d_np_total);
 
     // make a particle
     Particle_t p;

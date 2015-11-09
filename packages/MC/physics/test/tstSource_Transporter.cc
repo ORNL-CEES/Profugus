@@ -42,6 +42,8 @@ class DRSourceTransporterTest : public TransporterTestBase
         // no tallies have been added
         tallier->build();
     }
+
+    void init_source() { /* ... */ }
 };
 
 //---------------------------------------------------------------------------//
@@ -55,14 +57,14 @@ TEST_F(DRSourceTransporterTest, source)
                      0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
 
     // make the source
-    int np = 11;
+    int np = nodes * 11;
     db->set("Np", np);
-    std::shared_ptr<Source_t> source(std::make_shared<Source_t>(
-					 db,geometry, physics,box));
+    std::shared_ptr<Source_t> test_source(std::make_shared<Source_t>(
+    db,geometry, physics,box));
 
-    Source_t& base = *source;
-    EXPECT_EQ(11, source->num_to_transport());
-    EXPECT_EQ(nodes * 11, source->total_num_to_transport());
+    Source_t& base = *test_source;
+    EXPECT_EQ(11, test_source->num_to_transport());
+    EXPECT_EQ(nodes * 11, test_source->total_num_to_transport());
 
     int count = 0;
     for ( int n = 0; n < np; ++n )
@@ -71,9 +73,9 @@ TEST_F(DRSourceTransporterTest, source)
         count++;
     }
 
-    EXPECT_EQ(11, count);
-    EXPECT_EQ(11, source->num_to_transport());
-    EXPECT_EQ(nodes * 11, source->total_num_to_transport());
+    EXPECT_EQ(11*nodes, count);
+    EXPECT_EQ(11, test_source->num_to_transport());
+    EXPECT_EQ(nodes * 11, test_source->total_num_to_transport());
 }
 
 //---------------------------------------------------------------------------//
@@ -81,7 +83,7 @@ TEST_F(DRSourceTransporterTest, source)
 TEST_F(DRSourceTransporterTest, Heuristic)
 {
     db->set("mc_diag_frac", 0.2);
-    db->set("Np", 11);
+    db->set("Np", nodes*11);
 
     // make the fixed source Transporter_t
     Transporter_t solver(db, geometry, physics);
@@ -96,11 +98,11 @@ TEST_F(DRSourceTransporterTest, Heuristic)
     SP_Shape box(std::make_shared<profugus::Box_Shape>(
                      0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
     // make the source
-    std::shared_ptr<Source_t> source(std::make_shared<Source_t>(
-					 db,geometry, physics,box));
+    std::shared_ptr<Source_t> test_source(std::make_shared<Source_t>(
+			  		 db,geometry, physics,box));
 
     // assign the source
-    solver.assign_source(source);
+    solver.assign_source(test_source);
 
     // solve
     profugus::pcout << profugus::endl;

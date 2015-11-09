@@ -124,9 +124,10 @@ TEST_F(Domain_TransporterTest, transport)
     transporter.set(geometry, physics);
     transporter.set(var_red);
     transporter.set(tallier);
+    transporter.set(source);
 
     // events
-    int esc = 0, rk = 0;
+    int end_event = 0;
 
     // number of particles
     int Np = 100;
@@ -179,18 +180,14 @@ TEST_F(Domain_TransporterTest, transport)
 
     transporter.transport(particles, events, banks);
 
-    // check the results of the transport
+    // check the results of the transport. everything should be at the end.
     for (int n = 0; n < Np; ++n)
     {
         EXPECT_TRUE(!particles[n].alive());
         // count up events
-        if (events[n].second == profugus::events::ESCAPE)
+        if (events[n].second == profugus::events::END_EVENT)
         {
-            esc++;
-        }
-        else if (events[n].second == profugus::events::ROULETTE_KILLED)
-        {
-            rk++;
+            end_event++;
         }
         else
         {
@@ -200,12 +197,7 @@ TEST_F(Domain_TransporterTest, transport)
         }
     }
 
-    cout << "Events on external boundary-mesh:\n"
-         << "\t" << esc << " escaping particles\n"
-         << "\t" << rk  << " rouletted particles" << endl << endl;
-
-    EXPECT_EQ(67, rk);
-    EXPECT_EQ(33, esc);
+    EXPECT_EQ(100, end_event);
 }
 
 //---------------------------------------------------------------------------//
@@ -216,6 +208,7 @@ TEST_F(Reflecting_Domain_TransporterTest, transport)
     transporter.set(geometry, physics);
     transporter.set(var_red);
     transporter.set(tallier);
+    transporter.set(source);
 
     // number of particles
     int Np = 100;
@@ -226,7 +219,7 @@ TEST_F(Reflecting_Domain_TransporterTest, transport)
     std::vector<Bank_t> banks( Np );
 
     // events
-    int esc = 0, rk = 0;
+    int end_event = 0;
 
     // set the particle direction and position
     for (int n = 0; n < Np; ++n)
@@ -277,13 +270,9 @@ TEST_F(Reflecting_Domain_TransporterTest, transport)
         EXPECT_TRUE(!particles[n].alive());
 
         // count up events
-        if (events[n].second == profugus::events::ESCAPE)
+        if (events[n].second == profugus::events::END_EVENT)
         {
-            esc++;
-        }
-        else if (events[n].second == profugus::events::ROULETTE_KILLED)
-        {
-            rk++;
+            end_event++;
         }
         else
         {
@@ -293,12 +282,7 @@ TEST_F(Reflecting_Domain_TransporterTest, transport)
         }
     }
 
-    cout << "Events on external boundary-mesh:\n"
-         << "\t" << esc << " escaping particles\n"
-         << "\t" << rk  << " rouletted particles" << endl << endl;
-
-    EXPECT_EQ(100, rk);
-    EXPECT_EQ(0, esc);
+    EXPECT_EQ(100, end_event);
 }
 
 //---------------------------------------------------------------------------//

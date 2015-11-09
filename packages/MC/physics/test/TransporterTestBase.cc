@@ -17,6 +17,7 @@
 #include "comm/global.hh"
 
 #include "../VR_Roulette.hh"
+#include "../Box_Shape.hh"
 
 //---------------------------------------------------------------------------//
 //! Initialization that are performed for each test
@@ -186,6 +187,15 @@ void TransporterTestBase::init_vr()
     db->set("weight_cutoff", 0.01);
 
     var_red = std::make_shared<profugus::VR_Roulette>(db);
+}
+
+//---------------------------------------------------------------------------//
+// Create source.
+void TransporterTestBase::init_source()
+{ 
+    SP_Shape box(std::make_shared<profugus::Box_Shape>(
+		     0.0, 2.52, 0.0, 2.52, 0.0, 14.28));
+    source = std::make_shared<Source_t>( db, geometry, physics, box );
 }
 
 //---------------------------------------------------------------------------//
