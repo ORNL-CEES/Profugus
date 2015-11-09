@@ -357,9 +357,13 @@ LinearSystem_MultiSplitting::buildSplitting(
 {
     splitting split;
     
-    Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
-    //Teuchos::RCP<CRS_MATRIX> A;
-    auto A = d_A->clone(node);
+    //Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
+    //auto A = d_A->clone(node);
+    Teuchos::RCP<CRS_MATRIX> A;
+    Teuchos::RCP<MV>   Prb;
+    buildMatrixMarketSystem(mat_pl,A,Prb);
+
+    A = applyShift(A,mat_pl); 
 
     VALIDATE( p<= d_partitions.size(), 
     "Trying to access to a partition with an index bigger than the n. of total partitions." );
@@ -372,13 +376,14 @@ LinearSystem_MultiSplitting::buildSplitting(
     invD = computeBlockDiagPrec(p);
 	
     Tpetra::MatrixMatrix::Multiply(*invD,false,*d_A,false,*A,true);
-    MV Prb = Tpetra::createCopy(*d_b);
-    invD->apply(*d_b,Prb);	
+    //MV Prb = Tpetra::createCopy(*d_b);
+    invD->apply(*d_b,*Prb);	
 
-    Teuchos::RCP<MV> Prb_pointer(&Prb); 
+    //Teuchos::RCP<MV> Prb_pointer(&Prb); 
 
     split.A = A;
-    split.b = Prb_pointer;
+    //split.b = Prb_pointer;
+    split.b = Prb;
     Teuchos::RCP<MV> E( new MV(d_A->getDomainMap(),1) );
     Teuchos::ArrayRCP<SCALAR> E_data = E->getDataNonConst(0);
  
