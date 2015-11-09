@@ -62,6 +62,8 @@ int main( int argc, char *argv[] )
 
     splitting split = MS.buildSplitting(pl, 0);
 
+    std::cout<<"VAFFANCULO"<<std::endl;
+
     Kokkos::finalize();
     profugus::finalize();
     return 0;

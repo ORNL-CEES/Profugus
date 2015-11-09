@@ -358,13 +358,10 @@ LinearSystem_MultiSplitting::buildSplitting(
 {
     splitting split;
     
-    //Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
-    //auto A = d_A->clone(node);
-    Teuchos::RCP<CRS_MATRIX> A;
-    Teuchos::RCP<MV>   Prb;
-    buildMatrixMarketSystem(mat_pl,A,Prb);
-
-    A = applyShift(A,mat_pl); 
+//    Teuchos::RCP<NODE> node = d-A->getNode();
+//    auto A = d_A->clone(node);
+    Teuchos::RCP<CRS_MATRIX> DA = Tpetra::createCrsMatrix<SCALAR>(
+               d_A->getDomainMap());
 
     VALIDATE( p<= d_partitions.size(), 
     "Trying to access to a partition with an index bigger than the n. of total partitions." );
@@ -373,18 +370,20 @@ LinearSystem_MultiSplitting::buildSplitting(
     unsigned int end = d_partitions[p][1];
 	
     Teuchos::RCP<CRS_MATRIX>  invD = Tpetra::createCrsMatrix<SCALAR>(
-    d_A->getDomainMap());
+    	d_A->getDomainMap());
     invD = computeBlockDiagPrec(p);
 	
-    Tpetra::MatrixMatrix::Multiply(*invD,false,*d_A,false,*A,true);
-    //MV Prb = Tpetra::createCopy(*d_b);
-    invD->apply(*d_b,*Prb);	
+    Tpetra::MatrixMatrix::Multiply(*invD,false,*d_A,false,*DA,true);
 
-    //Teuchos::RCP<MV> Prb_pointer(&Prb); 
+    CHECK( DA->isFillComplete() );
 
-    split.A = A;
-    //split.b = Prb_pointer;
-    split.b = Prb;
+    MV Prb = Tpetra::createCopy(*d_b);
+    invD->apply(*d_b,Prb);	
+
+    Teuchos::RCP<MV> Prb_pointer(&Prb); 
+
+    split.A = DA;
+    split.b = Prb_pointer;
     Teuchos::RCP<MV> E( new MV(d_A->getDomainMap(),1) );
     Teuchos::ArrayRCP<SCALAR> E_data = E->getDataNonConst(0);
  
@@ -395,7 +394,7 @@ LinearSystem_MultiSplitting::buildSplitting(
     for( unsigned int i=start;  i<=end; ++i)
         E_data[i] = 1.0;
 
-    if(p!=1)    
+    if(p!=0)    
     {
 		for( unsigned int i=start;  i<=d_partitions[p-1][1]; ++i)
 		    E_data[i] = 0.5;
@@ -407,6 +406,7 @@ LinearSystem_MultiSplitting::buildSplitting(
 		    E_data[i] = 0.5;
     }   
 
+    std::cout<<"CAZZO"<<std::endl;
     split.E = E;
 
     return split;
