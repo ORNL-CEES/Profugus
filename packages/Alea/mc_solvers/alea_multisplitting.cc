@@ -60,7 +60,7 @@ int main( int argc, char *argv[] )
 
     LinearSystem_MultiSplitting MS(pl);
 
-    splitting split = MS.buildSplitting(0);
+    splitting split = MS.buildSplitting(pl, 0);
 
     Kokkos::finalize();
     profugus::finalize();

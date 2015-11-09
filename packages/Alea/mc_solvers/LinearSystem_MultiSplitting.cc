@@ -353,6 +353,7 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
 
 splitting
 LinearSystem_MultiSplitting::buildSplitting(
+    Teuchos::RCP<Teuchos::ParameterList> pl,
     unsigned int p)
 {
     splitting split;

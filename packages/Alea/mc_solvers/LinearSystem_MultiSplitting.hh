@@ -41,7 +41,7 @@ class LinearSystem_MultiSplitting
 
     void createPartitions(Teuchos::RCP<Teuchos::ParameterList>);    
 
-    splitting buildSplitting(unsigned int);
+    splitting buildSplitting(Teuchos::RCP<Teuchos::ParameterList>, unsigned int);
        
     void buildSystem(Teuchos::RCP<Teuchos::ParameterList>,   
         Teuchos::RCP<CRS_MATRIX> &,
