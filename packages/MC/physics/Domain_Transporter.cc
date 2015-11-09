@@ -118,7 +118,6 @@ void Domain_Transporter::transport(
     // Get the number of particles
     int batch_size = particles.size();
     CHECK( batch_size > 0 );
-    auto range = boost::irange( 0, batch_size );
 
     // initialize the source run count.
     def::size_type num_run = batch_size;
@@ -169,7 +168,7 @@ void Domain_Transporter::transport(
 	// Get the next event for the particles that are still alive.
 	for ( auto e = events.begin(); e != alive_end; ++e )
 	{
-	    get_next_event( particles[e.first], e.second );
+	    get_next_event( particles[e->first], e->second );
 	}
 
 	// Sort the alive particle events.
@@ -194,37 +193,36 @@ void Domain_Transporter::transport(
 	// Process collision events.
 	for ( auto e = collision_range_begin; e != collision_range_end; ++e )
 	{
-	    process_collision( particles[e.first], e.second, banks[e.first] );
-	    particles[e.first].set_dist_mfp(
-		-std::log(particles[e.first].rng().ran()) );
+	    process_collision( particles[e->first], e->second, banks[e->first] );
+	    particles[e->first].set_dist_mfp(
+		-std::log(particles[e->first].rng().ran()) );
 	}
 
 	// Process boundary events.
-	for ( auto e = boundary_range_begin, e != boundary_range_end; ++e )
+	for ( auto e = boundary_range_begin; e != boundary_range_end; ++e )
 	{
-	    process_boundary( particles[e.first], e.second, banks[e.first] );
+	    process_boundary( particles[e->first], e->second, banks[e->first] );
 	}
 
 	// Tally particles that died on the last event cycle and spawn a new
 	// one if needed.
 	for ( auto e = alive_end; e != dead_end; ++e )
 	{
-	    this->d_tallier->end_history( particles[e.first] );
-	    ++num_run;
+	    d_tallier->end_history( particles[e->first] );
 
 	    // If we still have particles to run create a
 	    // new one.
 	    if ( num_run < num_to_run )
 	    {
-		particles[e.first] = 
-		    this->d_source->get_particle(count);
-		e.second = events::BORN;
+		particles[e->first] = d_source->get_particle(num_run);
+		e->second = events::BORN;
+		++num_run;
 	    }
 
 	    // Otherwise this element in the vector is done.
 	    else
 	    {
-		e.second = events::END_EVENT;
+		e->second = events::END_EVENT;
 	    }
 	}
 
@@ -251,11 +249,10 @@ void Domain_Transporter::transport(
     // Process any remaining particles.
     for ( auto e = alive_end; e != dead_end; ++e )
     {
-	this->d_tallier->end_history( particles[e.first] );
-	int count = num_run.fetch_add(1);
+	d_tallier->end_history( particles[e->first] );
     } 
     
-    std::cout << "NUM RUN " << num_run.load() << std::endl;
+    std::cout << "NUM RUN " << num_run << std::endl;
     std::cout << "NUM CYCLE " << counter << std::endl;
     ENSURE( num_run == num_to_run );
 }

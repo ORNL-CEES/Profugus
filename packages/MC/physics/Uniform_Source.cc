@@ -63,11 +63,9 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
     REQUIRE(!db.is_null());
 
     // store the total number of requested particles
-    d_batch_size = static_cast<size_type>(db->get("Batch Size", 1000));
     d_np_requested = static_cast<size_type>(db->get("Np", 1000));
     VALIDATE(d_np_requested > 0., "Number of source particles ("
             << d_np_requested << ") must be positive");
-    REQUIRE( d_batch_size <= d_np_requested );
 
     // initialize the total
     d_np_total = d_np_requested;
@@ -92,6 +90,10 @@ Uniform_Source::Uniform_Source(RCP_Std_DB     db,
 
     // build the source based on domain replication
     build_DR();
+
+    // Get the batch size.
+    d_batch_size = static_cast<size_type>(db->get("Batch Size",d_np_domain));
+    REQUIRE( d_batch_size <= d_np_domain );
 
     profugus::global_barrier();
 }
