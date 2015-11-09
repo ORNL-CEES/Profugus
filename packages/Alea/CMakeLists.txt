@@ -90,6 +90,7 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/LinearSystem_MultiSplitting.cc
   mc_solvers/MC_Data.cc
   mc_solvers/MonteCarloSolver.cc
+  mc_solvers/MultiSplitting.cc
   mc_solvers/SequentialMC.cc
   mc_solvers/NeumannPolynomial.cc
   mc_solvers/Polynomial.cc

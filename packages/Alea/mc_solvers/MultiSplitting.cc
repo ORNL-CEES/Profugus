@@ -34,32 +34,20 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 
-MultiSplitting::MultiSplitting(Teuchos::RCP<const MATRIX> A,
+MultiSplitting::MultiSplitting(LinearSystem_MultiSplitting &multisplit,
            Teuchos::RCP<Teuchos::ParameterList> pl )
   : AleaSolver(A,pl)
 {
     // Get MultiSplitting pl
-    Teuchos::RCP<Teuchos::ParameterList> solver_pl =
-        Teuchos::sublist(pl,"MultiSplitting");
-        
+    Teuchos::RCP<Teuchos::ParameterList> b_pl = pl;
+    d_multisplitting = multisplit;                
              
+    Teuchos::RCP<Teuchos::ParameterList> mat_pl =
+        Teuchos::sublist(pl,"MultiSplitting");             
+             
+    d_divergence_tol = mat_pl->get("divergence_tolerance",1.0e4);
+    std::cout<<"divergence tolerance "<<d_divergence_tol<<std::endl;
     
-    
-    // Get InnerSolver pl
-    Teuchos::sublist(inner_solver_pl,"InnerSolver");
-    
-    if(d_inner_solver == "monte_carlo")
-    	subdomains.resize( d_num_blocks, MonteCarloSolver );
-    	for(unsigned int p = 0; p!=d_num_blocks; ++p)
-    	{
-    		subdomains[p].part[0]=
-    	}
-    else
-    	subdomains.resize( d_num_blocks, RichardsonIteration );
-    	for(unsigned int p = 0; p!=d_num_blocks; ++p)
-    	{
-    	}
-    	
 }
 
 

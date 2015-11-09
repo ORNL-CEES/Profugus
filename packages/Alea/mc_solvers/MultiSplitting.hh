@@ -26,21 +26,15 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 
-template <typename solver_type>
-struct partition
-{
-	Teuchos::RCP<solver_type> solver;
-	Teuchos::RCP<MV> E;
-	Teuchos::ArrayRCP<unsigned int> part;
-}
-
 
 class MultiSplitting : public AleaSolver
 {
   public:
 
-    MultiSplitting(Teuchos::RCP<const MATRIX> A,
-         Teuchos::RCP<Teuchos::ParameterList> pl);
+    MultiSplitting(LinearSystem_MultiSplitting &,
+         Teuchos::RCP<Teuchos::ParameterList>);
+         
+	Teuchos::RCP<const MATRIX> getMatrix() const override { return b_A; }     
 
   private:
 
@@ -51,10 +45,7 @@ class MultiSplitting : public AleaSolver
     MAGNITUDE d_divergence_tol;
     
     // Parameters for the generations of subdomains
-    SCALAR d_num_block;
-    SCALAR d_overlap;
-    std::string d_inner_solver;
-    Teuchos::ArrayRCP< partition<AleaSolver> > subdomains;
+    LinearSystem_MultiSplitting d_multisplitting;
 };
 
 }

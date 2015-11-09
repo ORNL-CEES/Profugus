@@ -52,6 +52,10 @@ namespace alea
 LinearSystem_MultiSplitting::
 	LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> pl)
 {
+    d_inner_solver = multisplit_pl->get("inner_solver","richardson");
+    VALIDATE( d_inner_solver == "richardson" || d_inner_solver =="monte_carlo", 
+             "The type of inner solver provided is not valid for Multi-Splitting" );
+
 	buildSystem(pl, d_A, d_b);
 	createPartitions(pl);
 }
@@ -197,11 +201,7 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
     d_overlap      = multisplit_pl->get("overlap",0.0);
     VALIDATE( d_overlap>= 0.0 && d_overlap<=1.0, 
             "The percentage of overlapping must be a number between 0 and 1");
-    
-    d_inner_solver = multisplit_pl->get("inner_solver","richardson");
-    VALIDATE( d_inner_solver == "richardson" || d_inner_solver =="monte_carlo", 
-             "The type of inner solver provided is not valid for Multi-Splitting" );
-                          
+                              
     //measure the size of the problem 
     unsigned int N = d_A -> getGlobalNumRows();
 
