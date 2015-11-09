@@ -13,6 +13,7 @@
 #include "Teuchos_ArrayRCP.hpp"
 
 #include "MultiSplitting.hh"
+#include "LinearSystem_MultiSplitting.hh"
 #include "LinearSolverFactory.hh"
 #include "harness/DBC.hh"
 
@@ -34,13 +35,13 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 
-MultiSplitting::MultiSplitting(LinearSystem_MultiSplitting &multisplit,
-           Teuchos::RCP<Teuchos::ParameterList> pl )
-  : AleaSolver(A,pl)
+MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
+
 {
     // Get MultiSplitting pl
     Teuchos::RCP<Teuchos::ParameterList> b_pl = pl;
-    d_multisplitting = multisplit;                
+    Teuchos::RCP<LinearSystem_MultiSplitting> ms( new LinearSystem_MultiSplitting(pl) );
+    d_multisplitting = ms;                
              
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
         Teuchos::sublist(pl,"MultiSplitting");             

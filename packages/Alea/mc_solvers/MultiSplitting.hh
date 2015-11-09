@@ -14,6 +14,7 @@
 
 #include "AleaTypedefs.hh"
 
+#include "LinearSystem_MultiSplitting.hh"
 #include "AleaSolver.hh"
 
 namespace alea
@@ -27,16 +28,18 @@ namespace alea
 //---------------------------------------------------------------------------//
 
 
-class MultiSplitting : public AleaSolver
+class MultiSplitting 
 {
   public:
 
-    MultiSplitting(LinearSystem_MultiSplitting &,
-         Teuchos::RCP<Teuchos::ParameterList>);
+    MultiSplitting(Teuchos::RCP<Teuchos::ParameterList>);
          
-	Teuchos::RCP<const MATRIX> getMatrix() const override { return b_A; }     
+	Teuchos::RCP<const MATRIX> getMatrix() const { return b_A; }     
 
   private:
+
+    Teuchos::RCP<MATRIX> b_A;
+    Teuchos::RCP<MV> b_rhs;
 
     // Implementation of apply
     void applyImpl(const MV &x, MV &y) const;
@@ -45,7 +48,7 @@ class MultiSplitting : public AleaSolver
     MAGNITUDE d_divergence_tol;
     
     // Parameters for the generations of subdomains
-    LinearSystem_MultiSplitting d_multisplitting;
+    Teuchos::RCP<LinearSystem_MultiSplitting> d_multisplitting;
 };
 
 }

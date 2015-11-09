@@ -52,8 +52,13 @@ namespace alea
 LinearSystem_MultiSplitting::
 	LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> pl)
 {
+    
+    Teuchos::RCP<Teuchos::ParameterList> multisplit_pl =
+        Teuchos::sublist(pl,"MultiSplitting");             
+
     d_inner_solver = multisplit_pl->get("inner_solver","richardson");
-    VALIDATE( d_inner_solver == "richardson" || d_inner_solver =="monte_carlo", 
+    VALIDATE( d_inner_solver == "richardson" || 
+              d_inner_solver =="monte_carlo", 
              "The type of inner solver provided is not valid for Multi-Splitting" );
 
 	buildSystem(pl, d_A, d_b);
