@@ -40,9 +40,6 @@ int main( int argc, char *argv[] )
     pl = Teuchos::getParametersFromXmlFile(argv[1]);
     CHECK( pl != Teuchos::null );
 
-    // Initialize Kokkos device
-    //DeviceTraits<DEVICE>::initialize(pl);
-
     Teuchos::RCP<LinearSystem> system =
         alea::LinearSystemFactory::buildLinearSystem(pl);
     Teuchos::RCP<const MATRIX> myA = system->getMatrix();
@@ -61,6 +58,12 @@ int main( int argc, char *argv[] )
     LinearSystem_MultiSplitting MS(pl);
 
     splitting split = MS.buildSplitting(pl, 0);
+
+    Teuchos::ArrayRCP<const double> b_data = split.b->getData(0); 
+
+/*    for(unsigned int i=0; i!=b_data.size(); ++i)
+       std::cout<<b_data[i]<<std::endl;
+*/
 
     Kokkos::finalize();
     profugus::finalize();

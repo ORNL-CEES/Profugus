@@ -237,7 +237,7 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
     d_partitions[p][1] = N-1;
 
     for(unsigned int i =0; i!=d_num_blocks; ++i)
-        std::cout<<d_partitions[i][0]<<"\t"<<d_partitions[i][1]<<std::endl;
+	std::cout<<"partition "<<i<<":\t"<<d_partitions[i][0]<<"\t"<<d_partitions[i][1]<<std::endl;
 
 }
 
@@ -407,6 +407,7 @@ LinearSystem_MultiSplitting::buildSplitting(
     }   
 
     split.E = E;
+    split.b = Prb_pointer;
 
     return split;
 
