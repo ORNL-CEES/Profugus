@@ -67,11 +67,13 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
  * \brief Perform MultiSplitting.
  */
 //---------------------------------------------------------------------------//
-void MultiSplitting::applyImpl(const MV &x, MV &y) const
+void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
 {
 
     Teuchos::RCP<alea::AleaSolver> solver =
         alea::LinearSolverFactory::buildSolver(d_inner_solver,d_A,d_pl);
+
+	solver->apply(*d_b,*x);
 
 }
 

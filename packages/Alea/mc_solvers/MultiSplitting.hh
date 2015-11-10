@@ -42,7 +42,7 @@ class MultiSplitting
     Teuchos::RCP<MV> d_b;
 
     // Implementation of apply
-    void applyImpl(const MV &x, MV &y) const;
+    void solve(const MV &x, MV &y) const;
 
     // Parameter list
     Teuchos::RCP<Teuchos::ParameterList> d_pl;
