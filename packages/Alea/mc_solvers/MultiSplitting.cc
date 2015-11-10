@@ -39,14 +39,14 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
 
 {
     // Get MultiSplitting pl
-    Teuchos::RCP<Teuchos::ParameterList> b_pl = pl;
-    Teuchos::RCP<LinearSystem_MultiSplitting> ms( new LinearSystem_MultiSplitting(b_pl) );
+    Teuchos::RCP<Teuchos::ParameterList> d_pl = pl;
+    Teuchos::RCP<LinearSystem_MultiSplitting> ms( new LinearSystem_MultiSplitting(d_pl) );
     d_multisplitting = ms;                
              
     d_A = d_multisplitting->getMatrix();
     d_b = d_multisplitting->getRhs();         
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
-        Teuchos::sublist(b_pl,"MultiSplitting");             
+        Teuchos::sublist(d_pl,"MultiSplitting");             
              
     d_inner_solver = d_multisplitting->getInnerSolverType();
     VALIDATE( d_inner_solver == "richardson" || d_inner_solver == "monte_carlo",
@@ -71,7 +71,7 @@ void MultiSplitting::applyImpl(const MV &x, MV &y) const
 {
 
     Teuchos::RCP<alea::AleaSolver> solver =
-        alea::LinearSolverFactory::buildSolver(solver_type,myA,pl);
+        alea::LinearSolverFactory::buildSolver(d_inner_solver,d_A,d_pl);
 
 }
 

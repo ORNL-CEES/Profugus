@@ -44,8 +44,14 @@ class MultiSplitting
     // Implementation of apply
     void applyImpl(const MV &x, MV &y) const;
 
+    // Parameter list
+    Teuchos::RCP<Teuchos::ParameterList> d_pl;
+
     // Divergence tolerance
     MAGNITUDE d_divergence_tol;
+
+    // Inner solver type
+    std::string d_inner_solver;
     
     // Parameters for the generations of subdomains
     Teuchos::RCP<LinearSystem_MultiSplitting> d_multisplitting;
