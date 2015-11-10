@@ -44,6 +44,7 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
     d_multisplitting = ms;                
              
     d_A = d_multisplitting->getMatrix();
+
     d_b = d_multisplitting->getRhs();         
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
         Teuchos::sublist(d_pl,"MultiSplitting");             
@@ -69,11 +70,15 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
 //---------------------------------------------------------------------------//
 void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
 {
-
     Teuchos::RCP<alea::AleaSolver> solver =
         alea::LinearSolverFactory::buildSolver(d_inner_solver,d_A,d_pl);
 
-	solver->apply(*d_b,*x);
+        std::cout<< d_A->getGlobalNumRows()<<std::endl;
+        std::cout<<"Is upper triangular: "<<d_A->isUpperTriangular()<<std::endl;
+        std::cout<<"Is lower triangular: "<<d_A->isLowerTriangular()<<std::endl;
+	std::cout<<d_inner_solver<<std::endl;
+
+//	solver->apply(*d_b,*x);
 
 }
 

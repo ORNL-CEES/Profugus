@@ -7,6 +7,7 @@
 #include "LinearSystemFactory.hh"
 #include "LinearSolverFactory.hh"
 #include "LinearSystem_MultiSplitting.hh"
+#include "MultiSplitting.hh"
 #include "AleaTypedefs.hh"
 #include "DeviceTraits.hh"
 
@@ -55,11 +56,12 @@ int main( int argc, char *argv[] )
             << " milliseconds" << std::endl;
     }
 
-    LinearSystem_MultiSplitting MS(pl);
+/*    LinearSystem_MultiSplitting L_MS(pl);
+ *
+ *        splitting split = L_MS.buildSplitting(pl, 0);*/
 
-    splitting split = MS.buildSplitting(pl, 0);
-
-    Teuchos::ArrayRCP<const double> b_data = split.b->getData(0); 
+    MultiSplitting MS(pl);
+    MS.solve(x);
 
 /*    for(unsigned int i=0; i!=b_data.size(); ++i)
        std::cout<<b_data[i]<<std::endl;

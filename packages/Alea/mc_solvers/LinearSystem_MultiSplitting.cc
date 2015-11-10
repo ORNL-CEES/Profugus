@@ -114,7 +114,6 @@ void LinearSystem_MultiSplitting::buildMatrixMarketSystem(
         A->apply(*x0,*b,Teuchos::NO_TRANS,-1.0,1.0);
     }
     
-    A = applyShift(A,pl);
 }
 
 
@@ -181,10 +180,7 @@ LinearSystem_MultiSplitting::buildSystem( Teuchos::RCP<Teuchos::ParameterList> p
     VALIDATE(matrix_type=="matrix_market",
                  "Invalid matrix_type specified.");
 
-    buildMatrixMarketSystem(mat_pl,A,b);
-
-    A = applyShift(A,mat_pl);
-        
+    buildMatrixMarketSystem(mat_pl,A,b); 
 }
 
 
@@ -198,7 +194,7 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
 {    
 
     Teuchos::RCP<Teuchos::ParameterList> multisplit_pl =
-        Teuchos::sublist(pl,"Multi_Splitting");
+        Teuchos::sublist(pl,"MultiSplitting");
 
     d_num_blocks   = multisplit_pl->get("num_blocks",10);
     VALIDATE( d_num_blocks >= 2, "Minimal number of partitions is 2" );

@@ -15,6 +15,7 @@
 #include "AleaTypedefs.hh"
 
 #include "LinearSystem_MultiSplitting.hh"
+#include "LinearSystemFactory.hh"
 #include "AleaSolver.hh"
 
 namespace alea
@@ -34,15 +35,15 @@ class MultiSplitting
 
     MultiSplitting(Teuchos::RCP<Teuchos::ParameterList>);
          
-	Teuchos::RCP<const MATRIX> getMatrix() const { return d_A; }     
+    Teuchos::RCP<const MATRIX> getMatrix() const { return d_A; }     
+
+    // Implementation of solver
+    void solve(Teuchos::RCP<MV> &x) const;
 
   private:
 
-    Teuchos::RCP<MATRIX> d_A;
+    Teuchos::RCP<const MATRIX> d_A;
     Teuchos::RCP<MV> d_b;
-
-    // Implementation of apply
-    void solve(const MV &x, MV &y) const;
 
     // Parameter list
     Teuchos::RCP<Teuchos::ParameterList> d_pl;
