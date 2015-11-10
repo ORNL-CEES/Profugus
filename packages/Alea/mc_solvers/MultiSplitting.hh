@@ -33,7 +33,7 @@ class MultiSplitting
 {
   public:
 
-    MultiSplitting(Teuchos::RCP<Teuchos::ParameterList>);
+    MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> &);
          
     Teuchos::RCP<const MATRIX> getMatrix() const { return d_A; }     
 

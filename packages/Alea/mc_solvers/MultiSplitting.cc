@@ -35,11 +35,11 @@ namespace alea
  */
 //---------------------------------------------------------------------------//
 
-MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> pl )
+MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
 
 {
     // Get MultiSplitting pl
-    Teuchos::RCP<Teuchos::ParameterList> d_pl = pl;
+    d_pl = pl;
     Teuchos::RCP<LinearSystem_MultiSplitting> ms( new LinearSystem_MultiSplitting(d_pl) );
     d_multisplitting = ms;                
              
@@ -78,7 +78,7 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
         std::cout<<"Is lower triangular: "<<d_A->isLowerTriangular()<<std::endl;
 	std::cout<<d_inner_solver<<std::endl;
 
-//	solver->apply(*d_b,*x);
+	solver->apply(*d_b,*x);
 
 }
 
