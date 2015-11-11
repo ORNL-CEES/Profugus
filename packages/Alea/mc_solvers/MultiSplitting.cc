@@ -90,7 +90,56 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
     r.norm2(r_norm());
     if( r_norm[0] == 0.0 )
         return;
+        
+        MAGNITUDE r0_norm = r_norm[0];
 
+    b_num_iters = 0;
+    while( true )
+    {
+        b_num_iters++;
+
+        // Compute residual r = x - A*y
+        d_A->apply(*x,r);
+        r.update(1.0,x,-1.0);
+
+        // Check convergence on true (rather than preconditioned) residual
+        r.norm2(r_norm());
+
+        if( b_verbosity >= HIGH )
+        {
+            std::cout << "Relative residual norm at iteration " << b_num_iters
+                << " is " << r_norm[0]/r0_norm << std::endl;
+        }
+
+        // Check for convergence
+        if( r_norm[0]/r0_norm < b_tolerance )
+        {
+                std::cout << "Richardson Iteration converged after "
+                    << b_num_iters << " iterations." << std::endl;
+            break;
+        }
+
+        // Check for max iterations
+        if( b_num_iters >= b_max_iterations )
+        {
+            std::cout << "Richardson Iteration reached maximum iteration "
+                 << "count with relative residual norm of "
+                 << r_norm[0]/r0_norm << std::endl;
+            b_num_iters = -1;
+            break;
+        }
+
+        // Check for divergence
+        if( r_norm[0]/r0_norm > d_divergence_tol)
+        {
+            std::cout << "Richardson Iteration diverged after "
+                 << b_num_iters << " iterations." << std::endl;
+            b_num_iters = -b_num_iters;
+            break;
+        }
+
+    }
+         
 }
 
 } // namespace alea

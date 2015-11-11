@@ -50,6 +50,7 @@ class MultiSplitting
 
     // Divergence tolerance
     MAGNITUDE d_divergence_tol;
+    mutable LO b_num_iters;
 
     // Inner solver type
     std::string d_inner_solver;
