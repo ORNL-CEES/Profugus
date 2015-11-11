@@ -50,7 +50,15 @@ class MultiSplitting
 
     // Divergence tolerance
     MAGNITUDE d_divergence_tol;
+    
+    // Number of iterations employed
     mutable LO b_num_iters;
+    
+    // Maximal number of iterations allowed
+    LO b_max_iterations;
+    
+    // Verbosity level
+    Verbosity_Level b_verbosity;
 
     // Inner solver type
     std::string d_inner_solver;

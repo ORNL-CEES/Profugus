@@ -59,6 +59,42 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
     d_divergence_tol = mat_pl->get("divergence_tolerance",1.0e4);
     std::cout<<"divergence tolerance "<<d_divergence_tol<<std::endl;
     
+    b_max_iterations = mat_pl->get<int>("max_iterations");
+    
+    if( mat_pl->isType<std::string>("verbosity") )
+    {
+        std::string verbosity = pl->get<std::string>("verbosity");
+        VALIDATE(verbosity=="none"   || verbosity=="low"  ||
+                 verbosity=="medium" || verbosity=="high" ||
+                 verbosity=="debug",
+                 "Invalid verbosity specified.");
+        if( verbosity == "none")
+        {
+            b_verbosity = NONE;
+        }
+        else if( verbosity == "low" )
+        {
+            b_verbosity = LOW;
+        }
+        else if( verbosity == "medium" )
+        {
+            b_verbosity = MEDIUM;
+        }
+        else if( verbosity == "high" )
+        {
+            b_verbosity = HIGH;
+        }
+        else if( verbosity == "debug" )
+        {
+            b_verbosity = DEBUG;
+        }
+        //
+        // Silence processors other than rank 0
+        if( profugus::node() != 0 )
+            b_verbosity = NONE;
+    }
+    
+    
 }
 
 
@@ -114,8 +150,11 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
         // Check for convergence
         if( r_norm[0]/r0_norm < b_tolerance )
         {
+            if( b_verbosity >= LOW )
+            {
                 std::cout << "Richardson Iteration converged after "
                     << b_num_iters << " iterations." << std::endl;
+            }
             break;
         }
 
@@ -132,8 +171,11 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
         // Check for divergence
         if( r_norm[0]/r0_norm > d_divergence_tol)
         {
-            std::cout << "Richardson Iteration diverged after "
-                 << b_num_iters << " iterations." << std::endl;
+            if( b_verbosity >= LOW )
+            {
+                std::cout << "Richardson Iteration diverged after "
+                    << b_num_iters << " iterations." << std::endl;
+            }
             b_num_iters = -b_num_iters;
             break;
         }
