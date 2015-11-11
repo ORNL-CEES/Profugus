@@ -13,6 +13,7 @@
 #include "Teuchos_ParameterList.hpp"
 
 #include "AleaTypedefs.hh"
+#include "AleaSolver.hh"
 
 #include "LinearSystem_MultiSplitting.hh"
 #include "LinearSystemFactory.hh"
