@@ -44,6 +44,9 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
     d_multisplitting = ms;                
              
     d_A = d_multisplitting->getMatrix();
+    std::cout<< d_A->getGlobalNumRows()<<std::endl;
+    std::cout<<"Is upper triangular: "<<d_A->isUpperTriangular()<<std::endl;
+    std::cout<<"Is lower triangular: "<<d_A->isLowerTriangular()<<std::endl;
 
     d_b = d_multisplitting->getRhs();         
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
@@ -70,15 +73,23 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
 //---------------------------------------------------------------------------//
 void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
 {
+    splitting split = d_multisplitting->buildSplitting(d_pl,0);
+ 
     Teuchos::RCP<alea::AleaSolver> solver =
-        alea::LinearSolverFactory::buildSolver(d_inner_solver,d_A,d_pl);
+        alea::LinearSolverFactory::buildSolver(d_inner_solver,
+         split.A,d_pl);
 
-        std::cout<< d_A->getGlobalNumRows()<<std::endl;
-        std::cout<<"Is upper triangular: "<<d_A->isUpperTriangular()<<std::endl;
-        std::cout<<"Is lower triangular: "<<d_A->isLowerTriangular()<<std::endl;
-	std::cout<<d_inner_solver<<std::endl;
+    solver->apply(*(split.b),*x);
 
-	solver->apply(*d_b,*x);
+    // For now we only support operating on a single vector
+    REQUIRE( x->getNumVectors() == 1 );
+    // Compute initial residual
+    MV r( (split.b)->getMap(),1 );
+
+    Teuchos::ArrayRCP<MAGNITUDE> r_norm(1);
+    r.norm2(r_norm());
+    if( r_norm[0] == 0.0 )
+        return;
 
 }
 
