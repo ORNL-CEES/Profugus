@@ -17,7 +17,6 @@
 
 #include "LinearSystem_MultiSplitting.hh"
 #include "LinearSystemFactory.hh"
-#include "AleaSolver.hh"
 
 namespace alea
 {
@@ -33,6 +32,23 @@ namespace alea
 class MultiSplitting 
 {
   public:
+
+    //! Enumeration describing level of output produced by solver
+    enum Verbosity_Level
+    {
+        //! Produce no output.
+        NONE,
+        //! Minimal output, usually only a final summary.
+        LOW,
+        //! More output, commonly updates on the iteration process.
+        MEDIUM,
+        /*! Significant output, possibly extra information about each
+            iteration. */
+        HIGH,
+        //! Highest level of output, may only be meaningful to developers.
+        DEBUG
+    };
+
 
     MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> &);
          

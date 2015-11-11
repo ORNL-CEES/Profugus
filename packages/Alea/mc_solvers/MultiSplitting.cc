@@ -88,10 +88,6 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
         {
             b_verbosity = DEBUG;
         }
-        //
-        // Silence processors other than rank 0
-        if( profugus::node() != 0 )
-            b_verbosity = NONE;
     }
     
     
