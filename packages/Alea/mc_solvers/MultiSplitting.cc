@@ -39,16 +39,19 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
 
 {
     // Get MultiSplitting pl
-    d_pl = pl;
-    Teuchos::RCP<LinearSystem_MultiSplitting> ms( new LinearSystem_MultiSplitting(d_pl) );
-    d_multisplitting = ms;                
+    d_pl = pl;        
              
-    d_A = d_multisplitting->getMatrix();
+    Teuchos::RCP<LinearSystem> system =
+        alea::LinearSystemFactory::buildLinearSystem(pl);
+    d_A = system->getMatrix();
+    d_b = system->getRhs();
+
     std::cout<< d_A->getGlobalNumRows()<<std::endl;
     std::cout<<"Is upper triangular: "<<d_A->isUpperTriangular()<<std::endl;
     std::cout<<"Is lower triangular: "<<d_A->isLowerTriangular()<<std::endl;
 
-    d_b = d_multisplitting->getRhs();         
+    d_multisplitting = Teuchos::RCP<LinearSystem_MultiSplitting>( new LinearSystem_MultiSplitting(d_pl, d_A, d_b));
+      
     Teuchos::RCP<Teuchos::ParameterList> mat_pl =
         Teuchos::sublist(d_pl,"MultiSplitting");             
              

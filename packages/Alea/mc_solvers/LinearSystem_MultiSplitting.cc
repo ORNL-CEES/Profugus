@@ -50,7 +50,9 @@ namespace alea
 //---------------------------------------------------------------------------//
 
 LinearSystem_MultiSplitting::
-	LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> pl)
+	LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> pl, 
+	Teuchos::RCP<CRS_MATRIX>             &A,
+	Teuchos::RCP<MV>                     &b )
 {
     
     Teuchos::RCP<Teuchos::ParameterList> multisplit_pl =
@@ -60,129 +62,12 @@ LinearSystem_MultiSplitting::
     VALIDATE( d_inner_solver == "richardson" || 
               d_inner_solver =="monte_carlo", 
              "The type of inner solver provided is not valid for Multi-Splitting" );
+             
+    d_b = b;  
+    d_A = A;       
 
-	buildSystem(pl, d_A, d_b);
 	createPartitions(pl);
 }
-
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Read matrix from Matrix Market file.
- */
-//---------------------------------------------------------------------------//
-void LinearSystem_MultiSplitting::buildMatrixMarketSystem(
-        Teuchos::RCP<Teuchos::ParameterList> pl,
-        Teuchos::RCP<CRS_MATRIX>             &A,
-        Teuchos::RCP<MV>                     &b )
-{
-    VALIDATE( pl->isType<std::string>("matrix_filename"),
-            "Must specify matrix_filename to build matrix market system.");
-
-    std::string filename = pl->get<std::string>("matrix_filename");
-
-    Teuchos::RCP<NODE> node = KokkosClassic::Details::getNode<NODE>();
-    Teuchos::RCP<const Teuchos::Comm<int> > comm =
-        Teuchos::DefaultComm<int>::getComm();            
-    A = Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readSparseFile(
-        filename,comm,node);
-	
-    Teuchos::RCP<const MAP> map = A->getDomainMap();
-        
-    if( pl->isType<std::string>("rhs_filename") )
-    {
-        std::string rhs_file = pl->get<std::string>("rhs_filename");
-        b = Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readVectorFile(
-            rhs_file,comm,node,map);
-    }
-        
-    else
-    {
-        // Just make RHS constant
-        b = Teuchos::rcp( new MV(map,1) );
-        b->putScalar(1.0);
-    }
-
-    // If an initial guess is specified, compute the initial residual and
-    // use that as the RHS
-    if( pl->isType<std::string>("init_guess_filename") )
-    {
-        std::string x0_file = pl->get<std::string>("init_guess_filename");
-        Teuchos::RCP<MV> x0 =
-            Tpetra::MatrixMarket::Reader<CRS_MATRIX>::readVectorFile(
-                x0_file,comm,node,map);
-        A->apply(*x0,*b,Teuchos::NO_TRANS,-1.0,1.0);
-    }
-    
-}
-
-
-//---------------------------------------------------------------------------//
-/*!
-* \brief Apply specified shift to matrix
-  */
-//--------------------------------------------------------------------------
-Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::applyShift(
-    Teuchos::RCP<CRS_MATRIX>                 A,
-    Teuchos::RCP<Teuchos::ParameterList> pl )
-{
-    VECTOR diag(A->getDomainMap());
-    A->getLocalDiagCopy(diag);
-
-    SCALAR shift = pl->get<SCALAR>("diagonal_shift", 0.0);
-
-    Teuchos::ArrayRCP<SCALAR> diag_vec = diag.getDataNonConst();
-      
-    int max_entries = A -> getNodeMaxNumRowEntries();
-    Teuchos::ArrayRCP<LO> inds( max_entries );
-    Teuchos::ArrayRCP<SCALAR> vals( max_entries );
-    
-    A -> resumeFill();
-    for ( int i=0; i<diag_vec.size(); ++i )
-    {
-    	size_t num_entries;
-    	A -> getLocalRowCopy( i, inds(), vals(), num_entries );
-    	int index = std::find( inds.begin(), inds.end(), i ) - inds.begin();
-    	vals[index] = vals[index] + shift * vals[index];
-    	Teuchos::ArrayView<SCALAR> vals_view=vals( index, 1 );
-    	Teuchos::ArrayView<LO> cols_view=inds( index, 1 );
-    	//std::cout<<"size of inds = "<<inds.size()<<" and size of cols = " <<vals.size()<<std::endl;
-    	auto changes = A -> replaceLocalValues( i, cols_view, vals_view );
-    	CHECK( changes==1 );
-    	//std::cout<<num_entries<<std::endl;
-     }
-        	    	    	            
-     A -> fillComplete();
-    	    	    	    	                    
-     CHECK( A -> isFillComplete() );    
-     return A;
-}
-
-
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Construction of the linear system.
- */
-//---------------------------------------------------------------------------//
-void
-LinearSystem_MultiSplitting::buildSystem( Teuchos::RCP<Teuchos::ParameterList> pl,
-        Teuchos::RCP<CRS_MATRIX>             &A,
-        Teuchos::RCP<MV>                     &b)
-{
-
-    Teuchos::RCP<Teuchos::ParameterList> mat_pl =
-        Teuchos::sublist(pl,"Problem");
-
-    VALIDATE( mat_pl->isType<std::string>("matrix_type"),
-            "Must specify matrix_type." );
-    std::string matrix_type = mat_pl->get<std::string>("matrix_type");
-    VALIDATE(matrix_type=="matrix_market",
-                 "Invalid matrix_type specified.");
-
-    buildMatrixMarketSystem(mat_pl,A,b); 
-}
-
 
 //---------------------------------------------------------------------------//
 /*!
@@ -236,6 +121,8 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
              
     d_partitions[p][0] = d_partitions[p-1][1] + 1 - overlapping;
     d_partitions[p][1] = N-1;
+    
+    d_partitions_computed = true;
 
     for(unsigned int i =0; i!=d_num_blocks; ++i)
 	std::cout<<"partition "<<i<<":\t"<<d_partitions[i][0]<<"\t"<<d_partitions[i][1]<<std::endl;
@@ -357,6 +244,9 @@ LinearSystem_MultiSplitting::buildSplitting(
     Teuchos::RCP<Teuchos::ParameterList> pl,
     unsigned int p)
 {
+
+	VALIDATE( d_partitions_computed, "partitions are not computed yet");
+
     splitting split;
     
 //    Teuchos::RCP<NODE> node = d-A->getNode();

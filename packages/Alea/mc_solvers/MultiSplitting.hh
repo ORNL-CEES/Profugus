@@ -60,7 +60,7 @@ class MultiSplitting
   private:
 
     Teuchos::RCP<const MATRIX> d_A;
-    Teuchos::RCP<MV> d_b;
+    Teuchos::RCP<const MV> d_b;
 
     // Parameter list
     Teuchos::RCP<Teuchos::ParameterList> d_pl;
