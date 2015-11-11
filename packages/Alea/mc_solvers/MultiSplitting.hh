@@ -73,6 +73,9 @@ class MultiSplitting
     
     // Maximal number of iterations allowed
     LO b_max_iterations;
+ 
+    // Tolerance for the solver
+    MAGNITUDE b_tolerance;
     
     // Verbosity level
     Verbosity_Level b_verbosity;

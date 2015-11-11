@@ -54,12 +54,13 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
              
     d_inner_solver = d_multisplitting->getInnerSolverType();
     VALIDATE( d_inner_solver == "richardson" || d_inner_solver == "monte_carlo",
-         "the only iterative solvers admitted are Richardson and MonteCarlo" );         
-             
+         "the only iterative solvers admitted are Richardson and MonteCarlo" );                  
     d_divergence_tol = mat_pl->get("divergence_tolerance",1.0e4);
     std::cout<<"divergence tolerance "<<d_divergence_tol<<std::endl;
     
     b_max_iterations = mat_pl->get<int>("max_iterations");
+
+    b_tolerance = mat_pl->get<MAGNITUDE>("tolerance");
     
     if( mat_pl->isType<std::string>("verbosity") )
     {
@@ -106,17 +107,12 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
 void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
 {
     splitting split = d_multisplitting->buildSplitting(d_pl,0);
- 
-    Teuchos::RCP<alea::AleaSolver> solver =
-        alea::LinearSolverFactory::buildSolver(d_inner_solver,
-         split.A,d_pl);
-
-    solver->apply(*(split.b),*x);
 
     // For now we only support operating on a single vector
     REQUIRE( x->getNumVectors() == 1 );
     // Compute initial residual
     MV r( (split.b)->getMap(),1 );
+    r.update(1.0,*(d_b),0.0);
 
     Teuchos::ArrayRCP<MAGNITUDE> r_norm(1);
     r.norm2(r_norm());
@@ -132,7 +128,7 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x) const
 
         // Compute residual r = x - A*y
         d_A->apply(*x,r);
-        r.update(1.0,x,-1.0);
+        r.update(1.0,*x,-1.0);
 
         // Check convergence on true (rather than preconditioned) residual
         r.norm2(r_norm());
