@@ -11,6 +11,8 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
+#include "Teuchos_DefaultComm.hpp"
+#include "MatrixMarket_Tpetra.hpp"
 
 #include "AleaTypedefs.hh"
 #include "AleaSolver.hh"
@@ -52,14 +54,14 @@ class MultiSplitting
 
     MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> &);
          
-    Teuchos::RCP<const MATRIX> getMatrix() const { return d_A; }     
+    Teuchos::RCP<const CRS_MATRIX> getMatrix() const { return d_A; }     
 
     // Implementation of solver
-    void solve(Teuchos::RCP<MV> &x) const;
+    void solve(Teuchos::RCP<MV> &x);
 
   private:
 
-    Teuchos::RCP<const MATRIX> d_A;
+    Teuchos::RCP<const CRS_MATRIX> d_A;
     Teuchos::RCP<const MV> d_b;
 
     // Parameter list
@@ -82,9 +84,16 @@ class MultiSplitting
 
     // Inner solver type
     std::string d_inner_solver;
+
+    // Numver of partitionings
+    unsigned int d_num_blocks;
     
     // Parameters for the generations of subdomains
     Teuchos::RCP<LinearSystem_MultiSplitting> d_multisplitting;
+
+    //Method to compute a MultiSplittng step
+    Teuchos::RCP<MV> computeIteration();
+    
 };
 
 }

@@ -51,8 +51,8 @@ namespace alea
 
 LinearSystem_MultiSplitting::
 	LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList> pl, 
-	Teuchos::RCP<CRS_MATRIX>             &A,
-	Teuchos::RCP<MV>                     &b )
+	Teuchos::RCP<const CRS_MATRIX>             &A,
+	Teuchos::RCP<const MV>                     &b )
 {
     
     Teuchos::RCP<Teuchos::ParameterList> multisplit_pl =
@@ -66,7 +66,8 @@ LinearSystem_MultiSplitting::
     d_b = b;  
     d_A = A;       
 
-	createPartitions(pl);
+    createPartitions(pl);
+
 }
 
 //---------------------------------------------------------------------------//
@@ -83,7 +84,7 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
 
     d_num_blocks   = multisplit_pl->get("num_blocks",10);
     VALIDATE( d_num_blocks >= 2, "Minimal number of partitions is 2" );
-    
+ 
     d_overlap      = multisplit_pl->get("overlap",0.0);
     VALIDATE( d_overlap>= 0.0 && d_overlap<=1.0, 
             "The percentage of overlapping must be a number between 0 and 1");
@@ -96,7 +97,7 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
              
     //determine the number of rows that overlaps between adjacent subdomains         
     unsigned int overlapping = d_overlap * size_temp;        
-    std::cout<<"overlapping= "<<overlapping<<std::endl;
+    //std::cout<<"overlapping= "<<overlapping<<std::endl;
     
     //determine the number of rows for each subdomain
     unsigned int block_size = ( N + (d_num_blocks-1)*overlapping ) / d_num_blocks;        
@@ -124,8 +125,8 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
     
     d_partitions_computed = true;
 
-    for(unsigned int i =0; i!=d_num_blocks; ++i)
-	std::cout<<"partition "<<i<<":\t"<<d_partitions[i][0]<<"\t"<<d_partitions[i][1]<<std::endl;
+/*    for(unsigned int i =0; i!=d_num_blocks; ++i)
+	std::cout<<"partition "<<i<<":\t"<<d_partitions[i][0]<<"\t"<<d_partitions[i][1]<<std::endl;*/
 
 }
 
@@ -240,12 +241,10 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
 
 
 splitting
-LinearSystem_MultiSplitting::buildSplitting(
-    Teuchos::RCP<Teuchos::ParameterList> pl,
-    unsigned int p)
+LinearSystem_MultiSplitting::buildSplitting(unsigned int p)
 {
 
-	VALIDATE( d_partitions_computed, "partitions are not computed yet");
+    VALIDATE( d_partitions_computed, "partitions are not computed yet");
 
     splitting split;
     
@@ -291,7 +290,7 @@ LinearSystem_MultiSplitting::buildSplitting(
 		    E_data[i] = 0.5;
     }   
     
-    if(p!=N-1)    
+    if(p!=d_num_blocks-1)    
     {
 		for( unsigned int i=d_partitions[p+1][0];  i<=end; ++i)
 		    E_data[i] = 0.5;

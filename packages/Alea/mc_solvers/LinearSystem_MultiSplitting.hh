@@ -37,22 +37,23 @@ class LinearSystem_MultiSplitting
  
   public:
 
-    LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList>
-    	Teuchos::RCP<CRS_MATRIX>	&,
-		Teuchos::RCP<MV>  			&);
+    LinearSystem_MultiSplitting(Teuchos::RCP<Teuchos::ParameterList>,
+    	Teuchos::RCP<const CRS_MATRIX>	&,
+	Teuchos::RCP<const MV>  			&);
 
-    splitting buildSplitting(Teuchos::RCP<Teuchos::ParameterList>, unsigned int);
+    splitting buildSplitting(unsigned int);
        
     inline std::string getInnerSolverType(){ return d_inner_solver; }
     
-    Teuchos::RCP<CRS_MATRIX> getMatrix(){return d_A; }
-    Teuchos::RCP<MV> getRhs(){return d_b; }
+    inline Teuchos::RCP<const CRS_MATRIX> getMatrix(){return d_A; }
+    inline Teuchos::RCP<const MV> getRhs(){return d_b; }
+    inline unsigned int getNumBlocks(){return d_num_blocks; }
 
   private:
 
     //Data
-    Teuchos::RCP<CRS_MATRIX> d_A;
-    Teuchos::RCP<MV> d_b; 
+    Teuchos::RCP<const CRS_MATRIX> d_A;
+    Teuchos::RCP<const MV> d_b; 
     
     unsigned int d_num_blocks;
     SCALAR d_overlap;
