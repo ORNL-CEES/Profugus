@@ -34,6 +34,12 @@ ENDIF()
 # Setup M4 for FORTRAN processing
 APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+## Trilinos Timing options.
+IF (${PROJECT_NAME}_ENABLE_TRILINOS_TIMING)
+   MESSAGE(STATUS "Building Profugus with Trilinos timing")
+   SET(USE_TRILINOS_TIMING 1)
+ENDIF()
+ 
 # Setup debug option
 TRIBITS_ADD_DEBUG_OPTION()
 

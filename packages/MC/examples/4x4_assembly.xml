@@ -27,7 +27,8 @@
     <Parameter name="mat list" type="Array(string)" value="{uo2,zirc,moderator}"/>
   </ParameterList>
   <ParameterList name="PROBLEM">
-    <Parameter name="Np" type="int" value="10"/>
+    <Parameter name="Np" type="int" value="1000000"/>
+    <Parameter name="Batch Size" type="unsigned long int" value="1000000"/>
     <Parameter name="output_geometry" type="bool" value="true"/>
     <Parameter name="do_transport" type="bool" value="true"/>
     <ParameterList name="cell_tally_db">

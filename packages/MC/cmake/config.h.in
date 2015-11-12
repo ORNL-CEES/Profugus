@@ -21,15 +21,12 @@
 /* PARALLEL MPI ENVIRONMENT VARIABLES */
 #include <Utils/config.h>
 
-#ifdef COMM_MPI
-#include "Epetra_MpiComm.h"
-#else
-#include "Epetra_SerialComm.h"
-#endif
-
 /* FORTRAN WRAPPERS */
 #define FC_FUNC@F77_FUNC@
 #define FC_FUNC_@F77_FUNC_@
+
+/* Trilinos timers */
+#cmakedefine USE_TRILINOS_TIMING
 
 #endif /* MC_config_h */
 

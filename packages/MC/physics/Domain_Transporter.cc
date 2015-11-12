@@ -17,6 +17,8 @@
 #include "Definitions.hh"
 #include "Domain_Transporter.hh"
 
+#include <Teuchos_TimeMonitor.hpp>
+
 namespace profugus
 {
 
@@ -27,6 +29,15 @@ namespace profugus
  * \brief Constructor.
  */
 Domain_Transporter::Domain_Transporter()
+#ifdef USE_TRILINOS_TIMING
+    : d_next_event_timer( Teuchos::TimeMonitor::getNewCounter("Get Next Event") )
+    , d_event_sort_timer( Teuchos::TimeMonitor::getNewCounter("Event Sort") )
+    , d_process_collision_timer( Teuchos::TimeMonitor::getNewCounter("Process Collision") )
+    , d_process_boundary_timer( Teuchos::TimeMonitor::getNewCounter("Process Boundary") )
+    , d_new_mfp_timer( Teuchos::TimeMonitor::getNewCounter("New MFP") )
+    , d_tally_timer( Teuchos::TimeMonitor::getNewCounter("Tally/Regenerate") )
+    , d_alive_sort_timer( Teuchos::TimeMonitor::getNewCounter("Alive Sort") ) 
+#endif
 {
 }
 
@@ -115,6 +126,9 @@ void Domain_Transporter::transport(
     REQUIRE(d_var_reduction);
     REQUIRE(d_tallier);
 
+    // Call cuda.
+    launch_cuda();
+    
     // Get the number of particles
     int batch_size = particles.size();
     CHECK( batch_size > 0 );
@@ -166,13 +180,23 @@ void Domain_Transporter::transport(
     while ( events[0].second < events::STILL_ALIVE )
     {
 	// Get the next event for the particles that are still alive.
-	for ( auto e = events.begin(); e != alive_end; ++e )
 	{
-	    get_next_event( particles[e->first], e->second );
+#ifdef USE_TRILINOS_TIMING	    
+	    Teuchos::TimeMonitor monitor( *d_next_event_timer );
+#endif
+	    for ( auto e = events.begin(); e != alive_end; ++e )
+	    {
+		get_next_event( particles[e->first], e->second );
+	    }
 	}
 
 	// Sort the alive particle events.
-	std::sort( events.begin(), alive_end, event_pred );
+	{
+#ifdef USE_TRILINOS_TIMING	    
+	    Teuchos::TimeMonitor monitor( *d_event_sort_timer );
+#endif
+	    std::sort( events.begin(), alive_end, event_pred );
+	}
 
 	// Get the range of particles that have had a collision.
 	auto collision_range_begin = std::find_if( events.begin(),
@@ -191,42 +215,79 @@ void Domain_Transporter::transport(
 						find_boundary_end );
 
 	// Process collision events.
-	for ( auto e = collision_range_begin; e != collision_range_end; ++e )
 	{
-	    process_collision( particles[e->first], e->second, banks[e->first] );
-	    particles[e->first].set_dist_mfp(
-		-std::log(particles[e->first].rng().ran()) );
+#ifdef USE_TRILINOS_TIMING	    
+	    Teuchos::TimeMonitor monitor( *d_process_collision_timer );
+#endif
+	    for ( auto e = collision_range_begin; e != collision_range_end; ++e )
+	    {
+		process_collision( particles[e->first], e->second, banks[e->first] );
+	    }
+	}
+
+	// Set new mfp distance after collision.
+	{
+#ifdef USE_TRILINOS_TIMING	    
+	    Teuchos::TimeMonitor monitor( *d_new_mfp_timer );
+#endif
+	    for ( auto e = collision_range_begin; e != collision_range_end; ++e )
+	    {
+		particles[e->first].set_dist_mfp(
+		    -std::log(particles[e->first].rng().ran()) );
+	    }
 	}
 
 	// Process boundary events.
-	for ( auto e = boundary_range_begin; e != boundary_range_end; ++e )
 	{
-	    process_boundary( particles[e->first], e->second, banks[e->first] );
+#ifdef USE_TRILINOS_TIMING	    
+	    Teuchos::TimeMonitor monitor( *d_process_boundary_timer );
+#endif
+	    for ( auto e = boundary_range_begin; e != boundary_range_end; ++e )
+	    {
+		process_boundary( particles[e->first], e->second, banks[e->first] );
+	    }
 	}
-
+	
 	// Tally particles that died on the last event cycle and spawn a new
 	// one if needed.
-	for ( auto e = alive_end; e != dead_end; ++e )
 	{
-	    d_tallier->end_history( particles[e->first] );
-
-	    // If we still have particles to run create a new one.
-	    if ( num_run < num_to_run )
+#ifdef USE_TRILINOS_TIMING	    
+	    Teuchos::TimeMonitor monitor( *d_tally_timer );
+#endif
+	    for ( auto e = alive_end; e != dead_end; ++e )
 	    {
-		particles[e->first] = d_source->get_particle(num_run);
-		e->second = events::BORN;
-		++num_run;
-	    }
+		d_tallier->end_history( particles[e->first] );
 
-	    // Otherwise this element in the vector is done.
-	    else
-	    {
-		e->second = events::END_EVENT;
+		// If we still have particles to run create a new one.
+		if ( num_run < num_to_run )
+		{
+		    // Create the particle.
+		    particles[e->first] = d_source->get_particle(num_run);
+		    e->second = events::BORN;
+
+		    // Initialize distance to collision in mfp.
+		    particles[e->first].set_dist_mfp(
+			-std::log(particles[e->first].rng().ran()) );
+
+		    // Update run count.
+		    ++num_run;
+		}
+
+		// Otherwise this element in the vector is done.
+		else
+		{
+		    e->second = events::END_EVENT;
+		}
 	    }
 	}
 
 	// Sort the events again to get the active particles and dead particles.
-	std::sort( events.begin(), dead_end, event_pred );
+	{
+#ifdef USE_TRILINOS_TIMING	    
+	    Teuchos::TimeMonitor monitor( *d_alive_sort_timer );
+#endif
+	    std::sort( events.begin(), dead_end, event_pred );
+	}
 
 	// Get the iterator to the end of the particles that are alive.
 	alive_end = std::find_if( events.begin(),
@@ -260,6 +321,14 @@ void Domain_Transporter::transport(
 //---------------------------------------------------------------------------//
 // PRIVATE FUNCTIONS
 //---------------------------------------------------------------------------//
+double Domain_Transporter::distance_to_collision( Particle_t& particle,
+						  const double& xs_total ) const
+{
+    CHECK(xs_total >= 0.0);
+    return (xs_total > 0.0) ? (particle.dist_mfp() / xs_total) : constants::huge;
+}
+
+//---------------------------------------------------------------------------//
 void Domain_Transporter::get_next_event( 
     Particle_t& particle, events::Event& event ) const
 {
@@ -268,13 +337,9 @@ void Domain_Transporter::get_next_event(
     CHECK(particle.alive());
     CHECK(particle.dist_mfp() > 0.0);
 
-    // total interaction cross section
-    double xs_total = d_physics->total(physics::TOTAL, particle);
-    CHECK(xs_total >= 0.0);
-
     // sample distance to next collision
-    double dist_col = 
-	(xs_total > 0.0) ? (particle.dist_mfp() / xs_total) : constants::huge;
+    double xs_total = d_physics->total(physics::TOTAL, particle);    
+    double dist_col = distance_to_collision( particle, xs_total );
 
     // initialize the distance to collision in the step selector
     step_selector.initialize(dist_col, events::COLLISION);

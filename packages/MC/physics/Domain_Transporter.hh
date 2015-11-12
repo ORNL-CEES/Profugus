@@ -19,6 +19,10 @@
 #include "Variance_Reduction.hh"
 #include "Tallier.hh"
 #include "Uniform_Source.hh"
+#include "config.h"
+
+#include <Teuchos_RCP.hpp>
+#include <Teuchos_Time.hpp>
 
 namespace profugus
 {
@@ -106,11 +110,40 @@ class Domain_Transporter
     // >>> IMPLEMENTATION
 
     // Process collisions and boundaries.
+    void launch_cuda() const;
+    double distance_to_collision( Particle_t& particle,
+				  const double& xs_total ) const;
     void get_next_event( Particle_t& particle, events::Event& event ) const;
     void process_boundary(
 	Particle_t &particle, events::Event& event, Bank_t &bank) const;
     void process_collision(
 	Particle_t &particle, events::Event& event, Bank_t &bank) const;
+
+  private:
+
+#ifdef USE_TRILINOS_TIMING
+    // Get next event timer.
+    Teuchos::RCP<Teuchos::Time> d_next_event_timer;
+
+    // Get event sort timer.
+    Teuchos::RCP<Teuchos::Time> d_event_sort_timer;
+
+    // Process collision timer.
+    Teuchos::RCP<Teuchos::Time> d_process_collision_timer;
+
+    // Process boundary timer.
+    Teuchos::RCP<Teuchos::Time> d_process_boundary_timer;
+    
+    // New mfp timer.
+    Teuchos::RCP<Teuchos::Time> d_new_mfp_timer;
+
+    // Tally timer.
+    Teuchos::RCP<Teuchos::Time> d_tally_timer;    
+
+    // Alive sort timer.
+    Teuchos::RCP<Teuchos::Time> d_alive_sort_timer;    
+#endif
+    
 };
 
 } // end namespace profugus

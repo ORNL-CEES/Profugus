@@ -61,16 +61,27 @@ SET(PHYSICS_SOURCES
   Uniform_Source.cc
   VR_Roulette.cc
   )
+SET(CUDA_SOURCES
+  Domain_Transporter.cu
+  )
 LIST(APPEND HEADERS ${PHYSICS_HEADERS})
 LIST(APPEND SOURCES ${PHYSICS_SOURCES})
 
 ##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
 
+SET(cuda_libs)
+
+PACKAGE_ADD_CUDA_LIBRARY(
+  mc_physics_cuda
+  SOURCES ${CUDA_SOURCES})
+SET(cuda_libs mc_physics_cuda)
+
 TRIBITS_ADD_LIBRARY(
   mc_physics
   NOINSTALLHEADERS ${HEADERS}
-  SOURCES ${SOURCES})
+  SOURCES ${SOURCES}
+  DEPLIBS ${cuda_libs})
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package
