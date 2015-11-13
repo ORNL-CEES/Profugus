@@ -112,19 +112,21 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
 // PRIVATE MEMBER FUNCTIONS
 //---------------------------------------------------------------------------//
 
-Teuchos::RCP<MV> MultiSplitting::computeIteration()
+void MultiSplitting::computeIteration(Teuchos::RCP<MV> &sol)
 {
     unsigned int N = d_A->getGlobalNumRows();
     Teuchos::RCP<const MAP> map = d_A->getDomainMap();
     Teuchos::RCP<MV> x_partial = Teuchos::RCP<MV>( new MV(map, d_num_blocks) );
     Teuchos::RCP<MV> x_average( new MV(d_A->getDomainMap(),1) );
     Teuchos::ArrayRCP<SCALAR> x_aver = x_average->getDataNonConst(0);
+    Teuchos::ArrayRCP<SCALAR> sol2 = sol->getDataNonConst(0);
+
     for(unsigned int i=0; i!=N; ++i)
 	x_aver[i]=0.0;
 
     for(unsigned int p=0; p!=d_num_blocks; ++p)
     {
-        std::cout<<"p= "<<p<<std::endl;
+        //std::cout<<"p= "<<p<<std::endl;
         splitting split= d_multisplitting->buildSplitting(p);
         Teuchos::RCP<CRS_MATRIX> A = split.A;
         Teuchos::RCP<MV> b = split.b;
@@ -134,14 +136,19 @@ Teuchos::RCP<MV> MultiSplitting::computeIteration()
     	Teuchos::RCP<alea::AleaSolver> solver =
        		alea::LinearSolverFactory::buildSolver(d_inner_solver,A,d_pl);
     	solver->apply(*b,*x_p);
-    	Teuchos::ArrayRCP<SCALAR> x_p2 = x_p->getDataNonConst(0);
-    	Teuchos::ArrayRCP<SCALAR> E_2 = E->getDataNonConst(0);
+    	Teuchos::ArrayRCP<const SCALAR> x_p2 = x_p->getData(0);
+    	Teuchos::ArrayRCP<const SCALAR> E_2 = E->getData(0);
 	for(unsigned int i=0; i!=N; ++i)
+        {
      		x_aver[i] = x_aver[i] + x_p2[i]*E_2[i];
+	}
 
     }
-std::cout<<"Qui ci arrivo"<<std::endl;
-    return x_average;
+    for(unsigned int i=0; i!=N; ++i)
+    {
+	sol2[i] = sol2[i] + x_aver[i];
+    }
+    
 }
 //---------------------------------------------------------------------------//
 /*!
@@ -176,16 +183,17 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x)
 
         // update the multisplitting system with the residual as RHS
         d_multisplitting.reset( new LinearSystem_MultiSplitting(d_pl, d_A, r_pointer) );
+
+        computeIteration(x);
+
     	// Compute residual r = b - A*x
     	d_A->apply(*x,r);
     	r.update(1.0,*d_b,-1.0);
     	r_pointer.reset( new MV(r) );
-
-        x = computeIteration();
         // Check convergence on true (rather than preconditioned) residual
         r.norm2(r_norm());
  
-	std::cout<<"verbosity: "<<b_verbosity<<std::endl;
+	//std::cout<<"verbosity: "<<b_verbosity<<std::endl;
         if( b_verbosity >= HIGH )
         {
             std::cout << "Relative residual norm at iteration " << b_num_iters

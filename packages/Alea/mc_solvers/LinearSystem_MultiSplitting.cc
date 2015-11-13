@@ -159,11 +159,11 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
     Teuchos::RCP<const MAP> indexer = d_A->getColMap();
     size_t num_entries;
     int err;
-    for( int index=0; index < d_partitions[p][0]; ++index )
+    for( int index=0; index != d_partitions[p][0]; ++index )
     {
         SCALAR diag_val=0.0;
         d_A->getLocalRowCopy(index,row_inds(),row_vals(),num_entries);
-        for( size_t j=0; j<num_entries; ++j )
+        for( size_t j=0; j!=num_entries; ++j )
         {
             if( row_inds[j] == index )
                 diag_val = row_vals[j];
@@ -181,12 +181,14 @@ Teuchos::RCP<CRS_MATRIX> LinearSystem_MultiSplitting::computeBlockDiagPrec(unsig
     
     // Fill diagonal block
     diag_block->putScalar(0.0);
-    for( int i=0; i<block_size; ++i )
+    for( int i=0; i!=block_size; ++i )
     {
-        d_A->getLocalRowCopy(block_start+i,row_inds(),row_vals(),num_entries);
-        for( size_t j=0; j<num_entries; ++j )
+	//std::cout<<"constructor of the diagonal called"<<std::endl;
+        d_A->getLocalRowCopy(block_start + i,row_inds(),row_vals(),num_entries);
+        for( size_t j=0; j!=num_entries; ++j )
+
         {
-             if( row_inds[j] >= block_start && row_inds[j] < block_end )
+             if( row_inds[j] >= block_start && row_inds[j] <= block_end )
              {
                  (*diag_block)(i,row_inds[j]-block_start) = row_vals[j];
              }

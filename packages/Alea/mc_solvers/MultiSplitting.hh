@@ -92,7 +92,7 @@ class MultiSplitting
     Teuchos::RCP<LinearSystem_MultiSplitting> d_multisplitting;
 
     //Method to compute a MultiSplittng step
-    Teuchos::RCP<MV> computeIteration();
+    void computeIteration(Teuchos::RCP<MV> &);
     
 };
 
