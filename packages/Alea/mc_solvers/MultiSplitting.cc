@@ -124,7 +124,7 @@ Teuchos::RCP<MV> MultiSplitting::computeIteration()
 
     for(unsigned int p=0; p!=d_num_blocks; ++p)
     {
-        //std::cout<<"p= "<<p<<std::endl;
+        std::cout<<"p= "<<p<<std::endl;
         splitting split= d_multisplitting->buildSplitting(p);
         Teuchos::RCP<CRS_MATRIX> A = split.A;
         Teuchos::RCP<MV> b = split.b;
@@ -138,8 +138,9 @@ Teuchos::RCP<MV> MultiSplitting::computeIteration()
     	Teuchos::ArrayRCP<SCALAR> E_2 = E->getDataNonConst(0);
 	for(unsigned int i=0; i!=N; ++i)
      		x_aver[i] = x_aver[i] + x_p2[i]*E_2[i];
-    }
 
+    }
+std::cout<<"Qui ci arrivo"<<std::endl;
     return x_average;
 }
 //---------------------------------------------------------------------------//

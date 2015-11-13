@@ -112,11 +112,11 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
     d_partitions[p][0]=0;
     d_partitions[p][1]=block_size - 1;
     p=1;
-    
+   
     while(p!=d_num_blocks - 1)
     {
     	d_partitions[p][0] = d_partitions[p-1][1] + 1 - overlapping;
-    	d_partitions[p][1] = d_partitions[p-1][1] + 1 - overlapping + block_size;
+    	d_partitions[p][1] = d_partitions[p-1][1] - overlapping + block_size;
         p++;
     }
              
@@ -125,7 +125,7 @@ LinearSystem_MultiSplitting::createPartitions( Teuchos::RCP<Teuchos::ParameterLi
     
     d_partitions_computed = true;
 
-/*    for(unsigned int i =0; i!=d_num_blocks; ++i)
+    /* for(unsigned int i =0; i!=d_num_blocks; ++i)
 	std::cout<<"partition "<<i<<":\t"<<d_partitions[i][0]<<"\t"<<d_partitions[i][1]<<std::endl;*/
 
 }
