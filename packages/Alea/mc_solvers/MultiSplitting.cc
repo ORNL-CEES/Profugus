@@ -114,24 +114,32 @@ MultiSplitting::MultiSplitting( Teuchos::RCP<Teuchos::ParameterList> &pl )
 
 Teuchos::RCP<MV> MultiSplitting::computeIteration()
 {
+    unsigned int N = d_A->getGlobalNumRows();
     Teuchos::RCP<const MAP> map = d_A->getDomainMap();
     Teuchos::RCP<MV> x_partial = Teuchos::RCP<MV>( new MV(map, d_num_blocks) );
-    Teuchos::RCP<MV> x_average;
+    Teuchos::RCP<MV> x_average( new MV(d_A->getDomainMap(),1) );
+    Teuchos::ArrayRCP<SCALAR> x_aver = x_average->getDataNonConst(0);
+    for(unsigned int i=0; i!=N; ++i)
+	x_aver[i]=0.0;
 
-    for(unsigned int p=0; p!=10; ++p)
+    for(unsigned int p=0; p!=d_num_blocks; ++p)
     {
-        std::cout<<"p= "<<p<<std::endl;
+        //std::cout<<"p= "<<p<<std::endl;
         splitting split= d_multisplitting->buildSplitting(p);
         Teuchos::RCP<CRS_MATRIX> A = split.A;
         Teuchos::RCP<MV> b = split.b;
         Teuchos::RCP<MV> E = split.E;
-        Teuchos::RCP<MV> x_p;
+    	Teuchos::RCP<MV> x_p( new MV(d_A->getDomainMap(),1) );
         
-//    	Teuchos::RCP<alea::AleaSolver> solver =
-//       		alea::LinearSolverFactory::buildSolver(d_inner_solver,A,d_pl);
-//    	solver->apply(*b,*x_p);
+    	Teuchos::RCP<alea::AleaSolver> solver =
+       		alea::LinearSolverFactory::buildSolver(d_inner_solver,A,d_pl);
+    	solver->apply(*b,*x_p);
+    	Teuchos::ArrayRCP<SCALAR> x_p2 = x_p->getDataNonConst(0);
+    	Teuchos::ArrayRCP<SCALAR> E_2 = E->getDataNonConst(0);
+	for(unsigned int i=0; i!=N; ++i)
+     		x_aver[i] = x_aver[i] + x_p2[i]*E_2[i];
     }
-    std::cout<<"Esco del ciclo for"<<std::endl;
+
     return x_average;
 }
 //---------------------------------------------------------------------------//
@@ -155,22 +163,24 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x)
         
     MAGNITUDE r0_norm = r_norm[0];
 
+    // Compute residual r = b - A*x
+    d_A->apply(*x,r);
+    r.update(1.0,*d_b,-1.0);
+    Teuchos::RCP<const MV> r_pointer = Teuchos::RCP<const MV>(new MV(r));
+
     b_num_iters = 0;
     while( true )
     {
         b_num_iters++;
 
-        // Compute residual r = b - A*x
-        d_A->apply(*x,r);
-        r.update(1.0,*d_b,-1.0);
-        std::cout<<"residual norm: "<<r_norm[0]<<std::endl;
-        Teuchos::RCP<const MV> r_pointer = Teuchos::RCP<const MV>(new MV(r));
-
         // update the multisplitting system with the residual as RHS
         d_multisplitting.reset( new LinearSystem_MultiSplitting(d_pl, d_A, r_pointer) );
+    	// Compute residual r = b - A*x
+    	d_A->apply(*x,r);
+    	r.update(1.0,*d_b,-1.0);
+    	r_pointer.reset( new MV(r) );
 
-	//std::cout<<d_inner_solver<<std::endl;
-        Teuchos::RCP<MV> aux = computeIteration();
+        x = computeIteration();
         // Check convergence on true (rather than preconditioned) residual
         r.norm2(r_norm());
  
@@ -213,7 +223,6 @@ void MultiSplitting::solve(Teuchos::RCP<MV> &x)
             b_num_iters = -b_num_iters;
             break;
         }
-
     }
          
 }

@@ -418,7 +418,7 @@ AdjointMcCuda::AdjointMcCuda(
     d_num_curand_calls = 0;
     d_rng_seed = pl->get<int>("rng_seed",1234);
 
-    std::cout<<"Number of device called: "<<d_device_number<<std::endl;
+//    std::cout<<"Number of device called: "<<d_device_number<<std::endl;
 }
 
 
@@ -547,7 +547,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     double time = 0;
     double cumulate_time = 0;
 
-    std::cout<<"Number of loops: "<<num_loops<<std::endl;	
+//    std::cout<<"Number of loops: "<<num_loops<<std::endl;	
 
     curandState *rng_states;
     cudaError e = cudaMalloc( (void **)&rng_states,
@@ -562,7 +562,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
 
     if( d_seed_type==SEED_TYPE::SAME )
     {
-        std::cout<<"Same seed instantiated for all the threads"<<std::endl;
+        //std::cout<<"Same seed instantiated for all the threads"<<std::endl;
 
     	// Initialize RNG
     	SameSeed seed(d_rng_seed);
@@ -571,7 +571,7 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     }
     else if ( d_seed_type==SEED_TYPE::DIFF )
     {
-        std::cout<<"Different adjacent seeds instantiated"<<std::endl;
+        //std::cout<<"Different adjacent seeds instantiated"<<std::endl;
 
  	DifferentSeed seed( BLOCK_SIZE*num_blocks, d_rng_seed );
     	initialize_rng<DifferentSeed><<<num_blocks, BLOCK_SIZE>>>(rng_states,  
@@ -579,8 +579,8 @@ void AdjointMcCuda::solve(const MV &b, MV &x)
     }
     else if ( d_seed_type==SEED_TYPE::RAND )
     {
-        std::cout<<"Different random seeds instantiated from 0 to "<<
-         RAND_MAX<<std::endl;
+        //std::cout<<"Different random seeds instantiated from 0 to "<<
+         //RAND_MAX<<std::endl;
 
     	RandomSeed seed( BLOCK_SIZE * num_blocks );
  

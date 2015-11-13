@@ -188,11 +188,11 @@ void AdjointMcAdaptive::solve(const MV &b, MV &x)
         rel_std_dev = std_dev_1norm / soln_1norm;
 
 
-        if( d_verbosity == HIGH )
+        /*if( d_verbosity == HIGH )
         {
             std::cout << "Relative std dev after " << num_histories <<
                 " histories : " << rel_std_dev << std::endl;
-        }
+        }*/
     }
 
     // Add rhs for expected value
