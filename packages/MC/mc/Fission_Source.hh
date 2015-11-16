@@ -80,7 +80,7 @@ class Fission_Source : public Source
     typedef def::Vec_Int                            Vec_Int;
     //@}
 
-  private:
+  protected:
     // >>> DATA
 
     // Fission site container.
@@ -109,7 +109,7 @@ class Fission_Source : public Source
     // >>> DERIVED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    SP_Particle get_particle();
+    virtual SP_Particle get_particle();
 
     //! Boolean operator for source (true when source still has particles).
     bool empty() const { return d_num_left == 0; }
@@ -151,7 +151,7 @@ class Fission_Source : public Source
     //! Set a new number per cycle.
     void update_Np(size_type np) { d_np_requested = np; }
 
-  private:
+  protected:
     // >>> IMPLEMENTATION
 
     typedef Source Base;
