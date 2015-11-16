@@ -68,6 +68,10 @@ inline T sample_linear(RNG& rng, const T left, const T right);
 template<class T>
 T sample_linear(const T xi_lr, const T xi_linear, const T left, const T right);
 
+// Sample Epanechnikov (parabolic) kernel on [-1,1]
+template<class RNG>
+double sample_epan(RNG &rng);
+
 //---------------------------------------------------------------------------//
 } // end namespace sampler
 
