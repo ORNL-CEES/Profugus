@@ -1,0 +1,26 @@
+/*-----------------------------------*-C-*-----------------------------------*/
+/*!
+ * \file   cuda_utils/config.h
+ * \author Seth R Johnson
+ * \date   Thu Apr 11 09:11:29 2013
+ * \brief  configure #defines for package cuda
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC
+ */
+/*---------------------------------------------------------------------------*/
+
+#ifndef cuda_utils_config_h
+#define cuda_utils_config_h
+
+/* CUDA support */
+#cmakedefine USE_CUDA
+
+/* TRILINOS BUILD REQUIREMENTS */
+#ifndef HAVE_CONFIG_H
+#define HAVE_CONFIG_H
+#endif
+
+#endif /* cuda_utils_config_h */
+
+/*---------------------------------------------------------------------------*/
+/*           end of cuda_utils/config.h */
+/*---------------------------------------------------------------------------*/

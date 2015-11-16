@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   Nemesis/utils/View_Field.hh
+ * \file   Utils/utils/View_Field.hh
  * \author Gregory G. Davidson
  * \date   Thu Aug  9 09:47:05 2007
  * \brief  View_Field class declaration.
@@ -8,19 +8,19 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef Nemesis_utils_View_Field_hh
-#define Nemesis_utils_View_Field_hh
+#ifndef Utils_utils_View_Field_hh
+#define Utils_utils_View_Field_hh
 
 #include <cstring>
 #include <cstddef>
 #include <iterator>
 #include <vector>
 
-#include "Nemesis/harness/DBC.hh"
-#include "Nemesis/harness/SWIG.hh"
+#include "Utils/harness/DBC.hh"
+#include "Utils/harness/SWIG.hh"
 #include "View_Field_Iterator.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -352,18 +352,18 @@ inline const_View_Field<T> make_const_view(const std::vector<T,A> &vec);
 // Views of views
 
 template<typename T>
-inline View_Field<T> make_view(nemesis::View_Field<T> view);
+inline View_Field<T> make_view(profugus::View_Field<T> view);
 
 template<typename T>
-inline const_View_Field<T> make_view(nemesis::const_View_Field<T> view);
+inline const_View_Field<T> make_view(profugus::const_View_Field<T> view);
 
 template<typename T>
-inline const_View_Field<T> make_const_view(nemesis::const_View_Field<T> view);
+inline const_View_Field<T> make_const_view(profugus::const_View_Field<T> view);
 
 
 //---------------------------------------------------------------------------//
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 // INLINE FUNCTIONS
@@ -371,8 +371,8 @@ inline const_View_Field<T> make_const_view(nemesis::const_View_Field<T> view);
 
 #include "View_Field.i.hh"
 
-#endif // Nemesis_utils_View_Field_hh
+#endif // Utils_utils_View_Field_hh
 
 //---------------------------------------------------------------------------//
-//              end of nemesis/View_Field.hh
+//              end of profugus/View_Field.hh
 //---------------------------------------------------------------------------//

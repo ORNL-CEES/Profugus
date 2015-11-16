@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   Nemesis/utils/View_Field.i.hh
+ * \file   Utils/utils/View_Field.i.hh
  * \author Gregory G. Davidson
  * \date   Tue Feb 16 08:52:06 2010
  * \brief  Member definitions of View_Field and const_View_Field classes.
@@ -8,12 +8,12 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef Nemesis_utils_View_Field_i_hh
-#define Nemesis_utils_View_Field_i_hh
+#ifndef Utils_utils_View_Field_i_hh
+#define Utils_utils_View_Field_i_hh
 
 #include <cstring>
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -699,7 +699,7 @@ const_View_Field<T> make_const_view(const std::vector<T,A> &vec)
  * \brief Re-emit a view
  */
 template<typename T>
-View_Field<T> make_view(nemesis::View_Field<T> view)
+View_Field<T> make_view(profugus::View_Field<T> view)
 {
     return view;
 }
@@ -709,7 +709,7 @@ View_Field<T> make_view(nemesis::View_Field<T> view)
  * \brief Re-emit a view
  */
 template<typename T>
-const_View_Field<T> make_view(nemesis::const_View_Field<T> view)
+const_View_Field<T> make_view(profugus::const_View_Field<T> view)
 {
     return view;
 }
@@ -719,15 +719,15 @@ const_View_Field<T> make_view(nemesis::const_View_Field<T> view)
  * \brief Re-emit a view
  */
 template<typename T>
-const_View_Field<T> make_const_view(nemesis::const_View_Field<T> view)
+const_View_Field<T> make_const_view(profugus::const_View_Field<T> view)
 {
     return view;
 }
 
-}  // end namespace nemesis
+}  // end namespace profugus
 
-#endif // Nemesis_utils_View_Field_i_hh
+#endif // Utils_utils_View_Field_i_hh
 
 //---------------------------------------------------------------------------//
-//              end of nemesis/View_Field.i.hh
+//              end of profugus/View_Field.i.hh
 //---------------------------------------------------------------------------//

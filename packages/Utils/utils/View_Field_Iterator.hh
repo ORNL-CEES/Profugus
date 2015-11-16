@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   Nemesis/utils/View_Field_Iterator.hh
+ * \file   Utils/utils/View_Field_Iterator.hh
  * \author Gregory G. Davidson
  * \date   Wed Oct 08 11:07:08 2014
  * \brief  View_Field_Iterator class definition.
@@ -8,14 +8,14 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef Nemesis_utils_View_Field_Iterator_hh
-#define Nemesis_utils_View_Field_Iterator_hh
+#ifndef Utils_utils_View_Field_Iterator_hh
+#define Utils_utils_View_Field_Iterator_hh
 
 #include <iterator>
 
-#include "Nemesis/harness/DBC.hh"
+#include "Utils/harness/DBC.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //===========================================================================//
@@ -277,7 +277,7 @@ bool operator!=(const const_VF_Iterator<T> &left,
     return !(right == left);
 }
 
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 // INLINE FUNCTION DEFINITIONS
@@ -285,7 +285,7 @@ bool operator!=(const const_VF_Iterator<T> &left,
 
 #include "View_Field_Iterator.i.hh"
 
-#endif // Nemesis_utils_View_Field_Iterator_hh
+#endif // Utils_utils_View_Field_Iterator_hh
 
 //---------------------------------------------------------------------------//
 //                 end of View_Field_Iterator.hh

@@ -14,6 +14,8 @@ INCLUDE(UtilsTest)
 ## TESTS
 ##---------------------------------------------------------------------------##
 
+ADD_UTILS_TEST(tstView_Field_Iterator.cc NP 1)
+ADD_UTILS_TEST(tstView_Field.cc          NP 1)
 ADD_UTILS_TEST(tstStatic_Map.cc          NP 1)
 ADD_UTILS_TEST(tstVector_Lite.cc         NP 1)
 ADD_UTILS_TEST(tstContainer_Functions.cc NP 1)

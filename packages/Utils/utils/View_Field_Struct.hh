@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   Nemesis/utils/View_Field_Struct.hh
+ * \file   Utils/utils/View_Field_Struct.hh
  * \author Seth R Johnson
  * \date   Mon Jan 26 20:14:12 2015
  * \brief  View_Field_Struct helper function.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef Nemesis_utils_View_Field_Struct_hh
-#define Nemesis_utils_View_Field_Struct_hh
+#ifndef Utils_utils_View_Field_Struct_hh
+#define Utils_utils_View_Field_Struct_hh
 
 #include <type_traits>
 #include <cstddef>
@@ -18,7 +18,7 @@
 
 //---------------------------------------------------------------------------//
 /*!
- * \def NEMESIS_MAKE_STRUCT_VIEW
+ * \def PROFUGUS_MAKE_STRUCT_VIEW
  * \brief Return a view of a member inside a view field of structs.
  *
  * As an example, suppose that we want to keep sampling data for CE
@@ -35,9 +35,9 @@
 
     std::vector<EnergyPoint> points;
 
-    nemesis::const_View_Field<double> energies()
+    profugus::const_View_Field<double> energies()
     {
-        return NEMESIS_MAKE_STRUCT_VIEW(points, energy);
+        return PROFUGUS_MAKE_STRUCT_VIEW(points, energy);
     }
  * \endcode
  *
@@ -46,18 +46,18 @@
  * \param VIEW View field of structs to extract
  * \param MEMBER Name of the member inside that struct
  */
-#define NEMESIS_MAKE_STRUCT_VIEW_IMPL(VIEW, MEMBER, STRUCT_TYPE) \
-    ::nemesis::detail::make_struct_view<STRUCT_TYPE, \
+#define PROFUGUS_MAKE_STRUCT_VIEW_IMPL(VIEW, MEMBER, STRUCT_TYPE) \
+    ::profugus::detail::make_struct_view<STRUCT_TYPE, \
                                         decltype(STRUCT_TYPE::MEMBER) \
-                                       >( ::nemesis::make_view(VIEW), \
+                                       >( ::profugus::make_view(VIEW), \
                                           offsetof(STRUCT_TYPE, MEMBER))
 
-#define NEMESIS_MAKE_STRUCT_VIEW(VIEW, MEMBER) \
-    (NEMESIS_MAKE_STRUCT_VIEW_IMPL(VIEW, MEMBER, \
+#define PROFUGUS_MAKE_STRUCT_VIEW(VIEW, MEMBER) \
+    (PROFUGUS_MAKE_STRUCT_VIEW_IMPL(VIEW, MEMBER, \
                                  std::decay<decltype(VIEW)>::type::value_type))
 
 
-namespace nemesis
+namespace profugus
 {
 namespace detail
 {
@@ -65,11 +65,11 @@ namespace detail
 /*!
  * \brief Create a struct view from given struct and the member value offset.
  *
- * This should only be called through the NEMESIS_MAKE_STRUCT_VIEW macro.
+ * This should only be called through the PROFUGUS_MAKE_STRUCT_VIEW macro.
  */
 template<class S, class T>
-nemesis::const_View_Field<T>
-make_struct_view(nemesis::const_View_Field<S> view_struct,
+profugus::const_View_Field<T>
+make_struct_view(profugus::const_View_Field<S> view_struct,
                  std::size_t                  offset)
 {
     static_assert(sizeof(S) % sizeof(T) == 0,
@@ -83,7 +83,7 @@ make_struct_view(nemesis::const_View_Field<S> view_struct,
         = reinterpret_cast<const char*>(view_struct.data() + view_struct.size())
             + offset;
 
-    return nemesis::const_View_Field<T>(
+    return profugus::const_View_Field<T>(
             reinterpret_cast<const T*>(begin_ptr),
             reinterpret_cast<const T*>(end_ptr),
             sizeof(S) / sizeof(T));
@@ -93,11 +93,11 @@ make_struct_view(nemesis::const_View_Field<S> view_struct,
 /*!
  * \brief Create a struct view from given struct and the member value offset.
  *
- * This should only be called through the NEMESIS_MAKE_STRUCT_VIEW macro.
+ * This should only be called through the PROFUGUS_MAKE_STRUCT_VIEW macro.
  */
 template<class S, class T>
-nemesis::View_Field<T>
-make_struct_view(nemesis::View_Field<S> view_struct,
+profugus::View_Field<T>
+make_struct_view(profugus::View_Field<S> view_struct,
                  std::size_t            offset)
 {
     static_assert(sizeof(S) % sizeof(T) == 0,
@@ -111,7 +111,7 @@ make_struct_view(nemesis::View_Field<S> view_struct,
         = reinterpret_cast<char*>(view_struct.data() + view_struct.size())
             + offset;
 
-    return nemesis::View_Field<T>(
+    return profugus::View_Field<T>(
             reinterpret_cast<T*>(begin_ptr),
             reinterpret_cast<T*>(end_ptr),
             sizeof(S) / sizeof(T));
@@ -121,11 +121,11 @@ make_struct_view(nemesis::View_Field<S> view_struct,
 } // end namespace detail
 
 //---------------------------------------------------------------------------//
-} // end namespace nemesis
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
-#endif // Nemesis_utils_View_Field_Struct_hh
+#endif // Utils_utils_View_Field_Struct_hh
 
 //---------------------------------------------------------------------------//
-// end of Nemesis/utils/View_Field_Struct.hh
+// end of Utils/utils/View_Field_Struct.hh
 //---------------------------------------------------------------------------//

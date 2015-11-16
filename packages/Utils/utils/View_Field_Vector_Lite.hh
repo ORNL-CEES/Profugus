@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   Nemesis/utils/View_Field_Vector_Lite.hh
+ * \file   Utils/utils/View_Field_Vector_Lite.hh
  * \author Seth R Johnson
  * \date   Mon Mar 16 15:35:15 2015
  * \brief  View_Field adapters for Vector_Lite
@@ -8,13 +8,13 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef Nemesis_utils_View_Field_Vector_Lite_hh
-#define Nemesis_utils_View_Field_Vector_Lite_hh
+#ifndef Utils_utils_View_Field_Vector_Lite_hh
+#define Utils_utils_View_Field_Vector_Lite_hh
 
 #include "View_Field.hh"
 #include "Vector_Lite.hh"
 
-namespace nemesis
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -56,10 +56,10 @@ inline const_View_Field<T> make_const_view(const Vector_Lite<T,N> &vec)
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace nemesis
+} // end namespace profugus
 
-#endif // Nemesis_utils_View_Field_Vector_Lite_hh
+#endif // Utils_utils_View_Field_Vector_Lite_hh
 
 //---------------------------------------------------------------------------//
-// end of Nemesis/utils/View_Field_Vector_Lite.hh
+// end of Utils/utils/View_Field_Vector_Lite.hh
 //---------------------------------------------------------------------------//
