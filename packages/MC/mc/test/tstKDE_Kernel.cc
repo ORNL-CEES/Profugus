@@ -210,18 +210,25 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
 }
 
 //---------------------------------------------------------------------------//
-#if 0
 TEST_F(KernelTest, test_bounds)
 {
+    std::cout << "Ok_1" << std::endl;
+
     // Create a KDE kernel
     KDE_Kernel kernel(b_geometry, b_physics);
 
-    // Set the bandwidth
+    std::cout << "Ok_2" << std::endl;
+
+    // Set the bandwidth in the pin (cell 1)
     double bandwidth = 2.5;
-    kernel.set_bandwidth(bandwidth);
+    kernel.set_bandwidth(1, bandwidth);
+
+    std::cout << "Ok_3" << std::endl;
 
     // Create random number generator
-    RNG_Control::RNG rng = b_rcon->rng();
+    profugus::RNG rng = b_rcon->rng();
+
+    std::cout << "Ok_4" << std::endl;
 
     // Do 1000 samples
     for (unsigned int i = 0; i < 1000; ++i)
@@ -229,8 +236,12 @@ TEST_F(KernelTest, test_bounds)
         // Create a fission site at the middle of the top-right pin
         Space_Vector site_pos(1.89, 1.89, 7.14);
 
+        std::cout << "Ok_5" << std::endl;
+
         // Sample the position
         Space_Vector sampled_pos = kernel.sample_position(site_pos, rng);
+
+        std::cout << "Ok_6" << std::endl;
 
         // Verify that the x,y coordinates are the same, and the z-position is
         // within the bandwidth
@@ -242,6 +253,7 @@ TEST_F(KernelTest, test_bounds)
 }
 
 //---------------------------------------------------------------------------//
+#if 0
 
 TEST_F(KernelTest, test_in_pin)
 {

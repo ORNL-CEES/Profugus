@@ -87,6 +87,10 @@ class KDE_Kernel
     //! Return the bandwidths for all cells
     std::vector<double> get_bandwidths() const;
 
+    //! Manually set the bandwidth
+    void set_bandwidth(geometry::cell_type cell,
+                       double              bandwidth);
+
     //! Sample a new position
     Space_Vector sample_position(const Space_Vector &orig_position,
                                  RNG                &rng) const;

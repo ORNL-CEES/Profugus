@@ -143,6 +143,18 @@ KDE_Kernel::get_bandwidths() const
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Set the bandwidth for a given cell.
+ */
+void KDE_Kernel::set_bandwidth(geometry::cell_type cell,
+                               double              bandwidth)
+{
+    REQUIRE(d_bndwidth_map.find(cell) != d_bndwidth_map.end());
+
+    d_bndwidth_map[cell] = bandwidth;
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Sample a new position.
  *
  * If the new position is outside the fissionable region, it is rejected.
@@ -155,33 +167,58 @@ KDE_Kernel::sample_position(const Space_Vector &orig_position,
     REQUIRE(d_geometry);
     REQUIRE(rng.assigned());
 
+    std::cout << "Ok_A" << std::endl;
+
     // Get the cell at the position
     cell_type cellid = d_geometry->cell(orig_position);
+
+    std::cout << "Ok_B" << std::endl;
 
     size_type failures = 0;
     do
     {
+
+        std::cout << "Ok_C" << std::endl;
         // Sample Epanechnikov kernel
         double epsilon = sampler::sample_epan(rng);
+
+        std::cout << "Ok_D" << std::endl;
 
         // Get the bandwidth
         CHECK(d_bndwidth_map.count(cellid) == 1);
         double bandwidth = d_bndwidth_map.find(cellid)->second;
         CHECK(bandwidth >= 0.0);
 
+        std::cout << "Ok_E" << std::endl;
+
         // Create a new position
         Space_Vector new_pos(orig_position[def::X],
                              orig_position[def::Y],
                              orig_position[def::Z] + epsilon*bandwidth/2.0);
 
-        // Get matid from sampled point (may raise error if outside
-        // geometry)
-        if (d_physics->is_fissionable(d_geometry->matid(new_pos)))
+        std::cout << "Ok_F" << std::endl;
+
+        // Ensure that the sampled point is in the geometry
+        if (d_geometry->boundary_state(new_pos) == geometry::INSIDE)
         {
-            // Accept: sampled point is fissionable
-            d_num_sampled += failures + 1;
-            ++d_num_accepted;
-            return new_pos;
+            // Get the matid for sampled point
+            unsigned int matid = d_geometry->matid(new_pos);
+
+            std::cout << "Matid: " << matid << std::endl;
+            std::cout << "Ok_G" << std::endl;
+
+            // Get matid from sampled point (may raise error if outside
+            // geometry)
+            if (d_physics->is_fissionable(d_geometry->matid(new_pos)))
+            {
+
+                std::cout << "Ok_H" << std::endl;
+
+                // Accept: sampled point is fissionable
+                d_num_sampled += failures + 1;
+                ++d_num_accepted;
+                return new_pos;
+            }
         }
 
         // Increment failure counter.
