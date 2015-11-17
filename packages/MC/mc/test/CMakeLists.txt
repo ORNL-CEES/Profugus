@@ -48,6 +48,7 @@ ADD_UTILS_TEST(tstFission_Source.cc           DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstUniform_Source.cc           DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstFission_Matrix_Tally        DEPLIBS mc_test_lib)
 ADD_UTILS_TEST(tstFixed_Source_Solver.cc      DEPLIBS mc_test_lib)
+ADD_UTILS_TEST(tstKDE_Kernel.cc               DEPLIBS mc_test_lib)
 
 ##---------------------------------------------------------------------------##
 ## FILES
