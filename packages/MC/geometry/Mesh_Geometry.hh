@@ -112,6 +112,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         return c;
     }
 
+    //! Return the current cell ID from a position inside the mesh
+    geometry::cell_type cell(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<Mesh_State>::cell(r);
+    }
+
     //! Return the current material ID
     geometry::matid_type matid(const Geo_State_t &state) const
     {

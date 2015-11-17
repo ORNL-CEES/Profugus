@@ -60,6 +60,9 @@ class Tracking_Geometry
     //! Return the current cell ID, valid only when inside the mesh
     virtual geometry::cell_type cell(const Geo_State_t &state) const = 0;
 
+    //! Return the cell ID from a given position inside the mesh
+    inline geometry::cell_type cell(const Space_Vector &r) const;
+
     //! Return the current material ID
     virtual geometry::matid_type matid(const Geo_State_t &state) const = 0;
 
@@ -98,6 +101,27 @@ class Tracking_Geometry
 template<class Geo_State>
 Tracking_Geometry<Geo_State>::~Tracking_Geometry()
 {
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the cell that contains a given position.
+ */
+template<class Geo_State>
+geometry::cell_type
+Tracking_Geometry<Geo_State>::cell(const Space_Vector &r) const
+{
+    // Create a dummy angle
+    Space_Vector dummy_dir(1.0, 0.0, 0.0);
+
+    // Create a temporary Geo state
+    Geo_State_t geo_state;
+
+    // Initialize the Geo state with the given position
+    this->initialize(r, dummy_dir, geo_state);
+
+    // Return the cell from the geometry state
+    return this->cell(geo_state);
 }
 
 } // end namespace profugus
