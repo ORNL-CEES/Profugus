@@ -152,6 +152,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         return geometry::INSIDE;
     }
 
+    //! Return the boundary state for the given location
+    geometry::Boundary_State boundary_state(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<Mesh_State>::boundary_state(r);
+    }
+
     //! Return the current position.
     Space_Vector position(const Geo_State_t& state) const
     {

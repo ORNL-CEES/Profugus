@@ -198,6 +198,12 @@ class Geometry : public Tracking_Geometry<RTK_State>
         return geometry::INSIDE;
     }
 
+    //! Return the boundary state for a given position
+    geometry::Boundary_State boundary_state(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<RTK_State>::boundary_state(r);
+    }
+
     //! Return the current position.
     Space_Vector position(const Geo_State_t &state) const { return state.d_r; }
 

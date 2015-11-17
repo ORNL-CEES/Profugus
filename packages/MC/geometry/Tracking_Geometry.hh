@@ -73,6 +73,9 @@ class Tracking_Geometry
     virtual geometry::Boundary_State boundary_state(const Geo_State_t &state)
         const = 0;
 
+    //! Return the state with respect to outer geometry boundary for a point
+    inline geometry::Boundary_State boundary_state(const Space_Vector &r) const;
+
     //! Return the current position.
     virtual Space_Vector position(const Geo_State_t& state) const = 0;
 
@@ -146,6 +149,27 @@ Tracking_Geometry<Geo_State>::matid(const Space_Vector &r) const
 
     // Return the cell from the geometry state
     return this->matid(geo_state);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the boundary state for a given position.
+ */
+template<class Geo_State>
+geometry::Boundary_State
+Tracking_Geometry<Geo_State>::boundary_state(const Space_Vector &r) const
+{
+    // Create a dummy angle
+    Space_Vector dummy_dir(1.0, 0.0, 0.0);
+
+    // Create a temporary Geo state
+    Geo_State_t geo_state;
+
+    // Initialize the Geo state with the given position
+    this->initialize(r, dummy_dir, geo_state);
+
+    // Return the cell from the geometry state
+    return this->boundary_state(geo_state);
 }
 
 } // end namespace profugus
