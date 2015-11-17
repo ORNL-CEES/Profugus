@@ -167,6 +167,9 @@ TEST_F(MeshGeometryTest, tags)
         EXPECT_EQ(cell * 2 + 1, geo.matid(state));
 
         EXPECT_EQ(INSIDE, geo.boundary_state(state));
+
+        // Check matid search
+        EXPECT_EQ(geo.matid(state), geo.matid(r));
     }
 
     r[Z] = 100.;

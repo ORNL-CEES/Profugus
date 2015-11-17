@@ -173,6 +173,12 @@ class Geometry : public Tracking_Geometry<RTK_State>
         return d_array->matid(state);
     }
 
+    //! Return the material ID from the given location
+    geometry::matid_type matid(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<RTK_State>::matid(r);
+    }
+
     //! Return the state with respect to outer geometry boundary
     geometry::Boundary_State boundary_state(const Geo_State_t &state) const
     {

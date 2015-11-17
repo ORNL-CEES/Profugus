@@ -128,6 +128,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         return (*d_materials)[cell(state)];
     }
 
+    //! Return the material ID for the given location
+    geometry::matid_type matid(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<Mesh_State>::matid(r);
+    }
+
     //! Return the state with respect to outer geometry boundary
     geometry::Boundary_State boundary_state(const Geo_State_t &state) const
     {

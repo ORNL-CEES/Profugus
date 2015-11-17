@@ -66,6 +66,9 @@ class Tracking_Geometry
     //! Return the current material ID
     virtual geometry::matid_type matid(const Geo_State_t &state) const = 0;
 
+    //! Return the mateiral ID from a given position inside the mesh
+    inline geometry::matid_type matid(const Space_Vector &r) const;
+
     //! Return the state with respect to outer geometry boundary
     virtual geometry::Boundary_State boundary_state(const Geo_State_t &state)
         const = 0;
@@ -122,6 +125,27 @@ Tracking_Geometry<Geo_State>::cell(const Space_Vector &r) const
 
     // Return the cell from the geometry state
     return this->cell(geo_state);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the matid for the given position.
+ */
+template<class Geo_State>
+geometry::cell_type
+Tracking_Geometry<Geo_State>::matid(const Space_Vector &r) const
+{
+    // Create a dummy angle
+    Space_Vector dummy_dir(1.0, 0.0, 0.0);
+
+    // Create a temporary Geo state
+    Geo_State_t geo_state;
+
+    // Initialize the Geo state with the given position
+    this->initialize(r, dummy_dir, geo_state);
+
+    // Return the cell from the geometry state
+    return this->matid(geo_state);
 }
 
 } // end namespace profugus
