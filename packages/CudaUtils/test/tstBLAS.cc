@@ -10,8 +10,8 @@
 
 #include "../BLAS.hh"
 
-#include "Utils/gtest/utils_gtest.hh"
-#include "Utils/utils/View_Field.hh"
+#include "gtest/utils_gtest.hh"
+#include "utils/View_Field.hh"
 
 #include "../Hardware.hh"
 #include "../Device_Vector.hh"

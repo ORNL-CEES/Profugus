@@ -224,7 +224,7 @@ class Texture_Vector<arch::Host, T>
     // Return the kernel accessor by value
     TVK_t data() const
     {
-        Require(is_initialized());
+        REQUIRE(is_initialized());
 
         return TVK_t(&d_data.front(), d_data.size());
     }

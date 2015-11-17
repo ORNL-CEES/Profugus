@@ -10,7 +10,7 @@
 
 #include "../Event.hh"
 
-#include "Utils/gtest/utils_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include "../Device_Vector.hh"
 #include "../Hardware.hh"

@@ -11,7 +11,7 @@
 #ifndef cuda_utils_Host_Vector_hh
 #define cuda_utils_Host_Vector_hh
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "Definitions.hh"
 
 // Declare fields to avoid header propagation into CUDA kernel files
@@ -113,15 +113,15 @@ class Host_Vector
     //! Field value at index i.
     reference operator[](size_type i)
     {
-        Require(d_begin + i < d_end);
+        REQUIRE(d_begin + i < d_end);
         return *(d_begin + i);
     }
 
     //! Constant field value at index i.
     const_reference operator[](size_type i) const
     {
-        Require(!is_write_combined());
-        Require(d_begin + i < d_end);
+        REQUIRE(!is_write_combined());
+        REQUIRE(d_begin + i < d_end);
         return *(d_begin + i);
     }
 
@@ -157,16 +157,16 @@ class Host_Vector
     // Get a device pointer if this is mapped memory
     pointer data()
     {
-        Require(is_mapped());
-        Ensure(d_gpu_data);
+        REQUIRE(is_mapped());
+        ENSURE(d_gpu_data);
         return d_gpu_data;
     }
 
     // Get a const device pointer if this is mapped memory
     const_pointer data() const
     {
-        Require(is_mapped());
-        Ensure(d_gpu_data);
+        REQUIRE(is_mapped());
+        ENSURE(d_gpu_data);
         return d_gpu_data;
     }
 
@@ -182,7 +182,7 @@ class Host_Vector
     //! Begin const_iterator.
     const_iterator begin() const
     {
-        Require(!is_write_combined());
+        REQUIRE(!is_write_combined());
         return d_begin;
     }
 

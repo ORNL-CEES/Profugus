@@ -10,8 +10,8 @@
 
 #include "../Multi_Vector.hh"
 
-#include "Utils/gtest/utils_gtest.hh"
-#include "Utils/utils/View_Field.hh"
+#include "gtest/utils_gtest.hh"
+#include "utils/View_Field.hh"
 
 #include "../Hardware.hh"
 #include "../Vector_Traits.hh"

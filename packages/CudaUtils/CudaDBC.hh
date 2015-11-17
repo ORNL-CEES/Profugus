@@ -11,7 +11,7 @@
 #ifndef cuda_utils_CudaDBC_hh
 #define cuda_utils_CudaDBC_hh
 
-#include <config.h>
+#include "config.h"
 
 //---------------------------------------------------------------------------//
 // If compiling device code, disable DBC
@@ -19,16 +19,16 @@
 #ifdef __CUDA_ARCH__
 #ifdef Require
 // Undefine DBC macros since we've included DBC.hh
-#include "Utils/harness/DBC_undef.hh"
+#include "harness/DBC_undef.hh"
 #else // Require
 // Prevent DBC from being loaded
 #define harness_DBC_hh
 #endif // Require
 
 // Null-ops for DBC macros
-#include "Utils/harness/DBC_nulldef.hh"
+#include "harness/DBC_nulldef.hh"
 #else // __CUDA_ARCH__
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #endif
 
 //---------------------------------------------------------------------------//

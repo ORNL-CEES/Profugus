@@ -12,7 +12,7 @@
 #define cuda_utils_Hardware_hh
 
 #include <string>
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 #include "Definitions.hh"
 
@@ -84,7 +84,7 @@ class Hardware<cuda::arch::Host>
 
     // >>> SYNCHRONIZATION
 
-    //! Ensure asynchronous operations are complete
+    //! ENSURE asynchronous operations are complete
     static void synchronize() { /* * */ }
 
   private:
@@ -150,16 +150,16 @@ class Hardware<cuda::arch::Device>
     //! Number of streaming multiprocessors
     static unsigned int num_multiprocessors()
     {
-        Require(have_acquired());
-        Ensure(d_multiProcessorCount > 0);
+        REQUIRE(have_acquired());
+        ENSURE(d_multiProcessorCount > 0);
         return d_multiProcessorCount;
     }
 
     //! Number of CUDA cores in each multiprocessor
     static unsigned int num_cores_per_mp()
     {
-        Require(have_acquired());
-        Ensure(d_cores_per_mp > 0);
+        REQUIRE(have_acquired());
+        ENSURE(d_cores_per_mp > 0);
         return d_cores_per_mp;
     }
 
@@ -169,38 +169,38 @@ class Hardware<cuda::arch::Device>
     //! Limit on number of threads per multiprocessor
     static unsigned int max_threads_per_mp()
     {
-        Require(have_acquired());
-        Ensure(d_maxThreadsPerMultiProcessor > 0);
+        REQUIRE(have_acquired());
+        ENSURE(d_maxThreadsPerMultiProcessor > 0);
         return d_maxThreadsPerMultiProcessor;
     }
 
     //! Total constant memory on the device, in bytes
     static unsigned int const_memory()
     {
-        Require(have_acquired());
-        Ensure(d_totalConstMem > 0);
+        REQUIRE(have_acquired());
+        ENSURE(d_totalConstMem > 0);
         return d_totalConstMem;
     }
 
     //! Total shared memory per multiprocessor, in bytes
     static unsigned int shared_memory_per_mp()
     {
-        Require(have_acquired());
-        Ensure(d_sharedMemPerBlock > 0);
+        REQUIRE(have_acquired());
+        ENSURE(d_sharedMemPerBlock > 0);
         return d_sharedMemPerBlock;
     }
 
     //! Total number of cores
     static unsigned int num_total_cores()
     {
-        Require(have_acquired());
+        REQUIRE(have_acquired());
         unsigned int result = d_multiProcessorCount * d_cores_per_mp;
         return result;
     }
 
     // >>> SYNCHRONIZATION
 
-    // Ensure asynchronous operations are complete
+    // ENSURE asynchronous operations are complete
     static void synchronize();
 
   private:

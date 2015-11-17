@@ -13,7 +13,7 @@
 
 #include <iterator>
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 namespace profugus
 {
@@ -66,14 +66,14 @@ class VF_Iterator : public std::iterator_traits<T*>
 
     //@{
     //! Dereference operator.
-    reference operator*()             { Require(d_ptr != 0); return *d_ptr; }
-    const reference operator*() const { Require(d_ptr != 0); return *d_ptr; }
+    reference operator*()             { REQUIRE(d_ptr != 0); return *d_ptr; }
+    const reference operator*() const { REQUIRE(d_ptr != 0); return *d_ptr; }
     //@}
 
     //@{
     //! Pointer operator.
-    pointer operator->()             { Require(d_ptr != 0); return d_ptr; }
-    const pointer operator->() const { Require(d_ptr != 0); return d_ptr; }
+    pointer operator->()             { REQUIRE(d_ptr != 0); return d_ptr; }
+    const pointer operator->() const { REQUIRE(d_ptr != 0); return d_ptr; }
     //@}
 
     // Equality operator with pointer
@@ -183,10 +183,10 @@ class const_VF_Iterator : public std::iterator_traits<const T*>
     bool is_valid() const { return d_ptr != 0; }
 
     //! Dereference operator.
-    reference operator*() const { Require(d_ptr != 0); return *d_ptr; }
+    reference operator*() const { REQUIRE(d_ptr != 0); return *d_ptr; }
 
     //! Pointer operator.
-    pointer operator->() const { Require(d_ptr != 0); return d_ptr; }
+    pointer operator->() const { REQUIRE(d_ptr != 0); return d_ptr; }
 
     // Equality operator
     inline bool operator==(const This &iter) const;

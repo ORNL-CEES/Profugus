@@ -15,7 +15,7 @@
 
 #include <cublas_v2.h>
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 namespace cuda
 {
@@ -47,7 +47,7 @@ class BLAS_Handle
     // Access the handle, which under the hood is actually a pointer
     cublasHandle_t handle() const
     {
-        Check(d_handle_count > 0);
+        CHECK(d_handle_count > 0);
         return d_global_handle;
     }
 

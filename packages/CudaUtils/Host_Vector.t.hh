@@ -16,13 +16,13 @@
 #include <cstdlib>
 #include <iostream>
 #include <algorithm>
-#include <config.h>
+#include "config.h"
 #ifdef USE_CUDA
 #include <cuda_runtime.h>
 #endif
 
-#include "Utils/comm/Logger.hh"
-#include "Utils/utils/View_Field.hh"
+#include "comm/Logger.hh"
+#include "utils/View_Field.hh"
 #include "CudaDBC.hh"
 
 namespace cuda
@@ -41,7 +41,7 @@ Host_Vector<T>::Host_Vector(
   , d_gpu_data(NULL)
   , d_alloc_flag(flag)
 {
-    Require(count > 0);
+    REQUIRE(count > 0);
 
 #ifdef USE_CUDA
     unsigned int cuda_flags = 0;
@@ -91,12 +91,12 @@ Host_Vector<T>::Host_Vector(
 #else // CUDA is disabled in this build
         std::free(d_begin);
         d_begin = NULL;
-        Insist(false,
+        INSIST(false,
                 "Mapped memory cannot be emulated without CUDA support.");
 #endif
     }
 
-    Ensure(count == size());
+    ENSURE(count == size());
 }
 
 //---------------------------------------------------------------------------//
@@ -128,7 +128,7 @@ Host_Vector<T>::~Host_Vector()
 template<class T>
 void Host_Vector<T>::assign(const_View_Field_t hostvec)
 {
-    Require(hostvec.size() == size());
+    REQUIRE(hostvec.size() == size());
 
     std::memcpy(d_begin, &hostvec[0], size() * sizeof(T));
 }
@@ -140,7 +140,7 @@ void Host_Vector<T>::assign(const_View_Field_t hostvec)
 template<class T>
 void Host_Vector<T>::assign(const This& rhs)
 {
-    Require(rhs.size() == size());
+    REQUIRE(rhs.size() == size());
 
     std::memcpy(d_begin, rhs.d_begin, size() * sizeof(T));
 }

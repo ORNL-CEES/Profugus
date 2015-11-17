@@ -17,7 +17,7 @@
 #endif
 
 #include <iostream>
-#include "Utils/comm/global.hh"
+#include "comm/global.hh"
 
 using cuda::arch::Device;
 
@@ -74,8 +74,8 @@ bool Hardware<Device>::valid_device_exists()
  */
 void Hardware<Device>::acquire(Acquire_Method method)
 {
-    Insist(d_device_id == -1, "A device has already been acquired.");
-    Validate(method < END_ACQUIRE_METHOD, "Invalid method " << method);
+    INSIST(d_device_id == -1, "A device has already been acquired.");
+    VALIDATE(method < END_ACQUIRE_METHOD, "Invalid method " << method);
 
 #ifdef USE_CUDA
     cudaDeviceProp prop;
@@ -121,7 +121,7 @@ void Hardware<Device>::acquire(Acquire_Method method)
         }
     }
 
-    Insist(d_device_id != 1, "No valid devices were found.");
+    INSIST(d_device_id != 1, "No valid devices were found.");
     CudaCall(cudaSetDevice(d_device_id));
 
     // Reset the device
@@ -146,7 +146,7 @@ void Hardware<Device>::acquire(Acquire_Method method)
 
 
 #else // USE_CUDA disabled
-    Insist(false, "CUDA is disabled in this build.");
+    INSIST(false, "CUDA is disabled in this build.");
 #endif // USE_CUDA
 }
 
@@ -161,7 +161,7 @@ void Hardware<Device>::synchronize()
 #ifdef USE_CUDA
     CudaCall(cudaDeviceSynchronize());
 #else // USE_CUDA disabled
-    Insist(false, "CUDA is disabled in this build.");
+    INSIST(false, "CUDA is disabled in this build.");
 #endif //USE_CUDA
 }
 

@@ -16,9 +16,9 @@
 #include <cuda_runtime.h>
 #include <cstdlib>
 
-#include "Utils/harness/DBC.hh"
-#include "Utils/comm/Logger.hh"
-#include "Utils/utils/View_Field.hh"
+#include "harness/DBC.hh"
+#include "comm/Logger.hh"
+#include "utils/View_Field.hh"
 #include "Host_Vector.hh"
 #include "Device_Vector.hh"
 
@@ -83,10 +83,10 @@ Texture_Vector<arch::Device,T>::Texture_Vector(size_t count)
   : d_data(count)
   , d_is_initialized(false)
 {
-    Require(count > 0);
+    REQUIRE(count > 0);
 
-    Ensure(size() == count);
-    Ensure(!is_initialized());
+    ENSURE(size() == count);
+    ENSURE(!is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -100,8 +100,8 @@ Texture_Vector<arch::Device,T>::Texture_Vector(const_View_Field_t hostvec)
 {
     this->create_texture();
 
-    Ensure(size() == hostvec.size());
-    Ensure(is_initialized());
+    ENSURE(size() == hostvec.size());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -115,8 +115,8 @@ Texture_Vector<arch::Device,T>::Texture_Vector(const Host_Vector_t& hostvec)
 {
     this->create_texture();
 
-    Ensure(size() == hostvec.size());
-    Ensure(is_initialized());
+    ENSURE(size() == hostvec.size());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -130,8 +130,8 @@ Texture_Vector<arch::Device,T>::Texture_Vector(const Device_Vector_t& devvec)
 {
     this->create_texture();
 
-    Ensure(size() == devvec.size());
-    Ensure(is_initialized());
+    ENSURE(size() == devvec.size());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -168,27 +168,27 @@ Texture_Vector<arch::Device,T>::~Texture_Vector()
 template<typename T>
 void Texture_Vector<arch::Device,T>::assign(const_View_Field_t hostvec)
 {
-    Require(hostvec.size() == size());
+    REQUIRE(hostvec.size() == size());
     this->assign_any(hostvec);
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
 template<typename T>
 void Texture_Vector<arch::Device,T>::assign(const Host_Vector_t& hostvec)
 {
-    Require(hostvec.size() == size());
+    REQUIRE(hostvec.size() == size());
     this->assign_any(hostvec);
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
 template<typename T>
 void Texture_Vector<arch::Device,T>::assign(const Device_Vector_t& devicevec)
 {
-    Require(devicevec.size() == size());
+    REQUIRE(devicevec.size() == size());
     this->assign_any(devicevec);
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -198,7 +198,7 @@ template<typename T>
 template<typename U>
 void Texture_Vector<arch::Device,T>::assign_any(const U& vec)
 {
-    Require(vec.size() == size());
+    REQUIRE(vec.size() == size());
 
     // If we're already bound to a texture, delete the texture object
     if (is_initialized())
@@ -210,7 +210,7 @@ void Texture_Vector<arch::Device,T>::assign_any(const U& vec)
     // Initialize texture from device memory
     create_texture();
 
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -220,8 +220,8 @@ void Texture_Vector<arch::Device,T>::assign_any(const U& vec)
 template<typename T>
 void Texture_Vector<arch::Device,T>::create_texture()
 {
-    Require(d_data.is_initialized());
-    Require(!is_initialized());
+    REQUIRE(d_data.is_initialized());
+    REQUIRE(!is_initialized());
 
     // Resource descriptor
     cudaResourceDesc res_desc;
@@ -247,7 +247,7 @@ void Texture_Vector<arch::Device,T>::create_texture()
 
     d_is_initialized = true;
 
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -262,13 +262,13 @@ void Texture_Vector<arch::Device,T>::create_texture()
 template<typename T>
 void Texture_Vector<arch::Device,T>::destroy_texture()
 {
-    Require(is_initialized());
+    REQUIRE(is_initialized());
 
     CudaCall(cudaDestroyTextureObject(d_texture));
 
     d_is_initialized = false;
 
-    Ensure(!is_initialized());
+    ENSURE(!is_initialized());
 }
 
 //---------------------------------------------------------------------------//

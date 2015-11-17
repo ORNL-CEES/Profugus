@@ -40,7 +40,7 @@ VF_Iterator<T>::VF_Iterator(pointer      ptr_in,
     : d_ptr(ptr_in)
     , d_stride(stride)
 {
-    Require(stride > 0);
+    REQUIRE(stride > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -52,7 +52,7 @@ VF_Iterator<T>::VF_Iterator(pointer      ptr_in,
 template<typename T>
 bool VF_Iterator<T>::operator==(const This &iter) const
 {
-    Require(stride() == iter.stride());
+    REQUIRE(stride() == iter.stride());
     return d_ptr == iter.d_ptr;
 }
 
@@ -63,7 +63,7 @@ bool VF_Iterator<T>::operator==(const This &iter) const
 template<typename T>
 bool VF_Iterator<T>::operator!=(const This &iter) const
 {
-    Require(stride() == iter.stride());
+    REQUIRE(stride() == iter.stride());
     return d_ptr != iter.d_ptr;
 }
 
@@ -131,8 +131,8 @@ template<typename T>
 typename VF_Iterator<T>::difference_type
 VF_Iterator<T>::operator-(const This &vf_iter) const
 {
-    Require(d_stride > 0);
-    Require((d_ptr - vf_iter.d_ptr) % d_stride == 0);
+    REQUIRE(d_stride > 0);
+    REQUIRE((d_ptr - vf_iter.d_ptr) % d_stride == 0);
 
     return (d_ptr - vf_iter.d_ptr) / d_stride;
 }
@@ -145,7 +145,7 @@ template<typename T>
 typename VF_Iterator<T>::reference
 VF_Iterator<T>::operator[](int n)
 {
-    Require(d_ptr);
+    REQUIRE(d_ptr);
 
     return d_ptr[n*d_stride];
 }
@@ -158,7 +158,7 @@ template<typename T>
 const typename VF_Iterator<T>::reference
 VF_Iterator<T>::operator[](int n) const
 {
-    Require(d_ptr);
+    REQUIRE(d_ptr);
 
     return d_ptr[n*d_stride];
 }
@@ -202,7 +202,7 @@ const_VF_Iterator<T>::const_VF_Iterator(pointer ptr_in, unsigned int stride)
     : d_ptr(ptr_in)
     , d_stride(stride)
 {
-    Require(stride > 0);
+    REQUIRE(stride > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -214,7 +214,7 @@ const_VF_Iterator<T>::const_VF_Iterator(const VF_Iterator<T> &iter)
     : d_ptr(iter.get_pointer())
     , d_stride(iter.stride())
 {
-    Ensure(d_stride > 0);
+    ENSURE(d_stride > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -226,7 +226,7 @@ const_VF_Iterator<T>::const_VF_Iterator(const VF_Iterator<T> &iter)
 template<typename T>
 bool const_VF_Iterator<T>::operator==(const This &iter) const
 {
-    Require(stride() == iter.stride());
+    REQUIRE(stride() == iter.stride());
     return d_ptr == iter.d_ptr;
 }
 
@@ -237,7 +237,7 @@ bool const_VF_Iterator<T>::operator==(const This &iter) const
 template<typename T>
 bool const_VF_Iterator<T>::operator!=(const This &iter) const
 {
-    Require(stride() == iter.stride());
+    REQUIRE(stride() == iter.stride());
     return d_ptr != iter.d_ptr;
 }
 
@@ -306,8 +306,8 @@ template<typename T>
 typename const_VF_Iterator<T>::difference_type
 const_VF_Iterator<T>::operator-(const This &vf_iter) const
 {
-    Require(d_stride > 0);
-    Require((d_ptr - vf_iter.d_ptr) % d_stride == 0);
+    REQUIRE(d_stride > 0);
+    REQUIRE((d_ptr - vf_iter.d_ptr) % d_stride == 0);
 
     return (d_ptr - vf_iter.d_ptr) / d_stride;
 }
@@ -320,7 +320,7 @@ template<typename T>
 typename const_VF_Iterator<T>::reference
 const_VF_Iterator<T>::operator[](int n) const
 {
-    Require(d_ptr != 0);
+    REQUIRE(d_ptr != 0);
 
     return d_ptr[n*d_stride];
 }

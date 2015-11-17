@@ -11,7 +11,7 @@
 #include "../Stream.hh"
 
 #include <utility>
-#include "Utils/gtest/utils_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include "../Device_Vector.hh"
 #include "../Host_Vector.hh"

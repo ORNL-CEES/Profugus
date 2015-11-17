@@ -11,7 +11,7 @@
 #ifndef cuda_utils_Stream_hh
 #define cuda_utils_Stream_hh
 
-#include <config.h>
+#include "config.h"
 #if defined(USE_CUDA) && !defined(PSEUDO_CUDA)
 #include <cuda_runtime.h>
 #endif // USE_CUDA && !PSEUDO_CUDA

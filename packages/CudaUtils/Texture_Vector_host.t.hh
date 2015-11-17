@@ -13,8 +13,8 @@
 
 #include "Texture_Vector.hh"
 
-#include "Utils/harness/DBC.hh"
-#include "Utils/utils/View_Field.hh"
+#include "harness/DBC.hh"
+#include "utils/View_Field.hh"
 #include "Host_Vector.hh"
 #include "Device_Vector.hh"
 
@@ -33,10 +33,10 @@ Texture_Vector<arch::Host,T>::Texture_Vector(size_t count)
   : d_data(count)
   , d_is_initialized(false)
 {
-    Require(count > 0);
+    REQUIRE(count > 0);
 
-    Ensure(size() == count);
-    Ensure(!is_initialized());
+    ENSURE(size() == count);
+    ENSURE(!is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -48,8 +48,8 @@ Texture_Vector<arch::Host,T>::Texture_Vector(const_View_Field_t hostvec)
   : d_data(hostvec.begin(), hostvec.end())
   , d_is_initialized(true)
 {
-    Ensure(size() == hostvec.size());
-    Ensure(is_initialized());
+    ENSURE(size() == hostvec.size());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -61,8 +61,8 @@ Texture_Vector<arch::Host,T>::Texture_Vector(const Host_Vector_t& hostvec)
   : d_data(hostvec.begin(), hostvec.end())
   , d_is_initialized(true)
 {
-    Ensure(size() == hostvec.size());
-    Ensure(is_initialized());
+    ENSURE(size() == hostvec.size());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -74,8 +74,8 @@ Texture_Vector<arch::Host,T>::Texture_Vector(const Device_Vector_t& devicevecec)
   : d_data(devicevecec.data(), devicevecec.data() + devicevecec.size())
   , d_is_initialized(true)
 {
-    Ensure(size() == devicevecec.size());
-    Ensure(is_initialized());
+    ENSURE(size() == devicevecec.size());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -95,30 +95,30 @@ Texture_Vector<arch::Host,T>::~Texture_Vector()
 template<typename T>
 void Texture_Vector<arch::Host,T>::assign(const_View_Field_t hostvec)
 {
-    Require(hostvec.size() == size());
+    REQUIRE(hostvec.size() == size());
     d_data.assign(hostvec.begin(), hostvec.end());
     d_is_initialized = true;
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
 template<typename T>
 void Texture_Vector<arch::Host,T>::assign(const Host_Vector_t& hostvec)
 {
-    Require(hostvec.size() == size());
+    REQUIRE(hostvec.size() == size());
     d_data.assign(hostvec.begin(), hostvec.end());
     d_is_initialized = true;
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
 template<typename T>
 void Texture_Vector<arch::Host,T>::assign(const Device_Vector_t& devicevec)
 {
-    Require(devicevec.size() == size());
+    REQUIRE(devicevec.size() == size());
     d_data.assign(devicevec.data(), devicevec.data() + devicevec.size());
     d_is_initialized = true;
-    Ensure(is_initialized());
+    ENSURE(is_initialized());
 }
 //---------------------------------------------------------------------------//
 } // end namespace cuda

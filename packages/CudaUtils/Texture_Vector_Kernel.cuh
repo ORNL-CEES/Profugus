@@ -11,7 +11,7 @@
 #ifndef cuda_utils_Texture_Vector_Kernel_cuh
 #define cuda_utils_Texture_Vector_Kernel_cuh
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 namespace cuda
 {
@@ -134,7 +134,7 @@ class Texture_Vector_Kernel<arch::Host, T>
       : d_data(data)
       , d_size(size)
     {
-        Require(d_data);
+        REQUIRE(d_data);
     }
 
   public:
@@ -149,7 +149,7 @@ class Texture_Vector_Kernel<arch::Host, T>
     //! Access texture memory like a vector
     value_type operator[] (int i) const
     {
-        Require(i >= 0 && i < d_size);
+        REQUIRE(i >= 0 && i < d_size);
         return d_data[i];
     }
 };

@@ -16,8 +16,7 @@
 #include <iterator>
 #include <vector>
 
-#include "Utils/harness/DBC.hh"
-#include "Utils/harness/SWIG.hh"
+#include "harness/DBC.hh"
 #include "View_Field_Iterator.hh"
 
 namespace profugus
@@ -67,7 +66,7 @@ class View_Field
     // Pointer to the ending of the field data
     iterator d_end_iterator;
 
-  SWIG_PRIVATE:
+  public:
     // Default constructor.  Sets both iterators at null
     inline View_Field();
 
@@ -116,7 +115,6 @@ class View_Field
     //! Returns true if the size of the field is zero.
     bool empty() const { return d_begin_iterator == d_end_iterator; }
 
-  SWIG_PRIVATE:
 
     // >>> RAW DATA ACCESS (like C++11)
     //@{
@@ -228,7 +226,7 @@ class const_View_Field
     const_iterator d_begin_iterator;
     const_iterator d_end_iterator;
 
-  SWIG_PRIVATE:
+  public:
     // Default constructor.
     inline const_View_Field();
 
@@ -265,7 +263,6 @@ class const_View_Field
     //! Returns true if the size of the field is zero.
     bool empty() const { return d_begin_iterator == d_end_iterator; }
 
-  SWIG_PRIVATE:
     // >>> RAW DATA ACCESS (like C++11)
     //! Raw data access
     inline const_pointer data() const;

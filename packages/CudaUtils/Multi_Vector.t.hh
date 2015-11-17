@@ -12,7 +12,7 @@
 #define cuda_utils_Multi_Vector_t_hh
 
 #include "Multi_Vector.hh"
-#include "Utils/utils/View_Field.hh"
+#include "utils/View_Field.hh"
 
 namespace cuda
 {
@@ -21,7 +21,7 @@ template <typename Arch_Switch, typename T>
 Multi_Vector<Arch_Switch,T>::Multi_Vector(size_type count)
   : d_device_vectors(count, NULL)
 {
-    Ensure(size() == count);
+    ENSURE(size() == count);
 }
 //---------------------------------------------------------------------------//
 /*!
@@ -50,14 +50,14 @@ void Multi_Vector<Arch_Switch,T>::initialize(
         size_type index,
         const_View_Field_t data)
 {
-    Require(index < size());
-    Require(!is_initialized(index));
-    Require(data.size() > 0);
+    REQUIRE(index < size());
+    REQUIRE(!is_initialized(index));
+    REQUIRE(data.size() > 0);
 
     d_device_vectors[index] = new Device_Vector_t(data);
-    Check(d_device_vectors[index]->is_initialized());
+    CHECK(d_device_vectors[index]->is_initialized());
 
-    Ensure(is_initialized(index));
+    ENSURE(is_initialized(index));
 }
 
 //---------------------------------------------------------------------------//

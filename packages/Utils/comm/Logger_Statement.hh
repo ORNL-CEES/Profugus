@@ -15,7 +15,7 @@
 #include <sstream>
 #include <iostream>
 #include <memory>
-#include "/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 namespace profugus
 {

@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Utils/gtest/utils_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include "Exp_Kernel.cuh"
 #include "../Vector_Traits.hh"

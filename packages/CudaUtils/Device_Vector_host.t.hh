@@ -16,8 +16,8 @@
 #include <cstdlib>
 #include <utility>
 
-#include "Utils/harness/DBC.hh"
-#include "Utils/utils/View_Field.hh"
+#include "harness/DBC.hh"
+#include "utils/View_Field.hh"
 #include "Host_Vector.hh"
 
 namespace cuda
@@ -34,8 +34,8 @@ Device_Vector<arch::Host,T>::Device_Vector(size_t count)
   : d_storage(count)
   , d_is_initialized(false)
 {
-    Require(count > 0);
-    Ensure(!is_initialized());
+    REQUIRE(count > 0);
+    ENSURE(!is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -47,8 +47,8 @@ Device_Vector<arch::Host,T>::Device_Vector(const_View_Field_t hostvec)
   : d_storage(hostvec.begin(), hostvec.end())
   , d_is_initialized(true)
 {
-    Require(hostvec.size() > 0);
-    Ensure(is_initialized());
+    REQUIRE(hostvec.size() > 0);
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -60,8 +60,8 @@ Device_Vector<arch::Host,T>::Device_Vector(const Host_Vector_t& hostvec)
   : d_storage(hostvec.begin(), hostvec.end())
   , d_is_initialized(true)
 {
-    Require(hostvec.size() > 0);
-    Ensure(is_initialized());
+    REQUIRE(hostvec.size() > 0);
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -79,8 +79,8 @@ Device_Vector<arch::Host,T>::Device_Vector(const This& rhs)
   : d_storage(rhs.d_storage)
   , d_is_initialized(rhs.d_is_initialized)
 {
-    Require(rhs.is_initialized());
-    Ensure(is_initialized());
+    REQUIRE(rhs.is_initialized());
+    ENSURE(is_initialized());
 }
 
 //---------------------------------------------------------------------------//
@@ -90,7 +90,7 @@ Device_Vector<arch::Host,T>::Device_Vector(const This& rhs)
 template<typename T>
 void Device_Vector<arch::Host,T>::assign(const_View_Field_t hostvec)
 {
-    Require(hostvec.size() == size());
+    REQUIRE(hostvec.size() == size());
     d_storage.assign(hostvec.begin(), hostvec.end());
     d_is_initialized = true;
 }
@@ -102,7 +102,7 @@ void Device_Vector<arch::Host,T>::assign(const_View_Field_t hostvec)
 template<typename T>
 void Device_Vector<arch::Host,T>::assign(const Host_Vector_t& hostvec)
 {
-    Require(hostvec.size() == size());
+    REQUIRE(hostvec.size() == size());
     d_storage.assign(hostvec.begin(), hostvec.end());
     d_is_initialized = true;
 }
@@ -114,7 +114,7 @@ void Device_Vector<arch::Host,T>::assign(const Host_Vector_t& hostvec)
 template<typename T>
 void Device_Vector<arch::Host,T>::assign(const This& rhs)
 {
-    Require(rhs.size() == size());
+    REQUIRE(rhs.size() == size());
     d_storage.assign(rhs.d_storage.begin(), rhs.d_storage.end());
     d_is_initialized = true;
 }
@@ -137,8 +137,8 @@ void Device_Vector<arch::Host,T>::swap(This& rhs)
 template<typename T>
 void Device_Vector<arch::Host,T>::to_host(profugus::View_Field<T> out) const
 {
-    Require(size() == out.size());
-    Require(is_initialized());
+    REQUIRE(size() == out.size());
+    REQUIRE(is_initialized());
 
     std::memcpy(&out[0], data(), size() * sizeof(T));
 }
@@ -150,8 +150,8 @@ void Device_Vector<arch::Host,T>::to_host(profugus::View_Field<T> out) const
 template<typename T>
 void Device_Vector<arch::Host,T>::to_host(Host_Vector<T>& out) const
 {
-    Require(size() == out.size());
-    Require(is_initialized());
+    REQUIRE(size() == out.size());
+    REQUIRE(is_initialized());
 
     std::memcpy(&out[0], data(), size() * sizeof(T));
 }

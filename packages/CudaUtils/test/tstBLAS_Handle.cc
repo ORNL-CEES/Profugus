@@ -10,7 +10,7 @@
 
 #include "../BLAS_Handle.hh"
 
-#include "Utils/gtest/utils_gtest.hh"
+#include "gtest/utils_gtest.hh"
 #include "../Hardware.hh"
 
 using cuda::BLAS_Handle;

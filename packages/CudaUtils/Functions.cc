@@ -10,7 +10,7 @@
 
 #include "Functions.hh"
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 namespace cuda
 {
@@ -27,9 +27,9 @@ namespace cuda
  */
 unsigned int ceil_quotient(unsigned int dividend, unsigned int divisor)
 {
-    Require(divisor > 0);
+    REQUIRE(divisor > 0);
     unsigned int result = (dividend + divisor - 1) / divisor;
-    Ensure(result * divisor >= dividend);
+    ENSURE(result * divisor >= dividend);
     return result;
 }
 

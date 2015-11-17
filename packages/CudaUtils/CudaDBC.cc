@@ -10,7 +10,7 @@
 
 #include "CudaDBC.hh"
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 namespace cuda
 {

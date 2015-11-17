@@ -16,9 +16,9 @@
 #include <cuda_runtime.h>
 #include <utility>
 
-#include "Utils/harness/DBC.hh"
-#include "Utils/comm/Logger.hh"
-#include "Utils/utils/View_Field.hh"
+#include "harness/DBC.hh"
+#include "comm/Logger.hh"
+#include "utils/View_Field.hh"
 #include "CudaDBC.hh"
 #include "Host_Vector.hh"
 #include "Stream.hh"
@@ -38,14 +38,14 @@ Device_Vector<arch::Device,T>::Device_Vector(size_t count)
     , d_data(NULL)
     , d_is_initialized(false)
 {
-    Require(count > 0);
+    REQUIRE(count > 0);
 
     // Allocate memory
     this->allocate();
 
-    Ensure(d_size == count);
-    Ensure(d_data != NULL);
-    Ensure(!d_is_initialized);
+    ENSURE(d_size == count);
+    ENSURE(d_data != NULL);
+    ENSURE(!d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -57,7 +57,7 @@ Device_Vector<arch::Device,T>::Device_Vector(const_View_Field_t hostvec)
     : d_size(hostvec.size())
     , d_data(NULL)
 {
-    Require(hostvec.size() > 0);
+    REQUIRE(hostvec.size() > 0);
 
     // Allocate memory
     this->allocate();
@@ -65,9 +65,9 @@ Device_Vector<arch::Device,T>::Device_Vector(const_View_Field_t hostvec)
     // Copy memory to device
     this->assign(hostvec);
 
-    Ensure(d_size == hostvec.size());
-    Ensure(d_data != NULL);
-    Ensure(d_is_initialized);
+    ENSURE(d_size == hostvec.size());
+    ENSURE(d_data != NULL);
+    ENSURE(d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -79,7 +79,7 @@ Device_Vector<arch::Device,T>::Device_Vector(const Host_Vector_t& hostvec)
     : d_size(hostvec.size())
     , d_data(NULL)
 {
-    Require(hostvec.size() > 0);
+    REQUIRE(hostvec.size() > 0);
 
     // Allocate memory
     this->allocate();
@@ -87,9 +87,9 @@ Device_Vector<arch::Device,T>::Device_Vector(const Host_Vector_t& hostvec)
     // Copy memory to device
     this->assign(hostvec);
 
-    Ensure(d_size == hostvec.size());
-    Ensure(d_data != NULL);
-    Ensure(d_is_initialized);
+    ENSURE(d_size == hostvec.size());
+    ENSURE(d_data != NULL);
+    ENSURE(d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -108,7 +108,7 @@ Device_Vector<arch::Device,T>::Device_Vector(const This& rhs)
     , d_data(NULL)
     , d_is_initialized(true)
 {
-    Require(rhs.is_initialized());
+    REQUIRE(rhs.is_initialized());
 
     // Allocate memory
     this->allocate();
@@ -117,9 +117,9 @@ Device_Vector<arch::Device,T>::Device_Vector(const This& rhs)
     CudaCall(cudaMemcpy(d_data, rhs.d_data, d_size * sizeof(T),
                 cudaMemcpyDeviceToDevice));
 
-    Ensure(d_size == rhs.size());
-    Ensure(d_data != NULL);
-    Ensure(d_is_initialized);
+    ENSURE(d_size == rhs.size());
+    ENSURE(d_data != NULL);
+    ENSURE(d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -130,8 +130,8 @@ Device_Vector<arch::Device,T>::Device_Vector(const This& rhs)
 template<typename T>
 void Device_Vector<arch::Device,T>::allocate()
 {
-    Require(d_data == NULL);
-    Require(d_size > 0);
+    REQUIRE(d_data == NULL);
+    REQUIRE(d_size > 0);
 
     try
     {
@@ -159,7 +159,7 @@ void Device_Vector<arch::Device,T>::allocate()
         throw e;
     }
 
-    Ensure(d_data);
+    ENSURE(d_data);
 }
 
 //---------------------------------------------------------------------------//
@@ -188,8 +188,8 @@ Device_Vector<arch::Device,T>::~Device_Vector()
 template<typename T>
 void Device_Vector<arch::Device,T>::assign(const_View_Field_t hostvec)
 {
-    Require(hostvec.size() == size());
-    Require(d_data);
+    REQUIRE(hostvec.size() == size());
+    REQUIRE(d_data);
 
     // Copy from host to device
     CudaCall(cudaMemcpy(d_data, &hostvec[0], hostvec.size() * sizeof(T),
@@ -198,7 +198,7 @@ void Device_Vector<arch::Device,T>::assign(const_View_Field_t hostvec)
     // Set our state to initialized
     d_is_initialized = true;
 
-    Ensure(d_is_initialized);
+    ENSURE(d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -212,8 +212,8 @@ void Device_Vector<arch::Device,T>::assign(const_View_Field_t hostvec)
 template<typename T>
 void Device_Vector<arch::Device,T>::assign(const Host_Vector_t& hostvec)
 {
-    Require(hostvec.size() == size());
-    Require(d_data);
+    REQUIRE(hostvec.size() == size());
+    REQUIRE(d_data);
 
     if (hostvec.is_mapped())
     {
@@ -234,7 +234,7 @@ void Device_Vector<arch::Device,T>::assign(const Host_Vector_t& hostvec)
     // Set our state to initialized
     d_is_initialized = true;
 
-    Ensure(d_is_initialized);
+    ENSURE(d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -244,8 +244,8 @@ void Device_Vector<arch::Device,T>::assign(const Host_Vector_t& hostvec)
 template<typename T>
 void Device_Vector<arch::Device,T>::assign(const This& rhs)
 {
-    Require(rhs.size() == size());
-    Require(d_data);
+    REQUIRE(rhs.size() == size());
+    REQUIRE(d_data);
 
     // Copy from host to device
     CudaCall(cudaMemcpy(d_data, rhs.d_data, rhs.size() * sizeof(T),
@@ -254,7 +254,7 @@ void Device_Vector<arch::Device,T>::assign(const This& rhs)
     // Set our state to initialized
     d_is_initialized = true;
 
-    Ensure(d_is_initialized);
+    ENSURE(d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -270,8 +270,8 @@ void Device_Vector<arch::Device,T>::assign_async(
         const Host_Vector_t& hostvec,
         Stream_t& stream)
 {
-    Require(hostvec.size() == size());
-    Require(d_data);
+    REQUIRE(hostvec.size() == size());
+    REQUIRE(d_data);
 
     if (hostvec.is_mapped())
     {
@@ -293,7 +293,7 @@ void Device_Vector<arch::Device,T>::assign_async(
     // Set our state to initialized
     d_is_initialized = true;
 
-    Ensure(d_is_initialized);
+    ENSURE(d_is_initialized);
 }
 
 //---------------------------------------------------------------------------//
@@ -311,8 +311,8 @@ void Device_Vector<arch::Device,T>::swap(This& rhs)
 template <typename T>
 void Device_Vector<arch::Device,T>::to_host(profugus::View_Field<T> out) const
 {
-    Require(size() == out.size());
-    Require(is_initialized());
+    REQUIRE(size() == out.size());
+    REQUIRE(is_initialized());
 
     CudaCall(cudaMemcpy(&out[0], data(), size() * sizeof(T),
                 cudaMemcpyDeviceToHost));
@@ -327,8 +327,8 @@ void Device_Vector<arch::Device,T>::to_host(profugus::View_Field<T> out) const
 template <typename T>
 void Device_Vector<arch::Device,T>::to_host(Host_Vector<T>& out) const
 {
-    Require(size() == out.size());
-    Require(is_initialized());
+    REQUIRE(size() == out.size());
+    REQUIRE(is_initialized());
 
     if (out.is_mapped())
     {
@@ -352,8 +352,8 @@ void Device_Vector<arch::Device,T>::to_host_async(
         Host_Vector<T>& out,
         Stream_t&       stream) const
 {
-    Require(size() == out.size());
-    Require(is_initialized());
+    REQUIRE(size() == out.size());
+    REQUIRE(is_initialized());
 
     if (out.is_mapped())
     {

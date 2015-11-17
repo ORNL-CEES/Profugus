@@ -12,12 +12,12 @@
 
 #include <iostream>
 #include <cstddef>
-#include <config.h>
+#include "config.h"
 #ifdef USE_CUDA
 #include <cuda_runtime.h>
 #endif
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
 namespace cuda

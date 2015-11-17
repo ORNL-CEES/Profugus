@@ -8,8 +8,8 @@
 ## CMAKE for CUDA_utils
 ##---------------------------------------------------------------------------##
 
-
-TRIBITS_SUBPACKAGE(CUDA_utils)
+INCLUDE(ProfugusAddCFlags)
+TRIBITS_PACKAGE(CudaUtils)
 
 ##---------------------------------------------------------------------------##
 ## PACKAGE-SPECIFIC OPTIONS
@@ -24,6 +24,9 @@ ENDIF()
 ##---------------------------------------------------------------------------##
 ## PACKAGE CONFIGURE FILE
 ##---------------------------------------------------------------------------##
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 TRIBITS_CONFIGURE_FILE(config.h)
 
@@ -61,6 +64,8 @@ IF(USE_CUDA)
     )
 ENDIF()
 
+LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
 ##---------------------------------------------------------------------------##
 ## PACKAGE TARGETS AND INSTALL
 ##---------------------------------------------------------------------------##
@@ -73,7 +78,7 @@ TRIBITS_ADD_LIBRARY(
 #
 # Add test directory for this package
 #
-TRIBITS_ADD_TEST_DIRECTORIES(test)
+TRIBITS_ADD_TEST_DIRECTORIES( test )
 
 TRIBITS_PACKAGE_POSTPROCESS()
 

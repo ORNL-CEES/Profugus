@@ -11,9 +11,9 @@
 #ifndef cuda_utils_BLAS_hh
 #define cuda_utils_BLAS_hh
 
-#include <config.h>
+#include "config.h"
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 #include "Definitions.hh"
 #include "Stream.hh"

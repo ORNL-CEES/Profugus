@@ -38,13 +38,13 @@ BLAS_Handle::BLAS_Handle()
 {
     if (d_handle_count == 0)
     {
-        Require(d_global_handle == NULL);
+        REQUIRE(d_global_handle == NULL);
 
         CudaBlasCall(cublasCreate(&d_global_handle));
     }
     ++d_handle_count;
-    Ensure(d_global_handle != NULL);
-    Ensure(d_handle_count > 0);
+    ENSURE(d_global_handle != NULL);
+    ENSURE(d_handle_count > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -53,9 +53,9 @@ BLAS_Handle::BLAS_Handle()
  */
 BLAS_Handle::BLAS_Handle(const This& rhs)
 {
-    Require(d_handle_count > 0);
+    REQUIRE(d_handle_count > 0);
 
-    Check(d_global_handle != NULL);
+    CHECK(d_global_handle != NULL);
 
     ++d_handle_count;
 }
@@ -66,7 +66,7 @@ BLAS_Handle::BLAS_Handle(const This& rhs)
  */
 BLAS_Handle::~BLAS_Handle()
 {
-    Require(d_handle_count > 0);
+    REQUIRE(d_handle_count > 0);
     --d_handle_count;
 
     if (d_handle_count == 0)

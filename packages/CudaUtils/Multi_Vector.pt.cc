@@ -10,7 +10,7 @@
 
 #include "Multi_Vector.t.hh"
 
-#include <cuda_utils/config.h>
+#include "config.h"
 #include "Device_Vector.hh"
 
 namespace cuda

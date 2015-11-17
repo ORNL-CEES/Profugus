@@ -12,7 +12,7 @@
 #define cuda_utils_BLAS_device_common_hh
 
 #include <sstream>
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
 namespace cuda

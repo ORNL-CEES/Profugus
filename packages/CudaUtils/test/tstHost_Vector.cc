@@ -10,11 +10,11 @@
 
 #include "../Host_Vector.hh"
 
-#include "Utils/gtest/utils_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include "../Device_Vector.hh"
 #include "../Hardware.hh"
-#include "Utils/utils/View_Field.hh"
+#include "utils/View_Field.hh"
 
 #include <../config.h>
 #include "Polyglot_Kernel.cuh"

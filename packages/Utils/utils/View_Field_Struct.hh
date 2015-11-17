@@ -74,7 +74,7 @@ make_struct_view(profugus::const_View_Field<S> view_struct,
 {
     static_assert(sizeof(S) % sizeof(T) == 0,
             "Given structure and data member have bad alignment!");
-    Require(offset < sizeof(S));
+    REQUIRE(offset < sizeof(S));
 
     // Begin/end pointers for offsets
     const char* begin_ptr
@@ -102,7 +102,7 @@ make_struct_view(profugus::View_Field<S> view_struct,
 {
     static_assert(sizeof(S) % sizeof(T) == 0,
             "Given structure and data member have bad alignment!");
-    Require(offset < sizeof(S));
+    REQUIRE(offset < sizeof(S));
 
     // Begin/end pointers for offsets
     char* begin_ptr

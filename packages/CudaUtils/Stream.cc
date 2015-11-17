@@ -11,7 +11,7 @@
 #include "Stream.hh"
 
 #include <iostream>
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
 using cuda::arch::Host;
@@ -32,8 +32,8 @@ Stream<Arch_T>::Stream()
     d_use_count = new long;
     *d_use_count = 1;
 
-    Ensure(d_use_count);
-    Ensure(use_count() > 0);
+    ENSURE(d_use_count);
+    ENSURE(use_count() > 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -45,12 +45,12 @@ Stream<Arch_T>::Stream(const This& rhs)
     : d_stream(rhs.d_stream)
     , d_use_count(rhs.d_use_count)
 {
-    Require(d_use_count);
+    REQUIRE(d_use_count);
 
     // Increment the reference count
     ++(*d_use_count);
 
-    Ensure(use_count() > 1);
+    ENSURE(use_count() > 1);
 }
 
 //---------------------------------------------------------------------------//
@@ -87,7 +87,7 @@ void Stream<Arch_T>::swap(This& rhs)
 template<class Arch_T>
 Stream<Arch_T>::~Stream()
 {
-    Require(use_count() > 0);
+    REQUIRE(use_count() > 0);
 
     // Decrement the reference count
     --(*d_use_count);
@@ -126,7 +126,7 @@ bool Stream<Arch_T>::is_complete() const
 template<class Arch_T>
 long Stream<Arch_T>::use_count() const
 {
-    Ensure(d_use_count);
+    ENSURE(d_use_count);
     return *d_use_count;
 }
 

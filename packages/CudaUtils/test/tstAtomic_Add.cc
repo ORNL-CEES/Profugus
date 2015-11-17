@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Utils/gtest/utils_gtest.hh"
+#include "gtest/utils_gtest.hh"
 
 #include "Atomic_Add_Kernel_Data.hh"
 #include "Atomic_Add_Kernel.cuh"

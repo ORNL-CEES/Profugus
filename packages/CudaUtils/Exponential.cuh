@@ -13,8 +13,8 @@
 
 #ifndef __NVCC__
 #include <memory>
-#include "Utils/harness/DBC.hh"
-#include "Utils/utils/Transport_Exp.hh"
+#include "harness/DBC.hh"
+#include "utils/Transport_Exp.hh"
 #endif
 
 #include "Definitions.hh"

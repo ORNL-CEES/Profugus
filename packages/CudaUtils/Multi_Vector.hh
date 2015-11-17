@@ -12,7 +12,7 @@
 #define cuda_utils_Multi_Vector_hh
 
 #include <vector>
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "Device_Vector.hh"
 
 namespace cuda
@@ -78,7 +78,7 @@ class Multi_Vector
     //! Whether an index has been assigned
     bool is_initialized(size_type index) const
     {
-        Require(index < size());
+        REQUIRE(index < size());
         return d_device_vectors[index] != NULL;
     }
 
@@ -88,15 +88,15 @@ class Multi_Vector
     // Return device vector for an index; raise DBC error if not yet assigned
     const Device_Vector_t& operator[](size_type index) const
     {
-        Require(index < size());
-        Require(is_initialized(index));
+        REQUIRE(index < size());
+        REQUIRE(is_initialized(index));
         return *d_device_vectors[index];
     }
 
     Device_Vector_t& operator[](size_type index)
     {
-        Require(index < size());
-        Require(is_initialized(index));
+        REQUIRE(index < size());
+        REQUIRE(is_initialized(index));
         return *d_device_vectors[index];
     }
 

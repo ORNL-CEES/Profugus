@@ -12,7 +12,7 @@
 
 #include "Teuchos_BLAS.hpp"
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 typedef cuda::arch::Host Arch_t;
 
@@ -32,7 +32,7 @@ inline Teuchos::ETransp transpose_convert(const cuda::Transpose t)
         case cuda::TRANS:      result = Teuchos::TRANS;      break;
         case cuda::CONJ_TRANS: result = Teuchos::CONJ_TRANS; break;
         default:
-            Check(0);
+            CHECK(0);
     }
     return result;
 }

@@ -11,13 +11,13 @@
 #ifndef cuda_utils_Device_Vector_hh
 #define cuda_utils_Device_Vector_hh
 
-#include <cuda_utils/config.h>
+#include "config.h"
 
 #ifndef __NVCC__
 #include <vector>
 #endif
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 
 #include "Definitions.hh"
 
@@ -164,7 +164,7 @@ class Device_Vector<arch::Device, T>
      */
     const_pointer cdata() const
     {
-        Require(d_is_initialized);
+        REQUIRE(d_is_initialized);
         return d_data;
     }
     const_pointer data() const { return cdata(); }
@@ -282,7 +282,7 @@ class Device_Vector<arch::Host, T>
      */
     const_pointer cdata() const
     {
-        Require(d_is_initialized);
+        REQUIRE(d_is_initialized);
         return &d_storage[0];
     }
     const_pointer data() const { return cdata(); }

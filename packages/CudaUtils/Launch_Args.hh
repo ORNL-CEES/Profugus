@@ -11,7 +11,7 @@
 #ifndef cuda_utils_Launch_Args_hh
 #define cuda_utils_Launch_Args_hh
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "Stream.hh"
 
 namespace cuda

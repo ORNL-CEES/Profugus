@@ -39,7 +39,7 @@ View_Field<T>::View_Field(pointer     first,
     : d_begin_iterator(first, stride)
     , d_end_iterator(last, stride)
 {
-    Require(std::distance(first, last) >= 0);
+    REQUIRE(std::distance(first, last) >= 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -52,8 +52,8 @@ View_Field<T>::View_Field(iterator    first,
     : d_begin_iterator(first)
     , d_end_iterator(last)
 {
-    Require(std::distance(first, last) >= 0);
-    Require(first.stride() == last.stride());
+    REQUIRE(std::distance(first, last) >= 0);
+    REQUIRE(first.stride() == last.stride());
 }
 
 //---------------------------------------------------------------------------//
@@ -66,8 +66,8 @@ template<typename T>
 void View_Field<T>::assign(const_iterator first,
                            const_iterator last)
 {
-    Require(last - first == d_end_iterator - d_begin_iterator);
-    Require(first.stride() == last.stride());
+    REQUIRE(last - first == d_end_iterator - d_begin_iterator);
+    REQUIRE(first.stride() == last.stride());
 
     // Optimization for stride == 1
     if (first.stride() == 1 && d_begin_iterator.stride() == 1)
@@ -91,7 +91,7 @@ template<typename InputIterator>
 void View_Field<T>::assign(InputIterator first,
                            InputIterator last)
 {
-    Require(last - first == size());
+    REQUIRE(last - first == size());
 
     std::copy(first, last, d_begin_iterator);
 }
@@ -104,7 +104,7 @@ template<typename T>
 typename View_Field<T>::reference
 View_Field<T>::operator[](size_type i)
 {
-    Require(valid_index(i));
+    REQUIRE(valid_index(i));
 
     return *(d_begin_iterator + i);
 }
@@ -117,7 +117,7 @@ template<typename T>
 typename View_Field<T>::const_reference
 View_Field<T>::operator[](size_type i) const
 {
-    Require(valid_index(i));
+    REQUIRE(valid_index(i));
 
     return *(d_begin_iterator + i);
 }
@@ -130,7 +130,7 @@ template<typename T>
 typename View_Field<T>::reference
 View_Field<T>::front()
 {
-    Require(!empty());
+    REQUIRE(!empty());
 
     return *d_begin_iterator;
 }
@@ -143,7 +143,7 @@ template<typename T>
 typename View_Field<T>::const_reference
 View_Field<T>::front() const
 {
-    Require(!empty());
+    REQUIRE(!empty());
 
     return *d_begin_iterator;
 }
@@ -156,7 +156,7 @@ template<typename T>
 typename View_Field<T>::reference
 View_Field<T>::back()
 {
-    Require(!empty());
+    REQUIRE(!empty());
 
     return *(d_end_iterator-1);
 }
@@ -169,7 +169,7 @@ template<typename T>
 typename View_Field<T>::const_reference
 View_Field<T>::back() const
 {
-    Require(!empty());
+    REQUIRE(!empty());
 
     return *(d_end_iterator-1);
 }
@@ -193,7 +193,7 @@ template<typename T>
 typename View_Field<T>::stride_type
 View_Field<T>::stride() const
 {
-    Ensure(d_begin_iterator.stride() == d_end_iterator.stride());
+    ENSURE(d_begin_iterator.stride() == d_end_iterator.stride());
     return d_begin_iterator.stride();
 }
 
@@ -209,7 +209,7 @@ template<typename T>
 typename View_Field<T>::pointer
 View_Field<T>::data()
 {
-    Require(stride() == 1);
+    REQUIRE(stride() == 1);
     return d_begin_iterator.get_pointer();
 }
 
@@ -221,13 +221,13 @@ template<typename T>
 typename View_Field<T>::const_pointer
 View_Field<T>::data() const
 {
-    Require(stride() == 1);
+    REQUIRE(stride() == 1);
     return d_begin_iterator.get_pointer();
 }
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Checks that index \a i is within bounds.
+ * \brief CHECKs that index \a i is within bounds.
  */
 template<typename T>
 bool View_Field<T>::valid_index(size_type i) const
@@ -266,18 +266,18 @@ template<typename T>
 View_Field<T> View_Field<T>::slice(size_type slice_size,
                                    int       slice_num) const
 {
-    Require(!empty());
-    Require(stride() == 1);
+    REQUIRE(!empty());
+    REQUIRE(stride() == 1);
 
-    Require(slice_size > 0);
-    Require(slice_num >= 0);
-    Require(slice_size <= size());
-    Require(slice_num * slice_size <= size());
+    REQUIRE(slice_size > 0);
+    REQUIRE(slice_num >= 0);
+    REQUIRE(slice_size <= size());
+    REQUIRE(slice_num * slice_size <= size());
 
     // Calculate the begin and end indexes
     size_type index_begin = slice_num * slice_size;
     size_type index_end   = index_begin + slice_size;
-    Check(d_begin_iterator + index_end <= d_end_iterator);
+    CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
     return View_Field_t(d_begin_iterator.get_pointer() + index_begin,
@@ -294,19 +294,19 @@ View_Field<T> View_Field<T>::slice(size_type slice_size,
                                    int       slice_begin,
                                    int       slice_end) const
 {
-    Require(!empty());
-    Require(stride() == 1);
+    REQUIRE(!empty());
+    REQUIRE(stride() == 1);
 
-    Require(slice_size > 0);
-    Require(slice_begin >= 0);
-    Require(slice_end >= slice_begin);
-    Require(slice_size * slice_begin <= size());
-    Require(slice_size * slice_end <= size());
+    REQUIRE(slice_size > 0);
+    REQUIRE(slice_begin >= 0);
+    REQUIRE(slice_end >= slice_begin);
+    REQUIRE(slice_size * slice_begin <= size());
+    REQUIRE(slice_size * slice_end <= size());
 
     // Calculate the begin and end indexes
     size_type index_begin = slice_size * slice_begin;
     size_type index_end   = slice_size * slice_end;
-    Check(d_begin_iterator + index_end <= d_end_iterator);
+    CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
     return View_Field_t(d_begin_iterator.get_pointer() + index_begin,
@@ -321,13 +321,13 @@ template<typename T>
 View_Field<T> View_Field<T>::general_slice(size_type index_begin,
                                            size_type index_end) const
 {
-    Require(d_begin_iterator);
-    Require(d_end_iterator);
-    Require(!empty());
+    REQUIRE(d_begin_iterator);
+    REQUIRE(d_end_iterator);
+    REQUIRE(!empty());
 
-    Require(index_end >= index_begin);
-    Require(d_begin_iterator + index_begin < d_end_iterator);
-    Require(d_begin_iterator + index_end <= d_end_iterator);
+    REQUIRE(index_end >= index_begin);
+    REQUIRE(d_begin_iterator + index_begin < d_end_iterator);
+    REQUIRE(d_begin_iterator + index_end <= d_end_iterator);
 
     return View_Field_t(
             d_begin_iterator.get_pointer() + index_begin,
@@ -345,10 +345,10 @@ View_Field<T> View_Field<T>::strided_slice(
         size_type stop,
         size_type step) const
 {
-    Require(start <= stop);
-    Require(step > 0);
-    Require(stop <= size() + step - 1);
-    Require((stop - start) % step == 0);
+    REQUIRE(start <= stop);
+    REQUIRE(step > 0);
+    REQUIRE(stop <= size() + step - 1);
+    REQUIRE((stop - start) % step == 0);
 
     return View_Field_t(d_begin_iterator.get_pointer() + start*stride(),
                         d_begin_iterator.get_pointer() + stop*stride(),
@@ -376,8 +376,8 @@ const_View_Field<T>::const_View_Field(const View_Field_t& rhs)
     : d_begin_iterator(rhs.begin())
     , d_end_iterator(rhs.end())
 {
-    Ensure(size() == rhs.size());
-    Ensure(stride() == rhs.stride());
+    ENSURE(size() == rhs.size());
+    ENSURE(stride() == rhs.stride());
 }
 
 //---------------------------------------------------------------------------//
@@ -391,7 +391,7 @@ const_View_Field<T>::const_View_Field(const_pointer first,
     : d_begin_iterator(first, stride)
     , d_end_iterator(last, stride)
 {
-    Require(std::distance(first, last) >= 0);
+    REQUIRE(std::distance(first, last) >= 0);
 }
 
 //---------------------------------------------------------------------------//
@@ -404,8 +404,8 @@ const_View_Field<T>::const_View_Field(const_iterator    first,
     : d_begin_iterator(first)
     , d_end_iterator(last)
 {
-    Require(std::distance(first, last) >= 0);
-    Require(first.stride() == last.stride());
+    REQUIRE(std::distance(first, last) >= 0);
+    REQUIRE(first.stride() == last.stride());
 }
 
 //---------------------------------------------------------------------------//
@@ -416,7 +416,7 @@ template<typename T>
 typename const_View_Field<T>::const_reference
 const_View_Field<T>::operator[](size_type i) const
 {
-    Require(valid_index(i));
+    REQUIRE(valid_index(i));
 
     return *(d_begin_iterator + i);
 }
@@ -429,7 +429,7 @@ template<typename T>
 typename const_View_Field<T>::const_reference
 const_View_Field<T>::front() const
 {
-    Require(!empty());
+    REQUIRE(!empty());
 
     return *d_begin_iterator;
 }
@@ -442,7 +442,7 @@ template<typename T>
 typename const_View_Field<T>::const_reference
 const_View_Field<T>::back() const
 {
-    Require(!empty());
+    REQUIRE(!empty());
 
     return *(d_end_iterator - 1);
 }
@@ -467,7 +467,7 @@ template<typename T>
 typename const_View_Field<T>::stride_type
 const_View_Field<T>::stride() const
 {
-    Ensure(d_begin_iterator.stride() == d_end_iterator.stride());
+    ENSURE(d_begin_iterator.stride() == d_end_iterator.stride());
     return d_begin_iterator.stride();
 }
 
@@ -479,7 +479,7 @@ template<typename T>
 typename const_View_Field<T>::const_pointer
 const_View_Field<T>::data() const
 {
-    Require(stride() == 1);
+    REQUIRE(stride() == 1);
     return d_begin_iterator.get_pointer();
 }
 
@@ -529,18 +529,18 @@ template<typename T>
 const_View_Field<T> const_View_Field<T>::slice(size_type slice_size,
                                                int       slice_num) const
 {
-    Require(!empty());
-    Require(stride() == 1);
+    REQUIRE(!empty());
+    REQUIRE(stride() == 1);
 
-    Require(slice_size > 0);
-    Require(slice_num >= 0);
-    Require(slice_size <= size());
-    Require(slice_num * slice_size <= size());
+    REQUIRE(slice_size > 0);
+    REQUIRE(slice_num >= 0);
+    REQUIRE(slice_size <= size());
+    REQUIRE(slice_num * slice_size <= size());
 
     // Calculate the begin and end indexes
     size_type index_begin = slice_num * slice_size;
     size_type index_end   = index_begin + slice_size;
-    Check(d_begin_iterator + index_end <= d_end_iterator);
+    CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
     return const_View_Field_t(d_begin_iterator.get_pointer() + index_begin,
@@ -557,17 +557,17 @@ const_View_Field<T> const_View_Field<T>::slice(size_type slice_size,
                                                int       slice_begin,
                                                int       slice_end) const
 {
-    Require(stride() == 1);
-    Require(slice_size > 0);
-    Require(slice_begin >= 0);
-    Require(slice_end >= slice_begin);
-    Require(slice_size * slice_begin <= size());
-    Require(slice_size * slice_end <= size());
+    REQUIRE(stride() == 1);
+    REQUIRE(slice_size > 0);
+    REQUIRE(slice_begin >= 0);
+    REQUIRE(slice_end >= slice_begin);
+    REQUIRE(slice_size * slice_begin <= size());
+    REQUIRE(slice_size * slice_end <= size());
 
     // Calculate the begin and end indexes
     size_type index_begin = slice_size * slice_begin;
     size_type index_end   = slice_size * slice_end;
-    Check(d_begin_iterator + index_end <= d_end_iterator);
+    CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
     return const_View_Field_t(d_begin_iterator.get_pointer() + index_begin,
@@ -583,8 +583,8 @@ const_View_Field<T>
 const_View_Field<T>::general_slice(size_type index_begin,
                                    size_type index_end) const
 {
-    Require(index_begin <= index_end);
-    Require(index_end <= size());
+    REQUIRE(index_begin <= index_end);
+    REQUIRE(index_end <= size());
 
     return const_View_Field_t(
             d_begin_iterator.get_pointer() + index_begin,
@@ -603,10 +603,10 @@ const_View_Field<T> const_View_Field<T>::strided_slice(
         size_type stop,
         size_type step) const
 {
-    Require(start <= stop);
-    Require(step > 0);
-    Require(stop <= size() + step - 1);
-    Require((stop - start) % step == 0);
+    REQUIRE(start <= stop);
+    REQUIRE(step > 0);
+    REQUIRE(stop <= size() + step - 1);
+    REQUIRE((stop - start) % step == 0);
 
     return const_View_Field_t(d_begin_iterator.get_pointer() + start * stride(),
                               d_begin_iterator.get_pointer() + stop * stride(),
@@ -629,7 +629,7 @@ const_View_Field<T> const_View_Field<T>::strided_slice(
 template<typename T, std::size_t N>
 View_Field<T> make_view(T (&array)[N])
 {
-    Require(N > 0);
+    REQUIRE(N > 0);
 
     return View_Field<T>(array, array + N);
 }
@@ -641,7 +641,7 @@ View_Field<T> make_view(T (&array)[N])
 template<typename T, std::size_t N>
 const_View_Field<T> make_view(const T (&array)[N])
 {
-    Require(N > 0);
+    REQUIRE(N > 0);
 
     return const_View_Field<T>(array, array + N);
 }

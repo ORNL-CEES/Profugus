@@ -19,7 +19,7 @@
 
 // Make sure DBC doesn't get included (don't compile in iostream, etc.)
 #define Utils_harness_DBC_hh
-#include "Utils/harness/DBC_nulldef.hh"
+#include "harness/DBC_nulldef.hh"
 
 #endif // __CUDA_ARCH__
 

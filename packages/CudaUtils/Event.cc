@@ -11,8 +11,8 @@
 #include "Event.hh"
 
 #include <iostream>
-#include "Utils/harness/DBC.hh"
-#include "Utils/comm/Timer.hh"
+#include "harness/DBC.hh"
+#include "comm/Timer.hh"
 
 #include "CudaDBC.hh"
 #include "Hardware.hh"
@@ -41,12 +41,12 @@ void Event<Host>::record()
     long long ll_freq, ll_now;
     QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&ll_freq));
     QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&ll_now));
-    Check(ll_freq > 0);
+    CHECK(ll_freq > 0);
     d_event_time = static_cast<double>(ll_now) / ll_freq;
 #else
-    Insist(false, "Timing is not available on this platform.");
+    INSIST(false, "Timing is not available on this platform.");
 #endif
-    Ensure(d_event_time > 0.);
+    ENSURE(d_event_time > 0.);
 }
 
 //---------------------------------------------------------------------------//
@@ -75,10 +75,10 @@ Event<Device>::Event(unsigned int flags)
  : d_handle(NULL)
 {
     typedef cuda::Hardware<Arch_t> Hardware_t;
-    Require(Hardware_t::have_acquired());
+    REQUIRE(Hardware_t::have_acquired());
 
     CudaCall(cudaEventCreateWithFlags(&d_handle, flags));
-    Ensure(d_handle != NULL);
+    ENSURE(d_handle != NULL);
 }
 
 //---------------------------------------------------------------------------//
