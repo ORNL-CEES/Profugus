@@ -43,7 +43,7 @@ class Tracking_Geometry
     //! Initialize track.
     virtual void initialize(const Space_Vector& r,
                             const Space_Vector& direction,
-                            Geo_State_t       & state) = 0;
+                            Geo_State_t       & state) const = 0;
 
     //! Get distance to next boundary.
     virtual double distance_to_boundary(Geo_State_t& state) = 0;
