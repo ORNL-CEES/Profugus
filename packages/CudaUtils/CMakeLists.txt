@@ -39,28 +39,28 @@ TRIBITS_CONFIGURE_FILE(config.h)
 ##---------------------------------------------------------------------------##
 
 # C/C++ headers
-FILE(GLOB HEADERS *.hh)
+FILE(GLOB HEADERS cuda_utils/*.hh)
 
 SET(SOURCES
-  Atomic_Lock.cc
-  BLAS_host.cc
-  Device_Vector_host.pt.cc
-  Event.cc
-  Functions.cc
-  Hardware.cc
-  Host_Vector.pt.cc
-  Multi_Vector.pt.cc
-  Stream.cc
-  Texture_Vector_host.pt.cc
+  cuda_utils/Atomic_Lock.cc
+  cuda_utils/BLAS_host.cc
+  cuda_utils/Device_Vector_host.pt.cc
+  cuda_utils/Event.cc
+  cuda_utils/Functions.cc
+  cuda_utils/Hardware.cc
+  cuda_utils/Host_Vector.pt.cc
+  cuda_utils/Multi_Vector.pt.cc
+  cuda_utils/Stream.cc
+  cuda_utils/Texture_Vector_host.pt.cc
   )
 
 IF(USE_CUDA)
   LIST(APPEND SOURCES
-    BLAS_device.cc
-    BLAS_Handle.cc
-    CudaDBC.cc
-    Device_Vector_device.pt.cc
-    Texture_Vector_device.pt.cc
+    cuda_utils/BLAS_device.cc
+    cuda_utils/BLAS_Handle.cc
+    cuda_utils/CudaDBC.cc
+    cuda_utils/Device_Vector_device.pt.cc
+    cuda_utils/Texture_Vector_device.pt.cc
     )
 ENDIF()
 
