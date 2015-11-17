@@ -89,25 +89,24 @@ TEST_F(MeshGeometryTest, accessors)
 
 TEST_F(MeshGeometryTest, initialization)
 {
-    std::shared_ptr<Mesh_Geometry> geo =
-        std::make_shared<Mesh_Geometry>(x, y, z);
+    Mesh_Geometry geo(x, y, z);
 
     Geo_State_t state;
 
     // begin outside
     Space_Vector r(-1., 1., 0.1);
     Space_Vector omega(1., 0.0, 0.);
-    geo->initialize(r, omega, state);
+    geo.initialize(r, omega, state);
 
     // check cell index
 #ifdef REQUIRE_ON
-    EXPECT_THROW(geo->cell(state), profugus::assertion);
+    EXPECT_THROW(geo.cell(state), profugus::assertion);
 #endif
-    EXPECT_EQ(OUTSIDE, geo->boundary_state(state));
+    EXPECT_EQ(OUTSIDE, geo.boundary_state(state));
 
     // check direction, position
-    EXPECT_VEC_SOFT_EQ(r,     geo->position(state));
-    EXPECT_VEC_SOFT_EQ(omega, geo->direction(state));
+    EXPECT_VEC_SOFT_EQ(r,     geo.position(state));
+    EXPECT_VEC_SOFT_EQ(omega, geo.direction(state));
 
     // check state internals
     EXPECT_EQ(-1 , state.ijk[I]);
@@ -117,16 +116,16 @@ TEST_F(MeshGeometryTest, initialization)
     // begin inside
     r = Space_Vector(0.2, 0.45, 0.4);
     omega = Space_Vector(0., 0., 1.);
-    geo->initialize(r, omega, state);
+    geo.initialize(r, omega, state);
 
     // check cell index
-    EXPECT_EQ(1 + 2 * 4 + 2 * 4 * 3, geo->cell(state));
-    Space_Vector pos = geo->position(state);
-    EXPECT_EQ(1 + 2 * 4 + 2 * 4 * 3, geo->cell(pos));
+    EXPECT_EQ(1 + 2 * 4 + 2 * 4 * 3, geo.cell(state));
+    Space_Vector pos = geo.position(state);
+    EXPECT_EQ(1 + 2 * 4 + 2 * 4 * 3, geo.cell(pos));
 
     // check direction, position
-    EXPECT_VEC_SOFT_EQ(r,     geo->position(state));
-    EXPECT_VEC_SOFT_EQ(omega, geo->direction(state));
+    EXPECT_VEC_SOFT_EQ(r,     geo.position(state));
+    EXPECT_VEC_SOFT_EQ(omega, geo.direction(state));
 
     // check state internals
     EXPECT_EQ(1, state.ijk[I]);
