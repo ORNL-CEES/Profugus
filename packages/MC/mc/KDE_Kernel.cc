@@ -1,7 +1,7 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   Shift/mc_sources/kde/KDE_Kernel.cc
- * \author Seth R Johnson
+ * \file   MC/mc/kde/KDE_Kernel.cc
+ * \author Gregory Davidson
  * \date   Mon Feb 16 14:21:15 2015
  * \brief  KDE_Kernel class definitions.
  * \note   Copyright (c) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -10,11 +10,12 @@
 
 #include "KDE_Kernel.hh"
 
-#include "Nemesis/harness/DBC.hh"
-#include "Nemesis/comm/global.hh"
-#include "Nemesis/utils/Container_Functions.hh"
+#include "harness/DBC.hh"
+#include "comm/global.hh"
+#include "utils/Container_Functions.hh"
+#include "Sampler.hh"
 
-namespace shift
+namespace profugus
 {
 
 //---------------------------------------------------------------------------//
@@ -27,17 +28,17 @@ KDE_Kernel::KDE_Kernel(SP_Geometry geometry,
                        SP_Physics  physics,
                        double      coefficient,
                        double      exponent)
-    : b_geometry(geometry)
-    , b_physics(physics)
-    , b_coefficient(coefficient)
-    , b_exponent(exponent)
-    , b_num_sampled(0)
-    , b_num_accepted(0)
+    : d_geometry(geometry)
+    , d_physics(physics)
+    , d_coefficient(coefficient)
+    , d_exponent(exponent)
+    , d_num_sampled(0)
+    , d_num_accepted(0)
 {
-    REQUIRE(b_geometry);
-    REQUIRE(b_physics);
-    REQUIRE(b_coefficient > 0.0);
-    REQUIRE(b_exponent > -1.0 && b_exponent < 0.0);
+    REQUIRE(d_geometry);
+    REQUIRE(d_physics);
+    REQUIRE(d_coefficient > 0.0);
+    REQUIRE(d_exponent > -1.0 && d_exponent < 0.0);
 
     // Setup the bandwidth map (start with a bandwidth of all zero)
     cell_type num_cells = geometry->num_cells();
@@ -53,9 +54,10 @@ KDE_Kernel::KDE_Kernel(SP_Geometry geometry,
 /*!
  * \brief Set the bandwidth for a cell.
  */
-void Axial_Kernel::calc_bandwidths(const std::vector<Space_Vector> &fis_sites)
+void KDE_Kernel::calc_bandwidths(
+    const Physics::Fission_Site_Container &fis_sites)
 {
-    typedef geometria::cell_type  cell_type;
+    typedef geometry::cell_type  cell_type;
 
     // Broadcast all of the fission sites to all cores
     std::vector<Space_Vector> global_sites = this->communicate_sites(fis_sites);
@@ -72,7 +74,7 @@ void Axial_Kernel::calc_bandwidths(const std::vector<Space_Vector> &fis_sites)
         double z = fs[def::Z];
 
         // Get the cell
-        cell_type cell = b_geometry->find_cell(fs);
+        cell_type cell = d_geometry->cell(fs);
 
         cell_sums[cell]   += z;
         cell_sum_sq[cell] += z*z;
@@ -80,35 +82,63 @@ void Axial_Kernel::calc_bandwidths(const std::vector<Space_Vector> &fis_sites)
     }
 
     // Loop over the cells and calculate the bandwidths
-    std::map<cell_type, double> bandwidths;
-    for (const auto &zip_elem : nemesis::zip(cell_sums, cell_sum_sq, num_fs))
+    auto cell_sum_iter = cell_sums.cbegin();
+    auto cell_sq_iter  = cell_sum_sq.cbegin();
+    for (auto num_fs_iter = num_fs.cbegin(); num_fs_iter != num_fs.cend();
+         ++num_fs_iter, ++cell_sum_iter, ++cell_sq_iter)
     {
-        cell_type cell = std::get<0>(std::get<0>(zip_elem));
-        double sum     = std::get<1>(std::get<0>(zip_elem));
-        double sum_sq  = std::get<1>(std::get<1>(zip_elem));
-        unsigned int N = std::get<1>(std::get<2>(zip_elem));
+        CHECK(cell_sum_iter != cell_sums.cend());
+        CHECK(cell_sq_iter  != cell_sum_sq.cend());
+        CHECK(cell_sum_iter->first == cell_sq_iter->first);
+        CHECK(cell_sum_iter->first == num_fs_iter->first);
+
+        // Get the data
+        cell_type cell = cell_sum_iter->first;
+        double sum     = cell_sum_iter->second;
+        double sum_sq  = cell_sq_iter->second;
+        unsigned int N = num_fs_iter->second;
 
         // Calculate the variance
         double variance = sum_sq/N - (sum/N)*(sum/N);
 
         // Calculate the bandwidth
-        bandwidths[cell] = b_coefficient*std::sqrt(variance)*
-                           std::pow(N, b_exponent);
+        d_bndwidth_map[cell] = d_coefficient*std::sqrt(variance)*
+                               std::pow(N, d_exponent);
     }
-
-    // Calculate the bandwidth
-    d_bandwidth_map.set(bandwidths);
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Return the bandwidth for a given cell.
  */
-double Axial_Kernel::bandwidth(cell_type cellid) const
+double KDE_Kernel::bandwidth(cell_type cellid) const
 {
     REQUIRE(d_bndwidth_map.count(cellid) == 1);
 
-    return d_bndwidth_map[cellid];
+    return d_bndwidth_map.find(cellid)->second;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the bandwidths for all cells.
+ */
+std::vector<double>
+KDE_Kernel::get_bandwidths() const
+{
+    // Create the vector to hold the bandwidths
+    std::vector<double> bandwidths(d_bndwidth_map.size());
+
+    // Loop over the bandwidth map and fill the bandwidth vector
+    std::vector<double>::iterator vec_iter = bandwidths.begin();
+    for (const auto &map_elem : d_bndwidth_map)
+    {
+        CHECK(vec_iter != bandwidths.end());
+
+        // Fill element and update iterator
+        *vec_iter++ = map_elem.first;
+    }
+
+    return bandwidths;
 }
 
 //---------------------------------------------------------------------------//
@@ -117,53 +147,41 @@ double Axial_Kernel::bandwidth(cell_type cellid) const
  *
  * If the new position is outside the fissionable region, it is rejected.
  */
-Axial_Kernel::Space_Vector
-Axial_Kernel::sample_position(const Space_Vector &orig_position,
-                              RNG                &rng) const
+KDE_Kernel::Space_Vector
+KDE_Kernel::sample_position(const Space_Vector &orig_position,
+                            RNG                &rng) const
 {
-    REQUIRE(b_physics);
-    REQUIRE(b_geometry);
+    REQUIRE(d_physics);
+    REQUIRE(d_geometry);
     REQUIRE(rng.assigned());
 
     // Get the cell at the position
-    cell_type cellid = b_geometry->find_cell(orig_position);
+    cell_type cellid = d_geometry->cell(orig_position);
 
     size_type failures = 0;
     do
     {
         // Sample Epanechnikov kernel
-        double epsilon = mc::sampler::sample_epan(rng);
+        double epsilon = sampler::sample_epan(rng);
 
-        // If we have a bandwidth here, get it.  Otherwise, use a bandwidth of
-        // 0.0
-        double bandwidth = 0.0;
-        if (d_bandwidth_map.have_cellid(cellid))
-        {
-            bandwidth = d_bndwidth_map.bandwidth(cellid);
-        }
-        Check(bandwidth >= 0.0);
+        // Get the bandwidth
+        CHECK(d_bndwidth_map.count(cellid) == 1);
+        double bandwidth = d_bndwidth_map.find(cellid)->second;
+        CHECK(bandwidth >= 0.0);
 
         // Create a new position
         Space_Vector new_pos(orig_position[def::X],
                              orig_position[def::Y],
                              orig_position[def::Z] + epsilon*bandwidth/2.0);
 
-        try
+        // Get matid from sampled point (may raise error if outside
+        // geometry)
+        if (d_physics->is_fissionable(d_geometry->matid(new_pos)))
         {
-            // Get matid from sampled point (may raise error if outside
-            // geometry)
-            if (b_physics->is_fissionable(b_geometry->find_matid(new_pos)))
-            {
-                // Accept: sampled point is fissionable
-                b_num_sampled += failures + 1;
-                ++b_num_accepted;
-                return new_pos;
-            }
-        }
-        catch (const geometria::Geometry_Error& e)
-        {
-            // Outside the geometry!
-            continue;
+            // Accept: sampled point is fissionable
+            d_num_sampled += failures + 1;
+            ++d_num_accepted;
+            return new_pos;
         }
 
         // Increment failure counter.
@@ -171,9 +189,9 @@ Axial_Kernel::sample_position(const Space_Vector &orig_position,
     } while (failures != 1000);
 
     // No luck
-    b_num_sampled += failures;
-    throw geometria::Geometry_Error(
-        "1000 consecutive nonfissionable rejections in KDE.");
+    d_num_sampled += failures;
+    std::cout << "1000 consecutive nonfissionable rejections in KDE."
+              << std::endl;
     return Space_Vector(0,0,0);
 }
 
@@ -183,10 +201,10 @@ Axial_Kernel::sample_position(const Space_Vector &orig_position,
  */
 double KDE_Kernel::acceptance_fraction() const
 {
-    REQUIRE(b_num_sampled > 0);
+    REQUIRE(d_num_sampled > 0);
 
-    return (static_cast<double>(b_num_accepted) /
-            static_cast<double>(b_num_sampled));
+    return (static_cast<double>(d_num_accepted) /
+            static_cast<double>(d_num_sampled));
 }
 
 //---------------------------------------------------------------------------//
@@ -197,40 +215,42 @@ double KDE_Kernel::acceptance_fraction() const
  *        all cores.
  */
 std::vector<KDE_Kernel::Space_Vector>
-KDE_Kernel::communicate_sites(const std::vector<Space_Vector> &fis_sites) const
+KDE_Kernel::communicate_sites(
+    const Physics::Fission_Site_Container &fis_sites) const
 {
     // >>> COMMUNICATE SIZES
     // Create a vector to hold all of the local sizes
-    std::vector<int> local_sizes(nemesis::nodes(), 0);
+    std::vector<int> local_sizes(profugus::nodes(), 0);
 
     // Set the local size
-    local_sizes[nemesis::node()] = fis_sites.size();
+    local_sizes[profugus::node()] = fis_sites.size();
 
     // Communicate all of the local sizes
-    nemesis::global_sum(local_sizes.data(), local_sizes.size());
+    profugus::global_sum(local_sizes.data(), local_sizes.size());
 
     // Calculate the global size
-    int global_size = nemesis::accumulate(local_sizes);
+    int global_size =
+        std::accumulate(local_sizes.begin(), local_sizes.end(), 0);
 
-    // >>> COMMUNICATE GLOBAL Z-LOCATIONS
-    // Create a vector to hold all of the z-locations
+    // >>> COMMUNICATE GLOBAL FISSION SITES
+    // Create a vector to hold all of the fission sites
     std::vector<Space_Vector> global_locs(global_size,
                                           Space_Vector(0.0, 0.0, 0.0));
-
     if (global_size > 0)
     {
         // Find the copy index
         int begin_index =
             std::accumulate(local_sizes.begin(),
-                            local_sizes.begin() + nemesis::node(), 0);
+                            local_sizes.begin() + profugus::node(), 0);
         CHECK(begin_index + fis_sites.size() <= global_locs.size());
 
         // Fill the local portion with the z locations
-        std::copy(fis_sites.begin(), fis_sites.end(),
-                  global_locs.begin() + begin_index);
+        std::transform(fis_sites.begin(), fis_sites.end(),
+                       global_locs.begin() + begin_index,
+                       [](const Physics::Fission_Site &fs) { return fs.r; });
 
         // Communicate the vector
-        nemesis::global_sum(&global_locs[0][def::X], 3*global_locs.size());
+        profugus::global_sum(&global_locs[0][def::X], 3*global_locs.size());
     }
 
     return global_locs;
@@ -240,5 +260,5 @@ KDE_Kernel::communicate_sites(const std::vector<Space_Vector> &fis_sites) const
 } // end namespace shift
 
 //---------------------------------------------------------------------------//
-// end of Shift/mc_sources/kde/KDE_Kernel.cc
+// end of MC/mc/kde/KDE_Kernel.cc
 //---------------------------------------------------------------------------//

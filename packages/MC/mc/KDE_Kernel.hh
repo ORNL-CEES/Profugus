@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   mc/KDE_Kernel.hh
+ * \file   MC/mc/KDE_Kernel.hh
  * \author Gregory Davidson
  * \date   Mon Feb 16 14:21:15 2015
  * \brief  KDE_Kernel class declaration.
@@ -8,13 +8,15 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Source_hh
-#define mc_Fission_Source_hh
+#ifndef MC_mc_KDE_Kernel_hh
+#define MC_mc_KDE_Kernel_hh
 
 #include <map>
 #include <utility>
 #include <vector>
 
+#include "utils/Definitions.hh"
+#include "rng/RNG_Control.hh"
 #include "geometry/Geometry.hh"
 #include "Physics.hh"
 #include "Particle.hh"
@@ -28,7 +30,7 @@ namespace profugus
  * \brief Samples a KDE position.
  */
 /*!
- * \example mc_sources/test/tstKDE_Kernel.cc
+ * \example mc/test/tstKDE_Kernel.cc
  *
  * Test of KDE_Kernel.
  */
@@ -39,14 +41,14 @@ class KDE_Kernel
   public:
     //@{
     //! Useful typedefs.
-    typedef def::Space_Vector                    Space_Vector;
-    typedef mc::SPRNG                            RNG;
-    typedef def::size_type                       size_type;
-    typedef geometria::cell_type                 cell_type;
-    typedef std::shared_ptr<geometria::Geometry> SP_Geometry;
-    typedef std::shared_ptr<physica::Physics>    SP_Physics;
-    typedef std::pair<cell_type, double>         Bandwidth_Element;
-    typedef std::vector<Bandwidth_Element>       Vec_Bandwidths;
+    typedef def::Space_Vector                   Space_Vector;
+    typedef def::size_type                      size_type;
+    typedef geometry::cell_type                 cell_type;
+    typedef Core                                Geometry_t;
+    typedef std::shared_ptr<Geometry_t>         SP_Geometry;
+    typedef std::shared_ptr<profugus::Physics>  SP_Physics;
+    typedef std::pair<cell_type, double>        Bandwidth_Element;
+    typedef std::map<cell_type, double>         Bandwidth_Map;
     //@}
 
   protected:
@@ -61,7 +63,7 @@ class KDE_Kernel
     double d_exponent;
 
     // Stores the bandwidth on each cell
-    std::map<cell_type, double> d_bndwidth_map;
+    Bandwidth_Map d_bndwidth_map;
 
   public:
     // Constructor.
@@ -71,19 +73,19 @@ class KDE_Kernel
                double      exponent    = -0.20);
 
     //! Get the bandwidth coefficient
-    double coefficient() const { return b_coefficient; }
+    double coefficient() const { return d_coefficient; }
 
     //! Get the bandwidth exponent
-    double exponent() const { return b_exponent; }
+    double exponent() const { return d_exponent; }
 
     //! Calculate the bandwidths
     void calc_bandwidths(const Physics::Fission_Site_Container &fis_sites);
 
     //! Return the bandwidth for a given cell
-    double bandwidth(cell_type cellid) { REQUIRE
+    double bandwidth(cell_type cellid) const;
 
-    //! Return all of the cells and bandwidths
-    Vec_Bandwidths get_bandwidths();
+    //! Return the bandwidths for all cells
+    std::vector<double> get_bandwidths() const;
 
     //! Sample a new position
     Space_Vector sample_position(const Space_Vector &orig_position,
@@ -95,21 +97,21 @@ class KDE_Kernel
   protected:
     // >>> IMPLEMENTATION FUNCTIONS
     std::vector<Space_Vector> communicate_sites(
-        const std::vector<Space_Vector> &fis_sites) const;
+        const Physics::Fission_Site_Container &fis_sites) const;
 
     // >>> IMPLEMENTATION DATA
 
     // Keeps track of the number of kernel samples
-    mutable size_type b_num_sampled;
+    mutable size_type d_num_sampled;
 
     // Keeps track of the number of accepted
-    mutable size_type b_num_accepted;
+    mutable size_type d_num_accepted;
 };
 
-} // end namespace shift
+} // end namespace profugus
 
-#endif // Shift_mc_sources_kde_KDE_Kernel_hh
+#endif // MC_mc_KDE_Kernel_hh
 
 //---------------------------------------------------------------------------//
-// end of Shift/mc_sources/kde/KDE_Kernel.hh
+// end of MC/mc/kde/KDE_Kernel.hh
 //---------------------------------------------------------------------------//
