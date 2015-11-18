@@ -39,18 +39,24 @@ class KernelTest : public SourceTestBase
     }
 
     /*
-      Test Geometry:
+      Test Lattice:
 
       |-------|-------|
       |       |       |
-      |  H20  |  pin  |
+      |  UO2  |  H2O  |
       |       |       |
       |-------|-------|
       |       |       |
-      |  pin  |  H20  |
+      |  H2O  |  UO2  |
       |       |       |
       |-------|-------|
 
+      PIN: FUEL = 1
+           MOD  = 0
+
+      LATTICE:
+           UO2 - 1
+           H2O - 2
      */
     virtual void init_geometry()
     {
@@ -61,33 +67,35 @@ class KernelTest : public SourceTestBase
         typedef Lattice_t::SP_Object SP_Pin_Cell;
         typedef Lattice_t::Object_t  Pin_Cell_t;
 
-        // make cells
-        SP_Pin_Cell h2o = std::make_shared<Pin_Cell_t>(3, 1.26, 14.28);
-        SP_Pin_Cell pin = std::make_shared<Pin_Cell_t>(5, 0.59, 3, 1.26, 14.28);
+        // make pin cells
+        SP_Pin_Cell uo2(std::make_shared<Pin_Cell_t>(1, 0.54, 0, 1.26, 14.28));
+        SP_Pin_Cell h2o(std::make_shared<Pin_Cell_t>(0, 1.26, 14.28));
 
         // make lattice
-        SP_Lattice lat = std::make_shared<Lattice_t>(2, 2, 1, 2);
-        lat->assign_object(h2o, 0);
-        lat->assign_object(pin, 1);
-        lat->id(0,0,0) = lat->id(1,1,0) = 1;
-        lat->id(1,0,0) = lat->id(0,1,0) = 0;
+        SP_Lattice lat(std::make_shared<Lattice_t>(2, 2, 1, 3));
+        lat->assign_object(uo2, 1);
+        lat->assign_object(h2o, 2);
+        lat->id(0, 0, 0) = 2; // H20
+        lat->id(1, 0, 0) = 1; // UO2
+        lat->id(0, 1, 0) = 1; // UO2
+        lat->id(1, 1, 0) = 2; // H2O
 
         // complete lattice
         lat->complete(0.0, 0.0, 0.0);
 
-        // make core
-        SP_Core core = std::make_shared<Core_t>(1, 1, 1, 1);
+        // make the core
+        SP_Core core(std::make_shared<Core_t>(1, 1, 1, 1));
         core->assign_object(lat, 0);
-        core->id(0,0,0) = 0;
         core->complete(0.0, 0.0, 0.0);
 
         // make the b_geometry
         b_geometry = std::make_shared<Geometry_t>(core);
     }
 
+    // 2 material definitions/1 group
     /*
-     - Mat 3 -> H20
-     - Mat 5 -> FUEL
+     - Mat 0 -> Moderator
+     - Mat 1 -> Fuel
      */
     virtual void init_physics()
     {
@@ -123,18 +131,23 @@ class KernelTest : public SourceTestBase
 
     //------------------------------------------------------------------------//
     // Check that a given position is in one of our fuel pins
+    // 
     bool is_in_pin(const Space_Vector &pos)
     {
-        // Pin origins are (0.63, 0.63) and (1.89, 1.89) with radius 0.59
-        double dist_1 = sqrt(  (pos[0] - 0.63) * (pos[0] - 0.63)
+        // Pin origins are (1.89, 0.63) and (0.63, 1.89) with radius 0.54
+        double dist_1 = sqrt(  (pos[0] - 1.89) * (pos[0] - 1.89)
                              + (pos[1] - 0.63) * (pos[1] - 0.63));
-        double dist_2 = sqrt(  (pos[0] - 1.89) * (pos[0] - 1.89)
+        double dist_2 = sqrt(  (pos[0] - 0.63) * (pos[0] - 0.63)
                              + (pos[1] - 1.89) * (pos[1] - 1.89));
 
-        if (dist_1 > 0.59 && dist_2 > 0.59)
+        if (dist_1 > 0.54 && dist_2 > 0.54)
+        {
             return false;
+        }
         else
+        {
             return true;
+        }
     }
 
 };
@@ -212,36 +225,24 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
 //---------------------------------------------------------------------------//
 TEST_F(KernelTest, test_bounds)
 {
-    std::cout << "Ok_1" << std::endl;
-
     // Create a KDE kernel
     KDE_Kernel kernel(b_geometry, b_physics);
-
-    std::cout << "Ok_2" << std::endl;
 
     // Set the bandwidth in the pin (cell 1)
     double bandwidth = 2.5;
     kernel.set_bandwidth(1, bandwidth);
 
-    std::cout << "Ok_3" << std::endl;
-
     // Create random number generator
     profugus::RNG rng = b_rcon->rng();
-
-    std::cout << "Ok_4" << std::endl;
 
     // Do 1000 samples
     for (unsigned int i = 0; i < 1000; ++i)
     {
         // Create a fission site at the middle of the top-right pin
-        Space_Vector site_pos(1.89, 1.89, 7.14);
-
-        std::cout << "Ok_5" << std::endl;
+        Space_Vector site_pos(0.63, 1.89, 7.14);
 
         // Sample the position
         Space_Vector sampled_pos = kernel.sample_position(site_pos, rng);
-
-        std::cout << "Ok_6" << std::endl;
 
         // Verify that the x,y coordinates are the same, and the z-position is
         // within the bandwidth
@@ -253,8 +254,6 @@ TEST_F(KernelTest, test_bounds)
 }
 
 //---------------------------------------------------------------------------//
-#if 0
-
 TEST_F(KernelTest, test_in_pin)
 {
     // Create a KDE kernel
@@ -262,21 +261,21 @@ TEST_F(KernelTest, test_in_pin)
 
     // Set the bandwidth
     double bandwidth = 2.5;
-    kernel.set_bandwidth(bandwidth);
+    kernel.set_bandwidth(1, bandwidth);
 
     // Create random number generator
-    RNG_Control::RNG rng = b_rcon->rng();
+    profugus::RNG rng = b_rcon->rng();
 
     // Do 1000 samples
     for (unsigned int i = 0; i < 1000; ++i)
     {
-        // Create a fission site within the top-right pin
+        // Create a fission site within the top-left pin
         // Sample the position
         Space_Vector site_pos(0.0, 0.0, 0.0);
         do
         {
-            site_pos[0] = rng.ran() * 0.59 + 1.555;
-            site_pos[1] = rng.ran() * 0.59 + 1.555;
+            site_pos[0] = rng.ran() * 0.54 + 0.63;
+            site_pos[1] = rng.ran() * 0.54 + 1.89;
             site_pos[2] = rng.ran() * 14.28;
         } while (!is_in_pin(site_pos));
 
@@ -289,7 +288,7 @@ TEST_F(KernelTest, test_in_pin)
 }
 
 //---------------------------------------------------------------------------//
-
+#if 0
 TEST_F(KernelTest, heuristic_test_resample)
 {
     // Create a KDE kernel
