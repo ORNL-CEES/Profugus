@@ -3,10 +3,11 @@
 ##---------------------------------------------------------------------------##
 
 # Default build all packages
-SET(Profugus_ENABLE_Utils   ON CACHE BOOL "")
-SET(Profugus_ENABLE_Matprop ON CACHE BOOL "")
-SET(Profugus_ENABLE_SPn     ON CACHE BOOL "")
-SET(Profugus_ENABLE_MC      ON CACHE BOOL "")
+SET(Profugus_ENABLE_Utils       ON CACHE BOOL "")
+SET(Profugus_ENABLE_CudaUtils   ON CACHE BOOL "")
+SET(Profugus_ENABLE_Matprop     ON CACHE BOOL "")
+SET(Profugus_ENABLE_SPn         ON CACHE BOOL "")
+SET(Profugus_ENABLE_MC          ON CACHE BOOL "")
 
 # Turn on tests
 SET(Profugus_ENABLE_TESTS ON CACHE BOOL "")

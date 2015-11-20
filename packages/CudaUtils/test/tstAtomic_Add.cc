@@ -12,8 +12,8 @@
 
 #include "Atomic_Add_Kernel_Data.hh"
 #include "Atomic_Add_Kernel.cuh"
-#include "../Hardware.hh"
-#include "../Host_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Host_Vector.hh"
 
 //---------------------------------------------------------------------------//
 // POLYGLOT TESTS

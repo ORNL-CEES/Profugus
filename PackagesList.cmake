@@ -13,9 +13,7 @@ TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   Utils     packages/Utils     SS
   CudaUtils packages/CudaUtils SS
   Matprop   packages/Matprop   SS
-  SPn       packages/SPn       SS
   MC        packages/MC        SS
-  Alea      packages/Alea      SS
   )
 
 ##---------------------------------------------------------------------------##

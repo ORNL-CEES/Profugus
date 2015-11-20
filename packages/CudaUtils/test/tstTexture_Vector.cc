@@ -8,15 +8,15 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../Texture_Vector.hh"
+#include "../cuda_utils/Texture_Vector.hh"
 
 #include <vector>
 #include "gtest/utils_gtest.hh"
 #include "utils/View_Field.hh"
 
-#include "../Hardware.hh"
-#include "../Host_Vector.hh"
-#include "../Device_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Host_Vector.hh"
+#include "../cuda_utils/Device_Vector.hh"
 
 #include "Texture_Vector_Test_Kernel.cuh"
 

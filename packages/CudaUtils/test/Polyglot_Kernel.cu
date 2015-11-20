@@ -7,14 +7,14 @@
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
-#include "../Kernel_Header.cuh"
+#include "../cuda_utils/Kernel_Header.cuh"
 
 #include <utility>
 
 #include "Polyglot_Kernel.cuh"
-#include "../CudaDBC.hh"
-#include "../Hardware.hh"
-#include "../Host_Vector.hh"
+#include "../cuda_utils/CudaDBC.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Host_Vector.hh"
 
 //---------------------------------------------------------------------------//
 // DEFINITIONS
@@ -43,7 +43,7 @@ __global__ void polyglot_copy_kernel(
 template<typename Arch_Switch>
 __host__ void polyglot_copy(Polyglot_Kernel_Data<Arch_Switch>& kd)
 {
-    Require(kd.input.size() == kd.output.size());
+    REQUIRE(kd.input.size() == kd.output.size());
 
     // Check for prior launch failure
     CudaCall(cudaGetLastError());
@@ -63,7 +63,7 @@ void polyglot_copy(
         const Device_Vector<Arch_Switch, Float_Type>& input,
               Device_Vector<Arch_Switch, Float_Type>& output)
 {
-    Require(input.size() == output.size());
+    REQUIRE(input.size() == output.size());
 
     typedef ::cuda::Hardware<Arch_Switch> Hardware_t;
 
@@ -89,8 +89,8 @@ void polyglot_copy(
         const Host_Vector<Float_Type>&   input,
               Device_Vector<Arch_Switch,Float_Type>& output)
 {
-    Require(input.is_mapped());
-    Require(input.size() == output.size());
+    REQUIRE(input.is_mapped());
+    REQUIRE(input.size() == output.size());
 
     typedef ::cuda::Hardware<Arch_Switch> Hardware_t;
 

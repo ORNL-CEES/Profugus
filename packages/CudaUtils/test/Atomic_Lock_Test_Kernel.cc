@@ -9,7 +9,7 @@
 //---------------------------------------------------------------------------//
 
 // Include fake cuda runtime
-#include "../Pseudo_Cuda.hh"
+#include "../cuda_utils/Pseudo_Cuda.hh"
 
 // Generate the polyglot Lock kernel for host code
 #include "Atomic_Lock_Test_Kernel.cu"

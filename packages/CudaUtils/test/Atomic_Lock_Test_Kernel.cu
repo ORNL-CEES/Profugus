@@ -7,12 +7,12 @@
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
-#include "../Kernel_Header.cuh"
+#include "../cuda_utils/Kernel_Header.cuh"
 
 #include "Atomic_Lock_Test_Kernel.cuh"
 
-#include "../Atomic_Lock_Kernel.cuh"
-#include "../CudaDBC.hh"
+#include "../cuda_utils/Atomic_Lock_Kernel.cuh"
+#include "../cuda_utils/CudaDBC.hh"
 
 namespace cuda
 {

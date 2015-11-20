@@ -10,8 +10,8 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include <../config.h>
-#include "../Hardware.hh"
+#include "config.h"
+#include "../cuda_utils/Hardware.hh"
 
 //---------------------------------------------------------------------------//
 #ifdef USE_CUDA

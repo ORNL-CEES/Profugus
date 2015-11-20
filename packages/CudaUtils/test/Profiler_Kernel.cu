@@ -7,12 +7,12 @@
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
-#include "../Kernel_Header.cuh"
+#include "../cuda_utils/Kernel_Header.cuh"
 
 #include "Profiler_Kernel.cuh"
 
-#include "Utils/harness/DBC.hh"
-#include "../CudaDBC.hh"
+#include "harness/DBC.hh"
+#include "../cuda_utils/CudaDBC.hh"
 
 #ifndef NDEBUG
 // debug mode is slower
@@ -112,7 +112,7 @@ __host__ unsigned long int operation_test(
 {
     typedef Profiler_Op<Float_T> Operation_t;
 
-    Require(num_threads * num_blocks > 0);
+    REQUIRE(num_threads * num_blocks > 0);
 
     // Functor to run on the device
     Operation_t op;

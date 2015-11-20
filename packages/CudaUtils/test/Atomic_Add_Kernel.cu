@@ -7,11 +7,11 @@
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
-#include "../Kernel_Header.cuh"
+#include "../cuda_utils/Kernel_Header.cuh"
 
 #include "Atomic_Add_Kernel.cuh"
-#include "../Atomic_Add.cuh"
-#include "../CudaDBC.hh"
+#include "../cuda_utils/Atomic_Add.cuh"
+#include "../cuda_utils/CudaDBC.hh"
 
 namespace cuda
 {
@@ -39,8 +39,8 @@ __global__ void atomic_add_test_kernel(
 template<typename Arch_Switch, typename Float_T>
 void atomic_add_test(Atomic_Add_Kernel_Data<Arch_Switch, Float_T>& kd)
 {
-    Require(kd.output.size() == 1);
-    Require(kd.num_increments > 0);
+    REQUIRE(kd.output.size() == 1);
+    REQUIRE(kd.num_increments > 0);
 
     // Check for prior launch failure
     CudaCall(cudaGetLastError());

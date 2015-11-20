@@ -9,7 +9,7 @@
 //---------------------------------------------------------------------------//
 
 // Include fake cuda runtime
-#include "../Pseudo_Cuda.hh"
+#include "../cuda_utils/Pseudo_Cuda.hh"
 
 // Generate the polyglot kernel for host code
 #include "Texture_Vector_Test_Kernel.cu"

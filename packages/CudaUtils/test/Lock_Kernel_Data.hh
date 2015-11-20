@@ -11,10 +11,10 @@
 #ifndef cuda_utils_test_Lock_Kernel_Data_hh
 #define cuda_utils_test_Lock_Kernel_Data_hh
 
-#include "../Vector_Traits.hh"
-#include "../Device_Vector.hh"
-#include "../Atomic_Lock.hh"
-#include "../Launch_Args.hh"
+#include "../cuda_utils/Vector_Traits.hh"
+#include "../cuda_utils/Device_Vector.hh"
+#include "../cuda_utils/Atomic_Lock.hh"
+#include "../cuda_utils/Launch_Args.hh"
 
 namespace cuda
 {

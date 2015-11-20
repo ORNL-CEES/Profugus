@@ -8,13 +8,13 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../BLAS.hh"
+#include "../cuda_utils/BLAS.hh"
 
 #include "gtest/utils_gtest.hh"
 #include "utils/View_Field.hh"
 
-#include "../Hardware.hh"
-#include "../Device_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Device_Vector.hh"
 
 //---------------------------------------------------------------------------//
 // POLYGLOT TESTS
@@ -50,7 +50,7 @@ class BLASTest : public ::testing::Test
             std::cout << "Acquiring device..." << std::endl;
             Hardware_t::acquire();
         }
-        Insist(Hardware_t::have_acquired(), "Device could not be acquired.");
+        INSIST(Hardware_t::have_acquired(), "Device could not be acquired.");
     }
 
 };

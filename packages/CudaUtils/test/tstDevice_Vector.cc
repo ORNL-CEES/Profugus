@@ -8,14 +8,14 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../Device_Vector.hh"
+#include "../cuda_utils/Device_Vector.hh"
 
 #include <vector>
 #include "gtest/utils_gtest.hh"
 #include "utils/View_Field.hh"
 
-#include "../Hardware.hh"
-#include "../Host_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Host_Vector.hh"
 #include "Polyglot_Kernel.cuh"
 
 //---------------------------------------------------------------------------//
@@ -45,7 +45,7 @@ class DeviceVectorTest : public ::testing::Test
             Hardware_t::acquire();
             std::cout << "done." << std::endl;
         }
-        Insist(Hardware_t::have_acquired(), "Device could not be acquired.");
+        INSIST(Hardware_t::have_acquired(), "Device could not be acquired.");
 
         // Add values to the vector
         for (std::size_t i = 0; i < 63; ++i)

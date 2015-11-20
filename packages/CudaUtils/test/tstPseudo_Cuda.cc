@@ -10,7 +10,7 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include "../Pseudo_Cuda.hh"
+#include "../cuda_utils/Pseudo_Cuda.hh"
 
 //---------------------------------------------------------------------------//
 // COMPILABILITY CHECKS

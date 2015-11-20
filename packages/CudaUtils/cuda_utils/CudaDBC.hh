@@ -17,7 +17,7 @@
 // If compiling device code, disable DBC
 //---------------------------------------------------------------------------//
 #ifdef __CUDA_ARCH__
-#ifdef Require
+#ifdef REQUIRE
 // Undefine DBC macros since we've included DBC.hh
 #include "harness/DBC_undef.hh"
 #else // Require

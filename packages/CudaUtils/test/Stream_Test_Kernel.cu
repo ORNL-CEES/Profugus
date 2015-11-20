@@ -7,11 +7,11 @@
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
-#include "../Kernel_Header.cuh"
+#include "../cuda_utils/Kernel_Header.cuh"
 
 #include "Stream_Test_Kernel.cuh"
 
-#include "../CudaDBC.hh"
+#include "../cuda_utils/CudaDBC.hh"
 
 namespace cuda
 {
@@ -43,14 +43,14 @@ __global__ void stream_test_kernel(
         for (unsigned int seg = 0; seg < num_segments;
                 ++seg, tau_it += num_rays, src_it += num_rays)
         {
-            Check(tau_it < all_tau + num_rays * num_segments);
-            Check(src_it < all_src + num_rays * num_segments);
+            CHECK(tau_it < all_tau + num_rays * num_segments);
+            CHECK(src_it < all_src + num_rays * num_segments);
 
             const float_type tau = *tau_it;
             const float_type src = *src_it;
 
-            Check(tau >= 0 && tau < 1);
-            Check(src >= 0);
+            CHECK(tau >= 0 && tau < 1);
+            CHECK(src >= 0);
 
             // Do the segments multiple times for fun
             for (unsigned int i = 0; i < 1024; ++i)
@@ -75,9 +75,9 @@ __global__ void stream_test_kernel(
 template<typename Arch_T, typename Float_T>
 void stream_test(Stream_Test_Kernel_Data<Arch_T, Float_T>& kd)
 {
-    Require(kd.input.size() == kd.output.size());
-    Require(kd.input.size() == kd.num_rays);
-    Require(kd.tau.size() == kd.num_rays * kd.num_segments);
+    REQUIRE(kd.input.size() == kd.output.size());
+    REQUIRE(kd.input.size() == kd.num_rays);
+    REQUIRE(kd.tau.size() == kd.num_rays * kd.num_segments);
 
     CUDA_LAUNCH((stream_test_kernel<Arch_T, Float_T>), kd.launch_args)(
             kd.tau.cdata(),

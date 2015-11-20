@@ -11,7 +11,7 @@
 #ifndef cuda_utils_test_Profiler_Kernel_cuh
 #define cuda_utils_test_Profiler_Kernel_cuh
 
-#include "../Device_Vector.hh"
+#include "../cuda_utils/Device_Vector.hh"
 
 namespace cuda
 {

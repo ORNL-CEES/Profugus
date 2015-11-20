@@ -11,10 +11,10 @@
 #include "gtest/utils_gtest.hh"
 
 #include <algorithm>
-#include <../config.h>
+#include <config.h>
 
-#include "../Hardware.hh"
-#include "../Host_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Host_Vector.hh"
 #include "Polyglot_Kernel.cuh"
 
 //---------------------------------------------------------------------------//

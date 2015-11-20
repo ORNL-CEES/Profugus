@@ -10,9 +10,9 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include "../Hardware.hh"
-#include "../Vector_Traits.hh"
-#include "../Host_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Vector_Traits.hh"
+#include "../cuda_utils/Host_Vector.hh"
 
 #include "Atomic_Lock_Test_Kernel.cuh"
 

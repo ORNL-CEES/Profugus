@@ -29,7 +29,7 @@ namespace cuda
  * the C preprocessor.
  */
 #define CUDA_LAUNCH(GLOBAL_FUNCTION, LAUNCH_ARGS) \
-    Require(LAUNCH_ARGS.is_valid()); \
+    REQUIRE(LAUNCH_ARGS.is_valid()); \
     GLOBAL_FUNCTION<<< \
         LAUNCH_ARGS.grid_size, \
         LAUNCH_ARGS.block_size, \

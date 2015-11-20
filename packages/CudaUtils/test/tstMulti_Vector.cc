@@ -8,14 +8,14 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../Multi_Vector.hh"
+#include "../cuda_utils/Multi_Vector.hh"
 
 #include "gtest/utils_gtest.hh"
 #include "utils/View_Field.hh"
 
-#include "../Hardware.hh"
-#include "../Vector_Traits.hh"
-#include "../Device_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Vector_Traits.hh"
+#include "../cuda_utils/Device_Vector.hh"
 
 using cuda::Multi_Vector;
 

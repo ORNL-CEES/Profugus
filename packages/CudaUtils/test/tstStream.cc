@@ -8,15 +8,15 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../Stream.hh"
+#include "../cuda_utils/Stream.hh"
 
 #include <utility>
 #include "gtest/utils_gtest.hh"
 
-#include "../Device_Vector.hh"
-#include "../Host_Vector.hh"
-#include "../Hardware.hh"
-#include "../Event.hh"
+#include "../cuda_utils/Device_Vector.hh"
+#include "../cuda_utils/Host_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/Event.hh"
 
 #include "Stream_Test_Kernel.cuh"
 #include "Stream_Test_Kernel_Data.hh"
@@ -132,7 +132,7 @@ class StreamTest : public ::testing::Test
             Hardware_t::acquire();
             std::cout << "done." << std::endl;
         }
-        Insist(Hardware_t::have_acquired(), "Device could not be acquired.");
+        INSIST(Hardware_t::have_acquired(), "Device could not be acquired.");
 
         d_num_blocks   = 8 * Hardware_t::num_multiprocessors();
         d_num_threads  = 2 * Hardware_t::num_cores_per_mp();
@@ -141,8 +141,8 @@ class StreamTest : public ::testing::Test
 
     void build_local_tau(Host_Vector_t& tau, Float_t scale) const
     {
-        Require(tau.size() == num_rays() * d_num_segments);
-        Require(scale > 0. && scale < 1.);
+        REQUIRE(tau.size() == num_rays() * d_num_segments);
+        REQUIRE(scale > 0. && scale < 1.);
 
         typename Host_Vector_t::iterator it = tau.begin();
 
@@ -155,12 +155,12 @@ class StreamTest : public ::testing::Test
                 *it *= scale;
             }
         }
-        Check(it == tau.end());
+        CHECK(it == tau.end());
     }
 
     void build_local_src(Host_Vector_t& src) const
     {
-        Require(src.size() == num_rays() * d_num_segments);
+        REQUIRE(src.size() == num_rays() * d_num_segments);
 
         typename Host_Vector_t::iterator it = src.begin();
 
@@ -172,7 +172,7 @@ class StreamTest : public ::testing::Test
                 *it = (seg + ray) % 3;
             }
         }
-        Check(it == src.end());
+        CHECK(it == src.end());
     }
 
     unsigned int num_rays() const

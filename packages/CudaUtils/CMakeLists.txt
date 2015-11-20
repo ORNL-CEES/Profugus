@@ -8,7 +8,14 @@
 ## CMAKE for CUDA_utils
 ##---------------------------------------------------------------------------##
 
+INCLUDE(AppendSet)
 INCLUDE(ProfugusAddCFlags)
+
+APPEND_SET(CMAKE_MODULE_PATH ${Utils_SOURCE_DIR}/cmake)
+
+##---------------------------------------------------------------------------##
+## Define the package
+##---------------------------------------------------------------------------##
 TRIBITS_PACKAGE(CudaUtils)
 
 ##---------------------------------------------------------------------------##
@@ -17,7 +24,7 @@ TRIBITS_PACKAGE(CudaUtils)
 
 SET(USE_CUDA OFF)
 IF(${PROJECT_NAME}_ENABLE_CUDA)
-  MESSAGE(STATUS "Building ${PACKAGE_NAME} with CUDA support")
+  MESSAGE(STATUS "Building ${PROJECT_NAME} with CUDA support")
   SET(USE_CUDA ON)
 ENDIF()
 
@@ -80,6 +87,7 @@ TRIBITS_ADD_LIBRARY(
 #
 TRIBITS_ADD_TEST_DIRECTORIES( test )
 
+# postprocess
 TRIBITS_PACKAGE_POSTPROCESS()
 
 ##---------------------------------------------------------------------------##

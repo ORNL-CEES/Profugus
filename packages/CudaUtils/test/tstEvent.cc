@@ -8,14 +8,14 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../Event.hh"
+#include "../cuda_utils/Event.hh"
 
 #include "gtest/utils_gtest.hh"
 
-#include "../Device_Vector.hh"
-#include "../Hardware.hh"
-#include "../CudaDBC.hh"
-#include "../Vector_Traits.hh"
+#include "../cuda_utils/Device_Vector.hh"
+#include "../cuda_utils/Hardware.hh"
+#include "../cuda_utils/CudaDBC.hh"
+#include "../cuda_utils/Vector_Traits.hh"
 
 #include "Profiler_Kernel.cuh"
 
@@ -57,7 +57,7 @@ class EventTest : public ::testing::Test
             Hardware_t::acquire();
             std::cout << "done." << std::endl;
         }
-        Insist(Hardware_t::have_acquired(), "Device could not be acquired.");
+        INSIST(Hardware_t::have_acquired(), "Device could not be acquired.");
 
         d_num_blocks  = 8 * Hardware_t::num_multiprocessors();
         d_num_threads = 2 * Hardware_t::num_cores_per_mp();

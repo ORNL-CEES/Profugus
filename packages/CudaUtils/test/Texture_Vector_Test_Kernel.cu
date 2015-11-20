@@ -7,11 +7,11 @@
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
-#include "../Kernel_Header.cuh"
+#include "../cuda_utils/Kernel_Header.cuh"
 
 #include "Texture_Vector_Test_Kernel.cuh"
 
-#include "../CudaDBC.hh"
+#include "../cuda_utils/CudaDBC.hh"
 
 namespace cuda
 {
@@ -41,9 +41,9 @@ void texture_vector_test(
         const Texture_Vector<Arch_Switch, T>& input,
               Device_Vector<Arch_Switch, T>&  output)
 {
-    Require(input.size() == output.size());
+    REQUIRE(input.size() == output.size());
 
-    // Check for prior launch failure
+    // CHECK for prior launch failure
     CudaCall(cudaGetLastError());
 
     unsigned int num_threads = 64;

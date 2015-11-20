@@ -8,10 +8,10 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../BLAS_Handle.hh"
+#include "../cuda_utils/BLAS_Handle.hh"
 
 #include "gtest/utils_gtest.hh"
-#include "../Hardware.hh"
+#include "../cuda_utils/Hardware.hh"
 
 using cuda::BLAS_Handle;
 
@@ -32,7 +32,7 @@ class BLASTest : public ::testing::Test
             std::cout << "Acquiring device..." << std::endl;
             Hardware_t::acquire();
         }
-        Insist(Hardware_t::have_acquired(), "Device could not be acquired.");
+        INSIST(Hardware_t::have_acquired(), "Device could not be acquired.");
     }
 };
 
