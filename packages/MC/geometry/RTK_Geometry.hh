@@ -216,6 +216,13 @@ class RTK_Geometry : public Tracking_Geometry<RTK_State>
 
     // >>> ACCESSORS
 
+    //! Return vector of cell volumes
+    const Vec_Dbl &cell_volumes() const
+    {
+        REQUIRE( d_volumes.size() == num_cells() );
+        return d_volumes;
+    }
+
     //! Return the underlying array representation of objects.
     const Array_t& array() const { REQUIRE(d_array); return *d_array; }
 

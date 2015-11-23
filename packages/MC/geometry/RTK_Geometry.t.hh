@@ -33,6 +33,11 @@ RTK_Geometry<Array>::RTK_Geometry(SP_Array array)
 
     d_array->get_extents(d_lower, d_upper);
 
+    this->b_box = std::make_shared<Bounding_Box>(
+            d_lower[def::I], d_upper[def::I],
+            d_lower[def::J], d_upper[def::J],
+            d_lower[def::K], d_upper[def::K] );
+
     ENSURE(d_array);
     ENSURE(d_lower <= d_upper);
 }

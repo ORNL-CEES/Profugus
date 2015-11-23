@@ -32,6 +32,13 @@ Mesh_Geometry::Mesh_Geometry(
     : d_mesh(x_edges, y_edges, z_edges)
 {
     INSIST(d_mesh.dimension() == 3, "Only 3-D meshes are supported.");
+
+    this->b_box = std::make_shared<Bounding_Box>(
+            x_edges.front(), x_edges.back(),
+            y_edges.front(), y_edges.back(),
+            z_edges.front(), z_edges.back() );
+
+    get_cell_volumes();
 }
 
 //---------------------------------------------------------------------------//

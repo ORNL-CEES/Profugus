@@ -20,6 +20,7 @@
 #include "Cartesian_Mesh.hh"
 #include "Mesh_State.hh"
 #include "Tracking_Geometry.hh"
+#include "Bounding_Box.hh"
 
 namespace profugus
 {
@@ -44,10 +45,11 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
   public:
     //@{
     //! Typedefs
-    typedef def::Vec_Dbl             Vec_Dbl;
-    typedef def::Vec_Int             Vec_Int;
-    typedef std::shared_ptr<Vec_Int> SP_Vec_Int;
-    typedef std::shared_ptr<Vec_Dbl> SP_Vec_Dbl;
+    typedef def::Vec_Dbl                    Vec_Dbl;
+    typedef def::Vec_Int                    Vec_Int;
+    typedef std::shared_ptr<Vec_Int>        SP_Vec_Int;
+    typedef std::shared_ptr<Vec_Dbl>        SP_Vec_Dbl;
+    typedef std::shared_ptr<Bounding_Box>   SP_Bounding_Box;
     //@}
 
   private:
@@ -187,6 +189,13 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
 
     // Get the volumes.
     SP_Vec_Dbl get_cell_volumes();
+
+    const Vec_Dbl &cell_volumes() const
+    {
+        CHECK( d_volumes );
+        CHECK( d_volumes->size() == num_cells() );
+        return *d_volumes;
+    }
 
     // If the particle is outside the geometry, find distance
     double distance_to_interior(Geo_State_t &state);
