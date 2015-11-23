@@ -58,6 +58,12 @@ void KDE_Kernel::calc_bandwidths(
 {
     typedef geometry::cell_type  cell_type;
 
+    // Reset all bandwidths to zero
+    for (cell_type cellid = 0; cellid < b_geometry->num_cells(); ++cellid)
+    {
+        b_bndwidth_map[cellid] = 0.0;
+    }
+
     // Broadcast all of the fission sites to all cores
     std::vector<Space_Vector> global_sites = this->communicate_sites(fis_sites);
 
