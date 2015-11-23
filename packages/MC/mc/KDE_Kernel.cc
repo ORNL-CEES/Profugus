@@ -13,7 +13,6 @@
 #include "harness/DBC.hh"
 #include "comm/global.hh"
 #include "utils/Container_Functions.hh"
-#include "Sampler.hh"
 
 namespace profugus
 {
@@ -28,23 +27,23 @@ KDE_Kernel::KDE_Kernel(SP_Geometry geometry,
                        SP_Physics  physics,
                        double      coefficient,
                        double      exponent)
-    : d_geometry(geometry)
-    , d_physics(physics)
-    , d_coefficient(coefficient)
-    , d_exponent(exponent)
-    , d_num_sampled(0)
-    , d_num_accepted(0)
+    : b_geometry(geometry)
+    , b_physics(physics)
+    , b_coefficient(coefficient)
+    , b_exponent(exponent)
+    , b_num_sampled(0)
+    , b_num_accepted(0)
 {
-    REQUIRE(d_geometry);
-    REQUIRE(d_physics);
-    REQUIRE(d_coefficient > 0.0);
-    REQUIRE(d_exponent > -1.0 && d_exponent < 0.0);
+    REQUIRE(b_geometry);
+    REQUIRE(b_physics);
+    REQUIRE(b_coefficient > 0.0);
+    REQUIRE(b_exponent > -1.0 && b_exponent < 0.0);
 
     // Setup the bandwidth map (start with a bandwidth of all zero)
-    cell_type num_cells = geometry->num_cells();
+    cell_type num_cells = b_geometry->num_cells();
     for (cell_type cellid = 0; cellid < num_cells; ++cellid)
     {
-        d_bndwidth_map[cellid] = 0.0;
+        b_bndwidth_map[cellid] = 0.0;
     }
 }
 
@@ -74,7 +73,7 @@ void KDE_Kernel::calc_bandwidths(
         double z = fs[def::Z];
 
         // Get the cell
-        cell_type cell = d_geometry->cell(fs);
+        cell_type cell = b_geometry->cell(fs);
 
         cell_sums[cell]   += z;
         cell_sum_sq[cell] += z*z;
@@ -102,8 +101,8 @@ void KDE_Kernel::calc_bandwidths(
         double variance = sum_sq/N - (sum/N)*(sum/N);
 
         // Calculate the bandwidth
-        d_bndwidth_map[cell] = d_coefficient*std::sqrt(variance)*
-                               std::pow(N, d_exponent);
+        b_bndwidth_map[cell] = b_coefficient*std::sqrt(variance)*
+                               std::pow(N, b_exponent);
     }
 }
 
@@ -113,9 +112,9 @@ void KDE_Kernel::calc_bandwidths(
  */
 double KDE_Kernel::bandwidth(cell_type cellid) const
 {
-    REQUIRE(d_bndwidth_map.count(cellid) == 1);
+    REQUIRE(b_bndwidth_map.count(cellid) == 1);
 
-    return d_bndwidth_map.find(cellid)->second;
+    return b_bndwidth_map.find(cellid)->second;
 }
 
 //---------------------------------------------------------------------------//
@@ -126,11 +125,11 @@ std::vector<double>
 KDE_Kernel::get_bandwidths() const
 {
     // Create the vector to hold the bandwidths
-    std::vector<double> bandwidths(d_bndwidth_map.size());
+    std::vector<double> bandwidths(b_bndwidth_map.size());
 
     // Loop over the bandwidth map and fill the bandwidth vector
     std::vector<double>::iterator vec_iter = bandwidths.begin();
-    for (const auto &map_elem : d_bndwidth_map)
+    for (const auto &map_elem : b_bndwidth_map)
     {
         CHECK(vec_iter != bandwidths.end());
 
@@ -148,71 +147,11 @@ KDE_Kernel::get_bandwidths() const
 void KDE_Kernel::set_bandwidth(geometry::cell_type cell,
                                double              bandwidth)
 {
-    REQUIRE(d_bndwidth_map.find(cell) != d_bndwidth_map.end());
+    REQUIRE(b_bndwidth_map.find(cell) != b_bndwidth_map.end());
 
-    d_bndwidth_map[cell] = bandwidth;
+    b_bndwidth_map[cell] = bandwidth;
 }
 
-//---------------------------------------------------------------------------//
-/*!
- * \brief Sample a new position.
- *
- * If the new position is outside the fissionable region, it is rejected.
- */
-KDE_Kernel::Space_Vector
-KDE_Kernel::sample_position(const Space_Vector &orig_position,
-                            RNG                &rng) const
-{
-    REQUIRE(d_physics);
-    REQUIRE(d_geometry);
-    REQUIRE(rng.assigned());
-
-    // Get the cell at the position
-    cell_type cellid = d_geometry->cell(orig_position);
-
-    size_type failures = 0;
-    do
-    {
-        // Sample Epanechnikov kernel
-        double epsilon = sampler::sample_epan(rng);
-
-        // Get the bandwidth
-        CHECK(d_bndwidth_map.count(cellid) == 1);
-        double bandwidth = d_bndwidth_map.find(cellid)->second;
-        CHECK(bandwidth >= 0.0);
-
-        // Create a new position
-        Space_Vector new_pos(orig_position[def::X],
-                             orig_position[def::Y],
-                             orig_position[def::Z] + epsilon*bandwidth/2.0);
-
-        // Ensure that the sampled point is in the geometry
-        if (d_geometry->boundary_state(new_pos) == geometry::INSIDE)
-        {
-            // Get the matid for sampled point
-            unsigned int matid = d_geometry->matid(new_pos);
-
-            // Get matid from sampled point (may raise error if outside
-            // geometry)
-            if (d_physics->is_fissionable(d_geometry->matid(new_pos)))
-            {
-                // Accept: sampled point is fissionable
-                d_num_sampled += failures + 1;
-                ++d_num_accepted;
-                return new_pos;
-            }
-        }
-
-        // Increment failure counter.
-        ++failures;
-    } while (failures != 1000);
-
-    // No luck
-    d_num_sampled += failures;
-    std::cout << "1000 consecutive nonfissionable rejections in KDE."
-              << std::endl;
-    return Space_Vector(0,0,0);
-}
 
 //---------------------------------------------------------------------------//
 /*!
@@ -220,10 +159,10 @@ KDE_Kernel::sample_position(const Space_Vector &orig_position,
  */
 double KDE_Kernel::acceptance_fraction() const
 {
-    REQUIRE(d_num_sampled > 0);
+    REQUIRE(b_num_sampled > 0);
 
-    return (static_cast<double>(d_num_accepted) /
-            static_cast<double>(d_num_sampled));
+    return (static_cast<double>(b_num_accepted) /
+            static_cast<double>(b_num_sampled));
 }
 
 //---------------------------------------------------------------------------//
@@ -276,7 +215,7 @@ KDE_Kernel::communicate_sites(
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace shift
+} // end namespace profugus
 
 //---------------------------------------------------------------------------//
 // end of MC/mc/kde/KDE_Kernel.cc

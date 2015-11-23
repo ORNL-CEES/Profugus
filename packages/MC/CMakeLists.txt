@@ -107,6 +107,7 @@ SET(MC_SOURCES
   mc/Group_Bounds.cc
   mc/KCode_Solver.cc
   mc/KDE_Kernel.cc
+  mc/KDE_Kernel_Resample.cc
   mc/Keff_Tally.cc
   mc/Particle.cc
   mc/Particle_Metaclass.pt.cc

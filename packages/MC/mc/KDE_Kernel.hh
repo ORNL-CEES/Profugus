@@ -53,17 +53,17 @@ class KDE_Kernel
 
   protected:
     // Stores the geometry and physics classes
-    SP_Geometry d_geometry;
-    SP_Physics  d_physics;
+    SP_Geometry b_geometry;
+    SP_Physics  b_physics;
 
     // Stores the coefficient to use in calculating the bandwidth
-    double d_coefficient;
+    double b_coefficient;
 
     // Stores the exponent to use in calculating the bandwidth
-    double d_exponent;
+    double b_exponent;
 
     // Stores the bandwidth on each cell
-    Bandwidth_Map d_bndwidth_map;
+    Bandwidth_Map b_bndwidth_map;
 
   public:
     // Constructor.
@@ -73,10 +73,10 @@ class KDE_Kernel
                double      exponent    = -0.20);
 
     //! Get the bandwidth coefficient
-    double coefficient() const { return d_coefficient; }
+    double coefficient() const { return b_coefficient; }
 
     //! Get the bandwidth exponent
-    double exponent() const { return d_exponent; }
+    double exponent() const { return b_exponent; }
 
     //! Calculate the bandwidths
     void calc_bandwidths(const Physics::Fission_Site_Container &fis_sites);
@@ -92,8 +92,8 @@ class KDE_Kernel
                        double              bandwidth);
 
     //! Sample a new position
-    Space_Vector sample_position(const Space_Vector &orig_position,
-                                 RNG                &rng) const;
+    virtual Space_Vector sample_position(const Space_Vector &orig_position,
+                                         RNG                &rng) const = 0;
 
     // Fraction of samples accepted inside kernel
     double acceptance_fraction() const;
@@ -106,10 +106,10 @@ class KDE_Kernel
     // >>> IMPLEMENTATION DATA
 
     // Keeps track of the number of kernel samples
-    mutable size_type d_num_sampled;
+    mutable size_type b_num_sampled;
 
     // Keeps track of the number of accepted
-    mutable size_type d_num_accepted;
+    mutable size_type b_num_accepted;
 };
 
 } // end namespace profugus

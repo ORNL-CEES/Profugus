@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   MC/mc/test/tstKDE_Kernel.cc
+ * \file   MC/mc/test/tstKDE_Kernel_Resample.cc
  * \author Gregory G. Davidson
  * \date   Thu Jan 22 13:50:16 2015
  * \brief  Tests the KDE Kernels
@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../KDE_Kernel.hh"
+#include "../KDE_Kernel_Resample.hh"
 
 #include "SourceTestBase.hh"
 #include "Utils/gtest/utils_gtest.hh"
@@ -21,7 +21,7 @@ class KernelTest : public SourceTestBase
 
   protected:
     // >>> TYPEDEFS
-    typedef profugus::KDE_Kernel KDE_Kernel;
+    typedef profugus::KDE_Kernel_Resample KDE_Kernel_Resample;
 
   protected:
     virtual int get_seed() const
@@ -131,7 +131,7 @@ class KernelTest : public SourceTestBase
 
     //------------------------------------------------------------------------//
     // Check that a given position is in one of our fuel pins
-    // 
+    //
     bool is_in_pin(const Space_Vector &pos)
     {
         // Pin origins are (1.89, 0.63) and (0.63, 1.89) with radius 0.54
@@ -165,7 +165,7 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
     double exponent = -0.7;
 
     // Create a Axial KDE kernel
-    KDE_Kernel kernel(b_geometry, b_physics, coeff, exponent);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics, coeff, exponent);
 
     // Create a bunch of fission sites
     std::vector<Fission_Site> fis_sites;
@@ -179,11 +179,20 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
     fis_sites.push_back(Fission_Site{0, Space_Vector(1.89, 0.63,  7.4)});
     fis_sites.push_back(Fission_Site{0, Space_Vector(1.89, 0.63,  9.4)});
 
+    // Add to these fission sites if in parallel
+    std::vector<Fission_Site> total_fis_sites;
+    for (unsigned int n = 0; n < profugus::nodes(); ++n)
+    {
+        // Make copy
+        total_fis_sites.insert(total_fis_sites.end(), fis_sites.begin(),
+                               fis_sites.end());
+    }
+
     // Calculate the sums and sum squares
     std::map<cell_type, double> sum;
     std::map<cell_type, double> sum_sq;
     std::map<cell_type, unsigned int> num_sites;
-    for (const Fission_Site &fs : fis_sites)
+    for (const Fission_Site &fs : total_fis_sites)
     {
         cell_type cell = b_geometry->cell(fs.r);
 
@@ -226,7 +235,7 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
 TEST_F(KernelTest, test_bounds)
 {
     // Create a KDE kernel
-    KDE_Kernel kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics);
 
     // Set the bandwidth in the pin (cell 1)
     double bandwidth = 2.5;
@@ -257,7 +266,7 @@ TEST_F(KernelTest, test_bounds)
 TEST_F(KernelTest, test_in_pin)
 {
     // Create a KDE kernel
-    KDE_Kernel kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -292,7 +301,7 @@ TEST_F(KernelTest, test_in_pin)
 TEST_F(KernelTest, heuristic_test_resample)
 {
     // Create a KDE kernel
-    KDE_Kernel kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -376,7 +385,7 @@ TEST_F(KernelTest, heuristic_test_resample)
 TEST_F(KernelTest, heuristic_test_fissite)
 {
     // Create a KDE kernel
-    KDE_Kernel kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -461,7 +470,7 @@ TEST_F(KernelTest, heuristic_test_bandwidth_rej)
     // For this test, we're simply going to try sampling from near the
     // boundary
     // Create a KDE kernel
-    KDE_Kernel kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -491,5 +500,5 @@ TEST_F(KernelTest, heuristic_test_bandwidth_rej)
 #endif
 
 //---------------------------------------------------------------------------//
-//                        end of tstKDE_Kernel.cc
+//                        end of tstKDE_Kernel_Resample.cc
 //---------------------------------------------------------------------------//
