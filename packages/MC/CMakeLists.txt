@@ -74,6 +74,7 @@ SET(HEADERS "")
 
 FILE(GLOB GEOMETRY_HEADERS mesh/*.hh)
 SET(GEOMETRY_SOURCES
+  geometry/Bounding_Box.cc
   geometry/Cartesian_Mesh.cc
   geometry/RTK_Geometry.pt.cc
   geometry/Mesh_Geometry.cc
