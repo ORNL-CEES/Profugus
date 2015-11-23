@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class KCode_Solver<Core>;
-//template class KCode_Solver<Mesh_Geometry>;
+template class KCode_Solver<Mesh_Geometry>;
 
 } // end namespace profugus
 

@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Fission_Rebalance<Core>;
-//template class Fission_Rebalance<Mesh_Geometry>;
+template class Fission_Rebalance<Mesh_Geometry>;
 
 } // end namespace profugus
 

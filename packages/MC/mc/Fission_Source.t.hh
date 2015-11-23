@@ -67,15 +67,10 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
              "Fission source must have 6 entries, but it has "
              << extents.size());
 
-    // get the underlying geometry array
-    const auto &array = b_geometry->array();
-
     // get the low and upper bounds of the geometry
-    const Space_Vector &low_edge = array.corner();
-    Space_Vector high_edge       = array.corner();
-    high_edge[I] += array.pitch(I);
-    high_edge[J] += array.pitch(J);
-    high_edge[K] += array.height();
+    auto box = geometry->extents();
+    const Space_Vector &low_edge  = box->lower();
+    const Space_Vector &high_edge = box->upper();
 
     for (int i = 0; i < 3; ++i)
     {

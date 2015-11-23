@@ -16,16 +16,16 @@ namespace profugus
 {
 
 template class Tally<Core>;
-//template class Tally<Mesh_Geometry>;
+template class Tally<Mesh_Geometry>;
 
 template class Source_Tally<Core>;
-//template class Source_Tally<Mesh_Geometry>;
+template class Source_Tally<Mesh_Geometry>;
 
 template class Pathlength_Tally<Core>;
-//template class Pathlength_Tally<Mesh_Geometry>;
+template class Pathlength_Tally<Mesh_Geometry>;
 
 template class Compound_Tally<Core>;
-//template class Compound_Tally<Mesh_Geometry>;
+template class Compound_Tally<Mesh_Geometry>;
 
 } // end namespace profugus
 

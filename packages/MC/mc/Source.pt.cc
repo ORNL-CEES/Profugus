@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Source<Core>;
-//template class Source<Mesh_Geometry>;
+template class Source<Mesh_Geometry>;
 
 } // end namespace profugus
 

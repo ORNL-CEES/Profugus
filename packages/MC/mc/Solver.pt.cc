@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Solver<Core>;
-//template class Solver<Mesh_Geometry>;
+template class Solver<Mesh_Geometry>;
 
 } // end namespace profugus
 

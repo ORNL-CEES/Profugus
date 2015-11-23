@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Tallier<Core>;
-//template class Tallier<Mesh_Geometry>;
+template class Tallier<Mesh_Geometry>;
 
 } // end namespace profugus
 

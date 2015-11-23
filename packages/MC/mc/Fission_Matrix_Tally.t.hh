@@ -303,7 +303,7 @@ void Fission_Matrix_Tally<Geometry>::PL_Tally::accumulate(
 
     // get weighted contribution to the fission matrix tally that is constant
     // across the step
-    double keff = p.wt() * b_physics->total(physics::NU_FISSION, p);
+    double keff = p.wt() * this->b_physics->total(physics::NU_FISSION, p);
 
     // track through the fission matrix and accumulate the fission matrix
     // elements

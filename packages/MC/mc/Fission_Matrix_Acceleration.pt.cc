@@ -18,8 +18,8 @@ namespace profugus
 
 template class Fission_Matrix_Acceleration_Impl<Core,EpetraTypes>;
 template class Fission_Matrix_Acceleration_Impl<Core,TpetraTypes>;
-//template class Fission_Matrix_Acceleration_Impl<Mesh_Geometry,EpetraTypes>;
-//template class Fission_Matrix_Acceleration_Impl<Mesh_Geometry,TpetraTypes>;
+template class Fission_Matrix_Acceleration_Impl<Mesh_Geometry,EpetraTypes>;
+template class Fission_Matrix_Acceleration_Impl<Mesh_Geometry,TpetraTypes>;
 
 } // end namespace profugus
 

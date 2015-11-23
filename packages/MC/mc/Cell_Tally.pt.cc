@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Cell_Tally<Core>;
-//template class Cell_Tally<Mesh_Geometry>;
+template class Cell_Tally<Mesh_Geometry>;
 
 } // end namespace profugus
 

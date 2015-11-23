@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Keff_Tally<Core>;
-//template class Keff_Tally<Mesh_Geometry>;
+template class Keff_Tally<Mesh_Geometry>;
 
 } // end namespace profugus
 

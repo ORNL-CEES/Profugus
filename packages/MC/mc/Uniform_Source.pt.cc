@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Uniform_Source<Core>;
-//template class Uniform_Source<Mesh_Geometry>;
+template class Uniform_Source<Mesh_Geometry>;
 
 } // end namespace profugus
 

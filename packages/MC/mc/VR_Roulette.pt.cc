@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class VR_Roulette<Core>;
-//template class VR_Roulette<Mesh_Geometry>;
+template class VR_Roulette<Mesh_Geometry>;
 
 } // end namespace profugus
 

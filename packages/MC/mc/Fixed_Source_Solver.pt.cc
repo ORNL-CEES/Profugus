@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Fixed_Source_Solver<Core>;
-//template class Fixed_Source_Solver<Mesh_Geometry>;
+template class Fixed_Source_Solver<Mesh_Geometry>;
 
 } // end namespace profugus
 

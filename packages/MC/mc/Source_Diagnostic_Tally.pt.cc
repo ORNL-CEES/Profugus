@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Source_Diagnostic_Tally<Core>;
-//template class Source_Diagnostic_Tally<Mesh_Geometry>;
+template class Source_Diagnostic_Tally<Mesh_Geometry>;
 
 } // end namespace profugus
 

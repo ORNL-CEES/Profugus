@@ -18,8 +18,8 @@ namespace profugus
 
 template class Fission_Matrix_Solver<Core,EpetraTypes>;
 template class Fission_Matrix_Solver<Core,TpetraTypes>;
-//template class Fission_Matrix_Solver<Mesh_Geometry,EpetraTypes>;
-//template class Fission_Matrix_Solver<Mesh_Geometry,TpetraTypes>;
+template class Fission_Matrix_Solver<Mesh_Geometry,EpetraTypes>;
+template class Fission_Matrix_Solver<Mesh_Geometry,TpetraTypes>;
 
 } // end namespace profugus
 

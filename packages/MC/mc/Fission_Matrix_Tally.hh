@@ -43,7 +43,6 @@ class Fission_Matrix_Tally : public Compound_Tally<Geometry>
     typedef Compound_Tally<Geometry> Base;
     using Base::b_pl_tally;
     using Base::b_src_tally;
-    using Base::b_physics;
 
   public:
     //@{

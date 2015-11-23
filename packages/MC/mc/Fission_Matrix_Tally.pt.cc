@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Fission_Matrix_Tally<Core>;
-//template class Fission_Matrix_Tally<Mesh_Geometry>;
+template class Fission_Matrix_Tally<Mesh_Geometry>;
 
 } // end namespace profugus
 

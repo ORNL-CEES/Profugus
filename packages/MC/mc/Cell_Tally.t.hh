@@ -124,13 +124,15 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
     // Reset the counter
     ctr = 0;
 
+    const auto &volumes = d_geometry->cell_volumes();
+
     // Iterate through tally cells and build the variance and mean
     for (auto &t : d_tally)
     {
-        CHECK(d_geometry->cell_volume(t.first) > 0.0);
+        CHECK(volumes[t.first] > 0.0);
 
         // Get the volume for the cell
-        double inv_V = 1.0 / d_geometry->cell_volume(t.first);
+        double inv_V = 1.0 / volumes[t.first];
 
         // Store 1/N
         double inv_N = 1.0 / static_cast<double>(num_particles);

@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Physics<Core>;
-//template class Physics<Mesh_Geometry>;
+template class Physics<Mesh_Geometry>;
 
 } // end namespace profugus
 

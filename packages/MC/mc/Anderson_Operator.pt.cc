@@ -18,8 +18,8 @@ namespace profugus
 
 template class Anderson_Operator<Core,EpetraTypes>;
 template class Anderson_Operator<Core,TpetraTypes>;
-//template class Anderson_Operator<Mesh_Geometry,EpetraTypes>;
-//template class Anderson_Operator<Mesh_Geometry,TpetraTypes>;
+template class Anderson_Operator<Mesh_Geometry,EpetraTypes>;
+template class Anderson_Operator<Mesh_Geometry,TpetraTypes>;
 
 } // end namespace profugus
 

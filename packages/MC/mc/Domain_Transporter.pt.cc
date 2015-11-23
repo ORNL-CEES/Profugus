@@ -16,7 +16,7 @@ namespace profugus
 {
 
 template class Domain_Transporter<Core>;
-//template class Domain_Transporter<Mesh_Geometry>;
+template class Domain_Transporter<Mesh_Geometry>;
 
 } // end namespace profugus
 
