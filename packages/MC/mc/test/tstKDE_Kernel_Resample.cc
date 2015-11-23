@@ -297,18 +297,13 @@ TEST_F(KernelTest, test_in_pin)
 }
 
 //---------------------------------------------------------------------------//
-#if 0
 TEST_F(KernelTest, heuristic_test_resample)
 {
     // Create a KDE kernel
     KDE_Kernel_Resample kernel(b_geometry, b_physics);
 
-    // Set the bandwidth
-    double bandwidth = 2.5;
-    kernel.set_bandwidth(bandwidth);
-
     // Create random number generator
-    RNG_Control::RNG rng = b_rcon->rng();
+    profugus::RNG rng = b_rcon->rng();
 
     // Store the mean and variance of the sampled position
     std::vector<double> test_mean = {0.0, 0.0, 0.0};
@@ -316,16 +311,23 @@ TEST_F(KernelTest, heuristic_test_resample)
     std::vector<double> ref_mean  = {0.0, 0.0, 0.0};
     std::vector<double> ref_var   = {0.0, 0.0, 0.0};
 
+    // Set the bandwidth
+    double bandwidth = 2.5;
+    for (int c = 0; c < b_geometry->num_cells(); ++c)
+    {
+        kernel.set_bandwidth(c, bandwidth);
+    }
+
     // Do 1000 test samples
     for (unsigned int i = 0; i < 1000; ++i)
     {
-        // Create a fission site within the top-right pin
+        // Create a fission site within the top-left pin
         // Sample the position
         Space_Vector site_pos(0.0, 0.0, 0.0);
         do
         {
-            site_pos[0] = rng.ran()*0.59 + 1.555;
-            site_pos[1] = rng.ran()*0.59 + 1.555;
+            site_pos[0] = rng.ran()*0.54 + 0.09;
+            site_pos[1] = rng.ran()*0.54 + 1.35;
             site_pos[2] = rng.ran()*14.28;
         } while (!is_in_pin(site_pos));
 
@@ -381,7 +383,7 @@ TEST_F(KernelTest, heuristic_test_resample)
 }
 
 //---------------------------------------------------------------------------//
-
+#if 0
 TEST_F(KernelTest, heuristic_test_fissite)
 {
     // Create a KDE kernel
