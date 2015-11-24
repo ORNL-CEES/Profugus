@@ -101,7 +101,7 @@ class Fission_Source : public Source
     void build_initial_source(SP_Cart_Mesh mesh, Const_Array_View fis_dens);
 
     // Build a source from a fission site container.
-    void build_source(SP_Fission_Sites &fission_sites);
+    virtual void build_source(SP_Fission_Sites &fission_sites);
 
     // Create a fission site container.
     SP_Fission_Sites create_fission_site_container() const;

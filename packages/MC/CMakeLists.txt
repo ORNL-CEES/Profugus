@@ -106,6 +106,7 @@ SET(MC_SOURCES
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
   mc/KCode_Solver.cc
+  mc/KDE_Fission_Source.cc
   mc/KDE_Kernel.cc
   mc/KDE_Kernel_Resample.cc
   mc/Keff_Tally.cc
