@@ -34,7 +34,7 @@ KDE_Fission_Source::KDE_Fission_Source(RCP_Std_DB     db,
 
     // Get the type of KDE kernel
     const std::string &kernel_type = db->get<std::string>("kernel_type");
-    
+
     // Get the bandwidth coefficient
     double coeff = db->get<double>("bnd_coeff", 1.06);
     double exponent = db->get<double>("bnd_exp", -0.20);
@@ -76,7 +76,7 @@ void KDE_Fission_Source::build_source(SP_Fission_Sites &fission_sites)
 /*!
  * \brief Sample a particle.
  */
-KDE_Fission_Source::SP_Particle 
+KDE_Fission_Source::SP_Particle
 KDE_Fission_Source::get_particle()
 {
     using def::I; using def::J; using def::K;
