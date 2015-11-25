@@ -207,7 +207,6 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
 
     void output(std::ostream &out) const
     {
-        INSIST(false,"Output not yet available for Mesh_Geometry.");
     }
 
   private:
