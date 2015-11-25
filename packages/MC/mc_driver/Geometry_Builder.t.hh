@@ -280,8 +280,6 @@ auto Geometry_Builder<profugus::Core>::build_axial_lattice(
 auto Geometry_Builder<profugus::Mesh_Geometry>::build(
     RCP_ParameterList master) -> SP_Geometry
 {
-    typedef def::Vec_Dbl Vec_Dbl;
-    typedef def::Vec_Int Vec_Int;
     auto mesh_db = Teuchos::sublist(master, "MESH");
 
     // Ensure all required parameters are present
@@ -290,17 +288,22 @@ auto Geometry_Builder<profugus::Mesh_Geometry>::build(
     REQUIRE( mesh_db->isParameter("z_edges") );
     REQUIRE( mesh_db->isParameter("matids") );
 
-    auto x_edges = mesh_db->get<Vec_Dbl>("x_edges");
-    auto y_edges = mesh_db->get<Vec_Dbl>("y_edges");
-    auto z_edges = mesh_db->get<Vec_Dbl>("z_edges");
-    auto matids  = mesh_db->get<Vec_Int>("matids");
+    auto x_edges = mesh_db->get<OneDArray_dbl>("x_edges");
+    auto y_edges = mesh_db->get<OneDArray_dbl>("y_edges");
+    auto z_edges = mesh_db->get<OneDArray_dbl>("z_edges");
+    auto matids  = mesh_db->get<OneDArray_int>("matids");
 
     // Build Mesh
     auto geom = std::make_shared<profugus::Mesh_Geometry>(
-        x_edges,y_edges,z_edges);
+        x_edges.toVector(),y_edges.toVector(),z_edges.toVector());
 
     // Convert matids to SP<Vec_Int> and pass to geometry
-    auto sp_matids = std::make_shared<Vec_Int>(matids);
+    auto sp_matids = std::make_shared<def::Vec_Int>(
+        matids.begin(),matids.end());
+
+    REQUIRE( sp_matids->size() == ( (x_edges.size()-1) *
+                                    (y_edges.size()-1) *
+                                    (z_edges.size()-1) ) );
     geom->set_matids(sp_matids);
 
     return geom;

@@ -101,6 +101,8 @@ class Geometry_Builder<profugus::Mesh_Geometry>
 
     typedef std::shared_ptr<profugus::Mesh_Geometry>  SP_Geometry;
     typedef Teuchos::RCP<Teuchos::ParameterList>      RCP_ParameterList;
+    typedef Teuchos::Array<int>                       OneDArray_int;
+    typedef Teuchos::Array<double>                    OneDArray_dbl;
 
     SP_Geometry build(RCP_ParameterList master);
 };
