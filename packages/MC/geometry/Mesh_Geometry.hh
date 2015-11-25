@@ -49,7 +49,6 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     typedef def::Vec_Int                    Vec_Int;
     typedef std::shared_ptr<Vec_Int>        SP_Vec_Int;
     typedef std::shared_ptr<Vec_Dbl>        SP_Vec_Dbl;
-    typedef std::shared_ptr<Bounding_Box>   SP_Bounding_Box;
     //@}
 
   private:
@@ -202,6 +201,9 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
 
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
+
+    // Bounding box
+    Bounding_Box get_extents() const;
 
   private:
     // >>> IMPLEMENTATION

@@ -226,6 +226,9 @@ class RTK_Geometry : public Tracking_Geometry<RTK_State>
     //! Return the underlying array representation of objects.
     const Array_t& array() const { REQUIRE(d_array); return *d_array; }
 
+    // Get bounding box
+    Bounding_Box get_extents() const;
+
   private:
     // >>> IMPLEMENTATION
 

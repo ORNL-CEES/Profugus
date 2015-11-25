@@ -68,9 +68,9 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
              << extents.size());
 
     // get the low and upper bounds of the geometry
-    auto box = geometry->extents();
-    const Space_Vector &low_edge  = box->lower();
-    const Space_Vector &high_edge = box->upper();
+    auto box = geometry->get_extents();
+    const Space_Vector &low_edge  = box.lower();
+    const Space_Vector &high_edge = box.upper();
 
     for (int i = 0; i < 3; ++i)
     {

@@ -34,12 +34,7 @@ class Tracking_Geometry
     typedef Geo_State                       Geo_State_t;
     typedef def::Space_Vector               Space_Vector;
     typedef def::Vec_Dbl                    Vec_Dbl;
-    typedef std::shared_ptr<Bounding_Box>   SP_Bounding_Box;
     //@}
-
-  protected:
-
-    SP_Bounding_Box b_box;
 
   public:
     // Virtual destructor.
@@ -99,11 +94,7 @@ class Tracking_Geometry
     virtual const Vec_Dbl &cell_volumes() const = 0;
 
     //! Get bounding box
-    SP_Bounding_Box extents() const
-    {
-        REQUIRE( b_box );
-        return b_box;
-    }
+    virtual Bounding_Box get_extents() const = 0;
 };
 
 //---------------------------------------------------------------------------//

@@ -33,11 +33,6 @@ Mesh_Geometry::Mesh_Geometry(
 {
     INSIST(d_mesh.dimension() == 3, "Only 3-D meshes are supported.");
 
-    this->b_box = std::make_shared<Bounding_Box>(
-            x_edges.front(), x_edges.back(),
-            y_edges.front(), y_edges.back(),
-            z_edges.front(), z_edges.back() );
-
     get_cell_volumes();
 }
 
@@ -407,6 +402,19 @@ Mesh_Geometry::SP_Vec_Dbl Mesh_Geometry::get_cell_volumes()
 
     ENSURE(d_volumes->size() == num_cells());
     return d_volumes;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get bounding box for this mesh.
+ */
+Bounding_Box Mesh_Geometry::get_extents() const
+{
+    using def::I;  using def::J;  using def::K;
+
+    return Bounding_Box(d_mesh.edges(I).front(), d_mesh.edges(I).back(),
+                        d_mesh.edges(J).front(), d_mesh.edges(J).back(),
+                        d_mesh.edges(K).front(), d_mesh.edges(K).back() );
 }
 
 //---------------------------------------------------------------------------//
