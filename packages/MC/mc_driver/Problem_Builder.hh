@@ -18,18 +18,13 @@
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
-#include "Teuchos_DefaultComm.hpp"
 #include "Teuchos_Array.hpp"
-#include "Teuchos_TwoDArray.hpp"
 
 #include "mc/Physics.hh"
 #include "mc/Shape.hh"
 #include "mc/Variance_Reduction.hh"
 #include "mc/Tallier.hh"
 #include "mc/Fission_Matrix_Acceleration.hh"
-
-// Remove this once templated
-#include "geometry/RTK_Geometry.hh"
 
 namespace mc
 {
@@ -41,15 +36,16 @@ namespace mc
  */
 //===========================================================================//
 
+template <class Geometry>
 class Problem_Builder
 {
   public:
     //@{
     //! Typedefs.
+    typedef Geometry                                      Geom_t;
     typedef Teuchos::ParameterList                        ParameterList;
     typedef Teuchos::RCP<ParameterList>                   RCP_ParameterList;
-    typedef profugus::Physics<profugus::Core>             Physics_t;
-    typedef Physics_t::Geometry_t                         Geom_t;
+    typedef profugus::Physics<Geom_t>                     Physics_t;
     typedef profugus::Tallier<Geom_t>                     Tallier_t;
     typedef profugus::Fission_Matrix_Acceleration<Geom_t> FM_Acceleration_t;
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
@@ -58,7 +54,7 @@ class Problem_Builder
     typedef profugus::Variance_Reduction<Geom_t>          VR_t;
     typedef std::shared_ptr<VR_t>                         SP_Var_Reduction;
     typedef std::shared_ptr<Tallier_t>                    SP_Tallier;
-    typedef Tallier_t::SP_Tally                           SP_Tally;
+    typedef typename Tallier_t::SP_Tally                  SP_Tally;
     typedef std::shared_ptr<FM_Acceleration_t>            SP_FM_Acceleration;
     //@}
 
@@ -89,7 +85,7 @@ class Problem_Builder
     Problem_Builder();
 
     // Setup the problem.
-    void setup(const std::string &xml_file);
+    void setup(RCP_ParameterList master);
 
     // >>> ACCESSORS
 
@@ -118,49 +114,21 @@ class Problem_Builder
     // >>> IMPLEMENTATION
 
     // Teuchos typedefs.
-    typedef Teuchos::Comm<int>          Comm;
-    typedef Teuchos::RCP<const Comm>    RCP_Comm;
     typedef Teuchos::Array<int>         OneDArray_int;
     typedef Teuchos::Array<double>      OneDArray_dbl;
     typedef Teuchos::Array<std::string> OneDArray_str;
-    typedef Teuchos::TwoDArray<int>     TwoDArray_int;
-    typedef Teuchos::TwoDArray<double>  TwoDArray_dbl;
-
-    // Geometry typedefs.
-    typedef Geom_t::SP_Array     SP_Core;
-    typedef Geom_t::Array_t      Core_t;
-    typedef Core_t::SP_Object    SP_Lattice;
-    typedef Core_t::Object_t     Lattice_t;
-    typedef Lattice_t::SP_Object SP_Pin_Cell;
-    typedef Lattice_t::Object_t  Pin_Cell_t;
 
     // Acceleration typedefs.
-    typedef FM_Acceleration_t::Problem_Builder_t SPN_Builder;
-
-    // General typedefs.
-    typedef std::unordered_map<int, SP_Lattice>  Lattice_Hash;
-    typedef std::unordered_map<int, SP_Pin_Cell> Pin_Hash;
+    typedef typename FM_Acceleration_t::Problem_Builder_t SPN_Builder;
 
     // Build implementation.
-    void build_geometry();
-    SP_Lattice build_axial_lattice(const TwoDArray_int &map, double height);
+    void build_geometry(RCP_ParameterList master);
     void build_physics();
     void build_var_reduction();
     void build_source(const ParameterList &source_db);
     void build_tallies();
     void build_spn_problem();
 
-    // Number of assemblies and pins per assembly.
-    int d_Na[2];
-    int d_Np[2];
-
-    // Teuchos communicator.
-    RCP_Comm d_comm;
-
-    // Problem-setup parameterlists.
-    RCP_ParameterList d_coredb;
-    RCP_ParameterList d_assblydb;
-    RCP_ParameterList d_pindb;
     RCP_ParameterList d_matdb;
 };
 

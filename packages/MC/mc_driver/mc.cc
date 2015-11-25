@@ -18,7 +18,8 @@
 #include "comm/Timing_Diagnostics.hh"
 #include "comm/P_Stream.hh"
 #include "utils/Definitions.hh"
-#include "Manager.hh"
+#include "Manager_Base.hh"
+#include "Manager_Builder.hh"
 
 // Parallel specs.
 int node  = 0;
@@ -111,16 +112,13 @@ int main(int argc, char *argv[])
     try
     {
         // make the manager
-        mc::Manager manager;
-
-        // setup the problem
-        manager.setup(xml_file);
+        auto manager = mc::Manager_Builder::build(xml_file);
 
         // solve the problem
-        manager.solve();
+        manager->solve();
 
         // output
-        manager.output();
+        manager->output();
     }
     catch (const profugus::assertion &a)
     {
