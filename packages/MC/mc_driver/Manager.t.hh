@@ -1,12 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Manager.cc
+ * \file   mc_driver/Manager.t.hh
  * \author Thomas M. Evans
  * \date   Wed Jun 18 11:21:16 2014
  * \brief  Manager member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef mc_driver_Manager_t_hh
+#define mc_driver_Manager_t_hh
 
 #include <fstream>
 #include <iomanip>
@@ -34,9 +37,10 @@ namespace mc
 /*!
  * \brief Build an Anderson solver.
  */
+template <class Geometry>
 template<class T>
-void Manager::build_anderson(SP_Transporter    transporter,
-                             SP_Fission_Source source)
+void Manager<Geometry>::build_anderson(SP_Transporter    transporter,
+                                       SP_Fission_Source source)
 {
     // make the solver
     auto anderson =
@@ -55,7 +59,8 @@ void Manager::build_anderson(SP_Transporter    transporter,
 /*!
  * \brief Constructor.
  */
-Manager::Manager()
+template <class Geometry>
+Manager<Geometry>::Manager()
     : d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
@@ -64,19 +69,19 @@ Manager::Manager()
 //---------------------------------------------------------------------------//
 /*!
  * \brief Setup the problem.
- * \param xml_file
+ * \param master Problem parameters.
  */
-void Manager::setup(const std::string &xml_file)
+template <class Geometry>
+void Manager<Geometry>::setup(RCP_ParameterList master)
 {
     SCOPED_TIMER("Manager.setup");
 
-    SCREEN_MSG("Reading xml file -> " << xml_file);
     SCREEN_MSG("Building and initializing geometry, physics, "
                << "variance reduction, and tallies");
 
     // use the problem builder to setup the problem
-    Problem_Builder builder;
-    builder.setup(xml_file);
+    Prob_Builder builder;
+    builder.setup(master);
 
     // get the problem database from the problem-builder
     d_db = builder.problem_db();
@@ -93,10 +98,10 @@ void Manager::setup(const std::string &xml_file)
     CHECK(d_physics);
 
     // output the geometry
-    if (d_db->get<bool>("output_geometry", false))
+    if (d_db->template get<bool>("output_geometry", false))
     {
         std::ostringstream g;
-        g << d_db->get<std::string>("problem_name") << "_geo.out";
+        g << d_db->template get<std::string>("problem_name") << "_geo.out";
 
         if (d_node == 0)
         {
@@ -104,7 +109,7 @@ void Manager::setup(const std::string &xml_file)
             std::ofstream gfile(g.str().c_str(), std::ofstream::out);
 
             // output the geometry
-            d_geometry->array().output(gfile);
+            d_geometry->output(gfile);
         }
     }
 
@@ -123,7 +128,7 @@ void Manager::setup(const std::string &xml_file)
 
     // build the random controller
     d_rnd_control = std::make_shared<RNG_Control_t>(
-        d_db->get<int>("seed", 32442));
+        d_db->template get<int>("seed", 32442));
 
     SCREEN_MSG("Building " << prob_type << " solver");
 
@@ -191,8 +196,8 @@ void Manager::setup(const std::string &xml_file)
     else if (prob_type == "fixed")
     {
         // make the uniform source
-        std::shared_ptr<profugus::Uniform_Source<profugus::Core> > source(
-            std::make_shared<profugus::Uniform_Source<profugus::Core> >(
+        std::shared_ptr<profugus::Uniform_Source<Geometry> > source(
+            std::make_shared<profugus::Uniform_Source<Geometry> >(
                 d_db, d_geometry, d_physics, d_rnd_control));
         source->build_source(shape);
 
@@ -220,9 +225,10 @@ void Manager::setup(const std::string &xml_file)
 /*!
  * \brief Solve the problem.
  */
-void Manager::solve()
+template <class Geometry>
+void Manager<Geometry>::solve()
 {
-    if (d_db->get<bool>("do_transport", true))
+    if (d_db->template get<bool>("do_transport", true))
     {
         SCOPED_TIMER("Manager.solve");
 
@@ -250,7 +256,8 @@ void Manager::solve()
 /*!
  * \brief Do output.
  */
-void Manager::output()
+template <class Geometry>
+void Manager<Geometry>::output()
 {
     using std::string;
 
@@ -314,6 +321,8 @@ void Manager::output()
 
 } // end namespace mc
 
+#endif // mc_driver_Manager_t_hh
+
 //---------------------------------------------------------------------------//
-//                 end of Manager.cc
+//                 end of Manager.t.hh
 //---------------------------------------------------------------------------//
