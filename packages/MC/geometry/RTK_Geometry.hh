@@ -229,6 +229,13 @@ class RTK_Geometry : public Tracking_Geometry<RTK_State>
     // Get bounding box
     Bounding_Box get_extents() const;
 
+    // Diagnostic output.
+    void output(std::ostream &out) const
+    {
+        REQUIRE( d_array );
+        d_array->output(out);
+    }
+
   private:
     // >>> IMPLEMENTATION
 
