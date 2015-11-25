@@ -144,13 +144,13 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Return the current position.
     Space_Vector position(const Geo_State_t& state) const
     {
-        return state.pos;
+        return state.d_r;
     }
 
     //! Return the current direction.
     Space_Vector direction(const Geo_State_t& state) const
     {
-        return state.dir;
+        return state.d_dir;
     }
 
     //! Change the direction to \p new_direction.
@@ -159,8 +159,8 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
             Geo_State_t& state)
     {
         // update and mnormalizethe direction
-        state.dir = new_direction;
-        vector_normalize(state.dir);
+        state.d_dir = new_direction;
+        vector_normalize(state.d_dir);
     }
 
     //! Change the direction through an angle
@@ -169,7 +169,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
             double       phi,
             Geo_State_t& state)
     {
-        cartesian_vector_transform(costheta, phi, state.dir);
+        cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
     //! Reflect the direction at a reflecting surface.
@@ -218,12 +218,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         using def::X; using def::Y; using def::Z;
 
         REQUIRE(dist >= 0.0);
-        REQUIRE(soft_equiv(vector_magnitude(state.dir), 1.0, 1.0e-6));
+        REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
-        state.pos[X] += dist * state.dir[X];
-        state.pos[Y] += dist * state.dir[Y];
-        state.pos[Z] += dist * state.dir[Z];
+        state.d_r[X] += dist * state.d_dir[X];
+        state.d_r[Y] += dist * state.d_dir[Y];
+        state.d_r[Z] += dist * state.d_dir[Z];
     }
 };
 

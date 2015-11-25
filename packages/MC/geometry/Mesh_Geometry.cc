@@ -62,11 +62,11 @@ void Mesh_Geometry::initialize(
     using profugus::soft_equiv;
     using def::I; using def::J; using def::K;
 
-    REQUIRE(soft_equiv(vector_magnitude(direction), 1.0, 1.e-5));
-
     // Set struct attributes
-    state.pos = r;
-    state.dir = direction;
+    state.d_r = r;
+    state.d_dir = direction;
+
+    vector_normalize(state.d_dir);
 
     update_state(state);
 
@@ -84,7 +84,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
     using def::I; using def::J; using def::K;
     using profugus::soft_equiv;
 
-    REQUIRE(soft_equiv(vector_magnitude(state.dir), 1.0, 1.e-5));
+    REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.e-5));
 
     const Vec_Dbl& edges_x(d_mesh.edges(I));
     const Vec_Dbl& edges_y(d_mesh.edges(J));
@@ -102,14 +102,14 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
     // unrolled check
 
     // X SURFACE
-    if (state.dir[I] > 0.0 && state.ijk[I] < extents[I])
+    if (state.d_dir[I] > 0.0 && state.ijk[I] < extents[I])
     {
-        test_dist = (edges_x[state.ijk[I]+1] - state.pos[I]) / state.dir[I];
+        test_dist = (edges_x[state.ijk[I]+1] - state.d_r[I]) / state.d_dir[I];
         test_next = state.ijk[I] + 1;
     }
-    else if (state.dir[I] < 0.0 && state.ijk[I] > -1)
+    else if (state.d_dir[I] < 0.0 && state.ijk[I] > -1)
     {
-        test_dist = (edges_x[state.ijk[I]] - state.pos[I]) / state.dir[I];
+        test_dist = (edges_x[state.ijk[I]] - state.d_r[I]) / state.d_dir[I];
         test_next = state.ijk[I] - 1;
     }
 
@@ -121,14 +121,14 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
     test_dist = std::numeric_limits<double>::max();
 
     // Y SURFACE
-    if (state.dir[J] > 0.0 && state.ijk[J] < extents[J])
+    if (state.d_dir[J] > 0.0 && state.ijk[J] < extents[J])
     {
-        test_dist = (edges_y[state.ijk[J]+1] - state.pos[J]) / state.dir[J];
+        test_dist = (edges_y[state.ijk[J]+1] - state.d_r[J]) / state.d_dir[J];
         test_next = state.ijk[J] + 1;
     }
-    else if (state.dir[J] < 0.0 && state.ijk[J] > -1)
+    else if (state.d_dir[J] < 0.0 && state.ijk[J] > -1)
     {
-        test_dist = (edges_y[state.ijk[J]] - state.pos[J]) / state.dir[J];
+        test_dist = (edges_y[state.ijk[J]] - state.d_r[J]) / state.d_dir[J];
         test_next = state.ijk[J] - 1;
     }
 
@@ -144,14 +144,14 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
     test_dist = std::numeric_limits<double>::max();
 
     // Z SURFACE
-    if (state.dir[K] > 0.0 && state.ijk[K] < extents[K])
+    if (state.d_dir[K] > 0.0 && state.ijk[K] < extents[K])
     {
-        test_dist = (edges_z[state.ijk[K]+1] - state.pos[K]) / state.dir[K];
+        test_dist = (edges_z[state.ijk[K]+1] - state.d_r[K]) / state.d_dir[K];
         test_next = state.ijk[K] + 1;
     }
-    else if (state.dir[K] < 0.0 && state.ijk[K] > -1)
+    else if (state.d_dir[K] < 0.0 && state.ijk[K] > -1)
     {
-        test_dist = (edges_z[state.ijk[K]] - state.pos[K]) / state.dir[K];
+        test_dist = (edges_z[state.ijk[K]] - state.d_r[K]) / state.d_dir[K];
         test_next = state.ijk[K] - 1;
     }
 
@@ -206,12 +206,12 @@ double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
     const Cartesian_Mesh::Dim_Vector& extents = d_mesh.extents();
 
     // First, check if we start outside, heading the wrong direction
-    if (   (state.ijk[I] == -1         && state.dir[X] < 0.0)
-           || (state.ijk[J] == -1         && state.dir[Y] < 0.0)
-           || (state.ijk[K] == -1         && state.dir[Z] < 0.0)
-           || (state.ijk[I] == extents[I] && state.dir[X] > 0.0)
-           || (state.ijk[J] == extents[J] && state.dir[Y] > 0.0)
-           || (state.ijk[K] == extents[K] && state.dir[Z] > 0.0))
+    if (   (state.ijk[I] == -1         && state.d_dir[X] < 0.0)
+           || (state.ijk[J] == -1         && state.d_dir[Y] < 0.0)
+           || (state.ijk[K] == -1         && state.d_dir[Z] < 0.0)
+           || (state.ijk[I] == extents[I] && state.d_dir[X] > 0.0)
+           || (state.ijk[J] == extents[J] && state.d_dir[Y] > 0.0)
+           || (state.ijk[K] == extents[K] && state.d_dir[Z] > 0.0))
     {
         state.next_dist = std::numeric_limits<double>::max();
         return state.next_dist;
@@ -226,18 +226,18 @@ double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
     double test_dist;
 
     // Check X faces if outside the extents
-    if      (state.dir[X] < 0.0 && state.ijk[I] == extents[I])
+    if      (state.d_dir[X] < 0.0 && state.ijk[I] == extents[I])
     {
-        test_dist = (edges_x.back() - state.pos[X]) / state.dir[X];
+        test_dist = (edges_x.back() - state.d_r[X]) / state.d_dir[X];
         if (test_dist > state.next_dist)
         {
             state.next_dist = test_dist;
             next_face       = Geo_State_t::PLUS_X;
         }
     }
-    else if (state.dir[X] > 0.0 && state.ijk[I] == -1)
+    else if (state.d_dir[X] > 0.0 && state.ijk[I] == -1)
     {
-        test_dist = (edges_x.front() - state.pos[X]) / state.dir[X];
+        test_dist = (edges_x.front() - state.d_r[X]) / state.d_dir[X];
         if (test_dist > state.next_dist)
         {
             state.next_dist = test_dist;
@@ -246,18 +246,18 @@ double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
     }
 
     // Check Y faces if outside the extents
-    if      (state.dir[Y] < 0.0 && state.ijk[J] == extents[J])
+    if      (state.d_dir[Y] < 0.0 && state.ijk[J] == extents[J])
     {
-        test_dist = (edges_y.back() - state.pos[Y]) / state.dir[Y];
+        test_dist = (edges_y.back() - state.d_r[Y]) / state.d_dir[Y];
         if (test_dist > state.next_dist)
         {
             state.next_dist = test_dist;
             next_face = Geo_State_t::PLUS_Y;
         }
     }
-    else if (state.dir[Y] > 0.0 && state.ijk[J] == -1)
+    else if (state.d_dir[Y] > 0.0 && state.ijk[J] == -1)
     {
-        test_dist = (edges_y.front() - state.pos[Y]) / state.dir[Y];
+        test_dist = (edges_y.front() - state.d_r[Y]) / state.d_dir[Y];
         if (test_dist > state.next_dist)
         {
             state.next_dist = test_dist;
@@ -266,18 +266,18 @@ double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
     }
 
     // Check Z faces if outside the extents
-    if      (state.dir[Z] < 0.0 && state.ijk[K] == extents[K])
+    if      (state.d_dir[Z] < 0.0 && state.ijk[K] == extents[K])
     {
-        test_dist = (edges_z.back() - state.pos[Z]) / state.dir[Z];
+        test_dist = (edges_z.back() - state.d_r[Z]) / state.d_dir[Z];
         if (test_dist > state.next_dist)
         {
             state.next_dist = test_dist;
             next_face = Geo_State_t::PLUS_Z;
         }
     }
-    else if (state.dir[Z] > 0.0 && state.ijk[K] == -1)
+    else if (state.d_dir[Z] > 0.0 && state.ijk[K] == -1)
     {
-        test_dist = (edges_z.front() - state.pos[Z]) / state.dir[Z];
+        test_dist = (edges_z.front() - state.d_r[Z]) / state.d_dir[Z];
         if (test_dist > state.next_dist)
         {
             state.next_dist = test_dist;
@@ -339,8 +339,8 @@ double Mesh_Geometry::distance_to_interior(Geo_State_t& state)
         }
 
         // Position after the next transport
-        double nextu = state.pos[u] + state.next_dist * state.dir[u];
-        double nextv = state.pos[v] + state.next_dist * state.dir[v];
+        double nextu = state.d_r[u] + state.next_dist * state.d_dir[u];
+        double nextv = state.d_r[v] + state.next_dist * state.d_dir[v];
 
         // Calculate IJK indices for the off-axis directions
         state.next_ijk[u] = d_mesh.find_upper(nextu, u);
@@ -428,7 +428,7 @@ void Mesh_Geometry::update_state(Geo_State_t& state) const
     using def::I; using def::J; using def::K;
 
     // Find the logical indices of the cell along each axis
-    d_mesh.find_upper(state.pos, state.ijk);
+    d_mesh.find_upper(state.d_r, state.ijk);
 
 #ifdef CHECK_ON
     // Clear the other internals for debugging
