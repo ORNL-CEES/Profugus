@@ -26,14 +26,15 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Solver
 {
   public:
     //@{
     //! Typedefs.
-    typedef Physics                    Physics_t;
-    typedef Physics_t::Geometry_t      Geometry_t;
-    typedef Tallier                    Tallier_t;
+    typedef Geometry                   Geometry_t;
+    typedef Physics<Geometry_t>        Physics_t;
+    typedef Tallier<Geometry_t>        Tallier_t;
     typedef std::shared_ptr<Tallier_t> SP_Tallier;
     //@}
 

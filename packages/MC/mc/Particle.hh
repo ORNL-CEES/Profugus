@@ -32,16 +32,17 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Particle
 {
   public:
     //@{
     //! Typedefs.
-    typedef def::Space_Vector   Space_Vector;
-    typedef events::Event       Event_Type;
-    typedef RNG                 RNG_t;
-    typedef RTK_State           Geo_State_t;
-    typedef Metaclass<Particle> Metadata;
+    typedef def::Space_Vector               Space_Vector;
+    typedef events::Event                   Event_Type;
+    typedef RNG                             RNG_t;
+    typedef typename Geometry::Geo_State_t  Geo_State_t;
+    typedef Metaclass<Particle>             Metadata;
     //@}
 
   private:

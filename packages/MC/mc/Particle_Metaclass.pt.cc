@@ -8,13 +8,16 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "geometry/RTK_Geometry.hh"
+#include "geometry/Mesh_Geometry.hh"
 #include "utils/Metaclass.t.hh"
 #include "Particle.hh"
 
 namespace profugus
 {
 
-template class Metaclass<Particle>;
+template class Metaclass<Particle<Core> >;
+template class Metaclass<Particle<Mesh_Geometry> >;
 
 } // end namespace profugus
 

@@ -31,10 +31,11 @@ class FissionSourceTest : public SourceTestBase
     typedef SourceTestBase Base;
 
   protected:
-    typedef profugus::Fission_Source         Fission_Source;
-    typedef Fission_Source::SP_Fission_Sites SP_Fission_Sites;
-    typedef Fission_Source::Fission_Site     Fission_Site;
-    typedef std::shared_ptr<Fission_Source>  SP_Fission_Source;
+    typedef profugus::Core                          Geometry_t;
+    typedef profugus::Fission_Source<Geometry_t>    Fission_Source;
+    typedef Fission_Source::SP_Fission_Sites        SP_Fission_Sites;
+    typedef Fission_Source::Fission_Site            Fission_Site;
+    typedef std::shared_ptr<Fission_Source>         SP_Fission_Source;
 
     virtual int get_seed() const
     {

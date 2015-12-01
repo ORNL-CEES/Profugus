@@ -31,12 +31,13 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-template<class T>
-Anderson_Operator<T>::Anderson_Operator(SP_Source_Transporter    transporter,
-                                        SP_Fission_Source        fission_source,
-                                        SP_Cart_Mesh             mesh,
-                                        RCP_MAP                  map,
-                                        profugus::Communicator_t set_comm)
+template<class Geometry, class T>
+Anderson_Operator<Geometry,T>::Anderson_Operator(
+        SP_Source_Transporter    transporter,
+        SP_Fission_Source        fission_source,
+        SP_Cart_Mesh             mesh,
+        RCP_MAP                  map,
+        profugus::Communicator_t set_comm)
     : Base(map)
     , d_transporter(transporter)
     , d_source(fission_source)
@@ -72,8 +73,8 @@ Anderson_Operator<T>::Anderson_Operator(SP_Source_Transporter    transporter,
 /*!
  * \brief Do a transport iteration.
  */
-template<class T>
-void Anderson_Operator<T>::iterate(double k) const
+template<class Geometry, class T>
+void Anderson_Operator<Geometry,T>::iterate(double k) const
 {
     REQUIRE(d_tallier);
     REQUIRE(d_tallier->is_built() && !d_tallier->is_finalized());
@@ -104,8 +105,8 @@ void Anderson_Operator<T>::iterate(double k) const
 /*!
  * \brief Update the fission source.
  */
-template<class T>
-void Anderson_Operator<T>::update_source() const
+template<class Geometry, class T>
+void Anderson_Operator<Geometry,T>::update_source() const
 {
     REQUIRE(!d_fission_sites->empty());
 
@@ -120,8 +121,8 @@ void Anderson_Operator<T>::update_source() const
 /*!
  * \brief Initialize Anderson solve.
  */
-template<class T>
-auto Anderson_Operator<T>::initialize_Anderson() -> RCP_MV
+template<class Geometry, class T>
+auto Anderson_Operator<Geometry,T>::initialize_Anderson() -> RCP_MV
 {
     REQUIRE(d_transporter->tallier()->num_tallies() == 1);
 
@@ -142,7 +143,7 @@ auto Anderson_Operator<T>::initialize_Anderson() -> RCP_MV
     std::copy(gp.begin(), gp.end(), v.begin());
 
     // Get the k from the initialization cycles
-    auto k_tally = std::dynamic_pointer_cast<Keff_Tally>(
+    auto k_tally = std::dynamic_pointer_cast<Keff_Tally_t>(
         *d_transporter->tallier()->begin());
     CHECK(k_tally);
 
@@ -163,8 +164,8 @@ auto Anderson_Operator<T>::initialize_Anderson() -> RCP_MV
  *
  * \return k from Anderson solve
  */
-template<class T>
-double Anderson_Operator<T>::finalize_Anderson(const MV &v)
+template<class Geometry, class T>
+double Anderson_Operator<Geometry,T>::finalize_Anderson(const MV &v)
 {
     REQUIRE(d_transporter->tallier()->num_tallies() == 0);
 
@@ -199,8 +200,8 @@ double Anderson_Operator<T>::finalize_Anderson(const MV &v)
 /*!
  * \brief Operator apply for solves.
  */
-template<class T>
-void Anderson_Operator<T>::ApplyImpl(const MV &x, MV &y) const
+template<class Geometry, class T>
+void Anderson_Operator<Geometry,T>::ApplyImpl(const MV &x, MV &y) const
 {
     // Number of cells in the grid
     int nc = d_mesh->num_cells();
@@ -269,9 +270,9 @@ void Anderson_Operator<T>::ApplyImpl(const MV &x, MV &y) const
    \mathbf{P}g = f' \frac{g}{g'}\:.
  * \f]
  */
-template<class T>
-void Anderson_Operator<T>::prolongate(const_View              g,
-                                      Fission_Site_Container &f) const
+template<class Geometry, class T>
+void Anderson_Operator<Geometry,T>::prolongate(const_View              g,
+                                               Fission_Site_Container &f) const
 {
     REQUIRE(g.size() == d_mesh->num_cells());
 
@@ -343,9 +344,10 @@ void Anderson_Operator<T>::prolongate(const_View              g,
  * The restriction operation is applied by adding all of the fission sites in
  * each cell and dividing by volume to get a fission density.
  */
-template<class T>
-void Anderson_Operator<T>::restrict(const Fission_Site_Container &f,
-                                    View                          g) const
+template<class Geometry, class T>
+void Anderson_Operator<Geometry,T>::restrict(
+        const Fission_Site_Container &f,
+        View                          g) const
 {
     REQUIRE(g.size() == d_mesh->num_cells());
 

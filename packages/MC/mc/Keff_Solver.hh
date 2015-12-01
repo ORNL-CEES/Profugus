@@ -31,15 +31,19 @@ namespace profugus
  */
 //===========================================================================//
 
-class Keff_Solver : public Solver
+template <class Geometry>
+class Keff_Solver : public Solver<Geometry>
 {
   public:
     //@{
     //! Typedefs.
-    typedef std::shared_ptr<Keff_Tally>        SP_Keff_Tally;
-    typedef std::shared_ptr<Fission_Source>    SP_Fission_Source;
-    typedef Fission_Matrix_Acceleration        FM_Acceleration_t;
-    typedef std::shared_ptr<FM_Acceleration_t> SP_FM_Acceleration;
+    typedef Geometry                                Geometry_t;
+    typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
+    typedef std::shared_ptr<Keff_Tally_t>           SP_Keff_Tally;
+    typedef Fission_Source<Geometry_t>              Fission_Source_t;
+    typedef std::shared_ptr<Fission_Source_t>       SP_Fission_Source;
+    typedef Fission_Matrix_Acceleration<Geometry>   FM_Acceleration_t;
+    typedef std::shared_ptr<FM_Acceleration_t>      SP_FM_Acceleration;
     //@}
 
   protected:

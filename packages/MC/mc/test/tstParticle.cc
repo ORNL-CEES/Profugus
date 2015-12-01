@@ -11,8 +11,9 @@
 #include "../Particle.hh"
 
 #include "gtest/utils_gtest.hh"
+#include "geometry/RTK_Geometry.hh"
 
-using profugus::Particle;
+typedef profugus::Particle<profugus::Core> Particle;
 
 //---------------------------------------------------------------------------//
 // TESTS

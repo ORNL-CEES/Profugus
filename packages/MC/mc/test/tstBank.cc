@@ -10,6 +10,7 @@
 
 #include "gtest/utils_gtest.hh"
 
+#include "geometry/RTK_Geometry.hh"
 #include "../Bank.hh"
 
 //---------------------------------------------------------------------------//
@@ -19,9 +20,10 @@
 class BankTest : public ::testing::Test
 {
   protected:
-    typedef profugus::Bank      Bank_t;
-    typedef Bank_t::Particle_t  Particle;
-    typedef Bank_t::SP_Particle SP_Particle;
+    typedef profugus::Core              Geometry_t;
+    typedef profugus::Bank<Geometry_t>  Bank_t;
+    typedef Bank_t::Particle_t          Particle;
+    typedef Bank_t::SP_Particle         SP_Particle;
 
     void SetUp()
     {

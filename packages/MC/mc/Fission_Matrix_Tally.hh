@@ -37,20 +37,27 @@ namespace profugus
  */
 //===========================================================================//
 
-class Fission_Matrix_Tally : public Compound_Tally
+template <class Geometry>
+class Fission_Matrix_Tally : public Compound_Tally<Geometry>
 {
-    typedef Compound_Tally Base;
+    typedef Compound_Tally<Geometry> Base;
+    using Base::b_pl_tally;
+    using Base::b_src_tally;
 
   public:
     //@{
     //! Typedefs.
-    typedef Physics_t::SP_Geometry                  SP_Geometry;
+    typedef Physics<Geometry>                       Physics_t;
+    typedef typename Physics_t::SP_Geometry         SP_Geometry;
+    typedef typename Physics_t::Particle_t          Particle_t;
     typedef std::shared_ptr<Mesh_Geometry>          SP_Mesh_Geometry;
+    typedef std::shared_ptr<Physics_t>              SP_Physics;
     typedef Teuchos::ParameterList                  ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>           RCP_Std_DB;
     typedef Fission_Matrix_Processor::Idx           Idx;
     typedef Fission_Matrix_Processor::Sparse_Matrix Sparse_Matrix;
     typedef Fission_Matrix_Processor::Denominator   Denominator;
+    typedef typename Particle_t::Metadata           Metadata_t;
     //@}
 
     //! Fission matrix tally data struct.
@@ -80,7 +87,7 @@ class Fission_Matrix_Tally : public Compound_Tally
         // Constructor.
         FM_Data()
             : d_birth_idx(
-                Particle::Metadata::new_pod_member<int>("fm_birth_cell"))
+                Metadata_t::template new_pod_member<int>("fm_birth_cell"))
         {/* * */}
     };
 
@@ -88,7 +95,7 @@ class Fission_Matrix_Tally : public Compound_Tally
     typedef std::shared_ptr<FM_Data> SP_FM_Data;
 
     //! Src_Tally class.
-    class Src_Tally : public Source_Tally
+    class Src_Tally : public Source_Tally<Geometry>
     {
       private:
         // >>> DATA
@@ -102,13 +109,13 @@ class Fission_Matrix_Tally : public Compound_Tally
       public:
         // Constructor.
         Src_Tally(SP_Physics physics, SP_FM_Data data)
-            : Source_Tally(physics, true)
+            : Source_Tally<Geometry>(physics, true)
             , d_data(data)
         {
             REQUIRE(d_data);
 
             // set the name
-            set_name("fission_matrix_source_tally");
+            this->set_name("fission_matrix_source_tally");
         }
 
         // >>> INHERITED INTERFACE
@@ -118,7 +125,7 @@ class Fission_Matrix_Tally : public Compound_Tally
     };
 
     //! PL_Tally class.
-    class PL_Tally : public Pathlength_Tally
+    class PL_Tally : public Pathlength_Tally<Geometry>
     {
       private:
         // >>> DATA
@@ -132,13 +139,13 @@ class Fission_Matrix_Tally : public Compound_Tally
       public:
         // Constructor.
         PL_Tally(SP_Physics physics, SP_FM_Data data)
-            : Pathlength_Tally(physics, true)
+            : Pathlength_Tally<Geometry>(physics, true)
             , d_data(data)
         {
             REQUIRE(d_data);
 
             // set the name
-            set_name("fission_matrix_pathlength_tally");
+            this->set_name("fission_matrix_pathlength_tally");
         }
 
         // >>> INHERITED INTERFACE

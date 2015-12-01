@@ -15,6 +15,7 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 
+#include "geometry/RTK_Geometry.hh"
 #include "../Cell_Tally.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
@@ -27,14 +28,14 @@ class CellTallyTest : public ::testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::Cell_Tally    Cell_Tally;
-    typedef Cell_Tally::Geometry_t  Geometry_t;
-    typedef Cell_Tally::SP_Geometry SP_Geometry;
-    typedef Cell_Tally::Physics_t   Physics_t;
-    typedef Cell_Tally::SP_Physics  SP_Physics;
-    typedef Physics_t::Particle_t   Particle_t;
-    typedef Physics_t::XS_t         XS_t;
-    typedef Physics_t::RCP_XS       RCP_XS;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::Cell_Tally<Geometry_t>    Cell_Tally;
+    typedef Cell_Tally::SP_Geometry             SP_Geometry;
+    typedef Cell_Tally::Physics_t               Physics_t;
+    typedef Cell_Tally::SP_Physics              SP_Physics;
+    typedef Physics_t::Particle_t               Particle_t;
+    typedef Physics_t::XS_t                     XS_t;
+    typedef Physics_t::RCP_XS                   RCP_XS;
 
     typedef Teuchos::ParameterList        ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;

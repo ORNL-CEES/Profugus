@@ -36,14 +36,15 @@ namespace profugus
 /*!
  * \brief Build the solver.
  */
-template<class T>
-Fission_Matrix_Solver<T>::Fission_Matrix_Solver(RCP_ParameterList fm_db,
-                                                RCP_Mesh          mesh,
-                                                RCP_Indexer       indexer,
-                                                RCP_Mat_DB        mat,
-                                                RCP_Linear_System system,
-                                                SP_Cart_Mesh      global_mesh,
-                                                double            keff)
+template<class Geometry, class T>
+Fission_Matrix_Solver<Geometry,T>::Fission_Matrix_Solver(
+        RCP_ParameterList fm_db,
+        RCP_Mesh          mesh,
+        RCP_Indexer       indexer,
+        RCP_Mat_DB        mat,
+        RCP_Linear_System system,
+        SP_Cart_Mesh      global_mesh,
+        double            keff)
     : d_mesh(mesh)
     , d_indexer(indexer)
     , d_mat(mat)
@@ -127,9 +128,9 @@ Fission_Matrix_Solver<T>::Fission_Matrix_Solver(RCP_ParameterList fm_db,
 /*!
  * \brief Set the eigenvectors of the SPN system.
  */
-template<class T>
-void Fission_Matrix_Solver<T>::set_eigenvectors(RCP_Vector forward,
-                                                RCP_Vector adjoint)
+template<class Geometry, class T>
+void Fission_Matrix_Solver<Geometry,T>::set_eigenvectors(RCP_Vector forward,
+                                                         RCP_Vector adjoint)
 {
     REQUIRE(!forward.is_null());
     REQUIRE(!adjoint.is_null());
@@ -142,9 +143,10 @@ void Fission_Matrix_Solver<T>::set_eigenvectors(RCP_Vector forward,
 /*!
  * \brief Set the fission source at the beginning of the cycle.
  */
-template<class T>
-void Fission_Matrix_Solver<T>::set_u_begin(const Fission_Site_Container &f,
-                                           double                        k_l)
+template<class Geometry, class T>
+void Fission_Matrix_Solver<Geometry,T>::set_u_begin(
+        const Fission_Site_Container &f,
+        double                        k_l)
 {
     REQUIRE(k_l > 0.0);
 
@@ -164,8 +166,8 @@ void Fission_Matrix_Solver<T>::set_u_begin(const Fission_Site_Container &f,
 /*!
  * \brief Solve for the correction.
  */
-template<class T>
-void Fission_Matrix_Solver<T>::solve(const Fission_Site_Container &f)
+template<class Geometry, class T>
+void Fission_Matrix_Solver<Geometry,T>::solve(const Fission_Site_Container &f)
 {
     typedef Anasazi::OperatorTraits<double, MultiVector_t, Operator_t> OT;
 
@@ -244,8 +246,8 @@ void Fission_Matrix_Solver<T>::solve(const Fission_Site_Container &f)
  *
  * The Stratimikos solver should \b not define a preconditioner.
  */
-template<class T>
-void Fission_Matrix_Solver<T>::solver_db(RCP_ParameterList fm_db)
+template<class Geometry, class T>
+void Fission_Matrix_Solver<Geometry,T>::solver_db(RCP_ParameterList fm_db)
 {
     using std::string;
 
@@ -278,8 +280,8 @@ void Fission_Matrix_Solver<T>::solver_db(RCP_ParameterList fm_db)
 /*!
  * \brief Build the Bphi mat-vec product from the fission sites.
  */
-template<class T>
-auto Fission_Matrix_Solver<T>::build_Bphi(
+template<class Geometry, class T>
+auto Fission_Matrix_Solver<Geometry,T>::build_Bphi(
     const Fission_Site_Container &f) -> RCP_Vector
 {
     using def::I; using def::J; using def::K;

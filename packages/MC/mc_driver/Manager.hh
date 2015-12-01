@@ -21,6 +21,7 @@
 #include "mc/Global_RNG.hh"
 #include "mc/Source_Transporter.hh"
 #include "Problem_Builder.hh"
+#include "Manager_Base.hh"
 
 namespace mc
 {
@@ -32,25 +33,30 @@ namespace mc
  */
 //===========================================================================//
 
-class Manager
+template <class Geometry>
+class Manager : public Manager_Base
 {
   private:
     // Typedefs.
-    typedef Problem_Builder::RCP_ParameterList     RCP_ParameterList;
-    typedef Problem_Builder::SP_Physics            SP_Physics;
-    typedef Problem_Builder::SP_Geometry           SP_Geometry;
-    typedef profugus::Solver                       Solver_t;
-    typedef std::shared_ptr<Solver_t>              SP_Solver;
-    typedef profugus::Keff_Solver                  Keff_Solver_t;
-    typedef std::shared_ptr<Keff_Solver_t>         SP_Keff_Solver;
-    typedef profugus::Fixed_Source_Solver          Fixed_Source_Solver_t;
-    typedef std::shared_ptr<Fixed_Source_Solver_t> SP_Fixed_Source_Solver;
-    typedef Solver_t::Tallier_t                    Tallier_t;
-    typedef Solver_t::SP_Tallier                   SP_Tallier;
-    typedef profugus::Source_Transporter           Transporter_t;
-    typedef std::shared_ptr<Transporter_t>         SP_Transporter;
-    typedef profugus::Global_RNG::RNG_Control_t    RNG_Control_t;
-    typedef std::shared_ptr<RNG_Control_t>         SP_RNG_Control;
+    typedef Geometry                                    Geom_t;
+    typedef Problem_Builder<Geometry>                   Prob_Builder;
+    typedef typename Prob_Builder::RCP_ParameterList    RCP_ParameterList;
+    typedef typename Prob_Builder::SP_Physics           SP_Physics;
+    typedef typename Prob_Builder::SP_Geometry          SP_Geometry;
+    typedef profugus::Solver<Geom_t>                    Solver_t;
+    typedef std::shared_ptr<Solver_t>                   SP_Solver;
+    typedef profugus::Keff_Solver<Geom_t>               Keff_Solver_t;
+    typedef std::shared_ptr<Keff_Solver_t>              SP_Keff_Solver;
+    typedef profugus::Fixed_Source_Solver<Geom_t>       Fixed_Source_Solver_t;
+    typedef std::shared_ptr<Fixed_Source_Solver_t>      SP_Fixed_Source_Solver;
+    typedef typename Solver_t::Tallier_t                Tallier_t;
+    typedef typename Solver_t::SP_Tallier               SP_Tallier;
+    typedef profugus::Source_Transporter<Geom_t>        Transporter_t;
+    typedef std::shared_ptr<Transporter_t>              SP_Transporter;
+    typedef profugus::Global_RNG::RNG_Control_t         RNG_Control_t;
+    typedef std::shared_ptr<RNG_Control_t>              SP_RNG_Control;
+    typedef profugus::Fission_Source<Geom_t>            Fission_Source_t;
+    typedef std::shared_ptr<Fission_Source_t>           SP_Fission_Source;
 
     // >>> DATA
 
@@ -76,7 +82,7 @@ class Manager
     Manager();
 
     // Setup the problem.
-    void setup(const std::string &xml_file);
+    void setup(RCP_ParameterList master);
 
     // Solve the problem.
     void solve();
@@ -86,8 +92,6 @@ class Manager
 
   private:
     // >>> IMPLEMENTATION
-
-    typedef Keff_Solver_t::SP_Fission_Source SP_Fission_Source;
 
     // Build an Anderson solver.
     template<class T>

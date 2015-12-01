@@ -20,6 +20,7 @@
 #include "Cartesian_Mesh.hh"
 #include "Mesh_State.hh"
 #include "Tracking_Geometry.hh"
+#include "Bounding_Box.hh"
 
 namespace profugus
 {
@@ -44,10 +45,10 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
   public:
     //@{
     //! Typedefs
-    typedef def::Vec_Dbl             Vec_Dbl;
-    typedef def::Vec_Int             Vec_Int;
-    typedef std::shared_ptr<Vec_Int> SP_Vec_Int;
-    typedef std::shared_ptr<Vec_Dbl> SP_Vec_Dbl;
+    typedef def::Vec_Dbl                    Vec_Dbl;
+    typedef def::Vec_Int                    Vec_Int;
+    typedef std::shared_ptr<Vec_Int>        SP_Vec_Int;
+    typedef std::shared_ptr<Vec_Dbl>        SP_Vec_Dbl;
     //@}
 
   private:
@@ -143,13 +144,13 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Return the current position.
     Space_Vector position(const Geo_State_t& state) const
     {
-        return state.pos;
+        return state.d_r;
     }
 
     //! Return the current direction.
     Space_Vector direction(const Geo_State_t& state) const
     {
-        return state.dir;
+        return state.d_dir;
     }
 
     //! Change the direction to \p new_direction.
@@ -158,8 +159,8 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
             Geo_State_t& state)
     {
         // update and mnormalizethe direction
-        state.dir = new_direction;
-        vector_normalize(state.dir);
+        state.d_dir = new_direction;
+        vector_normalize(state.d_dir);
     }
 
     //! Change the direction through an angle
@@ -168,7 +169,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
             double       phi,
             Geo_State_t& state)
     {
-        cartesian_vector_transform(costheta, phi, state.dir);
+        cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
     //! Reflect the direction at a reflecting surface.
@@ -188,11 +189,25 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     // Get the volumes.
     SP_Vec_Dbl get_cell_volumes();
 
+    const Vec_Dbl &cell_volumes() const
+    {
+        CHECK( d_volumes );
+        CHECK( d_volumes->size() == num_cells() );
+        return *d_volumes;
+    }
+
     // If the particle is outside the geometry, find distance
     double distance_to_interior(Geo_State_t &state);
 
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
+
+    // Bounding box
+    Bounding_Box get_extents() const;
+
+    void output(std::ostream &out) const
+    {
+    }
 
   private:
     // >>> IMPLEMENTATION
@@ -207,12 +222,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         using def::X; using def::Y; using def::Z;
 
         REQUIRE(dist >= 0.0);
-        REQUIRE(soft_equiv(vector_magnitude(state.dir), 1.0, 1.0e-6));
+        REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
-        state.pos[X] += dist * state.dir[X];
-        state.pos[Y] += dist * state.dir[Y];
-        state.pos[Z] += dist * state.dir[Z];
+        state.d_r[X] += dist * state.d_dir[X];
+        state.d_r[Y] += dist * state.d_dir[Y];
+        state.d_r[Z] += dist * state.d_dir[Z];
     }
 };
 

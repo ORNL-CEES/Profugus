@@ -41,11 +41,12 @@ class FM_AccelerationTest : public ::testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::Fission_Matrix_Acceleration         Acceleration;
+    typedef profugus::Core                                Geom_t;
+    typedef profugus::Fission_Matrix_Acceleration<Geom_t> Acceleration;
     typedef Acceleration::RCP_ParameterList               RCP_ParameterList;
     typedef std::shared_ptr<Acceleration>                 SP_Acceleration;
     typedef Acceleration::Problem_Builder_t               SPN_Builder;
-    typedef profugus::Fission_Matrix_Acceleration_Impl<T> Implementation;
+    typedef profugus::Fission_Matrix_Acceleration_Impl<Geom_t,T> Implementation;
     typedef std::shared_ptr<Implementation>               SP_Implementation;
     typedef typename Implementation::Linear_System_t      Linear_System_t;
     typedef typename Linear_System_t::RCP_MV              RCP_Vector;
@@ -64,8 +65,8 @@ class FM_AccelerationTest : public ::testing::Test
         nodes = profugus::nodes();
 
         // make the acceleration
-        implementation =
-            std::make_shared<profugus::Fission_Matrix_Acceleration_Impl<T>>();
+        implementation = std::make_shared<
+            profugus::Fission_Matrix_Acceleration_Impl<Geom_t,T> >();
         acceleration = implementation;
 
         mc_db = Teuchos::rcp(new Acceleration::ParameterList());

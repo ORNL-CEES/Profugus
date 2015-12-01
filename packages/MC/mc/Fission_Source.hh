@@ -64,20 +64,33 @@ namespace profugus
  */
 //===========================================================================//
 
-class Fission_Source : public Source
+template <class Geometry>
+class Fission_Source : public Source<Geometry>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Physics_t::RCP_Std_DB                   RCP_Std_DB;
-    typedef Physics_t::Fission_Site                 Fission_Site;
-    typedef Physics_t::Fission_Site_Container       Fission_Site_Container;
-    typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
-    typedef std::shared_ptr<Fission_Rebalance>      SP_Fission_Rebalance;
-    typedef std::shared_ptr<Cartesian_Mesh>         SP_Cart_Mesh;
-    typedef Teuchos::ArrayView<const double>        Const_Array_View;
-    typedef def::Vec_Dbl                            Vec_Dbl;
-    typedef def::Vec_Int                            Vec_Int;
+    typedef Geometry                                    Geometry_t;
+    typedef Physics<Geometry_t>                         Physics_t;
+    typedef typename Physics_t::RCP_Std_DB              RCP_Std_DB;
+    typedef typename Physics_t::Fission_Site            Fission_Site;
+    typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
+    typedef typename Physics_t::Particle_t              Particle_t;
+    typedef typename Geometry_t::Space_Vector           Space_Vector;
+    typedef RNG_Control                                 RNG_Control_t;
+    typedef RNG_Control_t::RNG_t                        RNG_t;
+    typedef std::shared_ptr<Geometry>                   SP_Geometry;
+    typedef std::shared_ptr<Physics_t>                  SP_Physics;
+    typedef std::shared_ptr<Particle_t>                 SP_Particle;
+    typedef std::shared_ptr<RNG_Control>                SP_RNG_Control;
+    typedef std::shared_ptr<Fission_Site_Container>     SP_Fission_Sites;
+    typedef Fission_Rebalance<Geometry_t>               Fission_Rebalance_t;
+    typedef std::shared_ptr<Fission_Rebalance_t>        SP_Fission_Rebalance;
+    typedef std::shared_ptr<Cartesian_Mesh>             SP_Cart_Mesh;
+    typedef Teuchos::ArrayView<const double>            Const_Array_View;
+    typedef def::Vec_Dbl                                Vec_Dbl;
+    typedef def::Vec_Int                                Vec_Int;
+    typedef def::size_type                              size_type;
     //@}
 
   private:
@@ -154,7 +167,12 @@ class Fission_Source : public Source
   private:
     // >>> IMPLEMENTATION
 
-    typedef Source Base;
+    typedef Source<Geometry> Base;
+    using Base::b_geometry;
+    using Base::b_physics;
+    using Base::b_rng_control;
+    using Base::b_nodes;
+    using Base::make_RNG;
 
     // Build the domain replicated fission source.
     void build_DR(SP_Cart_Mesh mesh, Const_Array_View fis_dens);

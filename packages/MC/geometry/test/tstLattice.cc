@@ -22,7 +22,7 @@
 #include "utils/Vector_Functions.hh"
 #include "rng/RNG_Control.hh"
 #include "../Definitions.hh"
-#include "../Geometry.hh"
+#include "../RTK_Geometry.hh"
 
 using namespace std;
 

@@ -74,8 +74,9 @@ SET(HEADERS "")
 
 FILE(GLOB GEOMETRY_HEADERS mesh/*.hh)
 SET(GEOMETRY_SOURCES
+  geometry/Bounding_Box.cc
   geometry/Cartesian_Mesh.cc
-  geometry/Geometry.pt.cc
+  geometry/RTK_Geometry.pt.cc
   geometry/Mesh_Geometry.cc
   geometry/Mesh_State.cc
   geometry/RTK_Array.cc
@@ -94,31 +95,31 @@ SET(MC_SOURCES
   mc/Anderson_Operator.pt.cc
   mc/Anderson_Solver.pt.cc
   mc/Box_Shape.cc
-  mc/Cell_Tally.cc
-  mc/Domain_Transporter.cc
+  mc/Cell_Tally.pt.cc
+  mc/Domain_Transporter.pt.cc
   mc/Fission_Matrix_Acceleration.pt.cc
   mc/Fission_Matrix_Processor.cc
   mc/Fission_Matrix_Solver.pt.cc
-  mc/Fission_Matrix_Tally.cc
-  mc/Fission_Rebalance.cc
-  mc/Fission_Source.cc
-  mc/Fixed_Source_Solver.cc
+  mc/Fission_Matrix_Tally.pt.cc
+  mc/Fission_Rebalance.pt.cc
+  mc/Fission_Source.pt.cc
+  mc/Fixed_Source_Solver.pt.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
-  mc/KCode_Solver.cc
-  mc/Keff_Tally.cc
-  mc/Particle.cc
+  mc/KCode_Solver.pt.cc
+  mc/Keff_Tally.pt.cc
+  mc/Particle.pt.cc
   mc/Particle_Metaclass.pt.cc
-  mc/Physics.cc
+  mc/Physics.pt.cc
   mc/Sampler.cc
-  mc/Solver.cc
-  mc/Source.cc
-  mc/Source_Diagnostic_Tally.cc
-  mc/Source_Transporter.cc
-  mc/Tallier.cc
-  mc/Tally.cc
-  mc/Uniform_Source.cc
-  mc/VR_Roulette.cc
+  mc/Solver.pt.cc
+  mc/Source.pt.cc
+  mc/Source_Diagnostic_Tally.pt.cc
+  mc/Source_Transporter.pt.cc
+  mc/Tallier.pt.cc
+  mc/Tally.pt.cc
+  mc/Uniform_Source.pt.cc
+  mc/VR_Roulette.pt.cc
   )
 LIST(APPEND HEADERS ${MC_HEADERS})
 LIST(APPEND SOURCES ${MC_SOURCES})
@@ -127,8 +128,10 @@ LIST(APPEND SOURCES ${MC_SOURCES})
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
-  mc_driver/Manager.cc
-  mc_driver/Problem_Builder.cc
+  mc_driver/Manager.pt.cc
+  mc_driver/Manager_Builder.cc
+  mc_driver/Problem_Builder.pt.cc
+  mc_driver/Geometry_Builder.pt.cc
   mc_driver/mc.cc
   )
 LIST(APPEND HEADERS ${DRIVER_HEADERS})

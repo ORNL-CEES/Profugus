@@ -95,7 +95,7 @@ AdjointMcEventKernel::AdjointMcEventKernel(
     {
         std::stringstream ss;
         ss << "Unknown transition kernel type: " << transition << std::endl;
-        VALIDATE(false,ss);
+        VALIDATE(false,ss.str());
     }
 }
 

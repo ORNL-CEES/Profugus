@@ -40,14 +40,18 @@ namespace profugus
  */
 //===========================================================================//
 
-class Source_Diagnostic_Tally : public Source_Tally
+template <class Geometry>
+class Source_Diagnostic_Tally : public Source_Tally<Geometry>
 {
-    typedef Source_Tally Base;
+    typedef Source_Tally<Geometry> Base;
 
   public:
     //@{
     //! Typedefs.
-    typedef Physics_t::SP_Geometry         SP_Geometry;
+    typedef Physics<Geometry>              Physics_t;
+    typedef typename Physics_t::Particle_t Particle_t;
+    typedef std::shared_ptr<Physics_t>     SP_Physics;
+    typedef std::shared_ptr<Geometry>      SP_Geometry;
     typedef std::shared_ptr<Mesh_Geometry> SP_Mesh_Geometry;
     typedef Teuchos::ParameterList         ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>  RCP_Std_DB;
@@ -55,6 +59,8 @@ class Source_Diagnostic_Tally : public Source_Tally
 
   private:
     // >>> DATA
+
+    using Base::b_physics;
 
     // Tally mesh.
     SP_Mesh_Geometry d_mesh;

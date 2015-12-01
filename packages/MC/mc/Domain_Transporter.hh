@@ -13,7 +13,6 @@
 
 #include <memory>
 
-#include "geometry/Geometry.hh"
 #include "Physics.hh"
 #include "Step_Selector.hh"
 #include "Variance_Reduction.hh"
@@ -37,20 +36,21 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Domain_Transporter
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef Core                                       Geometry_t;
-    typedef Physics                                    Physics_t;
+    typedef Geometry                                   Geometry_t;
+    typedef Physics<Geometry_t>                        Physics_t;
     typedef typename Geometry_t::Space_Vector          Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef typename Physics_t::Particle_t             Particle_t;
     typedef typename Physics_t::Bank_t                 Bank_t;
     typedef typename Physics_t::Fission_Site_Container Fission_Site_Container;
-    typedef Variance_Reduction                         Variance_Reduction_t;
-    typedef Tallier                                    Tallier_t;
+    typedef Variance_Reduction<Geometry_t>             Variance_Reduction_t;
+    typedef Tallier<Geometry_t>                        Tallier_t;
     //@}
 
     //@{

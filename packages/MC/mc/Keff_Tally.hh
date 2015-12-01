@@ -31,9 +31,15 @@ namespace profugus
  */
 //===========================================================================//
 
-class Keff_Tally : public Pathlength_Tally
+template <class Geometry>
+class Keff_Tally : public Pathlength_Tally<Geometry>
 {
-    typedef Pathlength_Tally Base;
+    typedef Pathlength_Tally<Geometry>      Base;
+    typedef Physics<Geometry>               Physics_t;
+    typedef typename Physics_t::Particle_t  Particle_t;
+    typedef std::shared_ptr<Physics_t>      SP_Physics;
+
+    using Base::b_physics;
 
   public:
     //@{

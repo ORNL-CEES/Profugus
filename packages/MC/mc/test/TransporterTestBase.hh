@@ -24,6 +24,7 @@
 #include "../Tallier.hh"
 #include "../Source.hh"
 #include "../Variance_Reduction.hh"
+#include "geometry/RTK_Geometry.hh"
 
 //===========================================================================//
 /*!
@@ -37,8 +38,8 @@ class TransporterTestBase : public testing::Test
     typedef testing::Test Base;
 
   protected:
-    typedef profugus::Physics                   Physics_t;
-    typedef Physics_t::Geometry_t               Geometry_t;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::Physics<Geometry_t>       Physics_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::SP_Particle              SP_Particle;
@@ -55,9 +56,9 @@ class TransporterTestBase : public testing::Test
 
     typedef std::vector<double> Vec_Dbl;
 
-    typedef profugus::Tallier            Tallier_t;
-    typedef profugus::Variance_Reduction Var_Reduction_t;
-    typedef profugus::Source             Source_t;
+    typedef profugus::Tallier<Geometry_t>            Tallier_t;
+    typedef profugus::Variance_Reduction<Geometry_t> Var_Reduction_t;
+    typedef profugus::Source<Geometry_t>             Source_t;
 
     typedef std::shared_ptr<Geometry_t>             SP_Geometry;
     typedef std::shared_ptr<Physics_t>              SP_Physics;

@@ -28,18 +28,19 @@ class Fission_Matrix_TallyTest : public TransporterTestBase
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::Fission_Matrix_Tally     Tally;
-    typedef Tally::PL_Tally                    PL_Tally;
-    typedef Tally::Src_Tally                   Src_Tally;
-    typedef profugus::Mesh_Geometry            Mesh_Geometry_t;
-    typedef std::shared_ptr<Mesh_Geometry_t>   SP_Mesh_Geometry;
-    typedef Mesh_Geometry_t::Vec_Dbl           Vec_Dbl;
-    typedef Particle_t::Geo_State_t            State;
-    typedef profugus::Fission_Matrix_Processor Processor;
-    typedef Processor::Idx                     Idx;
-    typedef Processor::Ordered_Graph           Graph;
-    typedef Processor::Ordered_Matrix          Matrix;
-    typedef profugus::HDF5_Reader::Decomp      Decomp;
+    typedef profugus::Core                              Geometry_t;
+    typedef profugus::Fission_Matrix_Tally<Geometry_t>  Tally;
+    typedef Tally::PL_Tally                             PL_Tally;
+    typedef Tally::Src_Tally                            Src_Tally;
+    typedef profugus::Mesh_Geometry                     Mesh_Geometry_t;
+    typedef std::shared_ptr<Mesh_Geometry_t>            SP_Mesh_Geometry;
+    typedef Mesh_Geometry_t::Vec_Dbl                    Vec_Dbl;
+    typedef Particle_t::Geo_State_t                     State;
+    typedef profugus::Fission_Matrix_Processor          Processor;
+    typedef Processor::Idx                              Idx;
+    typedef Processor::Ordered_Graph                    Graph;
+    typedef Processor::Ordered_Matrix                   Matrix;
+    typedef profugus::HDF5_Reader::Decomp               Decomp;
 
   protected:
     void SetUp()

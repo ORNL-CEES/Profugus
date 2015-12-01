@@ -39,29 +39,30 @@ namespace profugus
  */
 //===========================================================================//
 
-template<class T>
+template<class Geometry, class T>
 class Fission_Matrix_Solver
 {
   public:
     //@{
     //! Typedefs.
-    typedef ShiftedOperator<T>                    ShiftedOperator_t;
-    typedef Teuchos::RCP<ShiftedOperator_t>       RCP_ShiftedOperator;
-    typedef Teuchos::RCP<LinearSolver<T>>         RCP_LinearSolver;
-    typedef Physics::Fission_Site                 Fission_Site;
-    typedef Physics::Fission_Site_Container       Fission_Site_Container;
-    typedef profugus::Linear_System<T>            Linear_System_t;
-    typedef Teuchos::RCP<Linear_System_t>         RCP_Linear_System;
-    typedef typename Linear_System_t::MV          Vector_t;
-    typedef typename Linear_System_t::RCP_MV      RCP_Vector;
-    typedef Teuchos::RCP<const Vector_t>          RCP_Const_Vector;
-    typedef Teuchos::ParameterList                ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t>         RCP_ParameterList;
-    typedef typename Linear_System_t::RCP_Mesh    RCP_Mesh;
-    typedef typename Linear_System_t::RCP_Mat_DB  RCP_Mat_DB;
-    typedef typename Linear_System_t::RCP_Indexer RCP_Indexer;
-    typedef Teuchos::ArrayView<const double>      Const_Array_View;
-    typedef std::shared_ptr<Cartesian_Mesh>       SP_Cart_Mesh;
+    typedef ShiftedOperator<T>                          ShiftedOperator_t;
+    typedef Teuchos::RCP<ShiftedOperator_t>             RCP_ShiftedOperator;
+    typedef Teuchos::RCP<LinearSolver<T>>               RCP_LinearSolver;
+    typedef Physics<Geometry>                           Physics_t;
+    typedef typename Physics_t::Fission_Site            Fission_Site;
+    typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
+    typedef profugus::Linear_System<T>                  Linear_System_t;
+    typedef Teuchos::RCP<Linear_System_t>               RCP_Linear_System;
+    typedef typename Linear_System_t::MV                Vector_t;
+    typedef typename Linear_System_t::RCP_MV            RCP_Vector;
+    typedef Teuchos::RCP<const Vector_t>                RCP_Const_Vector;
+    typedef Teuchos::ParameterList                      ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>               RCP_ParameterList;
+    typedef typename Linear_System_t::RCP_Mesh          RCP_Mesh;
+    typedef typename Linear_System_t::RCP_Mat_DB        RCP_Mat_DB;
+    typedef typename Linear_System_t::RCP_Indexer       RCP_Indexer;
+    typedef Teuchos::ArrayView<const double>            Const_Array_View;
+    typedef std::shared_ptr<Cartesian_Mesh>             SP_Cart_Mesh;
     //@}
 
   private:

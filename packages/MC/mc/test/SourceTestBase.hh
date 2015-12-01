@@ -21,6 +21,7 @@
 #include "../Global_RNG.hh"
 #include "../Group_Bounds.hh"
 #include "../Physics.hh"
+#include "geometry/RTK_Geometry.hh"
 
 //===========================================================================//
 /*!
@@ -34,8 +35,8 @@
 class SourceTestBase : public testing::Test
 {
   protected:
-    typedef profugus::Physics                   Physics_t;
-    typedef Physics_t::Geometry_t               Geometry_t;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::Physics<Geometry_t>       Physics_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
 
     typedef Physics_t::XS_t   XS_t;

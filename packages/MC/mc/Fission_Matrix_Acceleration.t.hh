@@ -34,8 +34,8 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-template<class T>
-Fission_Matrix_Acceleration_Impl<T>::Fission_Matrix_Acceleration_Impl()
+template<class Geometry, class T>
+Fission_Matrix_Acceleration_Impl<Geometry,T>::Fission_Matrix_Acceleration_Impl()
     : d_cycle_ctr(0)
 {
 }
@@ -48,8 +48,8 @@ Fission_Matrix_Acceleration_Impl<T>::Fission_Matrix_Acceleration_Impl()
  *
  * \param builder
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::build_problem(
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::build_problem(
     const Problem_Builder_t &builder)
 {
     // get the problem database from the problem-builder
@@ -107,8 +107,9 @@ void Fission_Matrix_Acceleration_Impl<T>::build_problem(
    \frac{1}{k}\mathbf{B}^{\dagger}\phi^{\dagger}\:,
  * \f]
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::initialize(
+        RCP_ParameterList mc_db)
 {
     typedef Eigenvalue_Solver<T>               Solver_t;
     typedef typename Solver_t::External_Source Source_t;
@@ -192,7 +193,7 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
 
         // build and set the fission matrix solver
         d_fm_solver = Teuchos::rcp(
-            new Fission_Matrix_Solver<T>(
+            new FM_Solver_t(
                 fmdb, b_mesh, b_indexer, b_mat, d_system, b_global_mesh,
                 d_keff));
         d_fm_solver->set_eigenvectors(d_forward, d_adjoint);
@@ -206,8 +207,8 @@ void Fission_Matrix_Acceleration_Impl<T>::initialize(RCP_ParameterList mc_db)
  * Calculate beginning of cycle fission density for use in acceleration at end
  * of cycle.
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::start_cycle(
     double                        k_l,
     const Fission_Site_Container &f)
 {
@@ -229,8 +230,8 @@ void Fission_Matrix_Acceleration_Impl<T>::start_cycle(
  *
  * Build new fission source based on SPN acceleration.
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::end_cycle(
     Fission_Site_Container &f)
 {
     // increment
@@ -393,9 +394,9 @@ void Fission_Matrix_Acceleration_Impl<T>::end_cycle(
 /*!
  * \brief Build the initial fission source.
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::build_initial_source(
-    Fission_Source &source)
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::build_initial_source(
+    Fission_Source_t &source)
 {
     // if we aren't using an initial source, then do "standard" fission source
     // initialization and return
@@ -428,8 +429,8 @@ void Fission_Matrix_Acceleration_Impl<T>::build_initial_source(
 /*!
  * \brief Write diagnostics to HDF5 file.
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::diagnostics(
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::diagnostics(
     Serial_HDF5_Writer &writer) const
 {
     writer.begin_group("fission_mat_acceleration");
@@ -463,8 +464,9 @@ void Fission_Matrix_Acceleration_Impl<T>::diagnostics(
 /*!
  * \brief Convert g to fission density.
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::convert_g(
+        RCP_Const_Vector gc)
 {
     REQUIRE(b_mesh->num_cells() * d_system->get_dims()->num_equations()
             * b_mat->xs().num_groups() <=
@@ -535,8 +537,8 @@ void Fission_Matrix_Acceleration_Impl<T>::convert_g(RCP_Const_Vector gc)
 /*!
  * \brief Convert eigenvector to fission density.
  */
-template<class T>
-void Fission_Matrix_Acceleration_Impl<T>::convert_eigenvector(
+template<class Geometry, class T>
+void Fission_Matrix_Acceleration_Impl<Geometry,T>::convert_eigenvector(
     RCP_Const_Vector ev)
 {
     REQUIRE(b_mesh->num_cells() * d_system->get_dims()->num_equations()

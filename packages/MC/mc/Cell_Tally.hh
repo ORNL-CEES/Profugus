@@ -33,21 +33,28 @@ namespace profugus
  */
 //===========================================================================//
 
-class Cell_Tally : public Pathlength_Tally
+template <class Geometry>
+class Cell_Tally : public Pathlength_Tally<Geometry>
 {
-    typedef Pathlength_Tally Base;
+    typedef Pathlength_Tally<Geometry> Base;
+    using Base::set_name;
 
   public:
     //@{
     //! Typedefs.
-    typedef Physics_t::Geometry_t            Geometry_t;
+    typedef Geometry                         Geometry_t;
+    typedef Physics<Geometry>                Physics_t;
+    typedef typename Physics_t::Particle_t   Particle_t;
     typedef std::shared_ptr<Geometry_t>      SP_Geometry;
     typedef std::pair<double, double>        Moments;
     typedef std::unordered_map<int, Moments> Result;
+    typedef std::shared_ptr<Physics_t>       SP_Physics;
     //@}
 
   private:
     // >>> DATA
+
+    using Base::b_physics;
 
     // Geometry.
     SP_Geometry d_geometry;

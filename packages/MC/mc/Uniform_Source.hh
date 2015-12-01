@@ -44,14 +44,24 @@ namespace profugus
  */
 //===========================================================================//
 
-class Uniform_Source : public Source
+template <class Geometry>
+class Uniform_Source : public Source<Geometry>
 {
   public:
     //@{
     //! Typedefs.
-    typedef Physics_t::RCP_Std_DB  RCP_Std_DB;
-    typedef def::Vec_Dbl           Vec_Dbl;
-    typedef std::shared_ptr<Shape> SP_Shape;
+    typedef Geometry                            Geometry_t;
+    typedef Physics<Geometry_t>                 Physics_t;
+    typedef typename Physics_t::RCP_Std_DB      RCP_Std_DB;
+    typedef typename Physics_t::Particle_t      Particle_t;
+    typedef typename Geometry_t::Space_Vector   Space_Vector;
+    typedef std::shared_ptr<Shape>              SP_Shape;
+    typedef std::shared_ptr<Geometry_t>         SP_Geometry;
+    typedef std::shared_ptr<Physics_t>          SP_Physics;
+    typedef std::shared_ptr<RNG_Control>        SP_RNG_Control;
+    typedef std::shared_ptr<Particle_t>         SP_Particle;
+    typedef def::Vec_Dbl                        Vec_Dbl;
+    typedef def::size_type                      size_type;
     //@}
 
   private:
@@ -99,7 +109,10 @@ class Uniform_Source : public Source
   private:
     // >>> IMPLEMENTATION
 
-    typedef Source Base;
+    typedef Source<Geometry> Base;
+    using Base::b_geometry;
+    using Base::b_physics;
+    using Base::b_nodes;
 
     // Build the domain replicated source.
     void build_DR();

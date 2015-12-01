@@ -32,18 +32,19 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Tallier
 {
   public:
     //@{
     //! Typedefs.
-    typedef Physics                             Physics_t;
-    typedef Physics_t::Geometry_t               Geometry_t;
-    typedef Physics_t::Particle_t               Particle_t;
-    typedef Tally                               Tally_t;
-    typedef Pathlength_Tally                    Pathlength_Tally_t;
-    typedef Source_Tally                        Source_Tally_t;
-    typedef Compound_Tally                      Compound_Tally_t;
+    typedef Geometry                            Geometry_t;
+    typedef Physics<Geometry_t>                 Physics_t;
+    typedef typename Physics_t::Particle_t      Particle_t;
+    typedef Tally<Geometry_t>                   Tally_t;
+    typedef Pathlength_Tally<Geometry_t>        Pathlength_Tally_t;
+    typedef Source_Tally<Geometry_t>            Source_Tally_t;
+    typedef Compound_Tally<Geometry_t>          Compound_Tally_t;
     typedef std::shared_ptr<Tally_t>            SP_Tally;
     typedef std::shared_ptr<Pathlength_Tally_t> SP_Pathlength_Tally;
     typedef std::shared_ptr<Source_Tally_t>     SP_Source_Tally;
@@ -182,8 +183,9 @@ class Tallier
  *
  * This provides a std-like swap solution using Koenig namespace lookup.
  */
-inline void swap(Tallier &a,
-                 Tallier &b)
+template <class Geometry>
+inline void swap(Tallier<Geometry> &a,
+                 Tallier<Geometry> &b)
 {
     a.swap(b);
 }

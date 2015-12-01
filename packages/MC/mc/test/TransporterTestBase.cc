@@ -182,7 +182,7 @@ void TransporterTestBase::init_vr()
 {
     db->set("weight_cutoff", 0.01);
 
-    var_red = std::make_shared<profugus::VR_Roulette>(db);
+    var_red = std::make_shared<profugus::VR_Roulette<Geometry_t> >(db);
 }
 
 //---------------------------------------------------------------------------//
