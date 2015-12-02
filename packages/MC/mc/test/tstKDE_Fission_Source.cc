@@ -207,6 +207,11 @@ TEST_F(KernelTest, simple_test)
     site.r = Space_Vector(1.89, 0.63, 9.4);
     fsrc->push_back(site);
 
+    // Make a copy of the fission source sites.  Reverse them because we draw
+    // particles from the end
+    SP_Fission_Sites sites = std::make_shared<Fission_Site_Container>(*fsrc);
+    std::reverse(sites->begin(), sites->end());
+
     // Before setting the fission source should have 9 entries
     EXPECT_EQ(9, fsrc->size());
     source.build_source(fsrc);
@@ -236,10 +241,22 @@ TEST_F(KernelTest, simple_test)
 
     int ctr       = 0;
     double tot_wt = 0.0;
-    while (!source.empty())
+
+    for (const Fission_Site &fs : *sites)
     {
+        EXPECT_FALSE(source.empty());
+
         SP_Particle p = source.get_particle();
         ctr++;
+
+        // Get the bandwidth for this site
+        double bw = source.bandwidth(b_geometry->cell(fs.r));
+
+        // Verify that the particle is in the right location (x,y same, z
+        // within bandwidth)
+        EXPECT_SOFTEQ(fs.r[0], p->geo_state().d_r[0], 1.0e-6);
+        EXPECT_SOFTEQ(fs.r[1], p->geo_state().d_r[1], 1.0e-6);
+        EXPECT_TRUE(std::fabs(p->geo_state().d_r[2]-fs.r[2]) <= bw);
 
         EXPECT_EQ(1, p->matid());
         EXPECT_SOFT_EQ(12.0 / (9 * nodes), p->wt());
@@ -253,113 +270,6 @@ TEST_F(KernelTest, simple_test)
     EXPECT_EQ(9, source.num_run());
     EXPECT_TRUE(source.empty());
 }
-
-//---------------------------------------------------------------------------//
-#if 0
-TEST_F(KernelTest, axial_kernel_test)
-{
-    b_db->set<double>("Np", 12);
-
-    EXPECT_EQ(1, b_bmesh->num_blocks());
-    EXPECT_EQ(nodes, b_bmesh->num_sets());
-
-    // make fission source
-    Initial_Source init_source(b_db, b_geometry, b_physics, b_rcon, b_bmesh);
-
-    auto attr = std::make_shared<mc::Separable_Source_Attr>(
-            std::make_shared<mc::Box_Shape>(0.0, 2.52, 0.0, 2.52, 0.0, 14.28),
-            std::make_shared<mc::Line_Energy_Distribution>(100.0),
-            std::make_shared<mc::Isotropic_Angular_Distribution>());
-
-    init_source.add_source(std::make_shared<shift::Separable_Source>(
-            attr, b_geometry, b_physics));
-    init_source.complete();
-
-    // Make the KDE Kernel
-    auto kernel =
-        std::make_shared<shift::Axial_Kernel>(b_geometry, b_physics);
-
-    // Define the filename
-    std::string filename = "kde_fiss_src-np" + std::to_string(nemesis::nodes())
-                           + ".h5";
-    std::vector<unsigned int> write_cycles = {0, 5, 10};
-
-    // get a fission source container
-    KDE_Source source(init_source, kernel, filename, write_cycles);
-
-    Fission_Site_Container fsrc;
-    EXPECT_TRUE(fsrc.empty());
-
-    // add 3 sites to the container (6 total fissions) for upper-left
-    // pincell
-    Fission_Site site;
-    site.physics_state.matid = 1;
-    set_pos(site.geo_state.pos, 0.45, 2.1, 12.3);
-    fsrc.push_back(site);
-    fsrc.push_back(site);
-    fsrc.push_back(site);
-    site.physics_state.matid = 1;
-    set_pos(site.geo_state.pos, 0.48, 1.9, 12.1);
-    fsrc.push_back(site);
-    site.physics_state.matid = 1;
-    set_pos(site.geo_state.pos, 0.63, 1.8, 11.1);
-    fsrc.push_back(site);
-    fsrc.push_back(site);
-    // Add 3 sites to the container for bottom-right pincell
-    site.physics_state.matid = 1;
-    set_pos(site.geo_state.pos, 1.89, 0.63, 8.4);
-    fsrc.push_back(site);
-    set_pos(site.geo_state.pos, 1.89, 0.63, 7.4);
-    fsrc.push_back(site);
-    set_pos(site.geo_state.pos, 1.89, 0.63, 9.4);
-    fsrc.push_back(site);
-    source.set_fission_sites(std::move(fsrc));
-    EXPECT_EQ(9, fsrc.size());
-    fsrc.clear();
-
-    // Calculate the bandwidth for the upper-left pincell
-    double sum_ul           = 12.3*3.0 + 12.1 + 11.1*2.0;
-    double sum_sq_ul        = (12.3*12.3)*3.0 + 12.1*12.1 + (11.1*11.1)*2;
-    double variance_ul      = sum_sq_ul/6.0 - (sum_ul/6.0)*(sum_ul/6.0);
-    double ref_bandwidth_ul = 1.06*std::sqrt(variance_ul)*std::pow(6,-0.20);
-    EXPECT_SOFTEQ(ref_bandwidth_ul, source.bandwidth(3), 1.0e-6);
-
-    // Calculate the bandwidth for the bottom-right pincell
-    double sum_br           = 8.4 + 7.4 + 9.4;
-    double sum_sq_br        = (8.4*8.4) + (7.4*7.4) + (9.4*9.4);
-    double variance_br      = sum_sq_br/3.0 - (sum_br/3.0)*(sum_br/3.0);
-    double ref_bandwidth_br = 1.06*std::sqrt(variance_br)*std::pow(3,-0.20);
-    EXPECT_SOFTEQ(ref_bandwidth_br, source.bandwidth(1), 1.0e-6);
-
-    source.complete();
-
-    EXPECT_EQ(12, source.num_requested());
-    EXPECT_EQ(9, source.num_to_transport()); // local
-    EXPECT_EQ(9, source.num_to_transport_in_set());
-    EXPECT_EQ(9 * nodes, source.total_num_to_transport());
-
-    int ctr       = 0;
-    double tot_wt = 0.0;
-    while (!source.empty())
-    {
-        Particle_t p;
-
-        source.init_particle(p);
-        ctr++;
-
-        EXPECT_EQ(1, p.matid());
-        EXPECT_SOFT_EQ(12.0 / (9 * nodes), p.wt());
-        tot_wt += p.wt();
-    }
-
-    nemesis::global_sum(tot_wt);
-
-    EXPECT_SOFTEQ(12.0, tot_wt, 1.e-12);
-    EXPECT_EQ(9, ctr);
-    EXPECT_EQ(9, source.num_run());
-    EXPECT_TRUE(source.empty());
-}
-#endif
 
 //---------------------------------------------------------------------------//
 // end of MC/mc/test/tstKDE_Fission_Source.cc
