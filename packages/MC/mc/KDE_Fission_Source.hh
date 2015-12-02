@@ -14,10 +14,10 @@
 #include <memory>
 
 #include "Fission_Source.hh"
+#include "KDE_Kernel.hh"
 
 namespace profugus
 {
-class KDE_Kernel;
 
 //===========================================================================//
 /*!
@@ -41,6 +41,7 @@ class KDE_Fission_Source : public Fission_Source
     typedef Base::RCP_Std_DB            RCP_Std_DB;
     typedef Base::SP_Fission_Sites      SP_Fission_Sites;
     typedef std::shared_ptr<KDE_Kernel> SP_KDE_Kernel;
+    typedef KDE_Kernel::cell_type       cell_type;
     //@}
 
   public:
@@ -56,6 +57,12 @@ class KDE_Fission_Source : public Fission_Source
     // Sample a particle
     virtual SP_Particle get_particle() override;
 
+    //! Get the bandwidth
+    double bandwidth(cell_type cellid) const
+    {
+        return d_kernel->bandwidth(cellid);
+    }
+
   private:
     // Stores the KDE kernel
     SP_KDE_Kernel d_kernel;
@@ -64,11 +71,6 @@ class KDE_Fission_Source : public Fission_Source
 //---------------------------------------------------------------------------//
 } // end namespace profugus
 
-//---------------------------------------------------------------------------//
-// INLINE DEFINITIONS
-//---------------------------------------------------------------------------//
-// #include "KDE_Fission_Source.i.hh"
-//---------------------------------------------------------------------------//
 #endif // MC_mc_KDE_Fission_Source_hh
 
 //---------------------------------------------------------------------------//
