@@ -41,7 +41,6 @@ RichardsonIteration::RichardsonIteration(
         Teuchos::sublist(pl,"Richardson");
 
     d_divergence_tol = rich_pl->get("divergence_tolerance",1.0e4);
-    std::cout<<"divergence tolerance "<<d_divergence_tol<<std::endl;
 
     // Override default parameters if present on sublist
     this->setParameters(rich_pl);
