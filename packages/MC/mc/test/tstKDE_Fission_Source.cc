@@ -226,18 +226,33 @@ TEST_F(KernelTest, simple_test)
 
     // Calculate the bandwidth for cell 3
     {
-        double sum   = 12.3*3.0 + 12.1 + 11.1*2.0;
-        double sum_sq = (12.3*12.3)*3.0 + 12.1*12.1 + (11.1*11.1)*2;
-        double variance = sum_sq/6.0 - (sum/6.0)*(sum/6.0);
-        double ref_bandwidth = 1.06 * std::sqrt(variance) * std::pow(6,-0.20);
+        unsigned int nodes = profugus::nodes();
+        double sum    = 0.0;
+        double sum_sq = 0.0;
+        for (unsigned int node = 0; node < nodes; ++node)
+        {
+            sum    += 12.3*3.0 + 12.1 + 11.1*2.0;
+            sum_sq += (12.3*12.3)*3.0 + 12.1*12.1 + (11.1*11.1)*2;
+        }
+        unsigned int N = 6*nodes;
+        double variance = sum_sq/N - (sum/N)*(sum/N);
+        double ref_bandwidth = 1.06 * std::sqrt(variance) *
+                               std::pow(N,-0.20);
         EXPECT_SOFTEQ(ref_bandwidth, source.bandwidth(3), 1.0e-6);
     }
     // Calculate the bandwidth for cell 1
     {
-        double sum   = 8.4 + 7.4 + 9.4;
-        double sum_sq = (8.4*8.4) + (7.4*7.4) + (9.4*9.4);
-        double variance = sum_sq/3.0 - (sum/3.0)*(sum/3.0);
-        double ref_bandwidth = 1.06 * std::sqrt(variance) * std::pow(3,-0.20);
+        unsigned int nodes = profugus::nodes();
+        double sum = 0.0;
+        double sum_sq = 0.0;
+        for (unsigned int node = 0; node < nodes; ++node)
+        {
+            sum    += 8.4 + 7.4 + 9.4;
+            sum_sq += (8.4*8.4) + (7.4*7.4) + (9.4*9.4);
+        }
+        unsigned int N = 3*nodes;
+        double variance = sum_sq/N - (sum/N)*(sum/N);
+        double ref_bandwidth = 1.06 * std::sqrt(variance) * std::pow(N,-0.20);
         EXPECT_SOFTEQ(ref_bandwidth, source.bandwidth(1), 1.0e-6);
     }
 
