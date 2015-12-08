@@ -140,7 +140,7 @@ void Manager::setup(const std::string &xml_file)
     if (prob_type == "eigenvalue")
     {
         std::shared_ptr<profugus::Fission_Source> source;
-        if (d_db->isType<bool>("use_kde") && d_db->get<bool>("use_kde"))
+        if (d_db->isSublist("kde_db"))
         {
             SCREEN_MSG("Using KDE fission source");
             source =
