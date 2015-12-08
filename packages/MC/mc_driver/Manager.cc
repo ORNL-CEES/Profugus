@@ -20,6 +20,7 @@
 #include "utils/Parallel_HDF5_Writer.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "mc/Fission_Source.hh"
+#include "mc/KDE_Fission_Source.hh"
 #include "mc/Uniform_Source.hh"
 #include "mc/KCode_Solver.hh"
 #include "mc/Anderson_Solver.hh"
@@ -138,10 +139,24 @@ void Manager::setup(const std::string &xml_file)
     // build the appropriate solver (default is eigenvalue)
     if (prob_type == "eigenvalue")
     {
-        // make the fission source
-        std::shared_ptr<profugus::Fission_Source> source(
-            std::make_shared<profugus::Fission_Source>(
-                d_db, d_geometry, d_physics, d_rnd_control));
+        std::shared_ptr<profugus::Fission_Source> source;
+        if (d_db->isType<bool>("use_kde") && d_db->get<bool>("use_kde"))
+        {
+            SCREEN_MSG("Using KDE fission source");
+            source =
+                std::make_shared<profugus::KDE_Fission_Source>(d_db, d_geometry,
+                                                               d_physics,
+                                                               d_rnd_control);
+        }
+        else
+        {
+            SCREEN_MSG("Using traditional fission source");
+            source =
+                std::make_shared<profugus::Fission_Source>(d_db, d_geometry,
+                                                           d_physics,
+                                                           d_rnd_control);
+        }
+        CHECK(source);
 
         // >>> determine eigensolver
 
