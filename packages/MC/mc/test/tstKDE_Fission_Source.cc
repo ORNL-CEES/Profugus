@@ -174,7 +174,13 @@ class KernelTest : public SourceTestBase
 TEST_F(KernelTest, simple_test)
 {
     b_db->set<int>("Np", 12);
-    b_db->set<std::string>("kernel_type", std::string("resample"));
+
+    // Make the KDE database
+    ParameterList_t kde_db("kde_db");
+    kde_db.set<std::string>("kernel_type", std::string("resample"));
+
+    // Set the KDE database
+    b_db->set("kde_db", kde_db);
 
     // make fission source
     KDE_Source source(b_db, b_geometry, b_physics, b_rcon);

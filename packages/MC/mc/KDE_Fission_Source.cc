@@ -30,14 +30,20 @@ KDE_Fission_Source::KDE_Fission_Source(RCP_Std_DB     db,
     : Base(db, geometry, physics, rng_control)
 {
     REQUIRE(db.is_valid_ptr());
-    REQUIRE(db->isType<std::string>("kernel_type"));
+    REQUIRE(db->isSublist("kde_db"));
+
+    // Get the KDE database
+    auto &kde_db = db->sublist("kde_db");
+
+    VALIDATE(kde_db.isType<std::string>("kernel_type"),
+             "KDE Kernel type was not specified in input");
 
     // Get the type of KDE kernel
-    const std::string &kernel_type = db->get<std::string>("kernel_type");
+    const std::string &kernel_type = kde_db.get<std::string>("kernel_type");
 
     // Get the bandwidth coefficient
-    double coeff = db->get<double>("bnd_coeff", 1.06);
-    double exponent = db->get<double>("bnd_exp", -0.20);
+    double coeff    = kde_db.get<double>("bnd_coeff", 1.06);
+    double exponent = kde_db.get<double>("bnd_exp", -0.20);
 
     if (kernel_type == "resample")
     {
