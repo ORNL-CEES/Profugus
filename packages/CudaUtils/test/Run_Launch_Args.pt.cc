@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Launch_Args_Kernel.pt.cu
+ * \file   cuda_utils/test/Launch_Args_Kernel.pt.cc
  * \author Stuart Slattery
  * \date   Tue Nov 24 14:09:29 2015
  * \brief
@@ -8,16 +8,14 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Launch_Args_Kernel.hh"
-
+#include "../cuda_utils/Pseudo_Cuda.hh"
 #include "../cuda_utils/Definitions.hh"
-#include "../cuda_utils/Launch_Args.t.cuh"
+#include "../cuda_utils/Launch_Args.t.hh"
+#include "Run_Launch_Args.t.hh"
 
-typedef cuda::arch::Device Device;
-template class Functor<Device>;
-template void cuda::parallel_launch<Functor<Device> >(
-        Functor<Device> &, const cuda::Launch_Args<Device> &);
+typedef cuda::arch::Host Host;
+template void run_launch_args<Host>(std::vector<double> &);
 
 //---------------------------------------------------------------------------//
-//                        end of Launch_Args_Kernel.pt.cu
+//                        end of Launch_Args_Kernel.pt.cc
 //---------------------------------------------------------------------------//

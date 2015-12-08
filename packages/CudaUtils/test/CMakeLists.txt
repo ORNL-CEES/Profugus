@@ -18,7 +18,7 @@ INCLUDE(UtilsTest)
 SET(SOURCES
   Atomic_Add_Kernel.cc
   Atomic_Lock_Test_Kernel.cc
-  #Launch_Args_Kernel.pt.cc
+  Run_Launch_Args.pt.cc
   Polyglot_Kernel.cc
   Profiler_Kernel.cc
   Stream_Test_Kernel.cc
@@ -36,7 +36,7 @@ IF(USE_CUDA)
   SET(CUDA_SOURCES
     Atomic_Add_Kernel.cu
     Atomic_Lock_Test_Kernel.cu
-    #Launch_Args_Kernel.pt.cu
+    Run_Launch_Args.pt.cu
     Polyglot_Kernel.cu
     Profiler_Kernel.cu
     Stream_Test_Kernel.cu
@@ -65,7 +65,7 @@ ADD_UTILS_TEST(tstDevice_Vector.cc        NP 1 ${DEPS})
 ADD_UTILS_TEST(tstEvent.cc                NP 1 ${DEPS})
 ADD_UTILS_TEST(tstHardware.cc             NP 1        )
 ADD_UTILS_TEST(tstHost_Vector.cc          NP 1 ${DEPS})
-#ADD_UTILS_TEST(tstLaunch_Args.cc          NP 1 ${DEPS})
+ADD_UTILS_TEST(tstLaunch_Args.cc          NP 1 ${DEPS})
 ADD_UTILS_TEST(tstMulti_Vector.cc         NP 1 ${DEPS})
 ADD_UTILS_TEST(tstPseudo_Cuda.cc          NP 1 ${DEPS})
 ADD_UTILS_TEST(tstPseudo_Cuda_Polyglot.cc NP 1 ${DEPS})

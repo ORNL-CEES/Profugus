@@ -10,7 +10,7 @@
 
 #include "gtest/utils_gtest.hh"
 
-#include "Launch_Args_Kernel.hh"
+#include "Run_Launch_Args.hh"
 #include "../cuda_utils/Launch_Args.hh"
 #include "../cuda_utils/Device_Vector.hh"
 #include "../cuda_utils/Host_Vector.hh"
@@ -21,14 +21,11 @@
 template<typename Arch_Switch>
 class Launch_Args_Test : public testing::Test
 {
-  protected:
-    typedef Arch_Switch                        Arch_t;
 };
 
 #ifdef USE_CUDA
 // instantiate both host and device code
-//typedef ::testing::Types<cuda::arch::Host, cuda::arch::Device> ArchTypes;
-typedef ::testing::Types<cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda::arch::Host, cuda::arch::Device> ArchTypes;
 #else
 // instantiate host-only code
 typedef ::testing::Types<cuda::arch::Host> ArchTypes;
@@ -43,27 +40,16 @@ TYPED_TEST(Launch_Args_Test, functor)
 {
     typedef TypeParam Arch_t;
 
-    // Make launch args.
-    cuda::Launch_Args<Arch_t> launch_args;
-    launch_args.grid_size = 4;
-    launch_args.block_size = 256;
-
-    // Create a functor.
-    double value = 2.3;
-    int size = launch_args.block_size * launch_args.grid_size;
-    Functor<Arch_t> functor( size, value );
-
     // Call the kernel launch.
-    cuda::parallel_launch( functor, launch_args );
+    std::vector<double> host_data;
+    run_launch_args<Arch_t>( host_data );
 
-    // Get the data from the functor.
-    const typename Functor<Arch_t>::Host_Vector_t& host_data =
-	functor.get_data();
+    double value = 2.3;
 
     // Test the data.
-    for ( int i = 0; i < size; ++i )
+    for ( int i = 0; i < host_data.size(); ++i )
     {
-	EXPECT_EQ( host_data[i], value + i );
+        EXPECT_EQ( host_data[i], value + i );
     }
 }
 

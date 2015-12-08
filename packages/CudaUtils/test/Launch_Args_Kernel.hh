@@ -24,26 +24,24 @@ class Functor
     typedef cuda::Host_Vector<double>          Host_Vector_t;
 
     Functor( const int data_size, const double value )
-	: d_host_vec( data_size, value )
-	, d_device_vec( d_host_vec )
+	: d_device_vec( data_size )
 	, d_device_data( d_device_vec.data() )
-    { /* ... */ }
-
-    Functor( const Functor<Arch_T> & ) = default;
+    {
+        Host_Vector_t host_vec(data_size,value);
+        d_device_vec.assign( host_vec );
+    }
 
     __host__ __device__ void operator()( const std::size_t idx )
     {
         d_device_data[idx] += static_cast<double>(idx);
     }
 
-    const Host_Vector_t& get_data()
+    void assign_data(Host_Vector_t &host_vec)
     {
-        d_device_vec.to_host( d_host_vec );
-        return d_host_vec;
+        d_device_vec.to_host( host_vec );
     }
 
   private:
-    Host_Vector_t d_host_vec;
     Device_Vector_t d_device_vec;
     double* d_device_data;
 };
