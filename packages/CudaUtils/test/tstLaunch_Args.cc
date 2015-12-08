@@ -27,7 +27,8 @@ class Launch_Args_Test : public testing::Test
 
 #ifdef USE_CUDA
 // instantiate both host and device code
-typedef ::testing::Types<cuda::arch::Host, cuda::arch::Device> ArchTypes;
+//typedef ::testing::Types<cuda::arch::Host, cuda::arch::Device> ArchTypes;
+typedef ::testing::Types<cuda::arch::Host> ArchTypes;
 #else
 // instantiate host-only code
 typedef ::testing::Types<cuda::arch::Host> ArchTypes;
@@ -41,7 +42,7 @@ TYPED_TEST_CASE(Launch_Args_Test, ArchTypes);
 TYPED_TEST(Launch_Args_Test, functor)
 {
     typedef TypeParam Arch_t;
-    
+
     // Make launch args.
     cuda::Launch_Args<Arch_t> launch_args;
     launch_args.grid_size = 4;
@@ -53,7 +54,7 @@ TYPED_TEST(Launch_Args_Test, functor)
     Functor<Arch_t> functor( size, value );
 
     // Call the kernel launch.
-    cuda::ParallelLaunch<Arch_t>::launch( functor, launch_args );
+    cuda::parallel_launch( functor, launch_args );
 
     // Get the data from the functor.
     const typename Functor<Arch_t>::Host_Vector_t& host_data =

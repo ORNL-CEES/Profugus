@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Launch_Args.cuh
+ * \file   cuda_utils/Launch_Args.t.cuh
  * \author Seth R Johnson
  * \date   Wed Oct 02 13:16:37 2013
  * \brief  Launch class definition.
@@ -8,9 +8,10 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Launch_Args_cuh
-#define cuda_utils_Launch_Args_cuh
+#ifndef cuda_utils_Launch_Args_t_cuh
+#define cuda_utils_Launch_Args_t_cuh
 
+#include "Launch_Args.hh"
 #include "cuda_runtime.h"
 
 namespace cuda
@@ -21,7 +22,7 @@ namespace cuda
 template<class Kernel>
 __global__ void cuda_kernel( Kernel kernel )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * gridSize.x;
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
     kernel( idx );
 }
 
@@ -29,11 +30,11 @@ __global__ void cuda_kernel( Kernel kernel )
 // PARALLEL LAUNCH
 //---------------------------------------------------------------------------//
 // Cuda specialization.
-template<class Kernel>
-void ParallelLaunch<cuda::arch::Device>::launch(
+template <class Kernel>
+void parallel_launch(
     Kernel& kernel, const Launch_Args<cuda::arch::Device>& launch_args )
 {
-    REQUIRE( launch_args.is_valid() );
+    //REQUIRE( launch_args.is_valid() );
     cuda_kernel<<<launch_args.grid_size,
 	launch_args.block_size,
 	launch_args.shared_mem,
@@ -44,8 +45,8 @@ void ParallelLaunch<cuda::arch::Device>::launch(
 
 } // end namespace cuda
 
-#endif // cuda_utils_Launch_Args_cuh
+#endif // cuda_utils_Launch_Args_t_cuh
 
 //---------------------------------------------------------------------------//
-//                 end of Launch_Args.cuh
+//                 end of Launch_Args.t.cuh
 //---------------------------------------------------------------------------//

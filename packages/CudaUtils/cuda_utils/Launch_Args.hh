@@ -11,7 +11,7 @@
 #ifndef cuda_utils_Launch_Args_hh
 #define cuda_utils_Launch_Args_hh
 
-#include "harness/DBC.hh"
+//#include "harness/DBC.hh"
 #include "Stream.hh"
 #include "Definitions.hh"
 
@@ -87,7 +87,7 @@ struct Launch_Args
 
     unsigned int grid_size;
     unsigned int block_size;
-    size_t       shared_mem;
+    std::size_t  shared_mem;
     Stream_t     stream;
 };
 
@@ -95,57 +95,19 @@ struct Launch_Args
 // PARALLEL LAUNCH
 //---------------------------------------------------------------------------//
 // Launch a function on the host or the device.
-template<class Arch_T>
-class ParallelLaunch
-{
-  public:
-    template<class Kernel>
-    static void launch( Kernel& kernel,
-			const Launch_Args<Arch_T>& launch_args )
-    {
-	INSIST( (std::is_same<Arch_T,cuda::arch::Host>::value ||
-		 std::is_same<Arch_T,cuda::arch::Device>::value),
-		"Unsupported architecture for launch!" );
-    }
-};
 
-//---------------------------------------------------------------------------//
-// Host specialization.
-template<>
-class ParallelLaunch<cuda::arch::Host>
-{
-  public:
-    template<class Kernel>
-    static void launch( Kernel& kernel,
-			const Launch_Args<cuda::arch::Host>& launch_args );
-};
+template <class Kernel>
+void parallel_launch( Kernel& kernel,
+                      const Launch_Args<cuda::arch::Host>& launch_args );
 
-//---------------------------------------------------------------------------//
-// Cuda specialization.
-template<>
-class ParallelLaunch<cuda::arch::Device>
-{
-  public:
-    template<class Kernel>
-    static void launch( Kernel& kernel,
-			const Launch_Args<cuda::arch::Device>& launch_args );
-};
-
+template <class Kernel>
+void parallel_launch( Kernel& kernel,
+                      const Launch_Args<cuda::arch::Device>& launch_args );
 //---------------------------------------------------------------------------//
 
 } // end namespace cuda
 
 #endif // cuda_utils_Launch_Args_hh
-
-//---------------------------------------------------------------------------//
-// Template includes.
-//---------------------------------------------------------------------------//
-
-#include "Launch_Args.t.hh"
-
-#ifdef __NVCC__
-#include "Launch_Args.cuh"
-#endif
 
 //---------------------------------------------------------------------------//
 //                 end of Launch_Args.hh
