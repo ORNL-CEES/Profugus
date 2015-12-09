@@ -50,6 +50,9 @@ unsigned int Hardware<Device>::d_cores_per_mp = -1;
 //! Number of cores per multiprocessor in the device
 unsigned int Hardware<Device>::d_maxThreadsPerMultiProcessor = 0;
 
+//! Default block size for kernel launches
+unsigned int Hardware<Device>::d_default_block_size = 256;
+
 //---------------------------------------------------------------------------//
 // STATIC METHODS
 //---------------------------------------------------------------------------//

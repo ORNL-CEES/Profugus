@@ -82,6 +82,9 @@ class Hardware<cuda::arch::Host>
     //! Total number of cores
     static unsigned int num_total_cores() { return 1; }
 
+    //! Default block size
+    static unsigned int default_block_size() { return 1; }
+
     // >>> SYNCHRONIZATION
 
     //! ENSURE asynchronous operations are complete
@@ -129,6 +132,9 @@ class Hardware<cuda::arch::Device>
 
     //! Maximum number of threads per multiprocessor (warp scheduling)
     static unsigned int d_maxThreadsPerMultiProcessor;
+
+    //! Default block size
+    static unsigned int d_default_block_size;
 
   public:
     // >>> ACQUISITION
@@ -196,6 +202,20 @@ class Hardware<cuda::arch::Device>
         REQUIRE(have_acquired());
         unsigned int result = d_multiProcessorCount * d_cores_per_mp;
         return result;
+    }
+
+    //! Set new default block size
+    static void default_block_size(unsigned int block_size)
+    {
+        REQUIRE( block_size > 0 );
+        d_default_block_size = block_size;
+    }
+
+    //! Default block size
+    static unsigned int default_block_size()
+    {
+        REQUIRE( d_default_block_size > 0 );
+        return d_default_block_size;
     }
 
     // >>> SYNCHRONIZATION
