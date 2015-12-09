@@ -36,10 +36,14 @@ void parallel_launch(
     Kernel& kernel, const Launch_Args<cuda::arch::Device>& launch_args )
 {
     REQUIRE( launch_args.is_valid() );
+
     cuda_kernel<<<launch_args.grid_size(),
-	launch_args.block_size(),
-	launch_args.shared_mem(),
-	launch_args.stream_handle()>>>( kernel, launch_args.num_elements() );
+                  launch_args.block_size(),
+                  launch_args.shared_mem(),
+                  launch_args.stream_handle()>>>( kernel,
+                                                  launch_args.num_elements() );
+
+    REQUIRE( cudaSuccess == cudaGetLastError() );
 }
 
 //---------------------------------------------------------------------------//

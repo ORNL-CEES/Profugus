@@ -76,19 +76,27 @@ class Launch_Args
         // Block size can only be modified before grid_size/num_elements
         REQUIRE( d_grid_size    == 0 );
         REQUIRE( d_num_elements == 0 );
+        REQUIRE( block_size > 0 );
         d_block_size = block_size;
     }
 
     //! Set grid size
     void set_grid_size(unsigned int grid_size)
     {
+        REQUIRE( grid_size > 0 );
+        REQUIRE( d_block_size > 0 );
+        REQUIRE( d_num_elements == 0 );
         d_grid_size = grid_size;
         d_num_elements = d_grid_size * d_block_size;
+        ENSURE( d_num_elements > 0 );
     }
 
     //! Set number of elements for kernel
     void set_num_elements(std::size_t num_elements)
     {
+        REQUIRE( num_elements > 0 );
+        REQUIRE( d_block_size > 0 );
+        REQUIRE( d_grid_size == 0 );
         d_num_elements = num_elements;
         d_grid_size = d_num_elements / d_block_size;
         if( d_num_elements % d_block_size > 0 )
@@ -100,22 +108,22 @@ class Launch_Args
     //! Get block size
     std::size_t block_size() const
     {
+        REQUIRE( d_block_size > 0 );
         return d_block_size;
     }
 
     //! Get grid size
     std::size_t grid_size() const
     {
+        REQUIRE( d_grid_size > 0 );
         return d_grid_size;
     }
 
     //! Get number of elements
     std::size_t num_elements() const
     {
-        if( d_num_elements > 0 )
-            return d_num_elements;
-        else
-            return d_grid_size * d_block_size;
+        REQUIRE( d_num_elements > 0 );
+        return d_num_elements;
     }
 
     //! Get shared memory size
