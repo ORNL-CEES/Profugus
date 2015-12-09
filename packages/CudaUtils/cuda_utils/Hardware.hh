@@ -205,7 +205,7 @@ class Hardware<cuda::arch::Device>
     }
 
     //! Set new default block size
-    static void default_block_size(unsigned int block_size)
+    static void set_default_block_size(unsigned int block_size)
     {
         REQUIRE( block_size > 0 );
         d_default_block_size = block_size;
