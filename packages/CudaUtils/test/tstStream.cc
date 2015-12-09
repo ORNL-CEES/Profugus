@@ -231,9 +231,9 @@ TYPED_TEST(StreamTest, performance)
     // Initialize kernel data and launch arguments
     // Each kernel data instance (launch args) gets its own stream.
     Kernel_Data_t data(this->num_rays(), this->d_num_segments);
-    data.launch_args.block_size = this->d_num_threads;
-    data.launch_args.grid_size  = this->d_num_blocks;
-    data.launch_args.stream     = active_stream;
+    data.launch_args.set_block_size( this->d_num_threads );
+    data.launch_args.set_grid_size(  this->d_num_blocks );
+    data.launch_args.set_stream(     active_stream );
 
     // Whether we can expect asynchronous behavior
     const bool complete = (Completion<Arch_t>::HAS_ASYNC ? false : true);
@@ -244,8 +244,8 @@ TYPED_TEST(StreamTest, performance)
     Host_Vector_t host_input(data.num_rays);
     Host_Vector_t host_output(data.num_rays);
 
-    std::cout << "Running on " << data.launch_args.grid_size << " blocks"
-        << " x " << data.launch_args.block_size << " threads..." << std::flush;
+    std::cout << "Running on " << data.launch_args.grid_size() << " blocks"
+        << " x " << data.launch_args.block_size() << " threads..." << std::flush;
 
     // First initialization of tau
     std::cout << "T" << std::flush;

@@ -70,8 +70,8 @@ TYPED_TEST(ArchSwitchTest, PolyglotKernel)
     Kernel_Data_t data(original.size());
 
     // Set number of threads and blocks to reasonable GPU/CPU numbers
-    data.launch_args.block_size = Hardware_t::num_cores_per_mp();
-    data.launch_args.grid_size  = Hardware_t::num_multiprocessors();
+    data.launch_args.set_block_size( Hardware_t::num_cores_per_mp() );
+    data.launch_args.set_grid_size(  Hardware_t::num_multiprocessors() );
 
     // Copy the input data
     data.input.assign(original);

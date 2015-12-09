@@ -20,10 +20,11 @@ namespace cuda
 // GLOBAL CUDA KERNEL
 //---------------------------------------------------------------------------//
 template<class Kernel>
-__global__ void cuda_kernel( Kernel kernel )
+__global__ void cuda_kernel( Kernel kernel, std::size_t N )
 {
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-    kernel( idx );
+    if( idx < N )
+        kernel( idx );
 }
 
 //---------------------------------------------------------------------------//
@@ -34,11 +35,11 @@ template <class Kernel>
 void parallel_launch(
     Kernel& kernel, const Launch_Args<cuda::arch::Device>& launch_args )
 {
-    //REQUIRE( launch_args.is_valid() );
-    cuda_kernel<<<launch_args.grid_size,
-	launch_args.block_size,
-	launch_args.shared_mem,
-	launch_args.stream_handle()>>>( kernel );
+    REQUIRE( launch_args.is_valid() );
+    cuda_kernel<<<launch_args.grid_size(),
+	launch_args.block_size(),
+	launch_args.shared_mem(),
+	launch_args.stream_handle()>>>( kernel, launch_args.num_elements() );
 }
 
 //---------------------------------------------------------------------------//

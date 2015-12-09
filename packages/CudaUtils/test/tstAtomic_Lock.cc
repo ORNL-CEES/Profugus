@@ -73,8 +73,8 @@ TYPED_TEST(LockTest, execute)
     data.output.assign(original);
 
     // Set number of threads and blocks to reasonable GPU/CPU numbers
-    data.launch_args.block_size = Hardware_t::num_cores_per_mp();
-    data.launch_args.grid_size  = Hardware_t::num_multiprocessors();
+    data.launch_args.set_block_size( Hardware_t::num_cores_per_mp() );
+    data.launch_args.set_grid_size(  Hardware_t::num_multiprocessors() );
 
     // Do the kernel call
     cuda::lock_test(data);
@@ -85,7 +85,7 @@ TYPED_TEST(LockTest, execute)
 
     EXPECT_EQ(original.size(), cpu_result.size());
     for (unsigned int i = 0; i < original.size(); ++i)
-        EXPECT_FLOAT_EQ(data.launch_args.grid_size, cpu_result[i]);
+        EXPECT_FLOAT_EQ(data.launch_args.grid_size(), cpu_result[i]);
 }
 
 //---------------------------------------------------------------------------//

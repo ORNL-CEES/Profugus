@@ -23,17 +23,17 @@ template<typename Arch>
 void run_launch_args(std::vector<double> &data)
 {
     // Make launch args.
-    cuda::Launch_Args<Arch> launch_args;
-    launch_args.grid_size = 4;
-    launch_args.block_size = 256;
+    cuda::Launch_Args<Arch> args;
+    args.set_block_size(256);
+    args.set_num_elements(1024);
 
     // Create a functor.
     double value = 2.3;
-    int size = launch_args.block_size * launch_args.grid_size;
+    int size = args.num_elements();
     Functor<Arch> functor( size, value );
 
     // Call the kernel launch.
-    cuda::parallel_launch( functor, launch_args );
+    cuda::parallel_launch( functor, args );
 
     // Get the data from the functor.
     cuda::Host_Vector<double> host_vec(size);

@@ -11,9 +11,10 @@
 #ifndef cuda_utils_Launch_Args_hh
 #define cuda_utils_Launch_Args_hh
 
-//#include "harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "Stream.hh"
 #include "Definitions.hh"
+#include "Hardware.hh"
 
 #include <type_traits>
 
@@ -34,9 +35,9 @@ namespace cuda
 #define CUDA_LAUNCH(GLOBAL_FUNCTION, LAUNCH_ARGS) \
     REQUIRE(LAUNCH_ARGS.is_valid()); \
     GLOBAL_FUNCTION<<< \
-        LAUNCH_ARGS.grid_size, \
-        LAUNCH_ARGS.block_size, \
-        LAUNCH_ARGS.shared_mem, \
+        LAUNCH_ARGS.grid_size(), \
+        LAUNCH_ARGS.block_size(), \
+        LAUNCH_ARGS.shared_mem(), \
         LAUNCH_ARGS.stream_handle()>>>
 #else
 //! If not using CUDA, just call the function
@@ -52,8 +53,9 @@ namespace cuda
 //===========================================================================//
 
 template<class Arch_T>
-struct Launch_Args
+class Launch_Args
 {
+  public:
     // >>> TYPEDEFS
     typedef Stream<Arch_T> Stream_t;
 
@@ -62,33 +64,95 @@ struct Launch_Args
     //! Zero out launch arguments on construction
     Launch_Args()
     {
-        grid_size  = 0;
-        block_size = 0;
-        shared_mem = 0;
+        d_grid_size    = 0;
+        d_block_size   = Hardware<Arch_T>::default_block_size();
+        d_shared_mem   = 0;
+        d_num_elements = 0;
+    }
+
+    //! Set block size
+    void set_block_size(unsigned int block_size)
+    {
+        // Block size can only be modified before grid_size/num_elements
+        REQUIRE( d_grid_size    == 0 );
+        REQUIRE( d_num_elements == 0 );
+        d_block_size = block_size;
+    }
+
+    //! Set grid size
+    void set_grid_size(unsigned int grid_size)
+    {
+        d_grid_size = grid_size;
+        d_num_elements = d_grid_size * d_block_size;
+    }
+
+    //! Set number of elements for kernel
+    void set_num_elements(std::size_t num_elements)
+    {
+        d_num_elements = num_elements;
+        d_grid_size = d_num_elements / d_block_size;
+        if( d_num_elements % d_block_size > 0 )
+            d_grid_size++;
     }
 
     // >>> ACCESSORS
 
+    //! Get block size
+    std::size_t block_size() const
+    {
+        return d_block_size;
+    }
+
+    //! Get grid size
+    std::size_t grid_size() const
+    {
+        return d_grid_size;
+    }
+
+    //! Get number of elements
+    std::size_t num_elements() const
+    {
+        if( d_num_elements > 0 )
+            return d_num_elements;
+        else
+            return d_grid_size * d_block_size;
+    }
+
+    //! Get shared memory size
+    std::size_t shared_mem() const
+    {
+        return d_shared_mem;
+    }
+
+    //! Set stream
+    void set_stream( Stream_t stream )
+    {
+        d_stream = stream;
+    }
+
     //! Stream handle for CUDA (defaults to zero)
     typename Stream_t::stream_t stream_handle() const
     {
-        return stream.handle();
+        return d_stream.handle();
     }
 
     //! Check whether launch arguments are valid
     bool is_valid() const
     {
-        return (grid_size > 0)
-            && (block_size > 0);
+        return (d_grid_size > 0)
+            && (d_block_size > 0)
+            && (d_num_elements <= d_grid_size*d_block_size);
         // could also add checks for being less than hardware capacities
     }
 
-    // >>> PUBLIC DATA
+  private:
 
-    unsigned int grid_size;
-    unsigned int block_size;
-    std::size_t  shared_mem;
-    Stream_t     stream;
+    // >>> PRIVATE DATA
+    unsigned int d_grid_size;
+    unsigned int d_block_size;
+    std::size_t  d_shared_mem;
+    Stream_t     d_stream;
+    std::size_t  d_num_elements;
 };
 
 //---------------------------------------------------------------------------//

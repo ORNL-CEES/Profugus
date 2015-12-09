@@ -23,7 +23,7 @@ void parallel_launch(
     Kernel& kernel, const Launch_Args<cuda::arch::Host>& launch_args )
 {
     REQUIRE( launch_args.is_valid() );
-    std::size_t num_t = launch_args.grid_size*launch_args.block_size;
+    std::size_t num_t = launch_args.num_elements();
     for ( std::size_t n = 0; n < num_t; ++n )
     {
         kernel( n );
