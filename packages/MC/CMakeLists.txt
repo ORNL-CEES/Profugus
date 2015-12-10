@@ -140,6 +140,23 @@ LIST(APPEND SOURCES ${DRIVER_SOURCES})
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 ##---------------------------------------------------------------------------##
+## Check for CUDA
+
+SET(USE_CUDA OFF)
+IF(${PROJECT_NAME}_ENABLE_CUDA)
+  MESSAGE(STATUS "Building ${PACKAGE_NAME} with CUDA support")
+  SET(USE_CUDA ON)
+ENDIF()
+
+IF(USE_CUDA)
+  FILE(GLOB CUDA_GEOMETRY_HEADERS cuda_geometry/*.hh)
+  SET(CUDA_GEOMETRY_SOURCES
+    )
+  LIST(APPEND HEADERS ${CUDA_GEOMETRY_HEADERS})
+  LIST(APPEND SOURCES ${CUDA_GEOMETRY_SOURCES})
+ENDIF()
+
+##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
 
 TRIBITS_ADD_LIBRARY(
