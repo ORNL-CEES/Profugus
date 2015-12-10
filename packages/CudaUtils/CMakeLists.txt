@@ -51,6 +51,8 @@ FILE(GLOB HEADERS cuda_utils/*.hh)
 SET(SOURCES
   cuda_utils/Atomic_Lock.cc
   cuda_utils/BLAS_host.cc
+  cuda_utils/Cuda_RNG.cc
+  cuda_utils/Cuda_RNG.pt.cc
   cuda_utils/Device_Vector_host.pt.cc
   cuda_utils/Event.cc
   cuda_utils/Functions.cc
@@ -81,6 +83,18 @@ TRIBITS_ADD_LIBRARY(
   Profugus_cuda_utils
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
+
+IF( USE_CUDA )
+  SET( CUDA_SOURCES
+    cuda_utils/Cuda_RNG.pt.cu
+    )
+
+PACKAGE_ADD_CUDA_LIBRARY(
+  Profugus_cuda_utils_cuda
+  SOURCES ${CUDA_SOURCES}
+  DEPLIBS Profugus_cuda_utils
+)
+ENDIF()
 
 #
 # Add test directory for this package
