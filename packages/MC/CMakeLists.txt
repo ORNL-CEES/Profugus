@@ -189,6 +189,11 @@ TRIBITS_ADD_TEST_DIRECTORIES(
   geometry/test
   mc/test)
 
+IF(USE_CUDA)
+  TRIBITS_ADD_TEST_DIRECTORIES(
+    cuda_geometry/test)
+ENDIF()
+
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP
 
