@@ -134,12 +134,11 @@ class Cartesian_Mesh
     {
         if( i < d_cells_x && j < d_cells_y && k < d_cells_z )
         {
-            cell = i + d_cells_x * (i + d_cells_y * k);
+            cell = i + d_cells_x * (j + d_cells_y * k);
             return true;
         }
         cell = static_cast<size_type>(-1);
         return false;
-
     }
 
     // >>> VOLUME CALCULATION

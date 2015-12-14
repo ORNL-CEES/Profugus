@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <iostream>
+
 #include "Cartesian_Mesh.hh"
 #include "utils/Container_Props.hh"
 #include "utils/View_Field.hh"
@@ -56,15 +58,15 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
     cuda::Host_Vector<double> host_volumes(d_num_cells);
     for( int cell_k = 0; cell_k < d_cells_z; ++cell_k )
     {
-        double width_k = d_z_edges[cell_k+1] - d_z_edges[cell_k];
+        double width_k = z_edges[cell_k+1] - z_edges[cell_k];
         REQUIRE( width_k > 0.0 );
         for( int cell_j = 0; cell_j < d_cells_y; ++cell_j )
         {
-            double width_j = d_y_edges[cell_j+1] - d_y_edges[cell_j];
+            double width_j = y_edges[cell_j+1] - y_edges[cell_j];
             REQUIRE( width_j > 0.0 );
             for( int cell_i = 0; cell_i < d_cells_x; ++cell_i )
             {
-                double width_i = d_x_edges[cell_i+1] - d_x_edges[cell_i];
+                double width_i = x_edges[cell_i+1] - x_edges[cell_i];
                 REQUIRE( width_j > 0.0 );
                 size_type cell;
                 this->index(cell_i,cell_j,cell_k,cell);
