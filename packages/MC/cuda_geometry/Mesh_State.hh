@@ -11,7 +11,7 @@
 #ifndef cuda_geometry_Mesh_State_hh
 #define cuda_geometry_Mesh_State_hh
 
-#include "utils/Definitions.hh"
+#include "CudaUtils/cuda_utils/Definitions.hh"
 
 namespace cuda_profugus
 {
