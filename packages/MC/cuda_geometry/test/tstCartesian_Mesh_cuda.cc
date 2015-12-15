@@ -11,6 +11,7 @@
 #include "Cartesian_Mesh_Tester.hh"
 
 #include "gtest/utils_gtest.hh"
+#include "geometry/Definitions.hh"
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -19,7 +20,9 @@ class CartesianMeshTest : public ::testing::Test
 {
   protected:
     // >>> TYPEDEFS
+    typedef profugus::geometry::cell_type        cell_type;
     typedef std::vector<int>                     Vec_Int;
+    typedef std::vector<cell_type>               Vec_Cell_Type;
     typedef std::vector<double>                  Vec_Dbl;
     typedef cuda_profugus::Cartesian_Mesh_Tester Tester;
 
@@ -48,7 +51,7 @@ TEST_F(CartesianMeshTest, Index)
     Vec_Int ii = {0, 1, 2, 3};
     Vec_Int jj = {1, 0, 1, 0};
     Vec_Int kk = {0, 0, 2, 1};
-    Vec_Int cells(ii.size());
+    Vec_Cell_Type cells(ii.size());
 
     d_tester->compute_indices(ii,jj,kk,cells);
 
@@ -56,7 +59,7 @@ TEST_F(CartesianMeshTest, Index)
     for( auto x : cells )
         std::cout << x << " ";
     std::cout << std::endl;
-    Vec_Int expected_cells = {4, 1, 22, 11};
+    Vec_Cell_Type expected_cells = {4, 1, 22, 11};
 
     EXPECT_VEC_EQ( expected_cells, cells );
 }
@@ -64,7 +67,7 @@ TEST_F(CartesianMeshTest, Index)
 TEST_F(CartesianMeshTest, Cardinal)
 {
 
-    Vec_Int cells = {4, 1, 22, 11};
+    Vec_Cell_Type cells = {4, 1, 22, 11};
     Vec_Int ii(cells.size());
     Vec_Int jj(cells.size());
     Vec_Int kk(cells.size());
@@ -72,7 +75,7 @@ TEST_F(CartesianMeshTest, Cardinal)
     d_tester->compute_cardinals(cells,ii,jj,kk);
 
     std::cout << "Computed cardinals: " << std::endl;
-    for( int cell = 0; cell < cells.size(); ++cell )
+    for( cell_type cell = 0; cell < cells.size(); ++cell )
     {
         std::cout << cells[cell] << ": " << ii[cell] << " " << jj[cell]
             << " " << kk[cell] << std::endl;
@@ -90,7 +93,7 @@ TEST_F(CartesianMeshTest, Cardinal)
 TEST_F(CartesianMeshTest, Volumes)
 {
 
-    Vec_Int cells = {4, 1, 22, 11};
+    Vec_Cell_Type cells = {4, 1, 22, 11};
     Vec_Dbl volumes(cells.size());
 
     d_tester->compute_volumes(cells,volumes);

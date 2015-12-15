@@ -19,6 +19,7 @@
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
+#include "geometry/Definitions.hh"
 #include "utils/Definitions.hh"
 
 namespace cuda_profugus
@@ -43,15 +44,15 @@ class Cartesian_Mesh
   public:
     //@{
     //! Mesh typedefs
-    typedef int    dim_type;    //!< indexing along a single dimension
-    typedef size_t size_type;   //!< indexing for cells
+    typedef int                           dim_type;
+    typedef size_t                        size_type;
+    typedef profugus::geometry::cell_type cell_type;
 
     typedef std::vector<double>                Vec_Dbl;
     typedef cuda::arch::Device                 Arch;
     typedef cuda::Device_Vector<Arch,double>   Dbl_Vec;
     typedef cuda::Device_Vector<Arch,int>      Int_Vec;
     typedef std::shared_ptr<Dbl_Vec>           SP_Dbl_Vec;
-    typedef int                                Dim_Vec[3];
     //@}
 
   private:
@@ -71,12 +72,12 @@ class Cartesian_Mesh
     int d_cells_z;
 
     // Total number of cells
-    size_type d_num_cells;
+    cell_type d_num_cells;
 
     // Dimensionality (always 3 for now)
     dim_type d_dimension;
 
-    //
+    // Cell volumes
     SP_Dbl_Vec d_volumes_vec;
     double *d_volumes;
 
@@ -88,7 +89,7 @@ class Cartesian_Mesh
     // >>> ACCESSORS
 
     //! Get number of cells.
-    __host__ __device__ size_type num_cells() const { return d_num_cells; }
+    __host__ __device__ cell_type num_cells() const { return d_num_cells; }
 
     //! Number of cells along an axis
     __host__ __device__ dim_type num_cells_along(dim_type d) const
@@ -123,7 +124,7 @@ class Cartesian_Mesh
 
     // Convert cardinal index to (i,j) or (i,j,k).
     __host__ __device__ void cardinal(
-        size_type cell, dim_type& i, dim_type& j, dim_type& k) const
+        cell_type cell, dim_type& i, dim_type& j, dim_type& k) const
     {
         REQUIRE( cell < d_num_cells );
         k = cell / (d_cells_x * d_cells_y);
@@ -139,7 +140,7 @@ class Cartesian_Mesh
     __host__ __device__ inline bool index(dim_type   i,
                                           dim_type   j,
                                           dim_type   k,
-                                          size_type &cell) const
+                                          cell_type &cell) const
     {
         REQUIRE( i < d_cells_x );
         REQUIRE( j < d_cells_y );
@@ -150,14 +151,14 @@ class Cartesian_Mesh
             ENSURE( cell < d_num_cells );
             return true;
         }
-        cell = static_cast<size_type>(-1);
+        cell = static_cast<cell_type>(-1);
         return false;
     }
 
     // >>> VOLUME CALCULATION
 
     //! Calculate volume from the global cell id
-    __device__ inline double volume(size_type global_cell) const
+    __device__ inline double volume(cell_type global_cell) const
     {
         REQUIRE( global_cell < d_num_cells );
         return d_volumes[global_cell];

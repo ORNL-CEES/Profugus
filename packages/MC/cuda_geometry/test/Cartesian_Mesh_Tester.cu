@@ -16,28 +16,30 @@
 namespace cuda_profugus
 {
 
+typedef profugus::geometry::cell_type cell_type;
+
 __global__ void compute_indices_kernel(Cartesian_Mesh mesh,
                                        int            num_vals,
                                        const int     *ii,
                                        const int     *jj,
                                        const int     *kk,
-                                       int           *cells)
+                                       cell_type     *cells)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_vals )
     {
-        size_t cell;
+        cell_type cell;
         mesh.index(ii[tid], jj[tid], kk[tid], cell);
         cells[tid] = cell;
     }
 }
 
 __global__ void compute_cardinals_kernel(Cartesian_Mesh mesh,
-                                        int            num_vals,
-                                        const int     *cells,
-                                        int           *ii,
-                                        int           *jj,
-                                        int           *kk)
+                                        int              num_vals,
+                                        const cell_type *cells,
+                                        int             *ii,
+                                        int             *jj,
+                                        int             *kk)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_vals )
@@ -47,9 +49,9 @@ __global__ void compute_cardinals_kernel(Cartesian_Mesh mesh,
 }
 
 __global__ void compute_volumes_kernel(Cartesian_Mesh mesh,
-                                       int            num_points,
-                                       const int     *cells,
-                                       double        *volumes)
+                                       int              num_points,
+                                       const cell_type *cells,
+                                       double          *volumes)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
@@ -74,7 +76,7 @@ Cartesian_Mesh_Tester::Cartesian_Mesh_Tester( const Vec_Dbl &x_edges,
 void Cartesian_Mesh_Tester::compute_indices( const Vec_Int &host_ii,
                                              const Vec_Int &host_jj,
                                              const Vec_Int &host_kk,
-                                                   Vec_Int &host_cells ) const
+                                             Vec_Cell_Type &host_cells ) const
 {
     int num_points = host_ii.size();
     REQUIRE( num_points == host_jj.size() );
@@ -83,10 +85,10 @@ void Cartesian_Mesh_Tester::compute_indices( const Vec_Int &host_ii,
 
     // Create memroy on device
     typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,int> device_ii(profugus::make_view(host_ii));
-    cuda::Device_Vector<Arch,int> device_jj(profugus::make_view(host_jj));
-    cuda::Device_Vector<Arch,int> device_kk(profugus::make_view(host_kk));
-    cuda::Device_Vector<Arch,int> device_cells(num_points);
+    cuda::Device_Vector<Arch,int>       device_ii(profugus::make_view(host_ii));
+    cuda::Device_Vector<Arch,int>       device_jj(profugus::make_view(host_jj));
+    cuda::Device_Vector<Arch,int>       device_kk(profugus::make_view(host_kk));
+    cuda::Device_Vector<Arch,cell_type> device_cells(num_points);
 
     // Execute kernel
     compute_indices_kernel<<<1,num_points>>>( *d_mesh,
@@ -105,10 +107,11 @@ void Cartesian_Mesh_Tester::compute_indices( const Vec_Int &host_ii,
 //---------------------------------------------------------------------------//
 // Compute cardinal indices of specified cells
 //---------------------------------------------------------------------------//
-void Cartesian_Mesh_Tester::compute_cardinals( const Vec_Int &host_cells,
-                                                     Vec_Int &host_ii,
-                                                     Vec_Int &host_jj,
-                                                     Vec_Int &host_kk ) const
+void Cartesian_Mesh_Tester::compute_cardinals(
+        const Vec_Cell_Type &host_cells,
+              Vec_Int       &host_ii,
+              Vec_Int       &host_jj,
+              Vec_Int       &host_kk ) const
 {
     int num_points = host_cells.size();
     REQUIRE( num_points == host_ii.size() );
@@ -117,7 +120,8 @@ void Cartesian_Mesh_Tester::compute_cardinals( const Vec_Int &host_cells,
 
     // Create memroy on device
     typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,int> device_cells(profugus::make_view(host_cells));
+    cuda::Device_Vector<Arch,cell_type> device_cells(
+        profugus::make_view(host_cells));
     cuda::Device_Vector<Arch,int> device_ii(num_points);
     cuda::Device_Vector<Arch,int> device_jj(num_points);
     cuda::Device_Vector<Arch,int> device_kk(num_points);
@@ -141,8 +145,9 @@ void Cartesian_Mesh_Tester::compute_cardinals( const Vec_Int &host_cells,
 //---------------------------------------------------------------------------//
 // Compute volumes of specified cells
 //---------------------------------------------------------------------------//
-void Cartesian_Mesh_Tester::compute_volumes( const Vec_Int &host_cells,
-                                                   Vec_Dbl &host_volumes) const
+void Cartesian_Mesh_Tester::compute_volumes(
+        const Vec_Cell_Type &host_cells,
+              Vec_Dbl       &host_volumes) const
 {
     REQUIRE( host_cells.size() == host_volumes.size() );
 
@@ -150,7 +155,8 @@ void Cartesian_Mesh_Tester::compute_volumes( const Vec_Int &host_cells,
 
     // Create memroy on device
     typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,int>    device_cells(profugus::make_view(host_cells));
+    cuda::Device_Vector<Arch,cell_type> device_cells(
+        profugus::make_view(host_cells));
     cuda::Device_Vector<Arch,double> device_volumes(num_points);
 
     // Execute kernel

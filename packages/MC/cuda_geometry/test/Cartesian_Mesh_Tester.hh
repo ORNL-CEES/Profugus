@@ -14,6 +14,8 @@
 #include <vector>
 #include <memory>
 
+#include "geometry/Definitions.hh"
+
 namespace cuda_profugus
 {
 
@@ -31,25 +33,27 @@ class Cartesian_Mesh_Tester
 {
   public:
 
-      typedef std::vector<double> Vec_Dbl;
-      typedef std::vector<int>    Vec_Int;
+      typedef profugus::geometry::cell_type cell_type;
+      typedef std::vector<double>           Vec_Dbl;
+      typedef std::vector<int>              Vec_Int;
+      typedef std::vector<cell_type>        Vec_Cell_Type;
 
       Cartesian_Mesh_Tester( const Vec_Dbl &x_edges,
                              const Vec_Dbl &y_edges,
                              const Vec_Dbl &z_edges );
 
-      void compute_indices(const Vec_Int &ii,
-                           const Vec_Int &jj,
-                           const Vec_Int &kk,
-                                 Vec_Int &cells) const;
+      void compute_indices(const Vec_Int       &ii,
+                           const Vec_Int       &jj,
+                           const Vec_Int       &kk,
+                                 Vec_Cell_Type &cells) const;
 
-      void compute_cardinals(const Vec_Int &cells,
-                                   Vec_Int &ii,
-                                   Vec_Int &jj,
-                                   Vec_Int &kk ) const;
+      void compute_cardinals(const Vec_Cell_Type &cells,
+                                   Vec_Int       &ii,
+                                   Vec_Int       &jj,
+                                   Vec_Int       &kk ) const;
 
-      void compute_volumes(const Vec_Int &cells,
-                                 Vec_Dbl &volumes) const;
+      void compute_volumes(const Vec_Cell_Type &cells,
+                                 Vec_Dbl       &volumes) const;
 
   private:
 

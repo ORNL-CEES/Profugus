@@ -68,7 +68,7 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
             {
                 double width_i = x_edges[cell_i+1] - x_edges[cell_i];
                 REQUIRE( width_j > 0.0 );
-                size_type cell;
+                cell_type cell;
                 this->index(cell_i,cell_j,cell_k,cell);
                 host_volumes[cell] = width_i * width_j * width_k;
             }
