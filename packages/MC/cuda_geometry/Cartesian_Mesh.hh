@@ -29,7 +29,7 @@ namespace cuda_profugus
  * \class Cartesian_Mesh
  * \brief Common functionality for Cartesian meshes.
  *
- * Provides mesh-based functionality for tallies.
+ * Provides mesh-based functionality.
  */
 /*!
  * \example geometry/test/tstCartesian_Mesh.cc
@@ -64,16 +64,19 @@ class Cartesian_Mesh
     double *d_x_edges;
     double *d_y_edges;
     double *d_z_edges;
+
+    // Number of cells along each dimension
     int d_cells_x;
     int d_cells_y;
     int d_cells_z;
 
-    // Number of global cells
+    // Total number of cells
     size_type d_num_cells;
 
-    // Dimensionality
+    // Dimensionality (always 3 for now)
     dim_type d_dimension;
 
+    //
     SP_Dbl_Vec d_volumes_vec;
     double *d_volumes;
 
@@ -88,7 +91,7 @@ class Cartesian_Mesh
     __host__ __device__ size_type num_cells() const { return d_num_cells; }
 
     //! Number of cells along an axis
-    __device__ dim_type num_cells_along(dim_type d) const
+    __host__ __device__ dim_type num_cells_along(dim_type d) const
     {
         if( d == def::I )
             return d_cells_x;
@@ -117,7 +120,7 @@ class Cartesian_Mesh
     // >>> INDEX CONVERSION
 
     // Convert cardinal index to (i,j) or (i,j,k).
-    __device__ void cardinal(
+    __host__ __device__ void cardinal(
         size_type cell, dim_type& i, dim_type& j, dim_type& k) const
     {
         k = cell / (d_cells_x * d_cells_y);
@@ -128,9 +131,9 @@ class Cartesian_Mesh
 
     // Convert (i,j,k) to cell index
     __host__ __device__ inline bool index(dim_type   i,
-                                 dim_type   j,
-                                 dim_type   k,
-                                 size_type &cell) const
+                                          dim_type   j,
+                                          dim_type   k,
+                                          size_type &cell) const
     {
         if( i < d_cells_x && j < d_cells_y && k < d_cells_z )
         {
@@ -144,9 +147,9 @@ class Cartesian_Mesh
     // >>> VOLUME CALCULATION
 
     //! Calculate volume from the global cell id
-    __device__ inline double volume(size_type global_cell_index) const
+    __device__ inline double volume(size_type global_cell) const
     {
-        return d_volumes[global_cell_index];
+        return d_volumes[global_cell];
     }
 
     // >>> SPATIAL LOCATION
