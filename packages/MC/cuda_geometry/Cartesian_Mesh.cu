@@ -45,12 +45,12 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
     d_y_edges = d_y_edges_vec.data();
     d_z_edges = d_z_edges_vec.data();
 
-    VALIDATE(profugus::is_sorted(x_edges.begin(), x_edges.end()),
-             "Mesh along x axis is not monotonically increasing.");
-    VALIDATE(profugus::is_sorted(y_edges.begin(), y_edges.end()),
-             "Mesh along y axis is not monotonically increasing.");
-    VALIDATE(profugus::is_sorted(z_edges.begin(), z_edges.end()),
-             "Mesh along z axis is not monotonically increasing.");
+    INSIST(profugus::is_sorted(x_edges.begin(), x_edges.end()),
+           "Mesh along x axis is not monotonically increasing.");
+    INSIST(profugus::is_sorted(y_edges.begin(), y_edges.end()),
+           "Mesh along y axis is not monotonically increasing.");
+    INSIST(profugus::is_sorted(z_edges.begin(), z_edges.end()),
+           "Mesh along z axis is not monotonically increasing.");
 
     d_num_cells = d_cells_x * d_cells_y * d_cells_z;
 
