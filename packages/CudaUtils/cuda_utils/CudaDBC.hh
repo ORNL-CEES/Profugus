@@ -12,6 +12,7 @@
 #define cuda_utils_CudaDBC_hh
 
 #include "config.h"
+#include "Utils/config.h"
 
 //---------------------------------------------------------------------------//
 // If compiling device code, disable DBC
@@ -105,6 +106,31 @@ void toss_cuda_cookies(
 
 #endif
 //---------------------------------------------------------------------------//
+
+//
+// On-Device DBC
+//
+
+// Disable all assert calls on Mac
+#ifndef __APPLE__
+
+#include <assert.h>
+
+// DEVICE_INSIST is always on
+#define DEVICE_(COND) \
+    do { assert(COND); } while (0)
+
+#if UTILS_DBC & 4
+#define DEVICE_CHECK(COND) \
+    do { assert(COND); } while (0)
+#else
+#define DEVICE_CHECK(COND)
+#endif
+
+#else   // __APPLE__
+#define DEVICE_INSIST(COND)
+#define DEVICE_CHECK(COND)
+#endif  // __APPLE__
 
 #endif // cuda_utils_CudaDBC_hh
 
