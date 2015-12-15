@@ -1,7 +1,7 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
  * \file   MC/cuda_geometry/test/tstCartesian_Mesh.cc
- * \author hu4
+ * \author Steven Hamilton
  * \date   Mon Dec 14 13:16:35 2015
  * \brief  Cartesian_Mesh class definitions.
  * \note   Copyright (c) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -42,6 +42,51 @@ class CartesianMeshTest : public ::testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
+TEST_F(CartesianMeshTest, Index)
+{
+
+    Vec_Int ii = {0, 1, 2, 3};
+    Vec_Int jj = {1, 0, 1, 0};
+    Vec_Int kk = {0, 0, 2, 1};
+    Vec_Int cells(ii.size());
+
+    d_tester->compute_indices(ii,jj,kk,cells);
+
+    std::cout << "Computed indices: ";
+    for( auto x : cells )
+        std::cout << x << " ";
+    std::cout << std::endl;
+    Vec_Int expected_cells = {4, 1, 22, 11};
+
+    EXPECT_VEC_EQ( expected_cells, cells );
+}
+
+TEST_F(CartesianMeshTest, Cardinal)
+{
+
+    Vec_Int cells = {4, 1, 22, 11};
+    Vec_Int ii(cells.size());
+    Vec_Int jj(cells.size());
+    Vec_Int kk(cells.size());
+
+    d_tester->compute_cardinals(cells,ii,jj,kk);
+
+    std::cout << "Computed cardinals: " << std::endl;
+    for( int cell = 0; cell < cells.size(); ++cell )
+    {
+        std::cout << cells[cell] << ": " << ii[cell] << " " << jj[cell]
+            << " " << kk[cell] << std::endl;
+    }
+
+    Vec_Int expected_ii = {0, 1, 2, 3};
+    Vec_Int expected_jj = {1, 0, 1, 0};
+    Vec_Int expected_kk = {0, 0, 2, 1};
+
+    EXPECT_VEC_EQ( expected_ii, ii );
+    EXPECT_VEC_EQ( expected_jj, jj );
+    EXPECT_VEC_EQ( expected_kk, kk );
+}
+
 TEST_F(CartesianMeshTest, Volumes)
 {
 
@@ -60,7 +105,7 @@ TEST_F(CartesianMeshTest, Volumes)
                                 0.3 * 0.6 * 0.6,
                                 0.1 * 0.4 * 0.8};
 
-    EXPECT_VEC_SOFTEQ( expected_volumes, volumes, 1e-12 );
+    EXPECT_VEC_SOFT_EQ( expected_volumes, volumes );
 }
 
 //---------------------------------------------------------------------------//

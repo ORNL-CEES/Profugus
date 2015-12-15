@@ -38,6 +38,16 @@ class Cartesian_Mesh_Tester
                              const Vec_Dbl &y_edges,
                              const Vec_Dbl &z_edges );
 
+      void compute_indices(const Vec_Int &ii,
+                           const Vec_Int &jj,
+                           const Vec_Int &kk,
+                                 Vec_Int &cells) const;
+
+      void compute_cardinals(const Vec_Int &cells,
+                                   Vec_Int &ii,
+                                   Vec_Int &jj,
+                                   Vec_Int &kk ) const;
+
       void compute_volumes(const Vec_Int &cells,
                                  Vec_Dbl &volumes) const;
 
