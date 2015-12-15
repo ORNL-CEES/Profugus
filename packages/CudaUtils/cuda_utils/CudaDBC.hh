@@ -26,8 +26,54 @@
 #define harness_DBC_hh
 #endif // Require
 
-// Null-ops for DBC macros
+//
+// On-Device DBC using "assert"
+//
+
+#ifndef __APPLE__
+
+#include <assert.h>
+
+// Insist is always on
+// If condition fails, print message then assert
+// Don't expect fancy stream machinery to work
+//  (e.g. INSIST(n>0,"Value is " << n); ) like it would in normal DBC
+#define INSIST(COND,MSG) \
+    do \
+    { \
+        if (!(COND)) \
+        { \
+            printf(MSG "\n");  \
+        } \
+        assert(COND); \
+    } while (0)
+
+#if UTILS_DBC & 1
+#define REQUIRE(COND) \
+    do { assert(COND); } while (0)
+#else
+#define REQUIRE(COND) UTILS_NOASSERT_(COND)
+#endif
+
+#if UTILS_DBC & 2
+#define CHECK(COND) \
+    do { assert(COND); } while (0)
+#else
+#define CHECK(COND) UTILS_NOASSERT_(COND)
+#endif
+
+#if UTILS_DBC & 4
+#define ENSURE(COND) \
+    do { assert(COND); } while (0)
+#else
+#define ENSURE(COND) UTILS_NOASSERT_(COND)
+#endif
+
+#else   // __APPLE__
+// No device-side asserts on Mac, good luck
 #include "harness/DBC_nulldef.hh"
+#endif  // __APPLE__
+
 #else // __CUDA_ARCH__
 #include "harness/DBC.hh"
 #endif
@@ -106,31 +152,6 @@ void toss_cuda_cookies(
 
 #endif
 //---------------------------------------------------------------------------//
-
-//
-// On-Device DBC
-//
-
-// Disable all assert calls on Mac
-#ifndef __APPLE__
-
-#include <assert.h>
-
-// DEVICE_INSIST is always on
-#define DEVICE_(COND) \
-    do { assert(COND); } while (0)
-
-#if UTILS_DBC & 4
-#define DEVICE_CHECK(COND) \
-    do { assert(COND); } while (0)
-#else
-#define DEVICE_CHECK(COND)
-#endif
-
-#else   // __APPLE__
-#define DEVICE_INSIST(COND)
-#define DEVICE_CHECK(COND)
-#endif  // __APPLE__
 
 #endif // cuda_utils_CudaDBC_hh
 
