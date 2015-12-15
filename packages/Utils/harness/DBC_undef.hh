@@ -17,14 +17,14 @@
 #undef REMEMBER_ON
 #undef ENSURE_ON
 
-#undef Require
-#undef Check
-#undef Ensure
-#undef Remember
-#undef Assert
-#undef Insist
-#undef Not_Implemented
-#undef Validate
+#undef REQUIRE
+#undef CHECK
+#undef ENSURE
+#undef REMEMBER
+#undef ASSERT
+#undef INSIST
+#undef NOT_IMPLEMENTED
+#undef VALIDATE
 
 //---------------------------------------------------------------------------//
 //              end of harness/DBC_undef.hh
