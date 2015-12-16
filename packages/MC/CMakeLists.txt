@@ -108,7 +108,7 @@ SET(MC_SOURCES
   mc/KCode_Solver.cc
   mc/KDE_Fission_Source.cc
   mc/KDE_Kernel.cc
-  mc/KDE_Kernel_Resample.cc
+  mc/Axial_KDE_Kernel.cc
   mc/Keff_Tally.cc
   mc/Particle.cc
   mc/Particle_Metaclass.pt.cc

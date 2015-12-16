@@ -1,15 +1,15 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/kde/KDE_Kernel_Resample.cc
+ * \file   MC/mc/kde/Axial_KDE_Kernel.cc
  * \author Gregory Davidson
  * \date   Mon Feb 16 14:21:15 2015
- * \brief  KDE_Kernel_Resample class definitions.
+ * \brief  Axial_KDE_Kernel class definitions.
  * \note   Copyright (c) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef MC_mc_KDE_Kernel_Resample_hh
-#define MC_mc_KDE_Kernel_Resample_hh
+#ifndef MC_mc_Axial_KDE_Kernel_hh
+#define MC_mc_Axial_KDE_Kernel_hh
 
 #include "KDE_Kernel.hh"
 
@@ -19,7 +19,7 @@ namespace profugus
 
 //===========================================================================//
 /*!
- * \class KDE_Kernel_Resample
+ * \class Axial_KDE_Kernel
  * \brief Samples a KDE position.
  */
 /*!
@@ -30,7 +30,7 @@ namespace profugus
 //===========================================================================//
 
 
-class KDE_Kernel_Resample : public KDE_Kernel
+class Axial_KDE_Kernel : public KDE_Kernel
 {
     typedef KDE_Kernel  Base;
 
@@ -52,7 +52,7 @@ class KDE_Kernel_Resample : public KDE_Kernel
 
   public:
     //! Constructor
-    KDE_Kernel_Resample(SP_Geometry   geometry,
+    Axial_KDE_Kernel(SP_Geometry   geometry,
                         SP_Physics    physics,
                         Reject_Method method,
                         double        coefficient = 1.06,
@@ -77,8 +77,8 @@ class KDE_Kernel_Resample : public KDE_Kernel
 
 } // end namespace profugus
 
-#endif // MC_mc_KDE_Kernel_Resample_hh
+#endif // MC_mc_Axial_KDE_Kernel_hh
 
 //---------------------------------------------------------------------------//
-// end of MC/mc/kde/KDE_Kernel_Resample.hh
+// end of MC/mc/kde/Axial_KDE_Kernel.hh
 //---------------------------------------------------------------------------//

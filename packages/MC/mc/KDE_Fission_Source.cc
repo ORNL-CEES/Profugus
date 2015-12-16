@@ -10,7 +10,7 @@
 
 #include "KDE_Fission_Source.hh"
 
-#include "KDE_Kernel_Resample.hh"
+#include "Axial_KDE_Kernel.hh"
 #include "comm/Timing.hh"
 #include "mc/Global_RNG.hh"
 
@@ -48,15 +48,15 @@ KDE_Fission_Source::KDE_Fission_Source(RCP_Std_DB     db,
     if (kernel_type == "fission_rejection")
     {
         // Instantiate the resample kernel
-        d_kernel = std::make_shared<KDE_Kernel_Resample>(
-            geometry, physics, KDE_Kernel_Resample::FISSION_REJECTION,
+        d_kernel = std::make_shared<Axial_KDE_Kernel>(
+            geometry, physics, Axial_KDE_Kernel::FISSION_REJECTION,
             coeff, exponent);
     }
     else if (kernel_type == "cell_rejection")
     {
         // Instantiate the resample kernel
-        d_kernel = std::make_shared<KDE_Kernel_Resample>(
-            geometry, physics, KDE_Kernel_Resample::CELL_REJECTION,
+        d_kernel = std::make_shared<Axial_KDE_Kernel>(
+            geometry, physics, Axial_KDE_Kernel::CELL_REJECTION,
             coeff, exponent);
     }
     else

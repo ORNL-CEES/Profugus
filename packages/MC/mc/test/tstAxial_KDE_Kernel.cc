@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   MC/mc/test/tstKDE_Kernel_Resample.cc
+ * \file   MC/mc/test/tstAxial_KDE_Kernel.cc
  * \author Gregory G. Davidson
  * \date   Thu Jan 22 13:50:16 2015
  * \brief  Tests the KDE Kernels
@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../KDE_Kernel_Resample.hh"
+#include "../Axial_KDE_Kernel.hh"
 
 #include "SourceTestBase.hh"
 #include "Utils/gtest/utils_gtest.hh"
@@ -21,7 +21,7 @@ class KernelTest : public SourceTestBase
 
   protected:
     // >>> TYPEDEFS
-    typedef profugus::KDE_Kernel_Resample KDE_Kernel_Resample;
+    typedef profugus::Axial_KDE_Kernel Axial_KDE_Kernel;
 
   protected:
     virtual int get_seed() const
@@ -52,12 +52,12 @@ class KernelTest : public SourceTestBase
       |-------|-------|
 
       PIN: FUEL = 1
-           MOD  = 0
+      MOD  = 0
 
       LATTICE:
-           UO2 - 1
-           H2O - 2
-     */
+      UO2 - 1
+      H2O - 2
+    */
     virtual void init_geometry()
     {
         typedef Geometry_t::SP_Array SP_Core;
@@ -94,9 +94,9 @@ class KernelTest : public SourceTestBase
 
     // 2 material definitions/1 group
     /*
-     - Mat 0 -> Moderator
-     - Mat 1 -> Fuel
-     */
+      - Mat 0 -> Moderator
+      - Mat 1 -> Fuel
+    */
     virtual void init_physics()
     {
         RCP_XS xs(Teuchos::rcp(new XS_t()));
@@ -136,9 +136,9 @@ class KernelTest : public SourceTestBase
     {
         // Pin origins are (1.89, 0.63) and (0.63, 1.89) with radius 0.54
         double dist_1 = sqrt(  (pos[0] - 1.89) * (pos[0] - 1.89)
-                             + (pos[1] - 0.63) * (pos[1] - 0.63));
+                               + (pos[1] - 0.63) * (pos[1] - 0.63));
         double dist_2 = sqrt(  (pos[0] - 0.63) * (pos[0] - 0.63)
-                             + (pos[1] - 1.89) * (pos[1] - 1.89));
+                               + (pos[1] - 1.89) * (pos[1] - 1.89));
 
         if (dist_1 > 0.54 && dist_2 > 0.54)
         {
@@ -165,9 +165,9 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
     double exponent = -0.7;
 
     // Create a Axial KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics,
-                               KDE_Kernel_Resample::FISSION_REJECTION,
-                               coeff, exponent);
+    Axial_KDE_Kernel kernel(b_geometry, b_physics,
+                            Axial_KDE_Kernel::FISSION_REJECTION,
+                            coeff, exponent);
 
     // Create a bunch of fission sites
     std::vector<Fission_Site> fis_sites;
@@ -237,8 +237,8 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
 TEST_F(KernelTest, test_bounds)
 {
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics,
-                               KDE_Kernel_Resample::FISSION_REJECTION);
+    Axial_KDE_Kernel kernel(b_geometry, b_physics,
+                            Axial_KDE_Kernel::FISSION_REJECTION);
 
     // Set the bandwidth in the pin (cell 1)
     double bandwidth = 2.5;
@@ -269,8 +269,8 @@ TEST_F(KernelTest, test_bounds)
 TEST_F(KernelTest, test_in_pin)
 {
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics,
-                               KDE_Kernel_Resample::FISSION_REJECTION);
+    Axial_KDE_Kernel kernel(b_geometry, b_physics,
+                            Axial_KDE_Kernel::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -304,8 +304,8 @@ TEST_F(KernelTest, test_in_pin)
 TEST_F(KernelTest, heuristic_test_resample)
 {
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics,
-                               KDE_Kernel_Resample::FISSION_REJECTION);
+    Axial_KDE_Kernel kernel(b_geometry, b_physics,
+                            Axial_KDE_Kernel::FISSION_REJECTION);
 
     // Create random number generator
     profugus::RNG rng = b_rcon->rng();
@@ -394,8 +394,8 @@ TEST_F(KernelTest, fission_rejection_test)
     profugus::RNG rng = b_rcon->rng();
 
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics,
-                               KDE_Kernel_Resample::FISSION_REJECTION);
+    Axial_KDE_Kernel kernel(b_geometry, b_physics,
+                            Axial_KDE_Kernel::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -432,8 +432,8 @@ TEST_F(KernelTest, cell_rejection_test)
     profugus::RNG rng = b_rcon->rng();
 
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics,
-                               KDE_Kernel_Resample::CELL_REJECTION);
+    Axial_KDE_Kernel kernel(b_geometry, b_physics,
+                            Axial_KDE_Kernel::CELL_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -468,5 +468,5 @@ TEST_F(KernelTest, cell_rejection_test)
 }
 
 //---------------------------------------------------------------------------//
-//                        end of tstKDE_Kernel_Resample.cc
+//                        end of tstAxial_KDE_Kernel.cc
 //---------------------------------------------------------------------------//

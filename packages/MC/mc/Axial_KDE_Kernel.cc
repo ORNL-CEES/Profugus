@@ -1,14 +1,14 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/kde/KDE_Kernel_Resample.cc
+ * \file   MC/mc/kde/Axial_KDE_Kernel.cc
  * \author Gregory Davidson
  * \date   Mon Feb 16 14:21:15 2015
- * \brief  KDE_Kernel_Resample class definitions.
+ * \brief  Axial_KDE_Kernel class definitions.
  * \note   Copyright (c) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "KDE_Kernel_Resample.hh"
+#include "Axial_KDE_Kernel.hh"
 #include "Sampler.hh"
 
 namespace profugus
@@ -20,11 +20,11 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-KDE_Kernel_Resample::KDE_Kernel_Resample(SP_Geometry   geometry,
-                                         SP_Physics    physics,
-                                         Reject_Method method,
-                                         double        coefficient,
-                                         double        exponent)
+Axial_KDE_Kernel::Axial_KDE_Kernel(SP_Geometry   geometry,
+                                   SP_Physics    physics,
+                                   Reject_Method method,
+                                   double        coefficient,
+                                   double        exponent)
     : Base(geometry, physics, coefficient, exponent)
     , d_method(method)
 {   }
@@ -35,9 +35,9 @@ KDE_Kernel_Resample::KDE_Kernel_Resample(SP_Geometry   geometry,
  *
  * If the new position is outside the fissionable region, it is rejected.
  */
-KDE_Kernel_Resample::Space_Vector
-KDE_Kernel_Resample::sample_position(const Space_Vector &orig_position,
-                                     RNG                &rng) const
+Axial_KDE_Kernel::Space_Vector
+Axial_KDE_Kernel::sample_position(const Space_Vector &orig_position,
+                                  RNG                &rng) const
 {
     REQUIRE(b_physics);
     REQUIRE(b_geometry);
@@ -45,11 +45,11 @@ KDE_Kernel_Resample::sample_position(const Space_Vector &orig_position,
 
     if (d_method == FISSION_REJECTION)
     {
-        return sample_position_fiss_rej(orig_position, rng);
+        return this->sample_position_fiss_rej(orig_position, rng);
     }
     else if (d_method == CELL_REJECTION)
     {
-        return sample_position_cell_rej(orig_position, rng);
+        return this->sample_position_cell_rej(orig_position, rng);
     }
     else
     {
@@ -65,9 +65,9 @@ KDE_Kernel_Resample::sample_position(const Space_Vector &orig_position,
 /*!
  * \brief Sample using fission rejection.
  */
-KDE_Kernel_Resample::Space_Vector
-KDE_Kernel_Resample::sample_position_fiss_rej(const Space_Vector &orig_position,
-                                              RNG                &rng) const
+Axial_KDE_Kernel::Space_Vector
+Axial_KDE_Kernel::sample_position_fiss_rej(const Space_Vector &orig_position,
+                                           RNG                &rng) const
 {
     REQUIRE(b_physics);
     REQUIRE(b_geometry);
@@ -124,9 +124,9 @@ KDE_Kernel_Resample::sample_position_fiss_rej(const Space_Vector &orig_position,
 /*!
  * \brief Sample using cell rejection.
  */
-KDE_Kernel_Resample::Space_Vector
-KDE_Kernel_Resample::sample_position_cell_rej(const Space_Vector &orig_position,
-                                              RNG                &rng) const
+Axial_KDE_Kernel::Space_Vector
+Axial_KDE_Kernel::sample_position_cell_rej(const Space_Vector &orig_position,
+                                           RNG                &rng) const
 {
     REQUIRE(b_physics);
     REQUIRE(b_geometry);
@@ -180,5 +180,5 @@ KDE_Kernel_Resample::sample_position_cell_rej(const Space_Vector &orig_position,
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//
-// end of MC/mc/kde/KDE_Kernel_Resample.cc
+// end of MC/mc/kde/Axial_KDE_Kernel.cc
 //---------------------------------------------------------------------------//
