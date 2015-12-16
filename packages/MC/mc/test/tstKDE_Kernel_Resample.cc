@@ -165,7 +165,9 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
     double exponent = -0.7;
 
     // Create a Axial KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics, coeff, exponent);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics, 
+                               KDE_Kernel_Resample::FISSION_REJECTION,
+                               coeff, exponent);
 
     // Create a bunch of fission sites
     std::vector<Fission_Site> fis_sites;
@@ -235,7 +237,8 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
 TEST_F(KernelTest, test_bounds)
 {
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics,
+                               KDE_Kernel_Resample::FISSION_REJECTION);
 
     // Set the bandwidth in the pin (cell 1)
     double bandwidth = 2.5;
@@ -266,7 +269,8 @@ TEST_F(KernelTest, test_bounds)
 TEST_F(KernelTest, test_in_pin)
 {
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics,
+                               KDE_Kernel_Resample::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -300,7 +304,8 @@ TEST_F(KernelTest, test_in_pin)
 TEST_F(KernelTest, heuristic_test_resample)
 {
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics,
+                               KDE_Kernel_Resample::FISSION_REJECTION);
 
     // Create random number generator
     profugus::RNG rng = b_rcon->rng();
@@ -387,7 +392,8 @@ TEST_F(KernelTest, heuristic_test_resample)
 TEST_F(KernelTest, heuristic_test_fissite)
 {
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics,
+                               KDE_Kernel_Resample::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -472,7 +478,8 @@ TEST_F(KernelTest, heuristic_test_bandwidth_rej)
     // For this test, we're simply going to try sampling from near the
     // boundary
     // Create a KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics);
+    KDE_Kernel_Resample kernel(b_geometry, b_physics,
+                               KDE_Kernel_Resample::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;

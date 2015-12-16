@@ -20,11 +20,13 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-KDE_Kernel_Resample::KDE_Kernel_Resample(SP_Geometry geometry,
-                                         SP_Physics  physics,
-                                         double      coefficient,
-                                         double      exponent)
+KDE_Kernel_Resample::KDE_Kernel_Resample(SP_Geometry   geometry,
+                                         SP_Physics    physics,
+                                         Reject_Method method,
+                                         double        coefficient,
+                                         double        exponent)
     : Base(geometry, physics, coefficient, exponent)
+    , d_method(method)
 {   }
 
 //---------------------------------------------------------------------------//
@@ -36,6 +38,36 @@ KDE_Kernel_Resample::KDE_Kernel_Resample(SP_Geometry geometry,
 KDE_Kernel_Resample::Space_Vector
 KDE_Kernel_Resample::sample_position(const Space_Vector &orig_position,
                                      RNG                &rng) const
+{
+    REQUIRE(b_physics);
+    REQUIRE(b_geometry);
+    REQUIRE(rng.assigned());
+
+    if (d_method == FISSION_REJECTION)
+    {
+        return sample_position_fiss_rej(orig_position, rng);
+    }
+    else if (d_method == CELL_REJECTION)
+    {
+        return sample_position_cell_rej(orig_position, rng);
+    }
+    else
+    {
+        throw profugus::assertion("Unknown KDE rejection type");
+        // Make compiler happy
+        return Space_Vector(0,0,0);
+    }
+}
+
+//---------------------------------------------------------------------------//
+// PRIVATE FUNCTIONS
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Sample using fission rejection.
+ */
+KDE_Kernel_Resample::Space_Vector
+KDE_Kernel_Resample::sample_position_fiss_rej(const Space_Vector &orig_position,
+                                              RNG                &rng) const
 {
     REQUIRE(b_physics);
     REQUIRE(b_geometry);
@@ -83,8 +115,64 @@ KDE_Kernel_Resample::sample_position(const Space_Vector &orig_position,
 
     // No luck
     b_num_sampled += failures;
-    std::cout << "1000 consecutive nonfissionable rejections in KDE."
-              << std::endl;
+    throw profugus::assertion("1000 consecutive nonfissionable rejections in "
+                              "KDE.");
+    return Space_Vector(0,0,0);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Sample using cell rejection.
+ */
+KDE_Kernel_Resample::Space_Vector
+KDE_Kernel_Resample::sample_position_cell_rej(const Space_Vector &orig_position,
+                                              RNG                &rng) const
+{
+    REQUIRE(b_physics);
+    REQUIRE(b_geometry);
+    REQUIRE(rng.assigned());
+
+    // Get the cell at the position
+    cell_type cellid = b_geometry->cell(orig_position);
+
+    size_type failures = 0;
+    do
+    {
+        // Sample Epanechnikov kernel
+        double epsilon = sampler::sample_epan(rng);
+
+        // Get the bandwidth if available
+        CHECK(b_bndwidth_map.count(cellid) == 1);
+        double bandwidth = b_bndwidth_map.find(cellid)->second;
+        CHECK(bandwidth >= 0.0);
+
+        // Create a new position
+        Space_Vector new_pos(orig_position[def::X],
+                             orig_position[def::Y],
+                             orig_position[def::Z] + epsilon*bandwidth/2.0);
+
+        // Ensure that the sampled point is in the geometry
+        if (b_geometry->boundary_state(new_pos) == geometry::INSIDE)
+        {
+            // If we are still in the same cell, accept the point, otherwise
+            // reject it
+            if (b_geometry->cell(new_pos) == cellid)
+            {
+                // Accept: sampled point is in the same cell
+                b_num_sampled += failures + 1;
+                ++b_num_accepted;
+                return new_pos;
+            }
+        }
+
+        // Increment failure counter.
+        ++failures;
+    } while (failures != 1000);
+
+    // No luck
+    b_num_sampled += failures;
+    throw profugus::assertion("1000 consecutive nonfissionable rejections in "
+                              "KDE.");
     return Space_Vector(0,0,0);
 }
 
