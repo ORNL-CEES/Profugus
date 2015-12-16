@@ -17,6 +17,7 @@
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
+#include "cuda_utils/Utility_Functions.hh"
 #include "geometry/Definitions.hh"
 #include "geometry/Bounding_Box.hh"
 #include "Mesh_State.hh"
@@ -57,6 +58,7 @@ class Mesh_Geometry
     typedef cuda::Space_Vector                   Space_Vector;
     typedef Mesh_State                           Geo_State_t;
 
+
     //! Constructor
     Mesh_Geometry(const Vec_Dbl &x_edges,
                   const Vec_Dbl &y_edges,
@@ -75,15 +77,32 @@ class Mesh_Geometry
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
 
-    // Bounding box
-    profugus::Bounding_Box get_extents() const;
+    // Bounding box (is this needed?)
+    //profugus::Bounding_Box get_extents() const;
 
     // >>> DEVICE API
 
     //! Initialize track.
     __device__ inline void initialize(const Space_Vector& r,
                                       const Space_Vector& direction,
-                                            Geo_State_t&  state) const;
+                                            Geo_State_t&  state) const
+    {
+        using cuda::utility::soft_equiv;
+        using def::I; using def::J; using def::K;
+
+        // Set struct attributes
+        state.d_r = r;
+        state.d_dir = direction;
+
+        cuda::utility::vector_normalize(state.d_dir);
+
+        update_state(state);
+
+        ENSURE(state.ijk.i >= -1 && state.ijk.i <= d_mesh.num_cells_along(I));
+        ENSURE(state.ijk.j >= -1 && state.ijk.j <= d_mesh.num_cells_along(J));
+        ENSURE(state.ijk.k >= -1 && state.ijk.i <= d_mesh.num_cells_along(K));
+
+    }
 
     //! Get distance to next boundary
     __device__ inline double distance_to_boundary(Geo_State_t& state) const;
@@ -164,9 +183,9 @@ class Mesh_Geometry
     __device__ void change_direction( const Space_Vector& new_direction,
                                             Geo_State_t&  state) const
     {
-        // update and mnormalizethe direction
+        // update and normalize the direction
         state.d_dir = new_direction;
-        //vector_normalize(state.d_dir);
+        cuda::utility::vector_normalize(state.d_dir);
     }
 
     //! Change the direction through an angle
@@ -174,7 +193,7 @@ class Mesh_Geometry
                                       double       phi,
                                       Geo_State_t& state) const
     {
-        //cartesian_vector_transform(costheta, phi, state.d_dir);
+        cuda::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
     //! Reflect the direction at a reflecting surface.
@@ -206,13 +225,21 @@ class Mesh_Geometry
     // >>> IMPLEMENTATION
 
     // Update state tracking information
-    void update_state(Geo_State_t &state) const;
+    __device__ void update_state(Geo_State_t &state) const
+    {
+        using def::I; using def::J; using def::K;
+
+        // Find the logical indices of the cell along each axis
+        d_mesh.find_upper(state.d_r, state.ijk);
+    }
 
     //! Move a particle a distance \e d in the current direction.
-    void move(double dist, Geo_State_t &state) const
+    __device__ void move(double dist, Geo_State_t &state) const
     {
         REQUIRE(dist >= 0.0);
-        //REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+        REQUIRE(cuda::utility::soft_equiv(
+                    cuda::utility::vector_magnitude(state.d_dir),
+                        1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
         state.d_r.x += dist * state.d_dir.x;

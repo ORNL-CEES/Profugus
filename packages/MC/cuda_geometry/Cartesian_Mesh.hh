@@ -19,6 +19,7 @@
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
+#include "cuda_utils/Utility_Functions.hh"
 #include "geometry/Definitions.hh"
 #include "utils/Definitions.hh"
 
@@ -47,6 +48,8 @@ class Cartesian_Mesh
     typedef int                           dim_type;
     typedef size_t                        size_type;
     typedef profugus::geometry::cell_type cell_type;
+    typedef cuda::Space_Vector            Space_Vector;
+    typedef cuda::Coordinates             Coordinates;
 
     typedef std::vector<double>                Vec_Dbl;
     typedef cuda::arch::Device                 Arch;
@@ -166,9 +169,39 @@ class Cartesian_Mesh
 
     // >>> SPATIAL LOCATION
 
+    // Locate the positon's ijk coordinates with upper edges begin "inside"
+    __device__ void find_upper(const Space_Vector &r, Coordinates &ijk ) const
+    {
+        ijk.i = find_upper(r.x, def::I);
+        ijk.j = find_upper(r.y, def::J);
+        ijk.k = find_upper(r.z, def::K);
+    }
+
     // Locate a coordinate along a single axis
-    __device__ inline dim_type find_upper(
-        double r, dim_type axis) const;
+    __device__ dim_type find_upper(
+        double r, dim_type axis) const
+    {
+        REQUIRE( 0 <= axis && axis < d_dimension );
+        const double *edges_start;
+        const double *edges_end;
+        if( axis == def::I )
+        {
+            edges_start = d_x_edges;
+            edges_end   = d_x_edges+d_cells_x;
+        }
+        if( axis == def::J )
+        {
+            edges_start = d_y_edges;
+            edges_end   = d_y_edges+d_cells_y;
+        }
+        if( axis == def::K )
+        {
+            edges_start = d_z_edges;
+            edges_end   = d_z_edges+d_cells_z;
+        }
+        return cuda::utility::lower_bound(edges_start,edges_end,r)
+            - edges_start - 1;
+    }
 
     //! Low corner of mesh in \e (i,j,k) direction.
     __device__ double low_corner(dim_type d) const
