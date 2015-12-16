@@ -165,7 +165,7 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
     double exponent = -0.7;
 
     // Create a Axial KDE kernel
-    KDE_Kernel_Resample kernel(b_geometry, b_physics, 
+    KDE_Kernel_Resample kernel(b_geometry, b_physics,
                                KDE_Kernel_Resample::FISSION_REJECTION,
                                coeff, exponent);
 
@@ -388,27 +388,24 @@ TEST_F(KernelTest, heuristic_test_resample)
 }
 
 //---------------------------------------------------------------------------//
-#if 0
-TEST_F(KernelTest, heuristic_test_fissite)
+TEST_F(KernelTest, fission_rejection_test)
 {
+    // Create random number generator
+    profugus::RNG rng = b_rcon->rng();
+
     // Create a KDE kernel
     KDE_Kernel_Resample kernel(b_geometry, b_physics,
                                KDE_Kernel_Resample::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
-    kernel.set_bandwidth(bandwidth);
+    for (int c = 0; c < b_geometry->num_cells(); ++c)
+    {
+        kernel.set_bandwidth(c, bandwidth);
+    }
 
-    // Create random number generator
-    RNG_Control::RNG rng = b_rcon->rng();
-
-    // Store the mean and variance of the sampled position
-    std::vector<double> test_mean = {0.0, 0.0, 0.0};
-    std::vector<double> test_var  = {0.0, 0.0, 0.0};
-    std::vector<double> ref_mean  = {0.0, 0.0, 0.0};
-    std::vector<double> ref_var   = {0.0, 0.0, 0.0};
-
-    // Do 1000 test samples
+    // Create fission sites
+    std::vector<Space_Vector> fission_sites;
     for (unsigned int i = 0; i < 1000; ++i)
     {
         // Create a fission site within the top-right pin
@@ -416,97 +413,59 @@ TEST_F(KernelTest, heuristic_test_fissite)
         Space_Vector site_pos(0.0, 0.0, 0.0);
         do
         {
-            site_pos[0] = rng.ran()*0.59 + 1.555;
-            site_pos[1] = rng.ran()*0.59 + 1.555;
+            site_pos[0] = rng.ran()*0.54 + 0.36;
+            site_pos[1] = rng.ran()*0.54 + 1.62;
             site_pos[2] = rng.ran()*14.28;
         } while (!is_in_pin(site_pos));
 
-        // Sample the position
-        Space_Vector sampled_pos = kernel.sample_position(site_pos, rng);
+        // Sample and verify still in fissionable region
+        Space_Vector new_pos = kernel.sample_position(site_pos, rng);
 
-        // Add the test statistic
-        test_mean[0] += sampled_pos[0];
-        test_mean[1] += sampled_pos[1];
-        test_mean[2] += sampled_pos[2];
-        test_var[0] += sampled_pos[0]*sampled_pos[0];
-        test_var[1] += sampled_pos[1]*sampled_pos[1];
-        test_var[2] += sampled_pos[2]*sampled_pos[2];
-
-        // Do the heuristic sample (using the FISSION_SITE method)
-        ref_mean[0] += site_pos[0];
-        ref_mean[1] += site_pos[1];
-        double eps = 0.0;
-        double ran1 = 2.0 * rng.ran() - 1.0;
-        double ran2 = 2.0 * rng.ran() - 1.0;
-        double ran3 = 2.0 * rng.ran() - 1.0;
-        if (std::fabs(ran3) >= std::fabs(ran2) &&
-            std::fabs(ran3) >= std::fabs(ran1))
-        {
-            eps = ran2;
-        }
-        else
-        {
-            eps = ran3;
-        }
-        double new_z = site_pos[2] + bandwidth*eps/2.0;
-        // If outside boundary, use original site
-        if (new_z < 0.0 || new_z > 14.28)
-            new_z = site_pos[2];
-        ref_mean[2] += new_z;
-        ref_var[0]  += site_pos[0] * site_pos[0];
-        ref_var[1]  += site_pos[1] * site_pos[1];
-        ref_var[2]  += new_z*new_z;
+        EXPECT_TRUE(b_physics->is_fissionable(b_geometry->matid(new_pos)));
     }
-
-    // Normalize statistics
-    for (int i = 0; i < 3; ++i)
-    {
-        test_mean[i] /= 1000.0;
-        test_var[i]  /= 999.0;
-        ref_mean[i]  /= 1000.0;
-        ref_var[i]   /= 999.0;
-    }
-
-    EXPECT_VEC_SOFTEQ(ref_mean, test_mean, 1.0e-2);
-    EXPECT_VEC_SOFTEQ(ref_var, test_var, 3.0e-2);
 }
 
 //---------------------------------------------------------------------------//
-
-TEST_F(KernelTest, heuristic_test_bandwidth_rej)
+TEST_F(KernelTest, cell_rejection_test)
 {
-    // For this test, we're simply going to try sampling from near the
-    // boundary
+    // Create random number generator
+    profugus::RNG rng = b_rcon->rng();
+
     // Create a KDE kernel
     KDE_Kernel_Resample kernel(b_geometry, b_physics,
-                               KDE_Kernel_Resample::FISSION_REJECTION);
+                               KDE_Kernel_Resample::CELL_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
-    kernel.set_bandwidth(bandwidth);
-
-    // Create random number generator
-    RNG_Control::RNG rng = b_rcon->rng();
-
+    for (int c = 0; c < b_geometry->num_cells(); ++c)
     {
-        // Try sampling from near the bottom boundary
-        Space_Vector site_pos(0.0, 0.0, 1.0);
-        Space_Vector new_pos = kernel.sample_position(site_pos, rng);
-        EXPECT_SOFTEQ(0.0, new_pos[0], 1.0e-6);
-        EXPECT_SOFTEQ(0.0, new_pos[1], 1.0e-6);
-        EXPECT_SOFTEQ(1.0, new_pos[2], 1.0e-6);
+        kernel.set_bandwidth(c, bandwidth);
     }
 
+    // Create fission sites
+    std::vector<Space_Vector> fission_sites;
+    for (unsigned int i = 0; i < 1000; ++i)
     {
-        // Try sampling from near the top boundary
-        Space_Vector site_pos(0.0, 0.0, 14.0);
+        // Create a fission site within the top-right pin
+        // Sample the position
+        Space_Vector site_pos(0.0, 0.0, 0.0);
+        do
+        {
+            site_pos[0] = rng.ran()*0.54 + 0.36;
+            site_pos[1] = rng.ran()*0.54 + 1.62;
+            site_pos[2] = rng.ran()*14.28;
+        } while (!is_in_pin(site_pos));
+
+        auto orig_cellid = b_geometry->cell(site_pos);
+
+        // Sample and verify still in fissionable region
         Space_Vector new_pos = kernel.sample_position(site_pos, rng);
-        EXPECT_SOFTEQ(0.0,  new_pos[0], 1.0e-6);
-        EXPECT_SOFTEQ(0.0,  new_pos[1], 1.0e-6);
-        EXPECT_SOFTEQ(14.0, new_pos[2], 1.0e-6);
+
+        auto new_cellid = b_geometry->cell(new_pos);
+
+        EXPECT_EQ(orig_cellid, new_cellid);
     }
 }
-#endif
 
 //---------------------------------------------------------------------------//
 //                        end of tstKDE_Kernel_Resample.cc
