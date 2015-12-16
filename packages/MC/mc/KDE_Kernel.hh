@@ -27,7 +27,7 @@ namespace profugus
 //===========================================================================//
 /*!
  * \class KDE_Kernel
- * \brief Samples a KDE position.
+ * \brief Base class for sampling from a KDE.
  */
 /*!
  * \example mc/test/tstKDE_Kernel.cc
