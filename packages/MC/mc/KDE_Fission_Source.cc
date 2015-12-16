@@ -45,11 +45,19 @@ KDE_Fission_Source::KDE_Fission_Source(RCP_Std_DB     db,
     double coeff    = kde_db.get<double>("bnd_coeff", 1.06);
     double exponent = kde_db.get<double>("bnd_exp", -0.20);
 
-    if (kernel_type == "resample")
+    if (kernel_type == "fission_rejection")
     {
         // Instantiate the resample kernel
-        d_kernel = std::make_shared<KDE_Kernel_Resample>(geometry, physics,
-                                                         coeff, exponent);
+        d_kernel = std::make_shared<KDE_Kernel_Resample>(
+            geometry, physics, KDE_Kernel_Resample::FISSION_REJECTION,
+            coeff, exponent);
+    }
+    else if (kernel_type == "cell_rejection")
+    {
+        // Instantiate the resample kernel
+        d_kernel = std::make_shared<KDE_Kernel_Resample>(
+            geometry, physics, KDE_Kernel_Resample::CELL_REJECTION,
+            coeff, exponent);
     }
     else
     {
