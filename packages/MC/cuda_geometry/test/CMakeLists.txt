@@ -26,6 +26,7 @@ SET(SOURCES
 
 SET(CUDA_SOURCES
   Cartesian_Mesh_Tester.cu
+  Mesh_Geometry_Tester.cu
 )
 
 PACKAGE_ADD_CUDA_LIBRARY(
@@ -41,6 +42,7 @@ SET(DEPS DEPLIBS mc_cuda_geometry_test_cuda)
 #SET(DEPS ${DEPS} mc_cuda_geometry_test)
 
 ADD_UTILS_TEST(tstCartesian_Mesh_cuda.cc        NP 1 ${DEPS})
+ADD_UTILS_TEST(tstMesh_Geometry_cuda.cc         NP 1 ${DEPS})
 
 ##---------------------------------------------------------------------------##
 ##                        end of cuda_utils/test/CMakeLists.txt
