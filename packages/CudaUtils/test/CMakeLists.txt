@@ -39,6 +39,7 @@ IF(USE_CUDA)
     Run_Launch_Args.pt.cu
     Polyglot_Kernel.cu
     Profiler_Kernel.cu
+    Shared_Device_Ptr_Tester.cu
     Stream_Test_Kernel.cu
     Texture_Vector_Test_Kernel.cu
     )
@@ -61,7 +62,6 @@ ENDIF()
 ADD_UTILS_TEST(tstAtomic_Add.cc           NP 1 ${DEPS})
 ADD_UTILS_TEST(tstAtomic_Lock.cc          NP 1 ${DEPS})
 ADD_UTILS_TEST(tstBLAS.cc                 NP 1        )
-ADD_UTILS_TEST(tstCuda_RNG.cc             NP 1        )
 ADD_UTILS_TEST(tstDevice_Vector.cc        NP 1 ${DEPS})
 ADD_UTILS_TEST(tstEvent.cc                NP 1 ${DEPS})
 ADD_UTILS_TEST(tstHardware.cc             NP 1        )
@@ -70,6 +70,7 @@ ADD_UTILS_TEST(tstLaunch_Args.cc          NP 1 ${DEPS})
 ADD_UTILS_TEST(tstMulti_Vector.cc         NP 1 ${DEPS})
 ADD_UTILS_TEST(tstPseudo_Cuda.cc          NP 1 ${DEPS})
 ADD_UTILS_TEST(tstPseudo_Cuda_Polyglot.cc NP 1 ${DEPS})
+ADD_UTILS_TEST(tstShared_Device_Ptr.cc    NP 1 ${DEPS})
 ADD_UTILS_TEST(tstStream.cc               NP 1 ${DEPS})
 ADD_UTILS_TEST(tstTexture_Vector.cc       NP 1 ${DEPS})
 
