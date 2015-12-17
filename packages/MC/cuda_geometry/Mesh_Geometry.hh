@@ -71,7 +71,7 @@ class Mesh_Geometry
     {
         d_matid_vec =
             std::make_shared<Dev_Matid_Vec>(profugus::make_view(matids));
-        d_matids = d_matid_vec->data();
+        dd_matids = d_matid_vec->data();
     }
 
     //! Access the underlying mesh directly
@@ -146,7 +146,7 @@ class Mesh_Geometry
     {
         REQUIRE(cell(state) < num_cells());
 
-        return d_matids[cell(state)];
+        return dd_matids[cell(state)];
     }
 
     //! Return the state with respect to outer geometry boundary
@@ -250,7 +250,7 @@ class Mesh_Geometry
     Cartesian_Mesh d_mesh;
 
     SP_Dev_Matid_Vec d_matid_vec;
-    matid_type *d_matids;
+    matid_type *dd_matids;
 };
 
 //---------------------------------------------------------------------------//

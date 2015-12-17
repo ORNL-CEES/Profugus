@@ -50,24 +50,28 @@ class Cartesian_Mesh
     typedef profugus::geometry::cell_type cell_type;
     typedef cuda::Space_Vector            Space_Vector;
     typedef cuda::Coordinates             Coordinates;
+    typedef std::vector<double>           Vec_Dbl;
+    typedef cuda::arch::Device            Arch;
 
-    typedef std::vector<double>                Vec_Dbl;
-    typedef cuda::arch::Device                 Arch;
-    typedef cuda::Device_Vector<Arch,double>   Dbl_Vec;
-    typedef cuda::Device_Vector<Arch,int>      Int_Vec;
-    typedef std::shared_ptr<Dbl_Vec>           SP_Dbl_Vec;
+    template <class T>
+    using Device_Vector = cuda::Device_Vector<Arch,T>;
+
+    template <class T>
+    using SP = std::shared_ptr<T>;
     //@}
 
   private:
     // >>> DATA
 
     // Cell edges.
-    Dbl_Vec d_x_edges_vec;
-    Dbl_Vec d_y_edges_vec;
-    Dbl_Vec d_z_edges_vec;
-    double *d_x_edges;
-    double *d_y_edges;
-    double *d_z_edges;
+    Device_Vector<double> d_x_edges_vec;
+    Device_Vector<double> d_y_edges_vec;
+    Device_Vector<double> d_z_edges_vec;
+
+    // On-device pointers
+    double *dd_x_edges;
+    double *dd_y_edges;
+    double *dd_z_edges;
 
     // Number of cells along each dimension
     int d_cells_x;
@@ -81,10 +85,13 @@ class Cartesian_Mesh
     dim_type d_dimension;
 
     // Cell volumes
-    SP_Dbl_Vec d_volumes_vec;
-    double *d_volumes;
+    SP<Device_Vector<double> > d_volumes_vec;
+
+    // On-device pointer
+    double *dd_volumes;
 
   public:
+
     // Construct from xyz edges.
     Cartesian_Mesh(const Vec_Dbl& x_edges, const Vec_Dbl& y_edges,
                    const Vec_Dbl& z_edges);
@@ -115,11 +122,11 @@ class Cartesian_Mesh
     {
         REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
-            return d_x_edges;
+            return dd_x_edges;
         else if( d == def::J )
-            return d_y_edges;
+            return dd_y_edges;
         else if( d == def::K )
-            return d_z_edges;
+            return dd_z_edges;
         return 0;
     }
 
@@ -164,7 +171,7 @@ class Cartesian_Mesh
     __device__ inline double volume(cell_type global_cell) const
     {
         REQUIRE( global_cell < d_num_cells );
-        return d_volumes[global_cell];
+        return dd_volumes[global_cell];
     }
 
     // >>> SPATIAL LOCATION
@@ -186,18 +193,18 @@ class Cartesian_Mesh
         const double *edges_end;
         if( axis == def::I )
         {
-            edges_start = d_x_edges;
-            edges_end   = d_x_edges+d_cells_x;
+            edges_start = dd_x_edges;
+            edges_end   = dd_x_edges+d_cells_x;
         }
         if( axis == def::J )
         {
-            edges_start = d_y_edges;
-            edges_end   = d_y_edges+d_cells_y;
+            edges_start = dd_y_edges;
+            edges_end   = dd_y_edges+d_cells_y;
         }
         if( axis == def::K )
         {
-            edges_start = d_z_edges;
-            edges_end   = d_z_edges+d_cells_z;
+            edges_start = dd_z_edges;
+            edges_end   = dd_z_edges+d_cells_z;
         }
         return cuda::utility::lower_bound(edges_start,edges_end,r)
             - edges_start - 1;
@@ -208,11 +215,11 @@ class Cartesian_Mesh
     {
         REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
-            return d_x_edges[0];
+            return dd_x_edges[0];
         else if( d == def::J )
-            return d_y_edges[0];
+            return dd_y_edges[0];
         else if( d == def::K )
-            return d_z_edges[0];
+            return dd_z_edges[0];
         return CUDART_NAN;
     }
 
@@ -221,11 +228,11 @@ class Cartesian_Mesh
     {
         REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
-            return d_x_edges[d_cells_x];
+            return dd_x_edges[d_cells_x];
         else if( d == def::J )
-            return d_y_edges[d_cells_y];
+            return dd_y_edges[d_cells_y];
         else if( d == def::K )
-            return d_z_edges[d_cells_z];
+            return dd_z_edges[d_cells_z];
         return CUDART_NAN;
     }
 };

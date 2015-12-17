@@ -41,9 +41,9 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
     REQUIRE( d_cells_z > 0 );
 
     // Get raw pointers from device vectors
-    d_x_edges = d_x_edges_vec.data();
-    d_y_edges = d_y_edges_vec.data();
-    d_z_edges = d_z_edges_vec.data();
+    dd_x_edges = d_x_edges_vec.data();
+    dd_y_edges = d_y_edges_vec.data();
+    dd_z_edges = d_z_edges_vec.data();
 
     INSIST(profugus::is_sorted(x_edges.begin(), x_edges.end()),
            "Mesh along x axis is not monotonically increasing.");
@@ -74,9 +74,9 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
             }
         }
     }
-    d_volumes_vec = std::make_shared<Dbl_Vec>(d_num_cells);
+    d_volumes_vec = std::make_shared<Device_Vector<double> >(d_num_cells);
     d_volumes_vec->assign(host_volumes);
-    d_volumes = d_volumes_vec->data();
+    dd_volumes = d_volumes_vec->data();
 
     ENSURE(d_num_cells >= 1);
 }
