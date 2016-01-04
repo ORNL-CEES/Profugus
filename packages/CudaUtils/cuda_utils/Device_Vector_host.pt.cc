@@ -17,6 +17,7 @@ typedef arch::Host Arch_t;
 template class Device_Vector<Arch_t,float>;
 template class Device_Vector<Arch_t,double>;
 template class Device_Vector<Arch_t,int>;
+template class Device_Vector<Arch_t,unsigned int>;
 
 template void device_to_host(
         const Device_Vector<Arch_t,float>&,
@@ -27,6 +28,9 @@ template void device_to_host(
 template void device_to_host(
         const Device_Vector<Arch_t,int>&,
         profugus::View_Field<int>);
+template void device_to_host(
+        const Device_Vector<Arch_t,unsigned int>&,
+        profugus::View_Field<unsigned int>);
 
 template void device_to_host(
         const Device_Vector<Arch_t,float>&,
@@ -37,6 +41,9 @@ template void device_to_host(
 template void device_to_host(
         const Device_Vector<Arch_t,int>&,
         Host_Vector<int>&);
+template void device_to_host(
+        const Device_Vector<Arch_t,unsigned int>&,
+        Host_Vector<unsigned int>&);
 
 } // end namespace cuda
 

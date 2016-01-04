@@ -140,12 +140,40 @@ LIST(APPEND SOURCES ${DRIVER_SOURCES})
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 ##---------------------------------------------------------------------------##
+## Check for CUDA
+
+SET(USE_CUDA OFF)
+IF(${PROJECT_NAME}_ENABLE_CUDA)
+  MESSAGE(STATUS "Building ${PACKAGE_NAME} with CUDA support")
+  SET(USE_CUDA ON)
+ENDIF()
+
+SET(CUDA_HEADERS "")
+SET(CUDA_SOURCES "")
+IF(USE_CUDA)
+  FILE(GLOB CUDA_GEOMETRY_HEADERS cuda_geometry/*.hh)
+  SET(CUDA_GEOMETRY_SOURCES
+    cuda_geometry/Cartesian_Mesh.cu
+    cuda_geometry/Mesh_Geometry.cu
+    )
+  LIST(APPEND CUDDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
+  LIST(APPEND CUDA_SOURCES ${CUDA_GEOMETRY_SOURCES})
+ENDIF()
+
+##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
 
 TRIBITS_ADD_LIBRARY(
   MC
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
+
+IF(USE_CUDA)
+  PACKAGE_ADD_CUDA_LIBRARY(
+    MC_cuda
+    NOINSTALLHEADERS ${CUDA_HEADERS}
+    SOURCES ${CUDA_SOURCES})
+ENDIF()
 
 TRIBITS_ADD_EXECUTABLE(
   xmc
@@ -161,6 +189,11 @@ TRIBITS_ADD_EXECUTABLE(
 TRIBITS_ADD_TEST_DIRECTORIES(
   geometry/test
   mc/test)
+
+IF(USE_CUDA)
+  TRIBITS_ADD_TEST_DIRECTORIES(
+    cuda_geometry/test)
+ENDIF()
 
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP

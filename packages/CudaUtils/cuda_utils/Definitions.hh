@@ -36,6 +36,20 @@ struct Device
 //---------------------------------------------------------------------------//
 } // end namespace arch
 
+struct Coordinates
+{
+    int i;
+    int j;
+    int k;
+};
+
+struct Space_Vector
+{
+    double x;
+    double y;
+    double z;
+};
+
 //===========================================================================//
 } // end namespace cuda
 
