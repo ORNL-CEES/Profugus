@@ -71,8 +71,8 @@ class Shared_Device_Ptr
 	cudaMalloc( (void**) &device_object, sizeof(T) );
 	cudaMemcpy( device_object, &host_object, sizeof(T),
 		    cudaMemcpyHostToDevice );
-	d_device_ptr = 
-	    std::shared_ptr<T>( device_object, [](T* t){ cudaFree(t); } );
+	d_device_ptr = std::shared_ptr<T>( device_object, 
+					   [](T* t){ CudaCall(cudaFree(t)); } );
 #else
 	INSIST( false, "Shared_Device_Ptr can only be constructed with NVCC!" );
 #endif // end __NVCC__
