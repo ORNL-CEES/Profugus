@@ -21,6 +21,8 @@
 
 #include "Definitions.hh"
 
+#include "CudaMacros.hh"
+
 // Declare fields to avoid header propagation into CUDA kernel files
 namespace profugus
 {
@@ -149,6 +151,7 @@ class Device_Vector<arch::Device, T>
      * try to access the underlying data in host (CPU) code. To assign data
      * from the host, use the assign() function.
      */
+    PROFUGUS_HOST_DEVICE_FUNCTION
     pointer data()
     {
         d_is_initialized = true;
@@ -162,11 +165,21 @@ class Device_Vector<arch::Device, T>
      * try to access the underlying data in host (CPU) code. To copy the data
      * to the host, use the \c device_to_host function.
      */
+    PROFUGUS_HOST_DEVICE_FUNCTION
     const_pointer cdata() const
     {
         REQUIRE(d_is_initialized);
         return d_data;
     }
+
+    /*!
+     * \brief Access the underlying data for read-only on the GPU
+     *
+     * \warning This will always return a pointer to data on the device. Never
+     * try to access the underlying data in host (CPU) code. To copy the data
+     * to the host, use the \c device_to_host function.
+     */
+    PROFUGUS_HOST_DEVICE_FUNCTION
     const_pointer data() const { return cdata(); }
 
   private:
