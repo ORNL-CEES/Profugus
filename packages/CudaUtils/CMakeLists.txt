@@ -82,6 +82,19 @@ TRIBITS_ADD_LIBRARY(
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
 
+IF(USE_CUDA)
+  SET(CUDA_SOURCES
+    cuda_utils/SerialDenseDeviceMatrix.cu
+    cuda_utils/SerialDenseDeviceVector.cu
+    )
+
+  PACKAGE_ADD_CUDA_LIBRARY(
+    Profugus_cuda_utils_cuda
+    SOURCES ${CUDA_SOURCES}
+    DEPLIBS Profugus_cuda_utils
+    )
+ENDIF()
+
 #
 # Add test directory for this package
 #

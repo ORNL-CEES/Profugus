@@ -39,6 +39,7 @@ IF(USE_CUDA)
     Run_Launch_Args.pt.cu
     Polyglot_Kernel.cu
     Profiler_Kernel.cu
+    SerialDenseMatrixVector_Tester.cu
     Shared_Device_Ptr_Tester.cu
     Stream_Test_Kernel.cu
     Texture_Vector_Test_Kernel.cu
@@ -47,7 +48,7 @@ IF(USE_CUDA)
   PACKAGE_ADD_CUDA_LIBRARY(
     Profugus_cuda_utils_test_cuda
     SOURCES ${CUDA_SOURCES}
-    DEPLIBS Profugus_cuda_utils
+    DEPLIBS Profugus_cuda_utils Profugus_cuda_utils_cuda
     TESTONLY)
 ENDIF()
 
@@ -59,20 +60,21 @@ IF(USE_CUDA)
   SET(DEPS ${DEPS} Profugus_cuda_utils_test_cuda)
 ENDIF()
 
-ADD_UTILS_TEST(tstAtomic_Add.cc           NP 1 ${DEPS})
-ADD_UTILS_TEST(tstAtomic_Lock.cc          NP 1 ${DEPS})
-ADD_UTILS_TEST(tstBLAS.cc                 NP 1        )
-ADD_UTILS_TEST(tstDevice_Vector.cc        NP 1 ${DEPS})
-ADD_UTILS_TEST(tstEvent.cc                NP 1 ${DEPS})
-ADD_UTILS_TEST(tstHardware.cc             NP 1        )
-ADD_UTILS_TEST(tstHost_Vector.cc          NP 1 ${DEPS})
-ADD_UTILS_TEST(tstLaunch_Args.cc          NP 1 ${DEPS})
-ADD_UTILS_TEST(tstMulti_Vector.cc         NP 1 ${DEPS})
-ADD_UTILS_TEST(tstPseudo_Cuda.cc          NP 1 ${DEPS})
-ADD_UTILS_TEST(tstPseudo_Cuda_Polyglot.cc NP 1 ${DEPS})
-ADD_UTILS_TEST(tstShared_Device_Ptr.cc    NP 1 ${DEPS})
-ADD_UTILS_TEST(tstStream.cc               NP 1 ${DEPS})
-ADD_UTILS_TEST(tstTexture_Vector.cc       NP 1 ${DEPS})
+ADD_UTILS_TEST(tstAtomic_Add.cc                 NP 1 ${DEPS})
+ADD_UTILS_TEST(tstAtomic_Lock.cc                NP 1 ${DEPS})
+ADD_UTILS_TEST(tstBLAS.cc                       NP 1        )
+ADD_UTILS_TEST(tstDevice_Vector.cc              NP 1 ${DEPS})
+ADD_UTILS_TEST(tstEvent.cc                      NP 1 ${DEPS})
+ADD_UTILS_TEST(tstHardware.cc                   NP 1        )
+ADD_UTILS_TEST(tstHost_Vector.cc                NP 1 ${DEPS})
+ADD_UTILS_TEST(tstLaunch_Args.cc                NP 1 ${DEPS})
+ADD_UTILS_TEST(tstMulti_Vector.cc               NP 1 ${DEPS})
+ADD_UTILS_TEST(tstPseudo_Cuda.cc                NP 1 ${DEPS})
+ADD_UTILS_TEST(tstPseudo_Cuda_Polyglot.cc       NP 1 ${DEPS})
+ADD_UTILS_TEST(tstSerialDenseMatrixVector.cc    NP 1 ${DEPS})
+ADD_UTILS_TEST(tstShared_Device_Ptr.cc          NP 1 ${DEPS})
+ADD_UTILS_TEST(tstStream.cc                     NP 1 ${DEPS})
+ADD_UTILS_TEST(tstTexture_Vector.cc             NP 1 ${DEPS})
 
 IF(USE_CUDA)
   ADD_UTILS_TEST(tstBLAS_Handle.cc        NP 1        )
