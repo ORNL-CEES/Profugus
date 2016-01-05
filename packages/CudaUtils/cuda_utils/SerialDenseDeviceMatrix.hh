@@ -14,6 +14,7 @@
 #include <Teuchos_TwoDArray.hpp>
 
 #include "harness/DBC.hh"
+#include "CudaDBC.hh"
 #include "CudaMacros.hh"
 
 namespace cuda
@@ -39,30 +40,28 @@ class SerialDenseDeviceMatrix
     ~SerialDenseDeviceMatrix();
 
     // Get the number of rows. Host-accesible.
-    PROFUGUS_HOST_DEVICE_FUNCTION(
-	int num_rows() const { return d_num_rows; }
-	)
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    int num_rows() const { return d_num_rows; }
 
     // Get the number of columns. Host-accessible.
-    PROFUGUS_HOST_DEVICE_FUNCTION(
-	int num_cols() const { return d_num_cols; }
-	)
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    int num_cols() const { return d_num_cols; }
 
     // Const value accessor. Device-only.
-    PROFUGUS_DEVICE_FUNCTION(
-	const double& operator()( const int row, const int col ) const
-	{
-	    return d_data[row*d_num_cols + col];
-	}
-	)
+    PROFUGUS_DEVICE_FUNCTION
+    const double& operator()( const int row, const int col ) const
+    {
+	PROFUGUS_INSIST_ON_DEVICE;
+	return d_data[row*d_num_cols + col];
+    }
 
     // Non-const value accessor. Device-only.
-    PROFUGUS_DEVICE_FUNCTION(
-	double& operator()( const int row, const int col )
-	{
-	    return d_data[row*d_num_cols + col];
-	}
-	)
+    PROFUGUS_DEVICE_FUNCTION
+    double& operator()( const int row, const int col )
+    {
+	PROFUGUS_INSIST_ON_DEVICE;
+	return d_data[row*d_num_cols + col];
+    }
     
   private:
 

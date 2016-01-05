@@ -38,26 +38,24 @@ class SerialDenseDeviceVector
     ~SerialDenseDeviceVector();
 
     // Get the number of rows. Host-accesible.
-    PROFUGUS_HOST_DEVICE_FUNCTION(
-	int size() const { return d_size; }
-	)
-
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    int size() const { return d_size; }
 
     // Const value accessor. Device-only.
-    PROFUGUS_DEVICE_FUNCTION(
-	const double& operator()( const int i ) const
-	{
-	    return d_data[i];
-	}
-	)
+    PROFUGUS_DEVICE_FUNCTION
+    const double& operator()( const int i ) const
+    {
+	PROFUGUS_INSIST_ON_DEVICE;
+	return d_data[i];
+    }
 
     // Non-const value accessor. Device-only.
-    PROFUGUS_DEVICE_FUNCTION(
-	double& operator()( const int i )
-	{
-	    return d_data[i];
-	}
-	)
+    PROFUGUS_DEVICE_FUNCTION
+    double& operator()( const int i )
+    {
+	PROFUGUS_INSIST_ON_DEVICE;
+	return d_data[i];
+    }
     
   private:
 

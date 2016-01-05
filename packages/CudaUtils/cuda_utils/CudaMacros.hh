@@ -10,20 +10,29 @@
 #ifndef cuda_utils_CudaMacros_hh
 #define cuda_utils_CudaMacros_hh
 
+#include "CudaDBC.hh"
+
 //---------------------------------------------------------------------------//
-// Wrapper for device-only functions. Will only be visible to NVCC compiler.
+// Prefix for device-only functions.
 #ifdef __NVCC__
-#define PROFUGUS_DEVICE_FUNCTION(...) __device__ __VA_ARGS__
+#define PROFUGUS_DEVICE_FUNCTION __device__ 
 #else
-#define PROFUGUS_DEVICE_FUNCTION(...)
+#define PROFUGUS_DEVICE_FUNCTION
 #endif
 
-// Wrapper for host-device functions. Will be visible to both host compiler
-// and NVCC compiler.
+// Prefix for host-device functions.
 #ifdef __NVCC__
-#define PROFUGUS_HOST_DEVICE_FUNCTION(...) __host__ __device__ __VA_ARGS__
+#define PROFUGUS_HOST_DEVICE_FUNCTION __host__ __device__
 #else
-#define PROFUGUS_HOST_DEVICE_FUNCTION(...) __VA_ARGS__
+#define PROFUGUS_HOST_DEVICE_FUNCTION
+#endif
+
+// Insist only on the device.
+#ifdef __NVCC__
+#define PROFUGUS_INSIST_ON_DEVICE
+#else
+#define PROFUGUS_INSIST_ON_DEVICE \
+    do { INSIST(false,"Calling device code from host!"); } while(0)
 #endif
 
 //---------------------------------------------------------------------------//
