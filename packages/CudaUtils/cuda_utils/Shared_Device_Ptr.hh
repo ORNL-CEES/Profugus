@@ -38,9 +38,10 @@ class Shared_Device_Ptr
     { /* ... */ }
 
     //! Copy constructor.
-    Shared_Device_Ptr( const T& host_object )
+    Shared_Device_Ptr( const std::shared_ptr<T>& host_ptr )
+	: d_host_ptr( host_ptr )
     { 
-	copy_host_object_to_device( host_object ); 
+	copy_host_object_to_device(); 
     }
 
     //! Arugment constructor. Arguments must be for a valid constructor of
@@ -48,8 +49,8 @@ class Shared_Device_Ptr
     template<class ...Args>
     explicit Shared_Device_Ptr( Args&&... args )
     {
-	T host_object( std::forward<Args>(args)... );
-	copy_host_object_to_device( host_object ); 
+	d_host_ptr = std::make_shared<T>( std::forward<Args>(args)... );
+	copy_host_object_to_device(); 
     }
 
     //! Get the raw pointer to device data managed by this object.
@@ -58,21 +59,24 @@ class Shared_Device_Ptr
 
   private:
 
+    // Smart pointer to HOST data.
+    std::shared_ptr<T> d_host_ptr;
+
     // Smart pointer to DEVICE data.
     std::shared_ptr<T> d_device_ptr;
 
   private:
 
     // Copy a reference of T to the device.
-    void copy_host_object_to_device( const T& host_object )
+    void copy_host_object_to_device()
     {
 #ifdef __NVCC__
-	T* device_object;
-	cudaMalloc( (void**) &device_object, sizeof(T) );
-	cudaMemcpy( device_object, &host_object, sizeof(T),
+	T* device_ptr;
+	cudaMalloc( (void**) &device_ptr, sizeof(T) );
+	cudaMemcpy( device_ptr, d_host_ptr.get(), sizeof(T),
 		    cudaMemcpyHostToDevice );
-	d_device_ptr = std::shared_ptr<T>( device_object, 
-					   [](T* t){ CudaCall(cudaFree(t)); } );
+	d_device_ptr = 
+	    std::shared_ptr<T>( device_ptr, [](T* t){ cudaFree(t); } );
 #else
 	INSIST( false, "Shared_Device_Ptr can only be constructed with NVCC!" );
 #endif // end __NVCC__

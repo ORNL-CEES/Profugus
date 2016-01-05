@@ -14,8 +14,8 @@
 // Test kernel.
 __global__ void foo_kernel( Foo* foo )
 {
-    foo->d_dbl_data += 1.0;
-    foo->d_int_data += 1;
+    *(foo->d_dbl_data) += 1.0;
+    *(foo->d_int_data) += 1;
 }
 
 //---------------------------------------------------------------------------//
@@ -27,16 +27,48 @@ void foo_kernel_launch( Bar& bar )
 }
 
 //---------------------------------------------------------------------------//
+// Foo functions
+Foo::Foo( const double d, const int i )
+{
+    cudaMalloc( (void**) &d_dbl_data, sizeof(double) );
+    cudaMalloc( (void**) &d_int_data, sizeof(int) );
+
+    cudaMemcpy( d_dbl_data, &d, sizeof(double), cudaMemcpyHostToDevice );
+    cudaMemcpy( d_int_data, &i, sizeof(int), cudaMemcpyHostToDevice );
+}
+
+Foo::~Foo()
+{
+    cudaFree( d_dbl_data );
+    cudaFree( d_int_data );
+}
+
+double Foo::get_dbl_on_host() const
+{
+    double host_value = 0.0;
+    cudaMemcpy( 
+	&host_value, d_dbl_data, sizeof(double), cudaMemcpyDeviceToHost );
+    return host_value;
+}
+
+int Foo::get_int_on_host() const
+{
+    int host_value = 0.0;
+    cudaMemcpy( &host_value, d_int_data, sizeof(int), cudaMemcpyDeviceToHost );
+    return host_value;
+}
+
+//---------------------------------------------------------------------------//
 // Bar functions.
 Bar::Bar( const double d, const int i )
     : d_foo( d, i )
 { /* ... */ }
 
-Bar::Bar( const Foo& foo )
+Bar::Bar( const std::shared_ptr<Foo>& foo )
     : d_foo( foo )
 { /* ... */ }
 
-Foo Bar::get_foo_on_host()
+Foo Bar::get_foo_on_host() const
 {
     Foo foo;
     cudaMemcpy( &foo, d_foo.get_device_ptr(), sizeof(Foo),

@@ -9,10 +9,12 @@
 #ifndef cuda_utils_test_Shared_Device_Ptr_Tester_hh
 #define cuda_utils_test_Shared_Device_Ptr_Tester_hh
 
+#include <memory>
+
 #include "../cuda_utils/Shared_Device_Ptr.hh"
 
 //---------------------------------------------------------------------------//
-// Helper classes.
+// Helper classes to test deep/shallow copy.
 //---------------------------------------------------------------------------//
 class Foo
 {
@@ -20,14 +22,22 @@ class Foo
 
     Foo() { /* ... */ }
 
-    Foo( const double d, const int i )
-	: d_dbl_data( d )
-	, d_int_data( i )
-    { /* ... */ }
+    Foo( const double d, const int i );
+
+    ~Foo();
+
+    Foo( const Foo& foo ) = default;
+    Foo& operator=( const Foo& foo ) = default;
+
+    double get_dbl_on_host() const;
+
+    int get_int_on_host() const;
 
   public:
-    double d_dbl_data;
-    int d_int_data;
+
+    // DEVICE DATA
+    double* d_dbl_data;
+    int* d_int_data;
 };
 
 //---------------------------------------------------------------------------//
@@ -36,9 +46,9 @@ class Bar
   public:
     Bar( const double d, const int i );
 
-    Bar( const Foo& foo );
+    Bar( const std::shared_ptr<Foo>& foo );
 
-    Foo get_foo_on_host();
+    Foo get_foo_on_host() const;
 
     cuda::Shared_Device_Ptr<Foo> get_foo() { return d_foo; }
 
