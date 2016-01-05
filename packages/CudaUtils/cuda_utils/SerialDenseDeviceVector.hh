@@ -14,6 +14,7 @@
 #include <Teuchos_Array.hpp>
 
 #include "harness/DBC.hh"
+#include "CudaMacros.hh"
 
 namespace cuda
 {
@@ -37,38 +38,26 @@ class SerialDenseDeviceVector
     ~SerialDenseDeviceVector();
 
     // Get the number of rows. Host-accesible.
-#ifdef __NVCC__
-    __host__ __device__ 
-#endif
-    int size() const { return d_size; }
+    PROFUGUS_HOST_DEVICE_FUNCTION(
+	int size() const { return d_size; }
+	)
+
 
     // Const value accessor. Device-only.
-#ifdef __NVCC__
-    __device__ 
-#endif
-    const double& operator()( const int i ) const
-    {
-#ifdef __NVCC__
-	return d_data[i];
-#else
-	INSIST( false, "Tried to access vector data on host!" );
-	return d_data[0];
-#endif
-    }
+    PROFUGUS_DEVICE_FUNCTION(
+	const double& operator()( const int i ) const
+	{
+	    return d_data[i];
+	}
+	)
 
     // Non-const value accessor. Device-only.
-#ifdef __NVCC__
-    __device__ 
-#endif
-    double& operator()( const int i )
-    {
-#ifdef __NVCC__
-	return d_data[i];
-#else
-	INSIST( false, "Tried to access vector data on host!" );
-	return d_data[0];
-#endif
-    }
+    PROFUGUS_DEVICE_FUNCTION(
+	double& operator()( const int i )
+	{
+	    return d_data[i];
+	}
+	)
     
   private:
 
@@ -80,7 +69,7 @@ class SerialDenseDeviceVector
     // Length of vector.
     int d_size;
 
-    // Vector data.
+    // Vector data on the device.
     double* d_data;
 };
 

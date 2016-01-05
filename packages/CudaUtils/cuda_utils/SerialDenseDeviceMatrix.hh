@@ -14,6 +14,7 @@
 #include <Teuchos_TwoDArray.hpp>
 
 #include "harness/DBC.hh"
+#include "CudaMacros.hh"
 
 namespace cuda
 {
@@ -38,44 +39,30 @@ class SerialDenseDeviceMatrix
     ~SerialDenseDeviceMatrix();
 
     // Get the number of rows. Host-accesible.
-#ifdef __NVCC__
-    __host__ __device__ 
-#endif
-    int num_rows() const { return d_num_rows; }
+    PROFUGUS_HOST_DEVICE_FUNCTION(
+	int num_rows() const { return d_num_rows; }
+	)
 
     // Get the number of columns. Host-accessible.
-#ifdef __NVCC__
-    __host__ __device__ 
-#endif
-    int num_cols() const { return d_num_cols; }
+    PROFUGUS_HOST_DEVICE_FUNCTION(
+	int num_cols() const { return d_num_cols; }
+	)
 
     // Const value accessor. Device-only.
-#ifdef __NVCC__
-    __device__ 
-#endif
-    const double& operator()( const int row, const int col ) const
-    {
-#ifdef __NVCC__
-	return d_data[row*d_num_cols + col];
-#else
-	INSIST( false, "Tried to access matrix data on host!" );
-	return d_data[0];
-#endif
-    }
+    PROFUGUS_DEVICE_FUNCTION(
+	const double& operator()( const int row, const int col ) const
+	{
+	    return d_data[row*d_num_cols + col];
+	}
+	)
 
     // Non-const value accessor. Device-only.
-#ifdef __NVCC__
-    __device__ 
-#endif
-    double& operator()( const int row, const int col )
-    {
-#ifdef __NVCC__
-	return d_data[row*d_num_cols + col];
-#else
-	INSIST( false, "Tried to access matrix data on host!" );
-	return d_data[0];
-#endif
-    }
+    PROFUGUS_DEVICE_FUNCTION(
+	double& operator()( const int row, const int col )
+	{
+	    return d_data[row*d_num_cols + col];
+	}
+	)
     
   private:
 
@@ -90,7 +77,7 @@ class SerialDenseDeviceMatrix
     // Number of columns.
     int d_num_cols;
 
-    // Matrix data.
+    // Matrix data on the device.
     double* d_data;
 };
 
