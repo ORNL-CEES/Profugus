@@ -48,7 +48,7 @@ class Bar
 
     Bar( const std::shared_ptr<Foo>& foo );
 
-    Foo get_foo_on_host() const;
+    const std::shared_ptr<Foo>& get_foo_on_host() const;
 
     cuda::Shared_Device_Ptr<Foo> get_foo() { return d_foo; }
 

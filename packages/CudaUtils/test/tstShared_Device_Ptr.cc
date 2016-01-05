@@ -36,10 +36,10 @@ TEST_F(SharedDevicePtrTest, pointer_test)
     double v1 = 3.432l;
     int v2 = 4;
 
-    // Make a foo.
+    // Make a foo on the host.
     std::shared_ptr<Foo> foo = std::make_shared<Foo>( v1, v2 );
 
-    // Make some bars.
+    // Make some bars with the foo.
     Bar b1( foo );
     Bar b2 = b1;
     Bar b3 = b2;
@@ -49,10 +49,10 @@ TEST_F(SharedDevicePtrTest, pointer_test)
     foo_kernel_launch( b2 );
     foo_kernel_launch( b3 );
 
-    // Copy the foo back to the host and check the data.
-    Foo result = b1.get_foo_on_host();
-    EXPECT_EQ( v1 + 3.0, result.get_dbl_on_host() );
-    EXPECT_EQ( v2 + 3, result.get_int_on_host() );
+    // Check the data in the foo that was modified by the kernel.
+    std::shared_ptr<Foo> result = b1.get_foo_on_host();
+    EXPECT_EQ( v1 + 3.0, result->get_dbl_on_host() );
+    EXPECT_EQ( v2 + 3, result->get_int_on_host() );
 }
 
 //---------------------------------------------------------------------------//
@@ -63,7 +63,8 @@ TEST_F(SharedDevicePtrTest, argument_test)
     double v1 = 3.432l;
     int v2 = 4;
 
-    // Make some bars.
+    // Make some bars. This will make a foo with the argument constructor of
+    // the Shared_Device_Ptr.
     Bar b1( v1, v2 );
     Bar b2 = b1;
     Bar b3 = b2;
@@ -73,10 +74,10 @@ TEST_F(SharedDevicePtrTest, argument_test)
     foo_kernel_launch( b2 );
     foo_kernel_launch( b3 );
 
-    // Copy the foo back to the host and check the data.
-    Foo result = b1.get_foo_on_host();
-    EXPECT_EQ( v1 + 3.0, result.get_dbl_on_host() );
-    EXPECT_EQ( v2 + 3, result.get_int_on_host() );
+    // Check the data in the foo that was modified by the kernel.
+    std::shared_ptr<Foo> result = b1.get_foo_on_host();
+    EXPECT_EQ( v1 + 3.0, result->get_dbl_on_host() );
+    EXPECT_EQ( v2 + 3, result->get_int_on_host() );
 }
 
 //---------------------------------------------------------------------------//

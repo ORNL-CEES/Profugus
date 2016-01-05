@@ -25,8 +25,18 @@ namespace cuda
  *
  * \brief Manage a pointer to an object on the device with a shared_ptr.
  *
- * Shared_Device_Ptr will manage a COPY of a device object. It will not mirror
- * an equivalent host object.
+ * Shared_Device_Ptr will manage a SHALLOW COPY of a host object on the
+ * device. This means a host copy can manage device data automatically and we
+ * can pass the device copy around to kernels without deallocating that
+ * memory. When the device copy is done being used (i.e. this class destructor
+ * is called) both the device copy will automatically be destroyed and the
+ * host copy reference count will be decremented (or destroyed if zero). This
+ * paradigm is most useful for managing C-style structs passed to CUDA kernels
+ * (i.e. those with plain-old-data or raw pointers to device data).
+ *
+ * Shared_Device_Ptr may only be constructed from CUDA code as it is meant to
+ * copy data to the device and manage the deallocation of that data on the
+ * device.
  */
 template<class T>
 class Shared_Device_Ptr
@@ -38,10 +48,10 @@ class Shared_Device_Ptr
     { /* ... */ }
 
     //! Copy constructor.
-    Shared_Device_Ptr( const std::shared_ptr<T>& host_ptr )
+    explicit Shared_Device_Ptr( const std::shared_ptr<T>& host_ptr )
 	: d_host_ptr( host_ptr )
     { 
-	copy_host_object_to_device(); 
+	shallow_copy_host_object_to_device(); 
     }
 
     //! Arugment constructor. Arguments must be for a valid constructor of
@@ -50,8 +60,12 @@ class Shared_Device_Ptr
     explicit Shared_Device_Ptr( Args&&... args )
     {
 	d_host_ptr = std::make_shared<T>( std::forward<Args>(args)... );
-	copy_host_object_to_device(); 
+	shallow_copy_host_object_to_device(); 
     }
+
+    //! Get the shared pointer to host data managed by this object.
+    inline std::shared_ptr<T>& get_host_ptr() { return d_host_ptr; }
+    inline const std::shared_ptr<T>& get_host_ptr() const { return d_host_ptr; }
 
     //! Get the raw pointer to device data managed by this object.
     inline T* get_device_ptr() { return d_device_ptr.get(); }
@@ -59,16 +73,16 @@ class Shared_Device_Ptr
 
   private:
 
-    // Smart pointer to HOST data.
+    // Smart pointer to HOST object.
     std::shared_ptr<T> d_host_ptr;
 
-    // Smart pointer to DEVICE data.
+    // Smart pointer to the shallow copy of the object on the DEVICE.
     std::shared_ptr<T> d_device_ptr;
 
   private:
 
-    // Copy a reference of T to the device.
-    void copy_host_object_to_device()
+    // Shallow copy the host object to the device.
+    void shallow_copy_host_object_to_device()
     {
 #ifdef __NVCC__
 	T* device_ptr;

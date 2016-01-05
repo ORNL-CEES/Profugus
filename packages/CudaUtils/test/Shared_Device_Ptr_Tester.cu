@@ -68,12 +68,9 @@ Bar::Bar( const std::shared_ptr<Foo>& foo )
     : d_foo( foo )
 { /* ... */ }
 
-Foo Bar::get_foo_on_host() const
+const std::shared_ptr<Foo>& Bar::get_foo_on_host() const
 {
-    Foo foo;
-    cudaMemcpy( &foo, d_foo.get_device_ptr(), sizeof(Foo),
-		cudaMemcpyDeviceToHost );
-    return foo;
+    return d_foo.get_host_ptr();
 }
 
 //---------------------------------------------------------------------------//
