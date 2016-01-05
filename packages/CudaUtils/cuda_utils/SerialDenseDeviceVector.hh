@@ -15,6 +15,7 @@
 
 #include "harness/DBC.hh"
 #include "CudaMacros.hh"
+#include "CudaDBC.hh"
 
 namespace cuda
 {
@@ -46,6 +47,7 @@ class SerialDenseDeviceVector
     const double& operator()( const int i ) const
     {
 	PROFUGUS_INSIST_ON_DEVICE;
+	REQUIRE( i < d_size );
 	return d_data[i];
     }
 
@@ -54,6 +56,7 @@ class SerialDenseDeviceVector
     double& operator()( const int i )
     {
 	PROFUGUS_INSIST_ON_DEVICE;
+	REQUIRE( i < d_size );
 	return d_data[i];
     }
     

@@ -52,6 +52,8 @@ class SerialDenseDeviceMatrix
     const double& operator()( const int row, const int col ) const
     {
 	PROFUGUS_INSIST_ON_DEVICE;
+	REQUIRE( row < d_num_rows );
+	REQUIRE( col < d_num_cols );
 	return d_data[row*d_num_cols + col];
     }
 
@@ -60,6 +62,8 @@ class SerialDenseDeviceMatrix
     double& operator()( const int row, const int col )
     {
 	PROFUGUS_INSIST_ON_DEVICE;
+	REQUIRE( row < d_num_rows );
+	REQUIRE( col < d_num_cols );
 	return d_data[row*d_num_cols + col];
     }
     
