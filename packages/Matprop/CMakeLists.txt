@@ -78,6 +78,11 @@ INSTALL(FILES ${XS_HEADERS} DESTINATION include/Matprop/xs)
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/config.h DESTINATION include/Matprop)
 
+FILE(GLOB CUDA_XS_HEADERS cuda_xs/*.hh)
+LIST(APPEND HEADERS ${CUDA_XS_HEADERS})
+LIST(APPEND SOURCES ${CUDA_XS_SOURCES})
+INSTALL(FILES ${CUDA_XS_HEADERS} DESTINATION include/Matprop/cuda_xs)
+
 ##---------------------------------------------------------------------------##
 ## LIBRARY AND INSTALL TARGETS
 
@@ -85,6 +90,18 @@ TRIBITS_ADD_LIBRARY(
   Matprop
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
+
+IF(USE_CUDA)
+  SET(CUDA_SOURCES
+    cuda_xs/XS_Device.cu
+    )
+
+  PACKAGE_ADD_CUDA_LIBRARY(
+    Profugus_Matprop_cuda
+    SOURCES ${CUDA_SOURCES}
+    DEPLIBS Profugus_Matprop
+    )
+ENDIF()
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package

@@ -11,7 +11,7 @@
 #ifndef cuda_utils_SerialDenseDeviceMatrix_hh
 #define cuda_utils_SerialDenseDeviceMatrix_hh
 
-#include <Teuchos_TwoDArray.hpp>
+#include <Teuchos_Array.hpp>
 
 #include "CudaDBC.hh"
 #include "CudaMacros.hh"
@@ -22,7 +22,7 @@ namespace cuda
 //---------------------------------------------------------------------------//
 /*!
  * \class SerialDenseDeviceMatrix
- * \brief Device matrix in ROW-MAJOR order for scattering data.
+ * \brief Device matrix in COLUMN-MAJOR order for scattering data.
  */
 class SerialDenseDeviceMatrix
 {
@@ -34,7 +34,9 @@ class SerialDenseDeviceMatrix
 			     const double fill_value = 0.0 );
 
     // Host data constructor.
-    SerialDenseDeviceMatrix( const Teuchos::TwoDArray<double>& host_data );
+    SerialDenseDeviceMatrix( const int num_rows, 
+			     const int num_cols,
+			     const Teuchos::Array<double>& host_data );
 
     // Device data constructor.
     SerialDenseDeviceMatrix( const int num_rows, 
@@ -60,7 +62,7 @@ class SerialDenseDeviceMatrix
 	PROFUGUS_INSIST_ON_DEVICE;
 	REQUIRE( row < d_num_rows );
 	REQUIRE( col < d_num_cols );
-	return d_data[row*d_num_cols + col];
+	return d_data[col*d_num_rows + row];
     }
 
     // Non-const value accessor. Device-only.
@@ -70,13 +72,13 @@ class SerialDenseDeviceMatrix
 	PROFUGUS_INSIST_ON_DEVICE;
 	REQUIRE( row < d_num_rows );
 	REQUIRE( col < d_num_cols );
-	return d_data[row*d_num_cols + col];
+	return d_data[col*d_num_rows + row];
     }
     
   private:
 
     // Allocate and copy host data to the device.
-    void allocate_and_copy( const Teuchos::TwoDArray<double>& host_data );
+    void allocate_and_copy( const Teuchos::Array<double>& host_data );
 
   private:
 

@@ -36,13 +36,13 @@ TEST_F(SerialDenseMatrixVectorTest, pointer_test)
 {
     int N = 1000;
 
-    // Make a matrix.
-    Teuchos::TwoDArray<double> A( N, N );
+    // Make a matrix with COLUMN-MAJOR ORDER.
+    Teuchos::Array<double> A( N*N );
     for ( int i = 0; i < N; ++i )
     {
 	for ( int j = 0; j < N; ++j )
 	{
-	    A(i,j) = i;
+	    A[j*N + i] = i;
 	}
     }
 

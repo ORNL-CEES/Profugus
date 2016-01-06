@@ -30,9 +30,11 @@ SerialDenseDeviceMatrix::SerialDenseDeviceMatrix( const int num_rows,
 //---------------------------------------------------------------------------//
 // Host-data constructor.
 SerialDenseDeviceMatrix::SerialDenseDeviceMatrix( 
-    const Teuchos::TwoDArray<double>& host_data )
-    : d_num_rows( host_data.getNumRows() )
-    , d_num_cols( host_data.getNumCols() )
+    const int num_rows,
+    const int num_cols,
+    const Teuchos::Array<double>& host_data )
+    : d_num_rows( num_rows )
+    , d_num_cols( num_cols )
     , d_owns_mem( true )
 {
     allocate_and_copy( host_data );
@@ -67,7 +69,7 @@ void SerialDenseDeviceMatrix::allocate_and_copy(
 {
     int mem_size = d_num_rows*d_num_cols*sizeof(double);
     cudaMalloc( (void**) &d_data, mem_size );
-    cudaMemcpy( d_data, host_data.getDataArray().getRawPtr(), mem_size,
+    cudaMemcpy( d_data, host_data.getRawPtr(), mem_size,
 		cudaMemcpyHostToDevice );
 }
 

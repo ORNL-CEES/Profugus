@@ -12,6 +12,8 @@
 
 #include "../XS.hh"
 
+#include "XS_Device_Tester.hh"
+
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
@@ -131,10 +133,6 @@ class XS_Test : public testing::Test
 
 TEST_F(XS_Test, totals_assignment)
 {
-    EXPECT_EQ(1, xs.pn_order());
-    EXPECT_EQ(4, xs.num_groups());
-    EXPECT_EQ(0, xs.num_mat());
-
     xs.add(1, XS::TOTAL, m1_sig);
 
     xs.add(5, XS::TOTAL, m5_sig);
@@ -142,33 +140,16 @@ TEST_F(XS_Test, totals_assignment)
     xs.add(5, XS::NU_SIG_F, nusigf);
     xs.add(5, XS::CHI, chi);
 
-    EXPECT_EQ(0, xs.num_mat());
-
     xs.complete();
 
-    EXPECT_EQ(4, xs.velocities().length());
-    const auto &v = xs.velocities();
-    for (int g = 0; g < 4; ++g)
-    {
-        EXPECT_EQ(0.0, v[g]);
-    }
-
-    EXPECT_EQ(2, xs.num_mat());
-    EXPECT_EQ(1, xs.pn_order());
-    EXPECT_EQ(4, xs.num_groups());
-
-    EXPECT_TRUE(xs.has(1));
-    EXPECT_TRUE(xs.has(5));
-
-    Vec_Int mids;
-    xs.get_matids(mids);
-    EXPECT_EQ(2, mids.size());
-    EXPECT_EQ(1, mids[0]);
-    EXPECT_EQ(5, mids[1]);
+    XS_Device_Tester xs_device( xs );
+    EXPECT_EQ(2, xs_device.num_mat());
+    EXPECT_EQ(1, xs_device.pn_order());
+    EXPECT_EQ(4, xs_device.num_groups());
 
     // material 1
     {
-        const Vector &sigt = xs.vector(1, XS::TOTAL);
+        const Vector &sigt = xs_device.vector(1, XS::TOTAL);
         EXPECT_EQ(4, sigt.length());
 
         EXPECT_EQ(2.0, sigt(0));
@@ -178,7 +159,7 @@ TEST_F(XS_Test, totals_assignment)
 
         for (int t = 1; t < XS::END_XS_TYPES; ++t)
         {
-            const Vector &sig = xs.vector(1, t);
+            const Vector &sig = xs_device.vector(1, t);
             EXPECT_EQ(4, sig.length());
             for (int g = 0; g < 4; ++g)
             {
@@ -189,7 +170,7 @@ TEST_F(XS_Test, totals_assignment)
 
     // material 5
     {
-        const Vector &sigt = xs.vector(5, XS::TOTAL);
+        const Vector &sigt = xs_device.vector(5, XS::TOTAL);
         EXPECT_EQ(4, sigt.length());
 
         EXPECT_EQ(20.0, sigt(0));
@@ -197,7 +178,7 @@ TEST_F(XS_Test, totals_assignment)
         EXPECT_EQ(40.0, sigt(2));
         EXPECT_EQ(50.0, sigt(3));
 
-        const Vector &sigf = xs.vector(5, XS::SIG_F);
+        const Vector &sigf = xs_device.vector(5, XS::SIG_F);
         EXPECT_EQ(4, sigf.length());
 
         EXPECT_EQ(11.0, sigf(0));
@@ -205,7 +186,7 @@ TEST_F(XS_Test, totals_assignment)
         EXPECT_EQ(13.0, sigf(2));
         EXPECT_EQ(14.0, sigf(3));
 
-        const Vector &nusigf = xs.vector(5, XS::NU_SIG_F);
+        const Vector &nusigf = xs_device.vector(5, XS::NU_SIG_F);
         EXPECT_EQ(4, nusigf.length());
 
         EXPECT_EQ(2.4*11.0, nusigf(0));
@@ -213,7 +194,7 @@ TEST_F(XS_Test, totals_assignment)
         EXPECT_EQ(2.4*13.0, nusigf(2));
         EXPECT_EQ(2.4*14.0, nusigf(3));
 
-        const Vector &chi = xs.vector(5, XS::CHI);
+        const Vector &chi = xs_device.vector(5, XS::CHI);
         EXPECT_EQ(4, chi.length());
 
         EXPECT_EQ(0.6, chi(0));
@@ -222,12 +203,15 @@ TEST_F(XS_Test, totals_assignment)
         EXPECT_EQ(0.0, chi(3));
     }
 
+    Vec_Int mids;
+    xs.get_matids(mids);
+
     for (int m = 0; m < 2; ++m)
     {
         int matid = mids[m];
         for (int n = 0; n < 1; ++n)
         {
-            const Matrix &sigs = xs.matrix(matid, n);
+            const Matrix &sigs = xs_device.matrix(matid, n);
             EXPECT_EQ(4, sigs.numRows());
             EXPECT_EQ(4, sigs.numCols());
             for (int g = 0; g < 4; ++g)
@@ -254,13 +238,14 @@ TEST_F(XS_Test, scat_assignment)
 
     xs.complete();
 
-    EXPECT_EQ(2, xs.num_mat());
-    EXPECT_EQ(1, xs.pn_order());
-    EXPECT_EQ(4, xs.num_groups());
+    XS_Device_Tester xs_device( xs );
+    EXPECT_EQ(2, xs_device.num_mat());
+    EXPECT_EQ(1, xs_device.pn_order());
+    EXPECT_EQ(4, xs_device.num_groups());
 
     // material 1
     {
-        const Vector &sigt = xs.vector(1, XS::TOTAL);
+        const Vector &sigt = xs_device.vector(1, XS::TOTAL);
         EXPECT_EQ(4, sigt.length());
 
         EXPECT_EQ(2.0, sigt(0));
@@ -268,8 +253,8 @@ TEST_F(XS_Test, scat_assignment)
         EXPECT_EQ(4.0, sigt(2));
         EXPECT_EQ(5.0, sigt(3));
 
-        const Matrix &p0 = xs.matrix(1, 0);
-        const Matrix &p1 = xs.matrix(1, 1);
+        const Matrix &p0 = xs_device.matrix(1, 0);
+        const Matrix &p1 = xs_device.matrix(1, 1);
         EXPECT_EQ(4, p0.numRows());
         EXPECT_EQ(4, p0.numCols());
         EXPECT_EQ(4, p1.numRows());
@@ -306,7 +291,7 @@ TEST_F(XS_Test, scat_assignment)
 
     // material 5
     {
-        const Vector &sigt = xs.vector(5, XS::TOTAL);
+        const Vector &sigt = xs_device.vector(5, XS::TOTAL);
         EXPECT_EQ(4, sigt.length());
 
         EXPECT_EQ(20.0, sigt(0));
@@ -314,8 +299,8 @@ TEST_F(XS_Test, scat_assignment)
         EXPECT_EQ(40.0, sigt(2));
         EXPECT_EQ(50.0, sigt(3));
 
-        const Matrix &p0 = xs.matrix(5, 0);
-        const Matrix &p1 = xs.matrix(5, 1);
+        const Matrix &p0 = xs_device.matrix(5, 0);
+        const Matrix &p1 = xs_device.matrix(5, 1);
         EXPECT_EQ(4, p0.numRows());
         EXPECT_EQ(4, p0.numCols());
         EXPECT_EQ(4, p1.numRows());
@@ -357,7 +342,7 @@ TEST_F(XS_Test, scat_assignment)
     {
         for (int t = 1; t < XS::END_XS_TYPES; ++t)
         {
-            const Vector &sig = xs.vector(mids[m], t);
+            const Vector &sig = xs_device.vector(mids[m], t);
             EXPECT_EQ(4, sig.length());
             for (int g = 0; g < 4; ++g)
             {

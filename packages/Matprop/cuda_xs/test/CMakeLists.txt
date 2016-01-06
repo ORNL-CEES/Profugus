@@ -1,31 +1,32 @@
 ##---------------------------------------------------------------------------##
-## xs/test/CMakeLists.txt
-## Thomas M. Evans
-## Tuesday December 3 20:32:38 2013
+## cuda_xs/test/CMakeLists.txt
+## Stuart Slattery
 ##---------------------------------------------------------------------------##
 
 INCLUDE(UtilsTest)
 
 ##---------------------------------------------------------------------------##
+## TEST LIBRARIES
+##---------------------------------------------------------------------------##
+
+IF(USE_CUDA)
+  SET(CUDA_SOURCES
+    XS_Device_Tester.cu
+    )
+
+  PACKAGE_ADD_CUDA_LIBRARY(
+    Profugus_cuda_xs_test_cuda
+    SOURCES ${CUDA_SOURCES}
+    DEPLIBS Profugus_Matprop Profugus_Matprop_cuda
+    TESTONLY)
+ENDIF()
+
+##---------------------------------------------------------------------------##
 ## TESTS
 ##---------------------------------------------------------------------------##
 
-ADD_UTILS_TEST(tstTeuchos.cc         NP 1    )
-ADD_UTILS_TEST(tstXS.cc              NP 1    )
-ADD_UTILS_TEST(tstMat_DB.cc          NP 1    )
-ADD_UTILS_TEST(tstEnergy_Collapse.cc NP 1    )
-ADD_UTILS_TEST(tstXS_Builder.cc      NP 1 2 4)
+ADD_UTILS_TEST(tstXS_Device.cc              NP 1    )
 
 ##---------------------------------------------------------------------------##
-## COPY FILES
-##---------------------------------------------------------------------------##
-
-TRIBITS_COPY_FILES_TO_BINARY_DIR(XS_CROSS_SECTION_XML
-  SOURCE_FILES xs3GP0.xml xs5GP1.xml
-  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-  DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-  EXEDEPS tstTeuchos tstXS_Builder tstMat_DB)
-
-##---------------------------------------------------------------------------##
-## end of xs/test/CMakeLists.txt
+## end of cuda_xs/test/CMakeLists.txt
 ##---------------------------------------------------------------------------##
