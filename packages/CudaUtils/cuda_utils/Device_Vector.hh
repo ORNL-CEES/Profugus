@@ -17,7 +17,7 @@
 #include <vector>
 #endif
 
-#include "harness/DBC.hh"
+#include "CudaDBC.hh"
 
 #include "Definitions.hh"
 

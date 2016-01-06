@@ -21,6 +21,7 @@ SerialDenseDeviceMatrix::SerialDenseDeviceMatrix( const int num_rows,
 						  const double fill_value )
     : d_num_rows( num_rows )
     , d_num_cols( num_cols )
+    , d_owns_mem( true )
 {
     Teuchos::TwoDArray<double> host_data( num_rows, num_cols, fill_value );
     allocate_and_copy( host_data );
@@ -32,15 +33,31 @@ SerialDenseDeviceMatrix::SerialDenseDeviceMatrix(
     const Teuchos::TwoDArray<double>& host_data )
     : d_num_rows( host_data.getNumRows() )
     , d_num_cols( host_data.getNumCols() )
+    , d_owns_mem( true )
 {
     allocate_and_copy( host_data );
 }
 
 //---------------------------------------------------------------------------//
+// Device data constructor.
+SerialDenseDeviceMatrix::SerialDenseDeviceMatrix( const int num_rows, 
+						  const int num_cols,
+						  const bool owns_mem,
+						  double* device_data )
+    : d_num_rows( num_rows )
+    , d_num_cols( num_cols )
+    , d_owns_mem( owns_mem )
+    , d_data( device_data )
+{ /* ... */ }
+
+//---------------------------------------------------------------------------//
 // Destructor. Prohibits copy construction and assignment.
 SerialDenseDeviceMatrix::~SerialDenseDeviceMatrix()
 {
-    cudaFree( d_data );
+    if ( d_owns_mem )
+    {
+	cudaFree( d_data );
+    }
 }
 
 //---------------------------------------------------------------------------//

@@ -19,6 +19,7 @@ namespace cuda
 SerialDenseDeviceVector::SerialDenseDeviceVector( const int size,
 						  const double fill_value )
     : d_size( size )
+    , d_owns_mem( true )
 {
     Teuchos::Array<double> host_data( size, fill_value );
     allocate_and_copy( host_data );
@@ -29,15 +30,29 @@ SerialDenseDeviceVector::SerialDenseDeviceVector( const int size,
 SerialDenseDeviceVector::SerialDenseDeviceVector( 
     const Teuchos::Array<double>& host_data )
     : d_size( host_data.size() )
+    , d_owns_mem( true )
 {
     allocate_and_copy( host_data );
 }
 
 //---------------------------------------------------------------------------//
+// Device data constructor.
+SerialDenseDeviceVector::SerialDenseDeviceVector( const int size,
+						  const bool owns_mem,
+						  double* device_data )
+    : d_size( size )
+    , d_owns_mem( owns_mem )
+    , d_data( device_data )
+{ /* ... */ }
+
+//---------------------------------------------------------------------------//
 // Destructor. Prohibits copy construction and assignment.
 SerialDenseDeviceVector::~SerialDenseDeviceVector()
 {
-    cudaFree( d_data );
+    if ( d_owns_mem )
+    {
+	cudaFree( d_data );
+    }
 }
 
 //---------------------------------------------------------------------------//

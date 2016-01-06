@@ -13,7 +13,6 @@
 
 #include <Teuchos_Array.hpp>
 
-#include "harness/DBC.hh"
 #include "CudaMacros.hh"
 #include "CudaDBC.hh"
 
@@ -32,8 +31,13 @@ class SerialDenseDeviceVector
     // Size constructor.
     SerialDenseDeviceVector( const int size, const double fill_value = 0.0 );
 
-    // Host-data constructor.
+    // Host data constructor.
     SerialDenseDeviceVector( const Teuchos::Array<double>& host_data );
+
+    // Device data constructor.
+    SerialDenseDeviceVector( const int size,
+			     const bool owns_mem,
+			     double* device_data );
 
     // Destructor. Prohibits copy construction and assignment.
     ~SerialDenseDeviceVector();
@@ -66,6 +70,9 @@ class SerialDenseDeviceVector
     void allocate_and_copy( const Teuchos::Array<double>& host_data );
 
   private:
+
+    // Data ownership flag.
+    bool d_owns_mem;
 
     // Length of vector.
     int d_size;

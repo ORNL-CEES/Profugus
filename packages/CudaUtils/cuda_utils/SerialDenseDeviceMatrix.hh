@@ -13,7 +13,6 @@
 
 #include <Teuchos_TwoDArray.hpp>
 
-#include "harness/DBC.hh"
 #include "CudaDBC.hh"
 #include "CudaMacros.hh"
 
@@ -30,11 +29,18 @@ class SerialDenseDeviceMatrix
   public:
     
     // Size constructor.
-    SerialDenseDeviceMatrix( const int num_rows, const int num_cols,
+    SerialDenseDeviceMatrix( const int num_rows, 
+			     const int num_cols,
 			     const double fill_value = 0.0 );
 
     // Host data constructor.
     SerialDenseDeviceMatrix( const Teuchos::TwoDArray<double>& host_data );
+
+    // Device data constructor.
+    SerialDenseDeviceMatrix( const int num_rows, 
+			     const int num_cols,
+			     const bool owns_mem,
+			     double* device_data );
 
     // Destructor. Prohibits copy construction and assignment.
     ~SerialDenseDeviceMatrix();
@@ -73,6 +79,9 @@ class SerialDenseDeviceMatrix
     void allocate_and_copy( const Teuchos::TwoDArray<double>& host_data );
 
   private:
+
+    // Data ownership flag.
+    bool d_owns_mem;
 
     // Number of rows.
     int d_num_rows;

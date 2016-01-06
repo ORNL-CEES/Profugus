@@ -15,7 +15,7 @@
 
 #include <cuda_runtime.h>
 
-#include <harness/DBC.hh>
+#include "CudaDBC.hh"
 
 namespace cuda
 {
@@ -67,8 +67,9 @@ class Shared_Device_Ptr
     inline std::shared_ptr<T>& get_host_ptr() { return d_host_ptr; }
     inline const std::shared_ptr<T>& get_host_ptr() const { return d_host_ptr; }
 
-    //! Get the raw pointer to device data managed by this object.
-    inline T* get_device_ptr() { return d_device_ptr.get(); }
+    //! Get the raw pointer to device data managed by this object. Accessible
+    //! from the host or the device.
+    T* get_device_ptr() { return d_device_ptr.get(); }
     inline const T* get_device_ptr() const { return d_device_ptr.get(); }
 
   private:
@@ -85,12 +86,11 @@ class Shared_Device_Ptr
     void shallow_copy_host_object_to_device()
     {
 #ifdef __NVCC__
-	T* device_ptr;
 	cudaMalloc( (void**) &device_ptr, sizeof(T) );
-	cudaMemcpy( device_ptr, d_host_ptr.get(), sizeof(T),
+	cudaMemcpy( d_device_ptr.get(), d_host_ptr.get(), sizeof(T),
 		    cudaMemcpyHostToDevice );
 	d_device_ptr = 
-	    std::shared_ptr<T>( device_ptr, [](T* t){ cudaFree(t); } );
+	    std::shared_ptr<T>( d_device_ptr.get(), [](T* t){ cudaFree(t); } );
 #else
 	INSIST( false, "Shared_Device_Ptr can only be constructed with NVCC!" );
 #endif // end __NVCC__
