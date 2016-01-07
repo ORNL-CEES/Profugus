@@ -86,11 +86,12 @@ class Shared_Device_Ptr
     void shallow_copy_host_object_to_device()
     {
 #ifdef __NVCC__
+	T* device_ptr;
 	cudaMalloc( (void**) &device_ptr, sizeof(T) );
-	cudaMemcpy( d_device_ptr.get(), d_host_ptr.get(), sizeof(T),
+	cudaMemcpy( device_ptr, d_host_ptr.get(), sizeof(T),
 		    cudaMemcpyHostToDevice );
 	d_device_ptr = 
-	    std::shared_ptr<T>( d_device_ptr.get(), [](T* t){ cudaFree(t); } );
+	    std::shared_ptr<T>( device_ptr, [](T* t){ cudaFree(t); } );
 #else
 	INSIST( false, "Shared_Device_Ptr can only be constructed with NVCC!" );
 #endif // end __NVCC__

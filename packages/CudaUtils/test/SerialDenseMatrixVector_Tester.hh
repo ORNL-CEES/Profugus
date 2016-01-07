@@ -12,10 +12,6 @@
 #include <Teuchos_Array.hpp>
 #include <Teuchos_TwoDArray.hpp>
 
-#include "../cuda_utils/Shared_Device_Ptr.hh"
-#include "../cuda_utils/SerialDenseDeviceMatrix.hh"
-#include "../cuda_utils/SerialDenseDeviceVector.hh"
-
 //---------------------------------------------------------------------------//
 // Matrix-Vector product. A*x = y
 //---------------------------------------------------------------------------//
@@ -23,8 +19,10 @@ class SerialDenseMatrixVectorProduct
 {
   public:
 
-    SerialDenseMatrixVectorProduct( const Teuchos::TwoDArray<double>& A,
+    SerialDenseMatrixVectorProduct( const Teuchos::Array<double>& A,
 				    const Teuchos::Array<double>& x );
+
+    ~SerialDenseMatrixVectorProduct();
 
     void multiply_kernel_launch();
 
@@ -32,9 +30,10 @@ class SerialDenseMatrixVectorProduct
 
   private:
 
-    cuda::Shared_Device_Ptr<cuda::SerialDenseDeviceMatrix> d_A;
-    cuda::Shared_Device_Ptr<cuda::SerialDenseDeviceVector> d_x;
-    cuda::Shared_Device_Ptr<cuda::SerialDenseDeviceVector> d_y;
+    int d_N;
+    double* d_A;
+    double* d_x;
+    double* d_y;
 };
 
 //---------------------------------------------------------------------------//

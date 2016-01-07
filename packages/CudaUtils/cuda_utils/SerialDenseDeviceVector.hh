@@ -22,29 +22,34 @@ namespace cuda
 //---------------------------------------------------------------------------//
 /*!
  * \class SerialDenseDeviceVector
- * \brief Device matrix in ROW-MAJOR order for scattering data.
+ * \brief Dense device vector for scattering data. On-device only. Does not
+ * own memory.
  */
 class SerialDenseDeviceVector
 {
   public:
     
-    // Size constructor.
-    SerialDenseDeviceVector( const int size, const double fill_value = 0.0 );
-
-    // Host data constructor.
-    SerialDenseDeviceVector( const Teuchos::Array<double>& host_data );
-
-    // Device data constructor.
+    // Device data constructor. Device-only for wrapping of data on-device.
+    PROFUGUS_DEVICE_FUNCTION
     SerialDenseDeviceVector( const int size,
-			     const bool owns_mem,
-			     double* device_data );
+			     double* device_data )
+	: d_size( size )
+	, d_data( device_data )
+    {
+	PROFUGUS_INSIST_ON_DEVICE;
+    }
 
-    // Destructor. Prohibits copy construction and assignment.
-    ~SerialDenseDeviceVector();
+    // Destructor. Prohibits copy construction and assignment. Device-only.
+    PROFUGUS_DEVICE_FUNCTION
+    ~SerialDenseDeviceVector() { /* ... */ }
 
     // Get the number of rows. Host-accesible.
-    PROFUGUS_HOST_DEVICE_FUNCTION
-    int size() const { return d_size; }
+    PROFUGUS_DEVICE_FUNCTION
+    int size() const 
+    { 
+	PROFUGUS_INSIST_ON_DEVICE;
+	return d_size; 
+    }
 
     // Const value accessor. Device-only.
     PROFUGUS_DEVICE_FUNCTION
@@ -65,14 +70,6 @@ class SerialDenseDeviceVector
     }
     
   private:
-
-    // Allocate and copy host data to device.
-    void allocate_and_copy( const Teuchos::Array<double>& host_data );
-
-  private:
-
-    // Data ownership flag.
-    bool d_owns_mem;
 
     // Length of vector.
     int d_size;

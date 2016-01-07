@@ -48,7 +48,7 @@ IF(USE_CUDA)
   PACKAGE_ADD_CUDA_LIBRARY(
     Profugus_cuda_utils_test_cuda
     SOURCES ${CUDA_SOURCES}
-    DEPLIBS Profugus_cuda_utils Profugus_cuda_utils_cuda
+    DEPLIBS Profugus_cuda_utils
     TESTONLY)
 ENDIF()
 

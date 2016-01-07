@@ -8,61 +8,82 @@
 
 #include "SerialDenseMatrixVector_Tester.hh"
 
+#include "../cuda_utils/SerialDenseDeviceMatrix.hh"
+#include "../cuda_utils/SerialDenseDeviceVector.hh"
+
 #include <cuda_runtime.h>
 
 //---------------------------------------------------------------------------//
 // Matrix-Vector product kernel.
-__global__ void multiply_kernel( const cuda::SerialDenseDeviceMatrix* A,
-				 const cuda::SerialDenseDeviceVector* x,
-				 cuda::SerialDenseDeviceVector* y )
+__global__ void multiply_kernel( const int N,
+				 double* A,
+				 double* x,
+				 double* y )
 {
+    const cuda::SerialDenseDeviceMatrix Amat( N, N, A );
+    const cuda::SerialDenseDeviceVector xvec( N , x );
+    cuda::SerialDenseDeviceVector yvec( N, y );
+
     int i = threadIdx.x;
-    (*y)(i) = 0.0;
-    for ( int j = 0; j < A->num_cols(); ++j )
+    yvec(i) = 0.0;
+    for ( int j = 0; j < Amat.num_cols(); ++j )
     {
-	(*y)(i) += (*A)(i,j) * (*x)(j);
+	yvec(i) += Amat(i,j) * xvec(j);
     }
 }
 
 //---------------------------------------------------------------------------//
 // Product result copy kernel.
-__global__ void result_copy_kernel( const cuda::SerialDenseDeviceVector* y,
+__global__ void result_copy_kernel( const double* y,
 				    double* result )
 {
     int i = threadIdx.x;
-    result[i] = (*y)(i);
+    result[i] = y[i];
 }
 
 //---------------------------------------------------------------------------//
 // SerialDenseMatrixVectorProduct class functions.
 SerialDenseMatrixVectorProduct::SerialDenseMatrixVectorProduct( 
-    const Teuchos::TwoDArray<double>& A,
+    const Teuchos::Array<double>& A,
     const Teuchos::Array<double>& x )
-    : d_A( A )
-    , d_x( x )
-    , d_y( x.size() )
-{ /* ... */ }
+{
+    d_N = x.size();
+
+    cudaMalloc( (void**) &d_A, A.size() * sizeof(double) );
+    cudaMemcpy( d_A, A.getRawPtr(), A.size() * sizeof(double),
+		cudaMemcpyHostToDevice );
+
+    cudaMalloc( (void**) &d_x, x.size() * sizeof(double) );
+    cudaMemcpy( d_x, x.getRawPtr(), x.size() * sizeof(double),
+		cudaMemcpyHostToDevice );
+
+    cudaMalloc( (void**) &d_y, x.size() * sizeof(double) );
+}
+
+//---------------------------------------------------------------------------//
+SerialDenseMatrixVectorProduct::~SerialDenseMatrixVectorProduct()
+{
+    cudaFree( d_A );
+    cudaFree( d_x );
+    cudaFree( d_y );
+}
 
 //---------------------------------------------------------------------------//
 void SerialDenseMatrixVectorProduct::multiply_kernel_launch()
 {
-    int N = d_x.get_host_ptr()->size();
-    multiply_kernel<<<1,N>>>( d_A.get_device_ptr(),
-			      d_x.get_device_ptr(),
-			      d_y.get_device_ptr() );
+    multiply_kernel<<<1,d_N>>>( d_N, d_A, d_x, d_y );
 }
 
 //---------------------------------------------------------------------------//
 Teuchos::Array<double> SerialDenseMatrixVectorProduct::get_result() const
 {
-    int N = d_y.get_host_ptr()->size();
-    int mem_size = N*sizeof(double);
+    int mem_size = d_N*sizeof(double);
 
     double* device_result;
     cudaMalloc( (void**) &device_result, mem_size );
-    result_copy_kernel<<<1,N>>>( d_y.get_device_ptr(), device_result );
+    result_copy_kernel<<<1,d_N>>>( d_y, device_result );
 
-    Teuchos::Array<double> host_result( N );
+    Teuchos::Array<double> host_result( d_N );
     cudaMemcpy( host_result.getRawPtr(), device_result, mem_size,
 		cudaMemcpyDeviceToHost );
 

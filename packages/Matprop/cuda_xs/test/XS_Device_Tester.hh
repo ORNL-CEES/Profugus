@@ -11,7 +11,7 @@
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "xs/XS.hh"
-#include "../cuda_xs/XS_Device.hh"
+#include "../XS_Device.hh"
 
 //---------------------------------------------------------------------------//
 class XS_Device_Tester
@@ -20,9 +20,9 @@ class XS_Device_Tester
 
     XS_Device_Tester( const profugus::XS& xs );
 
-    const typename profugus::XS::Vector& vector( int matid, int type ) const;
+    const typename profugus::XS::Vector vector( int matid, int type ) const;
 
-    const typename profugus::XS::Matrix& matrix( int matid, int pn ) const;
+    const typename profugus::XS::Matrix matrix( int matid, int pn ) const;
 
     int pn_order() const { return d_xs.get_host_ptr()->pn_order(); }
     int num_groups() const { return d_xs.get_host_ptr()->num_groups(); }

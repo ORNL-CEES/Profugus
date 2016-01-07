@@ -60,7 +60,7 @@ class XS_Device
     { 
 	PROFUGUS_INSIST_ON_DEVICE;
 	int offset = type * d_Nm * d_Ng + d_matid_g2l[matid] * d_Ng;
-	return cuda::SerialDenseDeviceVector( d_Ng, false, d_totals+offset );
+	return cuda::SerialDenseDeviceVector( d_Ng, d_totals+offset );
     }
 
     // Return the 2-D data matrix for a given matid and Pn order.
@@ -69,8 +69,7 @@ class XS_Device
     { 
 	PROFUGUS_INSIST_ON_DEVICE;
 	int offset = pn * d_Nm * d_Ng * d_Ng + d_matid_g2l[matid] * d_Ng * d_Ng;
-	return cuda::SerialDenseDeviceVector( 
-	    d_Ng, d_Ng, false, d_scatter+offset );
+	return cuda::SerialDenseDeviceMatrix( d_Ng, d_Ng, d_scatter+offset );
     }
 
   private:
@@ -89,19 +88,19 @@ class XS_Device
     // Number of cross section types.
     int d_Nxst;
 
-    // Global-to-local mapping of matids
+    // Global-to-local mapping of matids. On-device.
     int* d_matid_g2l;
 
     // Size of total cross section data.
     std::size_t d_totals_size;
 
-    // Total cross sections on device strided by type and group size.
+    // Total cross sections on device strided by type and group size. On-device.
     double* d_totals;
 
     // Size of scattering cross section data.
     std::size_t d_scatter_size;
 
-    // Scattering cross sections on device.
+    // Scattering cross sections on device. On-device.
     double* d_scatter;
 
 };

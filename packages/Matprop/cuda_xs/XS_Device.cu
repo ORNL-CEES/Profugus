@@ -13,6 +13,8 @@
 
 #include <cuda_runtime.h>
 
+#include <algorithm>
+
 namespace cuda_profugus
 {
 //---------------------------------------------------------------------------//
@@ -25,24 +27,25 @@ XS_Device::XS_Device( const profugus::XS& xs )
     , d_Nm( xs.num_mat() )
     , d_Nxst( profugus::XS::END_XS_TYPES )
     , d_totals_size( d_Nxst * d_Nm * d_Ng )
-    , d_scatter_size( d_pn * d_Nm * d_Ng * d_Ng)
+    , d_scatter_size( (d_pn+1) * d_Nm * d_Ng * d_Ng)
 {
     // Get the matids.
     typename profugus::XS::Vec_Int matids;
     xs.get_matids( matids );
 
     // Create a global to local mapping of matids.
-    Teuchos::Array<int> host_matid_g2l( d_Nm, -1 );
-    for ( int m = 0; i < d_Nm; ++m )
+    int matid_g2l_size = *std::max_element( matids.begin(), matids.end() ) + 1;
+    Teuchos::Array<int> host_matid_g2l( matid_g2l_size, -1 );
+    for ( int m = 0; m < d_Nm; ++m )
     {
 	host_matid_g2l[ matids[m] ] = m;
     }
 
     // Allocate a matid global-to-local map.
-    cudaMalloc( (void**) &d_matid_g2l, d_Nm*sizeof(int) );
+    cudaMalloc( (void**) &d_matid_g2l, matid_g2l_size*sizeof(int) );
 
     // Copy the matid list to the device.
-    cudaMemcpy( d_matid_g2l, host_matid_g2l, d_Nm*sizeof(int),
+    cudaMemcpy( d_matid_g2l, host_matid_g2l.getRawPtr(), matid_g2l_size*sizeof(int),
 		cudaMemcpyHostToDevice );
     host_matid_g2l.clear();
 
@@ -67,7 +70,7 @@ XS_Device::XS_Device( const profugus::XS& xs )
     cudaMalloc( (void**) &d_scatter, d_scatter_size*sizeof(double) );
 
     // Extract the scattering cross sections.
-    for ( int pn = 0; pn < d_pn; ++pn )
+    for ( int pn = 0; pn < d_pn+1; ++pn )
     {
 	for ( int m = 0; m < d_Nm; ++m )
 	{

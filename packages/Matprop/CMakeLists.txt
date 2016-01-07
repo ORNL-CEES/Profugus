@@ -50,6 +50,13 @@ IF( CMAKE_SYSTEM_NAME MATCHES "Windows" )
    ADD_DEFINITIONS(-DNOMINMAX)
 ENDIF( CMAKE_SYSTEM_NAME MATCHES "Windows" )
 
+# Enable CUDA
+SET(USE_CUDA OFF)
+IF(${PROJECT_NAME}_ENABLE_CUDA)
+  MESSAGE(STATUS "Building ${PROJECT_NAME} with CUDA support")
+  SET(USE_CUDA ON)
+ENDIF()
+
 ##---------------------------------------------------------------------------##
 # C) Process the subpackages
 ##---------------------------------------------------------------------------##
@@ -97,9 +104,9 @@ IF(USE_CUDA)
     )
 
   PACKAGE_ADD_CUDA_LIBRARY(
-    Profugus_Matprop_cuda
+    Matprop_cuda
+    NOINSTALLHEADERS ${CUDA_HEADERS}
     SOURCES ${CUDA_SOURCES}
-    DEPLIBS Profugus_Matprop
     )
 ENDIF()
 
@@ -107,6 +114,7 @@ ENDIF()
 # Add tests to this package
 
 TRIBITS_ADD_TEST_DIRECTORIES(xs/test)
+TRIBITS_ADD_TEST_DIRECTORIES(cuda_xs/test)
 
 ##---------------------------------------------------------------------------##
 ## FINISH SETUP

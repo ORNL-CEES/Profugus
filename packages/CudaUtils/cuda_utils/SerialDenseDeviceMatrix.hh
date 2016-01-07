@@ -22,38 +22,44 @@ namespace cuda
 //---------------------------------------------------------------------------//
 /*!
  * \class SerialDenseDeviceMatrix
- * \brief Device matrix in COLUMN-MAJOR order for scattering data.
+ * \brief Device matrix in COLUMN-MAJOR order for scattering data. This
+ * manages a view of the data and does not own the data.
  */
 class SerialDenseDeviceMatrix
 {
   public:
     
-    // Size constructor.
+    // Device data constructor. Device-only.
+    PROFUGUS_DEVICE_FUNCTION
     SerialDenseDeviceMatrix( const int num_rows, 
 			     const int num_cols,
-			     const double fill_value = 0.0 );
+			     double* device_data )
+	: d_num_rows( num_rows )
+	, d_num_cols( num_cols )
+	, d_data( device_data )
+    { 
+	PROFUGUS_INSIST_ON_DEVICE;
+    }
 
-    // Host data constructor.
-    SerialDenseDeviceMatrix( const int num_rows, 
-			     const int num_cols,
-			     const Teuchos::Array<double>& host_data );
-
-    // Device data constructor.
-    SerialDenseDeviceMatrix( const int num_rows, 
-			     const int num_cols,
-			     const bool owns_mem,
-			     double* device_data );
-
-    // Destructor. Prohibits copy construction and assignment.
-    ~SerialDenseDeviceMatrix();
+    // Destructor. Prohibits copy construction and assignment. Device-only.
+    PROFUGUS_DEVICE_FUNCTION
+    ~SerialDenseDeviceMatrix() { /* ... */ }
 
     // Get the number of rows. Host-accesible.
-    PROFUGUS_HOST_DEVICE_FUNCTION
-    int num_rows() const { return d_num_rows; }
+    PROFUGUS_DEVICE_FUNCTION
+    int num_rows() const 
+    { 
+	PROFUGUS_INSIST_ON_DEVICE;
+	return d_num_rows; 
+    }
 
     // Get the number of columns. Host-accessible.
-    PROFUGUS_HOST_DEVICE_FUNCTION
-    int num_cols() const { return d_num_cols; }
+    PROFUGUS_DEVICE_FUNCTION
+    int num_cols() const 
+    { 
+	PROFUGUS_INSIST_ON_DEVICE;
+	return d_num_cols; 
+    }
 
     // Const value accessor. Device-only.
     PROFUGUS_DEVICE_FUNCTION
@@ -76,14 +82,6 @@ class SerialDenseDeviceMatrix
     }
     
   private:
-
-    // Allocate and copy host data to the device.
-    void allocate_and_copy( const Teuchos::Array<double>& host_data );
-
-  private:
-
-    // Data ownership flag.
-    bool d_owns_mem;
 
     // Number of rows.
     int d_num_rows;
