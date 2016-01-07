@@ -156,6 +156,12 @@ class RNG
     {
         return ::get_rn_flt(d_streamid->id);
     }
+
+    // Return an integer value
+    int uniform_impl(Type_Switch<int>) const
+    {
+        return ::get_rn_int(d_streamid->id);
+    }
 };
 
 //---------------------------------------------------------------------------//

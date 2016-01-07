@@ -214,26 +214,26 @@ class Cartesian_Mesh
     __device__ double low_corner(dim_type d) const
     {
         REQUIRE( d>=0 && d<=3 );
+	REQUIRE( d == def::I || d == def::J || d == def::K );
         if( d == def::I )
             return dd_x_edges[0];
         else if( d == def::J )
             return dd_y_edges[0];
-        else if( d == def::K )
+        else
             return dd_z_edges[0];
-        return CUDART_NAN;
     }
 
     //! High corner of mesh in \e (i,j,k) direction.
     __device__ double high_corner(dim_type d) const
     {
         REQUIRE( d>=0 && d<=3 );
+	REQUIRE( d == def::I || d == def::J || d == def::K );
         if( d == def::I )
             return dd_x_edges[d_cells_x];
         else if( d == def::J )
             return dd_y_edges[d_cells_y];
-        else if( d == def::K )
+        else
             return dd_z_edges[d_cells_z];
-        return CUDART_NAN;
     }
 };
 

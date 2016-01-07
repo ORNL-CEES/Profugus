@@ -159,13 +159,24 @@ ENDIF()
 SET(CUDA_HEADERS "")
 SET(CUDA_SOURCES "")
 IF(USE_CUDA)
+
+  # cuda geometry sources
   FILE(GLOB CUDA_GEOMETRY_HEADERS cuda_geometry/*.hh)
   SET(CUDA_GEOMETRY_SOURCES
     cuda_geometry/Cartesian_Mesh.cu
     cuda_geometry/Mesh_Geometry.cu
     )
-  LIST(APPEND CUDDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
+  LIST(APPEND CUDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_GEOMETRY_SOURCES})
+
+  # cuda mc sources
+  FILE(GLOB CUDA_MC_HEADERS cuda_mc/*.hh)
+  SET(CUDA_MC_SOURCES
+    cuda_mc/Particle_Vector.pt.cu
+    )
+  LIST(APPEND CUDA_HEADERS ${CUDA_MC_HEADERS})
+  LIST(APPEND CUDA_SOURCES ${CUDA_MC_SOURCES})
+
 ENDIF()
 
 ##---------------------------------------------------------------------------##
@@ -201,7 +212,8 @@ TRIBITS_ADD_TEST_DIRECTORIES(
 
 IF(USE_CUDA)
   TRIBITS_ADD_TEST_DIRECTORIES(
-    cuda_geometry/test)
+    cuda_geometry/test
+    cuda_mc/test)
 ENDIF()
 
 ##---------------------------------------------------------------------------##
