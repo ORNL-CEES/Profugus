@@ -125,10 +125,30 @@ class Device_Vector<arch::Device, T>
     void swap(This& rhs);
 
     //! Number of stored elements
+    PROFUGUS_HOST_DEVICE_FUNCTION
     size_type size() const { return d_size; }
 
     //! Whether our data is probably initialized
+    PROFUGUS_HOST_DEVICE_FUNCTION
     bool is_initialized() const { return d_is_initialized; }
+
+    //! Const value accessor. Device-only.
+    PROFUGUS_DEVICE_FUNCTION
+    const T& operator[]( const std::size_t i ) const
+    {
+	PROFUGUS_INSIST_ON_DEVICE;
+	REQUIRE( i < d_size );
+	return d_data[i];
+    }
+
+    //! Non const value accessor. Device-only.
+    PROFUGUS_DEVICE_FUNCTION
+    T& operator[]( const std::size_t i )
+    {
+	PROFUGUS_INSIST_ON_DEVICE;
+	REQUIRE( i < d_size );
+	return d_data[i];
+    }
 
     // >>> TRANSFER BACK TO CPU
 
@@ -263,6 +283,20 @@ class Device_Vector<arch::Host, T>
 
     //! Whether our data is probably initialized
     bool is_initialized() const { return d_is_initialized; }
+
+    //! Const value accessor. Device-only.
+    const T& operator[]( const std::size_t i ) const
+    {
+	REQUIRE( i < d_storage.size() );
+	return d_storage[i];
+    }
+
+    //! Non const value accessor. Device-only.
+    T& operator[]( const std::size_t i )
+    {
+	REQUIRE( i < d_storage.size() );
+	return d_storage[i];
+    }
 
     // >>> TRANSFER BACK TO CPU
 

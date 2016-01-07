@@ -38,6 +38,19 @@ __global__ void polyglot_copy_kernel(
 }
 
 //---------------------------------------------------------------------------//
+template<typename Arch_Switch>
+__global__ void polyglot_copy_kernel_vector(
+    const Device_Vector<Arch_Switch,float>* in,
+    Device_Vector<Arch_Switch,float>* out )
+{
+    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    unsigned int stride = blockDim.x * gridDim.x;
+
+    for (; i < in->size(); i += stride)
+        (*out)[i] = (*in)[i];
+}
+
+//---------------------------------------------------------------------------//
 // HOST INTERFACES
 //---------------------------------------------------------------------------//
 template<typename Arch_Switch>
@@ -111,6 +124,53 @@ void polyglot_copy(
 }
 
 //---------------------------------------------------------------------------//
+template<typename Arch_Switch, typename Float_Type>
+void polyglot_copy_vector(
+        const Device_Vector<Arch_Switch, Float_Type>& input,
+              Device_Vector<Arch_Switch, Float_Type>& output)
+{
+    REQUIRE(input.size() == output.size());
+
+    typedef Device_Vector<Arch_Switch,Float_Type> VecType;
+
+    VecType* input_device;
+    VecType* output_device;
+
+#ifdef __NVCC__
+    cudaMalloc( (void**) &input_device, sizeof(VecType) );
+    cudaMemcpy( input_device, &input, sizeof(VecType),
+		cudaMemcpyHostToDevice );
+
+    cudaMalloc( (void**) &output_device, sizeof(VecType) );
+    cudaMemcpy( output_device, &output, sizeof(VecType),
+		cudaMemcpyHostToDevice );
+
+#else
+    input_device = const_cast<VecType*>(&input);
+    output_device = &output;
+#endif
+
+    typedef ::cuda::Hardware<Arch_Switch> Hardware_t;
+
+    unsigned int num_threads = Hardware_t::num_cores_per_mp();
+    unsigned int num_blocks  = Hardware_t::num_multiprocessors();
+
+    polyglot_copy_kernel_vector
+#ifdef __NVCC__
+        <<<num_blocks, num_threads>>>
+#endif
+        ( input_device, output_device );
+
+    // Wait until kernel is finished
+    CudaInsist(cudaDeviceSynchronize(), "Kernel execution error");
+
+#ifdef __NVCC__
+    cudaFree( input_device );
+    cudaFree( output_device );    
+#endif
+}
+
+//---------------------------------------------------------------------------//
 // INSTANTIATIONS
 //---------------------------------------------------------------------------//
 #ifdef __NVCC__
@@ -126,6 +186,10 @@ template void polyglot_copy(
 
 template void polyglot_copy(
         const Host_Vector<float>&, Device_Vector<Arch_t, float>&);
+
+template void polyglot_copy_vector(
+        const Device_Vector<Arch_t, float>&, Device_Vector<Arch_t, float>&);
+
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda

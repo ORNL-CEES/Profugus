@@ -18,6 +18,8 @@
 #include "../cuda_utils/Host_Vector.hh"
 #include "Polyglot_Kernel.cuh"
 
+#include <type_traits>
+
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
@@ -31,6 +33,7 @@ class DeviceVectorTest : public ::testing::Test
 
     typedef std::vector<float>               Vector_t;
     typedef profugus::const_View_Field<float> const_View_Field_t;
+    typedef profugus::View_Field<float> View_Field_t;
     typedef cuda::Host_Vector<float>         Host_Vector_t;
 
   protected:
@@ -307,6 +310,42 @@ TYPED_TEST(DeviceVectorTest, accessors)
     // This should change it to initialized
     EXPECT_NO_THROW(this->takes_a_mutable(gpu_b.data()));
     EXPECT_TRUE(gpu_b.is_initialized());
+}
+
+//---------------------------------------------------------------------------//
+TYPED_TEST( DeviceVectorTest, device_api )
+{
+    typedef typename TestFixture::const_View_Field_t const_View_Field_t;
+    typedef typename TestFixture::View_Field_t       View_Field_t;
+    typedef typename TestFixture::Device_Vector_t    Device_Vector_t;
+    typedef typename TestFixture::Vector_t           Vector_t;
+
+    // This test is for device-only vectors.
+    if ( std::is_same<typename TestFixture::Arch_t,cuda::arch::Device>::value )
+    {
+	const Vector_t& original = this->original;
+
+	// Create copy of data on GPU
+	const_View_Field_t input_view = profugus::make_view(original);
+	Device_Vector_t gpu_in(input_view);
+
+	// Create blank vector
+	Vector_t result(original.size());
+	View_Field_t output_view = profugus::make_view(result);
+	Device_Vector_t gpu_out(output_view);
+
+	// Call kernel to copy data
+	polyglot_copy_vector(gpu_in, gpu_out);
+
+	// Copy from device vector to new vector
+	device_to_host(gpu_out, profugus::make_view(result));
+
+	// Check result
+	for (std::size_t i = 0; i < original.size(); ++i)
+	{
+	    EXPECT_FLOAT_EQ(original[i], result[i]);
+	}
+    }
 }
 
 //---------------------------------------------------------------------------//

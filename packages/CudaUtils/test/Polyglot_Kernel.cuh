@@ -34,6 +34,12 @@ void polyglot_copy(
               cuda::Device_Vector<Arch_Switch,Float_Type>& out);
 
 //---------------------------------------------------------------------------//
+template<typename Arch_Switch, typename Float_Type>
+void polyglot_copy_vector(
+        const Device_Vector<Arch_Switch, Float_Type>& input,
+              Device_Vector<Arch_Switch, Float_Type>& output);
+
+//---------------------------------------------------------------------------//
 } // end namespace cuda
 
 #endif // cuda_utils_test_Polyglot_Kernel_cuh
