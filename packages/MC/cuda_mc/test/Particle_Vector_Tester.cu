@@ -32,10 +32,10 @@ __global__ void set_wt_kernel( Particle_Vector_Tester::Particle_Vector* vector,
 
 //---------------------------------------------------------------------------//
 __global__ void multiply_wt_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				    double wt )
+				    double* wt )
 {
     int i = threadIdx.x;
-    vector->multiply_wt( i, wt );
+    vector->multiply_wt( i, wt[i] );
 }
 
 //---------------------------------------------------------------------------//
@@ -170,10 +170,17 @@ void Particle_Vector_Tester::set_wt( const double wt )
 }
 
 //---------------------------------------------------------------------------//
-// mulitply the entire vector by a weight.
-void Particle_Vector_Tester::multiply_wt( const double wt )
+// mulitply each particle weight by a different value.
+void Particle_Vector_Tester::multiply_wt( const Teuchos::Array<double>& wt )
 {
-    multiply_wt_kernel<<<1,d_size>>>( d_vector.get_device_ptr(), wt );
+    double* device_wt;
+    cudaMalloc( (void**) &device_wt, d_size * sizeof(double) );
+    cudaMemcpy( device_wt, wt.getRawPtr(), d_size * sizeof(double),
+		cudaMemcpyHostToDevice );
+    
+    multiply_wt_kernel<<<1,d_size>>>( d_vector.get_device_ptr(), device_wt );
+
+    cudaFree( device_wt );
 }
 
 //---------------------------------------------------------------------------//

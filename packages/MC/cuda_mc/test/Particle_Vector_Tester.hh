@@ -40,7 +40,7 @@ class Particle_Vector_Tester
     void set_wt( const double wt );
 
     // mulitply the entire vector by a weight.
-    void multiply_wt( const double wt );
+    void multiply_wt( const Teuchos::Array<double>& wt );
 
     // get a vector of weights.
     Teuchos::Array<double> wt();

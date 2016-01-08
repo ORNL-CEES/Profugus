@@ -49,11 +49,19 @@ TEST(Particle, construction)
     {
 	EXPECT_EQ( w, wt );
     }
-    tester.multiply_wt( wt );
-    weights = tester.wt();
-    for ( auto& w : weights )
+
+    // Multiply by a set of weights in reverse order so we can test sorting
+    // later.
+    Teuchos::Array<double> wt_mult( num_particle );
+    for ( int i = 0; i < num_particle; ++i )
     {
-	EXPECT_EQ( w, wt*wt );
+	wt_mult[i] = ( i % 2 == 0 ) ? 1.0 : 2.0;
+    }
+    tester.multiply_wt( wt_mult );
+    weights = tester.wt();
+    for ( int i = 0; i < num_particle; ++i )
+    {
+	EXPECT_EQ( weights[i], wt*wt_mult[i] );
     }
 
     // check group
@@ -114,6 +122,22 @@ TEST(Particle, construction)
     for ( int i = 0; i < num_particle; ++i )
     {
 	EXPECT_EQ( host_events[i], device_events[i] );
+    }
+
+    // Check that the local ids in the vector also got sorted. This means the
+    // weights should now be in sorted order when we access them (SCATTER is
+    // greater than ABSORPTION).
+    weights = tester.wt();
+    for ( int i = 0; i < num_particle; ++i )
+    {
+	if ( i < num_particle / 2 )
+	{
+	    EXPECT_EQ( weights[i], 2.0*wt );
+	}
+	else
+	{
+	    EXPECT_EQ( weights[i], wt );
+	}
     }
 
     // Setup a geo state.
