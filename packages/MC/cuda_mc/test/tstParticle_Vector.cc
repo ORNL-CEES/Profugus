@@ -185,6 +185,15 @@ TEST(Particle, construction)
 
 	EXPECT_EQ( geo_state.next_dist, s.next_dist );
     }
+
+    // Check the batch.
+    int batch = 3;
+    tester.set_batch( batch );
+    Teuchos::Array<int> batches = tester.batch();
+    for ( auto& b : batches )
+    {
+	EXPECT_EQ( b, batch );
+    }
 }
 
 //---------------------------------------------------------------------------//

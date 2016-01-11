@@ -28,11 +28,8 @@ __global__ void init_rng( const std::size_t start_idx,
 			  const int* seeds,
 			  curandState* rng )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx >= start_idx )
-    {
-	curand_init( seeds[idx], 0, 0, &rng[idx] );
-    }
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x + start_idx;
+    curand_init( seeds[idx], 0, 0, &rng[idx] );
 }
 
 //---------------------------------------------------------------------------//
@@ -40,11 +37,8 @@ __global__ void init_rng( const std::size_t start_idx,
 __global__ void init_lid( const std::size_t start_idx,
 			  std::size_t* lids )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx >= start_idx )
-    {
-	lids[idx] = idx;
-    }
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x + start_idx;
+    lids[idx] = idx;
 }
 
 //---------------------------------------------------------------------------//
@@ -67,6 +61,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cudaMalloc( (void**) &d_geo_state, d_size * sizeof(Geo_State_t) );
     cudaMalloc( (void**) &d_event, d_size * sizeof(Event_t) );
     cudaMalloc( (void**) &d_lid, d_size * sizeof(std::size_t) );
+    cudaMalloc( (void**) &d_batch, d_size * sizeof(int) );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -123,6 +118,7 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cudaFree( d_geo_state );
     cudaFree( d_event );
     cudaFree( d_lid );
+    cudaFree( d_batch );
 }
 
 //---------------------------------------------------------------------------//
@@ -130,9 +126,10 @@ Particle_Vector<Geometry>::~Particle_Vector()
 template <class Geometry>
 void Particle_Vector<Geometry>::sort_by_event()
 {
-    thrust::device_ptr<Event_t> event_ptr( d_event );
-    thrust::device_ptr<std::size_t> lid_ptr( d_lid );
-    thrust::sort_by_key( event_ptr, event_ptr+d_size, lid_ptr );
+    thrust::device_ptr<Event_t> event_begin( d_event );
+    thrust::device_ptr<Event_t> event_end( d_event + d_size );
+    thrust::device_ptr<std::size_t> lid_begin( d_lid );
+    thrust::sort_by_key( event_begin, event_end, lid_begin );
 }
 
 //---------------------------------------------------------------------------//

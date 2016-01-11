@@ -40,7 +40,7 @@ class Particle_Vector
   public:
     //@{
     //! Typedefs.
-    typedef typename Geometry::Geo_State_t  Geo_State_t;
+    typedef typename Geometry::Geo_State_t Geo_State_t;
     typedef profugus::events::Event Event_t;
     //@}
 
@@ -74,6 +74,9 @@ class Particle_Vector
     // Particle local index linked to the events.
     std::size_t* d_lid;
 
+    // Particle statistical batch id.
+    int* d_batch;
+
   public:
 
     // >>> HOST API
@@ -98,6 +101,7 @@ class Particle_Vector
     double ran( const std::size_t i )
     {
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return curand_uniform( &d_rng[ d_lid[i] ] );
     }
 
@@ -106,6 +110,7 @@ class Particle_Vector
     void set_wt( const std::size_t i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	d_wt[ d_lid[i] ] = wt; 
     }
 
@@ -114,6 +119,7 @@ class Particle_Vector
     void multiply_wt( const std::size_t i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	d_wt[ d_lid[i] ] *= wt; 
     }
 
@@ -122,6 +128,7 @@ class Particle_Vector
     double wt( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return d_wt[ d_lid[i] ]; 
     }
 
@@ -130,6 +137,7 @@ class Particle_Vector
     int group( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return d_group[ d_lid[i] ]; 
     }
 
@@ -138,6 +146,7 @@ class Particle_Vector
     void set_group( const std::size_t i, const int group )
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	d_group[ d_lid[i] ] = group; 
     }
 
@@ -146,6 +155,7 @@ class Particle_Vector
     int matid( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return d_matid[ d_lid[i] ]; 
     }
 
@@ -154,6 +164,7 @@ class Particle_Vector
     void set_matid( const std::size_t i, const int matid )
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	d_matid[ d_lid[i] ] = matid;
     }
 
@@ -162,6 +173,7 @@ class Particle_Vector
     bool alive( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return d_alive[ d_lid[i] ]; 
     }
 
@@ -170,6 +182,7 @@ class Particle_Vector
     void live( const std::size_t i )
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	d_alive[ d_lid[i] ] = true; 
     }
 
@@ -178,6 +191,7 @@ class Particle_Vector
     void kill( const std::size_t i )
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	d_alive[ d_lid[i] ] = false; 
     }
 
@@ -186,6 +200,7 @@ class Particle_Vector
     Event_t event( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return d_event[i];
     }
 
@@ -194,6 +209,7 @@ class Particle_Vector
     void set_event( const std::size_t i, const Event_t event )
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	d_event[i] = event; 
     }
 
@@ -202,15 +218,35 @@ class Particle_Vector
     const Geo_State_t& geo_state( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return d_geo_state[ d_lid[i] ]; 
     }
     PROFUGUS_DEVICE_FUNCTION
     Geo_State_t& geo_state( const std::size_t i )
     { 
 	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
 	return d_geo_state[ d_lid[i] ]; 
     }
     //@}
+
+    //! Get the particle batch.
+    PROFUGUS_DEVICE_FUNCTION
+    int batch( const std::size_t i ) const
+    {
+	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
+	return d_batch[ d_lid[i] ];
+    }
+
+    //! Set the particle batch.
+    PROFUGUS_DEVICE_FUNCTION
+    void set_batch( const std::size_t i, const int batch )
+    {
+	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
+	d_batch[ d_lid[i] ] = batch;
+    }
 };
 
 //---------------------------------------------------------------------------//

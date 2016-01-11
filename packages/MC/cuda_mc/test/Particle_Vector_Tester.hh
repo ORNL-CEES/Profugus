@@ -81,6 +81,12 @@ class Particle_Vector_Tester
     // get the geometry state for the whole vector
     Teuchos::Array<Geo_State_t> geo_state();
 
+    // get a vector of batches.
+    Teuchos::Array<int> batch();
+
+    // Set the entire vector to a batch.
+    void set_batch( const int batch );
+
   private:
     
     int d_size;
