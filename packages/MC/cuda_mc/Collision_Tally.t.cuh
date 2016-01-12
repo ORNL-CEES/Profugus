@@ -11,6 +11,7 @@
 #define cuda_mc_Collision_Tally_t_cuh
 
 #include "cuda_utils/Hardware.hh"
+#include "cuda_utils/Memory.cuh"
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Atomic_Add.cuh"
 
@@ -117,8 +118,7 @@ Collision_Tally<Geometry>::Collision_Tally(
 {
     // Allocate the tally.
     std::size_t size = d_num_batch * d_num_cells;
-    std::size_t mem_size = size * sizeof(double);
-    CudaCall( cudaMalloc( (void**) &d_tally, mem_size ) );
+    cuda::memory::Malloc( d_tally, size );
     
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -136,7 +136,7 @@ Collision_Tally<Geometry>::Collision_Tally(
 template <class Geometry>
 Collision_Tally<Geometry>::~Collision_Tally()
 {
-    cudaFree( d_tally );
+    cuda::memory::Free( d_tally );
 }
 
 //---------------------------------------------------------------------------//
@@ -197,11 +197,10 @@ void Collision_Tally<Geometry>::copy_moments_to_host(
     Teuchos::Array<double>& second_moment ) const
 {
     // Allocate moments on device.
-    std::size_t mem_size = d_num_cells * sizeof(double);
     double* device_first_moment;
-    CudaCall( cudaMalloc( (void**) &device_first_moment, mem_size ) );
+    cuda::memory::Malloc( device_first_moment, d_num_cells );
     double* device_second_moment;
-    CudaCall( cudaMalloc( (void**) &device_second_moment, mem_size ) );
+    cuda::memory::Malloc( device_second_moment, d_num_cells );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -219,15 +218,15 @@ void Collision_Tally<Geometry>::copy_moments_to_host(
 
     // Copy moments to host.
     first_moment.resize( d_num_cells );
-    CudaCall( cudaMemcpy( first_moment.getRawPtr(), device_first_moment,
-			  mem_size, cudaMemcpyDeviceToHost) );
+    cuda::memory::Memcpy_To_Host( 
+	first_moment.getRawPtr(), device_first_moment, d_num_cells );
     second_moment.resize( d_num_cells );
-    CudaCall( cudaMemcpy( second_moment.getRawPtr(), device_second_moment,
-			  mem_size, cudaMemcpyDeviceToHost) );
+    cuda::memory::Memcpy_To_Host( 
+	second_moment.getRawPtr(), device_second_moment, d_num_cells );
 
     // Free device moments.
-    cudaFree( device_first_moment );
-    cudaFree( device_second_moment );
+    cuda::memory::Free( device_first_moment );
+    cuda::memory::Free( device_second_moment );
 }
 
 //---------------------------------------------------------------------------//

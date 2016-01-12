@@ -13,6 +13,7 @@
 #include "Particle_Vector.hh"
 
 #include "cuda_utils/Hardware.hh"
+#include "cuda_utils/Memory.cuh"
 
 #include <vector>
 
@@ -57,15 +58,15 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 : d_size( num_particle )
 {
     // Allocate data arrays.
-    cudaMalloc( (void**) &d_matid, d_size * sizeof(int) );
-    cudaMalloc( (void**) &d_group, d_size * sizeof(int) );
-    cudaMalloc( (void**) &d_wt, d_size * sizeof(double) );
-    cudaMalloc( (void**) &d_rng, d_size * sizeof(curandState) );
-    cudaMalloc( (void**) &d_alive, d_size * sizeof(bool) );
-    cudaMalloc( (void**) &d_geo_state, d_size * sizeof(Geo_State_t) );
-    cudaMalloc( (void**) &d_event, d_size * sizeof(Event_t) );
-    cudaMalloc( (void**) &d_lid, d_size * sizeof(std::size_t) );
-    cudaMalloc( (void**) &d_batch, d_size * sizeof(int) );
+    cuda::memory::Malloc( d_matid, d_size );
+    cuda::memory::Malloc( d_group, d_size );
+    cuda::memory::Malloc( d_wt, d_size );
+    cuda::memory::Malloc( d_rng, d_size );
+    cuda::memory::Malloc( d_alive, d_size );
+    cuda::memory::Malloc( d_geo_state, d_size );
+    cuda::memory::Malloc( d_event, d_size );
+    cuda::memory::Malloc( d_lid, d_size );
+    cuda::memory::Malloc( d_batch, d_size );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -80,16 +81,15 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Copy the seeds to the device.
     int* device_seeds;
-    cudaMalloc( (void**) &device_seeds, d_size * sizeof(int) );
-    cudaMemcpy( device_seeds, host_seeds.data(), d_size * sizeof(int),
-		cudaMemcpyHostToDevice );
+    cuda::memory::Malloc( device_seeds, d_size );
+    cuda::Memory::Memcpy_To_Device( device_seeds, host_seeds.data(), d_size );
 
     // Initialize the generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 
 	d_size, device_seeds, d_rng );
 
     // Deallocate the device seeds.
-    cudaFree( device_seeds );
+    cuda::memory::Free( device_seeds );
 
     // Create the local ids.
     init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
@@ -100,15 +100,15 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 template <class Geometry>
 Particle_Vector<Geometry>::~Particle_Vector()
 {
-    cudaFree( d_matid );
-    cudaFree( d_group );
-    cudaFree( d_wt );
-    cudaFree( d_rng );
-    cudaFree( d_alive );
-    cudaFree( d_geo_state );
-    cudaFree( d_event );
-    cudaFree( d_lid );
-    cudaFree( d_batch );
+    cuda::memory::Free( d_matid );
+    cuda::memory::Free( d_group );
+    cuda::memory::Free( d_wt );
+    cuda::memory::Free( d_rng );
+    cuda::memory::Free( d_alive );
+    cuda::memory::Free( d_geo_state );
+    cuda::memory::Free( d_event );
+    cuda::memory::Free( d_lid );
+    cuda::memory::Free( d_batch );
 }
 
 //---------------------------------------------------------------------------//
