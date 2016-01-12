@@ -15,14 +15,14 @@
 //---------------------------------------------------------------------------//
 // Prefix for device-only functions.
 #ifdef __NVCC__
-#define PROFUGUS_DEVICE_FUNCTION __device__ inline
+#define PROFUGUS_DEVICE_FUNCTION __inline__ __device__
 #else
 #define PROFUGUS_DEVICE_FUNCTION inline
 #endif
 
 // Prefix for host-device functions.
 #ifdef __NVCC__
-#define PROFUGUS_HOST_DEVICE_FUNCTION __host__ __device__ inline
+#define PROFUGUS_HOST_DEVICE_FUNCTION __inline__ __host__ __device__
 #else
 #define PROFUGUS_HOST_DEVICE_FUNCTION inline
 #endif

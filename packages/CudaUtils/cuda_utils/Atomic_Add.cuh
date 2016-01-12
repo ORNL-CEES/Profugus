@@ -66,19 +66,31 @@ __device__ float Atomic_Add<arch::Device, float>::operator()(
 //---------------------------------------------------------------------------//
 //! Specialization on device double-precision
 template<>
-__device__ double Atomic_Add<arch::Device, double>::operator()(
+__inline__ __device__ double Atomic_Add<arch::Device, double>::operator()(
         double* __restrict__  address,
         double val)
 {
-    typedef unsigned long long int ulli;
-    ulli* __restrict__ address_as_ull = reinterpret_cast<ulli*>(address);
-    ulli old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed,
-                    __double_as_longlong(val + __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
+    // Declare a union to mask the double as an int.
+    union AtomicAddUnion
+    {
+	unsigned long long int d_i;
+	double d_d;
+	__device__ AtomicAddUnion() {};
+    };
+
+    // Create unions for the swap.
+    AtomicAddUnion old_value, new_value, next_value;
+
+    // Perform the sum.
+    old_value.d_d = *address;
+    do 
+    {
+	next_value.d_i = old_value.d_i;
+	new_value.d_d = next_value.d_d + val;
+	old_value.d_i = atomicCAS( (unsigned long long int*) address, next_value.d_i , new_value.d_i );
+    } while ( next_value.d_i != old_value.d_i );
+
+    return old_value.d_d ;
 }
 #endif // __NVCC__
 
