@@ -80,9 +80,9 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     for ( auto& s : host_seeds ) s = rng.uniform<int>();
 
     // Copy the seeds to the device.
-    int* device_seeds;
+    int* device_seeds = NULL;
     cuda::memory::Malloc( device_seeds, d_size );
-    cuda::Memory::Memcpy_To_Device( device_seeds, host_seeds.data(), d_size );
+    cuda::memory::Copy_To_Device( device_seeds, host_seeds.data(), d_size );
 
     // Initialize the generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 

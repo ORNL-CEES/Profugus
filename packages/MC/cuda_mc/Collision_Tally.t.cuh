@@ -148,7 +148,7 @@ void Collision_Tally<Geometry>::tally(
     // Get the particles that have had a collision.
     std::size_t start_idx = 0;
     std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( profugus::Events::COLLISION,
+    particles.get_host_ptr()->get_event_particles( profugus::Event::COLLISION,
 						   start_idx,
 						   num_particle );
 
@@ -197,9 +197,9 @@ void Collision_Tally<Geometry>::copy_moments_to_host(
     Teuchos::Array<double>& second_moment ) const
 {
     // Allocate moments on device.
-    double* device_first_moment;
+    double* device_first_moment = NULL;
     cuda::memory::Malloc( device_first_moment, d_num_cells );
-    double* device_second_moment;
+    double* device_second_moment = NULL;
     cuda::memory::Malloc( device_second_moment, d_num_cells );
 
     // Get CUDA launch parameters.
@@ -218,10 +218,10 @@ void Collision_Tally<Geometry>::copy_moments_to_host(
 
     // Copy moments to host.
     first_moment.resize( d_num_cells );
-    cuda::memory::Memcpy_To_Host( 
+    cuda::memory::Copy_To_Host( 
 	first_moment.getRawPtr(), device_first_moment, d_num_cells );
     second_moment.resize( d_num_cells );
-    cuda::memory::Memcpy_To_Host( 
+    cuda::memory::Copy_To_Host( 
 	second_moment.getRawPtr(), device_second_moment, d_num_cells );
 
     // Free device moments.
