@@ -56,6 +56,7 @@ void Malloc( T* device_ptr, const std::size_t N )
 
 //---------------------------------------------------------------------------//
 // Cuda free memory. This may be called in a destructor.
+template<typename T>
 void Free( T* device_ptr )
 {
     try
