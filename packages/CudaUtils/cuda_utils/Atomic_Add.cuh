@@ -21,12 +21,12 @@ namespace cuda
  *
  * \return The old value
  */
-template<typename Arch_Switch, typename T>
+template<typename Arch_Switch>
 struct Atomic_Add
 {
     typedef Arch_Switch Arch_t;
-    typedef T           float_type;
 
+    template<typename float_type>
     static __device__ float_type fetch_add(
             float_type* __restrict__  address,
             float_type val);
@@ -36,12 +36,12 @@ struct Atomic_Add
 // HOST EMULATION SPECIALIZATIONS
 //---------------------------------------------------------------------------//
 //! Specialization on host
-template<typename T>
-struct Atomic_Add<arch::Host, T>
+template<>
+struct Atomic_Add<arch::Host>
 {
     typedef arch::Host Arch_t;
-    typedef T          float_type;
 
+    template<typename float_type>
     static float_type fetch_add(float_type* address, float_type val)
     {
         float_type old = *address;
@@ -56,7 +56,8 @@ struct Atomic_Add<arch::Host, T>
 //---------------------------------------------------------------------------//
 //! Specialization on device single-precision
 template<>
-__inline__ __device__ float Atomic_Add<arch::Device, float>::fetch_add(
+template<>
+__inline__ __device__ float Atomic_Add<arch::Device>::fetch_add<float>(
         float* __restrict__  address,
         float val)
 {
@@ -66,7 +67,8 @@ __inline__ __device__ float Atomic_Add<arch::Device, float>::fetch_add(
 //---------------------------------------------------------------------------//
 //! Specialization on device double-precision
 template<>
-__inline__ __device__ double Atomic_Add<arch::Device, double>::fetch_add(
+template<>
+__inline__ __device__ double Atomic_Add<arch::Device>::fetch_add<double>(
         double* __restrict__  address,
         double val)
 {

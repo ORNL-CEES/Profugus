@@ -27,7 +27,7 @@ __global__ void atomic_add_test_kernel(
     unsigned int stride = blockDim.x * gridDim.x;
 
     for (; i < num_increments; i += stride)
-        Atomic_Add<Arch_Switch,Float_T>::fetch_add(&out[0], static_cast<Float_T>(1));
+        Atomic_Add<Arch_Switch>::fetch_add(&out[0], static_cast<Float_T>(1));
 }
 
 //---------------------------------------------------------------------------//
