@@ -160,7 +160,7 @@ Particle_Vector_Tester::Particle_Vector_Tester( const int num_particle,
     cuda::Hardware<cuda::arch::Device>::acquire();
 
     // Create the vector after hardware acquisition.
-    d_vector = cuda::Shared_Device_Ptr<Particle_Vector>( num_particle, rng );
+    d_vector = cuda::shared_device_ptr<Particle_Vector>( num_particle, rng );
 }
 
 //---------------------------------------------------------------------------//
