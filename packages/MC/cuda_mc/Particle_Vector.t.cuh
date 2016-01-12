@@ -7,6 +7,9 @@
  */
 //---------------------------------------------------------------------------//
 
+#ifndef cuda_mc_Particle_Vector_t_cuh
+#define cuda_mc_Particle_Vector_t_cuh
+
 #include "Particle_Vector.hh"
 
 #include "cuda_utils/Hardware.hh"
@@ -26,21 +29,20 @@ namespace cuda_profugus
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
 // Initialize particle random number generators
-__global__ void init_rng( const std::size_t start_idx,
-			  const int* seeds,
-			  curandState* rng )
+__global__ void init_rng_kernel( const std::size_t size,
+				 const int* seeds,
+				 curandState* rng )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x + start_idx;
-    curand_init( seeds[idx], 0, 0, &rng[idx] );
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( idx < size ) curand_init( seeds[idx], 0, 0, &rng[idx] );
 }
 
 //---------------------------------------------------------------------------//
 // Initialize particle local ids.
-__global__ void init_lid( const std::size_t start_idx,
-			  std::size_t* lids )
+__global__ void init_lid_kernel( const std::size_t size, std::size_t* lids )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x + start_idx;
-    lids[idx] = idx;
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( idx < size ) lids[idx] = idx;
 }
 
 //---------------------------------------------------------------------------//
@@ -70,7 +72,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
     unsigned int num_blocks = d_size / threads_per_block;
-    unsigned int remainder = d_size % threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
     // Create seeds for the random number generators.
     std::vector<int> host_seeds( d_size );
@@ -83,28 +85,14 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 		cudaMemcpyHostToDevice );
 
     // Initialize the generators.
-    if ( num_blocks > 0 )
-    {
-	init_rng<<<num_blocks,threads_per_block>>>( 0, device_seeds, d_rng );
-    }
-    if ( remainder > 0 )
-    {
-	init_rng<<<1,remainder>>>( 
-	    threads_per_block * num_blocks, device_seeds, d_rng );
-    }
+    init_rng_kernel<<<num_blocks,threads_per_block>>>( 
+	d_size, device_seeds, d_rng );
 
     // Deallocate the device seeds.
     cudaFree( device_seeds );
 
     // Create the local ids.
-    if ( num_blocks > 0 )
-    {
-    	init_lid<<<num_blocks,threads_per_block>>>( 0, d_lid );
-    }
-    if ( remainder > 0 )
-    {
-    	init_lid<<<1,remainder>>>( threads_per_block * num_blocks, d_lid );
-    }
+    init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
 }
     
 //---------------------------------------------------------------------------//
@@ -153,6 +141,8 @@ void Particle_Vector<Geometry>::get_event_particles(
 //---------------------------------------------------------------------------//
 
 } // end namespace profugus
+
+#endif // end cuda_mc_Particle_Vector_t_cuh
 
 //---------------------------------------------------------------------------//
 //                 end of Particle_Vector.t.cuh

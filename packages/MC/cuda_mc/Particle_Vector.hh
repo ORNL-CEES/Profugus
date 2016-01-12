@@ -257,7 +257,7 @@ class Particle_Vector
 
 //---------------------------------------------------------------------------//
 
-} // end namespace profugus
+} // end namespace cuda_profugus
 
 #endif // cuda_mc_Particle_Vector_hh
 
