@@ -139,7 +139,7 @@ Collision_Tally<Geometry>::~Collision_Tally()
 // Tally the particles in a vector.
 template <class Geometry>
 void Collision_Tally<Geometry>::tally( 
-    const cuda::Shared_Device_Ptr<Particle_Vector>& particles )
+    const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     // Get the particles that have had a collision.
     std::size_t start_idx = 0;
