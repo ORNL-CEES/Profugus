@@ -10,7 +10,9 @@
 #ifndef cuda_mc_Collision_Tally_t_cuh
 #define cuda_mc_Collision_Tally_t_cuh
 
+#include "cuda_utils/Hardware.hh"
 #include "cuda_utils/CudaDBC.hh"
+#include "cuda_utils/Atomic_Add.cuh"
 
 #include "mc/Definitions.hh"
 
@@ -24,7 +26,7 @@ namespace cuda_profugus
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
 // Initialize the tally to zero
-__global__ void init_tally_kernel( const std::size_t size, std::size_t* tally )
+__global__ void init_tally_kernel( const std::size_t size, double* tally )
 {
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) tally[idx] = 0.0;
@@ -32,8 +34,9 @@ __global__ void init_tally_kernel( const std::size_t size, std::size_t* tally )
 
 //---------------------------------------------------------------------------//
 // Tally particles that have had a collision.
+template<class Geometry>
 __global__ void tally_kernel( const Geometry* geometry,
-			      const Particle_Vector* particles,
+			      const Particle_Vector<Geometry>* particles,
 			      const int start_idx,
 			      const int num_particle,
 			      const int num_batch,
@@ -46,7 +49,7 @@ __global__ void tally_kernel( const Geometry* geometry,
 	std::size_t pidx = idx + start_idx;
 	std::size_t tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
-	cuda::Atomic_Add<cuda::arch::Device,double>::fetch_add( 
+	cuda::Atomic_Add<cuda::arch::Device>::fetch_add( 
 	    &tally[tally_idx], particles->wt(pidx) );
     }
 }
@@ -74,7 +77,7 @@ __global__ void moments_kernel( const int num_batch,
 				double* second_moment )
 {
     std::size_t cell_idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( cell_id < num_cell )
+    if ( cell_idx < num_cell )
     {
 	int tally_idx = 0;
 
@@ -82,16 +85,16 @@ __global__ void moments_kernel( const int num_batch,
 	first_moment[cell_idx] = 0.0;
 	for ( int b = 0; b < num_batch; ++b )
 	{
-	    tally_idx = b * num_cells + cell_idx;
+	    tally_idx = b * num_cell + cell_idx;
 	    first_moment[cell_idx] += tally[ tally_idx ];
 	}
 	first_moment[cell_idx] /= num_batch;
 
 	// Calculate the second moment.
-	second_moment[cells_idx] = 0.0;
+	second_moment[cell_idx] = 0.0;
 	for ( int b = 0; b < num_batch; ++b )
 	{
-	    tally_idx = b * num_cells + cell_idx;
+	    tally_idx = b * num_cell + cell_idx;
 	    second_moment[cell_idx] += 
 		tally[ tally_idx ] * tally[ tally_idx ]
 		- first_moment[cell_idx] * first_moment[cell_idx];
@@ -122,10 +125,10 @@ Collision_Tally<Geometry>::Collision_Tally(
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
     unsigned int num_blocks = size / threads_per_block;
-    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+    if ( size % threads_per_block > 0 ) ++num_blocks;
 
     // Initialize the tally to zero.
-    init_tally_kernel<<<num_blocks,threads_per_block>>>( d_size, d_tally );
+    init_tally_kernel<<<num_blocks,threads_per_block>>>( size, d_tally );
 }
     
 //---------------------------------------------------------------------------//
@@ -146,7 +149,7 @@ void Collision_Tally<Geometry>::tally(
     std::size_t start_idx = 0;
     std::size_t num_particle = 0;
     particles.get_host_ptr()->get_event_particles( profugus::Events::COLLISION,
-						   start_index,
+						   start_idx,
 						   num_particle );
 
     // Get CUDA launch parameters.
@@ -181,7 +184,7 @@ void Collision_Tally<Geometry>::finalize( const std::size_t total_num_particle )
 
     // Finalize the tally.
     finalize_kernel<<<num_blocks,threads_per_block>>>( d_num_batch,
-						       d_num_cell,
+						       d_num_cells,
 						       total_num_particle,
 						       d_tally );
 }
@@ -191,7 +194,7 @@ void Collision_Tally<Geometry>::finalize( const std::size_t total_num_particle )
 template <class Geometry>
 void Collision_Tally<Geometry>::copy_moments_to_host( 
     Teuchos::Array<double>& first_moment,
-    Teuchos::Array<double>& second_moment )
+    Teuchos::Array<double>& second_moment ) const
 {
     // Allocate moments on device.
     std::size_t mem_size = d_num_cells * sizeof(double);
@@ -204,12 +207,12 @@ void Collision_Tally<Geometry>::copy_moments_to_host(
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
-    unsigned int num_blocks = size / threads_per_block;
+    unsigned int num_blocks = d_num_cells / threads_per_block;
     if ( d_num_cells % threads_per_block > 0 ) ++num_blocks;
 
     // Calculate moments on device.
     moments_kernel<<<num_blocks,threads_per_block>>>( d_num_batch,
-						      d_num_cell,
+						      d_num_cells,
 						      d_tally,
 						      device_first_moment,
 						      device_second_moment );
