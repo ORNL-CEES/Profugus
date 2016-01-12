@@ -164,8 +164,15 @@ IF(USE_CUDA)
     cuda_geometry/Cartesian_Mesh.cu
     cuda_geometry/Mesh_Geometry.cu
     )
-  LIST(APPEND CUDDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
+  LIST(APPEND CUDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_GEOMETRY_SOURCES})
+
+  FILE(GLOB CUDA_MC_HEADERS cuda_mc/*.hh)
+  SET(CUDA_MC_SOURCES
+    cuda_mc/Physics.pt.cu
+    )
+  LIST(APPEND CUDA_HEADERS ${CUDA_MC_HEADERS})
+  LIST(APPEND CUDA_SOURCES ${CUDA_MC_SOURCES})
 ENDIF()
 
 ##---------------------------------------------------------------------------##

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Particle.hh
+ * \file   cuda_mc/Particle.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 11:26:16 2014
  * \brief  Particle class definition.
@@ -8,15 +8,16 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Particle_hh
-#define mc_Particle_hh
+#ifndef cuda_mc_Particle_hh
+#define cuda_mc_Particle_hh
 
 #include "CudaUtils/cuda_utils/Definitions.hh"
 #include "MC/mc/Definitions.hh"
+#include "CudaUtils/cuda_utils/CudaDBC.hh"
 
 #include <curand_kernel.h>
 
-namespace profugus
+namespace cuda_mc
 {
 
 //===========================================================================//
@@ -38,8 +39,9 @@ class Particle
     //@{
     //! Typedefs.
     typedef cuda::Space_Vector              Space_Vector;
-    typedef events::Event                   Event_Type;
+    typedef profugus::events::Event         Event_Type;
     typedef typename Geometry::Geo_State_t  Geo_State_t;
+    typedef curandState_t                   RNG_State;
     //@}
 
   private:
@@ -55,7 +57,7 @@ class Particle
     double d_wt;
 
     // Curand state
-    curandState_t d_rng;
+    RNG_State d_rng;
 
     // Alive/dead status.
     bool d_alive;
@@ -73,28 +75,28 @@ class Particle
     // >>> PARTICLE FUNCTIONS
 
     //! Set a new weight.
-    void set_wt(double wt) { d_wt = wt; }
+    __device__ void set_wt(double wt) { d_wt = wt; }
 
     //! Set particle group.
-    void set_group(int g) { d_group = g; }
+    __device__ void set_group(int g) { d_group = g; }
 
     //! Multiply weight.
-    void multiply_wt(double wt) { d_wt *= wt; }
+    __device__ void multiply_wt(double wt) { d_wt *= wt; }
 
     //! Set a new random number generator.
-    void set_rng(const RNG &rng) { d_rng = rng; }
+    __device__ void set_rng(const RNG_State &rng) { d_rng = rng; }
 
     //! Set the particle event flag.
-    void set_event(Event_Type event) { d_event = event; }
+    __device__ void set_event(Event_Type event) { d_event = event; }
 
     //! Set the material id of the region occupied by the particle.
-    void set_matid(int matid) { d_matid = matid; }
+    __device__ void set_matid(int matid) { d_matid = matid; }
 
     //! Kill the particle.
-    void kill() { d_alive = false; }
+    __device__ void kill() { d_alive = false; }
 
     //! Set particle status to alive.
-    void live() { d_alive = true; }
+    __device__ void live() { d_alive = true; }
 
     //@{
     //! Get a handle to the geometric state of the particle.
@@ -104,18 +106,18 @@ class Particle
 
     //@{
     //! Access particle data.
-    bool alive() const { return d_alive; }
-    double wt() const { return d_wt; }
-    const RNG& rng() const { return d_rng; }
-    Event_Type event() const { return d_event; }
-    int matid() const { return d_matid; }
-    int group() const { return d_group; }
+    __device__ bool alive() const { return d_alive; }
+    __device__ double wt() const { return d_wt; }
+    __device__ const RNG_State& rng() const { return d_rng; }
+    __device__ Event_Type event() const { return d_event; }
+    __device__ int matid() const { return d_matid; }
+    __device__ int group() const { return d_group; }
     //@}
 };
 
-} // end namespace profugus
+} // end namespace cuda_mc
 
-#endif // mc_Particle_hh
+#endif // cuda_mc_Particle_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Particle.hh
