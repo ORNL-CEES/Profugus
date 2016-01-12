@@ -27,7 +27,7 @@ struct Atomic_Add
     typedef Arch_Switch Arch_t;
     typedef T           float_type;
 
-    __device__ float_type operator()(
+    static __device__ float_type fetch_add(
             float_type* __restrict__  address,
             float_type val);
 };
@@ -42,7 +42,7 @@ struct Atomic_Add<arch::Host, T>
     typedef arch::Host Arch_t;
     typedef T          float_type;
 
-    float_type operator()(float_type* address, float_type val)
+    static float_type fetch_add(float_type* address, float_type val)
     {
         float_type old = *address;
         *address += val;
@@ -56,7 +56,7 @@ struct Atomic_Add<arch::Host, T>
 //---------------------------------------------------------------------------//
 //! Specialization on device single-precision
 template<>
-__device__ float Atomic_Add<arch::Device, float>::operator()(
+__inline__ __device__ float Atomic_Add<arch::Device, float>::fetch_add(
         float* __restrict__  address,
         float val)
 {
@@ -66,7 +66,7 @@ __device__ float Atomic_Add<arch::Device, float>::operator()(
 //---------------------------------------------------------------------------//
 //! Specialization on device double-precision
 template<>
-__inline__ __device__ double Atomic_Add<arch::Device, double>::operator()(
+__inline__ __device__ double Atomic_Add<arch::Device, double>::fetch_add(
         double* __restrict__  address,
         double val)
 {
@@ -87,7 +87,9 @@ __inline__ __device__ double Atomic_Add<arch::Device, double>::operator()(
     {
 	next_value.d_i = old_value.d_i;
 	new_value.d_d = next_value.d_d + val;
-	old_value.d_i = atomicCAS( (unsigned long long int*) address, next_value.d_i , new_value.d_i );
+	old_value.d_i = atomicCAS( (unsigned long long int*) address, 
+				   next_value.d_i , 
+				   new_value.d_i );
     } while ( next_value.d_i != old_value.d_i );
 
     return old_value.d_d ;

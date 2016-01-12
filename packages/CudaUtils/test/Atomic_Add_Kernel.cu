@@ -23,13 +23,11 @@ __global__ void atomic_add_test_kernel(
         Float_T* const __restrict__ out,
         unsigned int                num_increments)
 {
-    Atomic_Add<Arch_Switch, Float_T> atomic_add;
-
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int stride = blockDim.x * gridDim.x;
 
     for (; i < num_increments; i += stride)
-        atomic_add(&out[0], static_cast<Float_T>(1));
+        Atomic_Add<Arch_Switch,Float_T>::fetch_add(&out[0], static_cast<Float_T>(1));
 }
 
 //---------------------------------------------------------------------------//
