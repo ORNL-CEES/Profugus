@@ -48,6 +48,12 @@ class Shared_Device_Ptr
     { /* ... */ }
 
     //! Copy constructor.
+    Shared_Device_Ptr( const Shared_Device_Ptr<T>& rhs )
+	: d_host_ptr( rhs.d_host_ptr )
+	, d_device_ptr( rhs.d_device_ptr )
+    { /* ... */ }
+
+    //! Host pointer constructor.
     explicit Shared_Device_Ptr( const std::shared_ptr<T>& host_ptr )
 	: d_host_ptr( host_ptr )
     { 
