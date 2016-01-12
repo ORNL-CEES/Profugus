@@ -10,8 +10,12 @@
 #ifndef CudaUtils_cuda_utils_Memory_cuh
 #define CudaUtils_cuda_utils_Memory_cuh
 
+#include <exception>
+
 #include "CudaDBC.hh"
 #include "Stream.hh"
+
+#include "comm/Logger.hh"
 
 #include <cuda_runtime.h>
 
@@ -23,7 +27,8 @@ namespace memory
 //---------------------------------------------------------------------------//
 // Memory Management Functions.
 //---------------------------------------------------------------------------//
-// Cuda malloc memory.
+// Cuda allocate memory. Will allocate memory on the device of the requested
+// size and check for errors.
 template<typename T>
 void Malloc( T* device_ptr, const std::size_t N )
 {
@@ -31,7 +36,7 @@ void Malloc( T* device_ptr, const std::size_t N )
     {
 	CudaCall( cudaMalloc( (void**) &device_ptr, N * sizeof(T) ) );
     }
-    catch (const profugus::assertion& e)
+    catch (const std::exception& e)
     {
         try
         {
@@ -40,12 +45,12 @@ void Malloc( T* device_ptr, const std::size_t N )
             CudaCall(cudaMemGetInfo(&free, &total));
             profugus::log(profugus::WARNING)
                 << "Error: Failed to allocate "
-                << d_size * sizeof(T) << " bytes on device: only "
+                << N * sizeof(T) << " bytes on device: only "
                 << free << " of " << total << " bytes are free";
         }
-        catch (const profugus::assertion& e)
+        catch (const std::exception& e)
         {
-            log(profugus::WARNING)
+	    profugus::log(profugus::WARNING)
                 << "Error: Failed to allocate on device "
                 << "and failed to get information about the failure.";
         }
@@ -55,66 +60,67 @@ void Malloc( T* device_ptr, const std::size_t N )
 }
 
 //---------------------------------------------------------------------------//
-// Cuda free memory. This may be called in a destructor.
+// Cuda free memory. This may be called in a destructor so we check for errors
+// but log them instead of re-throwing the exception.
 template<typename T>
 void Free( T* device_ptr )
 {
     try
     {
-        CudaCall( cudaFree(device_ptr) );
+	CudaCall( cudaFree(device_ptr) );
     }
-    catch (const profugus::assertion& e)
+    catch (const std::exception& e)
     {
-        log(profugus::WARNING)
-            << "Error: failed to free device data "
-            << "at " << d_data << ": " << e.what();
+	profugus::log(profugus::WARNING)
+	    << "Error: failed to free device data "
+	    << "at " << device_ptr << ": " << e.what();
     }
 }
 
 //---------------------------------------------------------------------------//
 // Copy from the host to the device.
 template<typename T>
-void Memcpy_To_Device( T* device_ptr, 
-		       const T* host_ptr, 
-		       const std::size_t N )
+void Copy_To_Device( T* device_ptr, 
+		     const T* host_ptr, 
+		     const std::size_t N )
 {
-    cudaCall( cudaMemcpy(device_ptr, host_ptr, N*sizeof(T),
-			 cudaMemcpyToHostToDevice) );
+    CudaCall( cudaMemcpy(device_ptr, host_ptr, N*sizeof(T),
+			 cudaMemcpyHostToDevice) );
 }
 
 //---------------------------------------------------------------------------//
 // Copy from the device to the host.
 template<typename T>
-void Memcpy_To_Host( T* host_ptr, 
-		     const T* device_ptr, 
-		     const std::size_t N )
+void Copy_To_Host( T* host_ptr, 
+		   const T* device_ptr, 
+		   const std::size_t N )
 {
-    cudaCall( cudaMemcpy(host_ptr, device_ptr, N*sizeof(T),
-			 cudaMemcpyToDeviceToHost) );
+    CudaCall( cudaMemcpy(host_ptr, device_ptr, N*sizeof(T),
+			 cudaMemcpyDeviceToHost) );
 }
 
 //---------------------------------------------------------------------------//
 // Asynchronous copy from the host to the device.
 template<typename T>
-void Memcpy_To_Device_Async( T* device_ptr, 
-			     const T* host_ptr, 
-			     const std::size_t N,
-			     ::cuda::Stream<::cuda::arch::Device>& stream )
+void Copy_To_Device_Async( T* device_ptr, 
+			   const T* host_ptr, 
+			   const std::size_t N,
+			   ::cuda::Stream<::cuda::arch::Device>& stream )
 {
-    cudaCall( cudaMemcpyAsync(device_ptr, host_ptr, N*sizeof(T),
-			      cudaMemcpyToHostToDevice, stream.handle()) );
+    CudaCall( cudaMemcpyAsync(device_ptr, host_ptr, N*sizeof(T),
+			      cudaMemcpyHostToDevice, stream.handle()) );
 }
 
 //---------------------------------------------------------------------------//
 // Asynchronous copy from the device to the host.
 template<typename T>
-void Memcpy_To_Host_Async( T* host_ptr, 
-			   const T* device_ptr, 
-			   const std::size_t N,
-			   ::cuda::Stream<::cuda::arch::Device>& stream )
+void Copy_To_Host_Async( T* host_ptr, 
+			 const T* device_ptr, 
+			 const std::size_t N,
+			 ::cuda::Stream<::cuda::arch::Device>& stream )
 {
-    cudaCall( cudaMemcpyAsync(host_ptr, device_ptr, N*sizeof(T),
-			      cudaMemcpyToDeviceToHost, stream.handle()) );
+    CudaCall( cudaMemcpyAsync(host_ptr, device_ptr, N*sizeof(T),
+			      cudaMemcpyDeviceToHost, stream.handle()) );
 }
 
 //---------------------------------------------------------------------------//
