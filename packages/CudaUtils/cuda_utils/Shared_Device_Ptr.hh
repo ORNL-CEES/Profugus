@@ -47,25 +47,10 @@ class Shared_Device_Ptr
     Shared_Device_Ptr()
     { /* ... */ }
 
-    //! Copy constructor.
-    Shared_Device_Ptr( const Shared_Device_Ptr<T>& rhs )
-	: d_host_ptr( rhs.d_host_ptr )
-	, d_device_ptr( rhs.d_device_ptr )
-    { /* ... */ }
-
     //! Host pointer constructor.
-    explicit Shared_Device_Ptr( const std::shared_ptr<T>& host_ptr )
+    Shared_Device_Ptr( const std::shared_ptr<T>& host_ptr )
 	: d_host_ptr( host_ptr )
     { 
-	shallow_copy_host_object_to_device(); 
-    }
-
-    //! Arugment constructor. Arguments must be for a valid constructor of
-    //! type T.
-    template<class ...Args>
-    explicit Shared_Device_Ptr( Args&&... args )
-    {
-	d_host_ptr = std::make_shared<T>( std::forward<Args>(args)... );
 	shallow_copy_host_object_to_device(); 
     }
 
@@ -103,6 +88,16 @@ class Shared_Device_Ptr
 #endif // end __NVCC__
     }
 };
+
+//---------------------------------------------------------------------------//
+// Free function for creating a Shared_Device_Ptr from object construction
+// arguments.
+template<class T,class ...Args>
+Shared_Device_Ptr<T> shared_device_ptr( Args&&... args )
+{
+    return Shared_Device_Ptr<T>( 
+	std::make_shared<T>(std::forward<Args>(args)...) );
+}
 
 //===========================================================================//
 } // end namespace cuda

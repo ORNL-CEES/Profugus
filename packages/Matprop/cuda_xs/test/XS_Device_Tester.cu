@@ -42,7 +42,7 @@ __global__ void get_matrix_kernel( const cuda_profugus::XS_Device* xs,
 // XS_Device_Tester
 //---------------------------------------------------------------------------//
 XS_Device_Tester::XS_Device_Tester( const profugus::XS& xs )
-    : d_xs( xs )
+: d_xs( cuda::shared_device_ptr<cuda_profugus::XS_Device>(xs) )
 { /* ... */ }
 
 //---------------------------------------------------------------------------//

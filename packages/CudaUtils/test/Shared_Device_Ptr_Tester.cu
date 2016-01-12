@@ -61,7 +61,7 @@ int Foo::get_int_on_host() const
 //---------------------------------------------------------------------------//
 // Bar functions.
 Bar::Bar( const double d, const int i )
-    : d_foo( d, i )
+    : d_foo( cuda::shared_device_ptr<Foo>(d, i) )
 { /* ... */ }
 
 Bar::Bar( const std::shared_ptr<Foo>& foo )
