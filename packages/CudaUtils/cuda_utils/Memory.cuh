@@ -30,7 +30,7 @@ namespace memory
 // Cuda allocate memory. Will allocate memory on the device of the requested
 // size and check for errors.
 template<typename T>
-void Malloc( T* device_ptr, const std::size_t N )
+void Malloc( T*& device_ptr, const std::size_t N )
 {
     try
     {
