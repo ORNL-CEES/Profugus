@@ -32,8 +32,9 @@ namespace cuda_mc
  */
 template <class Geometry>
 Physics<Geometry>::Physics(RCP_Std_DB db,
-                           SP_XS      mat)
-    : d_mat(mat)
+                           SDP_XS     mat)
+    : d_mat_host(mat)
+    , d_mat(mat.get_device_ptr())
     , d_Ng(d_mat->num_groups())
     , d_Nm(d_mat->num_mat())
     , d_scatter_vec(d_mat->num_groups()*d_mat->num_mat())
@@ -83,7 +84,7 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
             // add up the scattering
             for (int gp = 0; gp < d_Ng; ++gp)
             {
-                host_scatter[group_mat_index(g,m)] += column[gp];
+                host_scatter[group_mat_index(g,m)] += sig_s(gp,g);
             }
         }
 

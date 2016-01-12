@@ -111,7 +111,7 @@ void Physics<Geometry>::collide(Particle_t &particle,
 template <class Geometry>
 __device__
 double Physics<Geometry>::total(Reaction_Type       type,
-                                           const Particle_t   &p)
+                                const Particle_t   &p)
 {
     REQUIRE(d_mat->num_mat() == d_Nm);
     REQUIRE(d_mat->num_groups() == d_Ng);

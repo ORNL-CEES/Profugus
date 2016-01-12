@@ -63,8 +63,8 @@ class Physics
     typedef std::shared_ptr<Particle_t>         SP_Particle;
 
     typedef curandState_t                       RNG_State;
-    typedef profugus::XS                        XS_t;
-    typedef std::shared_ptr<XS_t>               SP_XS;
+    typedef cuda_profugus::XS_Device            XS_t;
+    typedef cuda::Shared_Device_Ptr<XS_t>       SDP_XS;
     typedef Teuchos::ParameterList              ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     typedef typename Geometry_t::Space_Vector   Space_Vector;
@@ -82,14 +82,15 @@ class Physics
     // >>> DATA
 
     // Cross section database.
-    SP_XS d_mat;
+    SDP_XS d_mat_host;
+    XS *d_mat;
 
     // Geometry.
     SP_Geometry d_geometry;
 
   public:
     // Constructor that auto-creates group bounds.
-    explicit Physics(RCP_Std_DB db, SP_XS mat);
+    explicit Physics(RCP_Std_DB db, SDP_XS mat);
 
     // >>> PUBLIC TRANSPORT INTERFACE
 
@@ -130,8 +131,11 @@ class Physics
 
     // >>> CLASS FUNCTIONS
 
-    //! Get cross section database.
-    SP_XS xs() const { return d_mat; }
+    //! Get cross section database (host).
+    SDP_XS xs() const { return d_mat; }
+
+    //! Get cross section database (device).
+    __device__ SDP_XS xs_device() const { return d_mat; }
 
     //! Number of discrete energy groups
     __host__ __device__ int num_groups() const { return d_Ng; }
