@@ -46,7 +46,8 @@ __global__ void tally_kernel( const Geometry* geometry,
 	std::size_t pidx = idx + start_idx;
 	std::size_t tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
-	atomicAdd( &tally[tally_idx], particles->wt(pidx) );
+	cuda::Atomic_Add<cuda::arch::Device,double>::fetch_add( 
+	    &tally[tally_idx], particles->wt(pidx) );
     }
 }
 
