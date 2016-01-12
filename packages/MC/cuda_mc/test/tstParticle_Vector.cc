@@ -140,6 +140,19 @@ TEST(Particle, construction)
 	}
     }
 
+    // Check that we can query events.
+    std::size_t start_idx = 0;
+    std::size_t num_event = 0;
+    tester.get_event_particles( profugus::events::SCATTER, start_idx, num_event );
+    EXPECT_EQ( start_idx, num_particle / 2 );
+    EXPECT_EQ( num_event, num_particle / 2 );
+    tester.get_event_particles( profugus::events::ABSORPTION, start_idx, num_event );
+    EXPECT_EQ( start_idx, 0 );
+    EXPECT_EQ( num_event, num_particle / 2 );
+    tester.get_event_particles( profugus::events::ESCAPE, start_idx, num_event );
+    EXPECT_EQ( start_idx, num_particle );
+    EXPECT_EQ( num_event, 0 );
+
     // Setup a geo state.
     typedef typename Particle_Vector_Tester::Geo_State_t Geo_State_t;
     Geo_State_t geo_state;

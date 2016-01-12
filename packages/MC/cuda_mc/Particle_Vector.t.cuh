@@ -15,6 +15,8 @@
 
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
+#include <thrust/distance.h>
+#include <thrust/binary_search.h>
 
 #include <cuda_runtime.h>
 
@@ -130,6 +132,22 @@ void Particle_Vector<Geometry>::sort_by_event()
     thrust::device_ptr<Event_t> event_end( d_event + d_size );
     thrust::device_ptr<std::size_t> lid_begin( d_lid );
     thrust::sort_by_key( event_begin, event_end, lid_begin );
+}
+
+//---------------------------------------------------------------------------//
+// Given an event, get the index at which it starts and the number of
+// particles with that event.
+template <class Geometry>
+void Particle_Vector<Geometry>::get_event_particles( 
+    const Event_t event, 
+    std::size_t& start_index, 
+    std::size_t& num_particle ) const
+{
+    thrust::device_ptr<const Event_t> event_begin( d_event );
+    thrust::device_ptr<const Event_t> event_end( d_event + d_size );
+    auto event_range = thrust::equal_range( event_begin, event_end, event );
+    start_index = thrust::distance( event_begin, event_range.first );
+    num_particle = thrust::distance( event_range.first, event_range.second );
 }
 
 //---------------------------------------------------------------------------//

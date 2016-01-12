@@ -90,6 +90,12 @@ class Particle_Vector
     // Sort the local indices by event key, effectively sorting the vector.
     void sort_by_event();
 
+    // Given an event, get the index at which it starts and the number of
+    // particles with that event.
+    void get_event_particles( const Event_t event, 
+			      std::size_t& start_index,
+			      std::size_t& num_particle ) const;
+
     // >>> DEVICE API
 
     //! Get the number of particles in the vector.
