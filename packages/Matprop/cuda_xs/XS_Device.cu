@@ -9,6 +9,8 @@
 
 #include "XS_Device.hh"
 
+#include "cuda_utils/Memory.cuh"
+
 #include <Teuchos_Array.hpp>
 
 #include <cuda_runtime.h>
@@ -42,15 +44,15 @@ XS_Device::XS_Device( const profugus::XS& xs )
     }
 
     // Allocate a matid global-to-local map.
-    cudaMalloc( (void**) &d_matid_g2l, matid_g2l_size*sizeof(int) );
+    cuda::memory::Malloc( d_matid_g2l, matid_g2l_size );
 
     // Copy the matid list to the device.
-    cudaMemcpy( d_matid_g2l, host_matid_g2l.getRawPtr(), matid_g2l_size*sizeof(int),
-		cudaMemcpyHostToDevice );
+    cuda::memory::Copy_To_Device( 
+	d_matid_g2l, host_matid_g2l.getRawPtr(), matid_g2l_size );
     host_matid_g2l.clear();
 
     // Allocate total cross sections.
-    cudaMalloc( (void**) &d_totals, d_totals_size*sizeof(double) );
+    cuda::memory::Malloc( d_totals, d_totals_size );
 
     // Extract the total cross sections.
     double* host_xs;
@@ -61,13 +63,12 @@ XS_Device::XS_Device( const profugus::XS& xs )
 	{
 	    host_xs = xs.vector( matids[m], t ).values();
 	    offset = t * d_Nm * d_Ng + m * d_Ng;
-	    cudaMemcpy( d_totals + offset, host_xs, d_Ng*sizeof(double),
-			cudaMemcpyHostToDevice );
+	    cuda::memory::Copy_To_Device( d_totals + offset, host_xs, d_Ng );
 	}
     }
 
     // Allocate the scattering cross sections.
-    cudaMalloc( (void**) &d_scatter, d_scatter_size*sizeof(double) );
+    cuda::memory::Malloc( d_scatter, d_scatter_size );
 
     // Extract the scattering cross sections.
     for ( int pn = 0; pn < d_pn+1; ++pn )
@@ -76,8 +77,8 @@ XS_Device::XS_Device( const profugus::XS& xs )
 	{
 	    host_xs = xs.matrix( matids[m], pn ).values();
 	    offset = pn * d_Nm * d_Ng * d_Ng + m * d_Ng * d_Ng;
-	    cudaMemcpy( d_scatter + offset, host_xs, d_Ng*d_Ng*sizeof(double),
-			cudaMemcpyHostToDevice );
+	    cuda::memory::Copy_To_Device( 
+		d_scatter + offset, host_xs, d_Ng*d_Ng );
 	}
     }
 }
@@ -88,9 +89,9 @@ XS_Device::XS_Device( const profugus::XS& xs )
  */
 XS_Device::~XS_Device()
 {
-    cudaFree( d_matid_g2l );
-    cudaFree( d_totals );
-    cudaFree( d_scatter );
+    cuda::memory::Free( d_matid_g2l );
+    cuda::memory::Free( d_totals );
+    cuda::memory::Free( d_scatter );
 }
 
 //---------------------------------------------------------------------------//
