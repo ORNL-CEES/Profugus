@@ -72,7 +72,7 @@ SET(HEADERS "")
 
 # geometry sources
 
-FILE(GLOB GEOMETRY_HEADERS mesh/*.hh)
+FILE(GLOB GEOMETRY_HEADERS geometry/*.hh)
 SET(GEOMETRY_SOURCES
   geometry/Bounding_Box.cc
   geometry/Cartesian_Mesh.cc
@@ -88,9 +88,17 @@ SET(GEOMETRY_SOURCES
 LIST(APPEND HEADERS ${GEOMETRY_HEADERS})
 LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
 
+# sim_ce sources
+
+FILE(GLOB SIM_CE_HEADERS sim_ce/*.hh)
+SET(SIM_CE_SOURCES
+  )
+LIST(APPEND HEADERS ${SIM_CE_HEADERS})
+LIST(APPEND SOURCES ${SIM_CE_SOURCES})
+
 # mc sources
 
-FILE(GLOB MC_HEADERS mesh/*.hh)
+FILE(GLOB MC_HEADERS mc/*.hh)
 SET(MC_SOURCES
   mc/Anderson_Operator.pt.cc
   mc/Anderson_Solver.pt.cc
@@ -126,7 +134,7 @@ LIST(APPEND SOURCES ${MC_SOURCES})
 
 # driver sources
 
-FILE(GLOB DRIVER_HEADERS driver/*.hh)
+FILE(GLOB DRIVER_HEADERS mc_driver/*.hh)
 SET(DRIVER_SOURCES
   mc_driver/Manager.pt.cc
   mc_driver/Manager_Builder.cc
@@ -188,6 +196,7 @@ TRIBITS_ADD_EXECUTABLE(
 
 TRIBITS_ADD_TEST_DIRECTORIES(
   geometry/test
+  sim_ce/test
   mc/test)
 
 IF(USE_CUDA)
