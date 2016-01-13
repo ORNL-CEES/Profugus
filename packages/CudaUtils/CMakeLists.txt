@@ -22,6 +22,11 @@ TRIBITS_PACKAGE(CudaUtils)
 ## PACKAGE-SPECIFIC OPTIONS
 ##---------------------------------------------------------------------------##
 
+# Default Profugus_ENABLE_CUDE to ON if TPL_ENABLE_CUDA is ON
+IF(TPL_ENABLE_CUDA)
+    SET(${PROJECT_NAME}_ENABLE_CUDA ON CACHE BOOL "")
+ENDIF()
+
 SET(USE_CUDA OFF)
 IF(${PROJECT_NAME}_ENABLE_CUDA)
   MESSAGE(STATUS "Building ${PROJECT_NAME} with CUDA support")
