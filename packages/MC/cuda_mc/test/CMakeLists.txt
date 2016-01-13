@@ -11,6 +11,7 @@ INCLUDE(UtilsTest)
 
 IF(USE_CUDA)
   SET(CUDA_SOURCES
+    Collision_Tally_Tester.cu
     Particle_Vector_Tester.cu
     )
 
@@ -30,6 +31,7 @@ IF(USE_CUDA)
 ENDIF()
 
 ADD_UTILS_TEST(tstParticle_Vector.cc              NP 1 ${DEPS} )
+ADD_UTILS_TEST(tstCollision_Tally.cc              NP 1 ${DEPS} )
 
 ##---------------------------------------------------------------------------##
 ## end of cuda_xs/test/CMakeLists.txt

@@ -48,6 +48,7 @@ __global__ void tally_kernel( const Geometry* geometry,
     if ( idx < num_particle )
     {
 	std::size_t pidx = idx + start_idx;
+	REQUIRE( particles->alive(pidx) );
 	std::size_t tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
 	cuda::Atomic_Add<cuda::arch::Device>::fetch_add( 

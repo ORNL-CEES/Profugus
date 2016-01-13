@@ -170,8 +170,10 @@ Teuchos::Array<double> Particle_Vector_Tester::ran()
     double* device_ran;
     cudaMalloc( (void**) &device_ran, d_size * sizeof(double) );
 
-    int num_block = 4;
-    ran_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    ran_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_ran );
 
     Teuchos::Array<double> host_ran( d_size );
@@ -186,8 +188,10 @@ Teuchos::Array<double> Particle_Vector_Tester::ran()
 // set the entire vector to the same weight.
 void Particle_Vector_Tester::set_wt( const double wt )
 {
-    int num_block = 4;
-    set_wt_kernel<<<num_block,d_size/num_block>>>( d_vector.get_device_ptr(), wt );
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    set_wt_kernel<<<num_block,num_threads>>>( d_vector.get_device_ptr(), wt );
 }
 
 //---------------------------------------------------------------------------//
@@ -199,8 +203,10 @@ void Particle_Vector_Tester::multiply_wt( const Teuchos::Array<double>& wt )
     cudaMemcpy( device_wt, wt.getRawPtr(), d_size * sizeof(double),
 		cudaMemcpyHostToDevice );
     
-    int num_block = 4;
-    multiply_wt_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    multiply_wt_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_wt );
 
     cudaFree( device_wt );
@@ -212,8 +218,9 @@ Teuchos::Array<double> Particle_Vector_Tester::wt()
 {
     double* device_wt;
     cudaMalloc( (void**) &device_wt, d_size * sizeof(double) );
-    int num_block = 4;
-    wt_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+    wt_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_wt );
 
     Teuchos::Array<double> host_wt( d_size );
@@ -230,8 +237,10 @@ Teuchos::Array<int> Particle_Vector_Tester::group()
 {
     int* device_group;
     cudaMalloc( (void**) &device_group, d_size * sizeof(int) );
-    int num_block = 4;
-    group_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    group_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_group );
 
     Teuchos::Array<int> host_group( d_size );
@@ -246,8 +255,10 @@ Teuchos::Array<int> Particle_Vector_Tester::group()
 // Set the entire vector to a group.
 void Particle_Vector_Tester::set_group( const int group )
 {
-    int num_block = 4;
-    set_group_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    set_group_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), group );
 }
 
@@ -257,8 +268,10 @@ Teuchos::Array<int> Particle_Vector_Tester::matid()
 {
     int* device_matid;
     cudaMalloc( (void**) &device_matid, d_size * sizeof(int) );
-    int num_block = 4;
-    matid_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    matid_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_matid );
 
     Teuchos::Array<int> host_matid( d_size );
@@ -273,8 +286,10 @@ Teuchos::Array<int> Particle_Vector_Tester::matid()
 // Set the entire vector to a matid.
 void Particle_Vector_Tester::set_matid( const int matid )
 {
-    int num_block = 4;
-    set_matid_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    set_matid_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), matid );
 }
 
@@ -284,8 +299,10 @@ Teuchos::Array<int> Particle_Vector_Tester::alive()
 {
     int* device_alive;
     cudaMalloc( (void**) &device_alive, d_size * sizeof(int) );
-    int num_block = 4;
-    alive_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    alive_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_alive );
 
     Teuchos::Array<int> host_alive( d_size );
@@ -300,16 +317,20 @@ Teuchos::Array<int> Particle_Vector_Tester::alive()
 // set the whole vector to live.
 void Particle_Vector_Tester::live()
 {
-    int num_block = 4;
-    live_kernel<<<num_block,d_size/num_block>>>( d_vector.get_device_ptr() );
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    live_kernel<<<num_block,num_threads>>>( d_vector.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//
 // kill the whole vector.
 void Particle_Vector_Tester::kill()
 {
-    int num_block = 4;
-    kill_kernel<<<num_block,d_size/num_block>>>( d_vector.get_device_ptr() );
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    kill_kernel<<<num_block,num_threads>>>( d_vector.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//
@@ -319,8 +340,10 @@ Particle_Vector_Tester::event()
 {
     Event_t* device_event;
     cudaMalloc( (void**) &device_event, d_size * sizeof(Event_t) );
-    int num_block = 4;
-    event_kernel<<<num_block,d_size/num_block>>>(
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    event_kernel<<<num_block,num_threads>>>(
 	d_vector.get_device_ptr(), device_event );
 
     Teuchos::Array<Event_t> host_event( d_size );
@@ -340,8 +363,10 @@ void Particle_Vector_Tester::set_event( const Teuchos::Array<Event_t>& events )
     cudaMemcpy( device_event, events.getRawPtr(), d_size * sizeof(Event_t),
 		cudaMemcpyHostToDevice );
     
-    int num_block = 4;
-    set_event_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    set_event_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_event );
 
     cudaFree( device_event );
@@ -351,8 +376,10 @@ void Particle_Vector_Tester::set_event( const Teuchos::Array<Event_t>& events )
 // set the geometry state for the whole vector
 void Particle_Vector_Tester::set_geo_state( const Geo_State_t& geo_state )
 {
-    int num_block = 4;
-    set_geo_state_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    set_geo_state_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), geo_state );
 }
 
@@ -364,8 +391,10 @@ Particle_Vector_Tester::geo_state()
     Geo_State_t* device_geo_state;
     cudaMalloc( (void**) &device_geo_state, d_size * sizeof(Geo_State_t) );
 
-    int num_block = 4;
-    geo_state_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    geo_state_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_geo_state );
 
     Teuchos::Array<Geo_State_t> host_geo_state( d_size );
@@ -383,8 +412,10 @@ Teuchos::Array<int> Particle_Vector_Tester::batch()
     int* device_batch;
     cudaMalloc( (void**) &device_batch, d_size * sizeof(int) );
 
-    int num_block = 4;
-    batch_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    batch_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), device_batch );
 
     Teuchos::Array<int> host_batch( d_size );
@@ -399,8 +430,10 @@ Teuchos::Array<int> Particle_Vector_Tester::batch()
 // Set the entire vector to a batch.
 void Particle_Vector_Tester::set_batch( const int batch )
 {
-    int num_block = 4;
-    set_batch_kernel<<<num_block,d_size/num_block>>>( 
+    int num_threads = 256;
+    int num_block = d_size / num_threads;
+
+    set_batch_kernel<<<num_block,num_threads>>>( 
 	d_vector.get_device_ptr(), batch );
 }
 

@@ -1,9 +1,8 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstParticle.cc
- * \author Thomas M. Evans
- * \date   Fri Apr 25 11:32:36 2014
- * \brief  Particle class test.
+ * \file   mc/test/tstParticle_Vector.cc
+ * \author Stuart Slattery
+ * \brief  Particle_Vector class test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
@@ -22,9 +21,9 @@
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-TEST(Particle, construction)
+TEST(Particle_Vector, construction)
 {
-    int num_particle = 4;
+    int num_particle = 32768;
 
     profugus::RNG_Control control( 3420239343 );
 
