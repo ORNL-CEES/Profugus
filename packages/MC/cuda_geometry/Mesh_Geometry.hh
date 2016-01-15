@@ -136,7 +136,6 @@ class Mesh_Geometry
         using def::I; using def::J; using def::K;
         cell_type c = num_cells();
         bool found = d_mesh.index(state.ijk.i, state.ijk.j, state.ijk.k, c);
-
         ENSURE(found);
         return c;
     }

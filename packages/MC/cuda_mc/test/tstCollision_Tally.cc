@@ -8,11 +8,14 @@
 //---------------------------------------------------------------------------//
 
 #include "../Collision_Tally.hh"
+#include "cuda_geometry/Mesh_Geometry.hh"
+
 #include "Collision_Tally_Tester.hh"
 
 #include "rng/RNG_Control.hh"
 
 #include <Teuchos_Array.hpp>
+#include <Teuchos_TwoDArray.hpp>
 
 #include "gtest/utils_gtest.hh"
 
@@ -22,10 +25,10 @@
 TEST(Collision_Tally, construction)
 {
     // Geometry parameters.
-    int N = 10;
-    Teuchos::Array<double> x_edges( N+1 );
-    Teuchos::Array<double> y_edges( N+1 );
-    Teuchos::Array<double> z_edges( N+1 );
+    int N = 2;
+    std::vector<double> x_edges( N+1 );
+    std::vector<double> y_edges( N+1 );
+    std::vector<double> z_edges( N+1 );
     for ( int i = 0; i < N+1; ++i )
     {
 	x_edges[i] = i;
@@ -34,11 +37,11 @@ TEST(Collision_Tally, construction)
     }
     int num_cells = N*N*N;
 
-    // Tally paramters.
-    int num_batch = 30;
+    // Tally parameters.
+    int num_batch = 256;
 
     // Particle vector parameters
-    int num_particle = num_batch*num_cell;
+    int num_particle = num_batch*num_cells;
     profugus::RNG_Control control( 3420239343 );
 
     // Create the tally tester.
@@ -46,7 +49,8 @@ TEST(Collision_Tally, construction)
 	x_edges, y_edges, z_edges, num_particle, control.rng(), num_batch );
 
     // Create a tally.
-    Collision_Tally tally( tester.geometry(), num_batch );
+    cuda_profugus::Collision_Tally<cuda_profugus::Mesh_Geometry> 
+	tally( tester.geometry(), num_batch );
 
     // check sizes
     EXPECT_EQ( tally.num_cells(), num_cells );
@@ -65,43 +69,52 @@ TEST(Collision_Tally, construction)
     EXPECT_EQ( first_moment.size(), num_cells );
     EXPECT_EQ( second_moment.size(), num_cells );
 
-    // Check the first moment. Only the first half of the cells should have
-    // particles with collisions that will tally.
-    double gold_first = 0.0;
-    for ( int b = 0; b < num_batch; ++b )
+    // Calcuate the expected tally results. Only the first half of the cells
+    // should have particles with collisions that will tally.
+    Teuchos::TwoDArray<double> gold_tally( num_batch, num_cells, 0.0 );
+    for ( int c = 0; c < num_cells; ++c )
     {
-	gold_first += i;
+	if ( c < num_cells / 2 )
+	{
+	    for ( int b = 0; b < num_batch; ++b )
+	    {
+		gold_tally(b,c) += (b+1)*(c+1);
+	    }
+	}
     }
     for ( int c = 0; c < num_cells; ++c )
     {
-	if ( c < num_cells/2 )
+	for ( int b = 0; b < num_batch; ++b )
 	{
-	    EXPECT_EQ( first_moment[c], c*gold_first/num_particle );
-	}
-	else
-	{
-	    EXPECT_EQ( first_moment[c], 0.0 );	    
+	    gold_tally(b,c) = gold_tally(b,c) * num_batch / num_particle;
 	}
     }
 
-    // Check the second moment.
-    double gold_second = 0.0;
-    for ( int b = 0; b < num_batch; ++b )
-    {
-	gold_second += i*i - 
-		       gold_first*gold_first/(num_particle*num_particle);
-    }
+    Teuchos::Array<double> gold_first( num_cells, 0.0 );
     for ( int c = 0; c < num_cells; ++c )
     {
-	if ( c < num_cells/2 )
+	for ( int b = 0; b < num_batch; ++b )
 	{
-	    EXPECT_EQ( second_moment[c], 
-		       c*c*gold_second/(num_particle*(num_particle-1) );
+	    gold_first[c] += gold_tally(b,c) / num_batch;
 	}
-	else
+    }
+
+    Teuchos::Array<double> gold_second( num_cells, 0.0 );
+    for ( int c = 0; c < num_cells; ++c )
+    {
+	for ( int b = 0; b < num_batch; ++b )
 	{
-	    EXPECT_EQ( second_moment[c], 0.0 );	    
+	    gold_second[c] += (gold_tally(b,c) * gold_tally(b,c) -
+			       gold_first[c] * gold_first[c]) /
+			      ( num_batch * (num_batch-1) );
 	}
+    }
+
+    // Check that the tallies are correct.
+    for ( int c = 0; c < num_cells; ++c )
+    {
+	EXPECT_FLOAT_EQ( gold_first[c], first_moment[c] );
+	EXPECT_FLOAT_EQ( gold_second[c], second_moment[c] );
     }
 }
 

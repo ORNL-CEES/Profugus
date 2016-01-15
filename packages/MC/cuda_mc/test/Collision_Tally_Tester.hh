@@ -17,14 +17,14 @@
 
 #include "../Particle_Vector.hh"
 
-#include <Teuchos_Array.hpp>
+#include <vector>
 
 //---------------------------------------------------------------------------//
 class Collision_Tally_Tester
 {
   public:
 
-    typedef cuda_profugus::Mesh_Geometry Geometry
+    typedef cuda_profugus::Mesh_Geometry Geometry;
     typedef cuda_profugus::Particle_Vector<Geometry> Particle_Vector;
     typedef typename Particle_Vector::Event_t Event_t;
     typedef typename Geometry::Geo_State_t Geo_State_t;

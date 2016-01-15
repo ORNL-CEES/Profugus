@@ -51,6 +51,7 @@ __global__ void tally_kernel( const Geometry* geometry,
 	REQUIRE( particles->alive(pidx) );
 	std::size_t tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
+	CHECK( tally_idx < num_batch * num_cell );
 	cuda::Atomic_Add<cuda::arch::Device>::fetch_add( 
 	    &tally[tally_idx], particles->wt(pidx) );
     }
@@ -66,7 +67,7 @@ __global__ void finalize_kernel( const int num_batch,
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < num_batch * num_cell ) 
     {
-	tally[idx] *= num_batch / total_num_particle;
+	tally[idx] = (tally[idx] * num_batch) / total_num_particle;
     }
 }
 
@@ -81,13 +82,14 @@ __global__ void moments_kernel( const int num_batch,
     std::size_t cell_idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( cell_idx < num_cell )
     {
-	int tally_idx = 0;
+	std::size_t tally_idx = 0;
 
 	// Calculate the first moment.
 	first_moment[cell_idx] = 0.0;
 	for ( int b = 0; b < num_batch; ++b )
 	{
 	    tally_idx = b * num_cell + cell_idx;
+	    CHECK( tally_idx < num_batch * num_cell );
 	    first_moment[cell_idx] += tally[ tally_idx ];
 	}
 	first_moment[cell_idx] /= num_batch;
@@ -97,6 +99,7 @@ __global__ void moments_kernel( const int num_batch,
 	for ( int b = 0; b < num_batch; ++b )
 	{
 	    tally_idx = b * num_cell + cell_idx;
+	    CHECK( tally_idx < num_batch * num_cell );
 	    second_moment[cell_idx] += 
 		tally[ tally_idx ] * tally[ tally_idx ]
 		- first_moment[cell_idx] * first_moment[cell_idx];
@@ -113,14 +116,14 @@ template <class Geometry>
 Collision_Tally<Geometry>::Collision_Tally( 
     const cuda::Shared_Device_Ptr<Geometry>& geometry, 
     const int num_batch )
-    : d_geometry( d_geometry )
+    : d_geometry( geometry )
     , d_num_batch( num_batch )
     , d_num_cells( d_geometry.get_host_ptr()->num_cells() )
 {
     // Allocate the tally.
     std::size_t size = d_num_batch * d_num_cells;
     cuda::memory::Malloc( d_tally, size );
-    
+
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
