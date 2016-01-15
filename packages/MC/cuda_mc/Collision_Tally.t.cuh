@@ -101,8 +101,8 @@ __global__ void moments_kernel( const int num_batch,
 	    tally_idx = b * num_cell + cell_idx;
 	    CHECK( tally_idx < num_batch * num_cell );
 	    second_moment[cell_idx] += 
-		tally[ tally_idx ] * tally[ tally_idx ]
-		- first_moment[cell_idx] * first_moment[cell_idx];
+		tally[ tally_idx ] * tally[ tally_idx ] -
+		first_moment[cell_idx] * first_moment[cell_idx];
 	}
 	second_moment[cell_idx] /= num_batch * (num_batch - 1);
     }
