@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstParticle_Vector.cc
+ * \file   cuda_mc/test/tstParticle_Vector_cuda.cc
  * \author Stuart Slattery
  * \brief  Particle_Vector class test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -95,8 +95,15 @@ TEST(Particle_Vector, construction)
 	EXPECT_FALSE( a );
     }
 
-    // Setup events.
+    // Check initial event assignment
     typedef typename Particle_Vector_Tester::Event_t Event_t;
+    Teuchos::Array<Event_t> device_events = tester.event();
+    for ( int i = 0; i < num_particle; ++i )
+    {
+	EXPECT_EQ( profugus::events::DEAD, device_events[i] );
+    }
+
+    // Setup events.
     Teuchos::Array<Event_t> host_events( num_particle );
     for ( int i = 0; i < num_particle; ++i )
     {
@@ -108,7 +115,7 @@ TEST(Particle_Vector, construction)
 
     // Check event assignment
     tester.set_event( host_events );
-    Teuchos::Array<Event_t> device_events = tester.event();
+    device_events = tester.event();
     for ( int i = 0; i < num_particle; ++i )
     {
 	EXPECT_EQ( host_events[i], device_events[i] );
@@ -209,5 +216,5 @@ TEST(Particle_Vector, construction)
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstParticle.cc
+//                 end of tstParticle_Vector_cuda.cc
 //---------------------------------------------------------------------------//

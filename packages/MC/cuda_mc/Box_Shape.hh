@@ -54,6 +54,7 @@ class Box_Shape
     double d_Dx, d_Dy, d_Dz;
 
   public:
+    
     // Constructor.
     Box_Shape(double lox, double hix, double loy,
               double hiy, double loz, double hiz)
@@ -74,24 +75,33 @@ class Box_Shape
     PROFUGUS_HOST_DEVICE_FUNCTION
     Space_Vector low_corner() const
     {
-        return Space_Vector(d_lox, d_loy, d_loz);
+	Space_Vector r;
+	r.x = d_lox;
+	r.y = d_loy;
+	r.z = d_loz;
+	return r;
     }
 
     //! Return the high corner of the box.
     PROFUGUS_HOST_DEVICE_FUNCTION
     Space_Vector high_corner() const
     {
-        return Space_Vector(d_lox + d_Dx, d_loy + d_Dy, d_loz + d_Dz);
+	Space_Vector r;
+	r.x = d_lox + d_Dx;
+	r.y = d_loy + d_Dy;
+	r.z = d_loz + d_Dz;
+	return r;
     }
 
     // >>> DERIVED INTERFACE
     //! Sample a point in the shape.
     PROFUGUS_HOST_DEVICE_FUNCTION
-    Space_Vector sample(const double ran1, const double ran2, const double ran3 )
+    Space_Vector sample(const double ran1, const double ran2, const double ran3 ) const
     {
-        Space_Vector point(d_Dx * ran1 + d_lox,
-                           d_Dy * ran2 + d_loy,
-                           d_Dz * ran3 + d_loz);
+        Space_Vector point;
+	point.x = d_Dx * ran1 + d_lox;
+	point.y = d_Dy * ran2 + d_loy;
+	point.z = d_Dz * ran3 + d_loz;
         ENSURE(is_point_inside(point));
         return point;
     }
@@ -102,29 +112,29 @@ class Box_Shape
 
     // Whether a point is on or inside this shape
     PROFUGUS_HOST_DEVICE_FUNCTION
-    bool is_point_inside(const Space_Vector& x) const
+    bool is_point_inside(const Space_Vector& r) const
     {
-	return (x[0] >= d_lox && x[0] <= d_lox + d_Dx) &&
-	    (x[1] >= d_loy && x[1] <= d_loy + d_Dy) &&
-	    (x[2] >= d_loz && x[2] <= d_loz + d_Dz);
+	return (r.x >= d_lox && r.x <= d_lox + d_Dx) &&
+	    (r.y >= d_loy && r.y <= d_loy + d_Dy) &&
+	    (r.z >= d_loz && r.z <= d_loz + d_Dz);
     } 
 
     // Get the bounding box
     PROFUGUS_HOST_DEVICE_FUNCTION
     void get_bbox( Space_Vector& low_corner, Space_Vector& high_corner) const
     {
-	low_corner[0] = d_lox;
-	low_corner[1] = d_loy;
-	low_corner[2] = d_loz;
-	high_corner[0] = d_lox + d_Dx;
-	high_corner[1] = d_loy + d_Dy;
-	high_corner[2] = d_loz + d_Dz;
+	low_corner.x = d_lox;
+	low_corner.y = d_loy;
+	low_corner.z = d_loz;
+	high_corner.x = d_lox + d_Dx;
+	high_corner.y = d_loy + d_Dy;
+	high_corner.z = d_loz + d_Dz;
     }
 };
 
 //---------------------------------------------------------------------------//
 
-} // end namespace profugus
+} // end namespace cuda_profugus
 
 #endif // cuda_mc_Box_Shape_hh
 

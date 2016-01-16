@@ -35,6 +35,7 @@ enum Event {
     WEIGHT_WINDOW,    //!< Passed through weight window successfully
     BOUNDARY_MESH,    //!< Encountered domain decomposition boundary
     BORN,             //!< Born
+    DEAD,             //!< The particle is dead and has no more events
     END_EVENT
 };
 

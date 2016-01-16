@@ -44,10 +44,15 @@ __global__ void tally_kernel( const Geometry* geometry,
 			      const int num_cell,
 			      double* tally )
 {
+    // Get the thread index.
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
     if ( idx < num_particle )
     {
+	// Get the particle index.
 	std::size_t pidx = idx + start_idx;
+
+	// Accumulate the particle in its batch and cell.
 	REQUIRE( particles->alive(pidx) );
 	std::size_t tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );

@@ -174,6 +174,7 @@ IF(USE_CUDA)
   SET(CUDA_MC_SOURCES
     cuda_mc/Collision_Tally.pt.cu
     cuda_mc/Particle_Vector.pt.cu
+    cuda_mc/Uniform_Source.pt.cu
     )
   LIST(APPEND CUDA_HEADERS ${CUDA_MC_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_MC_SOURCES})

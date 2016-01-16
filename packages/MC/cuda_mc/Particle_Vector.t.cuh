@@ -47,6 +47,15 @@ __global__ void init_lid_kernel( const std::size_t size, std::size_t* lids )
 }
 
 //---------------------------------------------------------------------------//
+// Initialize particles to DEAD.
+__global__ void init_event_kernel( const std::size_t size,
+				   profugus::events::Event* events )
+{
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( idx < size ) events[idx] = profugus::events::DEAD;
+}
+
+//---------------------------------------------------------------------------//
 // HOST API
 //---------------------------------------------------------------------------//
 /*
@@ -93,6 +102,9 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Create the local ids.
     init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
+
+    // Initialize all particles to DEAD.
+    init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );    
 }
     
 //---------------------------------------------------------------------------//

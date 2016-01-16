@@ -12,13 +12,16 @@
 #define CudaUtils_cuda_utils_Utility_Functions_hh
 
 #include "Definitions.hh"
+#include "CudaDBC.hh"
+
+#include <cmath>
 
 namespace cuda
 {
 
 namespace utility
 {
-
+//---------------------------------------------------------------------------//
 // On-device lower bound binary search
 template <class T>
 __host__ __device__ inline const T * lower_bound(const T *first,
@@ -45,6 +48,8 @@ __host__ __device__ inline const T * lower_bound(const T *first,
     return first;
 }
 
+//---------------------------------------------------------------------------//
+// on device soft equivalence
 __host__ __device__ inline bool soft_equiv( double a,
                                             double b,
                                             double tol = 1.0e-12 )
@@ -56,6 +61,38 @@ __host__ __device__ inline bool soft_equiv( double a,
         return true;
 
     return false;
+}
+
+//---------------------------------------------------------------------------//
+// SAMPLING FUNCTIONS
+//---------------------------------------------------------------------------//
+template<class T>
+__host__ __device__ inline
+int sample_discrete_CDF(int nb, const T *c, const T ran)
+{
+    REQUIRE(nb > 0);
+    REQUIRE(soft_equiv(static_cast<double>(c[nb - 1]), 1.0, 1.0e-6));
+    REQUIRE(ran >= 0 && ran <= 1);
+
+    // do a binary search on the CDF
+    const T *ptr = lower_bound(c, c + nb, ran);
+
+    // return the value
+    ENSURE(ptr - c >= 0 && ptr - c < nb);
+    return ptr - c;
+}
+
+//---------------------------------------------------------------------------//
+// Sample an angle isotropically.
+__device__ inline void sample_angle( cuda::Space_Vector& omega,
+				     const double ran1,
+				     const double ran2 )
+{
+    omega.z = 1.0 - 2.0 * ran1;
+    double phi = 4.0 * std::asin(1.0) * ran2;
+    double sintheta = std::sqrt(1.0 - omega.z * omega.z);
+    omega.x = sintheta * std::cos(phi);
+    omega.y = sintheta * std::sin(phi);
 }
 
 //---------------------------------------------------------------------------//
@@ -200,8 +237,7 @@ __device__ inline void cartesian_vector_transform(double costheta, double phi,
 
 }
 
-
-
+//---------------------------------------------------------------------------//
 
 } // end namespace utility
 

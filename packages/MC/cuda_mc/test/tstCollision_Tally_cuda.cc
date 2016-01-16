@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstCollision_Tally.cc
+ * \file   cuda_mc/test/tstCollision_Tally_cuda.cc
  * \author Stuart Slattery
  * \brief  Collision_Tally class test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -119,5 +119,5 @@ TEST(Collision_Tally, construction)
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstParticle.cc
+//                 end of tstCollision_Tally_cuda.cc
 //---------------------------------------------------------------------------//
