@@ -77,6 +77,9 @@ class Uniform_Source
     // Number of particle batches.
     int d_num_batch;
 
+    // Particle batch size.
+    std::size_t d_batch_size;
+
     // Energy shape CDF. On-device.
     double* d_erg_cdf;
 

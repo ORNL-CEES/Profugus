@@ -66,6 +66,13 @@ __global__ void batch_kernel( Uniform_Source_Tester::Particle_Vector* vector,
 }
 
 //---------------------------------------------------------------------------//
+__global__ void kill_kernel( Uniform_Source_Tester::Particle_Vector* vector )
+{
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    vector->set_event( i, profugus::events::DEAD );
+}
+
+//---------------------------------------------------------------------------//
 // Uniform_Source_Tester
 //---------------------------------------------------------------------------//
 Uniform_Source_Tester::Uniform_Source_Tester( 
@@ -85,6 +92,10 @@ Uniform_Source_Tester::Uniform_Source_Tester(
     d_geometry = cuda::shared_device_ptr<Geometry>( x_edges, y_edges, z_edges );
     int num_cells = d_geometry.get_host_ptr()->num_cells();
 
+    // Set matids with the geometry.
+    std::vector<typename Geometry::matid_type> matids( num_cells, matid );
+    d_geometry.get_host_ptr()->set_matids( matids );
+
     // Create the particle vector.
     d_particles = cuda::shared_device_ptr<Particle_Vector>( vector_size, rng );
 
@@ -96,11 +107,6 @@ Uniform_Source_Tester::Uniform_Source_Tester(
 	*std::max_element(y_edges.begin(),y_edges.end()),
 	*std::min_element(z_edges.begin(),z_edges.end()),
 	*std::max_element(z_edges.begin(),z_edges.end()) );
-
-    // Set matids with the geometry.
-    std::vector<typename Geometry::matid_type> matids( 
-	d_geometry.get_host_ptr()->num_cells(), matid );
-    d_geometry.get_host_ptr()->set_matids( matids );
 }
 
 //---------------------------------------------------------------------------//
@@ -222,6 +228,15 @@ Teuchos::Array<int> Uniform_Source_Tester::batch()
 
     cudaFree( device_batch );
     return host_batch;
+}
+
+//---------------------------------------------------------------------------//
+// kill all the particles.
+void Uniform_Source_Tester::kill_particles()
+{
+    int num_threads = 64;
+    int num_block = d_size / num_threads;
+    kill_kernel<<<num_block,num_threads>>>( d_particles.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//

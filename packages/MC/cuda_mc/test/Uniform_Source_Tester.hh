@@ -50,7 +50,7 @@ class Uniform_Source_Tester
     { return d_shape; }
 
     // Get the particles
-    cuda::Shared_Device_Ptr<Particle_Vector>& particles()
+    cuda::Shared_Device_Ptr<Particle_Vector> particles()
     { return d_particles; }
 
     // get a vector of matids.
@@ -70,6 +70,9 @@ class Uniform_Source_Tester
 
     // get a vector of batches.
     Teuchos::Array<int> batch();
+
+    // kill all the particles so we can make a new batch.
+    void kill_particles();
 
   private:
     

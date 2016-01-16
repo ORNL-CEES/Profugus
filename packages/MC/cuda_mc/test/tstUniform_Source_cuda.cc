@@ -78,7 +78,8 @@ TEST(Uniform_Source, construction)
     EXPECT_EQ( source.num_left(), num_source / profugus::nodes() );
 
     // Run the first batch of particles.
-    source.get_particles( tester.particles() );
+    auto particles = tester.particles();
+    source.get_particles( particles );
 
     // Check the state of the particles.
     Teuchos::Array<int> matids = tester.matid();
@@ -89,12 +90,12 @@ TEST(Uniform_Source, construction)
     Teuchos::Array<int> batches = tester.batch();
     for ( int i = 0; i < vector_size; ++i )
     {
-	EXPECT_EQ( matids[i], matid );
-	EXPECT_EQ( wts[i], 1.0 );
-	EXPECT_TRUE( alive[i] );
-	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
-	EXPECT_EQ( events[i], profugus::events::BORN );
-	EXPECT_EQ( batches[i], 0 );
+    	EXPECT_EQ( matids[i], matid );
+    	EXPECT_EQ( wts[i], 1.0 );
+    	EXPECT_TRUE( alive[i] );
+    	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
+    	EXPECT_EQ( events[i], profugus::events::BORN );
+    	EXPECT_EQ( batches[i], 0 );
     }
 
     // Check the state of the source.
@@ -102,8 +103,11 @@ TEST(Uniform_Source, construction)
     EXPECT_EQ( source.num_run(), num_source / (2*profugus::nodes()) );
     EXPECT_EQ( source.num_left(), num_source / (2*profugus::nodes()) );
 
+    // Kill all the particles so we can get a new batch.
+    tester.kill_particles();
+
     // Run the second batch.
-    source.get_particles( tester.particles() );
+    source.get_particles( particles );
 
     // Check the state of the particles.
     matids = tester.matid();
@@ -114,12 +118,12 @@ TEST(Uniform_Source, construction)
     batches = tester.batch();
     for ( int i = 0; i < vector_size; ++i )
     {
-	EXPECT_EQ( matids[i], matid );
-	EXPECT_EQ( wts[i], 1.0 );
-	EXPECT_TRUE( alive[i] );
-	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
-	EXPECT_EQ( events[i], profugus::events::BORN );
-	EXPECT_EQ( batches[i], 1 );
+    	EXPECT_EQ( matids[i], matid );
+    	EXPECT_EQ( wts[i], 1.0 );
+    	EXPECT_TRUE( alive[i] );
+    	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
+    	EXPECT_EQ( events[i], profugus::events::BORN );
+    	EXPECT_EQ( batches[i], 1 );
     }
 
     // Check that the source is empty.

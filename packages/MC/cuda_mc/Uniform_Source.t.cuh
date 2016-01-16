@@ -25,15 +25,18 @@
 
 #include "Uniform_Source.hh"
 
+#include <algorithm>
+
 namespace cuda_profugus
 {
 //---------------------------------------------------------------------------//
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
-// Sample the source.
+// Sample the source. Passing geometry *BY COPY* for now because shallow
+// copies are resulting in segfault when accessing matids.
 template<class Geometry, class Shape>
 __global__
-void sample_source_kernel( const Geometry* geometry,
+void sample_source_kernel( const Geometry geometry,
 			   const Shape* shape,
 			   const std::size_t start_idx,
 			   const std::size_t num_particle,
@@ -41,7 +44,7 @@ void sample_source_kernel( const Geometry* geometry,
 			   const double* erg_cdf,
 			   const int num_group,
 			   const int num_run,
-			   const int num_batch,
+			   const int batch_size,
 			   Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
@@ -52,25 +55,20 @@ void sample_source_kernel( const Geometry* geometry,
 	// Get the particle index.
 	std::size_t pidx = idx + start_idx;
 
-	// material id
-	int matid = 0;
-
-	// particle position and direction
-	cuda::Space_Vector r, omega;
-
 	// sample the angle isotropically
+	cuda::Space_Vector omega;
 	cuda::utility::sample_angle( 
 	    omega, particles->ran(pidx), particles->ran(pidx) );
 
-	// sample the geometry shape
-	r = shape->sample( 
+	// sample the geometry shape to get a starting position
+	cuda::Space_Vector r = shape->sample(
 	    particles->ran(pidx), particles->ran(pidx), particles->ran(pidx) );
 
 	// intialize the geometry state
-	geometry->initialize( r, omega, particles->geo_state(pidx) );
+	geometry.initialize( r, omega, particles->geo_state(pidx) );
 
 	// get the material id
-	matid = geometry->matid( particles->geo_state(pidx) );
+	unsigned int matid = geometry.matid( particles->geo_state(pidx) );
 
 	// initialize the physics state by manually sampling the group
 	int group = cuda::utility::sample_discrete_CDF(
@@ -88,7 +86,7 @@ void sample_source_kernel( const Geometry* geometry,
 	particles->set_event( pidx, profugus::events::BORN );
 
 	// set the batch.
-	int batch = (num_run + idx) / num_batch;
+	int batch = (num_run + idx) / batch_size;
 	particles->set_batch( pidx, batch );
 
 	// make particle alive
@@ -139,13 +137,13 @@ Uniform_Source<Geometry,Shape>::Uniform_Source(
 
     // assign to the shape cdf
     Teuchos::Array<double> host_cdf( d_num_groups, 0.0 );
-    norm  = 1.0 / norm;
-    int n = 0;
-    for (double &c : host_cdf)
+    norm = 1.0 / norm;
+    host_cdf[0] = shape[0] * norm;
+    for ( int n = 1; n < host_cdf.size(); ++n )
     {
-        c = shape[n] * norm;
-        ++n;
+        host_cdf[n] = host_cdf[n-1] + shape[n] * norm;
     }
+    CHECK(profugus::soft_equiv(1.0, host_cdf.back(), 1.0e-6));
 
     // Allocate and copy the cdf to the device.
     cuda::memory::Malloc( d_erg_cdf, d_num_groups );
@@ -234,16 +232,16 @@ void Uniform_Source<Geometry,Shape>::get_particles(
 
     // Create the particles.
     sample_source_kernel<<<num_blocks,threads_per_block>>>(
-	d_geometry.get_device_ptr(),
-	d_shape.get_device_ptr(),
-	start_idx,
-	num_to_create,
-	d_wt,
-	d_erg_cdf,
-	d_num_groups,
-	d_np_run,
-	d_num_batch,
-	particles.get_device_ptr() );
+    	*d_geometry.get_host_ptr(),
+    	d_shape.get_device_ptr(),
+    	start_idx,
+    	num_to_create,
+    	d_wt,
+    	d_erg_cdf,
+    	d_num_groups,
+    	d_np_run,
+    	d_batch_size,
+    	particles.get_device_ptr() );
 
     // update counters
     d_np_left -= num_to_create;
@@ -264,6 +262,9 @@ void Uniform_Source<Geometry,Shape>::build_DR()
 
     // increase the domain count to get an equivalent number per batch
     d_np_domain += d_np_domain % d_num_batch;
+
+    // Get the actual batch size.
+    d_batch_size = d_np_domain / d_num_batch;
 
     // recalculate the total number of particles (we want the same number of
     // particles in each domain, so the total may change slightly from the
