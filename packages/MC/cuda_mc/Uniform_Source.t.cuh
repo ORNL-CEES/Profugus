@@ -36,7 +36,7 @@ namespace cuda_profugus
 // copies are resulting in segfault when accessing matids.
 template<class Geometry, class Shape>
 __global__
-void sample_source_kernel( const Geometry geometry,
+void sample_source_kernel( const Geometry* geometry,
 			   const Shape* shape,
 			   const std::size_t start_idx,
 			   const std::size_t num_particle,
@@ -65,10 +65,10 @@ void sample_source_kernel( const Geometry geometry,
 	    particles->ran(pidx), particles->ran(pidx), particles->ran(pidx) );
 
 	// intialize the geometry state
-	geometry.initialize( r, omega, particles->geo_state(pidx) );
+	geometry->initialize( r, omega, particles->geo_state(pidx) );
 
 	// get the material id
-	unsigned int matid = geometry.matid( particles->geo_state(pidx) );
+	unsigned int matid = geometry->matid( particles->geo_state(pidx) );
 
 	// initialize the physics state by manually sampling the group
 	int group = cuda::utility::sample_discrete_CDF(
@@ -232,7 +232,7 @@ void Uniform_Source<Geometry,Shape>::get_particles(
 
     // Create the particles.
     sample_source_kernel<<<num_blocks,threads_per_block>>>(
-    	*d_geometry.get_host_ptr(),
+    	d_geometry.get_device_ptr(),
     	d_shape.get_device_ptr(),
     	start_idx,
     	num_to_create,

@@ -88,13 +88,17 @@ Uniform_Source_Tester::Uniform_Source_Tester(
     // Acquire hardware for the test.
     cuda::Hardware<cuda::arch::Device>::acquire();
 
-    // Create the geometry.
-    d_geometry = cuda::shared_device_ptr<Geometry>( x_edges, y_edges, z_edges );
-    int num_cells = d_geometry.get_host_ptr()->num_cells();
+    // Create the geometry host .
+    std::shared_ptr<Geometry> host_geom = 
+	std::make_shared<Geometry>( x_edges, y_edges, z_edges );
+    int num_cells = host_geom->num_cells();
 
-    // Set matids with the geometry.
+    // Set matids with the geometry on the host.
     std::vector<typename Geometry::matid_type> matids( num_cells, matid );
-    d_geometry.get_host_ptr()->set_matids( matids );
+    host_geom->set_matids( matids );
+
+    // Create a device copy of the geometry.
+    d_geometry = cuda::Shared_Device_Ptr<Geometry>( host_geom );
 
     // Create the particle vector.
     d_particles = cuda::shared_device_ptr<Particle_Vector>( vector_size, rng );
