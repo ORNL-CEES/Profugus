@@ -117,11 +117,11 @@ Collision_Tally_Tester::Collision_Tally_Tester(  const std::vector<double>& x_ed
 	{
 	    if ( c < num_cells / 2 )
 	    {
-		events[ b*num_cells + c ] = profugus::events::COLLISION;
+		events[ b*num_cells + c ] = cuda_profugus::events::COLLISION;
 	    }
 	    else
 	    {
-		events[ b*num_cells + c ] = profugus::events::ABSORPTION;
+		events[ b*num_cells + c ] = cuda_profugus::events::ABSORPTION;
 	    }
 	}
     }

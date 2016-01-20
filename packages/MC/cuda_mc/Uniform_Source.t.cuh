@@ -83,7 +83,7 @@ void sample_source_kernel( const Geometry* geometry,
 	particles->set_wt( pidx, wt );
 
 	// set the event.
-	particles->set_event( pidx, profugus::events::BORN );
+	particles->set_event( pidx, events::BORN );
 
 	// set the batch.
 	int batch = (num_run + idx) / batch_size;
@@ -216,7 +216,7 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     // Get the particles that are dead.
     std::size_t start_idx = 0;
     std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( profugus::events::DEAD,
+    particles.get_host_ptr()->get_event_particles( events::DEAD,
 						   start_idx,
 						   num_particle );
 

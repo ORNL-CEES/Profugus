@@ -13,6 +13,7 @@
 
 #include "Definitions.hh"
 #include "CudaDBC.hh"
+#include "CudaMacros.hh"
 
 #include <cmath>
 
@@ -24,9 +25,10 @@ namespace utility
 //---------------------------------------------------------------------------//
 // On-device lower bound binary search
 template <class T>
-__host__ __device__ inline const T * lower_bound(const T *first,
-                                                 const T *last,
-                                                 const T &val )
+PROFUGUS_HOST_DEVICE_FUNCTION 
+const T * lower_bound(const T *first,
+		      const T *last,
+		      const T &val )
 {
     const T *it;
     int count, step;
@@ -50,9 +52,10 @@ __host__ __device__ inline const T * lower_bound(const T *first,
 
 //---------------------------------------------------------------------------//
 // on device soft equivalence
-__host__ __device__ inline bool soft_equiv( double a,
-                                            double b,
-                                            double tol = 1.0e-12 )
+PROFUGUS_HOST_DEVICE_FUNCTION
+bool soft_equiv( double a,
+		 double b,
+		 double tol = 1.0e-12 )
 {
     if( abs(a - b) < tol )
         return true;
@@ -67,7 +70,7 @@ __host__ __device__ inline bool soft_equiv( double a,
 // SAMPLING FUNCTIONS
 //---------------------------------------------------------------------------//
 template<class T>
-__host__ __device__ inline
+PROFUGUS_HOST_DEVICE_FUNCTION
 int sample_discrete_CDF(int nb, const T *c, const T ran)
 {
     REQUIRE(nb > 0);
@@ -84,9 +87,10 @@ int sample_discrete_CDF(int nb, const T *c, const T ran)
 
 //---------------------------------------------------------------------------//
 // Sample an angle isotropically.
-__device__ inline void sample_angle( cuda::Space_Vector& omega,
-				     const double ran1,
-				     const double ran2 )
+PROFUGUS_DEVICE_FUNCTION 
+void sample_angle( cuda::Space_Vector& omega,
+		   const double ran1,
+		   const double ran2 )
 {
     omega.z = 1.0 - 2.0 * ran1;
     double phi = 4.0 * std::asin(1.0) * ran2;
@@ -110,7 +114,8 @@ __device__ inline void sample_angle( cuda::Space_Vector& omega,
  *
  * \return vector magnitude
  */
-__device__ inline double vector_magnitude(const cuda::Space_Vector &vector)
+PROFUGUS_DEVICE_FUNCTION 
+double vector_magnitude(const cuda::Space_Vector &vector)
 {
     return sqrt(vector.x * vector.x +
                 vector.y * vector.y +
@@ -128,8 +133,9 @@ __device__ inline double vector_magnitude(const cuda::Space_Vector &vector)
  *
  * \return dot product
  */
-__device__ inline double dot_product(const cuda::Space_Vector &v,
-                                     const cuda::Space_Vector &w)
+PROFUGUS_DEVICE_FUNCTION 
+double dot_product(const cuda::Space_Vector &v,
+		   const cuda::Space_Vector &w)
 {
     return v.x*w.x + v.y*w.y + v.z*w.z;
 }
@@ -146,7 +152,8 @@ __device__ inline double dot_product(const cuda::Space_Vector &v,
  * This function is unrolled for efficiency, which is why we don't have a
  * general normalize function.
  */
-__device__ inline void vector_normalize(cuda::Space_Vector &vector)
+PROFUGUS_DEVICE_FUNCTION 
+void vector_normalize(cuda::Space_Vector &vector)
 {
     double norm     = 1.0 / vector_magnitude(vector);
     vector.x *= norm;
@@ -190,8 +197,9 @@ __device__ inline void vector_normalize(cuda::Space_Vector &vector)
  *
  * \pre the vector must be a unit-vector (magnitude == 1)
  */
-__device__ inline void cartesian_vector_transform(double costheta, double phi,
-                                                  cuda::Space_Vector &vector)
+PROFUGUS_DEVICE_FUNCTION 
+void cartesian_vector_transform(double costheta, double phi,
+				cuda::Space_Vector &vector)
 {
     REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 

@@ -86,7 +86,7 @@ TEST(Uniform_Source, construction)
     Teuchos::Array<double> wts = tester.wt();
     Teuchos::Array<int> alive = tester.alive();
     Teuchos::Array<int> groups = tester.group();
-    Teuchos::Array<profugus::events::Event> events = tester.event();
+    Teuchos::Array<cuda_profugus::events::Event> events = tester.event();
     Teuchos::Array<int> batches = tester.batch();
     for ( int i = 0; i < vector_size; ++i )
     {
@@ -94,7 +94,7 @@ TEST(Uniform_Source, construction)
     	EXPECT_EQ( wts[i], 1.0 );
     	EXPECT_TRUE( alive[i] );
     	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
-    	EXPECT_EQ( events[i], profugus::events::BORN );
+    	EXPECT_EQ( events[i], cuda_profugus::events::BORN );
     	EXPECT_EQ( batches[i], 0 );
     }
 
@@ -122,7 +122,7 @@ TEST(Uniform_Source, construction)
     	EXPECT_EQ( wts[i], 1.0 );
     	EXPECT_TRUE( alive[i] );
     	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
-    	EXPECT_EQ( events[i], profugus::events::BORN );
+    	EXPECT_EQ( events[i], cuda_profugus::events::BORN );
     	EXPECT_EQ( batches[i], 1 );
     }
 

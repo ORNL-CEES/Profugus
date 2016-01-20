@@ -15,6 +15,7 @@
 
 #include "utils/View_Field.hh"
 #include "cuda_utils/CudaDBC.hh"
+#include "cuda_utils/CudaMacros.hh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
 #include "cuda_utils/Utility_Functions.hh"
@@ -83,9 +84,10 @@ class Mesh_Geometry
     // >>> DEVICE API
 
     //! Initialize track.
-    __device__ inline void initialize(const Space_Vector& r,
-                                      const Space_Vector& direction,
-                                            Geo_State_t&  state) const
+    PROFUGUS_DEVICE_FUNCTION
+    void initialize(const Space_Vector& r,
+		    const Space_Vector& direction,
+		    Geo_State_t&  state) const
     {
         using cuda::utility::soft_equiv;
         using def::I; using def::J; using def::K;
@@ -105,17 +107,20 @@ class Mesh_Geometry
     }
 
     //! Get distance to next boundary
-    __device__ inline double distance_to_boundary(Geo_State_t& state) const;
+    PROFUGUS_DEVICE_FUNCTION
+    double distance_to_boundary(Geo_State_t& state) const;
 
     //! Move to and cross a surface in the current direction.
-    __device__ void move_to_surface(Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION
+    void move_to_surface(Geo_State_t& state) const
     {
         move(state.next_dist, state);
         state.ijk = state.next_ijk;
     }
 
     //! Move a distance \e d to a point in the current direction.
-    __device__ void move_to_point(double d, Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION
+    void move_to_point(double d, Geo_State_t& state) const
     {
         move(d, state);
 
@@ -123,13 +128,15 @@ class Mesh_Geometry
     }
 
     //! Number of cells (excluding "outside" cell)
-    __host__ __device__ cell_type num_cells() const
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    cell_type num_cells() const
     {
         return d_mesh.num_cells();
     }
 
     //! Return the current cell ID, valid only when inside the mesh
-    __device__ cell_type cell(const Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION
+    cell_type cell(const Geo_State_t& state) const
     {
         REQUIRE(boundary_state(state) != profugus::geometry::OUTSIDE);
 
@@ -141,7 +148,8 @@ class Mesh_Geometry
     }
 
     //! Return the current material ID
-    __device__ matid_type matid(const Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION
+    matid_type matid(const Geo_State_t& state) const
     {
         REQUIRE(cell(state) < num_cells());
 
@@ -149,7 +157,8 @@ class Mesh_Geometry
     }
 
     //! Return the state with respect to outer geometry boundary
-    __device__ profugus::geometry::Boundary_State boundary_state(
+    PROFUGUS_DEVICE_FUNCTION
+    profugus::geometry::Boundary_State boundary_state(
         const Geo_State_t& state) const
     {
         using def::I; using def::J; using def::K;
@@ -167,20 +176,23 @@ class Mesh_Geometry
     }
 
     //! Return the current position.
-    __device__ Space_Vector position(const Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION 
+    Space_Vector position(const Geo_State_t& state) const
     {
         return state.d_r;
     }
 
     //! Return the current direction.
-    __device__ Space_Vector direction(const Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION 
+    Space_Vector direction(const Geo_State_t& state) const
     {
         return state.d_dir;
     }
 
     //! Change the direction to \p new_direction.
-    __device__ void change_direction( const Space_Vector& new_direction,
-                                            Geo_State_t&  state) const
+    PROFUGUS_DEVICE_FUNCTION 
+    void change_direction( const Space_Vector& new_direction,
+			   Geo_State_t&  state) const
     {
         // update and normalize the direction
         state.d_dir = new_direction;
@@ -188,22 +200,25 @@ class Mesh_Geometry
     }
 
     //! Change the direction through an angle
-    __device__ void change_direction( double       costheta,
-                                      double       phi,
-                                      Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION
+    void change_direction( double       costheta,
+			   double       phi,
+			   Geo_State_t& state) const
     {
         cuda::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
     //! Reflect the direction at a reflecting surface.
-    __device__ bool reflect(Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION
+    bool reflect(Geo_State_t& state) const
     {
         INSIST(false, "no reflect in mesh_geometry");
         return false;
     }
 
     //! Return the outward normal at the location dictated by the state.
-    __device__ Space_Vector normal(const Geo_State_t& state) const
+    PROFUGUS_DEVICE_FUNCTION
+    Space_Vector normal(const Geo_State_t& state) const
     {
         INSIST(false, "normal in mesh_geometry");
         Space_Vector dir = {0.0, 0.0, 0.0};
@@ -211,10 +226,12 @@ class Mesh_Geometry
     }
 
     // If the particle is outside the geometry, find distance
-    __device__ double distance_to_interior(Geo_State_t &state);
+    PROFUGUS_DEVICE_FUNCTION 
+    double distance_to_interior(Geo_State_t &state);
 
     //! Get cell volume
-    __device__ double volume(size_type cell) const
+    PROFUGUS_DEVICE_FUNCTION 
+    double volume(size_type cell) const
     {
         return d_mesh.volume(cell);
     }
@@ -224,7 +241,8 @@ class Mesh_Geometry
     // >>> IMPLEMENTATION
 
     // Update state tracking information
-    __device__ void update_state(Geo_State_t &state) const
+    PROFUGUS_DEVICE_FUNCTION 
+    void update_state(Geo_State_t &state) const
     {
         using def::I; using def::J; using def::K;
 
@@ -233,7 +251,8 @@ class Mesh_Geometry
     }
 
     //! Move a particle a distance \e d in the current direction.
-    __device__ void move(double dist, Geo_State_t &state) const
+    PROFUGUS_DEVICE_FUNCTION
+    void move(double dist, Geo_State_t &state) const
     {
         REQUIRE(dist >= 0.0);
         REQUIRE(cuda::utility::soft_equiv(

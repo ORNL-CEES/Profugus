@@ -172,7 +172,9 @@ IF(USE_CUDA)
   # cuda mc sources
   FILE(GLOB CUDA_MC_HEADERS cuda_mc/*.hh)
   SET(CUDA_MC_SOURCES
+    cuda_mc/Bank.pt.cu
     cuda_mc/Collision_Tally.pt.cu
+    cuda_mc/Particle.pt.cu
     cuda_mc/Particle_Vector.pt.cu
     cuda_mc/Uniform_Source.pt.cu
     )

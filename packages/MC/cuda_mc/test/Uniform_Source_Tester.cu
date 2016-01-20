@@ -69,7 +69,7 @@ __global__ void batch_kernel( Uniform_Source_Tester::Particle_Vector* vector,
 __global__ void kill_kernel( Uniform_Source_Tester::Particle_Vector* vector )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->set_event( i, profugus::events::DEAD );
+    vector->set_event( i, cuda_profugus::events::DEAD );
 }
 
 //---------------------------------------------------------------------------//

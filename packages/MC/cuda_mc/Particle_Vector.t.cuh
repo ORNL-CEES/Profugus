@@ -49,10 +49,10 @@ __global__ void init_lid_kernel( const std::size_t size, std::size_t* lids )
 //---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
 __global__ void init_event_kernel( const std::size_t size,
-				   profugus::events::Event* events )
+				   events::Event* events )
 {
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size ) events[idx] = profugus::events::DEAD;
+    if ( idx < size ) events[idx] = events::DEAD;
 }
 
 //---------------------------------------------------------------------------//

@@ -157,7 +157,7 @@ void Collision_Tally<Geometry>::tally(
     // Get the particles that have had a collision.
     std::size_t start_idx = 0;
     std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( profugus::events::COLLISION,
+    particles.get_host_ptr()->get_event_particles( events::COLLISION,
 						   start_idx,
 						   num_particle );
 

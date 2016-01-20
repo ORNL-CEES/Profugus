@@ -100,7 +100,7 @@ TEST(Particle_Vector, construction)
     Teuchos::Array<Event_t> device_events = tester.event();
     for ( int i = 0; i < num_particle; ++i )
     {
-	EXPECT_EQ( profugus::events::DEAD, device_events[i] );
+	EXPECT_EQ( cuda_profugus::events::DEAD, device_events[i] );
     }
 
     // Setup events.
@@ -109,8 +109,8 @@ TEST(Particle_Vector, construction)
     {
 	// Evens scatter, odds absorb
 	host_events[i] = ( i % 2 == 0 ) 
-			 ? profugus::events::SCATTER 
-			 : profugus::events::ABSORPTION;
+			 ? cuda_profugus::events::SCATTER 
+			 : cuda_profugus::events::ABSORPTION;
     }
 
     // Check event assignment
@@ -149,13 +149,13 @@ TEST(Particle_Vector, construction)
     // Check that we can query events.
     std::size_t start_idx = 0;
     std::size_t num_event = 0;
-    tester.get_event_particles( profugus::events::SCATTER, start_idx, num_event );
+    tester.get_event_particles( cuda_profugus::events::SCATTER, start_idx, num_event );
     EXPECT_EQ( start_idx, num_particle / 2 );
     EXPECT_EQ( num_event, num_particle / 2 );
-    tester.get_event_particles( profugus::events::ABSORPTION, start_idx, num_event );
+    tester.get_event_particles( cuda_profugus::events::ABSORPTION, start_idx, num_event );
     EXPECT_EQ( start_idx, 0 );
     EXPECT_EQ( num_event, num_particle / 2 );
-    tester.get_event_particles( profugus::events::ESCAPE, start_idx, num_event );
+    tester.get_event_particles( cuda_profugus::events::ESCAPE, start_idx, num_event );
     EXPECT_EQ( start_idx, num_particle );
     EXPECT_EQ( num_event, 0 );
 

@@ -16,7 +16,7 @@
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
-#include "mc/Definitions.hh"
+#include "Definitions.hh"
 
 #include "Particle_Vector.hh"
 
@@ -40,7 +40,7 @@ class Collision_Tally
     //@{
     //! Typedefs.
     typedef typename Geometry::Geo_State_t Geo_State_t;
-    typedef profugus::events::Event Event_t;
+    typedef events::Event Event_t;
     //@}
 
   private:

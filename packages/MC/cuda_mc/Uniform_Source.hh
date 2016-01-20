@@ -15,7 +15,7 @@
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
-#include "mc/Definitions.hh"
+#include "Definitions.hh"
 
 #include "Particle_Vector.hh"
 
@@ -59,7 +59,7 @@ class Uniform_Source
     typedef Teuchos::ParameterList              ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     typedef typename Geometry_t::Space_Vector   Space_Vector;
-    typedef profugus::events::Event             Event_t;
+    typedef events::Event                       Event_t;
     //@}
 
   private:

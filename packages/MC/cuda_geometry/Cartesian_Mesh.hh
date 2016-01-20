@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "cuda_utils/CudaDBC.hh"
+#include "cuda_utils/CudaMacros.hh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
 #include "cuda_utils/Utility_Functions.hh"
@@ -99,10 +100,12 @@ class Cartesian_Mesh
     // >>> ACCESSORS
 
     //! Get number of cells.
-    __host__ __device__ cell_type num_cells() const { return d_num_cells; }
+    PROFUGUS_HOST_DEVICE_FUNCTION 
+    cell_type num_cells() const { return d_num_cells; }
 
     //! Number of cells along an axis
-    __host__ __device__ dim_type num_cells_along(dim_type d) const
+    PROFUGUS_HOST_DEVICE_FUNCTION 
+    dim_type num_cells_along(dim_type d) const
     {
         REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
@@ -115,10 +118,12 @@ class Cartesian_Mesh
     }
 
     //! Dimension of mesh.
-    __host__ __device__ dim_type dimension() const { return d_dimension; }
+    PROFUGUS_HOST_DEVICE_FUNCTION 
+    dim_type dimension() const { return d_dimension; }
 
     //! Return cell edges along a given direction.
-    __device__ double * edges(dim_type d) const
+    PROFUGUS_DEVICE_FUNCTION 
+    double * edges(dim_type d) const
     {
         REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
@@ -133,7 +138,8 @@ class Cartesian_Mesh
     // >>> INDEX CONVERSION
 
     // Convert cardinal index to (i,j) or (i,j,k).
-    __host__ __device__ void cardinal(
+    PROFUGUS_HOST_DEVICE_FUNCTION 
+    void cardinal(
         cell_type cell, dim_type& i, dim_type& j, dim_type& k) const
     {
         REQUIRE( cell < d_num_cells );
@@ -147,10 +153,11 @@ class Cartesian_Mesh
     }
 
     // Convert (i,j,k) to cell index
-    __host__ __device__ inline bool index(dim_type   i,
-                                          dim_type   j,
-                                          dim_type   k,
-                                          cell_type &cell) const
+    PROFUGUS_HOST_DEVICE_FUNCTION 
+    bool index(dim_type   i,
+	       dim_type   j,
+	       dim_type   k,
+	       cell_type &cell) const
     {
         REQUIRE( i < d_cells_x );
         REQUIRE( j < d_cells_y );
@@ -168,7 +175,8 @@ class Cartesian_Mesh
     // >>> VOLUME CALCULATION
 
     //! Calculate volume from the global cell id
-    __device__ inline double volume(cell_type global_cell) const
+    PROFUGUS_DEVICE_FUNCTION 
+    double volume(cell_type global_cell) const
     {
         REQUIRE( global_cell < d_num_cells );
         return dd_volumes[global_cell];
@@ -177,7 +185,8 @@ class Cartesian_Mesh
     // >>> SPATIAL LOCATION
 
     // Locate the positon's ijk coordinates with upper edges begin "inside"
-    __device__ void find_upper(const Space_Vector &r, Coordinates &ijk ) const
+    PROFUGUS_DEVICE_FUNCTION 
+    void find_upper(const Space_Vector &r, Coordinates &ijk ) const
     {
         ijk.i = find_upper(r.x, def::I);
         ijk.j = find_upper(r.y, def::J);
@@ -185,7 +194,8 @@ class Cartesian_Mesh
     }
 
     // Locate a coordinate along a single axis
-    __device__ dim_type find_upper(
+    PROFUGUS_DEVICE_FUNCTION 
+    dim_type find_upper(
         double r, dim_type axis) const
     {
         REQUIRE( 0 <= axis && axis < d_dimension );
@@ -211,7 +221,8 @@ class Cartesian_Mesh
     }
 
     //! Low corner of mesh in \e (i,j,k) direction.
-    __device__ double low_corner(dim_type d) const
+    PROFUGUS_DEVICE_FUNCTION 
+    double low_corner(dim_type d) const
     {
         REQUIRE( d>=0 && d<=3 );
 	REQUIRE( d == def::I || d == def::J || d == def::K );
@@ -224,7 +235,8 @@ class Cartesian_Mesh
     }
 
     //! High corner of mesh in \e (i,j,k) direction.
-    __device__ double high_corner(dim_type d) const
+    PROFUGUS_DEVICE_FUNCTION 
+    double high_corner(dim_type d) const
     {
         REQUIRE( d>=0 && d<=3 );
 	REQUIRE( d == def::I || d == def::J || d == def::K );
