@@ -70,7 +70,7 @@ class Particle
 
   public:
     // Constructor
-    Particle(){};
+    __device__ Particle(){};
 
     // >>> PARTICLE FUNCTIONS
 
@@ -100,8 +100,8 @@ class Particle
 
     //@{
     //! Get a handle to the geometric state of the particle.
-    Geo_State_t& geo_state() { return d_geo_state; }
-    const Geo_State_t& geo_state() const { return d_geo_state; }
+    __device__ Geo_State_t& geo_state() { return d_geo_state; }
+    __device__ const Geo_State_t& geo_state() const { return d_geo_state; }
     //@}
 
     //@{
@@ -109,6 +109,11 @@ class Particle
     __device__ bool alive() const { return d_alive; }
     __device__ double wt() const { return d_wt; }
     __device__ const RNG_State& rng() const { return d_rng; }
+    __device__ double ran() const
+    {
+        RNG_State rng_state = d_rng;
+        return curand_uniform_double(&rng_state);
+    }
     __device__ Event_Type event() const { return d_event; }
     __device__ int matid() const { return d_matid; }
     __device__ int group() const { return d_group; }
