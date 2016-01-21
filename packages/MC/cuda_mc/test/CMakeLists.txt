@@ -1,0 +1,42 @@
+##---------------------------------------------------------------------------##
+## cuda_mc/test/CMakeLists.txt
+## Steven Hamilton
+## Thu Apr 11 09:20:40 2013
+##---------------------------------------------------------------------------##
+## Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+##---------------------------------------------------------------------------##
+## CMAKE for cuda_mc/test
+##---------------------------------------------------------------------------##
+
+INCLUDE(UtilsTest)
+
+##---------------------------------------------------------------------------##
+## TEST LIBRARIES
+##---------------------------------------------------------------------------##
+
+# C++ code
+SET(SOURCES
+  )
+
+SET(CUDA_SOURCES
+  Particle_Tester.cu
+  Physics_Tester.cu
+)
+
+PACKAGE_ADD_CUDA_LIBRARY(
+  mc_cuda_mc_test_cuda
+  SOURCES ${CUDA_SOURCES}
+  DEPLIBS MC MC_cuda
+  TESTONLY)
+
+##---------------------------------------------------------------------------##
+## TESTS
+##---------------------------------------------------------------------------##
+SET(DEPS DEPLIBS mc_cuda_mc_test_cuda)
+
+ADD_UTILS_TEST(tstParticle_cuda.cc        NP 1 ${DEPS})
+ADD_UTILS_TEST(tstPhysics_cuda.cc         NP 1 ${DEPS})
+
+##---------------------------------------------------------------------------##
+##                        end of cuda_utils/test/CMakeLists.txt
+##---------------------------------------------------------------------------##
