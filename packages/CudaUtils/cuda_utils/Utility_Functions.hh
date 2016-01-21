@@ -16,6 +16,7 @@
 #include "CudaMacros.hh"
 
 #include <cmath>
+#include <functional>
 
 namespace cuda
 {
@@ -23,12 +24,37 @@ namespace cuda
 namespace utility
 {
 //---------------------------------------------------------------------------//
-// On-device lower bound binary search
-template <class T>
-PROFUGUS_HOST_DEVICE_FUNCTION 
+// Less than comparator.
+template<class T>
+struct less_than
+{
+    PROFUGUS_DEVICE_FUNCTION
+    bool operator() ( const T& a, const T& b ) const
+    {
+	return (a < b);
+    }
+};
+
+//---------------------------------------------------------------------------//
+// Greater than comparator.
+template<class T>
+struct greater_than
+{
+    PROFUGUS_DEVICE_FUNCTION
+    bool operator() ( const T& a, const T& b ) const
+    {
+	return (a > b);
+    }
+};
+
+//---------------------------------------------------------------------------//
+// On-device lower bound binary search with general binary comparator
+template <class T, class C>
+PROFUGUS_DEVICE_FUNCTION 
 const T * lower_bound(const T *first,
 		      const T *last,
-		      const T &val )
+		      const T &val,
+		      const C& comparator)
 {
     const T *it;
     int count, step;
@@ -37,7 +63,7 @@ const T * lower_bound(const T *first,
     {
         step = count / 2;
         it = first + step;
-        if( *it < val )
+        if( comparator(*it,val) )
         {
             first = ++it;
             count -= step+1;
@@ -51,8 +77,19 @@ const T * lower_bound(const T *first,
 }
 
 //---------------------------------------------------------------------------//
+// On-device lower bound binary search with default comparator.
+template <class T>
+PROFUGUS_DEVICE_FUNCTION 
+const T * lower_bound(const T *first,
+		      const T *last,
+		      const T &val)
+{
+    return lower_bound( first, last, val, less_than<T>() );
+}
+
+//---------------------------------------------------------------------------//
 // on device soft equivalence
-PROFUGUS_HOST_DEVICE_FUNCTION
+PROFUGUS_DEVICE_FUNCTION
 bool soft_equiv( double a,
 		 double b,
 		 double tol = 1.0e-12 )
@@ -70,7 +107,7 @@ bool soft_equiv( double a,
 // SAMPLING FUNCTIONS
 //---------------------------------------------------------------------------//
 template<class T>
-PROFUGUS_HOST_DEVICE_FUNCTION
+PROFUGUS_DEVICE_FUNCTION
 int sample_discrete_CDF(int nb, const T *c, const T ran)
 {
     REQUIRE(nb > 0);
