@@ -107,6 +107,7 @@ IF(USE_CUDA)
     Matprop_cuda
     NOINSTALLHEADERS ${CUDA_HEADERS}
     SOURCES ${CUDA_SOURCES}
+    DEPLIBS Matprop
     )
 ENDIF()
 
