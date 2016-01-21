@@ -32,18 +32,22 @@ namespace cuda_mc
  */
 template <class Geometry>
 Physics<Geometry>::Physics(RCP_Std_DB db,
-                           SDP_XS     mat)
-    : d_mat_host(mat)
-    , d_mat(mat.get_device_ptr())
-    , d_Ng(d_mat->num_groups())
-    , d_Nm(d_mat->num_mat())
-    , d_scatter_vec(d_mat->num_groups()*d_mat->num_mat())
+                           SP_XS      mat)
+    : d_Ng(mat->num_groups())
+    , d_Nm(mat->num_mat())
+    , d_scatter_vec(mat->num_groups()*mat->num_mat())
     , d_fissionable_vec(d_Nm)
 {
     REQUIRE(!db.is_null());
-    REQUIRE(!d_mat.is_null());
-    REQUIRE(d_mat->num_groups() > 0);
-    REQUIRE(d_mat->num_mat() > 0);
+
+    //auto mat_dev = std::make_shared<XS_Dev_t>(*mat);
+    std::cout << "Building SDP<XS_Device>" << std::endl;
+    d_mat_host = cuda::Shared_Device_Ptr<XS_Dev_t>(*mat);
+    d_mat = d_mat_host.get_device_ptr();
+
+    REQUIRE(d_mat);
+    REQUIRE(d_mat_host.get_host_ptr()->num_groups() > 0);
+    REQUIRE(d_mat_host.get_host_ptr()->num_mat() > 0);
 
     d_scatter = d_scatter_vec.data();
     d_fissionable = d_fissionable_vec.data();
@@ -59,7 +63,7 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
 
     // get the material ids in the database
     def::Vec_Int matids;
-    d_mat->get_matids(matids);
+    mat->get_matids(matids);
     CHECK(matids.size() == d_Nm);
 
     // calculate total scattering over all groups for each material and
@@ -69,7 +73,7 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
     for (auto m : matids)
     {
         // get the P0 scattering matrix for this material
-        const auto &sig_s = d_mat->matrix(m, 0);
+        const auto &sig_s = mat->matrix(m, 0);
         CHECK(sig_s.numRows() == d_Ng);
         CHECK(sig_s.numCols() == d_Ng);
 
@@ -96,13 +100,13 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
                 int ind = group_mat_index(g,m);
 
                 if (host_scatter[ind] >
-                    d_mat->vector(m, XS_t::TOTAL)[g])
+                    mat->vector(m, XS_t::TOTAL)[g])
                 {
                     std::ostringstream mm;
                     mm << "Scattering greater than total "
                        << "for material" << m << " in group " << g
                        << ". Total xs is "
-                       << d_mat->vector(m, XS_t::TOTAL)[g]
+                       << mat->vector(m, XS_t::TOTAL)[g]
                        << " and scatter is " << host_scatter[ind];
 
                     // terminate if we are running analog
@@ -116,7 +120,7 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
         }
 
         // see if this material is fissionable by checking Chi
-        host_fissionable[m] = d_mat->vector(m, XS_t::CHI).normOne() > 0.0 ?
+        host_fissionable[m] = mat->vector(m, XS_t::CHI).normOne() > 0.0 ?
                               true : false;
     }
 

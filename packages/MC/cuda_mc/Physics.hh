@@ -17,13 +17,14 @@
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
+#include "CudaUtils/cuda_utils/Shared_Device_Ptr.hh"
+#include "Matprop/cuda_xs/XS_Device.hh"
 #include "CudaUtils/cuda_utils/Device_Vector.hh"
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "xs/XS.hh"
 #include "mc/Definitions.hh"
 #include "Particle.hh"
-//#include "Bank.hh"
 
 namespace cuda_mc
 {
@@ -58,13 +59,14 @@ class Physics
     typedef Geometry                            Geometry_t;
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
     typedef Particle<Geometry_t>                Particle_t;
-    //typedef Bank<Geometry_t>                    Bank_t;
-    typedef std::shared_ptr<Geometry_t>         SP_Geometry;
+    typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef std::shared_ptr<Particle_t>         SP_Particle;
 
     typedef curandState_t                       RNG_State;
-    typedef cuda_profugus::XS_Device            XS_t;
-    typedef cuda::Shared_Device_Ptr<XS_t>       SDP_XS;
+    typedef cuda_profugus::XS_Device            XS_Dev_t;
+    typedef cuda::Shared_Device_Ptr<XS_Dev_t>   SDP_XS_Dev;
+    typedef profugus::XS                        XS_t;
+    typedef std::shared_ptr<XS_t>               SP_XS;
     typedef Teuchos::ParameterList              ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     typedef typename Geometry_t::Space_Vector   Space_Vector;
@@ -82,23 +84,30 @@ class Physics
     // >>> DATA
 
     // Cross section database.
-    SDP_XS d_mat_host;
-    XS *d_mat;
+    SDP_XS_Dev d_mat_host;
+    XS_Dev_t  *d_mat;
 
     // Geometry.
-    SP_Geometry d_geometry;
+    SDP_Geometry d_geometry_host;
+    Geometry    *d_geometry;
 
   public:
     // Constructor that auto-creates group bounds.
-    explicit Physics(RCP_Std_DB db, SDP_XS mat);
+    explicit Physics(RCP_Std_DB db, SP_XS mat);
 
     // >>> PUBLIC TRANSPORT INTERFACE
 
     //! Set the geometry.
-    void set_geometry(SP_Geometry g) { REQUIRE(g); d_geometry = g; }
+    void set_geometry(SDP_Geometry g)
+    {
+        REQUIRE(g.get_host_ptr());
+        REQUIRE(g.get_device_ptr());
+        d_geometry_host = g;
+        d_geometry = d_geometry_host.get_device_ptr();
+    }
 
     //! Get the geometry.
-    SP_Geometry get_geometry() const { return d_geometry; }
+    SDP_Geometry get_geometry() const { return d_geometry_host; }
 
     // Get a total cross section from the physics library.
     __device__ double total(Reaction_Type type, const Particle_t &p);
@@ -106,7 +115,7 @@ class Physics
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process a particle through a physical collision.
-    //__device__ void collide(Particle_t &particle, Bank_t &bank);
+    __device__ void collide(Particle_t &particle);
 
     // Sample fission site.
     __device__ int sample_fission_site(const Particle_t &p, Fission_Site *fsc,
@@ -127,15 +136,18 @@ class Physics
     // >>> FISSION SITE CONTAINER OPERATIONS
 
     //! Fission site position.
-    __device__ static Space_Vector fission_site(const Fission_Site &fs) { return fs.r; }
+    __device__ static Space_Vector fission_site(const Fission_Site &fs)
+    {
+        return fs.r;
+    }
 
     // >>> CLASS FUNCTIONS
 
     //! Get cross section database (host).
-    SDP_XS xs() const { return d_mat; }
+    SDP_XS_Dev xs() const { return d_mat_host; }
 
     //! Get cross section database (device).
-    __device__ SDP_XS xs_device() const { return d_mat; }
+    __device__ XS_Dev_t  * xs_device() const { return d_mat; }
 
     //! Number of discrete energy groups
     __host__ __device__ int num_groups() const { return d_Ng; }
