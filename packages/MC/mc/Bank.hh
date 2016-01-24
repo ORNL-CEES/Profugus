@@ -35,12 +35,13 @@ namespace profugus
 
 //===========================================================================//
 
+template <class Geometry>
 class Bank
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef Particle                    Particle_t;
+    typedef Particle<Geometry>          Particle_t;
     typedef std::shared_ptr<Particle_t> SP_Particle;
     typedef SP_Particle                 value_type;
     typedef size_t                      size_type;

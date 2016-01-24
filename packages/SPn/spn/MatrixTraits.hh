@@ -26,6 +26,7 @@
 #include "MatrixMarket_Tpetra.hpp"
 
 #include "harness/DBC.hh"
+#include "comm/global.hh"
 #include "solvers/LinAlgTypedefs.hh"
 
 
@@ -234,7 +235,8 @@ class MatrixTraits<EpetraTypes>
     static void write_matrix_file(Teuchos::RCP<const Matrix_t> matrix,
                                   std::string filename)
     {
-        EpetraExt::RowMatrixToMatrixMarketFile("Epetra.mtx",*matrix,matrix->Label());
+        EpetraExt::RowMatrixToMatrixMarketFile(filename.c_str(), *matrix,
+                                               matrix->Label());
     }
 
     static UTILS_INT8 global_nonzeros(Teuchos::RCP<const Matrix_t> matrix)

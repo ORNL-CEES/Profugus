@@ -41,24 +41,25 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Source_Transporter
 {
   public:
     //@{
     //! Typedefs.
-    typedef Domain_Transporter                   Transporter_t;
-    typedef Source                               Source_t;
-    typedef Transporter_t::Physics_t             Physics_t;
-    typedef Transporter_t::Geometry_t            Geometry_t;
-    typedef Transporter_t::SP_Physics            SP_Physics;
-    typedef Transporter_t::SP_Geometry           SP_Geometry;
-    typedef Transporter_t::SP_Particle           SP_Particle;
-    typedef Transporter_t::SP_Variance_Reduction SP_Variance_Reduction;
-    typedef Transporter_t::SP_Fission_Sites      SP_Fission_Sites;
-    typedef Transporter_t::SP_Tallier            SP_Tallier;
-    typedef std::shared_ptr<Source_t>            SP_Source;
-    typedef Physics_t::RCP_Std_DB                RCP_Std_DB;
-    typedef def::size_type                       size_type;
+    typedef Domain_Transporter<Geometry>                  Transporter_t;
+    typedef Source<Geometry>                              Source_t;
+    typedef typename Transporter_t::Physics_t             Physics_t;
+    typedef typename Transporter_t::Geometry_t            Geometry_t;
+    typedef typename Transporter_t::SP_Physics            SP_Physics;
+    typedef typename Transporter_t::SP_Geometry           SP_Geometry;
+    typedef typename Transporter_t::SP_Particle           SP_Particle;
+    typedef typename Transporter_t::SP_Variance_Reduction SP_Variance_Reduction;
+    typedef typename Transporter_t::SP_Fission_Sites      SP_Fission_Sites;
+    typedef typename Transporter_t::SP_Tallier            SP_Tallier;
+    typedef std::shared_ptr<Source_t>                     SP_Source;
+    typedef typename Physics_t::RCP_Std_DB                RCP_Std_DB;
+    typedef def::size_type                                size_type;
     //@}
 
   private:

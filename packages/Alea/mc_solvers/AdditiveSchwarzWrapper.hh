@@ -41,7 +41,7 @@ class AdditiveSchwarzWrapper : public AleaSolver
     void applyImpl(const MV &x, MV &y) const;
 
     // Belos solver
-    Teuchos::RCP<Ifpack2::AdditiveSchwarz<CRS_MATRIX> > d_schwarz;
+    Teuchos::RCP<Ifpack2::AdditiveSchwarz<MATRIX> > d_schwarz;
 };
 
 }

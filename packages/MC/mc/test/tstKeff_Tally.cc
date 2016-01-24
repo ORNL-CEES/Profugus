@@ -16,6 +16,8 @@
 
 #include "gtest/utils_gtest.hh"
 
+#include "geometry/RTK_Geometry.hh"
+
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
@@ -23,12 +25,13 @@
 class Keff_TallyTest : public testing::Test
 {
   protected:
-    typedef profugus::Physics          Physics_t;
-    typedef profugus::Keff_Tally       Tally_t;
-    typedef Physics_t::Particle_t      Particle_t;
-    typedef Physics_t::XS_t            XS_t;
-    typedef Physics_t::RCP_XS          RCP_XS;
-    typedef std::shared_ptr<Physics_t> SP_Physics;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::Physics<Geometry_t>       Physics_t;
+    typedef profugus::Keff_Tally<Geometry_t>    Tally_t;
+    typedef Physics_t::Particle_t               Particle_t;
+    typedef Physics_t::XS_t                     XS_t;
+    typedef Physics_t::RCP_XS                   RCP_XS;
+    typedef std::shared_ptr<Physics_t>          SP_Physics;
 
     typedef Teuchos::ParameterList        ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;

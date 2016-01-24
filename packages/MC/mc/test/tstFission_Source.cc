@@ -14,6 +14,7 @@
 #include "Teuchos_RCP.hpp"
 
 #include "comm/P_Stream.hh"
+#include "geometry/Cartesian_Mesh.hh"
 #include "../Fission_Source.hh"
 
 #include "gtest/utils_gtest.hh"
@@ -30,10 +31,11 @@ class FissionSourceTest : public SourceTestBase
     typedef SourceTestBase Base;
 
   protected:
-    typedef profugus::Fission_Source         Fission_Source;
-    typedef Fission_Source::SP_Fission_Sites SP_Fission_Sites;
-    typedef Fission_Source::Fission_Site     Fission_Site;
-    typedef std::shared_ptr<Fission_Source>  SP_Fission_Source;
+    typedef profugus::Core                          Geometry_t;
+    typedef profugus::Fission_Source<Geometry_t>    Fission_Source;
+    typedef Fission_Source::SP_Fission_Sites        SP_Fission_Sites;
+    typedef Fission_Source::Fission_Site            Fission_Site;
+    typedef std::shared_ptr<Fission_Source>         SP_Fission_Source;
 
     virtual int get_seed() const
     {
@@ -187,6 +189,7 @@ TEST_F(FissionSourceTest, DefaultInitialize)
         EXPECT_EQ(1250, source.Np());
     }
 }
+
 //---------------------------------------------------------------------------//
 
 TEST_F(FissionSourceTest, Initialize)
@@ -272,6 +275,110 @@ TEST_F(FissionSourceTest, Small)
     else if (nodes == 4)
     {
         EXPECT_EQ(3, ctr);
+    }
+
+    EXPECT_EQ(source.num_to_transport(), ctr);
+    EXPECT_EQ(ctr, source.num_run());
+    EXPECT_EQ(0, source.num_left());
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(FissionSourceTest, Initialize_Mesh)
+{
+    EXPECT_FALSE(b_db->isParameter("init_fission_src"));
+
+    // make a mesh
+    std::vector<double> r = {0.0, 1.26, 2.52};
+    std::vector<double> z = {0.0, 5.0, 10.0, 14.28};
+    auto mesh = std::make_shared<profugus::Cartesian_Mesh>(r, r, z);
+    std::vector<double> rho = {0.0, 2.0, 1.5, 0.0,
+                               0.0, 3.0, 2.5, 0.0,
+                               0.0, 1.8, 1.2, 0.0};
+
+    // make fission source
+    Fission_Source source(b_db, b_geometry, b_physics, b_rcon);
+    source.build_initial_source(mesh, rho);
+    EXPECT_TRUE(!source.empty());
+
+    if (nodes == 1)
+    {
+        EXPECT_EQ(999, source.num_to_transport());
+        EXPECT_EQ(999, source.total_num_to_transport());
+        EXPECT_EQ(1000, source.Np());
+    }
+    else if (nodes == 2)
+    {
+        EXPECT_TRUE(source.num_to_transport() >= 500 &&
+                    source.num_to_transport() <= 501);
+        EXPECT_EQ(1001, source.total_num_to_transport());
+        EXPECT_EQ(1000, source.Np());
+    }
+    else if (nodes == 4)
+    {
+        EXPECT_TRUE(source.num_to_transport() >= 311 &&
+                    source.num_to_transport() <= 314);
+        EXPECT_EQ(1251, source.total_num_to_transport());
+        EXPECT_EQ(1250, source.Np());
+    }
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(FissionSourceTest, Small_Mesh)
+{
+    EXPECT_FALSE(b_db->isParameter("init_fission_src"));
+
+    // make a mesh
+    std::vector<double> r = {0.0, 1.26, 2.52};
+    std::vector<double> z = {0.0, 5.0, 10.0, 14.28};
+    auto mesh = std::make_shared<profugus::Cartesian_Mesh>(r, r, z);
+    std::vector<double> rho = {0.0, 2.0, 1.5, 0.0,
+                               0.0, 3.0, 2.5, 0.0,
+                               0.0, 1.8, 1.2, 0.0};
+
+    // set to a small number of particles and rebuild the source and test
+    // particles
+    b_db->set("Np", 12);
+
+    // make fission source
+    Fission_Source source(b_db, b_geometry, b_physics, b_rcon);
+    source.build_initial_source(mesh, rho);
+    EXPECT_TRUE(!source.empty());
+
+    EXPECT_EQ(12, source.Np());
+
+    int ctr = 0;
+    Fission_Source::SP_Particle p;
+    while (!source.empty())
+    {
+        p = source.get_particle();
+        ctr++;
+
+        EXPECT_TRUE(p->alive());
+        EXPECT_EQ(1, p->matid());
+
+        auto r = b_geometry->position(p->geo_state());
+
+        if (r[1] < 1.26)
+        {
+            EXPECT_TRUE(r[0] > 1.26);
+        }
+
+        if (r[1] > 1.26)
+        {
+            EXPECT_TRUE(r[0] < 1.26);
+        }
+
+        if (nodes == 1)
+        {
+            EXPECT_EQ(1.0, p->wt());
+        }
+    }
+
+    if (nodes == 1)
+    {
+        EXPECT_EQ(12, ctr);
     }
 
     EXPECT_EQ(source.num_to_transport(), ctr);

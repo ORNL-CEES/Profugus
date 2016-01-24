@@ -31,9 +31,15 @@ namespace profugus
  */
 //===========================================================================//
 
-class Keff_Tally : public Tally
+template <class Geometry>
+class Keff_Tally : public Pathlength_Tally<Geometry>
 {
-    typedef Tally Base;
+    typedef Pathlength_Tally<Geometry>      Base;
+    typedef Physics<Geometry>               Physics_t;
+    typedef typename Physics_t::Particle_t  Particle_t;
+    typedef std::shared_ptr<Physics_t>      SP_Physics;
+
+    using Base::b_physics;
 
   public:
     //@{
@@ -90,17 +96,8 @@ class Keff_Tally : public Tally
 
     // >>> DERIVED INTERFACE
 
-    //! Nothing to do at particle birth.
-    virtual void birth(const Particle_t &p) final { /* * */ }
-
     // Track particle and do tallying.
     virtual void accumulate(double step, const Particle_t &p) override final;
-
-    //! Accumulate first and second moments
-    virtual void end_history() final { /* * */ }
-
-    //! Do post-processing on first and second moments
-    virtual void finalize(double num_histories) final { /* * */ }
 
     // Begin active cycles in a kcode calculation.
     virtual void begin_active_cycles() override final;
@@ -112,7 +109,12 @@ class Keff_Tally : public Tally
     virtual void end_cycle(double num_particles) override final;
 
     // Clear/re-initialize all tally values between solves.
-    virtual void reset() final;
+    virtual void reset() override final;
+
+    // >>> SETTERS
+
+    //! Set the latest keff in the tally.
+    void set_keff(double k) { d_keff_cycle = k; }
 };
 
 } // end namespace profugus

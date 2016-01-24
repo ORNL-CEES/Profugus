@@ -49,10 +49,10 @@ struct Mesh_State
     Coordinates ijk;
 
     //! Position
-    def::Space_Vector pos;
+    def::Space_Vector d_r;
 
     //! Direction
-    def::Space_Vector dir;
+    def::Space_Vector d_dir;
 
     //! Coordinates of next cell (not pickled)
     Coordinates next_ijk;

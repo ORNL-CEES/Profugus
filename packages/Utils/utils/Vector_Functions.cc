@@ -82,7 +82,7 @@ void cartesian_vector_transform(double             costheta,
     else
     {
         // calculate inverse of alpha
-        register const double inv_alpha = 1.0 / alpha;
+        const double inv_alpha = 1.0 / alpha;
 
         // calculate new z-direction
         vector[Z] = old[Z] * costheta - alpha * sintheta * cosphi;

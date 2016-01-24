@@ -32,19 +32,26 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Tallier
 {
   public:
     //@{
     //! Typedefs.
-    typedef Physics                     Physics_t;
-    typedef Physics_t::Geometry_t       Geometry_t;
-    typedef Physics_t::Particle_t       Particle_t;
-    typedef Tally                       Tally_t;
-    typedef std::shared_ptr<Tally_t>    SP_Tally;
-    typedef std::shared_ptr<Geometry_t> SP_Geometry;
-    typedef std::shared_ptr<Physics_t>  SP_Physics;
-    typedef std::vector<SP_Tally>       Vec_Tallies;
+    typedef Geometry                            Geometry_t;
+    typedef Physics<Geometry_t>                 Physics_t;
+    typedef typename Physics_t::Particle_t      Particle_t;
+    typedef Tally<Geometry_t>                   Tally_t;
+    typedef Pathlength_Tally<Geometry_t>        Pathlength_Tally_t;
+    typedef Source_Tally<Geometry_t>            Source_Tally_t;
+    typedef Compound_Tally<Geometry_t>          Compound_Tally_t;
+    typedef std::shared_ptr<Tally_t>            SP_Tally;
+    typedef std::shared_ptr<Pathlength_Tally_t> SP_Pathlength_Tally;
+    typedef std::shared_ptr<Source_Tally_t>     SP_Source_Tally;
+    typedef std::shared_ptr<Compound_Tally_t>   SP_Compound_Tally;
+    typedef std::shared_ptr<Geometry_t>         SP_Geometry;
+    typedef std::shared_ptr<Physics_t>          SP_Physics;
+    typedef std::vector<SP_Tally>               Vec_Tallies;
     //@}
 
   private:
@@ -58,7 +65,9 @@ class Tallier
     Vec_Tallies d_tallies;
 
     // Persistent source and pathlength tallies.
-    Vec_Tallies d_pl, d_src;
+    std::vector<SP_Pathlength_Tally> d_pl;
+    std::vector<SP_Source_Tally>     d_src;
+    std::vector<SP_Compound_Tally>   d_comp;
 
   public:
     // Constructor.
@@ -74,8 +83,9 @@ class Tallier
     SP_Physics physics() const { return d_physics; }
 
     // Add tallies.
-    void add_pathlength_tally(SP_Tally tally);
-    void add_source_tally(SP_Tally tally);
+    void add_pathlength_tally(SP_Pathlength_Tally tally);
+    void add_source_tally(SP_Source_Tally tally);
+    void add_compound_tally(SP_Compound_Tally tally);
 
     //@{
     //! Number of tallies.
@@ -91,10 +101,22 @@ class Tallier
     {
         return d_src.size();
     }
+    auto num_compound_tallies() const -> decltype(d_comp.size())
+    {
+        return d_comp.size();
+    }
+    //@}
+
+    //@{
+    //! Iterate through all tallies.
+    auto begin() -> decltype(d_tallies.begin()) { return d_tallies.begin(); }
+    auto end()   -> decltype(d_tallies.end())   { return d_tallies.end(); }
     //@}
 
     // Initialize internal data structures after adding tallies.
     void build();
+
+    // >>> TALLY OPERATIONS
 
     // Process path-length tally events.
     void path_length(double step, const Particle_t &p);
@@ -135,7 +157,8 @@ class Tallier
     // IMPLEMENTATION
 
     // Prune tallies for doubles.
-    void prune(Vec_Tallies &tallies);
+    template<class Vec_T>
+    void prune(Vec_T &tallies);
 
     //! Phases of construction, for error checking
     enum Build_Phase
@@ -160,8 +183,9 @@ class Tallier
  *
  * This provides a std-like swap solution using Koenig namespace lookup.
  */
-inline void swap(Tallier &a,
-                 Tallier &b)
+template <class Geometry>
+inline void swap(Tallier<Geometry> &a,
+                 Tallier<Geometry> &b)
 {
     a.swap(b);
 }

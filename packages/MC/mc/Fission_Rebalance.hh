@@ -17,6 +17,8 @@
 #include "utils/Definitions.hh"
 #include "Physics.hh"
 
+#include "geometry/RTK_Geometry.hh"
+
 namespace profugus
 {
 
@@ -121,16 +123,19 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Fission_Rebalance
 {
   public:
     //@{
     //! Typedefs.
-    typedef Physics::Fission_Site           Fission_Site_t;
-    typedef Physics::Fission_Site_Container Fission_Site_Container_t;
-    typedef Physics::Space_Vector           Space_Vector;
-    typedef def::Vec_Int                    Vec_Int;
-    typedef std::pair<int, int>             Array_Bnds;
+    typedef Geometry                                    Geometry_t;
+    typedef Physics<Geometry_t>                         Physics_t;
+    typedef typename Physics_t::Fission_Site            Fission_Site_t;
+    typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container_t;
+    typedef typename Physics_t::Space_Vector            Space_Vector;
+    typedef def::Vec_Int                                Vec_Int;
+    typedef std::pair<int, int>                         Array_Bnds;
     //@}
 
   public:

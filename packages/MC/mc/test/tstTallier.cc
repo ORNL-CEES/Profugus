@@ -16,101 +16,172 @@
 #include "Teuchos_ParameterList.hpp"
 
 #include "gtest/utils_gtest.hh"
+#include "geometry/RTK_Geometry.hh"
+#include "geometry/Mesh_Geometry.hh"
 
 //---------------------------------------------------------------------------//
 // Tally Types
 //---------------------------------------------------------------------------//
 
-class A_Tally : public profugus::Tally
+template <class Geometry>
+class A_Tally : public profugus::Pathlength_Tally<Geometry>
 {
+    typedef profugus::Pathlength_Tally<Geometry> Base;
+    typedef profugus::Physics<Geometry>          Physics_t;
+    typedef std::shared_ptr<Physics_t>           SP_Physics;
+    typedef typename Physics_t::Particle_t       Particle_t;
+
   public:
     A_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
+        : Base(physics, false)
     {
-        set_name("a_pl_tally");
+        this->set_name("a_pl_tally");
     }
 
-    void birth(const Particle_t &p) { /* * */ }
     void accumulate(double step, const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
 
-class P_Tally : public profugus::Tally
+template <class Geometry>
+class P_Tally : public profugus::Pathlength_Tally<Geometry>
 {
+    typedef profugus::Pathlength_Tally<Geometry> Base;
+    typedef profugus::Physics<Geometry>          Physics_t;
+    typedef std::shared_ptr<Physics_t>           SP_Physics;
+    typedef typename Physics_t::Particle_t       Particle_t;
+
   public:
     P_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
+        : Base(physics, false)
     {
-        set_name("p_pl_tally");
+        this->set_name("p_pl_tally");
     }
 
-    void birth(const Particle_t &p) { /* * */ }
     void accumulate(double step, const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
 
-class Q_Tally : public profugus::Tally
+template <class Geometry>
+class Q_Tally : public profugus::Source_Tally<Geometry>
 {
+    typedef profugus::Source_Tally<Geometry> Base;
+    typedef profugus::Physics<Geometry>      Physics_t;
+    typedef std::shared_ptr<Physics_t>       SP_Physics;
+    typedef typename Physics_t::Particle_t   Particle_t;
+
   public:
     Q_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
+        : Base(physics, false)
     {
-        set_name("q_src_tally");
+        this->set_name("q_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
-    void accumulate(double step, const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
 };
 
 //---------------------------------------------------------------------------//
 
-class S_Tally : public profugus::Tally
+template <class Geometry>
+class S_Tally : public profugus::Source_Tally<Geometry>
 {
+    typedef profugus::Source_Tally<Geometry> Base;
+    typedef profugus::Physics<Geometry>      Physics_t;
+    typedef std::shared_ptr<Physics_t>       SP_Physics;
+    typedef typename Physics_t::Particle_t   Particle_t;
+
   public:
     S_Tally(SP_Physics physics)
-        : profugus::Tally(physics)
+        : Base(physics, false)
     {
-        set_name("s_src_tally");
+        this->set_name("s_src_tally");
     }
 
     void birth(const Particle_t &p) { /* * */ }
-    void accumulate(double step, const Particle_t &p) { /* * */ }
-    void end_history() { /* * */ }
-    void finalize(double num_particles) { /* * */ }
-    void reset() { /* * */ }
+};
+
+//---------------------------------------------------------------------------//
+
+template <class Geometry>
+class C_Tally : public profugus::Compound_Tally<Geometry>
+{
+    typedef profugus::Compound_Tally<Geometry> Base;
+    typedef profugus::Physics<Geometry>        Physics_t;
+    typedef std::shared_ptr<Physics_t>         SP_Physics;
+    typedef typename Physics_t::Particle_t     Particle_t;
+
+  public:
+
+    class C_PL_Tally : public profugus::Pathlength_Tally<Geometry>
+    {
+        typedef profugus::Physics<Geometry>        Physics_t;
+        typedef std::shared_ptr<Physics_t>         SP_Physics;
+        typedef typename Physics_t::Particle_t     Particle_t;
+
+      public:
+        C_PL_Tally(SP_Physics physics)
+            : profugus::Pathlength_Tally<Geometry>(physics, false)
+        {
+            this->set_name("c_tally");
+        }
+
+        void accumulate(double step, const Particle_t &p) { /* * */ }
+    };
+
+    class C_SRC_Tally : public profugus::Source_Tally<Geometry>
+    {
+        typedef profugus::Physics<Geometry>        Physics_t;
+        typedef std::shared_ptr<Physics_t>         SP_Physics;
+        typedef typename Physics_t::Particle_t     Particle_t;
+
+      public:
+        C_SRC_Tally(SP_Physics physics)
+            : profugus::Source_Tally<Geometry>(physics, false)
+        {
+            this->set_name("c_tally");
+        }
+
+        void birth(const Particle_t &p) { /* * */ }
+    };
+
+  public:
+    C_Tally(SP_Physics physics)
+        : Base(physics, false)
+    {
+        this->set_name("c_tally");
+
+        // make compound tallies
+        this->b_pl_tally  = std::make_shared<C_PL_Tally>(physics);
+        this->b_src_tally = std::make_shared<C_SRC_Tally>(physics);
+    }
 };
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
 
+template <class Geometry>
 class TallierTest : public testing::Test
 {
   protected:
-    typedef profugus::Tallier      Tallier_t;
-    typedef Tallier_t::SP_Tally    SP_Tally;
-    typedef profugus::Physics      Physics_t;
-    typedef Physics_t::Geometry_t  Geometry_t;
-    typedef profugus::Keff_Tally   Keff_Tally_t;
-    typedef Physics_t::Particle_t  Particle_t;
-    typedef Physics_t::XS_t        XS_t;
-    typedef Physics_t::RCP_XS      RCP_XS;
-    typedef Physics_t::SP_Geometry SP_Geometry;
-    typedef Tallier_t::SP_Physics  SP_Physics;
+    typedef Geometry                                Geometry_t;
+    typedef profugus::Tallier<Geometry_t>           Tallier_t;
+    typedef typename Tallier_t::SP_Tally            SP_Tally;
+    typedef profugus::Physics<Geometry_t>           Physics_t;
+    typedef profugus::Keff_Tally<Geometry_t>        Keff_Tally_t;
+    typedef typename Physics_t::Particle_t          Particle_t;
+    typedef typename Physics_t::XS_t                XS_t;
+    typedef typename Physics_t::RCP_XS              RCP_XS;
+    typedef typename Physics_t::SP_Geometry         SP_Geometry;
+    typedef typename Tallier_t::SP_Physics          SP_Physics;
+    typedef typename Tallier_t::Pathlength_Tally_t  Pathlength_Tally_t;
+    typedef typename Tallier_t::Source_Tally_t      Source_Tally_t;
+    typedef typename Tallier_t::SP_Pathlength_Tally SP_Pathlength_Tally;
+    typedef typename Tallier_t::SP_Source_Tally     SP_Source_Tally;
 
-    typedef Teuchos::ParameterList        ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t> RCP_Std_DB;
+    typedef Teuchos::ParameterList                  ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>           RCP_Std_DB;
 
   protected:
     void SetUp()
@@ -124,47 +195,7 @@ class TallierTest : public testing::Test
         build_physics();
     }
 
-    void build_geometry()
-    {
-        typedef Geometry_t::SP_Array SP_Core;
-        typedef Geometry_t::Array_t  Core_t;
-        typedef Core_t::SP_Object    SP_Lattice;
-        typedef Core_t::Object_t     Lattice_t;
-        typedef Lattice_t::SP_Object SP_Pin_Cell;
-        typedef Lattice_t::Object_t  Pin_Cell_t;
-
-        // make boxes (10x10x20)
-        SP_Pin_Cell p0(std::make_shared<Pin_Cell_t>(0, 10.0, 20.0));
-        SP_Pin_Cell p1(std::make_shared<Pin_Cell_t>(1, 10.0, 20.0));
-
-        // make lattice
-        /*
-          1 0
-          0 1
-         */
-        SP_Lattice lat(std::make_shared<Lattice_t>(2, 2, 1, 2));
-
-        // assign pins
-        lat->assign_object(p0, 0); // mat 0 box
-        lat->assign_object(p1, 1); // mat 1 box
-
-        // arrange pin-cells in lattice
-        lat->id(0, 0, 0) = 0; // mat 0 box
-        lat->id(1, 0, 0) = 1; // mat 1 box
-        lat->id(0, 1, 0) = 1; // mat 1 box
-        lat->id(1, 1, 0) = 0; // mat 0 box
-
-        // complete lattice
-        lat->complete(0.0, 0.0, 0.0);
-
-        // make core
-        SP_Core core(std::make_shared<Core_t>(1, 1, 1, 1));
-        core->assign_object(lat, 0);
-        core->complete(0.0, 0.0, 0.0);
-
-        geometry = std::make_shared<Geometry_t>(core);
-
-    }
+    void build_geometry();
 
     void build_physics()
     {
@@ -174,15 +205,15 @@ class TallierTest : public testing::Test
         xs->set(0, ng);
 
         // make group boundaries
-        XS_t::OneDArray nbnd(4, 0.0);
+        typename XS_t::OneDArray nbnd(4, 0.0);
         nbnd[0] = 100.0; nbnd[1] = 1.0; nbnd[2] = 0.01; nbnd[3] = 0.0001;
         xs->set_bounds(nbnd);
 
         double t1[] = {1.1, 1.6, 2.9};
         double t2[] = {10.0, 11.3, 16.2};
 
-        XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
-        XS_t::OneDArray tot2(std::begin(t2), std::end(t2));
+        typename XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
+        typename XS_t::OneDArray tot2(std::begin(t2), std::end(t2));
 
         xs->add(0, XS_t::TOTAL, tot1);
         xs->add(1, XS_t::TOTAL, tot2);
@@ -195,8 +226,8 @@ class TallierTest : public testing::Test
                           {2.2, 2.3, 0.0},
                           {2.1, 2.7, 3.9}};
 
-        XS_t::TwoDArray sct1(ng, ng, 0.0);
-        XS_t::TwoDArray sct2(ng, ng, 0.0);
+        typename XS_t::TwoDArray sct1(ng, ng, 0.0);
+        typename XS_t::TwoDArray sct2(ng, ng, 0.0);
 
         for (int g = 0; g < 3; ++g)
         {
@@ -214,9 +245,9 @@ class TallierTest : public testing::Test
         double f2[] = {3.2, 4.2, 0.0};
         double n2[] = {2.4*3.2, 2.4*4.2, 0.0};
 
-        XS_t::OneDArray chi2(std::begin(c2), std::end(c2));
-        XS_t::OneDArray fis2(std::begin(f2), std::end(f2));
-        XS_t::OneDArray nuf2(std::begin(n2), std::end(n2));
+        typename XS_t::OneDArray chi2(std::begin(c2), std::end(c2));
+        typename XS_t::OneDArray fis2(std::begin(f2), std::end(f2));
+        typename XS_t::OneDArray nuf2(std::begin(n2), std::end(n2));
 
         xs->add(1, XS_t::CHI, chi2);
         xs->add(1, XS_t::SIG_F, fis2);
@@ -237,14 +268,75 @@ class TallierTest : public testing::Test
     int nodes;
 };
 
+template <>
+void TallierTest<profugus::Core>::build_geometry()
+{
+    typedef Geometry_t::SP_Array SP_Core;
+    typedef Geometry_t::Array_t  Core_t;
+    typedef Core_t::SP_Object    SP_Lattice;
+    typedef Core_t::Object_t     Lattice_t;
+    typedef Lattice_t::SP_Object SP_Pin_Cell;
+    typedef Lattice_t::Object_t  Pin_Cell_t;
+
+    // make boxes (10x10x20)
+    SP_Pin_Cell p0(std::make_shared<Pin_Cell_t>(0, 10.0, 20.0));
+    SP_Pin_Cell p1(std::make_shared<Pin_Cell_t>(1, 10.0, 20.0));
+
+    // make lattice
+    /*
+      1 0
+      0 1
+     */
+    SP_Lattice lat(std::make_shared<Lattice_t>(2, 2, 1, 2));
+
+    // assign pins
+    lat->assign_object(p0, 0); // mat 0 box
+    lat->assign_object(p1, 1); // mat 1 box
+
+    // arrange pin-cells in lattice
+    lat->id(0, 0, 0) = 0; // mat 0 box
+    lat->id(1, 0, 0) = 1; // mat 1 box
+    lat->id(0, 1, 0) = 1; // mat 1 box
+    lat->id(1, 1, 0) = 0; // mat 0 box
+
+    // complete lattice
+    lat->complete(0.0, 0.0, 0.0);
+
+    // make core
+    SP_Core core(std::make_shared<Core_t>(1, 1, 1, 1));
+    core->assign_object(lat, 0);
+    core->complete(0.0, 0.0, 0.0);
+
+    geometry = std::make_shared<Geometry_t>(core);
+}
+
+template <>
+void TallierTest<profugus::Mesh_Geometry>::build_geometry()
+{
+    def::Vec_Dbl xy_edges = {0.0, 10.0, 20.0};
+    def::Vec_Dbl z_edges  = {0.0, 20.0};
+    auto matids = std::make_shared<def::Vec_Int>(def::Vec_Int({0, 1, 1, 0}));
+
+    geometry = std::make_shared<Geometry_t>(xy_edges,xy_edges,z_edges);
+    geometry->set_matids(matids);
+}
+
+
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(TallierTest, keff_tally)
+typedef ::testing::Types<profugus::Core,profugus::Mesh_Geometry> MyTypes;
+TYPED_TEST_CASE(TallierTest, MyTypes);
+
+TYPED_TEST(TallierTest, keff_tally)
 {
+    typedef typename TestFixture::Tallier_t     Tallier_t;
+    typedef typename TestFixture::Keff_Tally_t  Keff_Tally_t;
+    typedef typename TestFixture::Particle_t    Particle_t;
+
     Tallier_t tallier;
-    tallier.set(geometry, physics);
+    tallier.set(this->geometry, this->physics);
 
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(0, tallier.num_pathlength_tallies());
@@ -253,7 +345,7 @@ TEST_F(TallierTest, keff_tally)
     EXPECT_FALSE(tallier.is_finalized());
 
     // make a keff tally
-    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
+    auto keff(std::make_shared<Keff_Tally_t>(1.0, this->physics));
 
     // add tallies
     tallier.add_pathlength_tally(keff);
@@ -315,7 +407,7 @@ TEST_F(TallierTest, keff_tally)
 
     // End the cycle
     tallier.end_cycle(3.0);
-    ref_k = nodes * ref_k / 3.0;
+    ref_k = this->nodes * ref_k / 3.0;
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
 
     /*** Begin INACTIVE CYCLE 2 ***/
@@ -352,7 +444,7 @@ TEST_F(TallierTest, keff_tally)
 
     // End the cycle
     tallier.end_cycle(3.0);
-    ref_k = nodes * ref_k / 3.0;
+    ref_k = this->nodes * ref_k / 3.0;
     EXPECT_SOFTEQ(ref_k, keff->latest(), 1.0e-6);
 
     /*** Begin ACTIVE CYCLE 1 ***/
@@ -394,7 +486,7 @@ TEST_F(TallierTest, keff_tally)
     // End the cycle
     tallier.end_cycle(3.0);
 
-    ref_k = nodes * ref_k / 3.0;
+    ref_k = this->nodes * ref_k / 3.0;
     ref_kmom1 += ref_k;
     ref_kmom2 += ref_k * ref_k;
     ref_kavg = ref_kmom1 / 1.0;
@@ -440,7 +532,7 @@ TEST_F(TallierTest, keff_tally)
     // End the cycle
     tallier.end_cycle(3.0);
 
-    ref_k = nodes * ref_k / 3.0;
+    ref_k = this->nodes * ref_k / 3.0;
     ref_kmom1 += ref_k;
     ref_kmom2 += ref_k * ref_k;
     ref_kavg = ref_kmom1 / 2.0;
@@ -492,7 +584,7 @@ TEST_F(TallierTest, keff_tally)
     tallier.finalize(15.0);
     EXPECT_TRUE(tallier.is_finalized());
 
-    ref_k = nodes * ref_k / 3.0;
+    ref_k = this->nodes * ref_k / 3.0;
     ref_kmom1 += ref_k;
     ref_kmom2 += ref_k * ref_k;
     ref_kavg = ref_kmom1 / 3.0;
@@ -517,14 +609,18 @@ TEST_F(TallierTest, keff_tally)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(TallierTest, swap)
+TYPED_TEST(TallierTest, swap)
 {
+    typedef typename TestFixture::Tallier_t     Tallier_t;
+    typedef typename TestFixture::Keff_Tally_t  Keff_Tally_t;
+    typedef typename TestFixture::Particle_t    Particle_t;
+
     Tallier_t tallier, inactive_tallier;
-    tallier.set(geometry, physics);
-    inactive_tallier.set(geometry, physics);
+    tallier.set(this->geometry, this->physics);
+    inactive_tallier.set(this->geometry, this->physics);
 
     // make a keff tally
-    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
+    auto keff(std::make_shared<Keff_Tally_t>(1.0, this->physics));
 
     // add tallies
     tallier.add_pathlength_tally(keff);
@@ -578,17 +674,23 @@ TEST_F(TallierTest, swap)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(TallierTest, add)
+TYPED_TEST(TallierTest, add)
 {
+    typedef typename TestFixture::Tallier_t     Tallier_t;
+    typedef typename TestFixture::Geometry_t    Geometry_t;
+    typedef typename TestFixture::Keff_Tally_t  Keff_Tally_t;
+    typedef typename TestFixture::Particle_t    Particle_t;
+
     Tallier_t tallier;
-    tallier.set(geometry, physics);
+    tallier.set(this->geometry, this->physics);
 
     // make tallies
-    auto keff(std::make_shared<Keff_Tally_t>(1.0, physics));
-    auto a(std::make_shared<A_Tally>(physics));
-    auto p(std::make_shared<P_Tally>(physics));
-    auto q(std::make_shared<Q_Tally>(physics));
-    auto s(std::make_shared<S_Tally>(physics));
+    auto keff(std::make_shared<Keff_Tally_t>(1.0, this->physics));
+    auto a(std::make_shared<A_Tally<Geometry_t> >(this->physics));
+    auto p(std::make_shared<P_Tally<Geometry_t> >(this->physics));
+    auto q(std::make_shared<Q_Tally<Geometry_t> >(this->physics));
+    auto s(std::make_shared<S_Tally<Geometry_t> >(this->physics));
+    auto c(std::make_shared<C_Tally<Geometry_t> >(this->physics));
 
     // add the tallies
     tallier.add_pathlength_tally(keff);
@@ -600,12 +702,14 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.build();
 
     EXPECT_EQ(5, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.finalize(1);
     tallier.reset();
@@ -613,6 +717,7 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     // add duplicates
     tallier.add_pathlength_tally(keff);
@@ -622,12 +727,37 @@ TEST_F(TallierTest, add)
     EXPECT_EQ(0, tallier.num_tallies());
     EXPECT_EQ(5, tallier.num_pathlength_tallies());
     EXPECT_EQ(3, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
 
     tallier.build();
 
     EXPECT_EQ(5, tallier.num_tallies());
     EXPECT_EQ(3, tallier.num_pathlength_tallies());
     EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
+
+    tallier.finalize(1);
+    tallier.reset();
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(3, tallier.num_pathlength_tallies());
+    EXPECT_EQ(2, tallier.num_source_tallies());
+    EXPECT_EQ(0, tallier.num_compound_tallies());
+
+    // add compound tallies
+    tallier.add_compound_tally(c);
+
+    EXPECT_EQ(0, tallier.num_tallies());
+    EXPECT_EQ(4, tallier.num_pathlength_tallies());
+    EXPECT_EQ(3, tallier.num_source_tallies());
+    EXPECT_EQ(1, tallier.num_compound_tallies());
+
+    tallier.build();
+
+    EXPECT_EQ(8, tallier.num_tallies());
+    EXPECT_EQ(4, tallier.num_pathlength_tallies());
+    EXPECT_EQ(3, tallier.num_source_tallies());
+    EXPECT_EQ(1, tallier.num_compound_tallies());
 }
 
 //---------------------------------------------------------------------------//

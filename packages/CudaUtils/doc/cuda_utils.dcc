@@ -1,0 +1,33 @@
+//---------------------------------*-text-*-----------------------------------//
+// cuda_utils.dcc
+// cuda_utils Overview page
+// Seth R Johnson
+// Thu Jul 11 09:25:36 2013
+// Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
+//---------------------------------------------------------------------------//
+
+/*!
+
+<!---------------------------------------------------------------------------->
+
+\mainpage Overview of the CUDA_Utils package
+\author Seth R Johnson
+
+This package contains C++ adapters and utilities for working with CUDA. It is
+usable even if the CUDA runtime is not installed or supported on the current
+platform. The Device class is meant to cleanly provide an interface for
+determining whether CUDA is currently usable, and if so, to provide statistics
+about the available graphics card (device).
+
+Because all of the headers include \c <cuda_runtime.h> , it's not necessary to
+compile this library with \c nvcc . It doesn't use any CUDA language
+extensions: just API functions. It can however be linked into nvcc-compiled
+libraries down the chain (and used by .cu and .cuh files).
+
+<!---------------------------------------------------------------------------->
+
+*/
+
+//---------------------------------------------------------------------------//
+//                              end of cuda_utils.dcc
+//---------------------------------------------------------------------------//

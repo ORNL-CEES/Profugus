@@ -25,15 +25,15 @@ class VR_RouletteTest : public testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::VR_Roulette Roulette;
-    typedef Roulette::Geometry_t  Geometry_t;
-    typedef Roulette::Physics_t   Physics_t;
-    typedef Roulette::Particle_t  Particle_t;
-    typedef Roulette::Bank_t      Bank_t;
-    typedef Roulette::RCP_Std_DB  RCP_Std_DB;
-    typedef Roulette::RNG_t       RNG_t;
-    typedef Roulette::SP_Geometry SP_Geometry;
-    typedef Roulette::SP_Physics  SP_Physics;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::VR_Roulette<Geometry_t>   Roulette;
+    typedef Roulette::Physics_t                 Physics_t;
+    typedef Roulette::Particle_t                Particle_t;
+    typedef Roulette::Bank_t                    Bank_t;
+    typedef Roulette::RCP_Std_DB                RCP_Std_DB;
+    typedef Roulette::RNG_t                     RNG_t;
+    typedef Roulette::SP_Geometry               SP_Geometry;
+    typedef Roulette::SP_Physics                SP_Physics;
 
   protected:
     void SetUp()

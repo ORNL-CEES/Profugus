@@ -11,12 +11,10 @@
 #ifndef mc_KCode_Solver_hh
 #define mc_KCode_Solver_hh
 
-#include "Solver.hh"
+#include "Keff_Solver.hh"
 
 #include "harness/DBC.hh"
 #include "Source_Transporter.hh"
-#include "Keff_Tally.hh"
-#include "Fission_Source.hh"
 
 namespace profugus
 {
@@ -55,20 +53,34 @@ namespace profugus
  */
 //===========================================================================//
 
-class KCode_Solver : public Solver
+template <class Geometry>
+class KCode_Solver : public Keff_Solver<Geometry>
 {
+    typedef Keff_Solver<Geometry> Base;
+
   public:
     //@{
     //! Typedefs.
-    typedef Source_Transporter                    Source_Transporter_t;
-    typedef Source_Transporter_t::RCP_Std_DB      RCP_Std_DB;
-    typedef std::shared_ptr<Source_Transporter_t> SP_Source_Transporter;
-    typedef std::shared_ptr<Keff_Tally>           SP_Keff_Tally;
-    typedef std::shared_ptr<Fission_Source>       SP_Fission_Source;
-    typedef Fission_Source::SP_Fission_Sites      SP_Fission_Sites;
+    typedef Geometry                                    Geometry_t;
+    typedef Source_Transporter<Geometry_t>              Source_Transporter_t;
+    typedef typename Source_Transporter_t::RCP_Std_DB   RCP_Std_DB;
+    typedef std::shared_ptr<Source_Transporter_t>       SP_Source_Transporter;
+    typedef Fission_Source<Geometry_t>                  FS_t;
+    typedef Tallier<Geometry_t>                         Tallier_t;
+    typedef Keff_Tally<Geometry_t>                      Keff_Tally_t;
+    typedef Pathlength_Tally<Geometry_t>                Pathlength_Tally_t;
+    typedef Source_Tally<Geometry_t>                    Source_Tally_t;
+    typedef Compound_Tally<Geometry_t>                  Compound_Tally_t;
+    typedef typename FS_t::SP_Fission_Sites             SP_Fission_Sites;
+    typedef typename Base::SP_Fission_Source            SP_Fission_Source;
+    typedef typename Base::SP_FM_Acceleration           SP_FM_Acceleration;
+    typedef typename Base::SP_Tallier                   SP_Tallier;
 
   private:
     // >>> DATA
+
+    using Base::b_keff_tally;
+    using Base::b_tallier;
 
     // Problem database.
     RCP_Std_DB d_db;
@@ -80,11 +92,11 @@ class KCode_Solver : public Solver
     SP_Fission_Source d_source;
     SP_Fission_Sites  d_fission_sites;
 
-    // Eigenvalue tally
-    SP_Keff_Tally d_keff_tally;
-
     // Inactive tallier
     SP_Tallier d_inactive_tallier;
+
+    // Acceleration.
+    SP_FM_Acceleration d_acceleration;
 
   public:
     // Constructor.
@@ -93,15 +105,15 @@ class KCode_Solver : public Solver
     // Set the underlying fixed-source transporter and fission source.
     void set(SP_Source_Transporter transporter, SP_Fission_Source source);
 
+    // Set acceleration.
+    void set(SP_FM_Acceleration acceleration);
+
     // >>> ACCESSORS
 
-    //! Keff tally for tracking k-effective (read-only please!)
-    SP_Keff_Tally keff_tally() const { return d_keff_tally; }
-
     //! Number of (inactive or active) cycles run so far
-    auto num_cycles() const -> decltype(d_keff_tally->cycle_count())
+    auto num_cycles() const -> decltype(b_keff_tally->cycle_count())
     {
-        return d_keff_tally->cycle_count();
+        return b_keff_tally->cycle_count();
     }
 
     /*
@@ -124,6 +136,9 @@ class KCode_Solver : public Solver
 
     // Call to reset the solver and tallies for another kcode run
     void reset();
+
+    //! Get acceleration.
+    SP_FM_Acceleration acceleration() const { return d_acceleration; }
 
     // >>> PUBLIC INTERFACE
 

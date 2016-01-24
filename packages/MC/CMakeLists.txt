@@ -38,7 +38,8 @@ APPEND_SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 TRIBITS_ADD_DEBUG_OPTION()
 
 # to allow includes like #include "comm/Comm.h"
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 # to allow includes like #include "Utils/config.h"
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/..)
@@ -73,8 +74,9 @@ SET(HEADERS "")
 
 FILE(GLOB GEOMETRY_HEADERS mesh/*.hh)
 SET(GEOMETRY_SOURCES
+  geometry/Bounding_Box.cc
   geometry/Cartesian_Mesh.cc
-  geometry/Geometry.pt.cc
+  geometry/RTK_Geometry.pt.cc
   geometry/Mesh_Geometry.cc
   geometry/Mesh_State.cc
   geometry/RTK_Array.cc
@@ -90,25 +92,34 @@ LIST(APPEND SOURCES ${GEOMETRY_SOURCES})
 
 FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
+  mc/Anderson_Operator.pt.cc
+  mc/Anderson_Solver.pt.cc
   mc/Box_Shape.cc
-  mc/Domain_Transporter.cc
-  mc/Fission_Rebalance.cc
-  mc/Fission_Source.cc
-  mc/Fixed_Source_Solver.cc
+  mc/Cell_Tally.pt.cc
+  mc/Domain_Transporter.pt.cc
+  mc/Fission_Matrix_Acceleration.pt.cc
+  mc/Fission_Matrix_Processor.cc
+  mc/Fission_Matrix_Solver.pt.cc
+  mc/Fission_Matrix_Tally.pt.cc
+  mc/Fission_Rebalance.pt.cc
+  mc/Fission_Source.pt.cc
+  mc/Fixed_Source_Solver.pt.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
-  mc/KCode_Solver.cc
-  mc/Keff_Tally.cc
-  mc/Particle.cc
-  mc/Physics.cc
+  mc/KCode_Solver.pt.cc
+  mc/Keff_Tally.pt.cc
+  mc/Particle.pt.cc
+  mc/Particle_Metaclass.pt.cc
+  mc/Physics.pt.cc
   mc/Sampler.cc
-  mc/Solver.cc
-  mc/Source.cc
-  mc/Source_Transporter.cc
-  mc/Tallier.cc
-  mc/Tally.cc
-  mc/Uniform_Source.cc
-  mc/VR_Roulette.cc
+  mc/Solver.pt.cc
+  mc/Source.pt.cc
+  mc/Source_Diagnostic_Tally.pt.cc
+  mc/Source_Transporter.pt.cc
+  mc/Tallier.pt.cc
+  mc/Tally.pt.cc
+  mc/Uniform_Source.pt.cc
+  mc/VR_Roulette.pt.cc
   )
 LIST(APPEND HEADERS ${MC_HEADERS})
 LIST(APPEND SOURCES ${MC_SOURCES})
@@ -117,9 +128,11 @@ LIST(APPEND SOURCES ${MC_SOURCES})
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
-  driver/Manager.cc
-  driver/Problem_Builder.cc
-  driver/mc.cc
+  mc_driver/Manager.pt.cc
+  mc_driver/Manager_Builder.cc
+  mc_driver/Problem_Builder.pt.cc
+  mc_driver/Geometry_Builder.pt.cc
+  mc_driver/mc.cc
   )
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
@@ -138,7 +151,7 @@ TRIBITS_ADD_EXECUTABLE(
   xmc
   NOEXESUFFIX
   NOEXEPREFIX
-  SOURCES driver/mc.cc
+  SOURCES mc_driver/mc.cc
   INSTALLABLE
   )
 

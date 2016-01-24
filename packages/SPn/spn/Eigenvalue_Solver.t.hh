@@ -16,14 +16,12 @@
 
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
-#include "harness/DBC.hh"
 #include "comm/P_Stream.hh"
 #include "comm/global.hh"
 #include "utils/String_Functions.hh"
 #include "solvers/EigenvalueSolverBuilder.hh"
 #include "solvers/InverseOperator.hh"
 #include "solvers/PreconditionerBuilder.hh"
-#include "solvers/LinAlgTypedefs.hh"
 #include "Linear_System_FV.hh"
 #include "Energy_Multigrid.hh"
 #include "Eigenvalue_Solver.hh"
@@ -59,7 +57,8 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
                                  RCP_Mat_DB      mat,
                                  RCP_Mesh        mesh,
                                  RCP_Indexer     indexer,
-                                 RCP_Global_Data data)
+                                 RCP_Global_Data data,
+                                 bool            adjoint)
 {
     REQUIRE(!b_db.is_null());
     REQUIRE(!dim.is_null());
@@ -129,8 +128,72 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
     // get the eigenvalue solver settings
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
 
+    // set adjoint
+    b_system->set_adjoint(adjoint);
+
     // Build a preconditioenr
     RCP_OP prec = build_preconditioner(dim, mat, mesh, indexer, data);
+
+    // Build the eigensolver
+    d_eigensolver = EigenvalueSolverBuilder<T>::build_solver(
+        edb, b_system->get_Operator(), b_system->get_fission_matrix(), prec);
+
+    ENSURE(!d_eigensolver.is_null());
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Setup the solver from an existing linear system.
+ *
+ */
+template <class T>
+void Eigenvalue_Solver<T>::setup(RCP_Mat_DB        mat,
+                                 RCP_Mesh          mesh,
+                                 RCP_Indexer       indexer,
+                                 RCP_Global_Data   data,
+                                 RCP_Linear_System system,
+                                 bool              adjoint)
+{
+    REQUIRE(!b_db.is_null());
+    REQUIRE(!mat.is_null());
+    REQUIRE(!mesh.is_null());
+    REQUIRE(!indexer.is_null());
+    REQUIRE(!data.is_null());
+    REQUIRE(!system.is_null());
+    REQUIRE(!system->get_Operator().is_null());
+    REQUIRE(!system->get_fission_matrix().is_null());
+
+    // assign the material
+    d_mat = mat;
+
+    // setup default parameters
+    set_default_parameters();
+    CHECK(b_db->isSublist("eigenvalue_db"));
+
+    // assign the linear system
+    Base::b_system = system;
+
+    // If we haven't built an eigenvector yet, build one and initialize it
+    if( d_u.is_null() )
+    {
+        // make the eigenvector
+        d_u = VectorTraits<T>::build_vector(Base::b_system->get_Map());
+
+        // initialize it to 1.0
+        VectorTraits<T>::put_scalar(d_u,1.0);
+    }
+
+    CHECK(!d_u.is_null());
+
+    // get the eigenvalue solver settings
+    RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
+
+    // set adjoint
+    b_system->set_adjoint(adjoint);
+
+    // Build a preconditioenr
+    RCP_OP prec = build_preconditioner(
+        b_system->get_dims(), mat, mesh, indexer, data);
 
     // Build the eigensolver
     d_eigensolver = EigenvalueSolverBuilder<T>::build_solver(
@@ -327,6 +390,8 @@ void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
     eig_db->sublist("operator_db").get("max_itr", max_itr);
 }
 
+//---------------------------------------------------------------------------//
+
 template <>
 void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
 {
@@ -445,6 +510,7 @@ void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
     eig_db->sublist("operator_db").get("tolerance", 0.1 * tol);
     eig_db->sublist("operator_db").get("max_itr", max_itr);
 }
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Build preconditioner

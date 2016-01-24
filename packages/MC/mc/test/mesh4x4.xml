@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='ASCII'?>
+<ParameterList name="profugus SPN input">
+  <ParameterList name="CORE">
+    <Parameter name="axial list" type="Array(string)" value="{core}"/>
+    <Parameter name="axial height" type="Array(double)" value="{0.25}"/>
+    <Parameter name="core" type="TwoDArray(int)" value="1x1:{0}"/>
+  </ParameterList>
+  <ParameterList name="ASSEMBLIES">
+    <Parameter name="pin pitch" type="double" value="1.0"/>
+    <Parameter name="assembly list" type="Array(string)" value="{assembly}"/>
+    <Parameter name="assembly" type="TwoDArray(int)" value="4x4:{3,3,3,3,3,0,1,3,3,2,0,3,3,3,3,3}"/>
+  </ParameterList>
+  <ParameterList name="MATERIAL">
+    <Parameter name="xs library" type="string" value="xs_3G.xml"/>
+    <Parameter name="mat list" type="Array(string)" value="{mat 0, mat 1, mat 2, mat 3}"/>
+  </ParameterList>
+  <ParameterList name="PROBLEM">
+    <Parameter name="radial mesh" type="int" value="1"/>
+    <Parameter name="axial mesh" type="Array(int)" value="{1}"/>
+    <Parameter name="symmetry" type="string" value="full"/>
+    <Parameter name="Pn_order" type="int" value="0"/>
+    <Parameter name="SPn_order" type="int" value="3"/>
+    <Parameter name="problem_name" type="string" value="acceleration"/>
+  </ParameterList>
+</ParameterList>
