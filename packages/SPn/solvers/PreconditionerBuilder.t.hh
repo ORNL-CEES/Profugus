@@ -160,9 +160,8 @@ PreconditionerBuilder<TpetraTypes>::build_preconditioner(
     typedef typename TpetraTypes::GO     GO;
     typedef typename TpetraTypes::NODE   NODE;
 
-    using std::string;
-
-    string prec_type = to_lower(db->get("Preconditioner", string("Ifpack2")));
+    std::string prec_type =
+        to_lower(db->get("Preconditioner", std::string("Ifpack2")));
     Teuchos::RCP<OP> prec;
     if( prec_type == "ifpack2" )
     {

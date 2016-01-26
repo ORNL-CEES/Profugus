@@ -23,15 +23,16 @@ namespace profugus
  */
 //===========================================================================//
 
-class VR_Analog : public Variance_Reduction
+template <class Geometry>
+class VR_Analog : public Variance_Reduction<Geometry>
 {
-    typedef Variance_Reduction Base;
+    typedef Variance_Reduction<Geometry> Base;
 
   public:
     //@{
     //! Base-class typedefs.
-    typedef Base::Particle_t Particle_t;
-    typedef Base::Bank_t     Bank_t;
+    typedef typename Base::Particle_t Particle_t;
+    typedef typename Base::Bank_t     Bank_t;
     //@}
 
   public:

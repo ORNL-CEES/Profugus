@@ -86,7 +86,7 @@ void MonteCarloEigenSolver::initialize()
     REQUIRE( b_A != Teuchos::null );
 
     // Create Monte Carlo data
-    d_mc_data = Teuchos::rcp(new MC_Data(b_A,b_pl));
+    d_mc_data = Teuchos::rcp(new EigenMC_Data(b_A,b_pl));
     d_mc_data_kokkos = d_mc_data->createKokkosViews();
 
     b_label = "MonteCarloEigenSolver";
@@ -99,7 +99,7 @@ void MonteCarloEigenSolver::initialize()
  * \brief Perform adjoint Monte Carlo process
  */
 //---------------------------------------------------------------------------//
-void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
+void MonteCarloEigenSolver::applyImpl(const MV &x, MV &y) const
 {
     REQUIRE( d_initialized );
 
@@ -128,10 +128,9 @@ void MonteCarloSolver::applyImpl(const MV &x, MV &y) const
         VALIDATE(false,"Cuda must be enabled to use Cuda kernel.");
 #endif*/
     }    
-    else if( ADAPTIVE )
+    else if( d_kernel_type == ADAPTIVE )
     {
     	EigenMcAdaptive solver(d_mc_data,d_mc_pl,d_rand_pool);
-
     	solver.solve(x,y);
     }
 

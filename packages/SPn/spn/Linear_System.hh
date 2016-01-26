@@ -21,6 +21,7 @@
 #include "mesh/Mesh.hh"
 #include "mesh/LG_Indexer.hh"
 #include "mesh/Global_Mesh_Data.hh"
+#include "solvers/LinAlgTypedefs.hh"
 #include "Isotropic_Source.hh"
 #include "Moment_Coefficients.hh"
 
@@ -97,11 +98,19 @@ class Linear_System
     RCP_Operator b_fission;  // Fission matrix
     RCP_MV       b_rhs;
 
+    // Adjoint objects (may be null).
+    RCP_Operator b_adjoint_operator;
+    RCP_Operator b_adjoint_fission;
+
     // Isotropic source coefficients.
     double b_src_coefficients[4];
 
     // Isotropic boundary source coefficients.
     double b_bnd_coefficients[4];
+
+    // Adjoint flag -> if true then get_ operations return transposed
+    // operators.
+    bool b_adjoint;
 
     // Processor nodes.
     int b_node, b_nodes;
@@ -123,13 +132,19 @@ class Linear_System
     //! Build the right-hand-side fission matrix.
     virtual void build_fission_matrix() = 0;
 
+    //! Set adjoint flag.
+    void set_adjoint(bool adjoint);
+
     // >>> ACCESSORS
 
     //! Get an RCP to the communication map.
     RCP_Map get_Map() const { return b_map; }
 
     //! Get an RCP to the full LHS Operator.
-    RCP_Operator get_Operator() const { return b_operator; }
+    RCP_Operator get_Operator() const
+    {
+        return b_adjoint ? b_adjoint_operator : b_operator;
+    }
 
     //! Get an RCP to the LHS matrix (may not be full matrix)
     virtual RCP_Matrix get_Matrix() const { return Teuchos::null; }
@@ -137,8 +152,11 @@ class Linear_System
     //! Get an RCP to the Right-Hand-Side vector.
     RCP_MV get_RHS() const { return b_rhs; }
 
-    //! Get an RCP to the Right-Hand-Side vector.
-    RCP_Operator get_fission_matrix() const { return b_fission; }
+    //! Get an RCP to the right-hand-side fission matrix.
+    RCP_Operator get_fission_matrix() const
+    {
+        return b_adjoint ? b_adjoint_fission : b_fission;
+    }
 
     //! Get problem dimensions.
     RCP_Dimensions get_dims() const { return b_dim; }
@@ -147,9 +165,16 @@ class Linear_System
     virtual int index(int g, int eqn, int spatial_unknown) const = 0;
 };
 
-} // end namespace profugus
+//---------------------------------------------------------------------------//
+// SPECIALIZATIONS
+//---------------------------------------------------------------------------//
 
-#endif // spn_Linear_System_hh
+template<>
+void Linear_System<EpetraTypes>::set_adjoint(bool adjoint);
+
+}                               // end namespace profugus
+
+#endif                          // spn_Linear_System_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/Linear_System.hh

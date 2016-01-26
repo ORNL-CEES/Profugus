@@ -672,7 +672,7 @@ int RTK_Cell::region(double x,
     }
 
     // calculate rp
-    register double rp2 = x*x + y*y;
+    double rp2 = x*x + y*y;
 
     // loop through shells to find the containing shell
     for (int n = 0; n < d_num_shells; ++n)
@@ -715,6 +715,61 @@ bool RTK_Cell::vessel_data(double &R0,
     xc = d_offsets[0];
     yc = d_offsets[1];
     return true;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build volumes in the pin.
+ */
+void RTK_Cell::build_volumes(Vec_Dbl &v,
+                             int      offset) const
+{
+    using profugus::constants::pi;
+
+    REQUIRE(v.size() >= offset + d_num_cells);
+
+    // volume of each region
+    Vec_Dbl vr(d_num_regions);
+
+    // regions counter and last volume
+    int     ctr = 0;
+    double last = 0.0;
+
+    // iterate through shells
+    for (auto r : d_r)
+    {
+        // calculate the volume of this cylinder
+        double cyl_v = pi * r*r * d_z;
+
+        // assign the volume of the shell
+        vr[ctr] = cyl_v - last;
+
+        // update the last cyclinder volume
+        last = cyl_v;
+
+        // increment the ctr
+        ++ctr;
+    }
+    CHECK(ctr == d_num_regions - 1);
+
+    // get the volume outside the shells
+    vr[ctr] = d_xy[0] * d_xy[1] * d_z - last;
+
+    // segment-volume correction
+    double seg_correction = 1.0 / static_cast<double>(d_segments);
+
+    // assign the volumes
+    for (int s = 0; s < d_segments; ++s)
+    {
+        for (int r = 0; r < d_num_regions; ++r)
+        {
+            int id = cell(r, s) + offset;
+            CHECK(id < v.size());
+
+            // correct the volume in the regions when multiple segments
+            v[id] = vr[r] * seg_correction;
+        }
+    }
 }
 
 //---------------------------------------------------------------------------//

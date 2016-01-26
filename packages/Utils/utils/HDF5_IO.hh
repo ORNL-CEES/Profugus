@@ -188,6 +188,10 @@ class HDF5_IO
         explicit Decomp(int n = 0, Data_Order o = COLUMN_MAJOR);
     };
 
+    //! HDF5 Type traits.
+    template<class T>
+    struct HDF5_Traits{};
+
   protected:
     // >>> DATA
 
@@ -300,6 +304,32 @@ class HDF5_IO_Node : public HDF5_IO
 
     // Return the absolute path to the current group
     std_string abspath() const;
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Specialization for HDF5_NATIVE_INT.
+ */
+template<>
+struct HDF5_IO::HDF5_Traits<int>
+{
+    static auto get_type() -> decltype(H5T_NATIVE_INT)
+    {
+        return H5T_NATIVE_INT;
+    }
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Specialization for HDF_NATIVE_DOUBLE.
+ */
+template<>
+struct HDF5_IO::HDF5_Traits<double>
+{
+    static auto get_type() -> decltype(H5T_NATIVE_DOUBLE)
+    {
+        return H5T_NATIVE_DOUBLE;
+    }
 };
 
 } // end namespace profugus

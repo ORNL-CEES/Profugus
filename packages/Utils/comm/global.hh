@@ -25,6 +25,11 @@
 #include "Request.hh"
 
 //---------------------------------------------------------------------------//
+// Load OpenMP API
+
+#include "OMP.hh"
+
+//---------------------------------------------------------------------------//
 // Include the appropriate header for an underlying message passing
 // implementation.  This allows the definition of inline functions declared
 // in Functions.hh.

@@ -19,6 +19,7 @@
 #include "harness/DBC.hh"
 #include "comm/P_Stream.hh"
 #include "xs/XS_Builder.hh"
+#include "geometry/RTK_Geometry.hh"
 #include "../Fission_Source.hh"
 #include "../Global_RNG.hh"
 #include "../Tally.hh"
@@ -29,10 +30,15 @@
 // Helpers
 //---------------------------------------------------------------------------//
 
-class Dummy_Tally : public profugus::Tally
+class Dummy_Tally : public profugus::Pathlength_Tally<profugus::Core>
 {
-    typedef profugus::Tally     Base;
-    typedef std::vector<double> Vec_Dbl;
+    typedef profugus::Core                          Geometry_t;
+    typedef profugus::Tally<Geometry_t>             Base;
+    typedef std::vector<double>                     Vec_Dbl;
+    typedef profugus::Physics<Geometry_t>           Physics_t;
+    typedef std::shared_ptr<Physics_t>              SP_Physics;
+    typedef Physics_t::Particle_t                   Particle_t;
+    typedef profugus::Pathlength_Tally<Geometry_t>  Pathlength_Tally_t;
 
   private:
     int    d_pl_counter;
@@ -43,7 +49,7 @@ class Dummy_Tally : public profugus::Tally
 
     // Constructor
     Dummy_Tally(SP_Physics physics)
-        : Base(physics)
+        : Pathlength_Tally_t(physics, false)
         , d_pl_counter(1)
         , d_finalized_np(-1.)
     {
@@ -64,17 +70,11 @@ class Dummy_Tally : public profugus::Tally
 
     // >>> DERIVED INTERFACE
 
-    //! Nothing at birth.
-    void birth(const Particle_t &p) { /* * */ }
-
     //! Track particle, using pre-calculated physics information (multipliers)
     inline void accumulate(double step, const Particle_t& p)
     {
         d_pl_counter += 1;
     }
-
-    //! Nothing done at end of particle history
-    void end_history() { /* * */ }
 
     //! Finalize is called at end of program, not cycle, so this is a null-op
     void finalize(double np) { d_finalized_np = np; }
@@ -91,15 +91,15 @@ class KCode_SolverTest : public testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    typedef profugus::KCode_Solver              Solver_t;
+    typedef profugus::Core                      Geometry_t;
+    typedef profugus::KCode_Solver<Geometry_t>  Solver_t;
     typedef Solver_t::Physics_t                 Physics_t;
-    typedef Solver_t::Geometry_t                Geometry_t;
     typedef profugus::Global_RNG::RNG_Control_t RNG_Control_t;
     typedef Physics_t::Particle_t               Particle_t;
     typedef Physics_t::Bank_t                   Bank_t;
     typedef Solver_t::Tallier_t                 Tallier_t;
     typedef Solver_t::Source_Transporter_t      Transporter_t;
-    typedef profugus::VR_Roulette               Var_Reduction_t;
+    typedef profugus::VR_Roulette<Geometry_t>   Var_Reduction_t;
 
     typedef Physics_t::XS_t   XS_t;
     typedef Physics_t::RCP_XS RCP_XS;
@@ -110,14 +110,15 @@ class KCode_SolverTest : public testing::Test
     typedef Physics_t::ParameterList_t ParameterList_t;
     typedef Physics_t::RCP_Std_DB      RCP_Std_DB;
 
-    typedef std::shared_ptr<Physics_t>       SP_Physics;
-    typedef std::shared_ptr<Geometry_t>      SP_Geometry;
-    typedef Physics_t::SP_Particle           SP_Particle;
-    typedef std::shared_ptr<RNG_Control_t>   SP_RNG_Control;
-    typedef Solver_t::SP_Tallier             SP_Tallier;
-    typedef Solver_t::SP_Fission_Source      SP_Fission_Source;
-    typedef Solver_t::SP_Source_Transporter  SP_Transporter;
-    typedef std::shared_ptr<Var_Reduction_t> SP_Var_Reduction;
+    typedef profugus::Fission_Source<Geometry_t>    Fission_Source_t;
+    typedef std::shared_ptr<Physics_t>              SP_Physics;
+    typedef std::shared_ptr<Geometry_t>             SP_Geometry;
+    typedef Physics_t::SP_Particle                  SP_Particle;
+    typedef std::shared_ptr<RNG_Control_t>          SP_RNG_Control;
+    typedef Solver_t::SP_Tallier                    SP_Tallier;
+    typedef Solver_t::SP_Fission_Source             SP_Fission_Source;
+    typedef Solver_t::SP_Source_Transporter         SP_Transporter;
+    typedef std::shared_ptr<Var_Reduction_t>        SP_Var_Reduction;
 
   protected:
     void SetUp()
@@ -265,7 +266,7 @@ TEST_F(KCode_SolverTest, pin_cell)
     Solver_t solver(db);
 
     // make fission source
-    SP_Fission_Source fsrc(std::make_shared<profugus::Fission_Source>(
+    SP_Fission_Source fsrc(std::make_shared<Fission_Source_t>(
                                db, geometry, physics, rcon));
 
     // set it
@@ -328,7 +329,7 @@ TEST_F(KCode_SolverTest, active_cycle_test)
     Solver_t solver(db);
 
     // make fission source
-    SP_Fission_Source fsrc(std::make_shared<profugus::Fission_Source>(
+    SP_Fission_Source fsrc(std::make_shared<Fission_Source_t>(
                                db, geometry, physics, rcon));
 
     // set it

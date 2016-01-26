@@ -12,6 +12,7 @@
 
 #include "AdditiveSchwarzWrapper.hh"
 #include "PowerMethod.hh"
+#include "MonteCarloEigenSolver.hh"
 //#include "EigenMCSolver.hh"
 //#include "EigenMCSA.hh"
 //#include "EigenSequentialMC.hh"
@@ -61,11 +62,13 @@ EigenSolverFactory::buildSolver(std::string solver_type,
     {
         return Teuchos::rcp( new EigenSequentialMC(A,pl) );
     }
-    else if( solver_type == "monte_carlo" )
+    */
+    if( solver_type == "monte_carlo" )
     {
-        return Teuchos::rcp( new EigenMC(A,pl) );
-    }*/
-    if( solver_type == "power_method" )
+	Teuchos::RCP<MonteCarloEigenSolver> mc_solver( new MonteCarloEigenSolver(A,pl) );
+        return Teuchos::rcp( new AdditiveSchwarzWrapper(A,mc_solver,pl) );
+    }
+    else if( solver_type == "power_method" )
     {
         return Teuchos::rcp( new PowerMethod(A,pl) );
     }

@@ -83,6 +83,10 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/BelosSolver.cc
   mc_solvers/ChebyshevIteration.cc
   mc_solvers/ChebyshevPolynomial.cc
+  mc_solvers/EigenMC_Data.cc
+  mc_solvers/EigenSystem.cc
+  mc_solvers/EigenSystemFactory.cc   
+  mc_solvers/EigenSolverFactory.cc   
   mc_solvers/GmresPolynomial.cc
   mc_solvers/LinearSolverFactory.cc
   mc_solvers/LinearSystem.cc
@@ -91,6 +95,7 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/MC_Data.cc
   mc_solvers/MonteCarloSolver.cc
   mc_solvers/MultiSplitting.cc
+  mc_solvers/MonteCarloEigenSolver.cc
   mc_solvers/SequentialMC.cc
   mc_solvers/NeumannPolynomial.cc
   mc_solvers/Polynomial.cc
@@ -98,6 +103,7 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/PolynomialFactory.cc
   mc_solvers/PolynomialPreconditioner.cc
   mc_solvers/PolynomialUtils.cc
+  mc_solvers/PowerMethod.cc
   mc_solvers/RichardsonIteration.cc
   mc_solvers/SyntheticAcceleration.cc
   )
@@ -155,6 +161,14 @@ TRIBITS_ADD_EXECUTABLE(
   SOURCES mc_solvers/alea_multisplitting.cc
   INSTALLABLE
   )  
+
+TRIBITS_ADD_EXECUTABLE(
+  xalea_eigen
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES mc_solvers/alea_eigen.cc
+  INSTALLABLE
+  )
 
 # MCLS executable
 IF (${PROJECT_NAME}_ENABLE_MCLS)

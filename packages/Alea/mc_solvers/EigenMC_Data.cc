@@ -35,9 +35,9 @@ EigenMC_Data::EigenMC_Data(Teuchos::RCP<const MATRIX> A,
   , d_pl(pl)
 {
     REQUIRE( d_A   != Teuchos::null );
-    REQUIRE( basis != Teuchos::null );
     REQUIRE( d_pl  != Teuchos::null );
 
+    buildMCMatrix();
     buildMonteCarloMatrices();
 }
 
@@ -46,19 +46,19 @@ EigenMC_Data::EigenMC_Data(Teuchos::RCP<const MATRIX> A,
 //---------------------------------------------------------------------------//
 EigenMC_Data_View EigenMC_Data::createKokkosViews()
 {
-    REQUIRE( d_A->isLocallyIndexed() );
+    REQUIRE( d_Amc->isLocallyIndexed() );
     REQUIRE( d_P->isLocallyIndexed() );
     REQUIRE( d_W->isLocallyIndexed() );
-    REQUIRE( d_A->supportsRowViews() );
+    REQUIRE( d_Amc->supportsRowViews() );
     REQUIRE( d_P->supportsRowViews() );
     REQUIRE( d_W->supportsRowViews() );
-    LO numRows     = d_A->getNodeNumRows();
-    GO numNonZeros = d_A->getNodeNumEntries();
+    LO numRows     = d_Amc->getNodeNumRows();
+    GO numNonZeros = d_Amc->getNodeNumEntries();
 
     // Allocate views
-    scalar_view A("A",numNonZeros);
-    scalar_view P("H",numNonZeros);
-    scalar_view W("H",numNonZeros);
+    scalar_view A("Amc",numNonZeros);
+    scalar_view P("Amc",numNonZeros);
+    scalar_view W("Amc",numNonZeros);
     ord_view    inds("inds",numNonZeros);
     ord_view    offsets("offsets",numRows+1);
 
@@ -77,7 +77,7 @@ EigenMC_Data_View EigenMC_Data::createKokkosViews()
     for( LO irow=0; irow<numRows; ++irow )
     {
         // Get row views
-        d_A->getLocalRowView(irow,ind_row,A_row);
+        d_Amc->getLocalRowView(irow,ind_row,A_row);
         d_P->getLocalRowView(irow,ind_row,P_row);
         d_W->getLocalRowView(irow,ind_row,W_row);
 
@@ -106,11 +106,47 @@ EigenMC_Data_View EigenMC_Data::createKokkosViews()
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
+// Build iteration MC matrix Amc = A
+//---------------------------------------------------------------------------//
+void EigenMC_Data::buildMCMatrix()
+{
+
+    // Create Amc
+    size_t N = d_A->getNodeNumRows();
+    size_t max_nnz = d_A->getNodeMaxNumRowEntries();
+    d_Amc = Teuchos::rcp( new CRS_MATRIX(d_A->getDomainMap(),max_nnz) );
+
+    Teuchos::ArrayRCP<SCALAR> Amc_vals(max_nnz), A_vals(max_nnz);
+    Teuchos::ArrayRCP<GO>     A_inds(max_nnz);
+    size_t num_entries;
+    for( size_t irow=0; irow<N; ++irow )
+    {
+        GO gid = d_A->getDomainMap()->getGlobalElement(irow);
+
+        // Get row from A
+        d_A->getGlobalRowCopy(irow,A_inds(),A_vals(),num_entries);
+
+        for( size_t icol=0; icol<num_entries; ++icol )
+            Amc_vals[icol] = A_vals[icol];
+
+        // Add row to Amc
+        Teuchos::ArrayView<GO>     ind_view = A_inds(0,num_entries);
+        Teuchos::ArrayView<SCALAR> val_view = Amc_vals(0,num_entries);
+        d_Amc->insertGlobalValues(irow,ind_view,val_view);
+    }
+
+    // Complete construction of Amc
+    d_Amc->fillComplete();
+    CHECK(d_Amc->isFillComplete());
+    CHECK(d_Amc->isStorageOptimized());
+}
+
+//---------------------------------------------------------------------------//
 // Build probability and weight matrices.
 //---------------------------------------------------------------------------//
-void MC_Data::buildMonteCarloMatrices()
+void EigenMC_Data::buildMonteCarloMatrices()
 {
-    REQUIRE( d_A != Teuchos::null );
+    REQUIRE( d_Amc != Teuchos::null );
 
     Teuchos::RCP<Teuchos::ParameterList> mc_pl =
         Teuchos::sublist(d_pl,"Monte Carlo");
@@ -119,19 +155,13 @@ void MC_Data::buildMonteCarloMatrices()
     SCALAR abs_prob = mc_pl->get("absorption_probability",0.0);
     SCALAR trans_factor = mc_pl->get("transition_factor",1.0);
 
-    // Determine if we want forward or adjoint MC
-    VALIDATE(mc_pl->isType<std::string>("mc_type"),"Must specify mc_type.");
-    std::string type = mc_pl->get<std::string>("mc_type");
-    INSIST( type == "forward" || type == "adjoint",
-            "mc_type must be forward or adjoint." );
-
-    CHECK( d_A != Teuchos::null );
+    CHECK( d_Amc != Teuchos::null );
 
     // Now loop over rows in B to build probability/weight matrices
-    LO N = d_A->getNodeNumRows();
-    LO max_nnz = d_A->getNodeMaxNumRowEntries();
-    d_P = Teuchos::rcp( new CRS_MATRIX(d_A->getDomainMap(),max_nnz) );
-    d_W = Teuchos::rcp( new CRS_MATRIX(d_A->getDomainMap(),max_nnz) );
+    LO N = d_Amc->getNodeNumRows();
+    LO max_nnz = d_Amc->getNodeMaxNumRowEntries();
+    d_P = Teuchos::rcp( new CRS_MATRIX(d_Amc->getDomainMap(),max_nnz) );
+    d_W = Teuchos::rcp( new CRS_MATRIX(d_Amc->getDomainMap(),max_nnz) );
 
     Teuchos::ArrayRCP<SCALAR> A_vals(max_nnz), P_vals(max_nnz), W_vals(max_nnz);
     Teuchos::ArrayRCP<GO>     A_inds(max_nnz);
@@ -139,7 +169,7 @@ void MC_Data::buildMonteCarloMatrices()
     for( LO irow=0; irow<N; ++irow )
     {
         // Get row from H^T
-        d_A->getGlobalRowCopy(irow,A_inds(),A_vals(),num_entries);
+        d_Amc->getGlobalRowCopy(irow,A_inds(),A_vals(),num_entries);
 
         // Compute row sum
         MAGNITUDE row_sum=0.0;
@@ -179,8 +209,8 @@ void MC_Data::buildMonteCarloMatrices()
             std::fill( P_vals.begin(), P_vals.end(), 0.0 );
             std::fill( W_vals.begin(), W_vals.end(), 0.0 );
         }
-        d_P->insertGlobalValues(irow,H_inds(0,num_entries),P_vals(0,num_entries));
-        d_W->insertGlobalValues(irow,H_inds(0,num_entries),W_vals(0,num_entries));
+        d_P->insertGlobalValues(irow,A_inds(0,num_entries),P_vals(0,num_entries));
+        d_W->insertGlobalValues(irow,A_inds(0,num_entries),W_vals(0,num_entries));
     }
     d_P->fillComplete();
     d_W->fillComplete();

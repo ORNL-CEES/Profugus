@@ -19,8 +19,8 @@
 #include "Teuchos_DefaultComm.hpp"
 #include "MatrixMarket_Tpetra.hpp"
 
-#include "cuda.h"
-#include "cuda_runtime_api.h"
+//#include "cuda.h"
+//#include "cuda_runtime_api.h"
 
 using namespace alea;
 using std::chrono::high_resolution_clock;

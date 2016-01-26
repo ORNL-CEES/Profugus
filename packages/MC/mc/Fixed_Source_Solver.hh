@@ -32,18 +32,23 @@ namespace profugus
  */
 //===========================================================================//
 
-class Fixed_Source_Solver : public Solver
+template <class Geometry>
+class Fixed_Source_Solver : public Solver<Geometry>
 {
+    typedef Solver<Geometry> Base;
   public:
     //@{
     //! Typedefs.
-    typedef Source_Transporter                    Source_Transporter_t;
-    typedef std::shared_ptr<Source_Transporter_t> SP_Source_Transporter;
-    typedef Source_Transporter_t::SP_Source       SP_Source;
+    typedef Geometry                                    Geometry_t;
+    typedef Source_Transporter<Geometry_t>              Source_Transporter_t;
+    typedef std::shared_ptr<Source_Transporter_t>       SP_Source_Transporter;
+    typedef typename Source_Transporter_t::SP_Source    SP_Source;
     //@}
 
   private:
     // >>> DATA
+
+    using Base::b_tallier;
 
     // Source transporter.
     SP_Source_Transporter d_transporter;

@@ -28,6 +28,8 @@ ADD_UTILS_TEST(tstStratimikosSolver.cc       )
 ADD_UTILS_TEST(tstBelosSolver.cc             )
 ADD_UTILS_TEST(tstArnoldi.cc                 )
 ADD_UTILS_TEST(tstInverseOperator.cc         )
+ADD_UTILS_TEST(tstModelEvaluatorWrapper.cc   )
+ADD_UTILS_TEST(tstAndersonSolver.cc          )
 
 ##---------------------------------------------------------------------------##
 ## FILES

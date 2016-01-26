@@ -3,10 +3,11 @@
 ##---------------------------------------------------------------------------##
 
 # Default build all packages
-SET(Profugus_ENABLE_Utils   ON CACHE BOOL "")
-SET(Profugus_ENABLE_Matprop ON CACHE BOOL "")
-SET(Profugus_ENABLE_SPn     ON CACHE BOOL "")
-SET(Profugus_ENABLE_MC      ON CACHE BOOL "")
+SET(Profugus_ENABLE_Utils       ON CACHE BOOL "")
+SET(Profugus_ENABLE_CudaUtils   ON CACHE BOOL "")
+SET(Profugus_ENABLE_Matprop     ON CACHE BOOL "")
+SET(Profugus_ENABLE_SPn         ON CACHE BOOL "")
+SET(Profugus_ENABLE_MC          ON CACHE BOOL "")
 
 # Turn on tests
 SET(Profugus_ENABLE_TESTS ON CACHE BOOL "")
@@ -39,7 +40,7 @@ SET(Profugus_ENABLE_Zoltan2 OFF CACHE BOOL "")
 # Compiler options
 SET(BUILD_SHARED_LIBS ON CACHE BOOL "")
 SET(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated-declarations" CACHE STRING "")
-SET(Profugus_ENABLE_CXX11:BOOL=ON)
+SET(Profugus_ENABLE_CXX11 ON CACHE BOOL "")
 
 # TriBITS stuff
 SET(Profugus_ENABLE_INSTALL_CMAKE_CONFIG_FILES OFF CACHE BOOL "")

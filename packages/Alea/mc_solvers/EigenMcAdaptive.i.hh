@@ -38,7 +38,7 @@ EigenMcAdaptive::EigenMcAdaptive(
         Teuchos::RCP<Teuchos::ParameterList> pl,
         generator_pool rand_pool)
 
-  : d_N(mc_data->getIterationMatrix()->getGlobalNumRows())
+  : d_N(mc_data->getMatrix()->getGlobalNumRows())
   , d_rand_pool(rand_pool)
   , d_rand_gen(d_rand_pool.get_state())
 {
@@ -172,7 +172,7 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 		        tallyContribution(wt*b_data[state],x_history);
 
 		        x_new_batch  += x_history;
-		    }
+	    	    }
 
 		    x_data_old[entry] += x_old_batch;
 
@@ -223,7 +223,7 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
     unsigned int num_entries_valid = 0;
     double lambda = 0.0;
 
-    for(unsigned int i=0; i!=d_N; ++i)i
+    for(unsigned int i=0; i!=d_N; ++i)
 	if(row_null[i]==0)
 	{
 		lambda += lambda_vec[i];

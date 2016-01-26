@@ -13,6 +13,7 @@
 
 #include "utils/Definitions.hh"
 #include "Definitions.hh"
+#include "Bounding_Box.hh"
 
 namespace profugus
 {
@@ -30,8 +31,9 @@ class Tracking_Geometry
   public:
     //@{
     //! Class Typedefs.
-    typedef Geo_State         Geo_State_t;
-    typedef def::Space_Vector Space_Vector;
+    typedef Geo_State                       Geo_State_t;
+    typedef def::Space_Vector               Space_Vector;
+    typedef def::Vec_Dbl                    Vec_Dbl;
     //@}
 
   public:
@@ -87,6 +89,12 @@ class Tracking_Geometry
 
     //! Return the outward normal at the location dictated by the state.
     virtual Space_Vector normal(const Geo_State_t& state) const = 0;
+
+    //! Get all cell volumes
+    virtual const Vec_Dbl &cell_volumes() const = 0;
+
+    //! Get bounding box
+    virtual Bounding_Box get_extents() const = 0;
 };
 
 //---------------------------------------------------------------------------//

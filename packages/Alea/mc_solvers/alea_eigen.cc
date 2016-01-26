@@ -17,8 +17,8 @@
 #include "Teuchos_DefaultComm.hpp"
 #include "MatrixMarket_Tpetra.hpp"
 
-#include "cuda.h"
-#include "cuda_runtime_api.h"
+//#include "cuda.h"
+//#include "cuda_runtime_api.h"
 
 using namespace alea;
 using std::chrono::high_resolution_clock;
@@ -82,7 +82,7 @@ int main( int argc, char *argv[] )
     }
 
 
-  int nDevices;
+/*  int nDevices;
 
   cudaGetDeviceCount(&nDevices);
   printf("The number of GPU devices is: %d\n", nDevices);
@@ -100,7 +100,7 @@ int main( int argc, char *argv[] )
     printf("  globalL1CacheSupported:  %d\n", prop.globalL1CacheSupported);
     printf("  localL1CacheSupported:  %d\n", prop.localL1CacheSupported);
   }
-
+*/
 
     Kokkos::finalize();
     profugus::finalize();

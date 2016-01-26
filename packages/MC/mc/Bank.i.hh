@@ -18,7 +18,8 @@ namespace profugus
 // INLINE FUNCTIONS
 //---------------------------------------------------------------------------//
 
-Bank::SP_Particle Bank::basic_pop()
+template <class Geometry>
+auto Bank<Geometry>::basic_pop() -> SP_Particle
 {
     REQUIRE(!empty());
     REQUIRE(!d_particles.empty());

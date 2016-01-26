@@ -9,7 +9,7 @@
 ##---------------------------------------------------------------------------##
 
 SET(LIB_REQUIRED_DEP_PACKAGES
-  Teuchos Epetra Matprop Utils)
+  Teuchos Epetra Matprop Utils SPn)
 
 SET(LIB_OPTIONAL_DEP_PACKAGES)
 

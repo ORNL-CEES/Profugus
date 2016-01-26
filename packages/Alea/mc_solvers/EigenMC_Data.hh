@@ -23,9 +23,9 @@ namespace alea
 //---------------------------------------------------------------------------//
 struct EigenMC_Data_View
 {
-    MC_Data_View(){}
+    EigenMC_Data_View(){}
 
-    MC_Data_View( const_scalar_view a,
+    EigenMC_Data_View( const_scalar_view a,
                   const_scalar_view p,
                   const_scalar_view w,
                   const_ord_view    ind,
@@ -83,8 +83,8 @@ class EigenMC_Data
     //! Access original matrix, \f$\textbf{A}\f$
     Teuchos::RCP<const MATRIX> getMatrix() const
     {
-        REQUIRE( d_A != Teuchos::null );
-        return d_A;
+        REQUIRE( d_Amc != Teuchos::null );
+        return d_Amc;
     }
     //! Access probability transition matrix, \f$\textbf{P}\f$
     Teuchos::RCP<const MATRIX> getProbabilityMatrix() const
@@ -105,10 +105,14 @@ class EigenMC_Data
 
   private:
 
+    void buildMCMatrix();
     void buildMonteCarloMatrices();
     
     // Original matrix
     Teuchos::RCP<const MATRIX> d_A;
+
+    // matrix manageable for MC
+    Teuchos::RCP<CRS_MATRIX> d_Amc;
 
     // Parameters
     Teuchos::RCP<Teuchos::ParameterList> d_pl;

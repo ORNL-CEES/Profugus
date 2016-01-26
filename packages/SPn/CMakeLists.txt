@@ -97,6 +97,7 @@ INSTALL(FILES ${MESH_HEADERS} DESTINATION include/SPn/mesh)
 
 FILE(GLOB SOLVERS_HEADERS solvers/*.hh)
 SET(SOLVERS_SOURCES
+  solvers/AndersonSolver.pt.cc
   solvers/Arnoldi.pt.cc
   solvers/BelosSolver.pt.cc
   solvers/Davidson_Eigensolver.pt.cc
@@ -104,6 +105,7 @@ SET(SOLVERS_SOURCES
   solvers/EigenvalueSolverBuilder.pt.cc
   solvers/InverseOperator.pt.cc
   solvers/LinearSolverBuilder.pt.cc
+  solvers/ModelEvaluatorWrapper.pt.cc
   solvers/PowerIteration.pt.cc
   solvers/PreconditionerBuilder.pt.cc
   solvers/RayleighQuotient.pt.cc
@@ -157,9 +159,9 @@ INSTALL(FILES ${SPN_HEADERS} DESTINATION include/SPn/spn)
 
 FILE(GLOB DRIVER_HEADERS driver/*.hh)
 SET(DRIVER_SOURCES
-  driver/Manager.cc
-  driver/Problem_Builder.cc
-  driver/spn.cc
+  spn_driver/Manager.cc
+  spn_driver/Problem_Builder.cc
+  spn_driver/spn.cc
   )
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
@@ -180,7 +182,7 @@ TRIBITS_ADD_EXECUTABLE(
   xspn
   NOEXESUFFIX
   NOEXEPREFIX
-  SOURCES driver/spn.cc
+  SOURCES spn_driver/spn.cc
   INSTALLABLE
   )
 

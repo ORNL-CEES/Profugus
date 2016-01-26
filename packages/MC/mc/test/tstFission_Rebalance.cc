@@ -11,6 +11,7 @@
 #include "../Fission_Rebalance.hh"
 
 #include "gtest/utils_gtest.hh"
+#include "geometry/RTK_Geometry.hh"
 
 #include <memory>
 #include <vector>
@@ -26,12 +27,13 @@ class Fission_RebalanceTest : public testing::Test
 {
   protected:
     // Typedefs usable inside the test fixture
-    typedef profugus::Fission_Rebalance         Rebalance;
-    typedef std::shared_ptr<Rebalance>          SP_Rebalance;
-    typedef Rebalance::Fission_Site_t           Fission_Site_t;
-    typedef Rebalance::Fission_Site_Container_t Fission_Container_t;
-    typedef Rebalance::Space_Vector             Space_Vector;
-    typedef Rebalance::Array_Bnds               Array_Bnds;
+    typedef profugus::Core                          Geometry_t;
+    typedef profugus::Fission_Rebalance<Geometry_t> Rebalance;
+    typedef std::shared_ptr<Rebalance>              SP_Rebalance;
+    typedef Rebalance::Fission_Site_t               Fission_Site_t;
+    typedef Rebalance::Fission_Site_Container_t     Fission_Container_t;
+    typedef Rebalance::Space_Vector                 Space_Vector;
+    typedef Rebalance::Array_Bnds                   Array_Bnds;
 
   protected:
     // Initialization that are performed for each test

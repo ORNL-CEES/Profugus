@@ -27,8 +27,8 @@ namespace profugus
 
 template <class T>
 Davidson_Eigensolver<T>::Davidson_Eigensolver(RCP_ParameterList db,
-                                                  RCP_OP            LHS,
-                                                  RCP_OP            RHS)
+                                              RCP_OP            LHS,
+                                              RCP_OP            RHS)
     : EigenvalueSolver<T>(db)
     , d_db(db)
     , d_LHS(LHS)

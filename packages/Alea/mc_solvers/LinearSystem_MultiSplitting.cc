@@ -23,7 +23,6 @@
 #include "spn/Eigenvalue_Solver.hh"
 #include "spn/Fixed_Source_Solver.hh"
 #include "solvers/LinAlgTypedefs.hh"
-#include "driver/Manager.hh"
 #include "harness/DBC.hh"
 
 namespace alea

@@ -12,6 +12,7 @@
 #define mc_Particle_hh
 
 #include "utils/Definitions.hh"
+#include "utils/Metaclass.hh"
 #include "rng/RNG.hh"
 #include "geometry/RTK_State.hh"
 #include "Definitions.hh"
@@ -31,15 +32,17 @@ namespace profugus
  */
 //===========================================================================//
 
+template <class Geometry>
 class Particle
 {
   public:
     //@{
     //! Typedefs.
-    typedef def::Space_Vector Space_Vector;
-    typedef events::Event     Event_Type;
-    typedef RNG               RNG_t;
-    typedef RTK_State         Geo_State_t;
+    typedef def::Space_Vector               Space_Vector;
+    typedef events::Event                   Event_Type;
+    typedef RNG                             RNG_t;
+    typedef typename Geometry::Geo_State_t  Geo_State_t;
+    typedef Metaclass<Particle>             Metadata;
     //@}
 
   private:
@@ -65,6 +68,9 @@ class Particle
 
     // Particle geometric state.
     Geo_State_t d_geo_state;
+
+    // Problem/application specific metadata.
+    Metadata d_metadata;
 
   public:
     // Constructor
@@ -110,6 +116,12 @@ class Particle
     Event_Type event() const { return d_event; }
     int matid() const { return d_matid; }
     int group() const { return d_group; }
+    //@}
+
+    //@{
+    //! Get particle metadata.
+    const Metadata& metadata() const { return d_metadata; }
+    Metadata& metadata() { return d_metadata; }
     //@}
 };
 

@@ -20,6 +20,8 @@
 #include "Teuchos_RCP.hpp"
 #include "utils/Definitions.hh"
 #include "rng/RNG_Control.hh"
+#include "geometry/RTK_Geometry.hh"
+#include "geometry/Mesh_Geometry.hh"
 #include "../Sampler.hh"
 
 using namespace std;
@@ -30,48 +32,31 @@ using def::X; using def::Y; using def::Z;
 // Test fixture
 //---------------------------------------------------------------------------//
 
+template <class Geometry>
 class PhysicsTest : public testing::Test
 {
   protected:
-    typedef profugus::RNG_Control             RNG_Control;
-    typedef profugus::Physics                 Physics_t;
-    typedef Physics_t::Geometry_t             Geometry_t;
-    typedef Physics_t::SP_Geometry            SP_Geometry;
-    typedef Physics_t::Particle_t             Particle;
-    typedef Physics_t::Bank_t                 Bank_t;
-    typedef Physics_t::SP_Particle            SP_Particle;
-    typedef Physics_t::ParameterList_t        ParameterList_t;
-    typedef Physics_t::RCP_Std_DB             RCP_Std_DB;
-    typedef Physics_t::XS_t                   XS_t;
-    typedef Physics_t::RCP_XS                 RCP_XS;
-    typedef Physics_t::Fission_Site           Fission_Site;
-    typedef Physics_t::Fission_Site_Container Fission_Site_Container;
-    typedef shared_ptr<Physics_t>             SP_Physics;
-    typedef Geometry_t::Space_Vector          Space_Vector;
+    typedef Geometry                                    Geometry_t;
+    typedef profugus::RNG_Control                       RNG_Control;
+    typedef profugus::Physics<Geometry>                 Physics_t;
+    typedef typename Physics_t::SP_Geometry             SP_Geometry;
+    typedef typename Physics_t::Particle_t              Particle;
+    typedef typename Physics_t::Bank_t                  Bank_t;
+    typedef typename Physics_t::SP_Particle             SP_Particle;
+    typedef typename Physics_t::ParameterList_t         ParameterList_t;
+    typedef typename Physics_t::RCP_Std_DB              RCP_Std_DB;
+    typedef typename Physics_t::XS_t                    XS_t;
+    typedef typename Physics_t::RCP_XS                  RCP_XS;
+    typedef typename Physics_t::Fission_Site            Fission_Site;
+    typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
+    typedef shared_ptr<Physics_t>                       SP_Physics;
+    typedef typename Geometry_t::Space_Vector           Space_Vector;
 
   protected:
 
     void SetUp()
     {
-        typedef Geometry_t::Array_t  Core_t;
-        typedef Core_t::Object_t     Lattice_t;
-        typedef Lattice_t::Object_t  Pin_Cell_t;
-        typedef Geometry_t::SP_Array SP_Core;
-        typedef Core_t::SP_Object    SP_Lattice;
-        typedef Lattice_t::SP_Object SP_Pin_Cell;
-
-        // make an infinite box
-        SP_Pin_Cell box(make_shared<Pin_Cell_t>(0, 100.0, 100.0));
-        SP_Lattice  lat(make_shared<Lattice_t>(1, 1, 1, 2));
-        lat->id(0, 0, 0) = 1;
-        lat->assign_object(box, 1);
-        lat->complete(0.0, 0.0, 0.0);
-
-        SP_Core core(make_shared<Core_t>(1, 1, 1, 1));
-        core->assign_object(lat, 0);
-        core->complete(0.0, 0.0, 0.0);
-
-        geometry = make_shared<Geometry_t>(core);
+        build_geometry();
 
         build_xs();
 
@@ -83,6 +68,8 @@ class PhysicsTest : public testing::Test
         // make db
         db = Teuchos::rcp(new ParameterList_t("test"));
     }
+
+    void build_geometry();
 
     void build_xs()
     {
@@ -98,15 +85,15 @@ class PhysicsTest : public testing::Test
         bnd[5] = 0.001;
         xs->set_bounds(bnd);
 
-        XS_t::OneDArray total(5);
-        XS_t::TwoDArray scat(5, 5);
+        typename XS_t::OneDArray total(5);
+        typename XS_t::TwoDArray scat(5, 5);
 
         double f[5] = {0.1, 0.4, 1.8, 5.7, 9.8};
         double c[5] = {0.3770, 0.4421, 0.1809, 0.0, 0.0};
         double n[5] = {2.4*f[0], 2.4*f[1], 2.4*f[2], 2.4*f[3], 2.4*f[4]};
-        XS_t::OneDArray fission(begin(f), end(f));
-        XS_t::OneDArray chi(begin(c), end(c));
-        XS_t::OneDArray nus(begin(n), end(n));
+        typename XS_t::OneDArray fission(begin(f), end(f));
+        typename XS_t::OneDArray chi(begin(c), end(c));
+        typename XS_t::OneDArray nus(begin(n), end(n));
         xs->add(1, XS_t::SIG_F, fission);
         xs->add(1, XS_t::NU_SIG_F, nus);
         xs->add(1, XS_t::CHI, chi);
@@ -157,27 +144,71 @@ class PhysicsTest : public testing::Test
     profugus::RNG_Control::RNG_t rng;
 };
 
+template <>
+void PhysicsTest<profugus::Core>::build_geometry()
+{
+    typedef Geometry_t::Array_t  Core_t;
+    typedef Core_t::Object_t     Lattice_t;
+    typedef Lattice_t::Object_t  Pin_Cell_t;
+    typedef Geometry_t::SP_Array SP_Core;
+    typedef Core_t::SP_Object    SP_Lattice;
+    typedef Lattice_t::SP_Object SP_Pin_Cell;
+
+    // make an infinite box
+    SP_Pin_Cell box(make_shared<Pin_Cell_t>(0, 100.0, 100.0));
+    SP_Lattice  lat(make_shared<Lattice_t>(1, 1, 1, 2));
+    lat->id(0, 0, 0) = 1;
+    lat->assign_object(box, 1);
+    lat->complete(0.0, 0.0, 0.0);
+
+    SP_Core core(make_shared<Core_t>(1, 1, 1, 1));
+    core->assign_object(lat, 0);
+    core->complete(0.0, 0.0, 0.0);
+
+    geometry = make_shared<Geometry_t>(core);
+}
+
+template <>
+void PhysicsTest<profugus::Mesh_Geometry>::build_geometry()
+{
+    def::Vec_Dbl edges = {0.0, 100.0};
+    auto matids = std::make_shared<def::Vec_Int>(def::Vec_Int({0}));
+
+    geometry = std::make_shared<Geometry_t>(edges,edges,edges);
+    geometry->set_matids(matids);
+}
+
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(PhysicsTest, Collisions)
+typedef ::testing::Types<profugus::Core,profugus::Mesh_Geometry> MyTypes;
+TYPED_TEST_CASE(PhysicsTest, MyTypes);
+
+TYPED_TEST(PhysicsTest, Collisions)
 {
+    typedef typename TestFixture::Particle      Particle;
+    typedef typename TestFixture::SP_Particle   SP_Particle;
+    typedef typename TestFixture::Physics_t     Physics_t;
+    typedef typename TestFixture::SP_Physics    SP_Physics;
+    typedef typename TestFixture::Space_Vector  Space_Vector;
+    typedef typename TestFixture::Bank_t        Bank_t;
+
     // make a particle
     SP_Particle p(make_shared<Particle>());
-    geometry->initialize(
+    this->geometry->initialize(
         Space_Vector(50.0, 50.0, 50.0), Space_Vector(1.0, 1.0, 1.0),
         p->geo_state());
-    p->set_rng(rng);
+    p->set_rng(this->rng);
     p->set_matid(0);
 
     // check distributions from analog collisions
     {
-        db->get("implicit_capture", false);
+        this->db->get("implicit_capture", false);
 
         // make a mg physics object
-        SP_Physics physics(make_shared<Physics_t>(db, xs));
-        physics->set_geometry(geometry);
+        SP_Physics physics(make_shared<Physics_t>(this->db, this->xs));
+        physics->set_geometry(this->geometry);
 
         // make a bank
         Bank_t bank;
@@ -203,7 +234,7 @@ TEST_F(PhysicsTest, Collisions)
             p->set_event(profugus::events::COLLISION);
 
             // sample a group
-            double rn = rng.ran();
+            double rn = this->rng.ran();
             int group = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
 
             p->set_group(group);
@@ -225,7 +256,8 @@ TEST_F(PhysicsTest, Collisions)
                 scat[ing]++;
                 g2g[ing][outg]++;
 
-                const Space_Vector &omega = geometry->direction(p->geo_state());
+                const Space_Vector &omega =
+                    this->geometry->direction(p->geo_state());
 
                 // check octant distribution (isotropic scattering)
                 if (omega[Z] > 0.0)
@@ -355,13 +387,13 @@ TEST_F(PhysicsTest, Collisions)
 
     // check distributions from implicit-capture collisions
     {
-        db->set("implicit_capture", true);
+        this->db->set("implicit_capture", true);
 
         double c[] = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
 
         // make a mg physics object
-        SP_Physics physics(make_shared<Physics_t>(db, xs));
-        physics->set_geometry(geometry);
+        SP_Physics physics(make_shared<Physics_t>(this->db, this->xs));
+        physics->set_geometry(this->geometry);
 
         // make a bank
         Bank_t bank;
@@ -379,7 +411,7 @@ TEST_F(PhysicsTest, Collisions)
             p->set_event(profugus::events::COLLISION);
 
             // sample a group
-            double rn   = rng.ran();
+            double rn   = this->rng.ran();
             int group   = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
 
             p->set_group(group);
@@ -392,7 +424,8 @@ TEST_F(PhysicsTest, Collisions)
             EXPECT_EQ(profugus::events::IMPLICIT_CAPTURE, p->event());
             EXPECT_TRUE(soft_equiv(p->wt(), c[g] * 0.9, 1.0e-4));
 
-            const Space_Vector &omega = geometry->direction(p->geo_state());
+            const Space_Vector &omega =
+                this->geometry->direction(p->geo_state());
 
             // check octant distribution (isotropic scattering)
             if (omega[Z] > 0.0)
@@ -468,8 +501,14 @@ TEST_F(PhysicsTest, Collisions)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(PhysicsTest, Access)
+TYPED_TEST(PhysicsTest, Access)
 {
+    typedef typename TestFixture::Particle      Particle;
+    typedef typename TestFixture::SP_Particle   SP_Particle;
+    typedef typename TestFixture::Physics_t     Physics_t;
+    typedef typename TestFixture::SP_Physics    SP_Physics;
+    typedef typename TestFixture::Space_Vector  Space_Vector;
+
     using profugus::physics::TOTAL;
     using profugus::physics::SCATTERING;
     using profugus::physics::FISSION;
@@ -478,7 +517,7 @@ TEST_F(PhysicsTest, Access)
     SP_Particle p(make_shared<Particle>());
 
     // physics
-    Physics_t physics(db, xs);
+    Physics_t physics(this->db, this->xs);
 
     EXPECT_FALSE(physics.is_fissionable(0));
     EXPECT_TRUE(physics.is_fissionable(1));
@@ -548,13 +587,19 @@ TEST_F(PhysicsTest, Access)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(PhysicsTest, initialization)
+TYPED_TEST(PhysicsTest, initialization)
 {
+    typedef typename TestFixture::Particle      Particle;
+    typedef typename TestFixture::SP_Particle   SP_Particle;
+    typedef typename TestFixture::Physics_t     Physics_t;
+    typedef typename TestFixture::SP_Physics    SP_Physics;
+    typedef typename TestFixture::Space_Vector  Space_Vector;
+
     // make a particle
     SP_Particle p(make_shared<Particle>());
 
     // physics
-    Physics_t physics(db, xs);
+    Physics_t physics(this->db, this->xs);
 
     EXPECT_FALSE(physics.is_fissionable(0));
     EXPECT_TRUE(physics.is_fissionable(1));
@@ -630,21 +675,27 @@ TEST_F(PhysicsTest, initialization)
 
 //---------------------------------------------------------------------------//
 
-TEST_F(PhysicsTest, fission_sampling)
+TYPED_TEST(PhysicsTest, fission_sampling)
 {
-    Physics_t physics(db, xs);
-    physics.set_geometry(geometry);
+    typedef typename TestFixture::Particle                  Particle;
+    typedef typename TestFixture::SP_Particle               SP_Particle;
+    typedef typename TestFixture::Physics_t                 Physics_t;
+    typedef typename TestFixture::Space_Vector              Space_Vector;
+    typedef typename TestFixture::Fission_Site_Container    FSC;
 
-    Fission_Site_Container fsites;
+    Physics_t physics(this->db, this->xs);
+    physics.set_geometry(this->geometry);
+
+    FSC fsites;
 
     // make a particle
     SP_Particle p(make_shared<Particle>());
-    geometry->initialize(Space_Vector(1.1, 0.5, 6.2),
-                         Space_Vector(1.0, 1.0, 1.0),
-                         p->geo_state());
+    this->geometry->initialize(Space_Vector(1.1, 0.5, 6.2),
+                               Space_Vector(1.0, 1.0, 1.0),
+                               p->geo_state());
     p->set_matid(1);
     p->set_wt(0.6);
-    p->set_rng(rng);
+    p->set_rng(this->rng);
     /*
      * First 10 random numbers in sequence:
      * 0.9709
@@ -740,7 +791,7 @@ TEST_F(PhysicsTest, fission_sampling)
     }
 
     {
-        Fission_Site_Container ufsc(4);
+        FSC ufsc(4);
         memcpy(&ufsc[0], &packed[0], packed.size());
 
         EXPECT_EQ(4, ufsc.size());
