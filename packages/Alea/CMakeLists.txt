@@ -84,6 +84,8 @@ SET(MC_SOLVERS_SOURCES
   mc_solvers/ChebyshevIteration.cc
   mc_solvers/ChebyshevPolynomial.cc
   mc_solvers/EigenMC_Data.cc
+  mc_solvers/EigenMCSA.cc
+  mc_solvers/EigenSequentialMC.cc
   mc_solvers/EigenSystem.cc
   mc_solvers/EigenSystemFactory.cc   
   mc_solvers/EigenSolverFactory.cc   

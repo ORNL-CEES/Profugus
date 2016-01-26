@@ -82,6 +82,20 @@ int main( int argc, char *argv[] )
     }
 
 
+    FILE *pFile;
+    pFile = fopen("eigenvector.mtx", "w");
+
+    size_t N = myA -> getGlobalNumRows();
+    
+    Teuchos::ArrayRCP<SCALAR> xp = x->getDataNonConst(0);
+
+    fprintf(pFile, "%%%MatrixMarket matrix array real general \n");
+    fprintf(pFile, "%d %d \n", N,1);
+    for (unsigned int index = 0; index < N; ++index)
+         fprintf (pFile, "%14.15f \n", xp[index]);
+    
+    fclose(pFile);
+
 /*  int nDevices;
 
   cudaGetDeviceCount(&nDevices);

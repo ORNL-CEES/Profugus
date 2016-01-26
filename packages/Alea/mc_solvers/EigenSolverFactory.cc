@@ -13,9 +13,8 @@
 #include "AdditiveSchwarzWrapper.hh"
 #include "PowerMethod.hh"
 #include "MonteCarloEigenSolver.hh"
-//#include "EigenMCSolver.hh"
-//#include "EigenMCSA.hh"
-//#include "EigenSequentialMC.hh"
+#include "EigenSequentialMC.hh"
+#include "EigenMCSA.hh"
 #include "harness/DBC.hh"
 
 namespace alea
@@ -51,18 +50,6 @@ EigenSolverFactory::buildSolver(std::string solver_type,
              solver_type=="none",
             "Invalid solver_type.");
 
-    // "mcsa" is shorthand for solver_type="synthetic_acceleration"
-    //  with preconditioner="monte_carlo"
-    /*if( solver_type == "mcsa" )
-    {
-	return Teuchos::rcp( new EigenMCSA(A,pl) );
-    }
-
-    if( solver_type == "sequential_mc" )
-    {
-        return Teuchos::rcp( new EigenSequentialMC(A,pl) );
-    }
-    */
     if( solver_type == "monte_carlo" )
     {
 	Teuchos::RCP<MonteCarloEigenSolver> mc_solver( new MonteCarloEigenSolver(A,pl) );
@@ -71,6 +58,14 @@ EigenSolverFactory::buildSolver(std::string solver_type,
     else if( solver_type == "power_method" )
     {
         return Teuchos::rcp( new PowerMethod(A,pl) );
+    }
+    else if( solver_type == "sequential_mc" )
+    {
+        return Teuchos::rcp( new EigenSequentialMC(A,pl) );
+    }
+    else if( solver_type == "mcsa" )
+    {
+        return Teuchos::rcp( new EigenMCSA(A,pl) );
     }
 
     // Return null if doesn't match any

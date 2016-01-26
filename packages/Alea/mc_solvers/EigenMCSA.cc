@@ -1,15 +1,15 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PowerMethod.cc
+ * \file   EigenMCSA.cc
  * \author Massimiliano Lupo Pasni
- * \brief  Perform power iteration on eigenvalue system
+ * \brief  Perform Monte Carlo Synthetic Acceleration on eigenvalue system
  */
 //---------------------------------------------------------------------------//
 
 #include <iterator>
 #include <string>
 
-#include "PowerMethod.hh"
+#include "EigenMCSA.hh"
 #include "EigenSolverFactory.hh"
 #include "harness/DBC.hh"
 
@@ -30,7 +30,7 @@ namespace alea
  *  - verbosity(string)      : "none", ("low"), "medium", "high"
  */
 //---------------------------------------------------------------------------//
-PowerMethod::PowerMethod(
+EigenMCSA::EigenMCSA(
         Teuchos::RCP<const MATRIX> A,
         Teuchos::RCP<Teuchos::ParameterList> pl )
   : AleaSolver(A,pl)
@@ -44,7 +44,10 @@ PowerMethod::PowerMethod(
     // Override default parameters if present on sublist
     this->setParameters(power_pl);
 
-    b_label = "PowerMethod";
+    b_label = "SequentialEigenMC";
+
+    d_mc_solver = EigenSolverFactory::buildSolver( "monte_carlo", A, pl );
+
 }
 
 //---------------------------------------------------------------------------//
@@ -56,7 +59,7 @@ PowerMethod::PowerMethod(
  * \brief Perform Richardson iteration.
  */
 //---------------------------------------------------------------------------//
-void PowerMethod::applyImpl(const MV &x, MV &y) const
+void EigenMCSA::applyImpl(const MV &x, MV &y) const
 {
     // For now we only support operating on a single vector
     REQUIRE( x.getNumVectors() == 1 );
@@ -68,6 +71,7 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
     SCALAR eig_old = dis(gen);
     SCALAR eig_new = 0.0;
 
+    // Compute initial estimation of the eigenvector
     MV r(y.getMap(),1);
     r.update(1.0,x,0.0);
     y.update(1.0,x,0.0);
@@ -77,27 +81,42 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
     Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
 
     Teuchos::ArrayRCP<MAGNITUDE> y_norm(1);
+    y.norm2(y_norm());
     unsigned int N = y_data.size();
+
+    for(unsigned int i = 0; i!=N; ++i)
+	y_data[i] /= y_norm[0];
  
+    //used as auxiliary vector
+    MV ig(y.getMap(),1);
+
     while( true )
     {
         b_num_iters++;
 
-        y.update(1.0,r,0.0);
-        // Check convergence on true (rather than preconditioned) residual
+	//deterministic step of the power iteration
+        b_A->apply(y,r);
+    	y.update(1.0,r,0.0);
+
+    	for(unsigned int i = 0; i!=N; ++i)
+		y_data[i] /= y_norm[0];
+
+    	ig.update(1.0,y,0.0);
+        d_mc_solver->apply(ig,y);
+
         y.norm2(y_norm());
 
     	for(unsigned int i = 0; i!=N; ++i)
 		y_data[i] /= y_norm[0];
 
-        b_A->apply(y,r);
-
+    	ig.update(1.0,y,0.0);
         eig_new = 0.0;
 
+        b_A->apply(y,r);
         for(unsigned int i = 0; i!=N; ++i)
 		eig_new += r_data[i]*y_data[i];
 
-	std::cout<<eig_new<<std::endl;
+	std::cout<< eig_new <<std::endl;
 
         if( b_verbosity >= HIGH )
         {
