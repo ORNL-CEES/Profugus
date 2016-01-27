@@ -129,7 +129,7 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
         {
             if( b_verbosity >= LOW )
             {
-                std::cout << "Power Iteration converged after "
+                std::cout << "MCSA converged after "
                     << b_num_iters << " iterations." << std::endl;
             }
             break;
@@ -140,7 +140,7 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
         {
             if( b_verbosity >= LOW )
             {
-                std::cout << "Power Iteration reached maximum iteration "
+                std::cout << "MCSA reached maximum iteration "
                     << "count with relative error of "
                     << std::abs(eig_old - eig_new)/std::abs(eig_old) << std::endl;
             }
@@ -153,7 +153,7 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
         {
             if( b_verbosity >= LOW )
             {
-                std::cout << "Richardson Iteration diverged after "
+                std::cout << "MCSA diverged after "
                     << b_num_iters << " iterations." << std::endl;
             }
             b_num_iters = -b_num_iters;

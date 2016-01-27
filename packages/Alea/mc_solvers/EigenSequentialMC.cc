@@ -123,7 +123,7 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
         {
             if( b_verbosity >= LOW )
             {
-                std::cout << "Power Iteration converged after "
+                std::cout << "Sequential converged after "
                     << b_num_iters << " iterations." << std::endl;
             }
             break;
@@ -134,7 +134,7 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
         {
             if( b_verbosity >= LOW )
             {
-                std::cout << "Power Iteration reached maximum iteration "
+                std::cout << "Sequential reached maximum iteration "
                     << "count with relative error of "
                     << std::abs(eig_old - eig_new)/std::abs(eig_old) << std::endl;
             }
@@ -147,7 +147,7 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
         {
             if( b_verbosity >= LOW )
             {
-                std::cout << "Richardson Iteration diverged after "
+                std::cout << "Sequential diverged after "
                     << b_num_iters << " iterations." << std::endl;
             }
             b_num_iters = -b_num_iters;
