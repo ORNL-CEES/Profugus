@@ -115,9 +115,9 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 
         if( sum == 0.0 )
         {
-            int init_wt = 1.0;
+            int init_wt = 0.0;
             int stage = 0 ;
-            wt = 1.0 ;
+	    wt = init_wt;
 
             // Perform initial tally
             tallyContribution(wt*b_data[entry],x_data[entry]);            
@@ -211,9 +211,8 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 		    
 		}
 		x_data_old[entry] /= num_histories;
-        }
-	if( row_null[entry] == 0 )
 		lambda_vec[entry] = static_cast<double>( x_data[entry]/static_cast<double>(x_data_old[entry]) );
+        }
 
         //std::cout << "Entry " << entry << " performed " << num_histories << " histories" << " with final std dev of " << rel_std_dev << std::endl;
         total_histories += num_histories;
@@ -232,13 +231,14 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 
     lambda /= num_entries_valid;
 
+    std::cout<<"Num entries valid: "<<num_entries_valid<<std::endl;
+
 /*    std::cout << "Performed " << total_histories << " total histories, "
         << " average of " <<
         static_cast<double>(total_histories)/static_cast<double>(d_N)
         << " per entry" << std::endl;
-
-    std::cout<<"MC estimation of the biggest eigenvalue: "<<lambda<<std::endl;
 */
+    std::cout<<"MC estimation of the biggest eigenvalue: "<<lambda<<std::endl;
 
 	
 }
