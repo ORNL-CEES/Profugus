@@ -186,6 +186,14 @@ TRIBITS_ADD_EXECUTABLE(
   INSTALLABLE
   )
 
+TRIBITS_ADD_EXECUTABLE(
+  xeig
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES solvers/eig.cc
+  INSTALLABLE
+  )
+
 ##---------------------------------------------------------------------------##
 # Add tests to this package
 
