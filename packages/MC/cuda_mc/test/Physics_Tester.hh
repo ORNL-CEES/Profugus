@@ -41,6 +41,12 @@ class Physics_Tester
                                     SP_XS     xs,
                                     Vec_Dbl  &totals );
 
+      static void test_collide( const Vec_Dbl  &x_edges,
+                                const Vec_Dbl  &y_edges,
+                                const Vec_Dbl  &z_edges,
+                                const Vec_UInt &matids,
+                                      SP_XS     xs,
+                                      int       num_particles );
 };
 
 } // end namespace cuda_mc

@@ -11,12 +11,9 @@
 #include <memory>
 #include <vector>
 
-#include "../Physics.hh"
 #include "Physics_Tester.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
-
-using cuda_mc::Physics;
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -125,6 +122,27 @@ TEST_F(Physics_cudaTest, total)
         auto expected = xs->vector(matid,profugus::XS::TOTAL);
         EXPECT_SOFT_EQ( expected[g], totals[i] );
     }
+}
+
+TEST_F(Physics_cudaTest, collide)
+{
+    // Mesh edges
+    std::vector<double> edges = {0.0, 0.50, 1.0};
+    std::vector<unsigned int> matids = {0, 1, 1, 0};
+
+    int num_p = 16;
+    //std::vector<double> totals(num_p);
+    cuda_mc::Physics_Tester::test_collide(edges,edges,edges,matids,xs,num_p);
+
+    /*
+    for( int i = 0; i < num_p; ++i )
+    {
+        int g = i % 5;
+        int matid = i % 2;
+        auto expected = xs->vector(matid,profugus::XS::TOTAL);
+        EXPECT_SOFT_EQ( expected[g], totals[i] );
+    }
+    */
 }
 
 //---------------------------------------------------------------------------//
