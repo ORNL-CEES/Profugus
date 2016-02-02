@@ -22,7 +22,7 @@
 #include <Teuchos_TimeMonitor.hpp>
 #include "Teuchos_XMLParameterListHelpers.hpp"
 #include "Teuchos_DefaultComm.hpp"
-#include "MatrixMarket_Tpetra.hpp"
+#include "EpetraExt_CrsMatrixIn.h"
 
 #include "LinAlgTypedefs.hh"
 #include "PreconditionerBuilder.hh"
@@ -102,20 +102,31 @@ void run_problem(const std::string &xml_file)
 
     auto node = Teuchos::rcp( new profugus::TpetraTypes::NODE() );
 
-    typedef profugus::TpetraTypes   MatType;
+    typedef profugus::EpetraTypes   MatType;
     typedef MatType::MATRIX         MATRIX;
+
+#ifdef COMM_MPI
+    Epetra_MpiComm ecomm(profugus::communicator);
+#else
+    Epetra_SerialComm ecomm;
+#endif
 
     // Get name of A matrix and read
     std::cout << "Loading A from file." << std::endl;
     auto a_file = pl->get<std::string>("A_filename");
-    auto A = Tpetra::MatrixMarket::Reader<MATRIX>::readSparseFile(
-            a_file,comm,node);
+    MATRIX *A_ptr;
+    int err;
+    err = EpetraExt::MatrixMarketFileToCrsMatrix(a_file.c_str(),ecomm,A_ptr);
+    INSIST(err == 0, "Error Reading A");
+    Teuchos::RCP<MATRIX> A(A_ptr);
 
     // Get name of B matrix and read
     std::cout << "Loading B from file." << std::endl;
     auto b_file = pl->get<std::string>("B_filename");
-    auto B = Tpetra::MatrixMarket::Reader<MATRIX>::readSparseFile(
-            b_file,comm,node);
+    MATRIX *B_ptr;
+    err = EpetraExt::MatrixMarketFileToCrsMatrix(b_file.c_str(),ecomm,B_ptr);
+    INSIST(err == 0, "Error Reading B");
+    Teuchos::RCP<MATRIX> B(B_ptr);
 
     // Build preconditioner
     std::cout << "Building preconditioner." << std::endl;
@@ -134,13 +145,13 @@ void run_problem(const std::string &xml_file)
 
 
     // Build Eigenvector
-    auto x = Teuchos::rcp( new MatType::MV( A->getRowMap(), 1 ) );
+    auto x = Teuchos::rcp( new MatType::MV( A->RowMap(), 1 ) );
 
     timer.reset();
     timer.start();
 
     // Solve
-    double lambda = 0.0;
+    double lambda = 1000.0;
     std::cout << "Solving." << std::endl;
     solver->solve( lambda, x );
 
