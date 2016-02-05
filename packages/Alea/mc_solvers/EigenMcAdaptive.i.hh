@@ -128,90 +128,91 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 
         else
         {
-		while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
-		{
-		    batch++;
-		    x_new_batch = 0.0;
-		    x_old_batch = 0.0;
-		    variance_batch = 0.0;            
+	    while( rel_std_dev > d_tolerance && num_histories < d_max_num_histories )
+	    {
+		 batch++;
+		 x_new_batch = 0.0;
+		 x_old_batch = 0.0;
+		 variance_batch = 0.0;            
 
-		    for( int i=0; i<d_batch_size; ++i )
-		    {
-                        double x_history_old = 0.0;
-		        double x_history = 0.0;
-		        int stage = 0 ;
-		        int init_wt = 1.0;
-		        wt = 1.0 ;
+		 for( int i=0; i<d_batch_size; ++i )
+		 {
+                     double x_history_old = 0.0;
+		     double x_history = 0.0;
+		     int stage = 0 ;
+		     int init_wt = 1.0;
+		     wt = 1.0 ;
 
-		        // Perform initial tally
-		        tallyContribution(wt*b_data[entry],x_history);
+		     // Perform initial tally
+		     tallyContribution(wt*b_data[entry],x_history);
 
-		        // Get new rows for this state
-		        a_row   = d_A[entry];
-		        p_row   = d_P[entry];
-		        w_row   = d_W[entry];
-		        ind_row = d_ind[entry];
+		     // Get new rows for this state
+		     a_row   = d_A[entry];
+		     p_row   = d_P[entry];
+		     w_row   = d_W[entry];
+		     ind_row = d_ind[entry];
 		        
-		        for( ; stage<=d_max_history_length-1; ++stage )
-		        {
-		            // Move to new state
-		            getNewState(state,wt,a_row,p_row,w_row,ind_row);
+		     for( ; stage<=d_max_history_length-1; ++stage )
+		     {
+		         // Move to new state
+		         getNewState(state,wt,a_row,p_row,w_row,ind_row);
 		            
-		            p_row_vec = Teuchos::createVector( p_row );
-        		    sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0.0);
+        		std::vector<SCALAR> w_row_vec = Teuchos::createVector( w_row );
+        		SCALAR sum = std::accumulate(w_row_vec.begin(), w_row_vec.end(), 0.0);
+                      
+                        //if(0.0==sum)
+			//	std::cout<<"stage: "<<stage<<std::endl;
 
-		            // Tally
-		            tallyContribution(wt*b_data[state],x_history);
 
-		        }
-			x_old_batch  += x_history;
+		         // Tally
+		         tallyContribution(wt*b_data[state],x_history);
 
-		        getNewState(state,wt,a_row,p_row,w_row,ind_row);    
-		        p_row_vec = Teuchos::createVector( p_row );
-        		sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0.0);
-		        tallyContribution(wt*b_data[state],x_history);
+		     }
+		     x_old_batch  += x_history;
 
-		        x_new_batch  += x_history;
-	    	    }
+		     getNewState(state,wt,a_row,p_row,w_row,ind_row);    
+		     tallyContribution(wt*b_data[state],x_history);
 
-		    x_data_old[entry] += x_old_batch;
+		     x_new_batch  += x_history;
+	    	 }
 
-		    variance_batch += x_new_batch * x_new_batch;
+		 x_data_old[entry] += x_old_batch;
 
-		    // From the old variance, compute the new second moment
-		    variance[entry] = (variance[entry] * static_cast<double>(num_histories-1) +
-		            x_data[entry]*x_data[entry]*static_cast<double>(num_histories) +
-		            variance_batch);
+		 variance_batch += x_new_batch * x_new_batch;
 
-		    // Compute new mean
-		    x_data[entry] = (x_data[entry] * static_cast<double>(num_histories) +
-		            x_new_batch) / static_cast<double>(num_histories+d_batch_size);
+		 // From the old variance, compute the new second moment
+		 variance[entry] = (variance[entry] * static_cast<double>(num_histories-1) +
+		         x_data[entry]*x_data[entry]*static_cast<double>(num_histories) +
+		         variance_batch);
 
-		    num_histories += d_batch_size;
+		 // Compute new mean
+		 x_data[entry] = (x_data[entry] * static_cast<double>(num_histories) +
+		         x_new_batch) / static_cast<double>(num_histories+d_batch_size);
 
-		    variance[entry] = (variance[entry] - x_data[entry]*x_data[entry]*
-		            static_cast<double>(num_histories)) /
-		        static_cast<double>(num_histories-1);
 
-		    if(x_data[entry] == 0.0)
-		    {
-		        rel_std_dev=1e6;
-		    }
-		    else
-		    {
-			// Compute 1-norm of solution and variance of mean
-			double std_dev = 0;
-			double var = variance[entry] / static_cast<double>(num_histories);
-			if( var > 0.0 )
-			    std_dev += std::sqrt(var);
+		 num_histories += d_batch_size;
 
-			//CHECK( static_cast<double>(std::abs(x_data[entry])) > 0.0 );
-			rel_std_dev = static_cast<double>( std_dev / static_cast<double>(std::abs(x_data[entry])) );
-		    }
+		 variance[entry] = (variance[entry] - x_data[entry]*x_data[entry]*
+		         static_cast<double>(num_histories)) /
+		     static_cast<double>(num_histories-1);
+
+		 if(x_data[entry] == 0.0)
+		     rel_std_dev=1e6;
+		 else
+		 {
+		     // Compute 1-norm of solution and variance of mean
+		     double std_dev = 0;
+		     double var = variance[entry] / static_cast<double>(num_histories);
+		     if( var > 0.0 )
+		        std_dev += std::sqrt(var);
+
+		     //CHECK( static_cast<double>(std::abs(x_data[entry])) > 0.0 );
+		     rel_std_dev = static_cast<double>( std_dev / static_cast<double>(std::abs(x_data[entry])) );
+		 }
 		    
-		}
-		x_data_old[entry] /= num_histories;
-		lambda_vec[entry] = static_cast<double>( x_data[entry]/static_cast<double>(x_data_old[entry]) );
+             }
+	     x_data_old[entry] /= num_histories;
+	     lambda_vec[entry] = static_cast<double>( x_data[entry]/static_cast<double>(x_data_old[entry]) );
         }
 
         //std::cout << "Entry " << entry << " performed " << num_histories << " histories" << " with final std dev of " << rel_std_dev << std::endl;
@@ -322,6 +323,7 @@ void EigenMcAdaptive::getNewState(int &state, double &wt,
     p_row   = d_P[state];
     w_row   = d_W[state];
     ind_row = d_ind[state];
+    
 }
 
 

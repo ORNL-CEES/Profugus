@@ -1,7 +1,7 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
  * \file   EigenSystemFactory.cc
- * \author Massimiliano Lupo Pasni
+ * \author Massimiliano Lupo Pasini
  * \brief  Construct EpetraCrsMatrix from ParameterList.
  */
 //---------------------------------------------------------------------------//
