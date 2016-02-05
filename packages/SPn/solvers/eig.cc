@@ -100,8 +100,6 @@ void run_problem(const std::string &xml_file)
     Teuchos::updateParametersFromXmlFileAndBroadcast(
         xml_file.c_str(), pl.ptr(), *comm);
 
-    auto node = Teuchos::rcp( new profugus::TpetraTypes::NODE() );
-
     typedef profugus::EpetraTypes   MatType;
     typedef MatType::MATRIX         MATRIX;
 
@@ -111,33 +109,49 @@ void run_problem(const std::string &xml_file)
     Epetra_SerialComm ecomm;
 #endif
 
+    int N = pl->get<int>("problem_size");
+    int node = profugus::node();
+    int nodes = profugus::nodes();
+    int my_N = N / nodes;
+    int extra_N = N % nodes;
+    if( node < extra_N )
+        my_N++;
+
+    Epetra_Map emap(N,my_N,0,ecomm);
+
     // Get name of A matrix and read
-    std::cout << "Loading A from file." << std::endl;
+    if( node == 0 )
+        std::cout << "Loading A from file." << std::endl;
     auto a_file = pl->get<std::string>("A_filename");
     MATRIX *A_ptr;
     int err;
-    err = EpetraExt::MatrixMarketFileToCrsMatrix(a_file.c_str(),ecomm,A_ptr);
+    err = EpetraExt::MatrixMarketFileToCrsMatrix(a_file.c_str(),emap,A_ptr);
     INSIST(err == 0, "Error Reading A");
     Teuchos::RCP<MATRIX> A(A_ptr);
 
     // Get name of B matrix and read
-    std::cout << "Loading B from file." << std::endl;
+    if( node == 0 )
+        std::cout << "Loading B from file." << std::endl;
     auto b_file = pl->get<std::string>("B_filename");
     MATRIX *B_ptr;
-    err = EpetraExt::MatrixMarketFileToCrsMatrix(b_file.c_str(),ecomm,B_ptr);
+    err = EpetraExt::MatrixMarketFileToCrsMatrix(b_file.c_str(),emap,B_ptr);
     INSIST(err == 0, "Error Reading B");
     Teuchos::RCP<MATRIX> B(B_ptr);
 
     // Build preconditioner
-    std::cout << "Building preconditioner." << std::endl;
+    if( node == 0 )
+        std::cout << "Building preconditioner." << std::endl;
     profugus::Timer timer;
     timer.start();
     auto P = profugus::PreconditionerBuilder<MatType>::build_preconditioner(
         A, pl);
 
     timer.stop();
-    std::cout << "Preconditioner construction took " << timer.TIMER_CLOCK()
-        << " seconds." << std::endl;
+    if( node == 0 )
+    {
+        std::cout << "Preconditioner construction took " << timer.TIMER_CLOCK()
+            << " seconds." << std::endl;
+    }
 
     // Build solver
     auto solver = profugus::EigenvalueSolverBuilder<MatType>::build_solver(
@@ -152,14 +166,18 @@ void run_problem(const std::string &xml_file)
 
     // Solve
     double lambda = 1000.0;
-    std::cout << "Solving." << std::endl;
+    if( node == 0 )
+        std::cout << "Solving." << std::endl;
     solver->solve( lambda, x );
 
     timer.stop();
     double total = timer.TIMER_CLOCK();
 
-    std::cout << "Computed eigenvalue of " << lambda <<
-        " in " << total << " seconds" << std::endl;
+    if( node == 0 )
+    {
+        std::cout << "Computed eigenvalue of " << lambda <<
+            " in " << total << " seconds" << std::endl;
+    }
 }
 
 
