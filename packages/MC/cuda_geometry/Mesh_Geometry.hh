@@ -64,6 +64,9 @@ class Mesh_Geometry
                   const Vec_Dbl &y_edges,
                   const Vec_Dbl &z_edges);
 
+    Mesh_Geometry(const Mesh_Geometry &geom)             = default;
+    Mesh_Geometry& operator=( const Mesh_Geometry &geom) = default;
+
     // >>> HOST API
 
     //! Set materials

@@ -95,6 +95,9 @@ class Physics
     // Constructor that auto-creates group bounds.
     explicit Physics(RCP_Std_DB db, SP_XS mat);
 
+    Physics(const Physics &phys)            = default;
+    Physics& operator=(const Physics &phys) = default;
+
     // >>> PUBLIC TRANSPORT INTERFACE
 
     //! Set the geometry.
