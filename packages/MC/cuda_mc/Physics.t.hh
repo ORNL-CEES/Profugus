@@ -41,7 +41,6 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
     REQUIRE(!db.is_null());
 
     //auto mat_dev = std::make_shared<XS_Dev_t>(*mat);
-    std::cout << "Building SDP<XS_Device>" << std::endl;
     d_mat_host = cuda::Shared_Device_Ptr<XS_Dev_t>(*mat);
     d_mat = d_mat_host.get_device_ptr();
 
