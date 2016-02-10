@@ -171,6 +171,8 @@ IF(USE_CUDA)
   SET(CUDA_MC_SOURCES
     cuda_mc/Box_Shape.cu
     cuda_mc/Physics.pt.cu
+    cuda_mc/Source.pt.cu
+    cuda_mc/Uniform_Source.pt.cu
     )
   LIST(APPEND CUDA_HEADERS ${CUDA_MC_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_MC_SOURCES})

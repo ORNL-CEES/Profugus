@@ -22,6 +22,7 @@ SET(CUDA_SOURCES
   Box_Shape_Tester.cu
   Particle_Tester.cu
   Physics_Tester.cu
+  Uniform_Source_Tester.cu
 )
 
 PACKAGE_ADD_CUDA_LIBRARY(
@@ -38,6 +39,7 @@ SET(DEPS DEPLIBS mc_cuda_mc_test_cuda)
 ADD_UTILS_TEST(tstBox_Shape_cuda.cc       NP 1 ${DEPS})
 ADD_UTILS_TEST(tstParticle_cuda.cc        NP 1 ${DEPS})
 ADD_UTILS_TEST(tstPhysics_cuda.cc         NP 1 ${DEPS})
+ADD_UTILS_TEST(tstUniform_Source_cuda.cc  NP 1 ${DEPS})
 
 ##---------------------------------------------------------------------------##
 ##                        end of cuda_utils/test/CMakeLists.txt
