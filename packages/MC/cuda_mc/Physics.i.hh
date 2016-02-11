@@ -323,7 +323,7 @@ int Physics<Geometry>::sample_group(int    matid,
     //CHECK(soft_equiv(cdf, 1.0));
 
     // we failed to sample
-    VALIDATE(false, "Failed to sample group.");
+    INSIST(false, "Failed to sample group.");
     return -1;
 }
 
@@ -366,7 +366,7 @@ int Physics<Geometry>::sample_fission_group(unsigned int matid,
     }
 
     // we failed to sample
-    VALIDATE(false, "Failed to sample fission group.");
+    INSIST(false, "Failed to sample fission group.");
     return -1;
 }
 

@@ -101,19 +101,16 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
                 if (host_scatter[ind] >
                     mat->vector(m, XS_t::TOTAL)[g])
                 {
-                    std::ostringstream mm;
-                    mm << "Scattering greater than total "
-                       << "for material" << m << " in group " << g
-                       << ". Total xs is "
-                       << mat->vector(m, XS_t::TOTAL)[g]
-                       << " and scatter is " << host_scatter[ind];
-
                     // terminate if we are running analog
                     if (!d_implicit_capture)
-                        VALIDATE(false, mm.str());
+                    {
+                        INSIST(false, "Scattering greater than total.");
+                    }
                     // else add to warnings
                     else
-                        ADD_WARNING(mm.str());
+                    {
+                        ADD_WARNING("Scattering greater than total.");
+                    }
                 }
             }
         }

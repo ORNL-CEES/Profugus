@@ -52,8 +52,7 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
 
     // store the total number of requested particles
     d_np_requested = static_cast<size_type>(db->get("Np", 1000));
-    VALIDATE(d_np_requested > 0., "Number of source particles ("
-            << d_np_requested << ") must be positive"); // initialize the total d_np_total = d_np_requested;
+    INSIST(d_np_requested > 0., "Number of source particles must be positive");
 
     // get the spectral shape
     d_num_groups = db->get<int>("num_groups");
@@ -66,14 +65,15 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     CHECK(norm > 0.0);
 
     // assign to the shape cdf
-    REMEMBER(double sum = 0.0);
+    double sum = 0.0;
     norm  = 1.0 / norm;
     int n = 0;
     Vec_Dbl erg_cdf(d_num_groups,0.0);
     for (double &c : erg_cdf)
     {
-        c = shape[n] * norm;
-        REMEMBER(sum += c);
+        double val = shape[n] * norm;
+        sum += val;
+        c = sum;
         ++n;
     }
     ENSURE(cuda::utility::soft_equiv(sum, 1.0));
