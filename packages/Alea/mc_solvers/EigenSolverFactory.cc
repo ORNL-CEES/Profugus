@@ -52,8 +52,9 @@ EigenSolverFactory::buildSolver(std::string solver_type,
 
     if( solver_type == "monte_carlo" )
     {
-	Teuchos::RCP<MonteCarloEigenSolver> mc_solver( new MonteCarloEigenSolver(A,pl) );
-        return Teuchos::rcp( new AdditiveSchwarzWrapper(A,mc_solver,pl) );
+//	Teuchos::RCP<MonteCarloEigenSolver> mc_solver( new MonteCarloEigenSolver(A,pl) );
+//        return Teuchos::rcp( new AdditiveSchwarzWrapper(A,mc_solver,pl) );
+	return Teuchos::rcp( new MonteCarloEigenSolver(A,pl) );     
     }
     else if( solver_type == "power_method" )
     {

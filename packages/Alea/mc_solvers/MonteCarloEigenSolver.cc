@@ -69,7 +69,9 @@ MonteCarloEigenSolver::MonteCarloEigenSolver(Teuchos::RCP<const MATRIX> A,
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
     d_init_count = 0;
-    d_initialized = false;
+
+    initialize();
+    d_initialized = true;
 }
 
 //---------------------------------------------------------------------------//

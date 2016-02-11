@@ -129,7 +129,7 @@ void EigenMC_Data::buildMCMatrix()
         for( size_t icol=0; icol<num_entries; ++icol )
             Amc_vals[icol] = A_vals[icol];
 
- /*       if(irow < 30) 
+        /*if(irow < 30) 
 	{
 	    	std::cout<<irow+1<<"___ ";
 
@@ -179,10 +179,12 @@ void EigenMC_Data::buildMonteCarloMatrices()
     {
         d_Amc->getGlobalRowCopy(irow,A_inds(),A_vals(),num_entries);
 
+	//std::cout<<irow<<": ";
         // Compute row sum
         MAGNITUDE row_sum=0.0;
         for( size_t icol=0; icol<num_entries; ++icol )
         {
+	    //std::cout<<A_inds[icol]<<" ";
             // Never include zeros
             if( SCALAR_TRAITS::magnitude(A_vals[icol]) > 0.0 )
             {
@@ -190,7 +192,7 @@ void EigenMC_Data::buildMonteCarloMatrices()
                             A_vals[icol]),trans_factor);
             }
         }
-
+	//std::cout<<std::endl;
         if( row_sum > 0.0 )
         {
             SCALAR cdf = 0.0;

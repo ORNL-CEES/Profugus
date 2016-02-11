@@ -81,6 +81,9 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
     Teuchos::ArrayRCP<unsigned int> row_null( x_data.size() );
     std::fill( row_null.begin(), row_null.end(), 0 );
 
+    Teuchos::ArrayRCP<unsigned int> hist_count( x_data.size() );
+    std::fill( hist_count.begin(), hist_count.end(), 0 );
+
     Teuchos::ArrayRCP<double> x_data_old( x_data.size() );
     std::fill( x_data_old.begin(), x_data_old.end(), 0.0 );
 
@@ -120,7 +123,6 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 	    wt = init_wt;
 
             // Perform initial tally
-            tallyContribution(wt*b_data[entry],x_data[entry]);            
             rel_std_dev=0.0;
   	    row_null[entry] = 1;
             
@@ -150,30 +152,38 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 		     a_row   = d_A[entry];
 		     p_row   = d_P[entry];
 		     w_row   = d_W[entry];
-		     ind_row = d_ind[entry];
-		        
+		     ind_row = d_ind[entry]; 
+		     state = entry;
+ 
 		     for( ; stage<=d_max_history_length-1; ++stage )
 		     {
-		         // Move to new state
-		         getNewState(state,wt,a_row,p_row,w_row,ind_row);
-		            
-        		std::vector<SCALAR> w_row_vec = Teuchos::createVector( w_row );
-        		SCALAR sum = std::accumulate(w_row_vec.begin(), w_row_vec.end(), 0.0);
-                      
-                        //if(0.0==sum)
-			//	std::cout<<"stage: "<<stage<<std::endl;
 
-
-		         // Tally
-		         tallyContribution(wt*b_data[state],x_history);
+        		std::vector<SCALAR> p_row_vec = Teuchos::createVector( p_row );
+        		SCALAR sum = std::accumulate(p_row_vec.begin(), p_row_vec.end(), 0.0);
+                        if(0.0==sum)
+			{
+				wt = 0.0;
+				break;
+			}
+		         
+			// Move to new state
+		        getNewState(state,wt,a_row,p_row,w_row,ind_row);
+		             
+		        // Tally
+		        tallyContribution(wt*b_data[state],x_history);
 
 		     }
-		     x_old_batch  += x_history;
+		     if (0.0 != wt)
+		     {
+		     	x_old_batch  += x_history;
+		
+		     	getNewState(state,wt,a_row,p_row,w_row,ind_row);    
 
-		     getNewState(state,wt,a_row,p_row,w_row,ind_row);    
-		     tallyContribution(wt*b_data[state],x_history);
+		     	tallyContribution(wt*b_data[state],x_history);
 
-		     x_new_batch  += x_history;
+		     	x_new_batch  += x_history;
+			hist_count[entry] = hist_count[entry] + 1;
+		     }
 	    	 }
 
 		 x_data_old[entry] += x_old_batch;
@@ -229,6 +239,8 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 		lambda += lambda_vec[i];
 		num_entries_valid++;
 	}
+	else
+		x_data[i] = 0.0;
 
     lambda /= num_entries_valid;
 
@@ -303,6 +315,9 @@ void EigenMcAdaptive::getNewState(int &state, double &wt,
     // Sample cdf to get new state
     auto elem = std::lower_bound(p_row.begin(),p_row.end(),rand);
 
+/*	if(state == 14440)
+		std::cout<<"I shouldn't print this"<<std::endl;*/
+
     if( elem == p_row.end() )
     {
         // Invalidate all row data
@@ -312,7 +327,7 @@ void EigenMcAdaptive::getNewState(int &state, double &wt,
         ind_row = Teuchos::ArrayView<const int>();
         return;
     }
-
+	
     // Modify weight and update state
     int index = elem - p_row.begin();
     state  =  ind_row[index];
