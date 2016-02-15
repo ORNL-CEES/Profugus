@@ -20,11 +20,11 @@
 #include "utils/Definitions.hh"
 #include "utils/Static_Map.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_utils/CudaMacros.hh"
 #include "xs/XS.hh"
 #include "cuda_xs/XS_Device.hh"
 #include "Definitions.hh"
 #include "Group_Bounds.hh"
-#include "Particle.hh"
 #include "Particle_Vector.hh"
 
 namespace cuda_profugus
@@ -59,7 +59,7 @@ class Physics
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
-    typedef Particle<Geometry_t>                Particle_t;
+    typedef Particle_Vector<Geometry_t>         Particle_Vector_t;
 
     typedef XS                                  XS_t;
     typedef Teuchos::RCP<XS_t>                  RCP_XS;
@@ -91,32 +91,33 @@ class Physics
     // Constructor that auto-creates group bounds.
     explicit Physics(RCP_Std_DB db, RCP_XS mat);
 
+    // Destructor.
+    ~Physics();
+
     // >>> PUBLIC TRANSPORT INTERFACE
 
     //! Set the geometry.
     void set_geometry(const Shared_Device_Ptr<Geometry>& g) { REQUIRE(g); d_geometry = g; }
 
     //! Get the geometry.
-    SP_Geometry get_geometry() const { return d_geometry; }
+    Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
 
     // Initialize the physics state.
-    void initialize(double E, Particle_t &p);
+    void initialize(const std::vector<double>& energy, 
+		    Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Get a total cross section from the physics library.
     double total(physics::Reaction_Type type, const Particle_t &p);
 
     //! Get the energy from a particle via its physics state
-    double energy(const Particle_t &p) const
-    {
-        double low = 0.0, up = 0.0;
-        d_gb.get_energy(p.group(), low, up);
-        return low;
-    }
+    double energy(const Particle_t &p) const;
 
     //! Get the minimum energy allowed for a particle
+    PROFUGUS_DEVICE_FUNCTION
     double min_energy() const { return d_gb.group_bounds()[d_Ng]; }
 
     //! Get the maximum energy allowed for a particle
+    PROFUGUS_DEVICE_FUNCTION
     double max_energy() const { return d_gb.group_bounds()[0]; }
 
     // >>> TYPE-CONCEPT INTERFACE
@@ -135,9 +136,10 @@ class Physics
     bool initialize_fission(Fission_Site &fs, Particle_t &p);
 
     // Return whether a given material is fissionable
+    PROFUGUS_DEVICE_FUNCTION
     bool is_fissionable(unsigned int matid) const
     {
-        return d_fissionable[d_mid2l[matid]];
+        return d_fissionable[d_mid_g2l[matid]];
     }
 
     // >>> FISSION SITE CONTAINER OPERATIONS
@@ -151,13 +153,13 @@ class Physics
     // >>> CLASS FUNCTIONS
 
     //! Get cross section database.
-    const XS_t& xs() const { return *d_mat; }
+    const Shared_Device_Ptr<XS>& xs() const { return *d_mat; }
 
     //! Number of discrete energy groups
     int num_groups() const { return d_Ng; }
 
     //! Group boundaries
-    const Group_Bounds& group_bounds() const { return d_gb; }
+    const Shared_Device_Ptr<Group_Bounds>& group_bounds() const { return d_gb; }
 
   private:
     // >>> IMPLEMENTATION
@@ -177,16 +179,16 @@ class Physics
     int d_Ng, d_Nm;
 
     // Group boundaries.
-    Group_Bounds d_gb;
+    Shared_Device_Ptr<Group_Bounds> d_gb;
 
-    // Matid-to-local hash such that d_mid2l[matid] = [0,N).
-    Static_Map<unsigned int, unsigned int> d_mid2l;
+    // Global-to-local mapping of matids. On-device.
+    int* d_matid_g2l;
 
-    // Total scattering for each group and material.
-    Vec_Vec_Dbl d_scatter;
+    // Total scattering for each group and material. On-device.
+    double* d_scatter;
 
-    // Fissionable bool by local matid.
-    std::vector<bool> d_fissionable;
+    // Fissionable bool by local matid. On-device.
+    int* d_fissionable;
 
     // Material id of current region.
     int d_matid;

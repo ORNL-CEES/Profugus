@@ -15,12 +15,35 @@
 
 #include "harness/Soft_Equivalence.hh"
 #include "harness/Warnings.hh"
+
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
+
+#include "cuda_utils/Memory.cuh"
+#include "cuda_utils/CudaDBC.hh"
+#include "cuda_utils/Hardware.hh"
+
 #include "Physics.hh"
 
 namespace cuda_profugus
 {
+//---------------------------------------------------------------------------//
+// CUDA KERNELS
+//---------------------------------------------------------------------------//
+template<class Geometry>
+__global__ void initialize_kernel( const double* energy,
+				   Particle_Vector<Geometry>* particles )
+{
+    idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    // check to make sure the energy is in the group structure and get the
+    // group index
+    int  group_index = 0;
+    bool success     = d_gb.find(energy[idx], group_index);
+
+    // set the group index in the particle
+    p.set_group(idx,group_index);
+}
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -31,19 +54,21 @@ namespace cuda_profugus
 template <class Geometry>
 Physics<Geometry>::Physics(RCP_Std_DB db,
                            RCP_XS     mat)
-    : d_mat(mat)
-    , d_Ng(d_mat->num_groups())
-    , d_Nm(d_mat->num_mat())
-    , d_gb(Vec_Dbl(mat->bounds().values(),
-                   mat->bounds().values() + mat->bounds().length()))
+    : d_mat(*mat)
+    , d_Ng(mat->num_groups())
+    , d_Nm(mat->num_mat())
     , d_scatter(d_Nm)
     , d_fissionable(d_Nm)
 {
     REQUIRE(!db.is_null());
-    REQUIRE(!d_mat.is_null());
+    REQUIRE(d_mat);
     REQUIRE(d_mat->num_groups() > 0);
     REQUIRE(d_mat->num_mat() > 0);
 
+    // Make the group bounds.
+    d_gb = shared_device_ptr<Group_Bounds>(
+	Vec_Dbl(mat->bounds().values(),
+		mat->bounds().values() + mat->bounds().length()) );
     INSIST(d_gb.num_groups() == mat->num_groups(),
             "Number of groups in material is inconsistent with Group_Bounds.");
 
@@ -56,33 +81,37 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
     // turn check balance on if we are not doing implicit capture
     if (!d_implicit_capture) d_check_balance = true;
 
-    // get the material ids in the database
-    def::Vec_Int matids;
-    d_mat->get_matids(matids);
-    CHECK(matids.size() == d_Nm);
-
-    // make the matid-to-local has map
-    for (unsigned int l = 0; l < d_Nm; ++l)
+    // Create a global to local mapping of matids.
+    int matid_g2l_size = *std::max_element( matids.begin(), matids.end() ) + 1;
+    Teuchos::Array<int> host_matid_g2l( matid_g2l_size, -1 );
+    for ( int m = 0; m < d_Nm; ++m )
     {
-        d_mid2l.insert(Static_Map<unsigned int, unsigned int>::value_type(
-                           static_cast<unsigned int>(matids[l]), l));
+	host_matid_g2l[ matids[m] ] = m;
     }
-    d_mid2l.complete();
-    CHECK(d_mid2l.size() == d_Nm);
+
+    // Allocate a matid global-to-local map.
+    cuda::memory::Malloc( d_matid_g2l, matid_g2l_size );
+
+    // Copy the matid list to the device.
+    cuda::memory::Copy_To_Device( 
+	d_matid_g2l, host_matid_g2l.getRawPtr(), matid_g2l_size );
+    host_matid_g2l.clear();
+
+    // Allocate scattering.
+    cuda::memory::Malloc( d_scatter, d_Nm * d_Ng );
 
     // calculate total scattering over all groups for each material and
     // determine if fission is available for a given material
-    for (auto matid : matids)
+    std::size_t offset = 0;
+    std::vector<double> matid_scatter( d_Ng, 0.0 );
+    std::vector<int> host_fissionable( d_Nm, false );
+    for ( int m = 0; m < d_Nm; ++m )
     {
-        // get the local index in the range [0, N)
-        int m = d_mid2l[static_cast<unsigned int>(matid)];
-        CHECK(m < d_Nm);
-
-        // size the group vector for this material
-        d_scatter[m].resize(d_Ng, 0.0);
+	// Clear the scatter vector.
+	matid_scatter.assign( d_Ng, 0.0 );
 
         // get the P0 scattering matrix for this material
-        const auto &sig_s = d_mat->matrix(matid, 0);
+        const auto &sig_s = mat->matrix(matids[m], 0);
         CHECK(sig_s.numRows() == d_Ng);
         CHECK(sig_s.numCols() == d_Ng);
 
@@ -97,23 +126,23 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
             // add up the scattering
             for (int gp = 0; gp < d_Ng; ++gp)
             {
-                d_scatter[m][g] += column[gp];
+                matid_scatter[g] += column[gp];
             }
         }
 
         // check scattering correctness if needed
         if (d_check_balance)
-        {
+        {n
             for (int g = 0; g < d_Ng; g++)
             {
-                if (d_scatter[m][g] > d_mat->vector(matid, XS_t::TOTAL)[g])
+                if (matid_scatter[g] > mat->vector(matids[m], XS_t::TOTAL)[g])
                 {
                     std::ostringstream mm;
                     mm << "Scattering greater than total "
                        << "for material" << m << " in group " << g
                        << ". Total xs is "
-                       << d_mat->vector(matid, XS_t::TOTAL)[g]
-                       << " and scatter is " << d_scatter[m][g];
+                       << mat->vector(matids[m], XS_t::TOTAL)[g]
+                       << " and scatter is " << matid_scatter[g];
 
                     // terminate if we are running analog
                     if (!d_implicit_capture)
@@ -125,13 +154,35 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
             }
         }
 
+	// Copy the scattering to the device.
+	offset = m * d_Ng;
+	cuda::memory::Copy_To_Device( 
+	    d_scatter + offset, matid_scatter.data(), d_Ng );
+
         // see if this material is fissionable by checking Chi
-        d_fissionable[m] = d_mat->vector(matid, XS_t::CHI).normOne() > 0.0 ?
+        host_fissionable[m] = mat->vector(matid, XS_t::CHI).normOne() > 0.0 ?
                            true : false;
     }
 
+    // Copy the fissionable vector to the device.
+    cuda::memory::Malloc( d_fissionable, d_Nm );
+    cuda::memory::Copy_To_Device( 
+	d_fissionable, host_fissionable.data(), d_Nm );
+
     ENSURE(d_Nm > 0);
     ENSURE(d_Ng > 0);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Destructor
+ */
+template <class Geometry>
+Physics<Geometry>::~Physics()
+{
+    cuda::memory::Free( d_matid_g2l );
+    cuda::memory::Free( d_scatter );
+    cuda::memory::Free( d_fissionable );
 }
 
 //---------------------------------------------------------------------------//
@@ -146,20 +197,69 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
  * \param p particle
  */
 template <class Geometry>
-void Physics<Geometry>::initialize(double      energy,
-                                   Particle_t &p)
+void Physics<Geometry>::initialize(
+    const std::vector<double>& energy, 
+    Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
-    // check to make sure the energy is in the group structure and get the
-    // group index
-    int  group_index = 0;
-    bool success     = d_gb.find(energy, group_index);
+    REQUIRE( energy.size() == particles.get_host_ptr()->size() );
 
-    VALIDATE(success, "Particle with energy " << energy
-             << " is outside the multigroup boundaries.");
+    // Copy the energies to the device.
+    double* device_energy;
+    cuda::memory::Malloc( device_energy, energy.size() );
+    cuda::memory::Copy_To_Device( device_energy, energy.data(), energy.size() );
 
-    // set the group index in the particle
-    ENSURE(group_index < d_Ng);
-    p.set_group(group_index);
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = particles.get_host_ptr()->size() / threads_per_block;
+    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+
+    // Initialize the particles.
+    initialize_kernel<<<num_blocks, threads_per_block>>>(
+	device_energy, particles.get_device_ptr() );
+
+    // Free the device energy array.
+    cuda::memory::Free( device_energy );
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get a total cross section from the physics library.
+ */
+template <class Geometry>
+double Physics<Geometry>::total(physics::Reaction_Type  type,
+                                const Particle_t       &p)
+{
+    REQUIRE(d_mat->num_mat() == d_Nm);
+    REQUIRE(d_mat->num_groups() == d_Ng);
+    REQUIRE(p.group() < d_Ng);
+
+    // get the matid from the particle
+    unsigned int matid = p.matid();
+    CHECK(d_mat->has(matid));
+
+    // return the approprate reaction type
+    switch (type)
+    {
+        case physics::TOTAL:
+            return d_mat->vector(matid, XS_t::TOTAL)[p.group()];
+
+        case physics::SCATTERING:
+            return d_scatter[d_mid2l[matid]][p.group()];
+
+        case physics::FISSION:
+            return d_mat->vector(matid, XS_t::SIG_F)[p.group()];
+
+        case physics::NU_FISSION:
+            return d_mat->vector(matid, XS_t::NU_SIG_F)[p.group()];
+
+        default:
+            return 0.0;
+    }
+
+    // undefined or unassigned type, return 0
+    return 0.0;
 }
 
 //---------------------------------------------------------------------------//
@@ -241,42 +341,13 @@ void Physics<Geometry>::collide(Particle_t &particle)
 }
 
 //---------------------------------------------------------------------------//
-/*!
- * \brief Get a total cross section from the physics library.
- */
-template <class Geometry>
-double Physics<Geometry>::total(physics::Reaction_Type  type,
-                                const Particle_t       &p)
+//! Get the energy from a particle via its physics state
+template<class Geometry>
+double Physics<Geometry>::energy(const Particle_t &p) const
 {
-    REQUIRE(d_mat->num_mat() == d_Nm);
-    REQUIRE(d_mat->num_groups() == d_Ng);
-    REQUIRE(p.group() < d_Ng);
-
-    // get the matid from the particle
-    unsigned int matid = p.matid();
-    CHECK(d_mat->has(matid));
-
-    // return the approprate reaction type
-    switch (type)
-    {
-        case physics::TOTAL:
-            return d_mat->vector(matid, XS_t::TOTAL)[p.group()];
-
-        case physics::SCATTERING:
-            return d_scatter[d_mid2l[matid]][p.group()];
-
-        case physics::FISSION:
-            return d_mat->vector(matid, XS_t::SIG_F)[p.group()];
-
-        case physics::NU_FISSION:
-            return d_mat->vector(matid, XS_t::NU_SIG_F)[p.group()];
-
-        default:
-            return 0.0;
-    }
-
-    // undefined or unassigned type, return 0
-    return 0.0;
+    double low = 0.0, up = 0.0;
+    d_gb.get_energy(p.group(), low, up);
+    return low;
 }
 
 //---------------------------------------------------------------------------//
