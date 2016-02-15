@@ -55,13 +55,16 @@ class Shared_Device_Ptr
     }
 
     //! Get the shared pointer to host data managed by this object.
-    inline std::shared_ptr<T>& get_host_ptr() { return d_host_ptr; }
-    inline const std::shared_ptr<T>& get_host_ptr() const { return d_host_ptr; }
+    std::shared_ptr<T>& get_host_ptr() { return d_host_ptr; }
+    const std::shared_ptr<T>& get_host_ptr() const { return d_host_ptr; }
 
-    //! Get the raw pointer to device data managed by this object. Accessible
-    //! from the host or the device.
+    //! Get the raw pointer to device data managed by this object.
     T* get_device_ptr() { return d_device_ptr.get(); }
-    inline const T* get_device_ptr() const { return d_device_ptr.get(); }
+    const T* get_device_ptr() const { return d_device_ptr.get(); }
+
+    //! Check if the pointers are null. Will return true only if both pointers
+    //! are not null.
+    explicit operator bool() const { return (d_host_ptr && d_device_ptr); }
 
   private:
 
