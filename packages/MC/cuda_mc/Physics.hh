@@ -103,8 +103,8 @@ class Physics
     Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
 
     // Initialize the physics state.
-    void initialize(const std::vector<double>& energy, 
-		    Shared_Device_Ptr<Particle_Vector_t>& particles );
+    void initialize( const std::vector<double>& energy, 
+		     Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Get a total cross section from the physics library.
     double total(physics::Reaction_Type type, const Particle_t &p);
@@ -123,7 +123,7 @@ class Physics
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process a particle through a physical collision.
-    void collide(Particle_t &particle);
+    void collide( Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Sample fission site.
     int sample_fission_site(const Particle_t &p, Fission_Site_Container &fsc,
@@ -189,15 +189,6 @@ class Physics
 
     // Fissionable bool by local matid. On-device.
     int* d_fissionable;
-
-    // Material id of current region.
-    int d_matid;
-
-    // Sample a group.
-    int sample_group(int matid, int g, double rnd) const;
-
-    // Sample a fission group.
-    int sample_fission_group(unsigned int matid, double rnd) const;
 };
 
 } // end namespace cuda_profugus

@@ -28,13 +28,96 @@
 namespace cuda_profugus
 {
 //---------------------------------------------------------------------------//
-// CUDA KERNELS
+// CUDA DEVICE FUNCTIONS
 //---------------------------------------------------------------------------//
+/*
+ * \brief Sample a group.
+ */
+__device__ int sample_group( const XS_Device* xs,
+			     const double* scatter,
+			     const int* matid_g2l,
+			     const int matid,
+			     const int g,
+			     const double rnd )
+{
+    // running cdf
+    double cdf = 0.0;
+
+    // total out-scattering for this cell and group
+    double total = 1.0 / d_scatter[matid_g2l[matid]][g];
+
+    // get the P0 scattering cross section matrix the g column (which is the
+    // outscatter) for this group (g->g' is the {A_(g'g) g'=0,Ng} entries of
+    // the inscatter matrix
+    const auto scat_matrix = xs->matrix(matid, 0);
+
+    // sample g'
+    for (int gp = 0; gp < d_Ng; ++gp)
+    {
+        // calculate the cdf for scattering to this group
+        cdf += scat_matrix(g,gp) * total;
+
+        // see if we have sampled this group
+        if (rnd <= cdf)
+            return gp;
+    }
+    CHECK(soft_equiv(cdf, 1.0));
+
+    // we failed to sample
+    VALIDATE(false, "Failed to sample group.");
+    return -1;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Sample a fission group.
+ *
+ * This function is optimized based on the assumption that nearly all of the
+ * fission emission is in the first couple of groups.
+ */
+__device int sample_fission_group(const XS_Device* xs,
+				  const unsigned int matid,
+				  const double       rnd)
+{
+    // running cdf; we make the cdf on the fly because nearly all of the
+    // emission is in the first couple of groups so its not worth storing for
+    // a binary search
+    double cdf = 0.0;
+
+    // get the fission chi
+    const auto &chi = xs->vector(matid, XS_t::CHI);
+
+    // sample cdf
+    for (int g = 0; g < xs->num_groups(); ++g)
+    {
+        // update cdf
+        cdf += chi[g];
+
+        // check for sampling; update particle's physics state and return
+        if (rnd <= cdf)
+        {
+            // update the group in the particle
+            return g;
+        }
+    }
+
+    // we failed to sample
+    VALIDATE(false, "Failed to sample fission group.");
+    return -1;
+}
+
+//---------------------------------------------------------------------------//
+// CUDA GLOBAL KERNELS
+//---------------------------------------------------------------------------//
+/*
+ * \brief initialize particles with a given energy
+ */
 template<class Geometry>
 __global__ void initialize_kernel( const double* energy,
 				   Particle_Vector<Geometry>* particles )
 {
-    idx = threadIdx.x + blockIdx.x * blockDim.x;
+    // get the thread id
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
     // check to make sure the energy is in the group structure and get the
     // group index
@@ -43,6 +126,93 @@ __global__ void initialize_kernel( const double* energy,
 
     // set the group index in the particle
     p.set_group(idx,group_index);
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief Process particles through a collision.
+ */
+template<class Geometry>
+__global__ void collide_kernel( const std::size_t start_idx,
+				const std::size_t num_particle,
+				const Geometry* geometry,
+				const XS_Device* xs,
+				const int* matid_g2l,
+				const double* scatter,
+				const bool implicit_capture
+				Particle_Vector<Geometry>* particles )
+{
+    // get the thread id.
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particle )
+    {
+	REQUIRE(geometry);
+	REQUIRE(particles->event(idx) == events::COLLISION);
+
+	// get the material id of the current region
+	int matid = particles->matid(idx);
+	CHECK(geometry->matid(particles->geo_state(idx)) == matid);
+
+	// get the group index
+	int group = particles->group(idx);
+
+	// calculate the scattering cross section ratio
+	double c = scatter[matid_g2l[matid]][group] /
+		   xs->vector(matid, XS_t::TOTAL)[group];
+	CHECK(!implicit_capture ? c <= 1.0 : c >= 0.0);
+
+	// we need to do analog transport if the particles->is c = 0.0 regardless of
+	// whether implicit capture is on or not
+
+	// do implicit capture
+	if (implicit_capture && c > 0.0)
+	{
+	    // set the event
+	    particles->set_event(idx,events::IMPLICIT_CAPTURE);
+
+	    // do implicit absorption
+	    particles->multiply_wt(idx,c);
+	}
+
+	// do analog transport
+	else
+	{
+	    // sample the interaction type
+	    if (particles->ran(idx) > c)
+	    {
+		// set event indicator
+		particles->set_event(idx,events::ABSORPTION);
+
+		// kill particle
+		particles->kill(idx);
+	    }
+	    else
+	    {
+		// set event indicator
+		particles->set_event(idx,events::SCATTER);
+	    }
+	}
+
+	// process scattering events
+	if (particles->event(idx) != events::ABSORPTION)
+	{
+	    // determine new group of particle
+	    group = sample_group(xs, scatter, matid_g2l,
+				 matid, group, particles->ran(idx));
+	    CHECK(group >= 0 && group < xs->num_groups());
+
+	    // set the group
+	    particles->set_group(idx,group);
+
+	    // sample isotropic scattering event
+	    double costheta = 1.0 - 2.0 * particles->ran(idx);
+	    double phi      = 2.0 * constants::pi * particles->ran(idx);
+
+	    // update the direction of the particles->in the geometry-tracker state
+	    geometry->change_direction(costheta, phi, particles->geo_state(idx));
+	}
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -132,7 +302,7 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
 
         // check scattering correctness if needed
         if (d_check_balance)
-        {n
+        {
             for (int g = 0; g < d_Ng; g++)
             {
                 if (matid_scatter[g] > mat->vector(matids[m], XS_t::TOTAL)[g])
@@ -209,10 +379,11 @@ void Physics<Geometry>::initialize(
     cuda::memory::Copy_To_Device( device_energy, energy.data(), energy.size() );
 
     // Get CUDA launch parameters.
+    int num_particle = particles.get_host_ptr()->size();
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
-    unsigned int num_blocks = particles.get_host_ptr()->size() / threads_per_block;
+    unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Initialize the particles.
@@ -263,84 +434,6 @@ double Physics<Geometry>::total(physics::Reaction_Type  type,
 }
 
 //---------------------------------------------------------------------------//
-/*!
- * \brief Process a particle through a physical collision.
- */
-template <class Geometry>
-void Physics<Geometry>::collide(Particle_t &particle)
-{
-    REQUIRE(d_geometry);
-    REQUIRE(particle.event() == events::COLLISION);
-    REQUIRE(!d_mat.is_null());
-    REQUIRE(d_mat->num_mat() == d_Nm);
-    REQUIRE(d_mat->num_groups() == d_Ng);
-    REQUIRE(particle.group() < d_Ng);
-
-    // get the material id of the current region
-    d_matid = particle.matid();
-    CHECK(d_mid2l[static_cast<unsigned int>(d_matid)] < d_Nm);
-    CHECK(d_geometry->matid(particle.geo_state()) == d_matid);
-
-    // get the group index
-    int group = particle.group();
-
-    // calculate the scattering cross section ratio
-    double c = d_scatter[d_mid2l[d_matid]][group] /
-               d_mat->vector(d_matid, XS_t::TOTAL)[group];
-    CHECK(!d_implicit_capture ? c <= 1.0 : c >= 0.0);
-
-    // we need to do analog transport if the particle is c = 0.0 regardless of
-    // whether implicit capture is on or not
-
-    // do implicit capture
-    if (d_implicit_capture && c > 0.0)
-    {
-        // set the event
-        particle.set_event(events::IMPLICIT_CAPTURE);
-
-        // do implicit absorption
-        particle.multiply_wt(c);
-    }
-
-    // do analog transport
-    else
-    {
-        // sample the interaction type
-        if (particle.rng().ran() > c)
-        {
-            // set event indicator
-            particle.set_event(events::ABSORPTION);
-
-            // kill particle
-            particle.kill();
-        }
-        else
-        {
-            // set event indicator
-            particle.set_event(events::SCATTER);
-        }
-    }
-
-    // process scattering events
-    if (particle.event() != events::ABSORPTION)
-    {
-        // determine new group of particle
-        group = sample_group(d_matid, group, particle.rng().ran());
-        CHECK(group >= 0 && group < d_Ng);
-
-        // set the group
-        particle.set_group(group);
-
-        // sample isotropic scattering event
-        double costheta = 1.0 - 2.0 * particle.rng().ran();
-        double phi      = 2.0 * constants::pi * particle.rng().ran();
-
-        // update the direction of the particle in the geometry-tracker state
-        d_geometry->change_direction(costheta, phi, particle.geo_state());
-    }
-}
-
-//---------------------------------------------------------------------------//
 //! Get the energy from a particle via its physics state
 template<class Geometry>
 double Physics<Geometry>::energy(const Particle_t &p) const
@@ -348,6 +441,40 @@ double Physics<Geometry>::energy(const Particle_t &p) const
     double low = 0.0, up = 0.0;
     d_gb.get_energy(p.group(), low, up);
     return low;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Process a particle through a physical collision.
+ */
+template <class Geometry>
+void Physics<Geometry>::collide(
+    Shared_Device_Ptr<Particle_Vector_t>& particles )
+{
+    // Get the particles that will have a collision.
+    std::size_t start_idx = 0;
+    std::size_t num_particle = 0;
+    particles.get_host_ptr()->get_event_particles( events::COLLISION,
+						   start_idx,
+						   num_particle );
+    
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = num_particle / threads_per_block;
+    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+
+    // Process the collisions.
+    collide_kernel<<<num_particle,threads_per_block>>>(
+	start_idx,
+	num_particle,
+	d_geometry.get_device_ptr(),
+	d_mat.get_device_ptr(),
+	d_matid_g2l,
+	d_scatter,
+	d_implicit_capture,
+	particles.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//
@@ -482,94 +609,8 @@ bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
 }
 
 //---------------------------------------------------------------------------//
-// PRIVATE FUNCTIONS
-//---------------------------------------------------------------------------//
-/*!
- * \brief Sample a group after a scattering event.
- */
-template <class Geometry>
-int Physics<Geometry>::sample_group(int    matid,
-                                    int    g,
-                                    double rnd) const
-{
-    REQUIRE(!d_mat.is_null());
-    REQUIRE(d_mat->num_groups() == d_Ng);
-    REQUIRE(g >= 0 && g < d_Ng);
-    REQUIRE(rnd >= 0.0 && rnd < 1.0);
-    REQUIRE(d_mat->has(matid));
-    REQUIRE(d_mid2l.exists(matid));
 
-    // running cdf
-    double cdf = 0.0;
-
-    // total out-scattering for this cell and group
-    double total = 1.0 / d_scatter[d_mid2l[matid]][g];
-
-    // get the P0 scattering cross section matrix the g column (which is the
-    // outscatter) for this group (g->g' is the {A_(g'g) g'=0,Ng} entries of
-    // the inscatter matrix
-    const auto *scat_g = d_mat->matrix(matid, 0)[g];
-
-    // sample g'
-    for (int gp = 0; gp < d_Ng; ++gp)
-    {
-        // calculate the cdf for scattering to this group
-        cdf += scat_g[gp] * total;
-
-        // see if we have sampled this group
-        if (rnd <= cdf)
-            return gp;
-    }
-    CHECK(soft_equiv(cdf, 1.0));
-
-    // we failed to sample
-    VALIDATE(false, "Failed to sample group.");
-    return -1;
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Sample a fission group.
- *
- * This function is optimized based on the assumption that nearly all of the
- * fission emission is in the first couple of groups.
- */
-template <class Geometry>
-int Physics<Geometry>::sample_fission_group(unsigned int matid,
-                                            double       rnd) const
-{
-    REQUIRE(d_mat->has(matid));
-    REQUIRE(is_fissionable(matid));
-
-    // running cdf; we make the cdf on the fly because nearly all of the
-    // emission is in the first couple of groups so its not worth storing for
-    // a binary search
-    double cdf = 0.0;
-
-    // get the fission chi
-    const auto &chi = d_mat->vector(matid, XS_t::CHI);
-    CHECK(chi.length() == d_Ng);
-
-    // sample cdf
-    for (int g = 0; g < d_Ng; ++g)
-    {
-        // update cdf
-        cdf += chi[g];
-
-        // check for sampling; update particle's physics state and return
-        if (rnd <= cdf)
-        {
-            // update the group in the particle
-            return g;
-        }
-    }
-
-    // we failed to sample
-    VALIDATE(false, "Failed to sample fission group.");
-    return -1;
-}
-
-} // end namespace cuda_profugus
+} // End namespace cuda_profugus
 
 #endif // cuda_mc_Physics_t_cuh
 
