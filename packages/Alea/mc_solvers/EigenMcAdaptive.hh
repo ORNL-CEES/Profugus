@@ -61,6 +61,9 @@ class EigenMcAdaptive
     Teuchos::ArrayRCP<Teuchos::ArrayView<const double> > d_W;
     Teuchos::ArrayRCP<Teuchos::ArrayView<const int> >    d_ind;
 
+    //storage of the column map
+    Teuchos::RCP<const MAP> d_col_map;
+
     // Vector length
     int d_N;
 

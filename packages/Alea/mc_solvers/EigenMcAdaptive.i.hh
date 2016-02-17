@@ -225,7 +225,6 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 	     lambda_vec[entry] = static_cast<double>( x_data[entry]/static_cast<double>(x_data_old[entry]) );
         }
 
-        //std::cout << "Entry " << entry << " performed " << num_histories << " histories" << " with final std dev of " << rel_std_dev << std::endl;
         total_histories += num_histories;
 	//std::cout<<rel_std_dev<<std::endl;
     }
@@ -246,11 +245,11 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 
     std::cout<<"Num entries valid: "<<num_entries_valid<<std::endl;
 
-/*    std::cout << "Performed " << total_histories << " total histories, "
+    std::cout << "Performed " << total_histories << " total histories, "
         << " average of " <<
-        static_cast<double>(total_histories)/static_cast<double>(d_N)
+        static_cast<double>(total_histories)/static_cast<double>(num_entries_valid)
         << " per entry" << std::endl;
-*/
+
     std::cout<<"MC estimation of the biggest eigenvalue: "<<lambda<<std::endl;
 
 	
@@ -273,6 +272,8 @@ void EigenMcAdaptive::extractMatrices(Teuchos::RCP<const EigenMC_Data> mc_data)
     Teuchos::RCP<const MATRIX> A = mc_data->getMatrix();
     Teuchos::RCP<const MATRIX> P = mc_data->getProbabilityMatrix();
     Teuchos::RCP<const MATRIX> W = mc_data->getWeightMatrix();
+
+    d_col_map = A->getColMap();
 
     Teuchos::ArrayView<const double> val_row;
     Teuchos::ArrayView<const int>    ind_row;
@@ -315,9 +316,6 @@ void EigenMcAdaptive::getNewState(int &state, double &wt,
     // Sample cdf to get new state
     auto elem = std::lower_bound(p_row.begin(),p_row.end(),rand);
 
-/*	if(state == 14440)
-		std::cout<<"I shouldn't print this"<<std::endl;*/
-
     if( elem == p_row.end() )
     {
         // Invalidate all row data
@@ -330,7 +328,7 @@ void EigenMcAdaptive::getNewState(int &state, double &wt,
 	
     // Modify weight and update state
     int index = elem - p_row.begin();
-    state  =  ind_row[index];
+    state  =  d_col_map->getGlobalElement( ind_row[index] );
     wt    *=  w_row[index];
 
     // Get new rows for this state
