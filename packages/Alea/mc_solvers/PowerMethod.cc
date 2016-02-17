@@ -8,6 +8,7 @@
 
 #include <iterator>
 #include <string>
+#include <iomanip>
 
 #include "PowerMethod.hh"
 #include "EigenSolverFactory.hh"
@@ -97,7 +98,7 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
         for(unsigned int i = 0; i!=N; ++i)
 		eig_new += r_data[i]*y_data[i];
 
-	std::cout<<eig_new<<std::endl;
+	std::cout<< std::setprecision(15) <<eig_new<<std::endl;
 
         if( b_verbosity >= HIGH )
         {
