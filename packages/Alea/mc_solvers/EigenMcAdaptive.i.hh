@@ -12,6 +12,7 @@
 #include <iterator>
 #include <random>
 #include <cmath>
+#include <iomanip>
 
 #include "EigenMcAdaptive.hh"
 #include "MC_Components.hh"
@@ -226,7 +227,6 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
         }
 
         total_histories += num_histories;
-	//std::cout<<rel_std_dev<<std::endl;
     }
 
     unsigned int num_entries_valid = 0;
@@ -249,8 +249,8 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
         << " average of " <<
         static_cast<double>(total_histories)/static_cast<double>(num_entries_valid)
         << " per entry" << std::endl;
-
-    std::cout<<"MC estimation of the biggest eigenvalue: "<<lambda<<std::endl;
+    if( d_verbosity ==HIGH )	
+    	std::cout<<"MC estimation of the biggest eigenvalue: "<<std::setprecision(15)<<lambda<<std::endl;
 
 	
 }

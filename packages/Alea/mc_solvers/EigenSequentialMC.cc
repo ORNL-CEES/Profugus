@@ -73,15 +73,18 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
 
     // Compute initial estimation of the eigenvector
     MV r(y.getMap(),1);
+    MV prod(y.getMap(),1);
     r.update(1.0,x,0.0);
     y.update(1.0,x,0.0);
     b_num_iters = 0;
 
     Teuchos::ArrayRCP<SCALAR> r_data = r.getDataNonConst(0);
     Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
+    Teuchos::ArrayRCP<SCALAR> prod_data = prod.getDataNonConst(0);
 
     Teuchos::ArrayRCP<MAGNITUDE> y_norm(1);
     y.norm2(y_norm());
+    Teuchos::ArrayRCP<MAGNITUDE> prod_norm(1);
     unsigned int N = y_data.size();
 
     for(unsigned int i = 0; i!=N; ++i)
@@ -110,11 +113,9 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
         for(unsigned int i = 0; i!=N; ++i)
 		eig_new += r_data[i]*y_data[i];
 
-	std::cout<< eig_new <<std::endl;
-
         if( b_verbosity >= HIGH )
         {
-            std::cout << "Approximated eigenvalue at iteration " << b_num_iters
+            std::cout << "Approximated eigenvalue at Seqeuential MC iteration " << b_num_iters
                 << " is " << eig_new << std::endl;
         }
 
@@ -155,6 +156,21 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
         }
         
         eig_old = eig_new;
+	b_A->apply(y,prod);
+
+	double res_norm = 0.0;
+
+        for(unsigned int i = 0; i!=N; ++i)
+		res_norm += (prod_data[i] - eig_new * y_data[i]) * (prod_data[i] - eig_new * y_data[i]);
+
+	res_norm = std::sqrt(res_norm);
+	
+    	prod.norm2(prod_norm());
+	double rel_res_norm = res_norm / prod_norm[0];
+
+        if( b_verbosity >= HIGH )
+		std::cout<<"relative residual norm: "<<rel_res_norm<<std::endl;
+			
     }
 
 }
