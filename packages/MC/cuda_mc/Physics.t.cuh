@@ -75,9 +75,9 @@ __device__ int sample_group( const XS_Device* xs,
  * This function is optimized based on the assumption that nearly all of the
  * fission emission is in the first couple of groups.
  */
-__device int sample_fission_group(const XS_Device* xs,
-				  const unsigned int matid,
-				  const double       rnd)
+__device__ int sample_fission_group(const XS_Device* xs,
+				    const unsigned int matid,
+				    const double       rnd)
 {
     // running cdf; we make the cdf on the fly because nearly all of the
     // emission is in the first couple of groups so its not worth storing for
@@ -396,7 +396,8 @@ void Physics<Geometry>::initialize(
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Get a total cross section from the physics library.
+ * \brief Get a total cross section from the physics library. IMPLEMENT THIS
+ * IN LINE IN CALLING CODES INSTEAD OF HERE!!!
  */
 template <class Geometry>
 double Physics<Geometry>::total(physics::Reaction_Type  type,
@@ -431,16 +432,6 @@ double Physics<Geometry>::total(physics::Reaction_Type  type,
 
     // undefined or unassigned type, return 0
     return 0.0;
-}
-
-//---------------------------------------------------------------------------//
-//! Get the energy from a particle via its physics state
-template<class Geometry>
-double Physics<Geometry>::energy(const Particle_t &p) const
-{
-    double low = 0.0, up = 0.0;
-    d_gb.get_energy(p.group(), low, up);
-    return low;
 }
 
 //---------------------------------------------------------------------------//

@@ -109,9 +109,6 @@ class Physics
     // Get a total cross section from the physics library.
     double total(physics::Reaction_Type type, const Particle_t &p);
 
-    //! Get the energy from a particle via its physics state
-    double energy(const Particle_t &p) const;
-
     //! Get the minimum energy allowed for a particle
     PROFUGUS_DEVICE_FUNCTION
     double min_energy() const { return d_gb.group_bounds()[d_Ng]; }
