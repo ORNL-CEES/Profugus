@@ -119,7 +119,7 @@ class Physics
 
     // >>> TYPE-CONCEPT INTERFACE
 
-    // Process a particle through a physical collision.
+    // Process particles through a collision.
     void collide( Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Sample fission site.

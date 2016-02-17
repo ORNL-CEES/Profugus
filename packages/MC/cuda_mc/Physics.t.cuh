@@ -162,8 +162,8 @@ __global__ void collide_kernel( const std::size_t start_idx,
 		   xs->vector(matid, XS_t::TOTAL)[group];
 	CHECK(!implicit_capture ? c <= 1.0 : c >= 0.0);
 
-	// we need to do analog transport if the particles->is c = 0.0 regardless of
-	// whether implicit capture is on or not
+	// we need to do analog transport if the particles->is c = 0.0
+	// regardless of whether implicit capture is on or not
 
 	// do implicit capture
 	if (implicit_capture && c > 0.0)
@@ -209,8 +209,10 @@ __global__ void collide_kernel( const std::size_t start_idx,
 	    double costheta = 1.0 - 2.0 * particles->ran(idx);
 	    double phi      = 2.0 * constants::pi * particles->ran(idx);
 
-	    // update the direction of the particles->in the geometry-tracker state
-	    geometry->change_direction(costheta, phi, particles->geo_state(idx));
+	    // update the direction of the particles->in the geometry-tracker
+	    // state
+	    geometry->change_direction(
+		costheta, phi, particles->geo_state(idx));
 	}
     }
 }
