@@ -69,44 +69,6 @@ __device__ int sample_group( const XS_Device* xs,
 }
 
 //---------------------------------------------------------------------------//
-/*!
- * \brief Sample a fission group.
- *
- * This function is optimized based on the assumption that nearly all of the
- * fission emission is in the first couple of groups.
- */
-__device__ int sample_fission_group(const XS_Device* xs,
-				    const unsigned int matid,
-				    const double       rnd)
-{
-    // running cdf; we make the cdf on the fly because nearly all of the
-    // emission is in the first couple of groups so its not worth storing for
-    // a binary search
-    double cdf = 0.0;
-
-    // get the fission chi
-    const auto &chi = xs->vector(matid, XS_t::CHI);
-
-    // sample cdf
-    for (int g = 0; g < xs->num_groups(); ++g)
-    {
-        // update cdf
-        cdf += chi[g];
-
-        // check for sampling; update particle's physics state and return
-        if (rnd <= cdf)
-        {
-            // update the group in the particle
-            return g;
-        }
-    }
-
-    // we failed to sample
-    VALIDATE(false, "Failed to sample fission group.");
-    return -1;
-}
-
-//---------------------------------------------------------------------------//
 // CUDA GLOBAL KERNELS
 //---------------------------------------------------------------------------//
 /*
@@ -469,42 +431,6 @@ void Physics<Geometry>::collide(
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Sample the fission spectrum and initialize the particle.
- *
- * This function is optimized based on the assumption that nearly all of the
- * fission emission is in the first couple of groups.
- *
- * \post the particle is initialized if fission is sampled
- *
- * \return true if fissionable material and spectrum sampled; false if no
- * fissionable material present
- */
-template <class Geometry>
-bool Physics<Geometry>::initialize_fission(unsigned int  matid,
-                                           Particle_t   &p)
-{
-    REQUIRE(d_mat->has(matid));
-
-    // sampled flag
-    bool sampled = false;
-
-    // only do sampling if this is a fissionable material
-    if (is_fissionable(matid))
-    {
-        // sample the fission group
-        int group = sample_fission_group(matid, p.rng().ran());
-        sampled   = true;
-
-        // set the group
-        p.set_group(group);
-    }
-
-    // return the sampled flag
-    return sampled;
-}
-
-//---------------------------------------------------------------------------//
-/*!
  * \brief Sample a fission site.
  *
  * A fission site is sampled using the MCNP5 routine:
@@ -533,7 +459,7 @@ int Physics<Geometry>::sample_fission_site(
     Fission_Site_Container &fsc,
     double                  keff)
 {
-    // Lazy allocate the fission site work vector.
+    // Lazy allocate the fission site work vectors.
     if ( !d_device_sites )
     {
 	d_host_sites.resize( particles.size() );
@@ -580,37 +506,6 @@ int Physics<Geometry>::sample_fission_site(
 	    fsc.push_back( site );
 	}
     }
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Initialize a physics state for transport at a previously sampled
- * fission site.
- *
- * This function initializes the physics state at a fission site (so fission
- * will definitely be sampled).  It returns true if the physics state was
- * initialized; it returns false if there are not more particles left to
- * sample at the site.
- *
- * \return true if physics state initialized; false if no particles are left
- * at the site
- */
-template <class Geometry>
-bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
-                                           Particle_Vector<Geometry>& particles)
-{
-    REQUIRE(d_mat->has(fs.m));
-    REQUIRE(is_fissionable(fs.m));
-
-    // sample the fission group
-    int group = sample_fission_group(fs.m, p.rng().ran());
-    CHECK(group < d_Ng);
-
-    // set the particle group
-    p.set_group(group);
-
-    // we successfully initialized the state
-    return true;
 }
 
 //---------------------------------------------------------------------------//

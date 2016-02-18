@@ -150,16 +150,37 @@ class Physics
     // Process particles through a collision.
     void collide( Shared_Device_Ptr<Particle_Vector_t>& particles );
 
+    // Sample fission spectrum and initialize the physics state.
+    PROFUGUS_DEVICE_FUNCTION
+    void initialize_fission(const int matid,
+			    const double ran,
+			    int& group,
+			    bool& sampled ) const
+    {
+	sampled = false;
+	if (is_fissionable(matid))
+	{
+	    group = sample_fission_group( matid, ran );
+	    sampled   = true;
+	}
+    }
+
+    // Initialize a physics state at a fission site.
+    PROFUGUS_DEVICE_FUNCTION
+    void initialize_fission(const Fission_Site &fs,
+			    const double ran,
+			    int& group,
+			    bool& sampled)
+    {
+	REQUIRE( is_fissionable(fs.m) );
+	group = sample_fission_group( fs.m, ran );
+	sampled = true;
+    }
+
     // Sample fission site.
     int sample_fission_site( Shared_Device_Ptr<Particle_Vector_t>& particles,
 			     Fission_Site_Container &fsc,
 			     double keff );
-
-    // Sample fission spectrum and initialize the physics state.
-    bool initialize_fission(unsigned int matid, Particle_t &p);
-
-    // Initialize a physics state at a fission site.
-    bool initialize_fission(Fission_Site &fs, Particle_t &p);
 
     // Return whether a given material is fissionable
     PROFUGUS_DEVICE_FUNCTION
@@ -218,6 +239,23 @@ class Physics
     
     // Device fission sites work vector.
     Device_Fission_Site* d_device_sites;
+
+  private:
+
+    //! Sample a fission group.
+    PROFUGUS_DEVICE_FUNCTION
+    int sample_fission_group(const unsigned int matid,
+			     const double       rnd)
+    {
+	double cdf = 0.0;
+	const auto &chi = xs->vector(matid, XS_t::CHI);
+	for (int g = 0; g < xs->num_groups(); ++g)
+	{
+	    cdf += chi[g];
+	    if (rnd <= cdf) return g;
+	}
+	return -1;
+    }
 };
 
 } // end namespace cuda_profugus
