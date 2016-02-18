@@ -32,8 +32,7 @@ namespace cuda_profugus
 //---------------------------------------------------------------------------//
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
-// Sample the source. Passing geometry *BY COPY* for now because shallow
-// copies are resulting in segfault when accessing matids.
+// Sample the source.
 template<class Geometry, class Shape>
 __global__
 void sample_source_kernel( const Geometry* geometry,

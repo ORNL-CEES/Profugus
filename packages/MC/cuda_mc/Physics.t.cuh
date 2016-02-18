@@ -44,7 +44,7 @@ __device__ int sample_group( const XS_Device* xs,
     double cdf = 0.0;
 
     // total out-scattering for this cell and group
-    double total = 1.0 / d_scatter[matid_g2l[matid]][g];
+    double total = 1.0 / scatter[matid_g2l[matid] * xs->num-groups() + g];
 
     // get the P0 scattering cross section matrix the g column (which is the
     // outscatter) for this group (g->g' is the {A_(g'g) g'=0,Ng} entries of
@@ -147,18 +147,21 @@ __global__ void collide_kernel( const std::size_t start_idx,
 
     if ( idx < num_particle )
     {
+	// get the particle index
+	int pidx = idx + start_idx;
+	
 	REQUIRE(geometry);
-	REQUIRE(particles->event(idx) == events::COLLISION);
+	REQUIRE(particles->event(pidx) == events::COLLISION);
 
 	// get the material id of the current region
-	int matid = particles->matid(idx);
-	CHECK(geometry->matid(particles->geo_state(idx)) == matid);
+	int matid = particles->matid(pidx);
+	CHECK(geometry->matid(particles->geo_state(pidx)) == matid);
 
 	// get the group index
-	int group = particles->group(idx);
+	int group = particles->group(pidx);
 
 	// calculate the scattering cross section ratio
-	double c = scatter[matid_g2l[matid]][group] /
+	double c = scatter[matid_g2l[matid]*xs->num_groups() + group] /
 		   xs->vector(matid, XS_t::TOTAL)[group];
 	CHECK(!implicit_capture ? c <= 1.0 : c >= 0.0);
 
@@ -169,53 +172,111 @@ __global__ void collide_kernel( const std::size_t start_idx,
 	if (implicit_capture && c > 0.0)
 	{
 	    // set the event
-	    particles->set_event(idx,events::IMPLICIT_CAPTURE);
+	    particles->set_event(pidx,events::IMPLICIT_CAPTURE);
 
 	    // do implicit absorption
-	    particles->multiply_wt(idx,c);
+	    particles->multiply_wt(pidx,c);
 	}
 
 	// do analog transport
 	else
 	{
 	    // sample the interaction type
-	    if (particles->ran(idx) > c)
+	    if (particles->ran(pidx) > c)
 	    {
 		// set event indicator
-		particles->set_event(idx,events::ABSORPTION);
+		particles->set_event(pidx,events::ABSORPTION);
 
 		// kill particle
-		particles->kill(idx);
+		particles->kill(pidx);
 	    }
 	    else
 	    {
 		// set event indicator
-		particles->set_event(idx,events::SCATTER);
+		particles->set_event(pidx,events::SCATTER);
 	    }
 	}
 
 	// process scattering events
-	if (particles->event(idx) != events::ABSORPTION)
+	if (particles->event(pidx) != events::ABSORPTION)
 	{
 	    // determine new group of particle
 	    group = sample_group(xs, scatter, matid_g2l,
-				 matid, group, particles->ran(idx));
+				 matid, group, particles->ran(pidx));
 	    CHECK(group >= 0 && group < xs->num_groups());
 
 	    // set the group
-	    particles->set_group(idx,group);
+	    particles->set_group(pidx,group);
 
 	    // sample isotropic scattering event
-	    double costheta = 1.0 - 2.0 * particles->ran(idx);
-	    double phi      = 2.0 * constants::pi * particles->ran(idx);
+	    double costheta = 1.0 - 2.0 * particles->ran(pidx);
+	    double phi      = 2.0 * constants::pi * particles->ran(pidx);
 
 	    // update the direction of the particles->in the geometry-tracker
 	    // state
 	    geometry->change_direction(
-		costheta, phi, particles->geo_state(idx));
+		costheta, phi, particles->geo_state(pidx));
 	}
     }
 }
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Sample fission.
+ */
+template<class Geometry>
+__global__ void sample_fission_site_kernel(
+    const std::size_t start_idx,
+    const std::size_t num_particle,
+    const Geometry* geometry,
+    const XS_Device* xs,
+    const double keff,
+    const int* matid_g2l,    
+    const int* is_fissionable,
+    Particle_Vector<Geometry>* particles,
+    typename Physics<Geometry>::Device_Fission_Site* fission_sites )
+{
+    // get the thread id.
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particle )
+    {
+	// get the particle index
+	int pidx = idx + start_idx;
+
+	// material id
+	unsigned int matid = p.matid();
+
+	typename Physics<Geometry>::Device_Fission_Site& site =
+	    fission_sites[idx];
+
+	// if fissionable calculate the number of fission sites
+	if ( is_fissionable[matid_g2l[matid]] )
+	{
+	    // get the group from the particle
+	    int group = particles.group(pidx);
+
+	    // calculate the number of fission sites (random number samples to
+	    // nearest integer)
+	    int n = static_cast<int>(
+		particles.wt(pidx) *
+		mat->vector(matid, XS_t::NU_SIG_F)[group] /
+		mat->vector(matid, XS_t::TOTAL)[group] /
+		keff + particles.ran(pidx) );
+
+	    // add sites to the fission site container
+	    site.m = matid;
+	    site.r = d_geometry->position(particles.geo_state(pidx));
+	    site.n = n;
+	}
+
+	// otherwise there is no fission
+	else
+	{
+	    site.n = 0
+	}
+    }
+}					    
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -226,19 +287,21 @@ __global__ void collide_kernel( const std::size_t start_idx,
 template <class Geometry>
 Physics<Geometry>::Physics(RCP_Std_DB db,
                            RCP_XS     mat)
-    : d_mat(*mat)
-    , d_Ng(mat->num_groups())
+    : d_Ng(mat->num_groups())
     , d_Nm(mat->num_mat())
     , d_scatter(d_Nm)
     , d_fissionable(d_Nm)
 {
+    // Create the device cross sections
+    d_mat = cuda::shared_device_ptr<XS_Device>( *mat );
+    
     REQUIRE(!db.is_null());
     REQUIRE(d_mat);
     REQUIRE(d_mat->num_groups() > 0);
     REQUIRE(d_mat->num_mat() > 0);
 
     // Make the group bounds.
-    d_gb = shared_device_ptr<Group_Bounds>(
+    d_gb = cuda::shared_device_ptr<Group_Bounds>(
 	Vec_Dbl(mat->bounds().values(),
 		mat->bounds().values() + mat->bounds().length()) );
     INSIST(d_gb.num_groups() == mat->num_groups(),
@@ -246,12 +309,6 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
 
     // implicit capture flag
     d_implicit_capture = db->get("implicit_capture", true);
-
-    // check for balanced scattering tables
-    d_check_balance = db->get("check_balance", false);
-
-    // turn check balance on if we are not doing implicit capture
-    if (!d_implicit_capture) d_check_balance = true;
 
     // Create a global to local mapping of matids.
     int matid_g2l_size = *std::max_element( matids.begin(), matids.end() ) + 1;
@@ -302,30 +359,6 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
             }
         }
 
-        // check scattering correctness if needed
-        if (d_check_balance)
-        {
-            for (int g = 0; g < d_Ng; g++)
-            {
-                if (matid_scatter[g] > mat->vector(matids[m], XS_t::TOTAL)[g])
-                {
-                    std::ostringstream mm;
-                    mm << "Scattering greater than total "
-                       << "for material" << m << " in group " << g
-                       << ". Total xs is "
-                       << mat->vector(matids[m], XS_t::TOTAL)[g]
-                       << " and scatter is " << matid_scatter[g];
-
-                    // terminate if we are running analog
-                    if (!d_implicit_capture)
-                        VALIDATE(false, mm.str());
-                    // else add to warnings
-                    else
-                        ADD_WARNING(mm.str());
-                }
-            }
-        }
-
 	// Copy the scattering to the device.
 	offset = m * d_Ng;
 	cuda::memory::Copy_To_Device( 
@@ -355,6 +388,10 @@ Physics<Geometry>::~Physics()
     cuda::memory::Free( d_matid_g2l );
     cuda::memory::Free( d_scatter );
     cuda::memory::Free( d_fissionable );
+    if ( d_device_sites )
+    {
+	cuda::memory::Free( d_device_sites );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -394,46 +431,6 @@ void Physics<Geometry>::initialize(
 
     // Free the device energy array.
     cuda::memory::Free( device_energy );
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Get a total cross section from the physics library. IMPLEMENT THIS
- * IN LINE IN CALLING CODES INSTEAD OF HERE!!!
- */
-template <class Geometry>
-double Physics<Geometry>::total(physics::Reaction_Type  type,
-                                const Particle_t       &p)
-{
-    REQUIRE(d_mat->num_mat() == d_Nm);
-    REQUIRE(d_mat->num_groups() == d_Ng);
-    REQUIRE(p.group() < d_Ng);
-
-    // get the matid from the particle
-    unsigned int matid = p.matid();
-    CHECK(d_mat->has(matid));
-
-    // return the approprate reaction type
-    switch (type)
-    {
-        case physics::TOTAL:
-            return d_mat->vector(matid, XS_t::TOTAL)[p.group()];
-
-        case physics::SCATTERING:
-            return d_scatter[d_mid2l[matid]][p.group()];
-
-        case physics::FISSION:
-            return d_mat->vector(matid, XS_t::SIG_F)[p.group()];
-
-        case physics::NU_FISSION:
-            return d_mat->vector(matid, XS_t::NU_SIG_F)[p.group()];
-
-        default:
-            return 0.0;
-    }
-
-    // undefined or unassigned type, return 0
-    return 0.0;
 }
 
 //---------------------------------------------------------------------------//
@@ -531,43 +528,58 @@ bool Physics<Geometry>::initialize_fission(unsigned int  matid,
  * \return the number of fission events added at the site
  */
 template <class Geometry>
-int Physics<Geometry>::sample_fission_site(const Particle_t       &p,
-                                           Fission_Site_Container &fsc,
-                                           double                  keff)
+int Physics<Geometry>::sample_fission_site(
+    Shared_Device_Ptr<Particle_Vector_t>& particles,
+    Fission_Site_Container &fsc,
+    double                  keff)
 {
-    REQUIRE(d_geometry);
-    REQUIRE(d_mat->has(p.matid()));
-
-    // material id
-    unsigned int matid = p.matid();
-
-    // if the material is not fissionable exit
-    if (!is_fissionable(matid))
-        return 0;
-
-    // otherwise make a fission site and sample
-
-    // get the group from the particle
-    int group = p.group();
-
-    // calculate the number of fission sites (random number samples to nearest
-    // integer)
-    int n = static_cast<int>(
-        p.wt() *
-        d_mat->vector(matid, XS_t::NU_SIG_F)[group] /
-        d_mat->vector(matid, XS_t::TOTAL)[group] /
-        keff + p.rng().ran());
-
-    // add sites to the fission site container
-    for (int i = 0; i < n; ++i)
+    // Lazy allocate the fission site work vector.
+    if ( !d_device_sites )
     {
-        Fission_Site site;
-        site.m = matid;
-        site.r = d_geometry->position(p.geo_state());
-        fsc.push_back(site);
+	d_host_sites.resize( particles.size() );
+	cuda::memory::Malloc( d_device_sites, particles.size() );
     }
 
-    return n;
+    // Get the particles that will have a collision.
+    std::size_t start_idx = 0;
+    std::size_t num_particle = 0;
+    particles.get_host_ptr()->get_event_particles( events::COLLISION,
+						   start_idx,
+						   num_particle );
+
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = num_particle / threads_per_block;
+    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+
+    // Sample the fission sites.
+    sample_fission_site_kernel<<<num_particle,threads_per_block>>>(
+	start_idx,
+	num_particle,
+	d_geometry.get_device_ptr(),
+	d_mat.get_device_ptr(),
+	d_matid_g2l,
+	d_fissionable,
+	particles.get_device_ptr(),
+	d_device_sites );
+
+    // Pull the fission sites off of the device.
+    cuda::memory::Copy_To_Host(
+	d_host_sites.data(), d_device_sites, num_particle );
+
+    // Add the fission sites to the fission container.
+    for ( int p = 0; p < num_particle; ++p )
+    {
+	for ( int n = 0; n < d_host_sites[p].n; ++n )
+	{
+	    Fission_Site site;
+	    site.m = d_host_sites[p].m;
+	    site.r = d_host_sites[p].r;
+	    fsc.push_back( site );
+	}
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -585,7 +597,7 @@ int Physics<Geometry>::sample_fission_site(const Particle_t       &p,
  */
 template <class Geometry>
 bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
-                                           Particle_t   &p)
+                                           Particle_Vector<Geometry>& particles)
 {
     REQUIRE(d_mat->has(fs.m));
     REQUIRE(is_fissionable(fs.m));

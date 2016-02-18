@@ -78,6 +78,14 @@ class Physics
     //! Fission_Site container.
     typedef std::vector<Fission_Site> Fission_Site_Container;
 
+    //! Fission site structure for storing fission sites in k-code on device.
+    struct Device_Fission_Site
+    {
+        int          m;
+        Space_Vector r;
+	int          n;
+    };
+    
   private:
     // >>> DATA
 
@@ -97,7 +105,8 @@ class Physics
     // >>> PUBLIC TRANSPORT INTERFACE
 
     //! Set the geometry.
-    void set_geometry(const Shared_Device_Ptr<Geometry>& g) { REQUIRE(g); d_geometry = g; }
+    void set_geometry(const Shared_Device_Ptr<Geometry>& g)
+    { REQUIRE(g); d_geometry = g; }
 
     //! Get the geometry.
     Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
@@ -107,7 +116,26 @@ class Physics
 		     Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Get a total cross section from the physics library.
-    double total(physics::Reaction_Type type, const Particle_t &p);
+    PROFUGUS_DEVICE_FUNCTION
+    double total( const physics::Reaction_Type type,
+		  const int matid,
+		  const int group ) const
+    {
+	switch (type)
+	{
+	    case physics::TOTAL:
+		return d_mat->vector(matid, XS_t::TOTAL)[group];
+	    case physics::SCATTERING:
+		return d_scatter[d_matid_g2l[matid]][group];
+	    case physics::FISSION:
+		return d_mat->vector(matid, XS_t::SIG_F)[group];
+	    case physics::NU_FISSION:
+		return d_mat->vector(matid, XS_t::NU_SIG_F)[group];
+	    default:
+		return 0.0;
+	}
+	return 0.0;
+    }
 
     //! Get the minimum energy allowed for a particle
     PROFUGUS_DEVICE_FUNCTION
@@ -123,8 +151,9 @@ class Physics
     void collide( Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Sample fission site.
-    int sample_fission_site(const Particle_t &p, Fission_Site_Container &fsc,
-                            double keff);
+    int sample_fission_site( Shared_Device_Ptr<Particle_Vector_t>& particles,
+			     Fission_Site_Container &fsc,
+			     double keff );
 
     // Sample fission spectrum and initialize the physics state.
     bool initialize_fission(unsigned int matid, Particle_t &p);
@@ -136,7 +165,7 @@ class Physics
     PROFUGUS_DEVICE_FUNCTION
     bool is_fissionable(unsigned int matid) const
     {
-        return d_fissionable[d_mid_g2l[matid]];
+        return d_fissionable[d_matid_g2l[matid]];
     }
 
     // >>> FISSION SITE CONTAINER OPERATIONS
@@ -169,9 +198,6 @@ class Physics
     // Boolean for implicit capture.
     bool d_implicit_capture;
 
-    // Check cross section balance.
-    bool d_check_balance;
-
     // Number of groups and materials in the material database.
     int d_Ng, d_Nm;
 
@@ -186,6 +212,12 @@ class Physics
 
     // Fissionable bool by local matid. On-device.
     int* d_fissionable;
+
+    // Host fission site work vector.
+    std::vector<Device_Fission_Site> d_host_sites;
+    
+    // Device fission sites work vector.
+    Device_Fission_Site* d_device_sites;
 };
 
 } // end namespace cuda_profugus
