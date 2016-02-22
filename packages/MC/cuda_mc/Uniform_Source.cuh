@@ -61,7 +61,7 @@ class Uniform_Source : public Source<Geometry>
     typedef typename Geometry_t::Space_Vector   Space_Vector;
     typedef std::shared_ptr<Box_Shape>          SP_Shape;
     typedef cuda::Shared_Device_Ptr<Box_Shape>  SDP_Shape;
-    typedef std::shared_ptr<Geometry_t>         SP_Geometry;
+    typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef std::shared_ptr<Particle_t>         SP_Particle;
     typedef curandState_t                       RNG_t;
     typedef def::Vec_Dbl                        Vec_Dbl;
@@ -82,7 +82,7 @@ class Uniform_Source : public Source<Geometry>
 
   public:
     // Constructor.
-    Uniform_Source(RCP_Std_DB db, SP_Geometry geometry);
+    Uniform_Source(RCP_Std_DB db, SDP_Geometry geometry);
 
     // Build the initial source on the host.
     void build_source(SP_Shape geometric_shape);

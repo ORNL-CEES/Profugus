@@ -44,7 +44,6 @@ class Source
 
     //@{
     //! Smart pointers
-    typedef std::shared_ptr<Geometry_t>    SP_Geometry;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     //@}
 
@@ -75,7 +74,7 @@ class Source
 
   public:
     // Constructor.
-    Source(SP_Geometry    geometry);
+    Source(SDP_Geometry    geometry);
 
     // Derived classes should implement the following functions,
     // but because this is an on-device class there can be NO virtual

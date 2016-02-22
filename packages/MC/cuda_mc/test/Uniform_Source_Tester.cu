@@ -95,7 +95,7 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
         z_edges[iz] = zlo + static_cast<double>(iz) * dz;
 
     // Build Geometry
-    auto geom = std::make_shared<Geometry>(x_edges,y_edges,z_edges);
+    cuda::Shared_Device_Ptr<Geometry> geom(x_edges,y_edges,z_edges);
 
     auto db = Teuchos::rcp( new Teuchos::ParameterList() );
     db->set("Np",Np);

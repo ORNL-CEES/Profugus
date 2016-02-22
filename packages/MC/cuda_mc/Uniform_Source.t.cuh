@@ -38,7 +38,7 @@ namespace cuda_mc
  */
 template <class Geometry>
 Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
-                                         SP_Geometry    geometry)
+                                         SDP_Geometry   geometry)
     : Base(geometry)
     , d_erg_cdf(db->get<int>("num_groups"))
     , d_np_requested(0)
