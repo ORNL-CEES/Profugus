@@ -13,6 +13,7 @@
 
 #include "Mesh_Geometry.hh"
 
+#include "cuda_utils/Constants.hh"
 #include "cuda_utils/CudaDBC.hh"
 
 namespace cuda_profugus
@@ -70,7 +71,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
 
     // min distance to boundary; initializing test_dist to a large number before
     // each surface check implicitly handles the case where omega[dir] == 0.0
-    double test_dist = 99e99;
+    double test_dist = cuda::constants::max_double;
     int    test_next = state.ijk.i;
 
     // initialize the next surface
@@ -95,7 +96,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     state.next_ijk.i = test_next;
 
     // reset the local dist-to-boundary to a large value to handle dir=0.0
-    test_dist = 99e99;
+    test_dist = cuda::constants::max_double;
 
     // Y SURFACE
     if (state.d_dir.y > 0.0 && state.ijk.j < extents.j)
@@ -118,7 +119,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     }
 
     // reset the local dist-to-boundary to a large value to handle dir=0.0
-    test_dist = 99e99;
+    test_dist = cuda::constants::max_double;
 
     // Z SURFACE
     if (state.d_dir.z > 0.0 && state.ijk.k < extents.k)
