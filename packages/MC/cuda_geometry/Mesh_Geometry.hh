@@ -85,24 +85,7 @@ class Mesh_Geometry
     //! Initialize track.
     __device__ inline void initialize(const Space_Vector& r,
                                       const Space_Vector& direction,
-                                            Geo_State_t&  state) const
-    {
-        using cuda::utility::soft_equiv;
-        using def::I; using def::J; using def::K;
-
-        // Set struct attributes
-        state.d_r = r;
-        state.d_dir = direction;
-
-        cuda::utility::vector_normalize(state.d_dir);
-
-        update_state(state);
-
-        ENSURE(state.ijk.i >= -1 && state.ijk.i <= d_mesh.num_cells_along(I));
-        ENSURE(state.ijk.j >= -1 && state.ijk.j <= d_mesh.num_cells_along(J));
-        ENSURE(state.ijk.k >= -1 && state.ijk.i <= d_mesh.num_cells_along(K));
-
-    }
+                                            Geo_State_t&  state) const;
 
     //! Get distance to next boundary
     __device__ inline double distance_to_boundary(Geo_State_t& state) const;
