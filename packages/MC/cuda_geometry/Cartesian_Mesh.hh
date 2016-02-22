@@ -118,7 +118,7 @@ class Cartesian_Mesh
     __host__ __device__ dim_type dimension() const { return d_dimension; }
 
     //! Return cell edges along a given direction.
-    __device__ double * edges(dim_type d) const
+    __device__ const double * edges(dim_type d) const
     {
         REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
