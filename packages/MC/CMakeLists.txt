@@ -170,6 +170,7 @@ IF(USE_CUDA)
   FILE(GLOB CUDA_MC_HEADERS cuda_mc/*.hh)
   SET(CUDA_MC_SOURCES
     cuda_mc/Box_Shape.cu
+    cuda_mc/Domain_Transporter.pt.cu
     cuda_mc/Physics.pt.cu
     cuda_mc/Source.pt.cu
     cuda_mc/Uniform_Source.pt.cu
