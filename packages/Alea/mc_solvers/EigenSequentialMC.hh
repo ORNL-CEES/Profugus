@@ -10,6 +10,7 @@
 #define mc_solvers_EigenSequentialMC_hh
 
 #include "AleaSolver.hh"
+#include "MonteCarloEigenSolver.hh"
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -41,7 +42,7 @@ class EigenSequentialMC : public AleaSolver
 
     SCALAR d_divergence_tol;
 
-    Teuchos::RCP<AleaSolver> d_mc_solver;
+    Teuchos::RCP<MonteCarloEigenSolver> d_mc_solver;
 };
 
 }

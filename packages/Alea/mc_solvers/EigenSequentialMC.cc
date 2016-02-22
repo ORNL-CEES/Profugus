@@ -46,7 +46,8 @@ EigenSequentialMC::EigenSequentialMC(
 
     b_label = "SequentialEigenMC";
 
-    d_mc_solver = EigenSolverFactory::buildSolver( "monte_carlo", A, pl );
+    Teuchos::RCP<AleaSolver> alea_solver = EigenSolverFactory::buildSolver( "monte_carlo", A, pl );
+    d_mc_solver = Teuchos::rcp_static_cast<MonteCarloEigenSolver>(alea_solver);
 
 }
 
@@ -73,18 +74,15 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
 
     // Compute initial estimation of the eigenvector
     MV r(y.getMap(),1);
-    MV prod(y.getMap(),1);
     r.update(1.0,x,0.0);
     y.update(1.0,x,0.0);
     b_num_iters = 0;
 
     Teuchos::ArrayRCP<SCALAR> r_data = r.getDataNonConst(0);
     Teuchos::ArrayRCP<SCALAR> y_data = y.getDataNonConst(0);
-    Teuchos::ArrayRCP<SCALAR> prod_data = prod.getDataNonConst(0);
 
     Teuchos::ArrayRCP<MAGNITUDE> y_norm(1);
     y.norm2(y_norm());
-    Teuchos::ArrayRCP<MAGNITUDE> prod_norm(1);
     unsigned int N = y_data.size();
 
     for(unsigned int i = 0; i!=N; ++i)
@@ -93,6 +91,8 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
     //Copy initial guess in a new auxiliary vector
     MV ig(y.getMap(),1);
     ig.update(1.0,y,0.0);
+
+    SCALAR old_res_norm = 1e+6;
 
     while( true )
     {
@@ -113,14 +113,23 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
         for(unsigned int i = 0; i!=N; ++i)
 		eig_new += r_data[i]*y_data[i];
 
+	SCALAR res_norm = 0.0;
+
+        for(unsigned int i = 0; i!=N; ++i)
+		res_norm += (r_data[i] - eig_new * y_data[i]) * (r_data[i] - eig_new * y_data[i]);
+
+	res_norm = std::sqrt(res_norm);
+	
+	SCALAR rel_res_norm = res_norm / eig_new;
+
         if( b_verbosity >= HIGH )
         {
-            std::cout << "Approximated eigenvalue at Seqeuential MC iteration " << b_num_iters
-                << " is " << eig_new << std::endl;
-        }
+            std::cout << "Approximated eigenvalue at Sequential MC iteration " << b_num_iters << " is " << eig_new << std::endl;
+	    std::cout<<"relative residual norm: "<< std::setprecision(15) <<rel_res_norm<<std::endl;
+	}
 
         // Check for convergence
-        if( std::abs(eig_old - eig_new)/std::abs(eig_old) < b_tolerance )
+        if( rel_res_norm < b_tolerance )
         {
             if( b_verbosity >= LOW )
             {
@@ -136,15 +145,15 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
             if( b_verbosity >= LOW )
             {
                 std::cout << "Sequential reached maximum iteration "
-                    << "count with relative error of "
-                    << std::abs(eig_old - eig_new)/std::abs(eig_old) << std::endl;
+                    << "count with relative residual of "
+                    << rel_res_norm << std::endl;
             }
             b_num_iters = -1;
             break;
         }
 
         // Check for divergence
-        if( std::abs(eig_old - eig_new)/std::abs(eig_old) > d_divergence_tol)
+        if( rel_res_norm > d_divergence_tol)
         {
             if( b_verbosity >= LOW )
             {
@@ -155,22 +164,11 @@ void EigenSequentialMC::applyImpl(const MV &x, MV &y) const
             break;
         }
         
-        eig_old = eig_new;
-	b_A->apply(y,prod);
-
-	double res_norm = 0.0;
-
-        for(unsigned int i = 0; i!=N; ++i)
-		res_norm += (prod_data[i] - eig_new * y_data[i]) * (prod_data[i] - eig_new * y_data[i]);
-
-	res_norm = std::sqrt(res_norm);
+	if(old_res_norm < res_norm)	
+		d_mc_solver->refineStandardDeviation(0.8);
 	
-    	prod.norm2(prod_norm());
-	double rel_res_norm = res_norm / prod_norm[0];
-
-        if( b_verbosity >= HIGH )
-		std::cout<<"relative residual norm: "<<rel_res_norm<<std::endl;
-			
+        eig_old = eig_new;
+	old_res_norm = res_norm;
     }
 
 }

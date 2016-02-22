@@ -141,5 +141,33 @@ void MonteCarloEigenSolver::applyImpl(const MV &x, MV &y) const
     b_num_iters = d_num_histories;
 }
 
+void MonteCarloEigenSolver::refineStandardDeviation(SCALAR factor)
+{
+	VALIDATE( d_kernel_type == ADAPTIVE, "std refinement possible just for adaptive kernel");
+	VALIDATE( factor < 1.0, "The refining factor must be smaller than 1" );
+
+	SCALAR new_tol; 
+	new_tol = d_mc_pl->get<SCALAR>("tolerance");
+	d_mc_pl->set<SCALAR>("tolerance", factor * new_tol); 
+}
+
+
+void MonteCarloEigenSolver::increaseNumHistories(unsigned int factor)
+{
+	VALIDATE( factor > 1, "The increasing factor must be bigger than 1" );
+
+	unsigned int new_hist; 
+	if(d_kernel_type == ADAPTIVE)
+	{
+		new_hist = d_mc_pl->get<SCALAR>("batch_size");
+		d_mc_pl->set<SCALAR>("batch_size", factor * new_hist); 
+	}
+	else
+	{	
+		new_hist = d_mc_pl->get<SCALAR>("num_histories");
+		d_mc_pl->set<SCALAR>("num_histories", factor * new_hist); 
+	}
+}
+
 } // namespace alea
 

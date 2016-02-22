@@ -80,6 +80,8 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
     Teuchos::ArrayRCP<MAGNITUDE> y_norm(1);
     unsigned int N = y_data.size();
  
+    SCALAR old_res_norm = 1e+6;
+
     while( true )
     {
         b_num_iters++;
@@ -98,16 +100,23 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
         for(unsigned int i = 0; i!=N; ++i)
 		eig_new += r_data[i]*y_data[i];
 
-	std::cout<< std::setprecision(15) <<eig_new<<std::endl;
+	SCALAR res_norm = 0.0;
+
+        for(unsigned int i = 0; i!=N; ++i)
+		res_norm += (r_data[i] - eig_new * y_data[i]) * (r_data[i] - eig_new * y_data[i]);
+
+	res_norm = std::sqrt(res_norm);
+	
+	SCALAR rel_res_norm = res_norm / eig_new;
 
         if( b_verbosity >= HIGH )
         {
             std::cout << "Approximated eigenvalue at iteration " << b_num_iters
-                << " is " << eig_new << std::endl;
+                << " is " << std::setprecision(15)<< eig_new << std::endl;
         }
 
         // Check for convergence
-        if( std::abs(eig_old - eig_new)/std::abs(eig_old) < b_tolerance )
+        if( rel_res_norm < b_tolerance )
         {
             if( b_verbosity >= LOW )
             {
@@ -123,15 +132,15 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
             if( b_verbosity >= LOW )
             {
                 std::cout << "Power Iteration reached maximum iteration "
-                    << "count with relative error of "
-                    << std::abs(eig_old - eig_new)/std::abs(eig_old) << std::endl;
+                    << "count with relative residual of "
+                    << rel_res_norm << std::endl;
             }
             b_num_iters = -1;
             break;
         }
 
         // Check for divergence
-        if( std::abs(eig_old - eig_new)/std::abs(eig_old) > d_divergence_tol)
+        if( rel_res_norm > d_divergence_tol )
         {
             if( b_verbosity >= LOW )
             {
@@ -143,6 +152,7 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
         }
         
         eig_old = eig_new;
+	old_res_norm = res_norm;
     }
 
 }

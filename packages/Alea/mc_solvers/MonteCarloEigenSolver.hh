@@ -99,6 +99,9 @@ class MonteCarloEigenSolver : public AleaSolver,
         AleaSolver::apply(x,y,mode,alpha,beta);
     }
 
+    void refineStandardDeviation(SCALAR);
+    void increaseNumHistories(unsigned int);
+
   private:
 
     // Implementation of apply

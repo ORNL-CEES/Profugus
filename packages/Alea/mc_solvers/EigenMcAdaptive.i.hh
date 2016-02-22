@@ -106,6 +106,8 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
     double wt = 0.0;
 
     int total_histories = 0;
+    double norm1_rel_std_dev = 0.0;
+    double norm1_sol = 0.0;
 
     for (int entry=0; entry < d_N; ++entry)
     {
@@ -200,7 +202,6 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 		 x_data[entry] = (x_data[entry] * static_cast<double>(num_histories) +
 		         x_new_batch) / static_cast<double>(num_histories+d_batch_size);
 
-
 		 num_histories += d_batch_size;
 
 		 variance[entry] = (variance[entry] - x_data[entry]*x_data[entry]*
@@ -217,7 +218,6 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 		     if( var > 0.0 )
 		        std_dev += std::sqrt(var);
 
-		     //CHECK( static_cast<double>(std::abs(x_data[entry])) > 0.0 );
 		     rel_std_dev = static_cast<double>( std_dev / static_cast<double>(std::abs(x_data[entry])) );
 		 }
 		    
@@ -225,7 +225,8 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
 	     x_data_old[entry] /= num_histories;
 	     lambda_vec[entry] = static_cast<double>( x_data[entry]/static_cast<double>(x_data_old[entry]) );
         }
-
+	norm1_sol += std::abs( x_data[entry] );
+	norm1_rel_std_dev += rel_std_dev; 
         total_histories += num_histories;
     }
 
@@ -249,8 +250,11 @@ void EigenMcAdaptive::solve(const MV &b, MV &x)
         << " average of " <<
         static_cast<double>(total_histories)/static_cast<double>(num_entries_valid)
         << " per entry" << std::endl;
-    if( d_verbosity ==HIGH )	
+    if( d_verbosity ==HIGH )
+    {	
     	std::cout<<"MC estimation of the biggest eigenvalue: "<<std::setprecision(15)<<lambda<<std::endl;
+	std::cout<<"norm of the relative std deviation: "<< norm1_rel_std_dev/norm1_sol <<std::endl;
+    }
 
 	
 }
