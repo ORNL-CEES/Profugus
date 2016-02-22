@@ -54,6 +54,11 @@ constexpr double sqrt_four_pi = CUDART_SQRT_2PI * sqrt_two;
 constexpr double inv_sqrt_four_pi = 1.0 / sqrt_four_pi;
 //@}
 
+//@{
+//! Max value - no Cuda builtin for this
+constexpr double max_double = 1.79e308;
+//@}
+//
 //---------------------------------------------------------------------------//
 // SCIENCE CONSTANTS
 //---------------------------------------------------------------------------//
