@@ -83,6 +83,7 @@ class Domain_Transporter
     //SP_Fission_Sites d_fission_sites;
 
   public:
+
     // Constructor.
     Domain_Transporter();
 
@@ -99,7 +100,7 @@ class Domain_Transporter
     //void set(SP_Fission_Sites fission_sites, double keff);
 
     // Transport a particle through the domain.
-    __device__ void transport(Particle_t &particle);
+    __device__ void transport(Particle_t &particle) const;
 
     //! Return the number of sampled fission sites.
     __host__ __device__
@@ -107,12 +108,6 @@ class Domain_Transporter
 
   private:
     // >>> IMPLEMENTATION
-
-    // Step selector.
-    Step_Selector d_step;
-
-    // Tracking distances.
-    double d_dist_mfp, d_dist_bnd, d_dist_col;
 
     // Total cross section in region.
     double d_xs_tot;
@@ -127,8 +122,9 @@ class Domain_Transporter
     double d_keff;
 
     // Process collisions and boundaries.
-    __device__ void process_boundary(Particle_t &particle);
-    __device__ void process_collision(Particle_t &particle);
+    __device__ void process_boundary(Particle_t &particle) const;
+    __device__ void process_collision(Particle_t &particle,
+                                      double      step) const;
 };
 
 } // end namespace cuda_mc 

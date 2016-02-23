@@ -28,7 +28,7 @@ namespace cuda_mc
  */
 template <class Geometry>
 __device__
-void Domain_Transporter<Geometry>::transport(Particle_t &particle)
+void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
 {
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
@@ -39,6 +39,9 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle)
     // particle state
     Geo_State_t &geo_state = particle.geo_state();
 
+    Step_Selector step;
+    double dist_mfp, dist_col, dist_bnd, xs_tot;
+
     // step particle through domain while particle is alive; life is relative
     // to the domain, so a particle leaving the domain would be no longer
     // alive wrt the current domain even though the particle might be alive to
@@ -46,7 +49,11 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle)
     while (particle.alive())
     {
         // calculate distance to collision in mean-free-paths
-        d_dist_mfp = -log(particle.ran());
+        dist_mfp = -log(particle.ran());
+
+        printf("Particle in group %i at %f %f %f with event %i\n",
+            particle.group(),geo_state.d_r.x,geo_state.d_r.y,geo_state.d_r.z,
+            particle.event());
 
         // while we are hitting boundaries, continue to transport until we get
         // to the collision site
@@ -65,36 +72,37 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle)
         while (particle.event() == profugus::events::BOUNDARY)
         {
             CHECK(particle.alive());
-            CHECK(d_dist_mfp > 0.0);
+            CHECK(dist_mfp > 0.0);
 
             // total interaction cross section
-            d_xs_tot = d_physics->total(profugus::physics::TOTAL, particle);
-            CHECK(d_xs_tot >= 0.0);
+            xs_tot = d_physics->total(profugus::physics::TOTAL, particle);
+            printf("Total cross section is %f\n",xs_tot);
+            CHECK(xs_tot >= 0.0);
 
             // sample distance to next collision
-            if (d_xs_tot > 0.0)
-                d_dist_col = d_dist_mfp / d_xs_tot;
+            if (xs_tot > 0.0)
+                dist_col = dist_mfp / xs_tot;
             else
-                d_dist_col = profugus::constants::huge;
+                dist_col = profugus::constants::huge;
 
             // initialize the distance to collision in the step selector
-            d_step.initialize(d_dist_col, profugus::events::COLLISION);
+            step.initialize(dist_col, profugus::events::COLLISION);
 
             // calculate distance to next geometry boundary
-            d_dist_bnd = d_geometry->distance_to_boundary(geo_state);
-            d_step.submit(d_dist_bnd, profugus::events::BOUNDARY);
+            dist_bnd = d_geometry->distance_to_boundary(geo_state);
+            step.submit(dist_bnd, profugus::events::BOUNDARY);
 
             // set the next event in the particle
-            CHECK(d_step.tag() < profugus::events::END_EVENT);
+            CHECK(step.tag() < profugus::events::END_EVENT);
             particle.set_event(static_cast<profugus::events::Event>(
-                d_step.tag()));
+                step.tag()));
 
             // path-length tallies (the actual movement of the particle will
             // take place when we process the various events)
-            //d_tallier->path_length(d_step.step(), particle);
+            //d_tallier->path_length(step.step(), particle);
 
             // update the mfp distance travelled
-            d_dist_mfp -= d_step.step() * d_xs_tot;
+            dist_mfp -= step.step() * xs_tot;
 
             // process a particle through the geometric boundary
             if (particle.event() == profugus::events::BOUNDARY)
@@ -107,7 +115,7 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle)
 
         // process particle at a collision
         if (particle.event() == profugus::events::COLLISION)
-            process_collision(particle);
+            process_collision(particle,step.step());
 
         // any future events go here ...
     }
@@ -118,8 +126,8 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle)
 //---------------------------------------------------------------------------//
 
 template <class Geometry>
-__device__
-void Domain_Transporter<Geometry>::process_boundary(Particle_t &particle)
+__device__ void
+Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
 {
     REQUIRE(particle.alive());
     REQUIRE(particle.event() == profugus::events::BOUNDARY);
@@ -174,14 +182,15 @@ void Domain_Transporter<Geometry>::process_boundary(Particle_t &particle)
 //---------------------------------------------------------------------------//
 
 template <class Geometry>
-__device__
-void Domain_Transporter<Geometry>::process_collision(Particle_t &particle)
+__device__ void
+Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
+                                                double dist) const
 {
     //REQUIRE(d_var_reduction);
     REQUIRE(particle.event() == profugus::events::COLLISION);
 
     // move the particle to the collision site
-    d_geometry->move_to_point(d_step.step(), particle.geo_state());
+    d_geometry->move_to_point(dist, particle.geo_state());
 
     // sample fission sites
     /*
