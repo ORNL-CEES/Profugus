@@ -46,13 +46,11 @@ __global__ void test_collide_kernel( Geom         *geom,
      if( tid < num_particles )
      {
          int g = tid % 5;
-         int matid = tid % 2;
 
          // Create particle
          Particle<Geom> p;
          p.live();
          p.set_group(g);
-         p.set_matid(matid);
          p.set_wt(1.0);
          p.set_event(profugus::events::COLLISION);
 
@@ -65,6 +63,7 @@ __global__ void test_collide_kernel( Geom         *geom,
          cuda::Space_Vector pos = {0.25, 0.75, 0.60};
          cuda::Space_Vector dir = {1.0, 0.0, 0.0};
          geom->initialize(pos,dir,p.geo_state());
+         p.set_matid(geom->matid(p.geo_state()));
 
          // Collide
          phys.collide(p);
