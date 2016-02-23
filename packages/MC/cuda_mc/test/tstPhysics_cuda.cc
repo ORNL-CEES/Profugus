@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstPhysics.cc
+ * \file   cuda_mc/test/tstPhysics.cc
  * \author Thomas M. Evans
  * \date   Fri May 02 00:58:54 2014
  * \brief  Physics unit test.
@@ -20,8 +20,8 @@
 #include "Teuchos_RCP.hpp"
 #include "utils/Definitions.hh"
 #include "rng/RNG_Control.hh"
-#include "geometry/RTK_Geometry.hh"
-#include "geometry/Mesh_Geometry.hh"
+#include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_geometry/Mesh_Geometry.hh"
 #include "../Sampler.hh"
 
 using namespace std;
@@ -38,7 +38,7 @@ class PhysicsTest : public testing::Test
   protected:
     typedef Geometry                                    Geometry_t;
     typedef profugus::RNG_Control                       RNG_Control;
-    typedef profugus::Physics<Geometry>                 Physics_t;
+    typedef cuda_profugus::Physics<Geometry>            Physics_t;
     typedef typename Physics_t::SP_Geometry             SP_Geometry;
     typedef typename Physics_t::Particle_t              Particle;
     typedef typename Physics_t::Bank_t                  Bank_t;
@@ -145,44 +145,20 @@ class PhysicsTest : public testing::Test
 };
 
 template <>
-void PhysicsTest<profugus::Core>::build_geometry()
-{
-    typedef Geometry_t::Array_t  Core_t;
-    typedef Core_t::Object_t     Lattice_t;
-    typedef Lattice_t::Object_t  Pin_Cell_t;
-    typedef Geometry_t::SP_Array SP_Core;
-    typedef Core_t::SP_Object    SP_Lattice;
-    typedef Lattice_t::SP_Object SP_Pin_Cell;
-
-    // make an infinite box
-    SP_Pin_Cell box(make_shared<Pin_Cell_t>(0, 100.0, 100.0));
-    SP_Lattice  lat(make_shared<Lattice_t>(1, 1, 1, 2));
-    lat->id(0, 0, 0) = 1;
-    lat->assign_object(box, 1);
-    lat->complete(0.0, 0.0, 0.0);
-
-    SP_Core core(make_shared<Core_t>(1, 1, 1, 1));
-    core->assign_object(lat, 0);
-    core->complete(0.0, 0.0, 0.0);
-
-    geometry = make_shared<Geometry_t>(core);
-}
-
-template <>
-void PhysicsTest<profugus::Mesh_Geometry>::build_geometry()
+void PhysicsTest<cuda_profugus::Mesh_Geometry>::build_geometry()
 {
     def::Vec_Dbl edges = {0.0, 100.0};
     auto matids = std::make_shared<def::Vec_Int>(def::Vec_Int({0}));
 
-    geometry = std::make_shared<Geometry_t>(edges,edges,edges);
-    geometry->set_matids(matids);
+    geometry = cuda::shared_device_ptr<Geometry_t>(edges,edges,edges);
+    geometry->set_matids(*matids);
 }
 
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
 
-typedef ::testing::Types<profugus::Core,profugus::Mesh_Geometry> MyTypes;
+typedef ::testing::Types<cuda_profugus::Mesh_Geometry> MyTypes;
 TYPED_TEST_CASE(PhysicsTest, MyTypes);
 
 TYPED_TEST(PhysicsTest, Collisions)
