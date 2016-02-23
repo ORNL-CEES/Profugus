@@ -113,27 +113,27 @@ class Physics
     SDP_Geometry get_geometry() const { return d_geometry_host; }
 
     // Get a total cross section from the physics library.
-    __device__ double total(Reaction_Type type, const Particle_t &p);
+    __device__ double total(Reaction_Type type, const Particle_t &p) const;
 
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process a particle through a physical collision.
-    __device__ void collide(Particle_t &particle);
+    __device__ void collide(Particle_t &particle) const;
 
     // Sample fission site.
     __device__ int sample_fission_site(const Particle_t &p, Fission_Site *fsc,
-                            double keff);
+                            double keff) const;
 
     // Sample fission spectrum and initialize the physics state.
-    __device__ bool initialize_fission(unsigned int matid, Particle_t &p);
+    __device__ bool initialize_fission(unsigned int matid, Particle_t &p) const;
 
     // Initialize a physics state at a fission site.
-    __device__ bool initialize_fission(Fission_Site &fs, Particle_t &p);
+    __device__ bool initialize_fission(Fission_Site &fs, Particle_t &p) const;
 
     // Return whether a given material is fissionable
     __device__ bool is_fissionable(unsigned int matid) const
     {
-        return d_fissionable[d_matid];
+        return d_fissionable[matid];
     }
 
     // >>> FISSION SITE CONTAINER OPERATIONS
@@ -175,9 +175,6 @@ class Physics
     // compatibility)
     cuda::Device_Vector<cuda::arch::Device,int> d_fissionable_vec;
     int *d_fissionable;
-
-    // Material id of current region.
-    int d_matid;
 
     // Index for a material/group combination
     __host__ __device__ int group_mat_index(int g, int m) const

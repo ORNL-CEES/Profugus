@@ -30,7 +30,7 @@ namespace cuda_mc
  */
 template <class Geometry>
 __device__
-void Physics<Geometry>::collide(Particle_t &particle)
+void Physics<Geometry>::collide(Particle_t &particle) const
 {
     REQUIRE(d_geometry);
     REQUIRE(particle.event() == profugus::events::COLLISION);
@@ -40,16 +40,16 @@ void Physics<Geometry>::collide(Particle_t &particle)
     REQUIRE(particle.group() < d_Ng);
 
     // get the material id of the current region
-    d_matid = particle.matid();
-    CHECK(d_matid < d_Nm);
-    CHECK(d_geometry->matid(particle.geo_state()) == d_matid);
+    int matid = particle.matid();
+    CHECK(matid < d_Nm);
+    CHECK(d_geometry->matid(particle.geo_state()) == matid);
 
     // get the group index
     int group = particle.group();
 
     // calculate the scattering cross section ratio
-    double c = d_scatter[group_mat_index(group,d_matid)] /
-               d_mat->vector(d_matid, XS_t::TOTAL)(group);
+    double c = d_scatter[group_mat_index(group,matid)] /
+               d_mat->vector(matid, XS_t::TOTAL)(group);
     CHECK(!d_implicit_capture ? c <= 1.0 : c >= 0.0);
 
     // we need to do analog transport if the particle is c = 0.0 regardless of
@@ -88,7 +88,7 @@ void Physics<Geometry>::collide(Particle_t &particle)
     if (particle.event() != profugus::events::ABSORPTION)
     {
         // determine new group of particle
-        group = sample_group(d_matid, group, particle.ran());
+        group = sample_group(matid, group, particle.ran());
         CHECK(group >= 0 && group < d_Ng);
 
         // set the group
@@ -110,7 +110,7 @@ void Physics<Geometry>::collide(Particle_t &particle)
 template <class Geometry>
 __device__
 double Physics<Geometry>::total(Reaction_Type       type,
-                                const Particle_t   &p)
+                                const Particle_t   &p) const
 {
     REQUIRE(d_mat->num_mat() == d_Nm);
     REQUIRE(d_mat->num_groups() == d_Ng);
@@ -158,7 +158,7 @@ double Physics<Geometry>::total(Reaction_Type       type,
 template <class Geometry>
 __device__
 bool Physics<Geometry>::initialize_fission(unsigned int  matid,
-                                           Particle_t   &p)
+                                           Particle_t   &p) const
 {
     REQUIRE( matid < d_mat->num_mat() );
 
@@ -208,7 +208,7 @@ template <class Geometry>
 __device__
 int Physics<Geometry>::sample_fission_site(const Particle_t &p,
                                            Fission_Site     *fsc,
-                                           double            keff)
+                                           double            keff) const
 {
     REQUIRE(d_geometry);
     REQUIRE(p.matid() < d_mat->num_mat() );
@@ -264,7 +264,7 @@ int Physics<Geometry>::sample_fission_site(const Particle_t &p,
 template <class Geometry>
 __device__
 bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
-                                           Particle_t   &p)
+                                           Particle_t   &p) const
 {
     REQUIRE(fs.m < d_mat->num_mat());
     REQUIRE(is_fissionable(fs.m));
