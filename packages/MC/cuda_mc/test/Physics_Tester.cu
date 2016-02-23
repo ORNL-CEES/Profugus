@@ -82,8 +82,9 @@ void Physics_Tester::test_total( const Vec_Dbl  &x_edges,
 {
 
     // Build geometry
-    cuda_profugus::Mesh_Geometry geom(x_edges,y_edges,z_edges);
-    geom.set_matids(matids);
+    auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(x_edges,
+        y_edges,z_edges);
+    geom->set_matids(matids);
     cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
 
     // Build physics
@@ -113,8 +114,9 @@ void Physics_Tester::test_collide( const Vec_Dbl  &x_edges,
 {
 
     // Build geometry
-    cuda_profugus::Mesh_Geometry geom(x_edges,y_edges,z_edges);
-    geom.set_matids(matids);
+    auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(x_edges,
+        y_edges,z_edges);
+    geom->set_matids(matids);
     cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
 
     // Build physics

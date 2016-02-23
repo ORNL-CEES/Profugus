@@ -104,7 +104,7 @@ void Uniform_Source<Geometry>::build_source(SP_Shape geometric_shape)
     SCOPED_TIMER("profugus::Uniform_Source.build_source");
 
     // store the spatial shape
-    d_geo_shape_host = SDP_Shape(*geometric_shape);
+    d_geo_shape_host = SDP_Shape(geometric_shape);
     d_geo_shape = d_geo_shape_host.get_device_ptr();
 
     // make the RNG for this cycle
