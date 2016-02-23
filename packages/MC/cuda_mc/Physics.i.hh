@@ -138,9 +138,6 @@ double Physics<Geometry>::total(Reaction_Type       type,
         default:
             return 0.0;
     }
-
-    // undefined or unassigned type, return 0
-    return 0.0;
 }
 
 //---------------------------------------------------------------------------//
