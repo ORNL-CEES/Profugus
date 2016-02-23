@@ -72,6 +72,7 @@ class Mesh_Geometry
     //! Set materials
     void set_matids(const Vec_Matids& matids)
     {
+        REQUIRE( matids.size() == num_cells() );
         d_matid_vec =
             std::make_shared<Dev_Matid_Vec>(profugus::make_view(matids));
         dd_matids = d_matid_vec->data();
