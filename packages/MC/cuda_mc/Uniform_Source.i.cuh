@@ -60,15 +60,6 @@ __device__ auto Uniform_Source<Geometry>::get_particle(RNG_t &rng) -> Particle_t
     // get the material id
     matid = b_geometry->matid(p.geo_state());
 
-    if( blockIdx.x==0 && threadIdx.x==0 )
-    {
-        printf("Energy cdf: ");
-        double *dat = d_erg_cdf.data();
-        for( int i = 0; i < d_erg_cdf.size(); ++i )
-            printf("%e, ",dat[i]);
-        printf("\n");
-    }
-
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
         d_erg_cdf.size(), d_erg_cdf.data(), p.ran());
