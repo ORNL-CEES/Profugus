@@ -51,10 +51,6 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
         // calculate distance to collision in mean-free-paths
         dist_mfp = -log(particle.ran());
 
-        printf("Particle in group %i at %f %f %f with event %i\n",
-            particle.group(),geo_state.d_r.x,geo_state.d_r.y,geo_state.d_r.z,
-            particle.event());
-
         // while we are hitting boundaries, continue to transport until we get
         // to the collision site
         particle.set_event(profugus::events::BOUNDARY);
@@ -76,7 +72,6 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
 
             // total interaction cross section
             xs_tot = d_physics->total(profugus::physics::TOTAL, particle);
-            printf("Total cross section is %f\n",xs_tot);
             CHECK(xs_tot >= 0.0);
 
             // sample distance to next collision
