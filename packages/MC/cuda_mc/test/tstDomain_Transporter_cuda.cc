@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "Domain_Transporter_Tester.hh"
+#include "mc/Definitions.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
 
@@ -28,10 +29,9 @@ class Domain_Transporter_cudaTest : public ::testing::Test
   protected:
     void SetUp()
     {
-        build_xs();
     }
 
-    void build_xs()
+    void build_5grp_xs()
     {
         xs = SP_XS(new XS_t());
         xs->set(0, 5);
@@ -96,7 +96,69 @@ class Domain_Transporter_cudaTest : public ::testing::Test
         xs->complete();
     }
 
+    void build_3grp_xs()
+    {
+        const int ng = 3;
+        xs = SP_XS(new XS_t());
+        xs->set(0, ng);
+
+        // make group boundaries
+        XS_t::OneDArray nbnd(ng+1, 0.0);
+        nbnd[0] = 100.0;
+        nbnd[1] = 1.0;
+        nbnd[2] = 0.01;
+        nbnd[3] = 0.0001;
+        xs->set_bounds(nbnd);
+
+        double t1[ng] = {1.1, 1.6, 2.9};
+        double t2[ng] = {10.0, 11.3, 16.2};
+
+        XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
+        XS_t::OneDArray tot2(std::begin(t2), std::end(t2));
+
+        xs->add(0, XS_t::TOTAL, tot1);
+        xs->add(1, XS_t::TOTAL, tot2);
+
+        double s1[][3] = {{0.7, 0.0, 0.0},
+                          {0.2, 0.3, 0.0},
+                          {0.1, 0.7, 1.9}};
+
+        double s2[][3] = {{2.7, 0.0, 0.0},
+                          {2.2, 2.3, 0.0},
+                          {2.1, 2.7, 3.9}};
+
+        XS_t::TwoDArray sct1(ng, ng, 0.0);
+        XS_t::TwoDArray sct2(ng, ng, 0.0);
+
+        for (int g = 0; g < 3; ++g)
+        {
+            for (int gp = 0; gp < 3; ++gp)
+            {
+                sct1(g, gp) = s1[g][gp];
+                sct2(g, gp) = s2[g][gp];
+            }
+        }
+
+        xs->add(0, 0, sct1);
+        xs->add(1, 0, sct2);
+
+        double c2[] = {0.4, 0.6, 0.0};
+        double f2[] = {3.2, 4.2, 0.0};
+        double n2[] = {2.4*3.2, 2.4*4.2, 0.0};
+
+        XS_t::OneDArray chi2(std::begin(c2), std::end(c2));
+        XS_t::OneDArray fis2(std::begin(f2), std::end(f2));
+        XS_t::OneDArray nuf2(std::begin(n2), std::end(n2));
+
+        xs->add(1, XS_t::CHI, chi2);
+        xs->add(1, XS_t::SIG_F, fis2);
+        xs->add(1, XS_t::NU_SIG_F, nuf2);
+
+        xs->complete();
+    }
+
   protected:
+
     // >>> DATA
     SP_XS xs;
 };
@@ -105,23 +167,80 @@ class Domain_Transporter_cudaTest : public ::testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(Domain_Transporter_cudaTest, transport)
+TEST_F(Domain_Transporter_cudaTest, five_group)
 {
+    build_5grp_xs();
+
     // Mesh edges
     std::vector<double> edges = {0.0, 0.50, 1.0};
     std::vector<unsigned int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
 
-    int num_p = 1;
+    int num_p = 128;
     std::vector<int> events(num_p);
     cuda_mc::Domain_Transporter_Tester::test_transport(
         edges,edges,edges,matids,xs,events);
 
     std::cout << "Events: ";
+    int absorptions = 0;
+    int escapes = 0;
+    int others = 0;
     for( auto e : events )
     {
+        if( e == profugus::events::ABSORPTION )
+            absorptions++;
+        else if( e == profugus::events::ESCAPE )
+            escapes++;
+        else
+            others++;
         std::cout << e << " ";
     }
     std::cout << std::endl;
+
+    std::cout << absorptions << " particles were absorbed and " << escapes
+        << " escaped from system" << std::endl;
+    std::cout << others << " other events were detected" << std::endl;
+
+    EXPECT_EQ( 0, others );
+    EXPECT_EQ( 60, escapes);
+    EXPECT_EQ( 68, absorptions);
+}
+
+TEST_F(Domain_Transporter_cudaTest, three_group)
+{
+    build_3grp_xs();
+
+    // Mesh edges
+    std::vector<double> edges = {0.0, 0.50, 1.0};
+    std::vector<unsigned int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
+
+    int num_p = 128;
+    std::vector<int> events(num_p);
+    cuda_mc::Domain_Transporter_Tester::test_transport(
+        edges,edges,edges,matids,xs,events);
+
+    std::cout << "Events: ";
+    int absorptions = 0;
+    int escapes = 0;
+    int others = 0;
+    for( auto e : events )
+    {
+        if( e == profugus::events::ABSORPTION )
+            absorptions++;
+        else if( e == profugus::events::ESCAPE )
+            escapes++;
+        else
+            others++;
+        std::cout << e << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << absorptions << " particles were absorbed and " << escapes
+        << " escaped from system" << std::endl;
+    std::cout << others << " other events were detected" << std::endl;
+
+    EXPECT_EQ( 0, others );
+    EXPECT_EQ( 50, escapes);
+    EXPECT_EQ( 78, absorptions);
 }
 
 //---------------------------------------------------------------------------//

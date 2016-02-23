@@ -25,7 +25,7 @@ typedef cuda_mc::Domain_Transporter<Geom> Transporter;
 
 __global__ void test_transport_kernel( Uniform_Src  source,
                                        Transporter  trans,
-                                       //int         *events,
+                                       int         *events,
                                        int          num_particles )
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -38,15 +38,11 @@ __global__ void test_transport_kernel( Uniform_Src  source,
          // Get particle from source
          auto p = source.get_particle(rng_state);
 
-         auto geo_state = p.geo_state();
-         auto xyz = geo_state.d_r;
-         printf("Thread %i starting particle at %f %f %f with matid %i\n",tid,xyz.x,xyz.y,xyz.z,p.matid());
-
          // Transport particle
          trans.transport(p);
 
          // Get final event
-         //events[tid] = p.event();
+         events[tid] = p.event();
      }
 }
 
@@ -68,6 +64,7 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     pl->set("num_groups",xs->num_groups());
     pl->set("Np",num_particles);
+    pl->set("implicit_capture",false);
     auto phys = std::make_shared<Physics<Geom> >(pl,xs);
     phys->set_geometry(sdp_geom);
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
@@ -96,12 +93,13 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
 
     test_transport_kernel<<<1,num_particles>>>( source,
                                                 trans,
-                                                //device_events.data(),
+                                                device_events.data(),
                                                 num_particles );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
-
     cudaDeviceSynchronize();
+
+    device_events.to_host(profugus::make_view(events));
 }
 
 } // end namespace cuda_mc
