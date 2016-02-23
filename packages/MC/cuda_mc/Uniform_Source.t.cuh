@@ -47,6 +47,7 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     , d_wt(1.0)
     , d_np_left(0)
     , d_np_run(0)
+    , d_nodes(profugus::nodes())
 {
     REQUIRE(!db.is_null());
 
