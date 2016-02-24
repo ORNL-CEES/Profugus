@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Physics.t.hh"
+#include "Physics.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
 namespace cuda_mc

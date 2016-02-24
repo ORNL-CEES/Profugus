@@ -11,8 +11,8 @@
 #ifndef cuda_mc_Domain_Transporter_cuh
 #define cuda_mc_Domain_Transporter_cuh
 
-#include "Particle.hh"
-#include "Physics.hh"
+#include "Particle.cuh"
+#include "Physics.cuh"
 #include "Step_Selector.cuh"
 //#include "Variance_Reduction.hh"
 //#include "Tallier.hh"

@@ -9,7 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "Particle_Tester.hh"
-#include "../Particle.hh"
+#include "../Particle.cuh"
 #include "../../cuda_geometry/Mesh_Geometry.hh"
 
 namespace cuda_mc

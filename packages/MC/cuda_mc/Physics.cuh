@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/Physics.hh
+ * \file   cuda_mc/Physics.cuh
  * \author Thomas M. Evans
  * \date   Thursday May 1 11:15:7 2014
  * \brief  MG_Physics class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_mc_Physics_hh
-#define cuda_mc_Physics_hh
+#ifndef cuda_mc_Physics_cuh
+#define cuda_mc_Physics_cuh
 
 #include <vector>
 #include <memory>
@@ -24,7 +24,7 @@
 #include "utils/Definitions.hh"
 #include "xs/XS.hh"
 #include "mc/Definitions.hh"
-#include "Particle.hh"
+#include "Particle.cuh"
 
 namespace cuda_mc
 {
@@ -193,10 +193,10 @@ class Physics
 
 } // end namespace cuda_mc
 
-#include "Physics.i.hh"
+#include "Physics.i.cuh"
 
-#endif // cuda_mc_Physics_hh
+#endif // cuda_mc_Physics_cuh
 
 //---------------------------------------------------------------------------//
-//              end of cuda_mc/Physics.hh
+//              end of cuda_mc/Physics.cuh
 //---------------------------------------------------------------------------//

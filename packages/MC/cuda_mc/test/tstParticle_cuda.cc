@@ -8,12 +8,9 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../Particle.hh"
 #include "Particle_Tester.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
-
-using cuda_mc::Particle;
 
 //---------------------------------------------------------------------------//
 // Test fixture

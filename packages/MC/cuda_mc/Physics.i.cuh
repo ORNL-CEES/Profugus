@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/Physics.i.hh
+ * \file   cuda_mc/Physics.i.cuh
  * \author Thomas M. Evans
  * \date   Thursday May 1 11:14:55 2014
  * \brief  Physics template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_mc_Physics_i_hh
-#define cuda_mc_Physics_i_hh
+#ifndef cuda_mc_Physics_i_cuh
+#define cuda_mc_Physics_i_cuh
 
 #include <sstream>
 #include <algorithm>
@@ -19,7 +19,7 @@
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
 #include "cuda_utils/Constants.hh"
-#include "Physics.hh"
+#include "Physics.cuh"
 
 namespace cuda_mc
 {
@@ -369,8 +369,8 @@ int Physics<Geometry>::sample_fission_group(unsigned int matid,
 
 } // end namespace cuda_mc
 
-#endif // cuda_mc_Physics_i_hh
+#endif // cuda_mc_Physics_i_cuh
 
 //---------------------------------------------------------------------------//
-//                 end of Physics.i.hh
+//                 end of Physics.i.cuh
 //---------------------------------------------------------------------------//

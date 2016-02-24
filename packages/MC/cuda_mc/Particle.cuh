@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/Particle.hh
+ * \file   cuda_mc/Particle.cuh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 11:26:16 2014
  * \brief  Particle class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_mc_Particle_hh
-#define cuda_mc_Particle_hh
+#ifndef cuda_mc_Particle_cuh
+#define cuda_mc_Particle_cuh
 
 #include "CudaUtils/cuda_utils/Definitions.hh"
 #include "MC/mc/Definitions.hh"
@@ -122,8 +122,8 @@ class Particle
 
 } // end namespace cuda_mc
 
-#endif // cuda_mc_Particle_hh
+#endif // cuda_mc_Particle_cuh
 
 //---------------------------------------------------------------------------//
-//                 end of Particle.hh
+//                 end of Particle.cuh
 //---------------------------------------------------------------------------//

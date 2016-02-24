@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/Physics.t.hh
+ * \file   cuda_mc/Physics.t.cuh
  * \author Thomas M. Evans
  * \date   Thursday May 1 11:14:55 2014
  * \brief  Physics template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_mc_Physics_t_hh
-#define cuda_mc_Physics_t_hh
+#ifndef cuda_mc_Physics_t_cuh
+#define cuda_mc_Physics_t_cuh
 
 #include <sstream>
 #include <algorithm>
@@ -19,7 +19,7 @@
 #include "utils/Constants.hh"
 #include "utils/Vector_Functions.hh"
 #include "utils/View_Field.hh"
-#include "Physics.hh"
+#include "Physics.cuh"
 
 namespace cuda_mc
 {
@@ -129,8 +129,8 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
 
 } // end namespace cuda_mc
 
-#endif // cuda_mc_Physics_t_hh
+#endif // cuda_mc_Physics_t_cuh
 
 //---------------------------------------------------------------------------//
-//                 end of Physics.t.hh
+//                 end of Physics.t.cuh
 //---------------------------------------------------------------------------//

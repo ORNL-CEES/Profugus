@@ -9,7 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "Physics_Tester.hh"
-#include "../Physics.hh"
+#include "../Physics.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "CudaUtils/cuda_utils/Shared_Device_Ptr.hh"
 #include "Teuchos_RCP.hpp"
