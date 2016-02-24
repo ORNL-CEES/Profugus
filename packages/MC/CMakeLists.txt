@@ -173,6 +173,7 @@ IF(USE_CUDA)
     cuda_mc/Domain_Transporter.pt.cu
     cuda_mc/Physics.pt.cu
     cuda_mc/Source.pt.cu
+    cuda_mc/Source_Transporter.pt.cu
     cuda_mc/Uniform_Source.pt.cu
     )
   LIST(APPEND CUDA_HEADERS ${CUDA_MC_HEADERS})
