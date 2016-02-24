@@ -22,7 +22,8 @@
 #include "rng/RNG_Control.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
-#include "../Sampler.hh"
+
+#include "Physics_Tester.hh"
 
 using namespace std;
 
@@ -149,637 +150,648 @@ void PhysicsTest<cuda_profugus::Mesh_Geometry>::build_geometry()
 typedef ::testing::Types<cuda_profugus::Mesh_Geometry> MyTypes;
 TYPED_TEST_CASE(PhysicsTest, MyTypes);
 
-TYPED_TEST(PhysicsTest, Collisions)
+TYPED_TEST(PhysicsTest, Collisions_no_capture)
 {
-    typedef typename TestFixture::Particle      Particle;
-    typedef typename TestFixture::SP_Particle   SP_Particle;
     typedef typename TestFixture::Physics_t     Physics_t;
-    typedef typename TestFixture::SP_Physics    SP_Physics;
     typedef typename TestFixture::Space_Vector  Space_Vector;
-    typedef typename TestFixture::Bank_t        Bank_t;
 
-    // make a particle
-    SP_Particle p(make_shared<Particle>());
-    this->geometry->initialize(
-        Space_Vector(50.0, 50.0, 50.0), Space_Vector(1.0, 1.0, 1.0),
-        p->geo_state());
-    p->set_rng(this->rng);
-    p->set_matid(0);
+    // turn off implicit capture
+    this->db->set("implicit_capture", false);
+
+    // make the physics tester.
+    int Np = 50000;
+    Physics_Tester physics_tester( this->edges, this->edges, this->edges,
+				   Np, this->rng, *(this->db), *(this->xs) );
+
+    // initialize particles with the geometry and set to collide.
+    Space_Vector r, d;
+    r.x = 50.0;
+    r.y = 50.0;
+    r.z = 50.0;
+    d.x = 1.0;
+    d.y = 1.0;
+    d.z = 1.0;
+    physics_tester.geometry_initialize( r, d, 0 );
 
     // check distributions from analog collisions
+    int scat[5]   = {0};
+    int abs[5]    = {0};
+    int ng[5]     = {0};
+    int octant[8] = {0};
+
+    vector< vector<int> > g2g(5, vector<int>(5, 0));
+
+    // group CDF
+    std::vector<double> cdf = {0.2, 0.4, 0.6, 0.8, 1.0};
+
+    // Sample the particle groups
+    physics_tester.sample_group( cdf );
+
+    // Get the ingoing groups
+    auto ing = physics_tester.particle_tester().group();
+
+    // Count the ingoing groups
+    for ( auto i : ing ) ng[i]++;
+
+    // collide the particles
+    physics_tester.physics().get_host_ptr()->collide( physics_tester.particles() );
+
+    // Get the outgoing groups.
+    auto outg = physics_tester.particle_tester().group();
+
+    // Get the outgoing events
+    auto events = physics_tester.particle_tester().event();
+
+    // Get the outgoing states.
+    auto geo_state = physics_tester.particle_tester().geo_state();
+
+    // count the outgoing data
+    for ( int i = 0; i < Np; ++i )
     {
-        this->db->get("implicit_capture", false);
+	if (events[i] == cuda_profugus::events::ABSORPTION)
+	{
+	    abs[ing[i]]++;
+	}
+	else if (events[i] == cuda_profugus::events::SCATTER)
+	{
+	    scat[ing[i]]++;
+	    g2g[ing[i]][outg[i]]++;
 
-        // make a mg physics object
-        SP_Physics physics(make_shared<Physics_t>(this->db, this->xs));
-        physics->set_geometry(this->geometry);
+	    Space_Vector omega = geo_state[i].d_dir;
 
-        // make a bank
-        Bank_t bank;
-
-        int Np = 100000;
-
-        int scat[5]   = {0};
-        int abs[5]    = {0};
-        int ng[5]     = {0};
-        int octant[8] = {0};
-
-        vector< vector<int> > g2g(5, vector<int>(5, 0));
-
-        int ing, outg;
-
-        // group CDF
-        double cdf[] = {0.2, 0.4, 0.6, 0.8, 1.0};
-
-        for (int n = 0; n < Np; ++n)
-        {
-            // setup particle to do analog collision
-            p->set_wt(1.0);
-            p->set_event(profugus::events::COLLISION);
-
-            // sample a group
-            double rn = this->rng.ran();
-            int group = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
-
-            p->set_group(group);
-
-            ing = group;
-            ng[ing]++;
-
-            // do the collision
-            physics->collide(*p, bank);
-
-            outg = p->group();
-
-            if (p->event() == profugus::events::ABSORPTION)
-            {
-                abs[ing]++;
-            }
-            else if (p->event() == profugus::events::SCATTER)
-            {
-                scat[ing]++;
-                g2g[ing][outg]++;
-
-                const Space_Vector &omega =
-                    this->geometry->direction(p->geo_state());
-
-                // check octant distribution (isotropic scattering)
-                if (omega[Z] > 0.0)
-                {
-                    if (omega[Y] > 0.0)
-                    {
-                        if (omega[X] > 0.0)
-                        {
-                            octant[0]++;
-                        }
-                        else
-                        {
-                            octant[1]++;
-                        }
-                    }
-                    else
-                    {
-                        if (omega[X] > 0.0)
-                        {
-                            octant[2]++;
-                        }
-                        else
-                        {
-                            octant[3]++;
-                        }
-                    }
-                }
-                else
-                {
-                    if (omega[Y] > 0.0)
-                    {
-                        if (omega[X] > 0.0)
-                        {
-                            octant[4]++;
-                        }
-                        else
-                        {
-                            octant[5]++;
-                        }
-                    }
-                    else
-                    {
-                        if (omega[X] > 0.0)
-                        {
-                            octant[6]++;
-                        }
-                        else
-                        {
-                            octant[7]++;
-                        }
-                    }
-                }
-            }
-        }
-
-        int tots         = 0, tota = 0;
-        double ref[]     = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
-        double g2gr[][5] = {{0.4615, 0.3462, 0.1538, 0.0385, 0.0000},
-                            {0.0000, 0.3855, 0.3373, 0.2530, 0.0241},
-                            {0.0000, 0.0000, 0.5036, 0.4015, 0.0949},
-                            {0.0000, 0.0000, 0.0843, 0.5449, 0.3708},
-                            {0.0000, 0.0000, 0.0000, 0.1750, 0.8250}};
-
-        cout.precision(4);
-        cout << setw(3) << "g" << setw(10) << "abs" << setw(10) << "scat"
-             << setw(10) << "c" << setw(10) << "diff" << endl;
-        cout << "-------------------------------------------" << endl;
-        for (int g = 0; g < 5; ++g)
-        {
-            double a = static_cast<double>(abs[g]) / ng[g];
-            double s = static_cast<double>(scat[g]) / ng[g];
-
-            cout << setw(3) << g
-                 << setw(10) << fixed << a
-                 << setw(10) << fixed << s
-                 << setw(10) << fixed << ref[g]
-                 << setw(10) << fixed << std::fabs(s - ref[g]) / ref[g]
-                 << endl;
-
-            EXPECT_SOFTEQ(s, ref[g], 0.008);
-
-            tota += abs[g];
-            tots += scat[g];
-        }
-        EXPECT_EQ(Np, tots + tota);
-
-        cout << endl;
-        cout << "Group-to-group Scattering" << endl;
-        cout << "------------------------------------" << endl;
-        for (int g = 0; g < 5; ++g)
-        {
-            for (int gp = 0; gp < 5; ++gp)
-            {
-                double s = static_cast<double>(g2g[g][gp]) / scat[g];
-                double e = 0.0;
-                if (g2gr[g][gp] > 0.0)
-                    e = std::fabs(s - g2gr[g][gp]) / g2gr[g][gp];
-
-                cout << setw(1) << g << " -> " << setw(1) << gp
-                     << setw(10) << fixed << s
-                     << setw(10) << fixed << g2gr[g][gp]
-                     << setw(10) << fixed << e
-                     << endl;
-
-                EXPECT_SOFTEQ(s, g2gr[g][gp], 0.05);
-            }
-        }
-
-        cout << endl;
-        cout << "Isotropic scattering by octant" << endl;
-        cout << "---------------------------------" << endl;
-        int osum = 0;
-        for (int i = 0; i < 8; ++i)
-        {
-            double o  = static_cast<double>(octant[i]) / tots;
-            double r  = 1.0/8.0;
-            osum     += octant[i];
-            cout << setw(3) << i
-                 << setw(10) << fixed << o
-                 << setw(10) << fixed << r
-                 << setw(10) << std::abs(o - r) / r << endl;
-
-            EXPECT_SOFTEQ(o, r, 0.03);
-        }
-        EXPECT_EQ(tots, osum);
+	    // check octant distribution (isotropic scattering)
+	    if (omega.z > 0.0)
+	    {
+		if (omega.y > 0.0)
+		{
+		    if (omega.x > 0.0)
+		    {
+			octant[0]++;
+		    }
+		    else
+		    {
+			octant[1]++;
+		    }
+		}
+		else
+		{
+		    if (omega.x > 0.0)
+		    {
+			octant[2]++;
+		    }
+		    else
+		    {
+			octant[3]++;
+		    }
+		}
+	    }
+	    else
+	    {
+		if (omega.y > 0.0)
+		{
+		    if (omega.x > 0.0)
+		    {
+			octant[4]++;
+		    }
+		    else
+		    {
+			octant[5]++;
+		    }
+		}
+		else
+		{
+		    if (omega.x > 0.0)
+		    {
+			octant[6]++;
+		    }
+		    else
+		    {
+			octant[7]++;
+		    }
+		}
+	    }
+	}
     }
 
-    // check distributions from implicit-capture collisions
+    int tots         = 0, tota = 0;
+    double ref[]     = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
+    double g2gr[][5] = {{0.4615, 0.3462, 0.1538, 0.0385, 0.0000},
+			{0.0000, 0.3855, 0.3373, 0.2530, 0.0241},
+			{0.0000, 0.0000, 0.5036, 0.4015, 0.0949},
+			{0.0000, 0.0000, 0.0843, 0.5449, 0.3708},
+			{0.0000, 0.0000, 0.0000, 0.1750, 0.8250}};
+
+    cout.precision(4);
+    cout << setw(3) << "g" << setw(10) << "abs" << setw(10) << "scat"
+	 << setw(10) << "c" << setw(10) << "diff" << endl;
+    cout << "-------------------------------------------" << endl;
+    for (int g = 0; g < 5; ++g)
     {
-        this->db->set("implicit_capture", true);
+	double a = static_cast<double>(abs[g]) / ng[g];
+	double s = static_cast<double>(scat[g]) / ng[g];
 
-        double c[] = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
+	cout << setw(3) << g
+	     << setw(10) << fixed << a
+	     << setw(10) << fixed << s
+	     << setw(10) << fixed << ref[g]
+	     << setw(10) << fixed << std::fabs(s - ref[g]) / ref[g]
+	     << endl;
 
-        // make a mg physics object
-        SP_Physics physics(make_shared<Physics_t>(this->db, this->xs));
-        physics->set_geometry(this->geometry);
+	EXPECT_SOFTEQ(s, ref[g], 0.04);
 
-        // make a bank
-        Bank_t bank;
-
-        int Np        = 100000;
-        int octant[8] = {0};
-
-        // group CDF
-        double cdf[] = {0.2, 0.4, 0.6, 0.8, 1.0};
-
-        for (int n = 0; n < Np; ++n)
-        {
-            // setup particle to do implicit capture
-            p->set_wt(0.9);
-            p->set_event(profugus::events::COLLISION);
-
-            // sample a group
-            double rn   = this->rng.ran();
-            int group   = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
-
-            p->set_group(group);
-
-            int g = group;
-
-            // do the collision
-            physics->collide(*p, bank);
-
-            EXPECT_EQ(profugus::events::IMPLICIT_CAPTURE, p->event());
-            EXPECT_TRUE(soft_equiv(p->wt(), c[g] * 0.9, 1.0e-4));
-
-            const Space_Vector &omega =
-                this->geometry->direction(p->geo_state());
-
-            // check octant distribution (isotropic scattering)
-            if (omega[Z] > 0.0)
-            {
-                if (omega[Y] > 0.0)
-                {
-                    if (omega[X] > 0.0)
-                    {
-                        octant[0]++;
-                    }
-                    else
-                    {
-                        octant[1]++;
-                    }
-                }
-                else
-                {
-                    if (omega[X] > 0.0)
-                    {
-                        octant[2]++;
-                    }
-                    else
-                    {
-                        octant[3]++;
-                    }
-                }
-            }
-            else
-            {
-                if (omega[Y] > 0.0)
-                {
-                    if (omega[X] > 0.0)
-                    {
-                        octant[4]++;
-                    }
-                    else
-                    {
-                        octant[5]++;
-                    }
-                }
-                else
-                {
-                    if (omega[X] > 0.0)
-                    {
-                        octant[6]++;
-                    }
-                    else
-                    {
-                        octant[7]++;
-                    }
-                }
-            }
-        }
-
-        cout << endl;
-        cout << "Isotropic scattering by octant" << endl;
-        cout << "---------------------------------" << endl;
-        for (int i = 0; i < 8; ++i)
-        {
-            double o  = static_cast<double>(octant[i]) / Np;
-            double r  = 1.0/8.0;
-            cout << setw(3) << i
-                 << setw(10) << fixed << o
-                 << setw(10) << fixed << r
-                 << setw(10) << std::abs(o - r) / r << endl;
-
-            EXPECT_SOFTEQ(o, r, 0.03);
-        }
+	tota += abs[g];
+	tots += scat[g];
     }
+    EXPECT_EQ(Np, tots + tota);
+
+    cout << endl;
+    cout << "Group-to-group Scattering" << endl;
+    cout << "------------------------------------" << endl;
+    for (int g = 0; g < 5; ++g)
+    {
+	for (int gp = 0; gp < 5; ++gp)
+	{
+	    double s = static_cast<double>(g2g[g][gp]) / scat[g];
+	    double e = 0.0;
+	    if (g2gr[g][gp] > 0.0)
+		e = std::fabs(s - g2gr[g][gp]) / g2gr[g][gp];
+
+	    cout << setw(1) << g << " -> " << setw(1) << gp
+		 << setw(10) << fixed << s
+		 << setw(10) << fixed << g2gr[g][gp]
+		 << setw(10) << fixed << e
+		 << endl;
+
+	    EXPECT_SOFTEQ(s, g2gr[g][gp], 0.07);
+	}
+    }
+
+    cout << endl;
+    cout << "Isotropic scattering by octant" << endl;
+    cout << "---------------------------------" << endl;
+    int osum = 0;
+    for (int i = 0; i < 8; ++i)
+    {
+	double o  = static_cast<double>(octant[i]) / tots;
+	double r  = 1.0/8.0;
+	osum     += octant[i];
+	cout << setw(3) << i
+	     << setw(10) << fixed << o
+	     << setw(10) << fixed << r
+	     << setw(10) << std::abs(o - r) / r << endl;
+
+	EXPECT_SOFTEQ(o, r, 0.03);
+    }
+    EXPECT_EQ(tots, osum);
 }
 
-//---------------------------------------------------------------------------//
-
-TYPED_TEST(PhysicsTest, Access)
-{
-    typedef typename TestFixture::Particle      Particle;
-    typedef typename TestFixture::SP_Particle   SP_Particle;
-    typedef typename TestFixture::Physics_t     Physics_t;
-    typedef typename TestFixture::SP_Physics    SP_Physics;
-    typedef typename TestFixture::Space_Vector  Space_Vector;
-
-    using profugus::physics::TOTAL;
-    using profugus::physics::SCATTERING;
-    using profugus::physics::FISSION;
-
-    // make a particle
-    SP_Particle p(make_shared<Particle>());
-
-    // physics
-    Physics_t physics(this->db, this->xs);
-
-    EXPECT_FALSE(physics.is_fissionable(0));
-    EXPECT_TRUE(physics.is_fissionable(1));
-
-    p->set_matid(0);
-
-    // test data access without fission
-    {
-
-        p->set_group(0);
-        EXPECT_SOFTEQ(5.2, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(1);
-        EXPECT_SOFTEQ(11.4, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(2);
-        EXPECT_SOFTEQ(18.2, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(3);
-        EXPECT_SOFTEQ(29.9, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(4);
-        EXPECT_SOFTEQ(27.3, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
-
-    }
-
-    p->set_matid(1);
-
-    // test data access with fission
-    {
-        p->set_group(0);
-        EXPECT_SOFTEQ(5.3, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.1, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(1);
-        EXPECT_SOFTEQ(11.8, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(0.4, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(2);
-        EXPECT_SOFTEQ(20.0, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(1.8, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(3);
-        EXPECT_SOFTEQ(35.6, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(5.7, physics.total(FISSION, *p), 1.e-12);
-
-        p->set_group(4);
-        EXPECT_SOFTEQ(37.1, physics.total(TOTAL, *p), 1.e-12);
-        EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
-        EXPECT_SOFTEQ(9.8, physics.total(FISSION, *p), 1.e-12);
-    }
-}
-
-//---------------------------------------------------------------------------//
-
-TYPED_TEST(PhysicsTest, initialization)
-{
-    typedef typename TestFixture::Particle      Particle;
-    typedef typename TestFixture::SP_Particle   SP_Particle;
-    typedef typename TestFixture::Physics_t     Physics_t;
-    typedef typename TestFixture::SP_Physics    SP_Physics;
-    typedef typename TestFixture::Space_Vector  Space_Vector;
-
-    // make a particle
-    SP_Particle p(make_shared<Particle>());
-
-    // physics
-    Physics_t physics(this->db, this->xs);
-
-    EXPECT_FALSE(physics.is_fissionable(0));
-    EXPECT_TRUE(physics.is_fissionable(1));
-
-    // check initializations
-    physics.initialize(100.0, *p);
-    EXPECT_EQ(0, p->group());
-
-    physics.initialize(99.99, *p);
-    EXPECT_EQ(0, p->group());
-
-    physics.initialize(10.01, *p);
-    EXPECT_EQ(0, p->group());
-
-    physics.initialize(10.0, *p);
-    EXPECT_EQ(0, p->group());
-
-    physics.initialize(9.99, *p);
-    EXPECT_EQ(1, p->group());
-
-    physics.initialize(1.01, *p);
-    EXPECT_EQ(1, p->group());
-
-    physics.initialize(1.0, *p);
-    EXPECT_EQ(1, p->group());
-
-    physics.initialize(0.99, *p);
-    EXPECT_EQ(2, p->group());
-
-    physics.initialize(0.101, *p);
-    EXPECT_EQ(2, p->group());
-
-    physics.initialize(0.1, *p);
-    EXPECT_EQ(2, p->group());
-
-    physics.initialize(0.099, *p);
-    EXPECT_EQ(3, p->group());
-
-    physics.initialize(0.011, *p);
-    EXPECT_EQ(3, p->group());
-
-    physics.initialize(0.01, *p);
-    EXPECT_EQ(3, p->group());
-
-    physics.initialize(0.0099, *p);
-    EXPECT_EQ(4, p->group());
-
-    physics.initialize(0.0011, *p);
-    EXPECT_EQ(4, p->group());
-
-    physics.initialize(0.001, *p);
-    EXPECT_EQ(4, p->group());
-
-    // Check energy bounds
-    EXPECT_EQ(0.001, physics.min_energy());
-    EXPECT_EQ(100.0, physics.max_energy());
-
-#ifdef CHECK_ON
-    bool caught = false;
-    try
-    {
-        physics.initialize(0.00099, *p);
-    }
-    catch (const profugus::assertion &a)
-    {
-        caught = true;
-    }
-    EXPECT_TRUE(caught);
-#endif
-}
-
-
-
-//---------------------------------------------------------------------------//
-
-TYPED_TEST(PhysicsTest, fission_sampling)
-{
-    typedef typename TestFixture::Particle                  Particle;
-    typedef typename TestFixture::SP_Particle               SP_Particle;
-    typedef typename TestFixture::Physics_t                 Physics_t;
-    typedef typename TestFixture::Space_Vector              Space_Vector;
-    typedef typename TestFixture::Fission_Site_Container    FSC;
-
-    Physics_t physics(this->db, this->xs);
-    physics.set_geometry(this->geometry);
-
-    FSC fsites;
-
-    // make a particle
-    SP_Particle p(make_shared<Particle>());
-    this->geometry->initialize(Space_Vector(1.1, 0.5, 6.2),
-                               Space_Vector(1.0, 1.0, 1.0),
-                               p->geo_state());
-    p->set_matid(1);
-    p->set_wt(0.6);
-    p->set_rng(this->rng);
-    /*
-     * First 10 random numbers in sequence:
-     * 0.9709
-     * 0.3771
-     * 0.7536
-     * 0.1897
-     * 0.5297
-     * 0.8803
-     * 0.6286
-     * 0.3288
-     * 0.6362
-     * 0.8904
-     */
-
-    // put particle in group 3
-    p->set_group(3);
-
-    // sampling fission with these setting should result in 1 fission event
-    EXPECT_EQ(1, physics.sample_fission_site(*p, fsites, 1.04));
-    EXPECT_EQ(1, fsites.size());
-    EXPECT_EQ(1, fsites[0].m);
-    EXPECT_EQ(1.1, fsites[0].r[0]);
-    EXPECT_EQ(0.5, fsites[0].r[1]);
-    EXPECT_EQ(6.2, fsites[0].r[2]);
-
-    // this next one will fail
-    p->geo_state().d_r = Space_Vector(1.2, 0.3, 6.6);
-    EXPECT_EQ(0, physics.sample_fission_site(*p, fsites, 1.04));
-    EXPECT_EQ(1, fsites.size());
-    EXPECT_EQ(1, fsites[0].m);
-    EXPECT_EQ(1.1, fsites[0].r[0]);
-    EXPECT_EQ(0.5, fsites[0].r[1]);
-    EXPECT_EQ(6.2, fsites[0].r[2]);
-
-    // this one will pass
-    p->set_group(4);
-    p->set_wt(0.99);
-    EXPECT_EQ(3, physics.sample_fission_site(*p, fsites, 0.2));
-    EXPECT_EQ(4, fsites.size());
-    EXPECT_EQ(1, fsites[0].m);
-    EXPECT_EQ(1.1, fsites[0].r[0]);
-    EXPECT_EQ(0.5, fsites[0].r[1]);
-    EXPECT_EQ(6.2, fsites[0].r[2]);
-
-    // there are 3 fission sites at this location
-    EXPECT_EQ(1, fsites[1].m);
-    EXPECT_EQ(1.2, fsites[1].r[0]);
-    EXPECT_EQ(0.3, fsites[1].r[1]);
-    EXPECT_EQ(6.6, fsites[1].r[2]);
-    EXPECT_EQ(1, fsites[2].m);
-    EXPECT_EQ(1.2, fsites[2].r[0]);
-    EXPECT_EQ(0.3, fsites[2].r[1]);
-    EXPECT_EQ(6.6, fsites[2].r[2]);
-    EXPECT_EQ(1, fsites[2].m);
-    EXPECT_EQ(1.2, fsites[2].r[0]);
-    EXPECT_EQ(0.3, fsites[2].r[1]);
-    EXPECT_EQ(6.6, fsites[2].r[2]);
-
-    // test fission spectrum sample
-    {
-        EXPECT_TRUE(physics.initialize_fission(1, *p));
-        EXPECT_EQ(0, p->group());
-    }
-
-    // test initialization of particle from a fission site
-    EXPECT_TRUE(physics.initialize_fission(fsites[0], *p));
-    EXPECT_EQ(1, p->group());
-
-    EXPECT_EQ(4, fsites.size());
-
-    EXPECT_EQ(1.1, physics.fission_site(fsites[0])[0]);
-    EXPECT_EQ(0.5, physics.fission_site(fsites[0])[1]);
-    EXPECT_EQ(6.2, physics.fission_site(fsites[0])[2]);
-    EXPECT_EQ(1.2, physics.fission_site(fsites[1])[0]);
-    EXPECT_EQ(0.3, physics.fission_site(fsites[1])[1]);
-    EXPECT_EQ(6.6, physics.fission_site(fsites[1])[2]);
-
-    cout << "\n Size of fission-site = " << sizeof(fsites[0]) << " bytes"
-         << endl;
-
-    EXPECT_EQ(sizeof(fsites[0]), physics.fission_site_bytes());
-
-    // the size of the fission site container is 4 * 8 bytes (all of the
-    // elements of the struct are aligned along 64-bit boundaries because of
-    // the doubles in the space vector)
-    EXPECT_EQ(32, physics.fission_site_bytes());
-
-    // test packing of fission-container
-    vector<char> packed;
-    {
-        packed.resize(physics.fission_site_bytes() * 4);
-        memcpy(&packed[0], &fsites[0], packed.size());
-    }
-
-    {
-        FSC ufsc(4);
-        memcpy(&ufsc[0], &packed[0], packed.size());
-
-        EXPECT_EQ(4, ufsc.size());
-        EXPECT_EQ(1, ufsc[0].m);
-        EXPECT_EQ(1.1, ufsc[0].r[0]);
-        EXPECT_EQ(0.5, ufsc[0].r[1]);
-        EXPECT_EQ(6.2, ufsc[0].r[2]);
-        EXPECT_EQ(1, ufsc[1].m);
-        EXPECT_EQ(1.2, ufsc[1].r[0]);
-        EXPECT_EQ(0.3, ufsc[1].r[1]);
-        EXPECT_EQ(6.6, ufsc[1].r[2]);
-        EXPECT_EQ(1, ufsc[2].m);
-        EXPECT_EQ(1.2, ufsc[2].r[0]);
-        EXPECT_EQ(0.3, ufsc[2].r[1]);
-        EXPECT_EQ(6.6, ufsc[2].r[2]);
-        EXPECT_EQ(1, ufsc[3].m);
-        EXPECT_EQ(1.2, ufsc[3].r[0]);
-        EXPECT_EQ(0.3, ufsc[3].r[1]);
-        EXPECT_EQ(6.6, ufsc[3].r[2]);
-    }
-
-    // test null ops for no fission
-    p->set_matid(0);
-    EXPECT_FALSE(physics.initialize_fission(0, *p));
-    EXPECT_EQ(0, physics.sample_fission_site(*p, fsites, 0.1));
-}
+// //---------------------------------------------------------------------------//
+// TYPED_TEST(PhysicsTest, Collisions_with_capture)
+// {
+//     typedef typename TestFixture::Particle      Particle;
+//     typedef typename TestFixture::SP_Particle   SP_Particle;
+//     typedef typename TestFixture::Physics_t     Physics_t;
+//     typedef typename TestFixture::SP_Physics    SP_Physics;
+//     typedef typename TestFixture::Space_Vector  Space_Vector;
+
+//     // turn on implicit capture
+//     this->db->set("implicit_capture", true);
+
+//     // make the physics tester.
+//     int Np = 100000;
+//     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
+// 				   Np, this->rng.rng(), *(this->db), *(this->xs) );
+
+//     // initialize particles with the geometry and set to collide.
+//     physics_tester.geometry_initialize( 
+// 	Space_Vector(50.0, 50.0, 50.0), Space_Vector(1.0, 1.0, 1.0) );
+    
+//     // check distributions from implicit-capture collisions
+//     {
+//         double c[] = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
+
+//         // make a mg physics object
+//         SP_Physics physics(make_shared<Physics_t>(this->db, this->xs));
+//         physics->set_geometry(this->geometry);
+
+//         int Np        = 100000;
+//         int octant[8] = {0};
+
+//         // group CDF
+//         double cdf[] = {0.2, 0.4, 0.6, 0.8, 1.0};
+
+//         for (int n = 0; n < Np; ++n)
+//         {
+//             // setup particle to do implicit capture
+//             p->set_wt(0.9);
+//             p->set_event(profugus::events::COLLISION);
+
+//             // sample a group
+//             double rn   = this->rng.ran();
+//             int group   = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
+
+//             p->set_group(group);
+
+//             int g = group;
+
+//             // do the collision
+//             physics->collide(*p, bank);
+
+//             EXPECT_EQ(profugus::events::IMPLICIT_CAPTURE, p->event());
+//             EXPECT_TRUE(soft_equiv(p->wt(), c[g] * 0.9, 1.0e-4));
+
+//             const Space_Vector &omega =
+//                 this->geometry->direction(p->geo_state());
+
+//             // check octant distribution (isotropic scattering)
+//             if (omega[Z] > 0.0)
+//             {
+//                 if (omega[Y] > 0.0)
+//                 {
+//                     if (omega[X] > 0.0)
+//                     {
+//                         octant[0]++;
+//                     }
+//                     else
+//                     {
+//                         octant[1]++;
+//                     }
+//                 }
+//                 else
+//                 {
+//                     if (omega[X] > 0.0)
+//                     {
+//                         octant[2]++;
+//                     }
+//                     else
+//                     {
+//                         octant[3]++;
+//                     }
+//                 }
+//             }
+//             else
+//             {
+//                 if (omega[Y] > 0.0)
+//                 {
+//                     if (omega[X] > 0.0)
+//                     {
+//                         octant[4]++;
+//                     }
+//                     else
+//                     {
+//                         octant[5]++;
+//                     }
+//                 }
+//                 else
+//                 {
+//                     if (omega[X] > 0.0)
+//                     {
+//                         octant[6]++;
+//                     }
+//                     else
+//                     {
+//                         octant[7]++;
+//                     }
+//                 }
+//             }
+//         }
+
+//         cout << endl;
+//         cout << "Isotropic scattering by octant" << endl;
+//         cout << "---------------------------------" << endl;
+//         for (int i = 0; i < 8; ++i)
+//         {
+//             double o  = static_cast<double>(octant[i]) / Np;
+//             double r  = 1.0/8.0;
+//             cout << setw(3) << i
+//                  << setw(10) << fixed << o
+//                  << setw(10) << fixed << r
+//                  << setw(10) << std::abs(o - r) / r << endl;
+
+//             EXPECT_SOFTEQ(o, r, 0.03);
+//         }
+//     }
+// }
+
+// //---------------------------------------------------------------------------//
+
+// TYPED_TEST(PhysicsTest, Access)
+// {
+//     typedef typename TestFixture::Particle      Particle;
+//     typedef typename TestFixture::SP_Particle   SP_Particle;
+//     typedef typename TestFixture::Physics_t     Physics_t;
+//     typedef typename TestFixture::SP_Physics    SP_Physics;
+//     typedef typename TestFixture::Space_Vector  Space_Vector;
+
+//     using profugus::physics::TOTAL;
+//     using profugus::physics::SCATTERING;
+//     using profugus::physics::FISSION;
+
+//     // make a particle
+//     SP_Particle p(make_shared<Particle>());
+
+//     // physics
+//     Physics_t physics(this->db, this->xs);
+
+//     EXPECT_FALSE(physics.is_fissionable(0));
+//     EXPECT_TRUE(physics.is_fissionable(1));
+
+//     p->set_matid(0);
+
+//     // test data access without fission
+//     {
+
+//         p->set_group(0);
+//         EXPECT_SOFTEQ(5.2, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(1);
+//         EXPECT_SOFTEQ(11.4, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(2);
+//         EXPECT_SOFTEQ(18.2, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(3);
+//         EXPECT_SOFTEQ(29.9, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(4);
+//         EXPECT_SOFTEQ(27.3, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+
+//     }
+
+//     p->set_matid(1);
+
+//     // test data access with fission
+//     {
+//         p->set_group(0);
+//         EXPECT_SOFTEQ(5.3, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(0.1, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(1);
+//         EXPECT_SOFTEQ(11.8, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(0.4, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(2);
+//         EXPECT_SOFTEQ(20.0, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(1.8, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(3);
+//         EXPECT_SOFTEQ(35.6, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(5.7, physics.total(FISSION, *p), 1.e-12);
+
+//         p->set_group(4);
+//         EXPECT_SOFTEQ(37.1, physics.total(TOTAL, *p), 1.e-12);
+//         EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
+//         EXPECT_SOFTEQ(9.8, physics.total(FISSION, *p), 1.e-12);
+//     }
+// }
+
+// //---------------------------------------------------------------------------//
+
+// TYPED_TEST(PhysicsTest, initialization)
+// {
+//     typedef typename TestFixture::Particle      Particle;
+//     typedef typename TestFixture::SP_Particle   SP_Particle;
+//     typedef typename TestFixture::Physics_t     Physics_t;
+//     typedef typename TestFixture::SP_Physics    SP_Physics;
+//     typedef typename TestFixture::Space_Vector  Space_Vector;
+
+//     // make a particle
+//     SP_Particle p(make_shared<Particle>());
+
+//     // physics
+//     Physics_t physics(this->db, this->xs);
+
+//     EXPECT_FALSE(physics.is_fissionable(0));
+//     EXPECT_TRUE(physics.is_fissionable(1));
+
+//     // check initializations
+//     physics.initialize(100.0, *p);
+//     EXPECT_EQ(0, p->group());
+
+//     physics.initialize(99.99, *p);
+//     EXPECT_EQ(0, p->group());
+
+//     physics.initialize(10.01, *p);
+//     EXPECT_EQ(0, p->group());
+
+//     physics.initialize(10.0, *p);
+//     EXPECT_EQ(0, p->group());
+
+//     physics.initialize(9.99, *p);
+//     EXPECT_EQ(1, p->group());
+
+//     physics.initialize(1.01, *p);
+//     EXPECT_EQ(1, p->group());
+
+//     physics.initialize(1.0, *p);
+//     EXPECT_EQ(1, p->group());
+
+//     physics.initialize(0.99, *p);
+//     EXPECT_EQ(2, p->group());
+
+//     physics.initialize(0.101, *p);
+//     EXPECT_EQ(2, p->group());
+
+//     physics.initialize(0.1, *p);
+//     EXPECT_EQ(2, p->group());
+
+//     physics.initialize(0.099, *p);
+//     EXPECT_EQ(3, p->group());
+
+//     physics.initialize(0.011, *p);
+//     EXPECT_EQ(3, p->group());
+
+//     physics.initialize(0.01, *p);
+//     EXPECT_EQ(3, p->group());
+
+//     physics.initialize(0.0099, *p);
+//     EXPECT_EQ(4, p->group());
+
+//     physics.initialize(0.0011, *p);
+//     EXPECT_EQ(4, p->group());
+
+//     physics.initialize(0.001, *p);
+//     EXPECT_EQ(4, p->group());
+
+//     // Check energy bounds
+//     EXPECT_EQ(0.001, physics.min_energy());
+//     EXPECT_EQ(100.0, physics.max_energy());
+
+// #ifdef CHECK_ON
+//     bool caught = false;
+//     try
+//     {
+//         physics.initialize(0.00099, *p);
+//     }
+//     catch (const profugus::assertion &a)
+//     {
+//         caught = true;
+//     }
+//     EXPECT_TRUE(caught);
+// #endif
+// }
+
+
+
+// //---------------------------------------------------------------------------//
+
+// TYPED_TEST(PhysicsTest, fission_sampling)
+// {
+//     typedef typename TestFixture::Particle                  Particle;
+//     typedef typename TestFixture::SP_Particle               SP_Particle;
+//     typedef typename TestFixture::Physics_t                 Physics_t;
+//     typedef typename TestFixture::Space_Vector              Space_Vector;
+//     typedef typename TestFixture::Fission_Site_Container    FSC;
+
+//     Physics_t physics(this->db, this->xs);
+//     physics.set_geometry(this->geometry);
+
+//     FSC fsites;
+
+//     // make a particle
+//     SP_Particle p(make_shared<Particle>());
+//     this->geometry->initialize(Space_Vector(1.1, 0.5, 6.2),
+//                                Space_Vector(1.0, 1.0, 1.0),
+//                                p->geo_state());
+//     p->set_matid(1);
+//     p->set_wt(0.6);
+//     p->set_rng(this->rng);
+//     /*
+//      * First 10 random numbers in sequence:
+//      * 0.9709
+//      * 0.3771
+//      * 0.7536
+//      * 0.1897
+//      * 0.5297
+//      * 0.8803
+//      * 0.6286
+//      * 0.3288
+//      * 0.6362
+//      * 0.8904
+//      */
+
+//     // put particle in group 3
+//     p->set_group(3);
+
+//     // sampling fission with these setting should result in 1 fission event
+//     EXPECT_EQ(1, physics.sample_fission_site(*p, fsites, 1.04));
+//     EXPECT_EQ(1, fsites.size());
+//     EXPECT_EQ(1, fsites[0].m);
+//     EXPECT_EQ(1.1, fsites[0].r[0]);
+//     EXPECT_EQ(0.5, fsites[0].r[1]);
+//     EXPECT_EQ(6.2, fsites[0].r[2]);
+
+//     // this next one will fail
+//     p->geo_state().d_r = Space_Vector(1.2, 0.3, 6.6);
+//     EXPECT_EQ(0, physics.sample_fission_site(*p, fsites, 1.04));
+//     EXPECT_EQ(1, fsites.size());
+//     EXPECT_EQ(1, fsites[0].m);
+//     EXPECT_EQ(1.1, fsites[0].r[0]);
+//     EXPECT_EQ(0.5, fsites[0].r[1]);
+//     EXPECT_EQ(6.2, fsites[0].r[2]);
+
+//     // this one will pass
+//     p->set_group(4);
+//     p->set_wt(0.99);
+//     EXPECT_EQ(3, physics.sample_fission_site(*p, fsites, 0.2));
+//     EXPECT_EQ(4, fsites.size());
+//     EXPECT_EQ(1, fsites[0].m);
+//     EXPECT_EQ(1.1, fsites[0].r[0]);
+//     EXPECT_EQ(0.5, fsites[0].r[1]);
+//     EXPECT_EQ(6.2, fsites[0].r[2]);
+
+//     // there are 3 fission sites at this location
+//     EXPECT_EQ(1, fsites[1].m);
+//     EXPECT_EQ(1.2, fsites[1].r[0]);
+//     EXPECT_EQ(0.3, fsites[1].r[1]);
+//     EXPECT_EQ(6.6, fsites[1].r[2]);
+//     EXPECT_EQ(1, fsites[2].m);
+//     EXPECT_EQ(1.2, fsites[2].r[0]);
+//     EXPECT_EQ(0.3, fsites[2].r[1]);
+//     EXPECT_EQ(6.6, fsites[2].r[2]);
+//     EXPECT_EQ(1, fsites[2].m);
+//     EXPECT_EQ(1.2, fsites[2].r[0]);
+//     EXPECT_EQ(0.3, fsites[2].r[1]);
+//     EXPECT_EQ(6.6, fsites[2].r[2]);
+
+//     // test fission spectrum sample
+//     {
+//         EXPECT_TRUE(physics.initialize_fission(1, *p));
+//         EXPECT_EQ(0, p->group());
+//     }
+
+//     // test initialization of particle from a fission site
+//     EXPECT_TRUE(physics.initialize_fission(fsites[0], *p));
+//     EXPECT_EQ(1, p->group());
+
+//     EXPECT_EQ(4, fsites.size());
+
+//     EXPECT_EQ(1.1, physics.fission_site(fsites[0])[0]);
+//     EXPECT_EQ(0.5, physics.fission_site(fsites[0])[1]);
+//     EXPECT_EQ(6.2, physics.fission_site(fsites[0])[2]);
+//     EXPECT_EQ(1.2, physics.fission_site(fsites[1])[0]);
+//     EXPECT_EQ(0.3, physics.fission_site(fsites[1])[1]);
+//     EXPECT_EQ(6.6, physics.fission_site(fsites[1])[2]);
+
+//     cout << "\n Size of fission-site = " << sizeof(fsites[0]) << " bytes"
+//          << endl;
+
+//     EXPECT_EQ(sizeof(fsites[0]), physics.fission_site_bytes());
+
+//     // the size of the fission site container is 4 * 8 bytes (all of the
+//     // elements of the struct are aligned along 64-bit boundaries because of
+//     // the doubles in the space vector)
+//     EXPECT_EQ(32, physics.fission_site_bytes());
+
+//     // test packing of fission-container
+//     vector<char> packed;
+//     {
+//         packed.resize(physics.fission_site_bytes() * 4);
+//         memcpy(&packed[0], &fsites[0], packed.size());
+//     }
+
+//     {
+//         FSC ufsc(4);
+//         memcpy(&ufsc[0], &packed[0], packed.size());
+
+//         EXPECT_EQ(4, ufsc.size());
+//         EXPECT_EQ(1, ufsc[0].m);
+//         EXPECT_EQ(1.1, ufsc[0].r[0]);
+//         EXPECT_EQ(0.5, ufsc[0].r[1]);
+//         EXPECT_EQ(6.2, ufsc[0].r[2]);
+//         EXPECT_EQ(1, ufsc[1].m);
+//         EXPECT_EQ(1.2, ufsc[1].r[0]);
+//         EXPECT_EQ(0.3, ufsc[1].r[1]);
+//         EXPECT_EQ(6.6, ufsc[1].r[2]);
+//         EXPECT_EQ(1, ufsc[2].m);
+//         EXPECT_EQ(1.2, ufsc[2].r[0]);
+//         EXPECT_EQ(0.3, ufsc[2].r[1]);
+//         EXPECT_EQ(6.6, ufsc[2].r[2]);
+//         EXPECT_EQ(1, ufsc[3].m);
+//         EXPECT_EQ(1.2, ufsc[3].r[0]);
+//         EXPECT_EQ(0.3, ufsc[3].r[1]);
+//         EXPECT_EQ(6.6, ufsc[3].r[2]);
+//     }
+
+//     // test null ops for no fission
+//     p->set_matid(0);
+//     EXPECT_FALSE(physics.initialize_fission(0, *p));
+//     EXPECT_EQ(0, physics.sample_fission_site(*p, fsites, 0.1));
+// }
 
 //---------------------------------------------------------------------------//
 //                 end of tstPhysics.cc

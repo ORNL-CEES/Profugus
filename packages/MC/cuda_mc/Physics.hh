@@ -98,7 +98,7 @@ class Physics
 
   public:
     // Constructor that auto-creates group bounds.
-    explicit Physics( ParameterList_t& db, XS_t& mat );
+    explicit Physics( ParameterList_t& db, const XS_t& mat );
 
     // Destructor.
     ~Physics();

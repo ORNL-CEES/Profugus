@@ -56,7 +56,7 @@ __device__ int sample_group( const XS_Device* xs,
     for (int gp = 0; gp < num_groups; ++gp)
     {
         // calculate the cdf for scattering to this group
-        cdf += scat_matrix(g,gp) * total;
+        cdf += scat_matrix(gp,g) * total;
 
         // see if we have sampled this group
         if (rnd <= cdf)
@@ -248,9 +248,15 @@ __global__ void sample_fission_site_kernel(
  * \brief Constructor that implicitly creates Group_Bounds
  */
 template <class Geometry>
-Physics<Geometry>::Physics( ParameterList_t& db, XS_t& mat )
-    : d_Ng(mat.num_groups())
+Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
+    : d_mat_device( nullptr )
+    , d_Ng(mat.num_groups())
     , d_Nm(mat.num_mat())
+    , d_gb_device( nullptr )
+    , d_matid_g2l( nullptr )
+    , d_scatter( nullptr )
+    , d_fissionable( nullptr )
+    , d_device_sites( nullptr )     
 {
     // Create the device cross sections
     d_mat = cuda::shared_device_ptr<XS_Device>( mat );
@@ -314,13 +320,10 @@ Physics<Geometry>::Physics( ParameterList_t& db, XS_t& mat )
         // store data as inscatter for the deterministic code
         for (int g = 0; g < d_Ng; g++)
         {
-            // get the g column (g->g' scatter stored as g'g in the matrix)
-            const auto *column = sig_s[g];
-
             // add up the scattering
             for (int gp = 0; gp < d_Ng; ++gp)
             {
-                matid_scatter[g] += column[gp];
+                matid_scatter[g] += sig_s(gp,g);
             }
         }
 
@@ -353,7 +356,7 @@ Physics<Geometry>::~Physics()
     cuda::memory::Free( d_matid_g2l );
     cuda::memory::Free( d_scatter );
     cuda::memory::Free( d_fissionable );
-    if ( d_device_sites )
+    if ( nullptr != d_device_sites )
     {
 	cuda::memory::Free( d_device_sites );
     }
@@ -463,7 +466,7 @@ int Physics<Geometry>::sample_fission_site(
     double                  keff)
 {
     // Lazy allocate the fission site work vectors.
-    if ( !d_device_sites )
+    if ( nullptr != d_device_sites )
     {
 	d_host_sites.resize( particles.get_host_ptr()->size() );
 	cuda::memory::Malloc( d_device_sites, particles.get_host_ptr()->size() );
