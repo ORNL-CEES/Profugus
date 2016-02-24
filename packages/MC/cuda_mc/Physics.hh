@@ -61,7 +61,7 @@ class Physics
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
     typedef Particle_Vector<Geometry_t>         Particle_Vector_t;
 
-    typedef XS                                  XS_t;
+    typedef profugus::XS                        XS_t;
     typedef Teuchos::RCP<XS_t>                  RCP_XS;
     typedef Teuchos::ParameterList              ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
@@ -90,10 +90,13 @@ class Physics
     // >>> DATA
 
     // Cross section database.
-    Shared_Device_Ptr<XS_Device> d_mat;
+    cuda::Shared_Device_Ptr<XS_Device> d_mat;
+
+    // XS raw device pointer for inline device functions.
+    XS_Device* d_mat_device;
 
     // Geometry.
-    Shared_Device_Ptr<Geometry> d_geometry;
+    cuda::Shared_Device_Ptr<Geometry> d_geometry;
 
   public:
     // Constructor that auto-creates group bounds.
@@ -105,15 +108,15 @@ class Physics
     // >>> PUBLIC TRANSPORT INTERFACE
 
     //! Set the geometry.
-    void set_geometry(const Shared_Device_Ptr<Geometry>& g)
+    void set_geometry(const cuda::Shared_Device_Ptr<Geometry>& g)
     { REQUIRE(g); d_geometry = g; }
 
     //! Get the geometry.
-    Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
+    cuda::Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
 
     // Initialize the physics state.
     void initialize( const std::vector<double>& energy, 
-		     Shared_Device_Ptr<Particle_Vector_t>& particles );
+		     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Get a total cross section from the physics library.
     PROFUGUS_DEVICE_FUNCTION
@@ -124,31 +127,30 @@ class Physics
 	switch (type)
 	{
 	    case physics::TOTAL:
-		return d_mat->vector(matid, XS_t::TOTAL)[group];
+		return d_mat_device->vector(matid, XS_t::TOTAL)(group);
 	    case physics::SCATTERING:
-		return d_scatter[d_matid_g2l[matid]][group];
+		return d_scatter[d_matid_g2l[matid] * d_mat_device->num_groups() + group];
 	    case physics::FISSION:
-		return d_mat->vector(matid, XS_t::SIG_F)[group];
+		return d_mat_device->vector(matid, XS_t::SIG_F)(group);
 	    case physics::NU_FISSION:
-		return d_mat->vector(matid, XS_t::NU_SIG_F)[group];
+		return d_mat_device->vector(matid, XS_t::NU_SIG_F)(group);
 	    default:
 		return 0.0;
 	}
-	return 0.0;
     }
 
     //! Get the minimum energy allowed for a particle
     PROFUGUS_DEVICE_FUNCTION
-    double min_energy() const { return d_gb.group_bounds()[d_Ng]; }
+    double min_energy() const { return d_gb_device->group_bounds()[d_Ng]; }
 
     //! Get the maximum energy allowed for a particle
     PROFUGUS_DEVICE_FUNCTION
-    double max_energy() const { return d_gb.group_bounds()[0]; }
+    double max_energy() const { return d_gb_device->group_bounds()[0]; }
 
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process particles through a collision.
-    void collide( Shared_Device_Ptr<Particle_Vector_t>& particles );
+    void collide( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Sample fission spectrum and initialize the physics state.
     PROFUGUS_DEVICE_FUNCTION
@@ -178,7 +180,7 @@ class Physics
     }
 
     // Sample fission site.
-    int sample_fission_site( Shared_Device_Ptr<Particle_Vector_t>& particles,
+    int sample_fission_site( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
 			     Fission_Site_Container &fsc,
 			     double keff );
 
@@ -200,13 +202,13 @@ class Physics
     // >>> CLASS FUNCTIONS
 
     //! Get cross section database.
-    const Shared_Device_Ptr<XS>& xs() const { return *d_mat; }
+    const cuda::Shared_Device_Ptr<XS_Device>& xs() const { return d_mat; }
 
     //! Number of discrete energy groups
     int num_groups() const { return d_Ng; }
 
     //! Group boundaries
-    const Shared_Device_Ptr<Group_Bounds>& group_bounds() const { return d_gb; }
+    const cuda::Shared_Device_Ptr<Group_Bounds>& group_bounds() const { return d_gb; }
 
   private:
     // >>> IMPLEMENTATION
@@ -223,7 +225,10 @@ class Physics
     int d_Ng, d_Nm;
 
     // Group boundaries.
-    Shared_Device_Ptr<Group_Bounds> d_gb;
+    cuda::Shared_Device_Ptr<Group_Bounds> d_gb;
+
+    // Raw pointer to group boundaries for inline device functions.
+    Group_Bounds* d_gb_device;
 
     // Global-to-local mapping of matids. On-device.
     int* d_matid_g2l;
@@ -245,13 +250,13 @@ class Physics
     //! Sample a fission group.
     PROFUGUS_DEVICE_FUNCTION
     int sample_fission_group(const unsigned int matid,
-			     const double       rnd)
+			     const double       rnd) const
     {
 	double cdf = 0.0;
-	const auto &chi = xs->vector(matid, XS_t::CHI);
-	for (int g = 0; g < xs->num_groups(); ++g)
+	const auto chi = d_mat_device->vector(matid, XS_t::CHI);
+	for (int g = 0; g < d_mat_device->num_groups(); ++g)
 	{
-	    cdf += chi[g];
+	    cdf += chi(g);
 	    if (rnd <= cdf) return g;
 	}
 	return -1;
