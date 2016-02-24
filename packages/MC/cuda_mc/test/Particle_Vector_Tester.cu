@@ -17,136 +17,153 @@
 // CUDA Kernels
 //---------------------------------------------------------------------------//
 __global__ void ran_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			    double* ran )
+			    double* ran,
+			    const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    ran[i] = vector->ran( i );
+    if ( i < num_particle ) ran[i] = vector->ran( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void set_wt_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			       double wt )
+			       double wt,
+			       const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->set_wt( i, wt );
+    if ( i < num_particle ) vector->set_wt( i, wt );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void multiply_wt_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				    double* wt )
+				    double* wt,
+				    const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->multiply_wt( i, wt[i] );
+    if ( i < num_particle ) vector->multiply_wt( i, wt[i] );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void wt_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			   double* wt )
+			   double* wt,
+			   const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    wt[i] = vector->wt( i );
+    if ( i < num_particle ) wt[i] = vector->wt( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void group_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			      int* group )
+			      int* group,
+			      const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    group[i] = vector->group( i );
+    if ( i < num_particle ) group[i] = vector->group( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void set_group_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				  int group )
+				  int group,
+				  const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->set_group( i, group );
+    if ( i < num_particle ) vector->set_group( i, group );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void matid_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			      int* matid )
+			      int* matid,
+			      const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    matid[i] = vector->matid( i );
+    if ( i < num_particle ) matid[i] = vector->matid( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void set_matid_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				  int matid )
+				  int matid,
+				  const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->set_matid( i, matid );
+    if ( i < num_particle ) vector->set_matid( i, matid );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void alive_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			      int* alive )
+			      int* alive,
+			      const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    alive[i] = vector->alive( i );
+    if ( i < num_particle ) alive[i] = vector->alive( i );
 }
 
 //---------------------------------------------------------------------------//
-__global__ void live_kernel( Particle_Vector_Tester::Particle_Vector* vector )
+__global__ void live_kernel( Particle_Vector_Tester::Particle_Vector* vector,
+			     const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->live( i );
+    if ( i < num_particle ) vector->live( i );
 }
 
 //---------------------------------------------------------------------------//
-__global__ void kill_kernel( Particle_Vector_Tester::Particle_Vector* vector )
+__global__ void kill_kernel( Particle_Vector_Tester::Particle_Vector* vector,
+			     const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->kill( i );
+    if ( i < num_particle ) vector->kill( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void set_event_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				  typename Particle_Vector_Tester::Event_t* event )
+				  typename Particle_Vector_Tester::Event_t* event,
+				  const int num_particle )
 {
     typename std::size_t i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->set_event( i, event[i] );
+    if ( i < num_particle ) vector->set_event( i, event[i] );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void event_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			      typename Particle_Vector_Tester::Event_t* event )
+			      typename Particle_Vector_Tester::Event_t* event,
+			      const int num_particle )
 {
     typename std::size_t i = threadIdx.x + blockIdx.x * blockDim.x;
-    event[i] = vector->event( i );
+    if ( i < num_particle ) event[i] = vector->event( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void set_geo_state_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				      typename Particle_Vector_Tester::Geo_State_t geo_state )
+				      typename Particle_Vector_Tester::Geo_State_t geo_state,
+				      const int num_particle )
 {
     typename std::size_t i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->geo_state( i ) = geo_state;
+    if ( i < num_particle ) vector->geo_state( i ) = geo_state;
 }
 
 //---------------------------------------------------------------------------//
 __global__ void geo_state_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				  typename Particle_Vector_Tester::Geo_State_t* geo_state )
+				  typename Particle_Vector_Tester::Geo_State_t* geo_state,
+				  const int num_particle )
 {
     typename std::size_t i = threadIdx.x + blockIdx.x * blockDim.x;
-    geo_state[i] = vector->geo_state( i );
+    if ( i < num_particle ) geo_state[i] = vector->geo_state( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void batch_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-			      int* batch )
+			      int* batch,
+			      const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    batch[i] = vector->batch( i );
+    if ( i < num_particle ) batch[i] = vector->batch( i );
 }
 
 //---------------------------------------------------------------------------//
 __global__ void set_batch_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
-				  int batch )
+				  int batch,
+				  const int num_particle )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
-    vector->set_batch( i, batch );
+    if ( i < num_particle ) vector->set_batch( i, batch );
 }
 
 //---------------------------------------------------------------------------//
@@ -170,11 +187,13 @@ Teuchos::Array<double> Particle_Vector_Tester::ran()
     double* device_ran;
     cudaMalloc( (void**) &device_ran, d_size * sizeof(double) );
 
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    ran_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_ran );
+    ran_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_ran, d_size );
 
     Teuchos::Array<double> host_ran( d_size );
     cudaMemcpy( host_ran.getRawPtr(), device_ran, d_size * sizeof(double),
@@ -188,10 +207,12 @@ Teuchos::Array<double> Particle_Vector_Tester::ran()
 // set the entire vector to the same weight.
 void Particle_Vector_Tester::set_wt( const double wt )
 {
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    set_wt_kernel<<<num_block,num_threads>>>( d_vector.get_device_ptr(), wt );
+    set_wt_kernel<<<num_blocks,threads_per_block>>>( d_vector.get_device_ptr(), wt, d_size );
 }
 
 //---------------------------------------------------------------------------//
@@ -203,11 +224,13 @@ void Particle_Vector_Tester::multiply_wt( const Teuchos::Array<double>& wt )
     cudaMemcpy( device_wt, wt.getRawPtr(), d_size * sizeof(double),
 		cudaMemcpyHostToDevice );
     
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    multiply_wt_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_wt );
+    multiply_wt_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_wt, d_size );
 
     cudaFree( device_wt );
 }
@@ -218,10 +241,14 @@ Teuchos::Array<double> Particle_Vector_Tester::wt()
 {
     double* device_wt;
     cudaMalloc( (void**) &device_wt, d_size * sizeof(double) );
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
-    wt_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_wt );
+
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    wt_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_wt, d_size );
 
     Teuchos::Array<double> host_wt( d_size );
     cudaMemcpy( host_wt.getRawPtr(), device_wt, d_size * sizeof(double),
@@ -237,11 +264,14 @@ Teuchos::Array<int> Particle_Vector_Tester::group()
 {
     int* device_group;
     cudaMalloc( (void**) &device_group, d_size * sizeof(int) );
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+ 
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    group_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_group );
+    group_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_group, d_size );
 
     Teuchos::Array<int> host_group( d_size );
     cudaMemcpy( host_group.getRawPtr(), device_group, d_size * sizeof(int),
@@ -255,11 +285,13 @@ Teuchos::Array<int> Particle_Vector_Tester::group()
 // Set the entire vector to a group.
 void Particle_Vector_Tester::set_group( const int group )
 {
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    set_group_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), group );
+    set_group_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), group, d_size );
 }
 
 //---------------------------------------------------------------------------//
@@ -268,11 +300,14 @@ Teuchos::Array<int> Particle_Vector_Tester::matid()
 {
     int* device_matid;
     cudaMalloc( (void**) &device_matid, d_size * sizeof(int) );
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
 
-    matid_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_matid );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    matid_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_matid, d_size );
 
     Teuchos::Array<int> host_matid( d_size );
     cudaMemcpy( host_matid.getRawPtr(), device_matid, d_size * sizeof(int),
@@ -286,11 +321,13 @@ Teuchos::Array<int> Particle_Vector_Tester::matid()
 // Set the entire vector to a matid.
 void Particle_Vector_Tester::set_matid( const int matid )
 {
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    set_matid_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), matid );
+    set_matid_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), matid, d_size );
 }
 
 //---------------------------------------------------------------------------//
@@ -299,11 +336,14 @@ Teuchos::Array<int> Particle_Vector_Tester::alive()
 {
     int* device_alive;
     cudaMalloc( (void**) &device_alive, d_size * sizeof(int) );
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
 
-    alive_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_alive );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    alive_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_alive, d_size );
 
     Teuchos::Array<int> host_alive( d_size );
     cudaMemcpy( host_alive.getRawPtr(), device_alive, d_size * sizeof(int),
@@ -317,20 +357,24 @@ Teuchos::Array<int> Particle_Vector_Tester::alive()
 // set the whole vector to live.
 void Particle_Vector_Tester::live()
 {
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    live_kernel<<<num_block,num_threads>>>( d_vector.get_device_ptr() );
+    live_kernel<<<num_blocks,threads_per_block>>>( d_vector.get_device_ptr(), d_size );
 }
 
 //---------------------------------------------------------------------------//
 // kill the whole vector.
 void Particle_Vector_Tester::kill()
 {
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    kill_kernel<<<num_block,num_threads>>>( d_vector.get_device_ptr() );
+    kill_kernel<<<num_blocks,threads_per_block>>>( d_vector.get_device_ptr(), d_size );
 }
 
 //---------------------------------------------------------------------------//
@@ -340,11 +384,14 @@ Particle_Vector_Tester::event()
 {
     Event_t* device_event;
     cudaMalloc( (void**) &device_event, d_size * sizeof(Event_t) );
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
 
-    event_kernel<<<num_block,num_threads>>>(
-	d_vector.get_device_ptr(), device_event );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    event_kernel<<<num_blocks,threads_per_block>>>(
+	d_vector.get_device_ptr(), device_event, d_size );
 
     Teuchos::Array<Event_t> host_event( d_size );
     cudaMemcpy( host_event.getRawPtr(), device_event, d_size * sizeof(Event_t),
@@ -363,11 +410,13 @@ void Particle_Vector_Tester::set_event( const Teuchos::Array<Event_t>& events )
     cudaMemcpy( device_event, events.getRawPtr(), d_size * sizeof(Event_t),
 		cudaMemcpyHostToDevice );
     
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    set_event_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_event );
+    set_event_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_event, d_size );
 
     cudaFree( device_event );
 }
@@ -376,11 +425,13 @@ void Particle_Vector_Tester::set_event( const Teuchos::Array<Event_t>& events )
 // set the geometry state for the whole vector
 void Particle_Vector_Tester::set_geo_state( const Geo_State_t& geo_state )
 {
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    set_geo_state_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), geo_state );
+    set_geo_state_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), geo_state, d_size );
 }
 
 //---------------------------------------------------------------------------//
@@ -391,11 +442,13 @@ Particle_Vector_Tester::geo_state()
     Geo_State_t* device_geo_state;
     cudaMalloc( (void**) &device_geo_state, d_size * sizeof(Geo_State_t) );
 
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    geo_state_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_geo_state );
+    geo_state_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_geo_state, d_size );
 
     Teuchos::Array<Geo_State_t> host_geo_state( d_size );
     cudaMemcpy( host_geo_state.getRawPtr(), device_geo_state, d_size * sizeof(Geo_State_t),
@@ -412,11 +465,13 @@ Teuchos::Array<int> Particle_Vector_Tester::batch()
     int* device_batch;
     cudaMalloc( (void**) &device_batch, d_size * sizeof(int) );
 
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    batch_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), device_batch );
+    batch_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_batch, d_size );
 
     Teuchos::Array<int> host_batch( d_size );
     cudaMemcpy( host_batch.getRawPtr(), device_batch, d_size * sizeof(int),
@@ -430,11 +485,13 @@ Teuchos::Array<int> Particle_Vector_Tester::batch()
 // Set the entire vector to a batch.
 void Particle_Vector_Tester::set_batch( const int batch )
 {
-    int num_threads = 256;
-    int num_block = d_size / num_threads;
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    set_batch_kernel<<<num_block,num_threads>>>( 
-	d_vector.get_device_ptr(), batch );
+    set_batch_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), batch, d_size );
 }
 
 //---------------------------------------------------------------------------//

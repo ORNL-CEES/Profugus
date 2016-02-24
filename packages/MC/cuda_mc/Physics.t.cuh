@@ -248,34 +248,32 @@ __global__ void sample_fission_site_kernel(
  * \brief Constructor that implicitly creates Group_Bounds
  */
 template <class Geometry>
-Physics<Geometry>::Physics(RCP_Std_DB db,
-                           RCP_XS     mat)
-    : d_Ng(mat->num_groups())
-    , d_Nm(mat->num_mat())
+Physics<Geometry>::Physics( ParameterList_t& db, XS_t& mat )
+    : d_Ng(mat.num_groups())
+    , d_Nm(mat.num_mat())
 {
     // Create the device cross sections
-    d_mat = cuda::shared_device_ptr<XS_Device>( *mat );
+    d_mat = cuda::shared_device_ptr<XS_Device>( mat );
     d_mat_device = d_mat.get_device_ptr();
     
-    REQUIRE(!db.is_null());
     REQUIRE(d_mat);
-    REQUIRE(mat->num_groups() > 0);
-    REQUIRE(mat->num_mat() > 0);
+    REQUIRE(mat.num_groups() > 0);
+    REQUIRE(mat.num_mat() > 0);
 
     // Make the group bounds.
     d_gb = cuda::shared_device_ptr<Group_Bounds>(
-	Vec_Dbl(mat->bounds().values(),
-		mat->bounds().values() + mat->bounds().length()) );
+	Vec_Dbl(mat.bounds().values(),
+		mat.bounds().values() + mat.bounds().length()) );
     d_gb_device = d_gb.get_device_ptr();
-    INSIST(d_gb.get_host_ptr()->num_groups() == mat->num_groups(),
+    INSIST(d_gb.get_host_ptr()->num_groups() == mat.num_groups(),
             "Number of groups in material is inconsistent with Group_Bounds.");
 
     // implicit capture flag
-    d_implicit_capture = db->get("implicit_capture", true);
+    d_implicit_capture = db.get("implicit_capture", true);
 
     // Get the matids.
     Vec_Int matids;
-    mat->get_matids( matids );
+    mat.get_matids( matids );
 
     // Create a global to local mapping of matids.
     int matid_g2l_size = *std::max_element( matids.begin(), matids.end() ) + 1;
@@ -307,7 +305,7 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
 	matid_scatter.assign( d_Ng, 0.0 );
 
         // get the P0 scattering matrix for this material
-        const auto &sig_s = mat->matrix(matids[m], 0);
+        const auto &sig_s = mat.matrix(matids[m], 0);
         CHECK(sig_s.numRows() == d_Ng);
         CHECK(sig_s.numCols() == d_Ng);
 
@@ -332,7 +330,7 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
 	    d_scatter + offset, matid_scatter.data(), d_Ng );
 
         // see if this material is fissionable by checking Chi
-        host_fissionable[m] = mat->vector(m, XS_t::CHI).normOne() > 0.0 ?
+        host_fissionable[m] = mat.vector(m, XS_t::CHI).normOne() > 0.0 ?
 			      true : false;
     }
 
@@ -377,7 +375,8 @@ void Physics<Geometry>::initialize(
     const std::vector<double>& energy, 
     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
-    REQUIRE( energy.size() == particles.get_host_ptr()->size() );
+    int num_particle = particles.get_host_ptr()->size();
+    REQUIRE( energy.size() == num_particle );
 
     // Copy the energies to the device.
     double* device_energy;
@@ -385,7 +384,6 @@ void Physics<Geometry>::initialize(
     cuda::memory::Copy_To_Device( device_energy, energy.data(), energy.size() );
 
     // Get CUDA launch parameters.
-    int num_particle = particles.get_host_ptr()->size();
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();

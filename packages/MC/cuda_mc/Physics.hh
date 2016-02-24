@@ -62,9 +62,7 @@ class Physics
     typedef Particle_Vector<Geometry_t>         Particle_Vector_t;
 
     typedef profugus::XS                        XS_t;
-    typedef Teuchos::RCP<XS_t>                  RCP_XS;
     typedef Teuchos::ParameterList              ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     typedef typename Geometry_t::Space_Vector   Space_Vector;
     //@}
 
@@ -100,7 +98,7 @@ class Physics
 
   public:
     // Constructor that auto-creates group bounds.
-    explicit Physics(RCP_Std_DB db, RCP_XS mat);
+    explicit Physics( ParameterList_t& db, XS_t& mat );
 
     // Destructor.
     ~Physics();

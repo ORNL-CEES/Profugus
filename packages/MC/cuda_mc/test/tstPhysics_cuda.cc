@@ -39,17 +39,10 @@ class PhysicsTest : public testing::Test
     typedef Geometry                                    Geometry_t;
     typedef profugus::RNG_Control                       RNG_Control;
     typedef cuda_profugus::Physics<Geometry>            Physics_t;
-    typedef typename Physics_t::SP_Geometry             SP_Geometry;
-    typedef typename Physics_t::Particle_t              Particle;
-    typedef typename Physics_t::Bank_t                  Bank_t;
-    typedef typename Physics_t::SP_Particle             SP_Particle;
     typedef typename Physics_t::ParameterList_t         ParameterList_t;
-    typedef typename Physics_t::RCP_Std_DB              RCP_Std_DB;
     typedef typename Physics_t::XS_t                    XS_t;
-    typedef typename Physics_t::RCP_XS                  RCP_XS;
     typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
-    typedef shared_ptr<Physics_t>                       SP_Physics;
     typedef typename Geometry_t::Space_Vector           Space_Vector;
 
   protected:
@@ -137,21 +130,16 @@ class PhysicsTest : public testing::Test
     }
 
   protected:
-    SP_Geometry geometry;
-    RCP_XS xs;
-    RCP_Std_DB db;
-
+    def::Vec_Dbl edges;
+    Teuchos::RCP<XS_t> xs;
+    Teuchos::RCP<ParameterList_t> db;
     profugus::RNG_Control::RNG_t rng;
 };
 
 template <>
 void PhysicsTest<cuda_profugus::Mesh_Geometry>::build_geometry()
 {
-    def::Vec_Dbl edges = {0.0, 100.0};
-    auto matids = std::make_shared<def::Vec_Int>(def::Vec_Int({0}));
-
-    geometry = cuda::shared_device_ptr<Geometry_t>(edges,edges,edges);
-    geometry->set_matids(*matids);
+    edges = {0.0, 100.0};
 }
 
 //---------------------------------------------------------------------------//
@@ -459,12 +447,10 @@ TYPED_TEST(PhysicsTest, Collisions)
         cout << endl;
         cout << "Isotropic scattering by octant" << endl;
         cout << "---------------------------------" << endl;
-        int osum = 0;
         for (int i = 0; i < 8; ++i)
         {
             double o  = static_cast<double>(octant[i]) / Np;
             double r  = 1.0/8.0;
-            osum     += octant[i];
             cout << setw(3) << i
                  << setw(10) << fixed << o
                  << setw(10) << fixed << r
