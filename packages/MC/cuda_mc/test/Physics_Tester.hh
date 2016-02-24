@@ -73,6 +73,9 @@ class Physics_Tester
 		      const int group,
 		      const cuda_profugus::physics::Reaction_Type type ) const;
 
+    // Get the min and max particle energies.
+    void get_min_max_energy( double& min, double& max ) const;
+
   private:
     
     cuda::Shared_Device_Ptr<Physics> d_physics;

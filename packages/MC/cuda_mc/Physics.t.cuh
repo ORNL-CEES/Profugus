@@ -82,13 +82,17 @@ __global__ void initialize_kernel( const double* energy,
     // get the thread id
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
-    // check to make sure the energy is in the group structure and get the
-    // group index
-    int  group_index = 0;
-    bool success = gb->find( energy[idx], group_index );
+    // this kernel updates all particles
+    if ( idx < particles->size() )
+    {
+	// check to make sure the energy is in the group structure and get the
+	// group index
+	int  group_index = 0;
+	bool success = gb->find( energy[idx], group_index );
 
-    // set the group index in the particle
-    particles->set_group( idx, group_index );
+	// set the group index in the particle
+	particles->set_group( idx, group_index );
+    }
 }
 
 //---------------------------------------------------------------------------//

@@ -73,6 +73,14 @@ __global__ void total_kernel( const Physics_Tester::Physics* physics,
 }
 
 //---------------------------------------------------------------------------//
+__global__ void min_max_energy_kernel( const Physics_Tester::Physics* physics,
+				       double* min_max_energy )
+{
+    min_max_energy[0] = physics->min_energy();
+    min_max_energy[1] = physics->max_energy();
+}
+
+//---------------------------------------------------------------------------//
 // Physics_Tester
 //---------------------------------------------------------------------------//
 Physics_Tester::Physics_Tester( 
@@ -179,6 +187,23 @@ double Physics_Tester::get_total(
     cuda::memory::Copy_To_Host( &total_host, total_device, 1 );
     cuda::memory::Free( total_device );
     return total_host;
+}
+
+//---------------------------------------------------------------------------//
+// get the min and max particle energies
+void Physics_Tester::get_min_max_energy( double& min, double& max ) const
+{
+    double* minmax_device;
+    cuda::memory::Malloc( minmax_device, 2 );
+    min_max_energy_kernel<<<1,1>>>( d_physics.get_device_ptr(),
+				    minmax_device );
+
+    double minmax_host[2];
+    cuda::memory::Copy_To_Host( minmax_host, minmax_device, 2 );
+    cuda::memory::Free( minmax_device );
+
+    min = minmax_host[0];
+    max = minmax_host[1];
 }
 
 //---------------------------------------------------------------------------//

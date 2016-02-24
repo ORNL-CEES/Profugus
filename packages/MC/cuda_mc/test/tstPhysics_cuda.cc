@@ -537,93 +537,57 @@ TYPED_TEST(PhysicsTest, Access)
     EXPECT_SOFTEQ(9.8, physics_tester.get_total(1,4,FISSION), 1.e-12);
 }
 
-// //---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
-// TYPED_TEST(PhysicsTest, initialization)
-// {
-//     typedef typename TestFixture::Particle      Particle;
-//     typedef typename TestFixture::SP_Particle   SP_Particle;
-//     typedef typename TestFixture::Physics_t     Physics_t;
-//     typedef typename TestFixture::SP_Physics    SP_Physics;
-//     typedef typename TestFixture::Space_Vector  Space_Vector;
+TYPED_TEST(PhysicsTest, initialization)
+{
+    typedef typename TestFixture::Physics_t     Physics_t;
+    typedef typename TestFixture::Space_Vector  Space_Vector;
 
-//     // make a particle
-//     SP_Particle p(make_shared<Particle>());
+    // make the physics tester.
+    int Np = 16;
+    Physics_Tester physics_tester( this->edges, this->edges, this->edges,
+				   Np, this->rng, *(this->db), *(this->xs) );
 
-//     // physics
-//     Physics_t physics(this->db, this->xs);
+    // Create initializization energies.
+    std::vector<double> energy =
+	{ 100.0, 99.99, 
+	  10.01, 10.0, 9.99, 
+	  1.01, 1.0, 0.99,
+	  0.101, 0.1, 0.099,
+	  0.011, 0.01, 0.0099, 
+	  0.0011, 0.001 };
 
-//     EXPECT_FALSE(physics.is_fissionable(0));
-//     EXPECT_TRUE(physics.is_fissionable(1));
+    // Initialize the particles.
+    physics_tester.physics().get_host_ptr()->initialize( energy, physics_tester.particles() );
 
-//     // check initializations
-//     physics.initialize(100.0, *p);
-//     EXPECT_EQ(0, p->group());
+    // Get the partice groups.
+    auto groups = physics_tester.particle_tester().group();
 
-//     physics.initialize(99.99, *p);
-//     EXPECT_EQ(0, p->group());
+    // check initializations
+    EXPECT_EQ(0, groups[0]);
+    EXPECT_EQ(0, groups[1]);
+    EXPECT_EQ(0, groups[2]);
+    EXPECT_EQ(0, groups[3]);
+    EXPECT_EQ(1, groups[4]);
+    EXPECT_EQ(1, groups[5]);
+    EXPECT_EQ(1, groups[6]);
+    EXPECT_EQ(2, groups[7]);
+    EXPECT_EQ(2, groups[8]);
+    EXPECT_EQ(2, groups[9]);
+    EXPECT_EQ(3, groups[10]);
+    EXPECT_EQ(3, groups[11]);
+    EXPECT_EQ(3, groups[12]);
+    EXPECT_EQ(4, groups[13]);
+    EXPECT_EQ(4, groups[14]);
+    EXPECT_EQ(4, groups[15]);
 
-//     physics.initialize(10.01, *p);
-//     EXPECT_EQ(0, p->group());
-
-//     physics.initialize(10.0, *p);
-//     EXPECT_EQ(0, p->group());
-
-//     physics.initialize(9.99, *p);
-//     EXPECT_EQ(1, p->group());
-
-//     physics.initialize(1.01, *p);
-//     EXPECT_EQ(1, p->group());
-
-//     physics.initialize(1.0, *p);
-//     EXPECT_EQ(1, p->group());
-
-//     physics.initialize(0.99, *p);
-//     EXPECT_EQ(2, p->group());
-
-//     physics.initialize(0.101, *p);
-//     EXPECT_EQ(2, p->group());
-
-//     physics.initialize(0.1, *p);
-//     EXPECT_EQ(2, p->group());
-
-//     physics.initialize(0.099, *p);
-//     EXPECT_EQ(3, p->group());
-
-//     physics.initialize(0.011, *p);
-//     EXPECT_EQ(3, p->group());
-
-//     physics.initialize(0.01, *p);
-//     EXPECT_EQ(3, p->group());
-
-//     physics.initialize(0.0099, *p);
-//     EXPECT_EQ(4, p->group());
-
-//     physics.initialize(0.0011, *p);
-//     EXPECT_EQ(4, p->group());
-
-//     physics.initialize(0.001, *p);
-//     EXPECT_EQ(4, p->group());
-
-//     // Check energy bounds
-//     EXPECT_EQ(0.001, physics.min_energy());
-//     EXPECT_EQ(100.0, physics.max_energy());
-
-// #ifdef CHECK_ON
-//     bool caught = false;
-//     try
-//     {
-//         physics.initialize(0.00099, *p);
-//     }
-//     catch (const profugus::assertion &a)
-//     {
-//         caught = true;
-//     }
-//     EXPECT_TRUE(caught);
-// #endif
-// }
-
-
+    // Check energy bounds
+    double min, max;
+    physics_tester.get_min_max_energy( min, max );
+    EXPECT_EQ(0.001, min);
+    EXPECT_EQ(100.0, max);
+}
 
 // //---------------------------------------------------------------------------//
 
