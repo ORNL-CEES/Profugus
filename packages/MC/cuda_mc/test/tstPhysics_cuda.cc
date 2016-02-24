@@ -475,91 +475,67 @@ TYPED_TEST(PhysicsTest, Collisions_with_capture)
     }
 }
 
-// //---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
-// TYPED_TEST(PhysicsTest, Access)
-// {
-//     typedef typename TestFixture::Particle      Particle;
-//     typedef typename TestFixture::SP_Particle   SP_Particle;
-//     typedef typename TestFixture::Physics_t     Physics_t;
-//     typedef typename TestFixture::SP_Physics    SP_Physics;
-//     typedef typename TestFixture::Space_Vector  Space_Vector;
+TYPED_TEST(PhysicsTest, Access)
+{
+    typedef typename TestFixture::Physics_t     Physics_t;
+    typedef typename TestFixture::Space_Vector  Space_Vector;
 
-//     using profugus::physics::TOTAL;
-//     using profugus::physics::SCATTERING;
-//     using profugus::physics::FISSION;
+    using cuda_profugus::physics::TOTAL;
+    using cuda_profugus::physics::SCATTERING;
+    using cuda_profugus::physics::FISSION;
 
-//     // make a particle
-//     SP_Particle p(make_shared<Particle>());
+    // make the physics tester.
+    int Np = 50;
+    Physics_Tester physics_tester( this->edges, this->edges, this->edges,
+				   Np, this->rng, *(this->db), *(this->xs) );
 
-//     // physics
-//     Physics_t physics(this->db, this->xs);
+    EXPECT_FALSE(physics_tester.is_fissionable(0));
+    EXPECT_TRUE(physics_tester.is_fissionable(1));
 
-//     EXPECT_FALSE(physics.is_fissionable(0));
-//     EXPECT_TRUE(physics.is_fissionable(1));
+    // test data access without fission
+    EXPECT_SOFTEQ(5.2, physics_tester.get_total(0,0,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(2.6, physics_tester.get_total(0,0,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(0.0, physics_tester.get_total(0,0,FISSION), 1.e-12);
 
-//     p->set_matid(0);
+    EXPECT_SOFTEQ(11.4, physics_tester.get_total(0,1,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(8.3, physics_tester.get_total(0,1,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(0.0, physics_tester.get_total(0,1,FISSION), 1.e-12);
 
-//     // test data access without fission
-//     {
+    EXPECT_SOFTEQ(18.2, physics_tester.get_total(0,2,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(13.7, physics_tester.get_total(0,2,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(0.0, physics_tester.get_total(0,2,FISSION), 1.e-12);
 
-//         p->set_group(0);
-//         EXPECT_SOFTEQ(5.2, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+    EXPECT_SOFTEQ(29.9, physics_tester.get_total(0,3,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(17.8, physics_tester.get_total(0,3,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(0.0, physics_tester.get_total(0,3,FISSION), 1.e-12);
 
-//         p->set_group(1);
-//         EXPECT_SOFTEQ(11.4, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+    EXPECT_SOFTEQ(27.3, physics_tester.get_total(0,4,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(12.0, physics_tester.get_total(0,4,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(0.0, physics_tester.get_total(0,4,FISSION), 1.e-12);
 
-//         p->set_group(2);
-//         EXPECT_SOFTEQ(18.2, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+    // test data access with fission
+    EXPECT_SOFTEQ(5.3, physics_tester.get_total(1,0,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(2.6, physics_tester.get_total(1,0,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(0.1, physics_tester.get_total(1,0,FISSION), 1.e-12);
 
-//         p->set_group(3);
-//         EXPECT_SOFTEQ(29.9, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+    EXPECT_SOFTEQ(11.8, physics_tester.get_total(1,1,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(8.3, physics_tester.get_total(1,1,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(0.4, physics_tester.get_total(1,1,FISSION), 1.e-12);
 
-//         p->set_group(4);
-//         EXPECT_SOFTEQ(27.3, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(0.0, physics.total(FISSION, *p), 1.e-12);
+    EXPECT_SOFTEQ(20.0, physics_tester.get_total(1,2,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(13.7, physics_tester.get_total(1,2,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(1.8, physics_tester.get_total(1,2,FISSION), 1.e-12);
 
-//     }
+    EXPECT_SOFTEQ(35.6, physics_tester.get_total(1,3,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(17.8, physics_tester.get_total(1,3,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(5.7, physics_tester.get_total(1,3,FISSION), 1.e-12);
 
-//     p->set_matid(1);
-
-//     // test data access with fission
-//     {
-//         p->set_group(0);
-//         EXPECT_SOFTEQ(5.3, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(2.6, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(0.1, physics.total(FISSION, *p), 1.e-12);
-
-//         p->set_group(1);
-//         EXPECT_SOFTEQ(11.8, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(8.3, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(0.4, physics.total(FISSION, *p), 1.e-12);
-
-//         p->set_group(2);
-//         EXPECT_SOFTEQ(20.0, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(13.7, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(1.8, physics.total(FISSION, *p), 1.e-12);
-
-//         p->set_group(3);
-//         EXPECT_SOFTEQ(35.6, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(17.8, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(5.7, physics.total(FISSION, *p), 1.e-12);
-
-//         p->set_group(4);
-//         EXPECT_SOFTEQ(37.1, physics.total(TOTAL, *p), 1.e-12);
-//         EXPECT_SOFTEQ(12.0, physics.total(SCATTERING, *p), 1.e-12);
-//         EXPECT_SOFTEQ(9.8, physics.total(FISSION, *p), 1.e-12);
-//     }
-// }
+    EXPECT_SOFTEQ(37.1, physics_tester.get_total(1,4,TOTAL), 1.e-12);
+    EXPECT_SOFTEQ(12.0, physics_tester.get_total(1,4,SCATTERING), 1.e-12);
+    EXPECT_SOFTEQ(9.8, physics_tester.get_total(1,4,FISSION), 1.e-12);
+}
 
 // //---------------------------------------------------------------------------//
 

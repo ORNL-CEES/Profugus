@@ -65,6 +65,14 @@ class Physics_Tester
     // Sample a cdf and set the particle group.
     void sample_group( const std::vector<double>& cdf );
 
+    // Check if a matid is fissionable.
+    bool is_fissionable( const int matid ) const;
+
+    // Get a total cross section.
+    double get_total( const int matid,
+		      const int group,
+		      const cuda_profugus::physics::Reaction_Type type ) const;
+
   private:
     
     cuda::Shared_Device_Ptr<Physics> d_physics;

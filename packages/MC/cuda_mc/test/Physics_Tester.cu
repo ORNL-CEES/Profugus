@@ -55,6 +55,24 @@ __global__ void sample_group_kernel(
 }
 
 //---------------------------------------------------------------------------//
+__global__ void is_fissionable_kernel( const Physics_Tester::Physics* physics,
+				       const int matid,
+				       int* is_f )
+{
+    *is_f = physics->is_fissionable( matid );
+}
+
+//---------------------------------------------------------------------------//
+__global__ void total_kernel( const Physics_Tester::Physics* physics,
+			      const cuda_profugus::physics::Reaction_Type type,
+			      const int matid,
+			      const int group,
+			      double* total )
+{
+    *total = physics->total( type, matid, group );
+}
+
+//---------------------------------------------------------------------------//
 // Physics_Tester
 //---------------------------------------------------------------------------//
 Physics_Tester::Physics_Tester( 
@@ -126,6 +144,41 @@ void Physics_Tester::sample_group( const std::vector<double>& cdf )
 
     // free allocated data.
     cuda::memory::Free( device_cdf );
+}
+
+//---------------------------------------------------------------------------//
+// Check if a matid is fissionable.
+bool Physics_Tester::is_fissionable(const int matid) const
+{
+    int* is_f_device;
+    cuda::memory::Malloc( is_f_device, 1 );
+    is_fissionable_kernel<<<1,1>>>( d_physics.get_device_ptr(), matid, is_f_device );
+
+    int is_f_host = 0;
+    cuda::memory::Copy_To_Host( &is_f_host, is_f_device, 1 );
+    cuda::memory::Free( is_f_device );
+    return is_f_host;
+}
+
+//---------------------------------------------------------------------------//
+// get a total cross section
+double Physics_Tester::get_total(
+    const int matid,
+    const int group,
+    const cuda_profugus::physics::Reaction_Type type ) const
+{
+    double* total_device;
+    cuda::memory::Malloc( total_device, 1 );
+    total_kernel<<<1,1>>>( d_physics.get_device_ptr(),
+			   type,
+			   matid,
+			   group,
+			   total_device );
+
+    double total_host = 0;
+    cuda::memory::Copy_To_Host( &total_host, total_device, 1 );
+    cuda::memory::Free( total_device );
+    return total_host;
 }
 
 //---------------------------------------------------------------------------//
