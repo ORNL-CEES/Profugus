@@ -113,6 +113,7 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
         {
             std::cout << "Approximated eigenvalue at iteration " << b_num_iters
                 << " is " << std::setprecision(15)<< eig_new << std::endl;
+	    std::cout<<"relative residual norm: "<< std::setprecision(15) <<rel_res_norm<<std::endl;
         }
 
         // Check for convergence
