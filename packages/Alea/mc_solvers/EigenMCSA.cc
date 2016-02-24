@@ -94,12 +94,12 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
 
     SCALAR old_res_norm = 1e+6;
 
+    b_A->apply(y,r);
     while( true )
     {
         b_num_iters++;
 
 	//deterministic step of the power iteration
-        b_A->apply(y,r);
     	y.update(1.0,r,0.0);
 
     	for(unsigned int i = 0; i!=N; ++i)
@@ -114,6 +114,8 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
 		y_data[i] /= y_norm[0];
 
     	ig.update(1.0,y,0.0);
+        b_A->apply(y,r);
+
         eig_new = 0.0;
 
         for(unsigned int i = 0; i!=N; ++i)
