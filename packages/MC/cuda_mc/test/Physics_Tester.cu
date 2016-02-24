@@ -34,7 +34,7 @@ __global__ void geometry_initialize_kernel(
 	geometry->initialize( r, d, vector->geo_state(i) );
 	vector->set_matid( i, matid );
 	vector->set_event( i, cuda_profugus::events::COLLISION );
-	vector->set_wt( i, 1.0 );
+	vector->set_wt( i, 0.9 );
     }
 }
 

@@ -345,133 +345,135 @@ TYPED_TEST(PhysicsTest, Collisions_no_capture)
     EXPECT_EQ(tots, osum);
 }
 
-// //---------------------------------------------------------------------------//
-// TYPED_TEST(PhysicsTest, Collisions_with_capture)
-// {
-//     typedef typename TestFixture::Particle      Particle;
-//     typedef typename TestFixture::SP_Particle   SP_Particle;
-//     typedef typename TestFixture::Physics_t     Physics_t;
-//     typedef typename TestFixture::SP_Physics    SP_Physics;
-//     typedef typename TestFixture::Space_Vector  Space_Vector;
+//---------------------------------------------------------------------------//
+TYPED_TEST(PhysicsTest, Collisions_with_capture)
+{
+    typedef typename TestFixture::Physics_t     Physics_t;
+    typedef typename TestFixture::Space_Vector  Space_Vector;
 
-//     // turn on implicit capture
-//     this->db->set("implicit_capture", true);
+    // turn on implicit capture
+    this->db->set("implicit_capture", true);
 
-//     // make the physics tester.
-//     int Np = 100000;
-//     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-// 				   Np, this->rng.rng(), *(this->db), *(this->xs) );
+    // make the physics tester.
+    int Np = 50000;
+    Physics_Tester physics_tester( this->edges, this->edges, this->edges,
+				   Np, this->rng, *(this->db), *(this->xs) );
 
-//     // initialize particles with the geometry and set to collide.
-//     physics_tester.geometry_initialize( 
-// 	Space_Vector(50.0, 50.0, 50.0), Space_Vector(1.0, 1.0, 1.0) );
+    // initialize particles with the geometry and set to collide.
+    Space_Vector r, d;
+    r.x = 50.0;
+    r.y = 50.0;
+    r.z = 50.0;
+    d.x = 1.0;
+    d.y = 1.0;
+    d.z = 1.0;
+    physics_tester.geometry_initialize( r, d, 0 );
     
-//     // check distributions from implicit-capture collisions
-//     {
-//         double c[] = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
+    // check distributions from implicit-capture collisions
+    std::vector<double> c = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
 
-//         // make a mg physics object
-//         SP_Physics physics(make_shared<Physics_t>(this->db, this->xs));
-//         physics->set_geometry(this->geometry);
+    // group CDF
+    std::vector<double> cdf = {0.2, 0.4, 0.6, 0.8, 1.0};
 
-//         int Np        = 100000;
-//         int octant[8] = {0};
+    // Sample the particle groups
+    physics_tester.sample_group( cdf );
 
-//         // group CDF
-//         double cdf[] = {0.2, 0.4, 0.6, 0.8, 1.0};
+    // Get the ingoing groups
+    auto ing = physics_tester.particle_tester().group();
 
-//         for (int n = 0; n < Np; ++n)
-//         {
-//             // setup particle to do implicit capture
-//             p->set_wt(0.9);
-//             p->set_event(profugus::events::COLLISION);
+    // collide the particles
+    physics_tester.physics().get_host_ptr()->collide( physics_tester.particles() );
 
-//             // sample a group
-//             double rn   = this->rng.ran();
-//             int group   = profugus::sampler::sample_discrete_CDF(5, cdf, rn);
+    // Get the outgoing groups.
+    auto outg = physics_tester.particle_tester().group();
 
-//             p->set_group(group);
+    // Get the outgoing events
+    auto events = physics_tester.particle_tester().event();
 
-//             int g = group;
+    // Get the outgoing states.
+    auto geo_state = physics_tester.particle_tester().geo_state();
 
-//             // do the collision
-//             physics->collide(*p, bank);
+    // Get the weights.
+    auto weights = physics_tester.particle_tester().wt();
 
-//             EXPECT_EQ(profugus::events::IMPLICIT_CAPTURE, p->event());
-//             EXPECT_TRUE(soft_equiv(p->wt(), c[g] * 0.9, 1.0e-4));
+    // check distributions from nonanalog collisions
+    int octant[8] = {0};
 
-//             const Space_Vector &omega =
-//                 this->geometry->direction(p->geo_state());
+    for (int n = 0; n < Np; ++n)
+    {
+	EXPECT_EQ( cuda_profugus::events::IMPLICIT_CAPTURE, events[n] );
+	EXPECT_SOFTEQ( weights[n], c[ing[n]] * 0.9, 1.0e-4 );
 
-//             // check octant distribution (isotropic scattering)
-//             if (omega[Z] > 0.0)
-//             {
-//                 if (omega[Y] > 0.0)
-//                 {
-//                     if (omega[X] > 0.0)
-//                     {
-//                         octant[0]++;
-//                     }
-//                     else
-//                     {
-//                         octant[1]++;
-//                     }
-//                 }
-//                 else
-//                 {
-//                     if (omega[X] > 0.0)
-//                     {
-//                         octant[2]++;
-//                     }
-//                     else
-//                     {
-//                         octant[3]++;
-//                     }
-//                 }
-//             }
-//             else
-//             {
-//                 if (omega[Y] > 0.0)
-//                 {
-//                     if (omega[X] > 0.0)
-//                     {
-//                         octant[4]++;
-//                     }
-//                     else
-//                     {
-//                         octant[5]++;
-//                     }
-//                 }
-//                 else
-//                 {
-//                     if (omega[X] > 0.0)
-//                     {
-//                         octant[6]++;
-//                     }
-//                     else
-//                     {
-//                         octant[7]++;
-//                     }
-//                 }
-//             }
-//         }
+	const Space_Vector &omega =geo_state[n].d_dir;
 
-//         cout << endl;
-//         cout << "Isotropic scattering by octant" << endl;
-//         cout << "---------------------------------" << endl;
-//         for (int i = 0; i < 8; ++i)
-//         {
-//             double o  = static_cast<double>(octant[i]) / Np;
-//             double r  = 1.0/8.0;
-//             cout << setw(3) << i
-//                  << setw(10) << fixed << o
-//                  << setw(10) << fixed << r
-//                  << setw(10) << std::abs(o - r) / r << endl;
+	// check octant distribution (isotropic scattering)
+	if (omega.z > 0.0)
+	{
+	    if (omega.y > 0.0)
+	    {
+		if (omega.x > 0.0)
+		{
+		    octant[0]++;
+		}
+		else
+		{
+		    octant[1]++;
+		}
+	    }
+	    else
+	    {
+		if (omega.x > 0.0)
+		{
+		    octant[2]++;
+		}
+		else
+		{
+		    octant[3]++;
+		}
+	    }
+	}
+	else
+	{
+	    if (omega.y > 0.0)
+	    {
+		if (omega.x > 0.0)
+		{
+		    octant[4]++;
+		}
+		else
+		{
+		    octant[5]++;
+		}
+	    }
+	    else
+	    {
+		if (omega.x > 0.0)
+		{
+		    octant[6]++;
+		}
+		else
+		{
+		    octant[7]++;
+		}
+	    }
+	}
+    }
 
-//             EXPECT_SOFTEQ(o, r, 0.03);
-//         }
-//     }
-// }
+    cout << endl;
+    cout << "Isotropic scattering by octant" << endl;
+    cout << "---------------------------------" << endl;
+    for (int i = 0; i < 8; ++i)
+    {
+	double o  = static_cast<double>(octant[i]) / Np;
+	double r  = 1.0/8.0;
+	cout << setw(3) << i
+	     << setw(10) << fixed << o
+	     << setw(10) << fixed << r
+	     << setw(10) << std::abs(o - r) / r << endl;
+
+	EXPECT_SOFTEQ(o, r, 0.04);
+    }
+}
 
 // //---------------------------------------------------------------------------//
 
