@@ -30,7 +30,9 @@ namespace cuda_mc
  * \brief Get a particle from the source.
  */
 template <class Geometry>
-__device__ auto Uniform_Source<Geometry>::get_particle(RNG_t &rng) -> Particle_t 
+__device__ auto
+Uniform_Source<Geometry>::get_particle(std::size_t tid,
+                                       RNG_t      &rng) const -> Particle_t 
 {
     REQUIRE(d_wt > 0.0);
     REQUIRE(d_geo_shape);

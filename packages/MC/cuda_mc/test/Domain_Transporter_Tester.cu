@@ -36,7 +36,7 @@ __global__ void test_transport_kernel( Uniform_Src  source,
          curand_init(tid,0,0,&rng_state);
 
          // Get particle from source
-         auto p = source.get_particle(rng_state);
+         auto p = source.get_particle(tid,rng_state);
 
          // Transport particle
          trans.transport(p);

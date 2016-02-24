@@ -32,7 +32,7 @@ __global__ void compute_source_kernel( Uniform_Src           source,
          curandState_t rng;
          curand_init( 345, tid, 0, &rng );
 
-         auto p = source.get_particle(rng);
+         auto p = source.get_particle(tid,rng);
 
          auto geo_state = p.geo_state();
          auto r = geo_state.d_r;

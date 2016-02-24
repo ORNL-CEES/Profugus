@@ -90,7 +90,7 @@ class Uniform_Source : public Source<Geometry>
     // >>> REQUIRED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    __device__ Particle_t get_particle(RNG_t &rng);
+    __device__ Particle_t get_particle(std::size_t idx, RNG_t &rng) const;
 
     //! Boolean operator for source (true when source still has particles).
     __host__ __device__ bool empty() const { return d_np_left == 0; }

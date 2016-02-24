@@ -15,6 +15,8 @@
 #include <iostream>
 #include <cmath>
 
+#include <curand_kernel.h>
+
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Launch_Args.hh"
 #include "harness/Diagnostics.hh"
@@ -39,6 +41,7 @@ class Source_Functor
     typedef cuda::Shared_Device_Ptr<Src_Type>       SDP_Source;
     typedef cuda::Shared_Device_Ptr<Transporter_t>  SDP_Transporter;
 
+    // Constructor
     Source_Functor( SDP_Source      src,
                     SDP_Transporter trans )
         : d_src( src.get_device_ptr() )
@@ -46,8 +49,14 @@ class Source_Functor
     {
     }
 
-    __device__ void operator()( const std::size_t tid )
+    // Operator apply for functor (transport 1 particle)
+    __device__ void operator()( std::size_t tid ) const
     {
+        // Create and initialize RNG state
+        // FIXME: Need to seed threads with different seeds
+        curandState_t rng_state;
+        curand_init(tid,0,0,&rng_state);
+        
         // Get particle from source
         auto p = d_src->get_particle(tid);
         CHECK( p.alive() );
