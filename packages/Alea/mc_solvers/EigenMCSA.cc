@@ -173,9 +173,6 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
             break;
         }
         
-        if( b_verbosity >= HIGH )
-		std::cout<<"relative residual norm: "<<std::setprecision(15)<<rel_res_norm<<std::endl;
-
 	if( d_mc_solver->refinement() )	
 		d_mc_solver->refineStandardDeviation(0.8);
 
