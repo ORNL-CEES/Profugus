@@ -107,7 +107,7 @@ void PowerMethod::applyImpl(const MV &x, MV &y) const
 
 	res_norm = std::sqrt(res_norm);
 	
-	SCALAR rel_res_norm = res_norm / eig_new;
+	SCALAR rel_res_norm = res_norm / std::abs(eig_new);
 
         if( b_verbosity >= HIGH )
         {

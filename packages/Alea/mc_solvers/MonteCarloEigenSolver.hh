@@ -101,6 +101,7 @@ class MonteCarloEigenSolver : public AleaSolver,
 
     void refineStandardDeviation(SCALAR);
     void increaseNumHistories(unsigned int);
+    bool refinement(){return d_refinement;};
 
   private:
 
@@ -116,6 +117,7 @@ class MonteCarloEigenSolver : public AleaSolver,
 
     KERNEL_TYPE d_kernel_type;
     bool    d_use_expected_value;
+    bool    d_refinement;
     GO      d_num_histories;
     SCALAR  d_weight_cutoff;
     SCALAR  d_start_wt_factor;

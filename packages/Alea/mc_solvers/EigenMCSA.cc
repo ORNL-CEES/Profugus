@@ -126,7 +126,7 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
 
 	res_norm = std::sqrt(res_norm);
 	
-	SCALAR rel_res_norm = res_norm / eig_new;
+	SCALAR rel_res_norm = res_norm / std::abs(eig_new);
 
         if( b_verbosity >= HIGH )
         {
@@ -173,7 +173,7 @@ void EigenMCSA::applyImpl(const MV &x, MV &y) const
         if( b_verbosity >= HIGH )
 		std::cout<<"relative residual norm: "<<std::setprecision(15)<<rel_res_norm<<std::endl;
 
-	if(old_res_norm < res_norm)	
+	if( d_mc_solver->refinement() )	
 		d_mc_solver->refineStandardDeviation(0.8);
 
         eig_old = eig_new;

@@ -68,6 +68,7 @@ MonteCarloEigenSolver::MonteCarloEigenSolver(Teuchos::RCP<const MATRIX> A,
         d_kernel_type = CUDA;
 
     d_num_histories = d_mc_pl->get<int>("num_histories",1000);
+    d_refinement = d_mc_pl->get<int>("refinement",0);
     d_init_count = 0;
 
     initialize();
