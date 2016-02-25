@@ -470,7 +470,7 @@ int Physics<Geometry>::sample_fission_site(
     double                  keff)
 {
     // Lazy allocate the fission site work vectors.
-    if ( nullptr != d_device_sites )
+    if ( nullptr == d_device_sites )
     {
 	d_host_sites.resize( particles.get_host_ptr()->size() );
 	cuda::memory::Malloc( d_device_sites, particles.get_host_ptr()->size() );

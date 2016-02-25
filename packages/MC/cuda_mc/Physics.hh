@@ -170,7 +170,7 @@ class Physics
     void initialize_fission(const Fission_Site &fs,
 			    const double ran,
 			    int& group,
-			    bool& sampled)
+			    bool& sampled) const
     {
 	REQUIRE( is_fissionable(fs.m) );
 	group = sample_fission_group( fs.m, ran );

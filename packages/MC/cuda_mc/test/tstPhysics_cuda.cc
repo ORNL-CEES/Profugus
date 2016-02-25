@@ -589,151 +589,130 @@ TYPED_TEST(PhysicsTest, initialization)
     EXPECT_EQ(100.0, max);
 }
 
-// //---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
-// TYPED_TEST(PhysicsTest, fission_sampling)
-// {
-//     typedef typename TestFixture::Particle                  Particle;
-//     typedef typename TestFixture::SP_Particle               SP_Particle;
-//     typedef typename TestFixture::Physics_t                 Physics_t;
-//     typedef typename TestFixture::Space_Vector              Space_Vector;
-//     typedef typename TestFixture::Fission_Site_Container    FSC;
+TYPED_TEST(PhysicsTest, fission_sampling)
+{
+    typedef typename TestFixture::Physics_t                 Physics_t;
+    typedef typename TestFixture::Space_Vector              Space_Vector;
+    typedef typename TestFixture::Fission_Site_Container    FSC;
 
-//     Physics_t physics(this->db, this->xs);
-//     physics.set_geometry(this->geometry);
+    // make the physics tester.
+    int Np = 15;
+    Physics_Tester physics_tester( this->edges, this->edges, this->edges,
+				   Np, this->rng, *(this->db), *(this->xs) );
 
-//     FSC fsites;
+    // initialize particles with the geometry and set to collide.
+    Space_Vector r, d;
+    r.x = 1.1;
+    r.y = 0.5;
+    r.z = 6.2;
+    d.x = 1.0;
+    d.y = 1.0;
+    d.z = 1.0;
+    physics_tester.geometry_initialize( r, d, 1 );
 
-//     // make a particle
-//     SP_Particle p(make_shared<Particle>());
-//     this->geometry->initialize(Space_Vector(1.1, 0.5, 6.2),
-//                                Space_Vector(1.0, 1.0, 1.0),
-//                                p->geo_state());
-//     p->set_matid(1);
-//     p->set_wt(0.6);
-//     p->set_rng(this->rng);
-//     /*
-//      * First 10 random numbers in sequence:
-//      * 0.9709
-//      * 0.3771
-//      * 0.7536
-//      * 0.1897
-//      * 0.5297
-//      * 0.8803
-//      * 0.6286
-//      * 0.3288
-//      * 0.6362
-//      * 0.8904
-//      */
+    // initialize fission sites.
+    FSC fsites;
 
-//     // put particle in group 3
-//     p->set_group(3);
+    // put particles in group 3
+    physics_tester.particle_tester().set_group(3);
 
-//     // sampling fission with these setting should result in 1 fission event
-//     EXPECT_EQ(1, physics.sample_fission_site(*p, fsites, 1.04));
-//     EXPECT_EQ(1, fsites.size());
-//     EXPECT_EQ(1, fsites[0].m);
-//     EXPECT_EQ(1.1, fsites[0].r[0]);
-//     EXPECT_EQ(0.5, fsites[0].r[1]);
-//     EXPECT_EQ(6.2, fsites[0].r[2]);
+    // sample fissions.
+    double keff = 1.04;
+    int num_sites = physics_tester.physics().get_host_ptr()->sample_fission_site(
+	physics_tester.particles(), fsites, keff );
+    EXPECT_EQ( num_sites, 4 );
 
-//     // this next one will fail
-//     p->geo_state().d_r = Space_Vector(1.2, 0.3, 6.6);
-//     EXPECT_EQ(0, physics.sample_fission_site(*p, fsites, 1.04));
-//     EXPECT_EQ(1, fsites.size());
-//     EXPECT_EQ(1, fsites[0].m);
-//     EXPECT_EQ(1.1, fsites[0].r[0]);
-//     EXPECT_EQ(0.5, fsites[0].r[1]);
-//     EXPECT_EQ(6.2, fsites[0].r[2]);
+    // first site
+    EXPECT_EQ(1, fsites[0].m);
+    EXPECT_EQ(1.1, fsites[0].r.x);
+    EXPECT_EQ(0.5, fsites[0].r.y);
+    EXPECT_EQ(6.2, fsites[0].r.z);
 
-//     // this one will pass
-//     p->set_group(4);
-//     p->set_wt(0.99);
-//     EXPECT_EQ(3, physics.sample_fission_site(*p, fsites, 0.2));
-//     EXPECT_EQ(4, fsites.size());
-//     EXPECT_EQ(1, fsites[0].m);
-//     EXPECT_EQ(1.1, fsites[0].r[0]);
-//     EXPECT_EQ(0.5, fsites[0].r[1]);
-//     EXPECT_EQ(6.2, fsites[0].r[2]);
+    // second site
+    EXPECT_EQ(1, fsites[1].m);
+    EXPECT_EQ(1.1, fsites[1].r.x);
+    EXPECT_EQ(0.5, fsites[1].r.y);
+    EXPECT_EQ(6.2, fsites[1].r.z);
 
-//     // there are 3 fission sites at this location
-//     EXPECT_EQ(1, fsites[1].m);
-//     EXPECT_EQ(1.2, fsites[1].r[0]);
-//     EXPECT_EQ(0.3, fsites[1].r[1]);
-//     EXPECT_EQ(6.6, fsites[1].r[2]);
-//     EXPECT_EQ(1, fsites[2].m);
-//     EXPECT_EQ(1.2, fsites[2].r[0]);
-//     EXPECT_EQ(0.3, fsites[2].r[1]);
-//     EXPECT_EQ(6.6, fsites[2].r[2]);
-//     EXPECT_EQ(1, fsites[2].m);
-//     EXPECT_EQ(1.2, fsites[2].r[0]);
-//     EXPECT_EQ(0.3, fsites[2].r[1]);
-//     EXPECT_EQ(6.6, fsites[2].r[2]);
+    // third site
+    EXPECT_EQ(1, fsites[2].m);
+    EXPECT_EQ(1.1, fsites[2].r.x);
+    EXPECT_EQ(0.5, fsites[2].r.y);
+    EXPECT_EQ(6.2, fsites[2].r.z);
 
-//     // test fission spectrum sample
-//     {
-//         EXPECT_TRUE(physics.initialize_fission(1, *p));
-//         EXPECT_EQ(0, p->group());
-//     }
+    // fourth site
+    EXPECT_EQ(1, fsites[3].m);
+    EXPECT_EQ(1.1, fsites[2].r.x);
+    EXPECT_EQ(0.5, fsites[2].r.y);
+    EXPECT_EQ(6.2, fsites[2].r.z);
 
-//     // test initialization of particle from a fission site
-//     EXPECT_TRUE(physics.initialize_fission(fsites[0], *p));
-//     EXPECT_EQ(1, p->group());
+    // test fission spectrum sample
+    int group = -1;
+    bool sampled = false;
+    physics_tester.initialize_fission_from_spectrum( 1, 0.342, group, sampled );
+    EXPECT_TRUE( sampled );
+    EXPECT_EQ(0, group);
 
-//     EXPECT_EQ(4, fsites.size());
+    // test fission site sample
+    group = -1;
+    sampled = false;
+    physics_tester.initialize_fission_from_site( fsites[0], 0.342, group, sampled );
+    EXPECT_TRUE( sampled );
+    EXPECT_EQ(0, group);
 
-//     EXPECT_EQ(1.1, physics.fission_site(fsites[0])[0]);
-//     EXPECT_EQ(0.5, physics.fission_site(fsites[0])[1]);
-//     EXPECT_EQ(6.2, physics.fission_site(fsites[0])[2]);
-//     EXPECT_EQ(1.2, physics.fission_site(fsites[1])[0]);
-//     EXPECT_EQ(0.3, physics.fission_site(fsites[1])[1]);
-//     EXPECT_EQ(6.6, physics.fission_site(fsites[1])[2]);
+    // Check site access.
+    EXPECT_EQ(1.1, physics_tester.physics().get_host_ptr()->fission_site(fsites[0]).x);
+    EXPECT_EQ(0.5, physics_tester.physics().get_host_ptr()->fission_site(fsites[0]).y);
+    EXPECT_EQ(6.2, physics_tester.physics().get_host_ptr()->fission_site(fsites[0]).z);
+    EXPECT_EQ(1.1, physics_tester.physics().get_host_ptr()->fission_site(fsites[1]).x);
+    EXPECT_EQ(0.5, physics_tester.physics().get_host_ptr()->fission_site(fsites[1]).y);
+    EXPECT_EQ(6.2, physics_tester.physics().get_host_ptr()->fission_site(fsites[1]).z);
 
-//     cout << "\n Size of fission-site = " << sizeof(fsites[0]) << " bytes"
-//          << endl;
+    EXPECT_EQ(sizeof(fsites[0]), physics_tester.physics().get_host_ptr()->fission_site_bytes());
 
-//     EXPECT_EQ(sizeof(fsites[0]), physics.fission_site_bytes());
+    // the size of the fission site container is 4 * 8 bytes (all of the
+    // elements of the struct are aligned along 64-bit boundaries because of
+    // the doubles in the space vector)
+    EXPECT_EQ(32, physics_tester.physics().get_host_ptr()->fission_site_bytes());
 
-//     // the size of the fission site container is 4 * 8 bytes (all of the
-//     // elements of the struct are aligned along 64-bit boundaries because of
-//     // the doubles in the space vector)
-//     EXPECT_EQ(32, physics.fission_site_bytes());
+    // test packing of fission-container
+    vector<char> packed;
+    {
+        packed.resize(physics_tester.physics().get_host_ptr()->fission_site_bytes() * 4);
+        memcpy(&packed[0], &fsites[0], packed.size());
+    }
 
-//     // test packing of fission-container
-//     vector<char> packed;
-//     {
-//         packed.resize(physics.fission_site_bytes() * 4);
-//         memcpy(&packed[0], &fsites[0], packed.size());
-//     }
+    {
+        FSC ufsc(4);
+        memcpy(&ufsc[0], &packed[0], packed.size());
 
-//     {
-//         FSC ufsc(4);
-//         memcpy(&ufsc[0], &packed[0], packed.size());
+        EXPECT_EQ(4, ufsc.size());
+        EXPECT_EQ(1, ufsc[0].m);
+        EXPECT_EQ(1.1, ufsc[0].r.x);
+        EXPECT_EQ(0.5, ufsc[0].r.y);
+        EXPECT_EQ(6.2, ufsc[0].r.z);
+        EXPECT_EQ(1, ufsc[1].m);
+        EXPECT_EQ(1.1, ufsc[1].r.x);
+        EXPECT_EQ(0.5, ufsc[1].r.y);
+        EXPECT_EQ(6.2, ufsc[1].r.z);
+        EXPECT_EQ(1, ufsc[2].m);
+        EXPECT_EQ(1.1, ufsc[2].r.x);
+        EXPECT_EQ(0.5, ufsc[2].r.y);
+        EXPECT_EQ(6.2, ufsc[2].r.z);
+        EXPECT_EQ(1, ufsc[3].m);
+        EXPECT_EQ(1.1, ufsc[3].r.x);
+        EXPECT_EQ(0.5, ufsc[3].r.y);
+        EXPECT_EQ(6.2, ufsc[3].r.z);
+    }
 
-//         EXPECT_EQ(4, ufsc.size());
-//         EXPECT_EQ(1, ufsc[0].m);
-//         EXPECT_EQ(1.1, ufsc[0].r[0]);
-//         EXPECT_EQ(0.5, ufsc[0].r[1]);
-//         EXPECT_EQ(6.2, ufsc[0].r[2]);
-//         EXPECT_EQ(1, ufsc[1].m);
-//         EXPECT_EQ(1.2, ufsc[1].r[0]);
-//         EXPECT_EQ(0.3, ufsc[1].r[1]);
-//         EXPECT_EQ(6.6, ufsc[1].r[2]);
-//         EXPECT_EQ(1, ufsc[2].m);
-//         EXPECT_EQ(1.2, ufsc[2].r[0]);
-//         EXPECT_EQ(0.3, ufsc[2].r[1]);
-//         EXPECT_EQ(6.6, ufsc[2].r[2]);
-//         EXPECT_EQ(1, ufsc[3].m);
-//         EXPECT_EQ(1.2, ufsc[3].r[0]);
-//         EXPECT_EQ(0.3, ufsc[3].r[1]);
-//         EXPECT_EQ(6.6, ufsc[3].r[2]);
-//     }
-
-//     // test null ops for no fission
-//     p->set_matid(0);
-//     EXPECT_FALSE(physics.initialize_fission(0, *p));
-//     EXPECT_EQ(0, physics.sample_fission_site(*p, fsites, 0.1));
-// }
+    // test null ops for no fission
+    physics_tester.particle_tester().set_matid(0);
+    num_sites = physics_tester.physics().get_host_ptr()->sample_fission_site(
+	physics_tester.particles(), fsites, keff );
+    EXPECT_EQ(0, num_sites);
+}
 
 //---------------------------------------------------------------------------//
 //                 end of tstPhysics.cc

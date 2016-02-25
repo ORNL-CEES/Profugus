@@ -35,6 +35,7 @@ class Physics_Tester
     typedef cuda_profugus::Particle_Vector<Geometry> Particle_Vector;
     typedef typename Particle_Vector::Event_t Event_t;
     typedef cuda_profugus::Physics<Geometry> Physics;
+    typedef Physics::Fission_Site Fission_Site;
     typedef typename Geometry::Space_Vector Space_Vector;
 
     // Constructor. Will build mesh geometry and particle vector.
@@ -75,6 +76,18 @@ class Physics_Tester
 
     // Get the min and max particle energies.
     void get_min_max_energy( double& min, double& max ) const;
+
+    // Initialize a particle from a fission spectrum.
+    void initialize_fission_from_spectrum( const int matid,
+					   const double ran,
+					   int& group,
+					   bool& sampled ) const;
+
+    // Initialize a particle from a fission site.
+    void initialize_fission_from_site( const Fission_Site &fs,
+				       const double ran,
+				       int& group,
+				       bool& sampled ) const;
 
   private:
     

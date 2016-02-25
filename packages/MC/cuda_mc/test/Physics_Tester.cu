@@ -81,6 +81,30 @@ __global__ void min_max_energy_kernel( const Physics_Tester::Physics* physics,
 }
 
 //---------------------------------------------------------------------------//
+__global__ void initialize_fission_from_spectrum_kernel( 
+    const Physics_Tester::Physics* physics,
+    const int matid,
+    const double ran,
+    int* result )					   
+{
+    bool sampled = false;
+    physics->initialize_fission( matid, ran, result[0], sampled);
+    result[1] = sampled;
+}
+
+//---------------------------------------------------------------------------//
+__global__ void initialize_fission_from_site_kernel( 
+    const Physics_Tester::Physics* physics,
+    const Physics_Tester::Fission_Site fs,
+    const double ran,
+    int* result )
+{
+    bool sampled = false;
+    physics->initialize_fission( fs, ran, result[0], sampled );
+    result[1] = sampled;
+}
+
+//---------------------------------------------------------------------------//
 // Physics_Tester
 //---------------------------------------------------------------------------//
 Physics_Tester::Physics_Tester( 
@@ -204,6 +228,52 @@ void Physics_Tester::get_min_max_energy( double& min, double& max ) const
 
     min = minmax_host[0];
     max = minmax_host[1];
+}
+
+//---------------------------------------------------------------------------//
+// Initialize a particle from a fission specturm.
+void Physics_Tester::initialize_fission_from_spectrum( const int matid,
+						       const double ran,
+						       int& group,
+						       bool& sampled ) const
+{
+    int* result;
+    cuda::memory::Malloc( result, 2 );
+
+    initialize_fission_from_spectrum_kernel<<<1,1>>>( d_physics.get_device_ptr(),
+						      matid,
+						      ran,
+						      result );
+
+    cuda::memory::Copy_To_Host( &group, &result[0], 1 );
+    int sampled_int = 0;
+    cuda::memory::Copy_To_Host( &sampled_int, &result[1], 1 );
+    sampled = sampled_int;
+
+    cuda::memory::Free( result );
+}
+
+//---------------------------------------------------------------------------//
+// Initialize a particle from a fission site.
+void Physics_Tester::initialize_fission_from_site( const Fission_Site &fs,
+						   const double ran,
+						   int& group,
+						   bool& sampled ) const
+{
+    int* result;
+    cuda::memory::Malloc( result, 2 );
+
+    initialize_fission_from_site_kernel<<<1,1>>>( d_physics.get_device_ptr(),
+						  fs,
+						  ran,
+						  result );
+
+    cuda::memory::Copy_To_Host( &group, &result[0], 1 );
+    int sampled_int = 0;
+    cuda::memory::Copy_To_Host( &sampled_int, &result[1], 1 );
+    sampled = sampled_int;
+
+    cuda::memory::Free( result );
 }
 
 //---------------------------------------------------------------------------//
