@@ -8,13 +8,24 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <memory>
+
 #include "Source_Transporter.t.cuh"
+#include "Uniform_Source.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
 namespace cuda_mc
 {
 
-template class Source_Transporter<cuda_profugus::Mesh_Geometry>;
+typedef cuda_profugus::Mesh_Geometry Mesh_Geom;
+
+// Instantiate class on geometry types
+template class Source_Transporter<Mesh_Geom>;
+
+// Instantiate solve function on Geometry/Source combinations
+typedef Uniform_Source<Mesh_Geom> UniSource;
+template void Source_Transporter<Mesh_Geom>::solve<UniSource>(
+    std::shared_ptr<UniSource>) const;
 
 } // end namespace cuda_mc
 
