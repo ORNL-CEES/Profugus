@@ -18,7 +18,7 @@
 #include <curand_kernel.h>
 
 #include "cuda_utils/CudaDBC.hh"
-#include "cuda_utils/Launch_Args.hh"
+#include "cuda_utils/Launch_Args.t.cuh"
 #include "harness/Diagnostics.hh"
 #include "comm/global.hh"
 #include "comm/Timing.hh"
@@ -42,10 +42,10 @@ class Source_Functor
     typedef cuda::Shared_Device_Ptr<Transporter_t>  SDP_Transporter;
 
     // Constructor
-    Source_Functor( SDP_Source      src,
-                    SDP_Transporter trans )
-        : d_src( src.get_device_ptr() )
-        , d_transporter( trans.get_device_ptr() )
+    Source_Functor( SDP_Transporter trans,
+                    SDP_Source      src )
+        : d_transporter( trans.get_device_ptr() )
+        , d_src( src.get_device_ptr() )
     {
     }
 
@@ -58,7 +58,7 @@ class Source_Functor
         curand_init(tid,0,0,&rng_state);
         
         // Get particle from source
-        auto p = d_src->get_particle(tid);
+        auto p = d_src->get_particle(tid,rng_state);
         CHECK( p.alive() );
 
         // Do "source event" tallies on the particle
@@ -151,7 +151,7 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
 
 #ifdef REMEMBER_ON
     profugus::global_sum(num_particles);
-    ENSURE(num_particles== source.total_num_to_transport());
+    ENSURE(num_particles== source->total_num_to_transport());
 #endif
 }
 
