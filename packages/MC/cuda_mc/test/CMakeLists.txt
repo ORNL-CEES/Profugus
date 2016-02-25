@@ -23,6 +23,7 @@ SET(CUDA_SOURCES
   Domain_Transporter_Tester.cu
   Particle_Tester.cu
   Physics_Tester.cu
+  Source_Transporter_Tester.cu
   Uniform_Source_Tester.cu
 )
 
@@ -41,6 +42,7 @@ ADD_UTILS_TEST(tstBox_Shape_cuda.cc             NP 1 ${DEPS})
 ADD_UTILS_TEST(tstDomain_Transporter_cuda.cc    NP 1 ${DEPS})
 ADD_UTILS_TEST(tstParticle_cuda.cc              NP 1 ${DEPS})
 ADD_UTILS_TEST(tstPhysics_cuda.cc               NP 1 ${DEPS})
+ADD_UTILS_TEST(tstSource_Transporter_cuda.cc    NP 1 ${DEPS})
 ADD_UTILS_TEST(tstUniform_Source_cuda.cc        NP 1 ${DEPS})
 
 ##---------------------------------------------------------------------------##
