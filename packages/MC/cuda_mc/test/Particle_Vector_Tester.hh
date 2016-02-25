@@ -97,6 +97,12 @@ class Particle_Vector_Tester
     // Set the entire vector to a batch.
     void set_batch( const int batch );
 
+    // get a vector of steps.
+    Teuchos::Array<double> step();
+
+    // Set the entire vector to a step.
+    void set_step( const double step );
+    
   private:
     
     int d_size;

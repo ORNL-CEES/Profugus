@@ -77,6 +77,9 @@ class Particle_Vector
     // Particle statistical batch id.
     int* d_batch;
 
+    // Distance of last particle step.
+    double* d_step;
+
   public:
 
     // >>> HOST API
@@ -252,6 +255,24 @@ class Particle_Vector
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
 	d_batch[ d_lid[i] ] = batch;
+    }
+
+    //! Get the particle step.
+    PROFUGUS_DEVICE_FUNCTION
+    double step( const std::size_t i ) const
+    {
+	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
+	return d_step[ d_lid[i] ];
+    }
+
+    //! Set the particle step.
+    PROFUGUS_DEVICE_FUNCTION
+    void set_step( const std::size_t i, const double step )
+    {
+	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
+	d_step[ d_lid[i] ] = step;
     }
 };
 

@@ -167,6 +167,24 @@ __global__ void set_batch_kernel( Particle_Vector_Tester::Particle_Vector* vecto
 }
 
 //---------------------------------------------------------------------------//
+__global__ void step_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
+			     double* step,
+			     const int num_particle )
+{
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( i < num_particle ) step[i] = vector->step( i );
+}
+
+//---------------------------------------------------------------------------//
+__global__ void set_step_kernel( Particle_Vector_Tester::Particle_Vector* vector, 
+				 double step,
+				 const int num_particle )
+{
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( i < num_particle ) vector->set_step( i, step );
+}
+
+//---------------------------------------------------------------------------//
 // Particle_Vector_Tester
 //---------------------------------------------------------------------------//
 Particle_Vector_Tester::Particle_Vector_Tester( const int num_particle, 
@@ -493,6 +511,42 @@ void Particle_Vector_Tester::set_batch( const int batch )
 
     set_batch_kernel<<<num_blocks,threads_per_block>>>( 
 	d_vector.get_device_ptr(), batch, d_size );
+}
+
+//---------------------------------------------------------------------------//
+// get a vector of stepes.
+Teuchos::Array<int> Particle_Vector_Tester::step()
+{
+    double* device_step;
+    cudaMalloc( (void**) &device_step, d_size * sizeof(double) );
+
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    step_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), device_step, d_size );
+
+    Teuchos::Array<double> host_step( d_size );
+    cudaMemcpy( host_step.getRawPtr(), device_step, d_size * sizeof(double),
+		cudaMemcpyDeviceToHost );
+
+    cudaFree( device_step );
+    return host_step;
+}
+
+//---------------------------------------------------------------------------//
+// Set the entire vector to a step.
+void Particle_Vector_Tester::set_step( const double step )
+{
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    set_step_kernel<<<num_blocks,threads_per_block>>>( 
+	d_vector.get_device_ptr(), step, d_size );
 }
 
 //---------------------------------------------------------------------------//

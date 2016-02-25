@@ -213,6 +213,15 @@ TEST(Particle_Vector, construction)
     {
 	EXPECT_EQ( b, batch );
     }
+
+    // Check the step
+    double step = 3.432;
+    tester.set_step( step );
+    Teuchos::Array<double> steps = tester.step();
+    for ( auto& s : steps )
+    {
+	EXPECT_EQ( s, step );
+    }    
 }
 
 //---------------------------------------------------------------------------//
