@@ -131,7 +131,7 @@ template <class Geometry>
 void Uniform_Source<Geometry>::build_DR()
 {
     // calculate the number of particles per domain and set (equivalent)
-    d_np_domain = d_np_total / d_nodes;
+    d_np_domain = d_np_requested / d_nodes;
 
     // recalculate the total number of particles (we want the same number of
     // particles in each domain, so the total may change slightly from the
