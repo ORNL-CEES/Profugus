@@ -34,6 +34,9 @@
 
 #include <assert.h>
 
+#define NOASSERT_(COND) \
+    do { (void)sizeof(COND); } while (0)
+
 // Insist is always on
 // If condition fails, print message then assert
 // Don't expect fancy stream machinery to work
@@ -52,21 +55,21 @@
 #define REQUIRE(COND) \
     do { assert(COND); } while (0)
 #else
-#define REQUIRE(COND) UTILS_NOASSERT_(COND)
+#define REQUIRE(COND) NOASSERT_(COND)
 #endif
 
 #if UTILS_DBC & 2
 #define CHECK(COND) \
     do { assert(COND); } while (0)
 #else
-#define CHECK(COND) UTILS_NOASSERT_(COND)
+#define CHECK(COND) NOASSERT_(COND)
 #endif
 
 #if UTILS_DBC & 4
 #define ENSURE(COND) \
     do { assert(COND); } while (0)
 #else
-#define ENSURE(COND) UTILS_NOASSERT_(COND)
+#define ENSURE(COND) NOASSERT_(COND)
 #endif
 
 #else   // __APPLE__
