@@ -157,6 +157,41 @@ class Source_Transporter_cudaTest : public ::testing::Test
         xs->complete();
     }
 
+    void build_1grp1mat_xs()
+    {
+        const int ng = 1;
+        xs = SP_XS(new XS_t());
+        xs->set(0, ng);
+
+        // make group boundaries
+        XS_t::OneDArray nbnd(ng+1, 0.0);
+        nbnd[0] = 100.0;
+        nbnd[1] = 0.00001;
+        xs->set_bounds(nbnd);
+
+        double t1[ng] = {1.0};
+
+        XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
+
+        xs->add(0, XS_t::TOTAL, tot1);
+
+        double s1[][3] = {{0.5}};
+
+        XS_t::TwoDArray sct1(ng, ng, 0.0);
+
+        for (int g = 0; g < ng; ++g)
+        {
+            for (int gp = 0; gp < ng; ++gp)
+            {
+                sct1(g, gp) = s1[g][gp];
+            }
+        }
+
+        xs->add(0, 0, sct1);
+
+        xs->complete();
+    }
+
   protected:
 
     // >>> DATA
@@ -187,8 +222,23 @@ TEST_F(Source_Transporter_cudaTest, three_group)
     build_3grp_xs();
 
     // Mesh edges
-    std::vector<double> edges = {0.0, 0.50, 1.0};
+    std::vector<double> edges = {0.0, 0.5, 1.0};
     std::vector<unsigned int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
+
+    int num_p = 128;
+    cuda_mc::Source_Transporter_Tester::test_transport(
+        edges,edges,edges,matids,xs,num_p);
+
+    // No tallies yet...
+}
+
+TEST_F(Source_Transporter_cudaTest, one_group)
+{
+    build_1grp1mat_xs();
+
+    // Mesh edges
+    std::vector<double> edges = {0.0, 5.0, 10.0};
+    std::vector<unsigned int> matids = {0, 0, 0, 0, 0, 0, 0, 0};
 
     int num_p = 128;
     cuda_mc::Source_Transporter_Tester::test_transport(
