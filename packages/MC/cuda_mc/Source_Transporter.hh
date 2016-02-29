@@ -31,6 +31,7 @@ template <class Geom> class Particle;
 template <class Geom> class Physics;
 template <class Geom> class Domain_Transporter;
 template <class Geom> class Tallier;
+template <class Geom> class VR_Roulette;
 
 //===========================================================================//
 /*!
@@ -62,11 +63,13 @@ class Source_Transporter
     typedef Physics<Geometry>                             Physics_t;
     typedef Domain_Transporter<Geometry>                  Transporter_t;
     typedef Tallier<Geometry>                             Tallier_t;
+    typedef VR_Roulette<Geometry>                         VR_Roulette_t;
     typedef cuda::Shared_Device_Ptr<Geometry>             SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Particle_t>           SDP_Particle;
     typedef cuda::Shared_Device_Ptr<Physics_t>            SDP_Physics;
     typedef cuda::Shared_Device_Ptr<Transporter_t>        SDP_Transporter;
     typedef cuda::Shared_Device_Ptr<Tallier_t>            SDP_Tallier;
+    typedef cuda::Shared_Device_Ptr<VR_Roulette_t>        SDP_VR;
     typedef Teuchos::RCP<Teuchos::ParameterList>          RCP_Std_DB;
     typedef def::size_type                                size_type;
     //@}
@@ -81,7 +84,7 @@ class Source_Transporter
     SDP_Physics d_physics;
 
     // Variance reduction.
-    //SP_Variance_Reduction d_var_reduction;
+    SDP_VR d_vr;
 
     // Tally controller.
     //SP_Tallier d_tallier;

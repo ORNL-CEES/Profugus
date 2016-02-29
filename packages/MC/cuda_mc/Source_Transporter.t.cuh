@@ -20,6 +20,7 @@
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Launch_Args.t.cuh"
 #include "harness/Diagnostics.hh"
+#include "utils/String_Functions.hh"
 #include "comm/global.hh"
 #include "comm/Timing.hh"
 #include "Source_Transporter.hh"
@@ -27,6 +28,7 @@
 #include "Particle.cuh"
 #include "Physics.cuh"
 #include "Domain_Transporter.cuh"
+#include "VR_Roulette.cuh"
 
 namespace cuda_mc
 {
@@ -101,8 +103,19 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     REQUIRE(d_physics.get_device_ptr());
 
     // set the geometry and physics in the domain transporter
-    auto trans_host = std::make_shared<Transporter_t>(db);
+    auto trans_host = std::make_shared<Transporter_t>();
     trans_host->set(d_geometry, d_physics);
+
+    // Build variance reduction
+    std::string var = profugus::to_lower(
+        db->get<std::string>("variance reduction",std::string("roulette")) );
+    if( var == "roulette" )
+    {
+        d_vr = cuda::shared_device_ptr<VR_Roulette_t>(db);
+        trans_host->set(d_vr);
+    }
+
+    // Copy Domain Transporter to device
     d_transporter = SDP_Transporter( trans_host );
 }
 

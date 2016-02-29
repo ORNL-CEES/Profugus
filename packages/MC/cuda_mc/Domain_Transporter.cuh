@@ -67,16 +67,13 @@ class Domain_Transporter
     // >>> DATA
 
     // Problem geometry implementation.
-    SDP_Geometry d_geometry_host;
     Geometry    *d_geometry;
 
     // Problem physics implementation.
-    SDP_Physics d_physics_host;
     Physics_t  *d_physics;
 
     // Variance reduction.
     bool           d_roulette;
-    SDP_VR         d_vr_host;
     VR_Roulette_t *d_vr;
 
     // Regular tallies.
@@ -88,10 +85,13 @@ class Domain_Transporter
   public:
 
     // Constructor.
-    Domain_Transporter(RCP_Std_DB db);
+    Domain_Transporter();
 
     // Set the geometry and physics classes.
     void set(SDP_Geometry geometry, SDP_Physics physics);
+
+    // Set the variance reduction
+    void set(SDP_VR vr);
 
     // Set regular tallies.
     //void set(SP_Tallier tallies);

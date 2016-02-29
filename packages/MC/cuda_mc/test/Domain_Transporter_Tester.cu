@@ -70,7 +70,7 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
     // Build domain transporter
-    Transporter trans(pl);
+    Transporter trans;
     trans.set(sdp_geom,sdp_phys);
 
     // Build box shape for source

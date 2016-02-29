@@ -16,7 +16,6 @@
 
 #include "harness/DBC.hh"
 #include "harness/Diagnostics.hh"
-#include "utils/String_Functions.hh"
 #include "geometry/Definitions.hh"
 #include "mc/Definitions.hh"
 #include "Domain_Transporter.cuh"
@@ -31,21 +30,11 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Domain_Transporter<Geometry>::Domain_Transporter(RCP_Std_DB db)
+Domain_Transporter<Geometry>::Domain_Transporter()
     : d_sample_fission_sites(false)
     , d_keff(0.0)
 {
-    // Build variance reduction
-    std::string var = profugus::to_lower(
-        db->get<std::string>("variance reduction",std::string("roulette")) );
-    if( var == "roulette" )
-    {
-        std::cout << "Building DT with Roulette" << std::endl;
-        d_roulette = true;
-        auto sp_vr = std::make_shared<VR_Roulette_t>(db);
-        d_vr_host = SDP_VR( sp_vr );
-        d_vr = d_vr_host.get_device_ptr();
-    }
+    d_roulette = false;
 }
 
 
@@ -68,11 +57,26 @@ void Domain_Transporter<Geometry>::set(SDP_Geometry geometry,
     REQUIRE(physics.get_device_ptr());
 
     // Get device pointers to Geometry and Physics
-    d_geometry_host = geometry;
-    d_geometry = d_geometry_host.get_device_ptr();
+    d_geometry = geometry.get_device_ptr();
+    d_physics  = physics.get_device_ptr();
+}
 
-    d_physics_host  = physics;
-    d_physics = d_physics_host.get_device_ptr();
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set the variance reduction
+ *
+ * \param vr
+ */
+template <class Geometry>
+void Domain_Transporter<Geometry>::set(SDP_VR vr)
+{
+    REQUIRE( vr.get_host_ptr() );
+    REQUIRE( vr.get_device_ptr() );
+
+    // Get device pointer to VR
+    d_roulette = true;
+
+    d_vr = vr.get_device_ptr();
 }
 
 //---------------------------------------------------------------------------//
