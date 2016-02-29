@@ -428,7 +428,7 @@ void Physics<Geometry>::collide(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Process the collisions.
-    collide_kernel<<<num_particle,threads_per_block>>>(
+    collide_kernel<<<num_blocks,threads_per_block>>>(
 	start_idx,
 	num_particle,
 	d_geometry.get_device_ptr(),
@@ -491,7 +491,7 @@ int Physics<Geometry>::sample_fission_site(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Sample the fission sites.
-    sample_fission_site_kernel<<<num_particle,threads_per_block>>>(
+    sample_fission_site_kernel<<<num_blocks,threads_per_block>>>(
 	start_idx,
 	num_particle,
 	d_geometry.get_device_ptr(),
