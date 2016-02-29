@@ -515,7 +515,7 @@ void Particle_Vector_Tester::set_batch( const int batch )
 
 //---------------------------------------------------------------------------//
 // get a vector of stepes.
-Teuchos::Array<int> Particle_Vector_Tester::step()
+Teuchos::Array<double> Particle_Vector_Tester::step()
 {
     double* device_step;
     cudaMalloc( (void**) &device_step, d_size * sizeof(double) );

@@ -39,7 +39,7 @@ __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
     if ( (idx >= collision_start && idx < collision_start + num_collision) ||
 	 (idx >= boundary_start && idx < boundary_start + num_boundary) )
     {
-	keff[idx] = particles->weight(idx) * particles->step(idx) *
+	keff[idx] = particles->wt(idx) * particles->step(idx) *
 		    phyiscs->total( physics::NU_FISSION,
 				    particles->matid(idx),
 				    particles->group(idx) );
@@ -58,6 +58,7 @@ Keff_Tally<Geometry>::Keff_Tally(
     const cuda::Shared_Device_Ptr<Physics_t>& physics )
     : d_physics( physics )
     , d_keff_cycle(keff_init)
+    , d_keff_device(nullptr)
 {
     REQUIRE(physics);
 
@@ -140,7 +141,7 @@ void Keff_Tally<Geometry>::accumulate(
     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
     // Lazy allocate the keff work vector.
-    int vector_size = particle.get_host_ptr()->size();
+    int vector_size = particles.get_host_ptr()->size();
     if ( nullptr == d_keff_device )
     {
 	d_keff_host.resize( vector_size );
