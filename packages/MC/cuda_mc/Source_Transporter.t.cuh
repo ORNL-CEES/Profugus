@@ -101,7 +101,7 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     REQUIRE(d_physics.get_device_ptr());
 
     // set the geometry and physics in the domain transporter
-    auto trans_host = std::make_shared<Transporter_t>();
+    auto trans_host = std::make_shared<Transporter_t>(db);
     trans_host->set(d_geometry, d_physics);
     d_transporter = SDP_Transporter( trans_host );
 }

@@ -164,7 +164,8 @@ Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
             particle.set_matid(d_geometry->matid(particle.geo_state()));
 
             // add variance reduction at surface crossings
-            //d_var_reduction->post_surface(particle);
+            if( d_roulette )
+                d_vr->post_surface(particle);
 
             ENSURE(particle.event() == profugus::events::BOUNDARY);
             break;
@@ -202,7 +203,8 @@ Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
     d_physics->collide(particle);
 
     // apply weight windows
-    //d_var_reduction->post_collision(particle, bank);
+    if( d_roulette )
+        d_vr->post_collision(particle);
 }
 
 } // end namespace cuda_mc

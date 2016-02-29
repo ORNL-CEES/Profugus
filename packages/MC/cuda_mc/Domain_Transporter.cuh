@@ -14,7 +14,7 @@
 #include "Particle.cuh"
 #include "Physics.cuh"
 #include "Step_Selector.cuh"
-//#include "Variance_Reduction.hh"
+#include "VR_Roulette.cuh"
 //#include "Tallier.hh"
 
 namespace cuda_mc
@@ -46,10 +46,11 @@ class Domain_Transporter
     typedef typename Geometry_t::Space_Vector          Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef typename Physics_t::Particle_t             Particle_t;
+    typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     //typedef typename Physics_t::Bank_t                 Bank_t;
     //typedef typename Physics_t::Fission_Site_Container Fission_Site_Container;
-    //typedef Variance_Reduction<Geometry_t>             Variance_Reduction_t;
     //typedef Tallier<Geometry_t>                        Tallier_t;
+    typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;
     //@}
 
     //@{
@@ -57,8 +58,8 @@ class Domain_Transporter
     typedef cuda::Shared_Device_Ptr<Geometry_t>       SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>        SDP_Physics;
     typedef cuda::Shared_Device_Ptr<Particle_t>       SDP_Particle;
+    typedef cuda::Shared_Device_Ptr<VR_Roulette_t>    SDP_VR;
     //typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
-    //typedef std::shared_ptr<Variance_Reduction_t>   SP_Variance_Reduction;
     //typedef std::shared_ptr<Tallier_t>              SP_Tallier;
     //@}
 
@@ -74,7 +75,9 @@ class Domain_Transporter
     Physics_t  *d_physics;
 
     // Variance reduction.
-    //SP_Variance_Reduction d_var_reduction;
+    bool           d_roulette;
+    SDP_VR         d_vr_host;
+    VR_Roulette_t *d_vr;
 
     // Regular tallies.
     //SP_Tallier d_tallier;
@@ -85,13 +88,10 @@ class Domain_Transporter
   public:
 
     // Constructor.
-    Domain_Transporter();
+    Domain_Transporter(RCP_Std_DB db);
 
     // Set the geometry and physics classes.
     void set(SDP_Geometry geometry, SDP_Physics physics);
-
-    // Set the variance reduction.
-    //void set(SP_Variance_Reduction reduction);
 
     // Set regular tallies.
     //void set(SP_Tallier tallies);

@@ -40,7 +40,8 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     pl->set("num_groups",xs->num_groups());
     pl->set("Np",num_particles);
-    pl->set("implicit_capture",false);
+    pl->set("implicit_capture",true);
+    pl->set("variance reduction",std::string("roulette"));
     auto phys = std::make_shared<Physics<Geom> >(pl,xs);
     phys->set_geometry(sdp_geom);
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);

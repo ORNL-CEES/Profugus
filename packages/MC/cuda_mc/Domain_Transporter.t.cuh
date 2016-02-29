@@ -12,9 +12,11 @@
 #define cuda_mc_Domain_Transporter_t_cuh
 
 #include <cmath>
+#include <memory>
 
 #include "harness/DBC.hh"
 #include "harness/Diagnostics.hh"
+#include "utils/String_Functions.hh"
 #include "geometry/Definitions.hh"
 #include "mc/Definitions.hh"
 #include "Domain_Transporter.cuh"
@@ -29,11 +31,23 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Domain_Transporter<Geometry>::Domain_Transporter()
+Domain_Transporter<Geometry>::Domain_Transporter(RCP_Std_DB db)
     : d_sample_fission_sites(false)
     , d_keff(0.0)
 {
+    // Build variance reduction
+    std::string var = profugus::to_lower(
+        db->get<std::string>("variance reduction",std::string("roulette")) );
+    if( var == "roulette" )
+    {
+        std::cout << "Building DT with Roulette" << std::endl;
+        d_roulette = true;
+        auto sp_vr = std::make_shared<VR_Roulette_t>(db);
+        d_vr_host = SDP_VR( sp_vr );
+        d_vr = d_vr_host.get_device_ptr();
+    }
 }
+
 
 //---------------------------------------------------------------------------//
 // PUBLIC FUNCTIONS
@@ -59,35 +73,7 @@ void Domain_Transporter<Geometry>::set(SDP_Geometry geometry,
 
     d_physics_host  = physics;
     d_physics = d_physics_host.get_device_ptr();
-
-    /*
-    if (d_var_reduction)
-    {
-        d_var_reduction->set(d_geometry);
-        d_var_reduction->set(d_physics);
-    }
-    */
 }
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Set the variance reduction.
- *
- * \param reduction
- */
-/*
-template <class Geometry>
-void Domain_Transporter<Geometry>::set(SP_Variance_Reduction reduction)
-{
-    REQUIRE(reduction);
-    d_var_reduction = reduction;
-
-    if (d_geometry)
-        d_var_reduction->set(d_geometry);
-    if (d_physics)
-        d_var_reduction->set(d_physics);
-}
-*/
 
 //---------------------------------------------------------------------------//
 /*!
