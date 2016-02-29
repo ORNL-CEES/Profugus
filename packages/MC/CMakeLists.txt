@@ -180,6 +180,7 @@ IF(USE_CUDA)
     cuda_mc/Particle_Vector.pt.cu
     cuda_mc/Physics.pt.cu    
     cuda_mc/Uniform_Source.pt.cu
+    cuda_mc/VR_Roulette.pt.cu
     )
   LIST(APPEND CUDA_HEADERS ${CUDA_MC_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_MC_SOURCES})
