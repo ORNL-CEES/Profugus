@@ -65,9 +65,6 @@ class Source
         omega.y = sintheta * sin(phi);
     }
 
-    // Calculate random number offsets.
-    void make_RNG();
-
   public:
     // Constructor.
     Source(SDP_Geometry geometry);
@@ -80,9 +77,6 @@ class Source
     //! Get a particle from the source on specified thread.
     //__device__ Particle_t get_particle(std::size_t idx, RNG_t &rng) const;
 
-    //! Whether the source has finished emitting all its particles.
-    //bool empty() const;
-
     //! Number of particles to transport in the source on the current domain.
     //size_type num_to_transport() const;
 
@@ -94,14 +88,8 @@ class Source
     //! Get the geometry.
     const Geometry_t& geometry() const { return *b_geometry; }
 
-    //! Number of random number streams generated so far (inclusive).
-    int num_streams() const { return d_rng_stream; }
-
   private:
     // >>> DATA
-
-    // Offsets used for random number generator selection.
-    int d_rng_stream;
 };
 
 } // end namespace cuda_mc

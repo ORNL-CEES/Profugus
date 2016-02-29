@@ -105,9 +105,6 @@ void Uniform_Source<Geometry>::build_source(SDP_Shape geometric_shape)
     // store the spatial shape
     d_geo_shape = geometric_shape.get_device_ptr();
 
-    // make the RNG for this cycle
-    Base::make_RNG();
-
     profugus::global_barrier();
 }
 
