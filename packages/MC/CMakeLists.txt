@@ -175,6 +175,7 @@ IF(USE_CUDA)
     cuda_mc/Bank.pt.cu
     cuda_mc/Collision_Tally.pt.cu
     cuda_mc/Group_Bounds.cu
+    cuda_mc/Keff_Tally.pt.cu
     cuda_mc/Particle.pt.cu
     cuda_mc/Particle_Vector.pt.cu
     cuda_mc/Physics.pt.cu    

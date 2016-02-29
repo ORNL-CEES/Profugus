@@ -67,6 +67,9 @@ class Keff_Tally
     //! Accumulated second moment of keff for calculating variance
     double d_keff_sum_sq;
 
+    //! keff host work vector.
+    std::vector<double> d_keff_host;
+
     //! keff work vector on-device.
     double* d_keff_device;
 

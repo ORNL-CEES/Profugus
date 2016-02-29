@@ -37,6 +37,7 @@ ADD_UTILS_TEST(tstCollision_Tally_cuda.cc              NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstUniform_Source_cuda.cc               NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstBank_cuda.cc                         NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstPhysics_cuda.cc                      NP 1 ${DEPS} )
+ADD_UTILS_TEST(tstKeff_Tally_cuda.cc                   NP 1 ${DEPS} )
 
 ##---------------------------------------------------------------------------##
 ## end of cuda_xs/test/CMakeLists.txt

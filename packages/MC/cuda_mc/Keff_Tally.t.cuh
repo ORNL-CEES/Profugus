@@ -35,10 +35,15 @@ __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
 				   double* keff )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    keff[idx] = particles->weight(idx) * particles->step(idx) *
-		phyiscs->total( physics::NU_FISSION,
-				particles->matid(idx),
-				particles->group(idx) );
+
+    if ( (idx >= collision_start && idx < collision_start + num_collision) ||
+	 (idx >= boundary_start && idx < boundary_start + num_boundary) )
+    {
+	keff[idx] = particles->weight(idx) * particles->step(idx) *
+		    phyiscs->total( physics::NU_FISSION,
+				    particles->matid(idx),
+				    particles->group(idx) );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -135,9 +140,11 @@ void Keff_Tally<Geometry>::accumulate(
     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
     // Lazy allocate the keff work vector.
+    int vector_size = particle.get_host_ptr()->size();
     if ( nullptr == d_keff_device )
     {
-	cuda::memory::Malloc( d_keff_device, particles.get_host_ptr()->size() );
+	d_keff_host.resize( vector_size );
+	cuda::memory::Malloc( d_keff_device, vector_size );
     }
     
     // Get the particles that just had a collision.
@@ -172,7 +179,17 @@ void Keff_Tally<Geometry>::accumulate(
 	num_boundary,
 	d_keff_device );
 
-    // Pull tallies off the device.
+    // Pull tallies off the device and add them to cycle tally.
+    cuda::memory::Copy_To_Host( 
+	d_keff_host.data(), d_keff_device, vector_size );
+    for ( int n = collision_start; n < collision_start + num_collision; ++n )
+    {
+	d_keff_cycle += d_keff_host[n];
+    }
+    for ( int n = boundary_start; n < boundary_start + num_boundary; ++n )
+    {
+	d_keff_cycle += d_keff_host[n];
+    }
 }
 
 //---------------------------------------------------------------------------//
