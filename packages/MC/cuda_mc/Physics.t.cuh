@@ -32,46 +32,41 @@ namespace cuda_mc
  */
 template <class Geometry>
 Physics<Geometry>::Physics(RCP_Std_DB db,
-                           SP_XS      mat)
-    : d_Ng(mat->num_groups())
-    , d_Nm(mat->num_mat())
-    , d_scatter_vec(mat->num_groups()*mat->num_mat())
-    , d_fissionable_vec(d_Nm)
+                           SP_XS      mat_host,
+                           SDP_XS_Dev mat)
 {
     REQUIRE(!db.is_null());
 
-    d_mat_host = cuda::shared_device_ptr<XS_Dev_t>(*mat);
-    d_mat = d_mat_host.get_device_ptr();
+    d_Ng = mat_host->num_groups();
+    d_Nm = mat_host->num_mat();
+    REQUIRE( d_Ng > 0 );
+    REQUIRE( d_Nm > 0 );
 
-    REQUIRE(d_mat);
-    REQUIRE(d_mat_host.get_host_ptr()->num_groups() > 0);
-    REQUIRE(d_mat_host.get_host_ptr()->num_mat() > 0);
+    cudaMalloc( (void**)&d_scatter, d_Ng*d_Nm*sizeof(double) );
+    cudaMalloc( (void**)&d_fissionable, d_Nm*sizeof(int) );
 
-    d_scatter = d_scatter_vec.data();
-    d_fissionable = d_fissionable_vec.data();
+    d_mat = mat.get_device_ptr();
+    CHECK( d_mat );
 
     // implicit capture flag
     d_implicit_capture = db->get("implicit_capture", true);
 
     // check for balanced scattering tables
-    d_check_balance = db->get("check_balance", false);
+    bool check_balance = db->get("check_balance", false);
 
     // turn check balance on if we are not doing implicit capture
-    if (!d_implicit_capture) d_check_balance = true;
-
-    // get the material ids in the database
-    def::Vec_Int matids;
-    mat->get_matids(matids);
-    CHECK(matids.size() == d_Nm);
+    if (!d_implicit_capture) check_balance = true;
 
     // calculate total scattering over all groups for each material and
     // determine if fission is available for a given material
     std::vector<double> host_scatter(d_Nm*d_Ng);
     std::vector<int> host_fissionable(d_Nm);
-    for (auto m : matids)
+
+    // XS_Device matids always run 0->Nm
+    for (int m = 0; m < d_Nm; ++m)
     {
         // get the P0 scattering matrix for this material
-        const auto &sig_s = mat->matrix(m, 0);
+        const auto &sig_s = mat_host->matrix(m, 0);
         CHECK(sig_s.numRows() == d_Ng);
         CHECK(sig_s.numCols() == d_Ng);
 
@@ -91,14 +86,14 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
         }
 
         // check scattering correctness if needed
-        if (d_check_balance)
+        if (check_balance)
         {
             for (int g = 0; g < d_Ng; g++)
             {
                 int ind = group_mat_index(g,m);
 
                 if (host_scatter[ind] >
-                    mat->vector(m, XS_t::TOTAL)[g])
+                    mat_host->vector(m, XS_t::TOTAL)[g])
                 {
                     // terminate if we are running analog
                     if (!d_implicit_capture)
@@ -115,16 +110,26 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
         }
 
         // see if this material is fissionable by checking Chi
-        host_fissionable[m] = mat->vector(m, XS_t::CHI).normOne() > 0.0 ?
+        host_fissionable[m] = mat_host->vector(m, XS_t::CHI).normOne() > 0.0 ?
                               true : false;
     }
 
     // Assign host data to device vectors
-    d_scatter_vec.assign(profugus::make_view(host_scatter));
-    d_fissionable_vec.assign(profugus::make_view(host_fissionable));
+    cudaMemcpy(d_scatter, &host_scatter[0],
+               host_scatter.size()*sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_fissionable, &host_fissionable[0],
+               host_fissionable.size()*sizeof(double), cudaMemcpyHostToDevice);
 
     ENSURE(d_Nm > 0);
     ENSURE(d_Ng > 0);
+}
+
+// Destructor
+template <class Geometry>
+Physics<Geometry>::~Physics()
+{
+    cudaFree(d_scatter);
+    cudaFree(d_fissionable);
 }
 
 } // end namespace cuda_mc

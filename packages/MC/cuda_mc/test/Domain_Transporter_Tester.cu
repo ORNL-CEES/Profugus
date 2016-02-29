@@ -65,7 +65,9 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     pl->set("num_groups",xs->num_groups());
     pl->set("Np",num_particles);
     pl->set("implicit_capture",false);
-    auto phys = std::make_shared<Physics<Geom> >(pl,xs);
+
+    auto sdp_mat = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
+    auto phys = std::make_shared<Physics<Geom> >(pl,xs,sdp_mat);
     phys->set_geometry(sdp_geom);
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 

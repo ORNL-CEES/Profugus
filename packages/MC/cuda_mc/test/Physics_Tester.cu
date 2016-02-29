@@ -88,7 +88,8 @@ void Physics_Tester::test_total( const Vec_Dbl  &x_edges,
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
-    Physics<cuda_profugus::Mesh_Geometry> phys(pl,xs);
+    auto sdp_mat = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
+    Physics<cuda_profugus::Mesh_Geometry> phys(pl,xs,sdp_mat);
     phys.set_geometry(sdp_geom);
 
     // Allocate data on device
@@ -120,7 +121,8 @@ void Physics_Tester::test_collide( const Vec_Dbl  &x_edges,
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
-    Physics<cuda_profugus::Mesh_Geometry> phys(pl,xs);
+    auto sdp_mat = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
+    Physics<cuda_profugus::Mesh_Geometry> phys(pl,xs,sdp_mat );
     phys.set_geometry(sdp_geom);
 
     // Allocate data on device

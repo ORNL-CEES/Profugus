@@ -84,19 +84,19 @@ class Physics
     // >>> DATA
 
     // Cross section database.
-    SDP_XS_Dev d_mat_host;
     XS_Dev_t  *d_mat;
 
     // Geometry.
-    SDP_Geometry d_geometry_host;
     Geometry    *d_geometry;
 
   public:
     // Constructor that auto-creates group bounds.
-    explicit Physics(RCP_Std_DB db, SP_XS mat);
+    explicit Physics(RCP_Std_DB db, SP_XS mat_host, SDP_XS_Dev mat);
 
     Physics(const Physics &phys)            = default;
     Physics& operator=(const Physics &phys) = default;
+
+    ~Physics();
 
     // >>> PUBLIC TRANSPORT INTERFACE
 
@@ -105,12 +105,8 @@ class Physics
     {
         REQUIRE(g.get_host_ptr());
         REQUIRE(g.get_device_ptr());
-        d_geometry_host = g;
-        d_geometry = d_geometry_host.get_device_ptr();
+        d_geometry = g.get_device_ptr();
     }
-
-    //! Get the geometry.
-    SDP_Geometry get_geometry() const { return d_geometry_host; }
 
     // Get a total cross section from the physics library.
     __device__ double total(Reaction_Type type, const Particle_t &p) const;
@@ -146,9 +142,6 @@ class Physics
 
     // >>> CLASS FUNCTIONS
 
-    //! Get cross section database (host).
-    SDP_XS_Dev xs() const { return d_mat_host; }
-
     //! Get cross section database (device).
     __device__ XS_Dev_t  * xs_device() const { return d_mat; }
 
@@ -161,19 +154,14 @@ class Physics
     // Boolean for implicit capture.
     bool d_implicit_capture;
 
-    // Check cross section balance.
-    bool d_check_balance;
-
     // Number of groups and materials in the material database.
     int d_Ng, d_Nm;
 
     // Total scattering for each group and material.
-    cuda::Device_Vector<cuda::arch::Device,double> d_scatter_vec;
     double *d_scatter;
 
     // Fissionable bool by local matid (stored as int for host/device
     // compatibility)
-    cuda::Device_Vector<cuda::arch::Device,int> d_fissionable_vec;
     int *d_fissionable;
 
     // Index for a material/group combination
