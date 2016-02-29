@@ -41,19 +41,16 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
                                          SDP_Geometry   geometry)
     : Base(geometry)
     , d_erg_cdf(db->get<int>("num_groups"))
-    , d_np_requested(0)
     , d_np_total(0)
-    , d_np_domain(0)
-    , d_wt(1.0)
-    , d_np_left(0)
-    , d_np_run(0)
-    , d_nodes(profugus::nodes())
 {
     REQUIRE(!db.is_null());
 
+    REQUIRE( profugus::nodes() == 1 );
+
     // store the total number of requested particles
-    d_np_requested = static_cast<size_type>(db->get("Np", 1000));
-    INSIST(d_np_requested > 0., "Number of source particles must be positive");
+    d_np_total = static_cast<size_type>(db->get("Np", 1000));
+    INSIST(d_np_total > 0., "Number of source particles must be positive");
+    d_np_domain = d_np_total / profugus::nodes();
 
     // get the spectral shape
     d_num_groups = db->get<int>("num_groups");
@@ -98,45 +95,20 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
  * \param geometric_shape
  */
 template <class Geometry>
-void Uniform_Source<Geometry>::build_source(SP_Shape geometric_shape)
+void Uniform_Source<Geometry>::build_source(SDP_Shape geometric_shape)
 {
-    REQUIRE(geometric_shape);
+    REQUIRE(geometric_shape.get_host_ptr());
+    REQUIRE(geometric_shape.get_device_ptr());
 
     SCOPED_TIMER("profugus::Uniform_Source.build_source");
 
     // store the spatial shape
-    d_geo_shape_host = SDP_Shape(geometric_shape);
-    d_geo_shape = d_geo_shape_host.get_device_ptr();
+    d_geo_shape = geometric_shape.get_device_ptr();
 
     // make the RNG for this cycle
     Base::make_RNG();
 
-    // build the source based on domain replication
-    build_DR();
-
-    // set counters
-    d_np_left = d_np_domain;
-    d_np_run  = 0;
-
     profugus::global_barrier();
-}
-
-//---------------------------------------------------------------------------//
-// PRIVATE IMPLEMENTATION
-//---------------------------------------------------------------------------//
-/*!
- * \brief Build domain replicated source.
- */
-template <class Geometry>
-void Uniform_Source<Geometry>::build_DR()
-{
-    // calculate the number of particles per domain and set (equivalent)
-    d_np_domain = d_np_requested / d_nodes;
-
-    // recalculate the total number of particles (we want the same number of
-    // particles in each domain, so the total may change slightly from the
-    // requested value)
-    d_np_total  = d_np_domain * d_nodes;
 }
 
 } // end namespace cuda_mc

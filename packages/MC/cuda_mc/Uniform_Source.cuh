@@ -74,7 +74,6 @@ class Uniform_Source : public Source<Geometry>
     // >>> DATA
 
     // Source geometric shape.
-    SDP_Shape   d_geo_shape_host;
     Box_Shape  *d_geo_shape;
 
     // Energy shape CDF.
@@ -85,15 +84,12 @@ class Uniform_Source : public Source<Geometry>
     Uniform_Source(RCP_Std_DB db, SDP_Geometry geometry);
 
     // Build the initial source on the host.
-    void build_source(SP_Shape geometric_shape);
+    void build_source(SDP_Shape geometric_shape);
 
     // >>> REQUIRED PUBLIC INTERFACE
 
     // Get a particle from the source.
     __device__ Particle_t get_particle(std::size_t idx, RNG_t &rng) const;
-
-    //! Boolean operator for source (true when source still has particles).
-    __host__ __device__ bool empty() const { return d_np_left == 0; }
 
     //! Number of particles to transport in the source on the current domain.
     __host__ __device__
@@ -105,44 +101,18 @@ class Uniform_Source : public Source<Geometry>
 
     // >>> CLASS ACCESSORS
 
-    //! Total number of requested particles.
-    __host__ __device__
-    size_type Np() const { return d_np_requested; }
-
-    //! Number transported so far on this domain.
-    __host__ __device__
-    size_type num_run() const { return d_np_run; }
-
-    //! Number left to transport on this domain.
-    __host__ __device__
-    size_type num_left() const { return d_np_left; }
+    //! Starting weight for histories
+    __host__ __device__ double wt() const { return 1.0; }
 
   private:
     // >>> IMPLEMENTATION
-    int d_nodes;
 
     using Base::b_geometry;
 
     int d_num_groups;
 
-    // Build the domain replicated source.
-    void build_DR();
-
-    // Requested particles.
-    size_type d_np_requested;
-
-    // Number of particles: total, domain
-    size_type d_np_total;
-    size_type d_np_domain;
-
-    // Particle weight.
-    double d_wt;
-
-    // Number of source particles left in the current domain.
-    size_type d_np_left;
-
-    // Number of particles run on the current domain.
-    size_type d_np_run;
+    int d_np_total;
+    int d_np_domain;
 };
 
 } // end namespace cuda_mc

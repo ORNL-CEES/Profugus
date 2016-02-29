@@ -103,7 +103,7 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
 
     // Build box shape for source
     REQUIRE( src_bounds.size() == 6 );
-    auto src_shape = std::make_shared<cuda_mc::Box_Shape>(
+    auto src_shape = cuda::shared_device_ptr<cuda_mc::Box_Shape>(
             src_bounds[0], src_bounds[1],
             src_bounds[2], src_bounds[3],
             src_bounds[4], src_bounds[5]);

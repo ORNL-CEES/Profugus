@@ -34,7 +34,6 @@ __device__ auto
 Uniform_Source<Geometry>::get_particle(std::size_t tid,
                                        RNG_t      &rng) const -> Particle_t 
 {
-    REQUIRE(d_wt > 0.0);
     REQUIRE(d_geo_shape);
 
     // make a particle
@@ -72,7 +71,7 @@ Uniform_Source<Geometry>::get_particle(std::size_t tid,
     p.set_matid(matid);
 
     // set particle weight
-    p.set_wt(d_wt);
+    p.set_wt(wt());
 
     // make particle alive
     p.live();

@@ -51,7 +51,6 @@ class Source
     // >>> DATA
 
     // Geometry and physics.
-    SDP_Geometry b_geometry_host;
     Geometry_t  *b_geometry;
 
     // Sample isotropic angle.
@@ -68,9 +67,6 @@ class Source
 
     // Calculate random number offsets.
     void make_RNG();
-
-    // Node ids.
-    int b_node, b_nodes;
 
   public:
     // Constructor.

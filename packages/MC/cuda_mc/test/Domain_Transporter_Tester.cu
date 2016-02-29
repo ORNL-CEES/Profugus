@@ -80,7 +80,7 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
                           y_edges.front(), y_edges.back(),
                           z_edges.front(), z_edges.back()};
     REQUIRE( src_bounds.size() == 6 );
-    auto src_shape = std::make_shared<cuda_mc::Box_Shape>(
+    auto src_shape = cuda::shared_device_ptr<cuda_mc::Box_Shape>(
             src_bounds[0], src_bounds[1],
             src_bounds[2], src_bounds[3],
             src_bounds[4], src_bounds[5]);

@@ -28,11 +28,9 @@ template <class Geometry>
 Source<Geometry>::Source(SDP_Geometry geometry)
     : b_node(profugus::node())
     , b_nodes(profugus::nodes())
-    , b_geometry_host(geometry)
+    , b_geometry( geometry.get_device_ptr() )
     , d_rng_stream(0)
 {
-    b_geometry = b_geometry_host.get_device_ptr();
-
     REQUIRE(b_geometry);
 }
 
