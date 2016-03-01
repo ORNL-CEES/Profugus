@@ -51,7 +51,7 @@ class VR_RouletteTest : public testing::Test
 
 TEST_F(VR_RouletteTest, default_settings)
 {
-    int num_particle = 10;
+    int num_particle = 1;
     Particle_Vector_Tester tester( num_particle, rng );
 
     tester.live();
@@ -73,20 +73,8 @@ TEST_F(VR_RouletteTest, default_settings)
     auto event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::COLLISION, i );
 
-    // below cutoff. some should roulette
+    // below cutoff. will survive
     tester.set_wt(0.2499);
-    vr.post_collision(tester.get_vector(), bank);
-    alive = tester.alive();
-    for ( auto i : alive ) EXPECT_FALSE( i );
-    wt = tester.wt();
-    for ( auto i : wt ) EXPECT_EQ( 0.2499, i );
-    event = tester.event();
-    for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_KILLED, i );
-
-    tester.live();
-
-    // below cutoff. some should roulette
-    tester.set_wt(0.058);
     vr.post_collision(tester.get_vector(), bank);
     alive = tester.alive();
     for ( auto i : alive ) EXPECT_TRUE( i );
@@ -94,6 +82,22 @@ TEST_F(VR_RouletteTest, default_settings)
     for ( auto i : wt ) EXPECT_EQ( 0.5, i );
     event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_SURVIVE, i );
+
+    tester.live();
+    tester.set_event(events);
+
+    // below cutoff. will die
+    tester.set_wt(0.018);
+    vr.post_collision(tester.get_vector(), bank);
+    alive = tester.alive();
+    for ( auto i : alive ) EXPECT_FALSE( i );
+    wt = tester.wt();
+    for ( auto i : wt ) EXPECT_EQ( 0.018, i );
+    event = tester.event();
+    for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_KILLED, i );
+
+    tester.live();
+    tester.set_event(events);
 
     // below cutoff. some should roulette
     tester.set_wt(0.20);
@@ -106,16 +110,17 @@ TEST_F(VR_RouletteTest, default_settings)
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_KILLED, i );
 
     tester.live();
+    tester.set_event(events);
 
-    // below cutoff. some should roulette
+    // below cutoff. will survive
     tester.set_wt(0.212501);
     vr.post_collision(tester.get_vector(), bank);
     alive = tester.alive();
-    for ( auto i : alive ) EXPECT_FALSE( i );
+    for ( auto i : alive ) EXPECT_TRUE( i );
     wt = tester.wt();
-    for ( auto i : wt ) EXPECT_EQ( 0.212501, i );
+    for ( auto i : wt ) EXPECT_EQ( 0.5, i );
     event = tester.event();
-    for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_KILLED, i );
+    for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_SURVIVE, i );
 
     EXPECT_EQ(0, bank.size());
 }
@@ -147,6 +152,9 @@ TEST_F(VR_RouletteTest, zero_cutoff)
     auto event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::COLLISION, i );
 
+    tester.live();
+    tester.set_event(events);
+
     // above cutoff
     tester.set_wt(0.000001);
     vr.post_collision(tester.get_vector(), bank);
@@ -156,6 +164,9 @@ TEST_F(VR_RouletteTest, zero_cutoff)
     for ( auto i : wt ) EXPECT_EQ( 0.000001, i );
     event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::COLLISION, i );
+
+    tester.live();
+    tester.set_event(events);
 
     // should be no particles in the bank
     EXPECT_EQ(0, bank.size());
