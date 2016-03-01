@@ -32,7 +32,6 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
 {
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
-    //REQUIRE(d_var_reduction);
     //REQUIRE(d_tallier);
     REQUIRE(particle.alive());
 
@@ -182,7 +181,6 @@ __device__ void
 Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
                                                 double dist) const
 {
-    //REQUIRE(d_var_reduction);
     REQUIRE(particle.event() == profugus::events::COLLISION);
 
     // move the particle to the collision site
