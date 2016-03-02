@@ -11,8 +11,8 @@
 #ifndef MC_cuda_mc_Cell_Tally_i_cuh
 #define MC_cuda_mc_Cell_Tally_i_cuh
 
-#include "cuda_utility/Utility_Functions.hh"
-#include "Cell_Tally.hh"
+#include "cuda_utils/Utility_Functions.hh"
+#include "Cell_Tally.cuh"
 
 namespace cuda_mc
 {
@@ -22,8 +22,8 @@ namespace cuda_mc
  * \brief Track particle and tally..
  */
 template <class Geometry>
-void Cell_Tally<Geometry>::accumulate(double            step,
-                                      const Particle_t &p)
+__device__ void Cell_Tally<Geometry>::accumulate(double            step,
+                                                 const Particle_t &p)
 {
     REQUIRE( step >= 0.0 );
     REQUIRE( p.alive() );
@@ -31,15 +31,19 @@ void Cell_Tally<Geometry>::accumulate(double            step,
     // Get the cell index
     int cell = d_geometry->cell(p.geo_state());
 
-    int ind = cuda::utility::lower_bound( &d_cells[0], 
-                                          &d_cells[0]+d_cells.size(),
-                                           cell ) - &d_cells[0];
+    int ind = cuda::utility::lower_bound( d_cells, 
+                                          d_cells+d_num_cells,
+                                          cell ) - d_cells;
 
-    CHECK( ind < d_tally.size() );
-
-    cuda::atomic_add_double( &d_tally[ind], p.wt() * step );
+    // See if valid index was returned and if it is an exact match
+    // for the particle's cell
+    if( (ind < d_num_cells) && (d_cells[ind] == cell))
+    {
+        cuda::utility::atomic_add_double( &d_tally[ind], p.wt() * step );
+    }
 }
 
+} // namespace cuda_mc
 
 #endif // MC_cuda_mc_Cell_Tally_i_cuh
 

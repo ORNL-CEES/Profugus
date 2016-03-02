@@ -55,24 +55,45 @@ class Cell_Tally
     Physics_t  *d_physics;
 
     // Vector of tally result (single value, only batch statistics)
-    Dev_Dbl d_tally;
+    double *d_tally;
 
     // List of cells we're tallying
-    Dev_Int d_cells;
+    int *d_cells;
 
     // Volumes of tally cells
-    Dev_Dbl d_volumes;
+    double *d_volumes;
+
+    // Number of cells being tallied
+    int d_num_cells;
 
   public:
 
     // Constructor.
     Cell_Tally(SDP_Geometry geometry, SDP_Physics physics);
 
-    // Add tally cells.
+    // Disallow copy and assignment
+    Cell_Tally(const Cell_Tally &phys)            = delete;
+    Cell_Tally& operator=(const Cell_Tally &phys) = delete;
+
+    // Destructor
+    ~Cell_Tally()
+    {
+        cudaFree(d_tally);
+        cudaFree(d_cells);
+        cudaFree(d_volumes);
+    }
+
+    // Set cell list for tally
     void set_cells(const std::vector<int> &cells);
 
     // Get tally results.
-    const Dev_Dbl& results() const { return d_tally; }
+    std::vector<double> results() const
+    {
+        std::vector<double> host_tally(d_num_cells);
+        cudaMemcpy( &host_tally[0], d_tally, d_num_cells*sizeof(double),
+                    cudaMemcpyDeviceToHost );
+        return host_tally;
+    }
 
     // Do post-processing on first and second moments
     void finalize(double num_particles);
@@ -94,6 +115,8 @@ class Cell_Tally
 //---------------------------------------------------------------------------//
 
 } // end namespace cuda_mc
+
+#include "Cell_Tally.i.cuh"
 
 #endif // MC_cuda_mc_Cell_Tally_cuh
 
