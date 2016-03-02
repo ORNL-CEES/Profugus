@@ -20,9 +20,9 @@ namespace cuda_mc
 
 typedef cuda_profugus::Mesh_Geometry Geom;
 
-__global__ void test_total_kernel( Physics<Geom> phys,
-                                   double       *totals,
-                                   int           num_vals)
+__global__ void test_total_kernel( Physics<Geom> *phys,
+                                   double        *totals,
+                                   int            num_vals)
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
@@ -34,13 +34,13 @@ __global__ void test_total_kernel( Physics<Geom> phys,
          Particle<Geom> p;
          p.set_group(g);
          p.set_matid(matid);
-         totals[tid] = phys.total(profugus::physics::TOTAL,p);
+         totals[tid] = phys->total(profugus::physics::TOTAL,p);
      }
 }
 
-__global__ void test_collide_kernel( Geom         *geom,
-                                     Physics<Geom> phys,
-                                     int           num_particles)
+__global__ void test_collide_kernel( Geom          *geom,
+                                     Physics<Geom> *phys,
+                                     int            num_particles)
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_particles )
@@ -66,9 +66,10 @@ __global__ void test_collide_kernel( Geom         *geom,
          p.set_matid(geom->matid(p.geo_state()));
 
          // Collide
-         phys.collide(p);
+         phys->collide(p);
 
-         printf("Particle %i has event %i, group %i, and weight %e\n",tid,p.event(),p.group(),p.wt());
+         printf("Particle %i has event %i, group %i, and weight %e\n",
+                tid,p.event(),p.group(),p.wt());
      }
 }
 
@@ -79,6 +80,7 @@ void Physics_Tester::test_total( const Vec_Dbl  &x_edges,
                                        SP_XS     xs,
                                        Vec_Dbl  &host_totals )
 {
+    cudaDeviceSynchronize();
 
     // Build geometry
     auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(x_edges,
@@ -89,20 +91,24 @@ void Physics_Tester::test_total( const Vec_Dbl  &x_edges,
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     auto sdp_mat = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
-    Physics<cuda_profugus::Mesh_Geometry> phys(pl,xs,sdp_mat);
-    phys.set_geometry(sdp_geom);
+    auto phys = std::make_shared<Physics<Geom> >(pl,xs,sdp_mat);
+    phys->set_geometry(sdp_geom);
+    auto sdp_phys = cuda::Shared_Device_Ptr<Physics<Geom> >(phys);
 
     // Allocate data on device
     int num_vals = host_totals.size();
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,double> device_totals(num_vals);
 
-    test_total_kernel<<<1,num_vals>>>( phys, device_totals.data(),
+    test_total_kernel<<<1,num_vals>>>( sdp_phys.get_device_ptr(),
+                                       device_totals.data(),
                                        num_vals );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     device_totals.to_host(profugus::make_view(host_totals));
+
+    cudaDeviceSynchronize();
 }
 
 void Physics_Tester::test_collide( const Vec_Dbl  &x_edges,
@@ -112,6 +118,7 @@ void Physics_Tester::test_collide( const Vec_Dbl  &x_edges,
                                          SP_XS     xs,
                                          int       num_particles )
 {
+    cudaDeviceSynchronize();
 
     // Build geometry
     auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(x_edges,
@@ -122,17 +129,22 @@ void Physics_Tester::test_collide( const Vec_Dbl  &x_edges,
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     auto sdp_mat = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
-    Physics<cuda_profugus::Mesh_Geometry> phys(pl,xs,sdp_mat );
-    phys.set_geometry(sdp_geom);
+
+    auto phys = std::make_shared<Physics<Geom> >(pl,xs,sdp_mat);
+    phys->set_geometry(sdp_geom);
+    auto sdp_phys = cuda::Shared_Device_Ptr<Physics<Geom> >(phys);
 
     // Allocate data on device
     //typedef cuda::arch::Device Arch;
     //cuda::Device_Vector<Arch,double> device_totals(num_particles);
 
     test_collide_kernel<<<1,num_particles>>>( sdp_geom.get_device_ptr(),
-                                              phys, num_particles );
+                                              sdp_phys.get_device_ptr(),
+                                              num_particles );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    cudaDeviceSynchronize();
 }
 
 } // end namespace cuda_mc

@@ -93,8 +93,9 @@ class Physics
     // Constructor that auto-creates group bounds.
     explicit Physics(RCP_Std_DB db, SP_XS mat_host, SDP_XS_Dev mat);
 
-    Physics(const Physics &phys)            = default;
-    Physics& operator=(const Physics &phys) = default;
+    // Due to Cuda memory management, disallow copy and assignment
+    Physics(const Physics &phys)            = delete;
+    Physics& operator=(const Physics &phys) = delete;
 
     ~Physics();
 

@@ -42,8 +42,10 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
     REQUIRE( d_Ng > 0 );
     REQUIRE( d_Nm > 0 );
 
-    cudaMalloc( (void**)&d_scatter, d_Ng*d_Nm*sizeof(double) );
-    cudaMalloc( (void**)&d_fissionable, d_Nm*sizeof(int) );
+    auto err = cudaMalloc( (void**)&d_scatter, d_Ng*d_Nm*sizeof(double) );
+    REQUIRE( err == cudaSuccess );
+    err = cudaMalloc( (void**)&d_fissionable, d_Nm*sizeof(int) );
+    REQUIRE( err == cudaSuccess );
 
     d_mat = mat.get_device_ptr();
     CHECK( d_mat );
@@ -115,21 +117,24 @@ Physics<Geometry>::Physics(RCP_Std_DB db,
     }
 
     // Assign host data to device vectors
-    cudaMemcpy(d_scatter, &host_scatter[0],
-               host_scatter.size()*sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_fissionable, &host_fissionable[0],
-               host_fissionable.size()*sizeof(double), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(d_scatter, &host_scatter[0],
+                     host_scatter.size()*sizeof(double),
+                     cudaMemcpyHostToDevice);
+    REQUIRE( err == cudaSuccess );
+    err = cudaMemcpy(d_fissionable, &host_fissionable[0],
+                     host_fissionable.size()*sizeof(int),
+                     cudaMemcpyHostToDevice);
+    REQUIRE( err == cudaSuccess );
 
-    ENSURE(d_Nm > 0);
-    ENSURE(d_Ng > 0);
+    cudaDeviceSynchronize();
 }
 
 // Destructor
 template <class Geometry>
 Physics<Geometry>::~Physics()
 {
-    cudaFree(d_scatter);
-    cudaFree(d_fissionable);
+    auto err = cudaFree(d_scatter);
+    err = cudaFree(d_fissionable);
 }
 
 } // end namespace cuda_mc
