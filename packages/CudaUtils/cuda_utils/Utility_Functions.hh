@@ -58,6 +58,31 @@ __host__ __device__ inline bool soft_equiv( double a,
     return false;
 }
 
+
+// Cuda doesn't natively support atomic operations on doubles
+double __device__ inline atomic_add_double( volatile double * const dest,
+                                            const double val )
+{
+    union U
+    {
+        unsigned long long int i;
+        double t;
+    } assume, oldval, newval;
+
+    oldval.t = *dest;
+
+    do
+    {
+        assume.i = oldval.i;
+        newval.t = assume.t + val;
+        oldval.i = atomicCAS( (unsigned long long int*)dest,
+                              assume.i, newval.i );
+    } while (assume.i != oldval.i);
+
+    return oldval.t;
+}
+
+
 //---------------------------------------------------------------------------//
 // SPACE_VECTOR FUNCTIONS
 //---------------------------------------------------------------------------//
