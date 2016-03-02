@@ -270,16 +270,6 @@ void Anderson_Solver<Geometry,T>::anderson_solve()
     // Initialize the Anderson operator and get a solution vector
     auto v = d_operator->initialize_Anderson();
 
-    // Make a null tallier
-    auto null_tallier = std::make_shared<Tallier_t>();
-    null_tallier->set(b_tallier->geometry(), b_tallier->physics());
-    null_tallier->build();
-    CHECK(null_tallier->is_built());
-    CHECK(null_tallier->num_tallies() == 0);
-
-    // Set the null tallier
-    d_operator->set_tallier(null_tallier);
-
     // Solve using Anderson
     d_anderson->solve(v);
 

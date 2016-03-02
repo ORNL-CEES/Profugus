@@ -99,6 +99,7 @@ void Anderson_Operator<Geometry,T>::iterate(double k) const
     // histories. Each processor adjusts the particle weights so that the
     // total weight emitted, summed over all processors, is d_Np.
     d_tallier->end_cycle(d_Np);
+
 }
 
 //---------------------------------------------------------------------------//
@@ -243,6 +244,25 @@ void Anderson_Operator<Geometry,T>::ApplyImpl(const MV &x, MV &y) const
 
     // >>> Update F(g,k)
 
+    // Get the k from the initialization cycles
+    double transport_eig = -1.0;
+    bool found_ktally = false;
+    for( auto tally =  d_transporter->tallier()->begin();
+              tally != d_transporter->tallier()->end();
+              tally++ )
+    {
+        auto k_tally = std::dynamic_pointer_cast<Keff_Tally_t>(*tally);
+
+        if( k_tally )
+        {
+            found_ktally = true;
+            transport_eig = k_tally->latest();
+        }
+    }
+
+    INSIST(found_ktally, "Anderson_Operator needs Keff_Tally.");
+    CHECK(transport_eig > 0.0);
+
     // F(g)
     for (int cell = 0; cell < nc; ++cell)
     {
@@ -251,12 +271,14 @@ void Anderson_Operator<Geometry,T>::ApplyImpl(const MV &x, MV &y) const
 
     // F(k)
     // Take norms of g and gp
-    double norm_gp = std::sqrt(
-        d_blas.DOT(nc, gp.getRawPtr(), 1, gp.getRawPtr(), 1));
-    double norm_g  = std::sqrt(
-        d_blas.DOT(nc, g.getRawPtr(), 1, g.getRawPtr(), 1));
+    double norm_gp = d_blas.NRM2( nc, gp.getRawPtr(), 1 );
+    double norm_g  = d_blas.NRM2( nc, g.getRawPtr(),  1 );
+
     CHECK(norm_g > 0.0);
-    out[nc] = k * norm_gp / norm_g - k;
+    out[nc] = transport_eig - k;
+
+    // Fix screwy formatting from NOX
+    std::cout << std::scientific;
 }
 
 //---------------------------------------------------------------------------//
@@ -368,7 +390,8 @@ void Anderson_Operator<Geometry,T>::restrict(
         CHECK(d_mesh->index(ijk[0], ijk[1], ijk[2]) < g.size());
 
         // add the site to the global field
-        ++g[d_mesh->index(ijk[0], ijk[1], ijk[2])];
+        g[d_mesh->index(ijk[0], ijk[1], ijk[2])] += 1.0;
+
     }
 
     // Normalize by volume
