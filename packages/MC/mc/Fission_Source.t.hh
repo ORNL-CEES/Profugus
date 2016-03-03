@@ -414,12 +414,28 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
     {
         CHECK(d_fis_dist.empty());
 
+        // Sanity check that some fissionable material exists
+        std::vector<int> matids;
+        b_physics->xs().get_matids(matids);
+        CHECK( matids.size() > 0 );
+        bool fission_found = false;
+        for( auto matid : matids )
+        {
+            fission_found = fission_found | b_physics->is_fissionable(matid);
+        }
+        INSIST(fission_found,"No fissionable material found in problem.");
+
         // sample the geometry until a fission site is found (if there is no
         // fission in a given domain the number of particles on that domain is
         // zero, and we never get here) --> so, fission sampling should always
         // be successful
+        int attempts = 0;
         while (!sampled)
         {
+            attempts++;
+            INSIST(attempts < 1000,
+                   "Failed to locate viable fission site after 1000 samples.");
+
             // sample a point in the geometry
             r[I] = d_width[I] * rng.ran() + d_lower[I];
             r[J] = d_width[J] * rng.ran() + d_lower[J];
