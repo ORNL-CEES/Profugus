@@ -47,6 +47,7 @@ class CellTallyTest : public ::testing::Test
         node  = profugus::node();
 
         db = Teuchos::rcp(new ParameterList_t("test"));
+        db->set("problem_name",std::string("cell_tally_test"));
 
         build_geometry();
         build_physics();
