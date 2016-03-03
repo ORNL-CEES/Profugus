@@ -30,70 +30,40 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Domain_Transporter<Geometry>::Domain_Transporter()
+Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
+                                                 SDP_Physics  physics,
+                                                 SDP_Tallier  tallier,
+                                                 SDP_VR       vr)
     : d_sample_fission_sites(false)
     , d_keff(0.0)
-{
-    d_geometry = nullptr;
-    d_physics  = nullptr;
-    d_vr       = nullptr;
-    d_tallier  = nullptr;
-}
-
-
-//---------------------------------------------------------------------------//
-// PUBLIC FUNCTIONS
-//---------------------------------------------------------------------------//
-/*!
- * \brief Set the geometry and physics classes.
- *
- * \param geometry
- * \param physics
- */
-template <class Geometry>
-void Domain_Transporter<Geometry>::set(SDP_Geometry geometry,
-                                       SDP_Physics  physics)
 {
     REQUIRE(geometry.get_host_ptr());
     REQUIRE(geometry.get_device_ptr());
     REQUIRE(physics.get_host_ptr());
     REQUIRE(physics.get_device_ptr());
-
-    // Get device pointers to Geometry and Physics
     d_geometry = geometry.get_device_ptr();
     d_physics  = physics.get_device_ptr();
-    d_vr      = nullptr;
-    d_tallier = nullptr;
-}
 
-//---------------------------------------------------------------------------//
-/*!
- * \brief Set the variance reduction
- *
- * \param vr
- */
-template <class Geometry>
-void Domain_Transporter<Geometry>::set(SDP_VR vr)
-{
-    REQUIRE( vr.get_host_ptr() );
-    REQUIRE( vr.get_device_ptr() );
+    // VR and Tallier are optional
+    if( tallier.get_host_ptr() )
+    {
+        d_tallier = tallier.get_device_ptr();
+        REQUIRE( d_tallier );
+    }
+    else
+    {
+        d_tallier = nullptr;
+    }
 
-    d_vr = vr.get_device_ptr();
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Set regular tallies.
- *
- * \param tallies
- */
-template <class Geometry>
-void Domain_Transporter<Geometry>::set(SDP_Tallier tallier)
-{
-    REQUIRE(tallier.get_host_ptr());
-    REQUIRE(tallier.get_device_ptr());
-    d_tallier = tallier.get_device_ptr();
-    ENSURE(d_tallier);
+    if( vr.get_host_ptr() )
+    {
+        d_vr = vr.get_device_ptr();
+        REQUIRE( d_vr );
+    }
+    else
+    {
+        d_vr = nullptr;
+    }
 }
 
 //---------------------------------------------------------------------------//

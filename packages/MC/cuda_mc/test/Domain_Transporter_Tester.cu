@@ -72,9 +72,7 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
     // Build domain transporter
-    auto sp_trans = std::make_shared<Transporter>();
-    sp_trans->set(sdp_geom,sdp_phys);
-    cuda::Shared_Device_Ptr<Transporter> sdp_trans(sp_trans);
+    auto transp = cuda::shared_device_ptr<Transporter>(sdp_geom,sdp_phys);
 
     // Build box shape for source
     Vec_Dbl src_bounds = {x_edges.front(), x_edges.back(),
@@ -96,7 +94,7 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     cuda::Device_Vector<Arch,int> device_events(num_particles);
 
     test_transport_kernel<<<1,num_particles>>>( sdp_source.get_device_ptr(),
-                                                sdp_trans.get_device_ptr(),
+                                                transp.get_device_ptr(),
                                                 device_events.data(),
                                                 num_particles );
 

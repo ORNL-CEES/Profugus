@@ -12,6 +12,8 @@
 #include "../Source_Transporter.hh"
 #include "../Uniform_Source.cuh"
 #include "../Physics.cuh"
+#include "../Cell_Tally.cuh"
+#include "../Tallier.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "CudaUtils/cuda_utils/Shared_Device_Ptr.hh"
 #include "Teuchos_RCP.hpp"
@@ -47,6 +49,19 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     phys->set_geometry(sdp_geom);
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
+    // Build cell tally
+    std::cout << "Building Cell_Tally" << std::endl;
+    auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(
+        sdp_geom,sdp_phys);
+    std::vector<int> cells = {4, 5};
+    sp_cell_tally->set_cells(cells);
+    cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
+
+    std::cout << "Building Tallier" << std::endl;
+    auto sp_tallier = std::make_shared<Tallier<Geom> >();
+    sp_tallier->add_cell_tally(cell_tally);
+    cuda::Shared_Device_Ptr<Tallier<Geom>> tallier(sp_tallier);
+
     // Build box shape for source
     Vec_Dbl src_bounds = {x_edges.front(), x_edges.back(),
                           y_edges.front(), y_edges.back(),
@@ -62,8 +77,10 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     source->build_source(src_shape);
 
     // Build source transporter
-    Transporter trans(pl,sdp_geom,sdp_phys);
+    Transporter trans(pl,sdp_geom,sdp_phys,tallier);
     trans.solve(source);
+
+    //sp_tallier->finalize(num_particles);
 }
 
 } // end namespace cuda_mc

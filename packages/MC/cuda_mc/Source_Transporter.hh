@@ -83,19 +83,21 @@ class Source_Transporter
     // Problem physics implementation.
     SDP_Physics d_physics;
 
-    // Variance reduction.
-    SDP_VR d_vr;
-
     // Tally controller.
     SDP_Tallier d_tallier;
+
+    // Variance reduction.
+    SDP_VR d_vr;
 
     // Domain transporter.
     SDP_Transporter d_transporter;
 
   public:
     // Constructor.
-    Source_Transporter(RCP_Std_DB db, SDP_Geometry geometry,
-                       SDP_Physics physics);
+    Source_Transporter(RCP_Std_DB   db,
+                       SDP_Geometry geometry,
+                       SDP_Physics  physics,
+                       SDP_Tallier  tallier = SDP_Tallier());
 
     // Solve the fixed-source problem.
     template <class Src_Type>
@@ -103,9 +105,6 @@ class Source_Transporter
 
     // Set fission sampling.
     //void sample_fission_sites(SP_Fission_Sites fis_sites, double keff);
-
-    // Set the tally controller
-    void set(SDP_Tallier tallier);
 
     // >>> ACCESSORS
 

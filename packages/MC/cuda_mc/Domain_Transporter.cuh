@@ -71,11 +71,11 @@ class Domain_Transporter
     // Problem physics implementation.
     Physics_t  *d_physics;
 
-    // Variance reduction.
-    VR_Roulette_t *d_vr;
-
     // Regular tallies.
     Tallier_t *d_tallier;
+
+    // Variance reduction.
+    VR_Roulette_t *d_vr;
 
     // Fission sites.
     //SP_Fission_Sites d_fission_sites;
@@ -83,16 +83,10 @@ class Domain_Transporter
   public:
 
     // Constructor.
-    Domain_Transporter();
-
-    // Set the geometry and physics classes.
-    void set(SDP_Geometry geometry, SDP_Physics physics);
-
-    // Set the variance reduction
-    void set(SDP_VR vr);
-
-    // Set regular tallies.
-    void set(SDP_Tallier tallier);
+    Domain_Transporter(SDP_Geometry geometry,
+                       SDP_Physics  physics,
+                       SDP_Tallier  tallier = SDP_Tallier(),
+                       SDP_VR       vr      = SDP_VR() );
 
     // Set fission site sampling.
     //void set(SP_Fission_Sites fission_sites, double keff);
