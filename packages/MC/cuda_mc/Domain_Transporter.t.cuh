@@ -34,7 +34,10 @@ Domain_Transporter<Geometry>::Domain_Transporter()
     : d_sample_fission_sites(false)
     , d_keff(0.0)
 {
-    d_roulette = false;
+    d_geometry = nullptr;
+    d_physics  = nullptr;
+    d_vr       = nullptr;
+    d_tallier  = nullptr;
 }
 
 
@@ -59,6 +62,8 @@ void Domain_Transporter<Geometry>::set(SDP_Geometry geometry,
     // Get device pointers to Geometry and Physics
     d_geometry = geometry.get_device_ptr();
     d_physics  = physics.get_device_ptr();
+    d_vr      = nullptr;
+    d_tallier = nullptr;
 }
 
 //---------------------------------------------------------------------------//
@@ -73,9 +78,6 @@ void Domain_Transporter<Geometry>::set(SDP_VR vr)
     REQUIRE( vr.get_host_ptr() );
     REQUIRE( vr.get_device_ptr() );
 
-    // Get device pointer to VR
-    d_roulette = true;
-
     d_vr = vr.get_device_ptr();
 }
 
@@ -85,15 +87,14 @@ void Domain_Transporter<Geometry>::set(SDP_VR vr)
  *
  * \param tallies
  */
-/*
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(SP_Tallier tallies)
+void Domain_Transporter<Geometry>::set(SDP_Tallier tallier)
 {
-    REQUIRE(tallies);
-    d_tallier = tallies;
+    REQUIRE(tallier.get_host_ptr());
+    REQUIRE(tallier.get_device_ptr());
+    d_tallier = tallier.get_device_ptr();
     ENSURE(d_tallier);
 }
-*/
 
 //---------------------------------------------------------------------------//
 /*!

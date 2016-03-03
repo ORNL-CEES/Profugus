@@ -29,6 +29,7 @@
 #include "Physics.cuh"
 #include "Domain_Transporter.cuh"
 #include "VR_Roulette.cuh"
+#include "Tallier.cuh"
 
 namespace cuda_mc
 {
@@ -193,39 +194,18 @@ void Source_Transporter<Geometry>::sample_fission_sites(SP_Fission_Sites fis_sit
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Set the variance reduction.
- */
-#if 0
-template <class Geometry>
-void Source_Transporter<Geometry>::set(SP_Variance_Reduction vr)
-{
-    REQUIRE(vr);
-
-    // set the variance reduction in the domain transporter and locally
-    d_transporter.set(vr);
-    d_var_reduction = vr;
-
-    ENSURE(d_var_reduction);
-}
-#endif
-
-//---------------------------------------------------------------------------//
-/*!
  * \brief Set the tally controller
  */
-#if 0
 template <class Geometry>
-void Source_Transporter<Geometry>::set(SP_Tallier tallier)
+void Source_Transporter<Geometry>::set(SDP_Tallier tallier)
 {
-    REQUIRE(tallier);
+    REQUIRE(tallier.get_host_ptr());
+    REQUIRE(tallier.get_device_ptr());
 
     // set the tally controller in the domain transporter and locally
-    d_transporter.set(tallier);
+    d_transporter.get_host_ptr()->set(tallier);
     d_tallier = tallier;
-
-    ENSURE(d_tallier);
 }
-#endif
 
 } // end namespace cuda_mc
 

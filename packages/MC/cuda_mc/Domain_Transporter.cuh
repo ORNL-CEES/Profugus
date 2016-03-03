@@ -15,7 +15,7 @@
 #include "Physics.cuh"
 #include "Step_Selector.cuh"
 #include "VR_Roulette.cuh"
-//#include "Tallier.hh"
+#include "Tallier.cuh"
 
 namespace cuda_mc
 {
@@ -47,9 +47,8 @@ class Domain_Transporter
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef typename Physics_t::Particle_t             Particle_t;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
-    //typedef typename Physics_t::Bank_t                 Bank_t;
-    //typedef typename Physics_t::Fission_Site_Container Fission_Site_Container;
-    //typedef Tallier<Geometry_t>                        Tallier_t;
+    typedef Tallier<Geometry_t>                        Tallier_t;
+    //typedef Fission_Site_Container Fission_Site_Container;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;
     //@}
 
@@ -59,8 +58,8 @@ class Domain_Transporter
     typedef cuda::Shared_Device_Ptr<Physics_t>        SDP_Physics;
     typedef cuda::Shared_Device_Ptr<Particle_t>       SDP_Particle;
     typedef cuda::Shared_Device_Ptr<VR_Roulette_t>    SDP_VR;
+    typedef cuda::Shared_Device_Ptr<Tallier_t>        SDP_Tallier;
     //typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
-    //typedef std::shared_ptr<Tallier_t>              SP_Tallier;
     //@}
 
   private:
@@ -73,11 +72,10 @@ class Domain_Transporter
     Physics_t  *d_physics;
 
     // Variance reduction.
-    bool           d_roulette;
     VR_Roulette_t *d_vr;
 
     // Regular tallies.
-    //SP_Tallier d_tallier;
+    Tallier_t *d_tallier;
 
     // Fission sites.
     //SP_Fission_Sites d_fission_sites;
@@ -94,7 +92,7 @@ class Domain_Transporter
     void set(SDP_VR vr);
 
     // Set regular tallies.
-    //void set(SP_Tallier tallies);
+    void set(SDP_Tallier tallier);
 
     // Set fission site sampling.
     //void set(SP_Fission_Sites fission_sites, double keff);

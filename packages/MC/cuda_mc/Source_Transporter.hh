@@ -87,7 +87,7 @@ class Source_Transporter
     SDP_VR d_vr;
 
     // Tally controller.
-    //SP_Tallier d_tallier;
+    SDP_Tallier d_tallier;
 
     // Domain transporter.
     SDP_Transporter d_transporter;
@@ -104,16 +104,13 @@ class Source_Transporter
     // Set fission sampling.
     //void sample_fission_sites(SP_Fission_Sites fis_sites, double keff);
 
-    // Set the variance reduction.
-    //void set(SP_Variance_Reduction vr);
-
     // Set the tally controller
-    //void set(SP_Tallier tallier);
+    void set(SDP_Tallier tallier);
 
     // >>> ACCESSORS
 
     //! Get the tallies.
-    //SP_Tallier tallier() const { return d_tallier; }
+    SDP_Tallier tallier() const { return d_tallier; }
 
     //! Get the transporter.
     SDP_Transporter transporter() const { return d_transporter; }

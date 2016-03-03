@@ -93,7 +93,8 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
 
             // path-length tallies (the actual movement of the particle will
             // take place when we process the various events)
-            //d_tallier->path_length(step.step(), particle);
+            if( d_tallier )
+                d_tallier->path_length(step.step(), particle);
 
             // update the mfp distance travelled
             dist_mfp -= step.step() * xs_tot;
@@ -163,7 +164,7 @@ Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
             particle.set_matid(d_geometry->matid(particle.geo_state()));
 
             // add variance reduction at surface crossings
-            if( d_roulette )
+            if( d_vr )
                 d_vr->post_surface(particle);
 
             ENSURE(particle.event() == profugus::events::BOUNDARY);
@@ -201,7 +202,7 @@ Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
     d_physics->collide(particle);
 
     // apply weight windows
-    if( d_roulette )
+    if( d_vr )
         d_vr->post_collision(particle);
 }
 
