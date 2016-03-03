@@ -23,8 +23,8 @@ typedef cuda_profugus::Mesh_Geometry      Geom;
 typedef cuda_mc::Uniform_Source<Geom>     Uniform_Src;
 typedef cuda_mc::Domain_Transporter<Geom> Transporter;
 
-__global__ void test_transport_kernel( Uniform_Src  source,
-                                       Transporter  trans,
+__global__ void test_transport_kernel( Uniform_Src *source,
+                                       Transporter *trans,
                                        int         *events,
                                        int          num_particles )
 {
@@ -36,10 +36,10 @@ __global__ void test_transport_kernel( Uniform_Src  source,
          curand_init(tid,0,0,&rng_state);
 
          // Get particle from source
-         auto p = source.get_particle(tid,rng_state);
+         auto p = source->get_particle(tid,rng_state);
 
          // Transport particle
-         trans.transport(p);
+         trans->transport(p);
 
          // Get final event
          events[tid] = p.event();
@@ -72,8 +72,9 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
     // Build domain transporter
-    Transporter trans;
-    trans.set(sdp_geom,sdp_phys);
+    auto sp_trans = std::make_shared<Transporter>();
+    sp_trans->set(sdp_geom,sdp_phys);
+    cuda::Shared_Device_Ptr<Transporter> sdp_trans(sp_trans);
 
     // Build box shape for source
     Vec_Dbl src_bounds = {x_edges.front(), x_edges.back(),
@@ -86,20 +87,21 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
             src_bounds[4], src_bounds[5]);
 
     // Build source
-    Uniform_Src source(pl,sdp_geom);
-    source.build_source(src_shape);
+    auto sp_source = std::make_shared<Uniform_Src>(pl,sdp_geom);
+    sp_source->build_source(src_shape);
+    cuda::Shared_Device_Ptr<Uniform_Src> sdp_source(sp_source);
 
     // Allocate data on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,int> device_events(num_particles);
 
-    test_transport_kernel<<<1,num_particles>>>( source,
-                                                trans,
+    test_transport_kernel<<<1,num_particles>>>( sdp_source.get_device_ptr(),
+                                                sdp_trans.get_device_ptr(),
                                                 device_events.data(),
                                                 num_particles );
 
-    REQUIRE( cudaGetLastError() == cudaSuccess );
     cudaDeviceSynchronize();
+    REQUIRE( cudaGetLastError() == cudaSuccess );
 
     device_events.to_host(profugus::make_view(events));
 }
