@@ -24,6 +24,7 @@
 #include "mc/Box_Shape.hh"
 #include "mc/VR_Analog.hh"
 #include "mc/VR_Roulette.hh"
+#include "mc/Cell_Tally.hh"
 #include "mc/Fission_Matrix_Tally.hh"
 #include "mc/Source_Diagnostic_Tally.hh"
 #include "Problem_Builder.hh"
@@ -248,6 +249,7 @@ void Problem_Builder<Geometry>::build_tallies()
 
     typedef profugus::Fission_Matrix_Tally<Geom_t>    FM_Tally_t;
     typedef profugus::Source_Diagnostic_Tally<Geom_t> SD_Tally_t;
+    typedef profugus::Cell_Tally<Geom_t>              Cell_Tally_t;
 
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
@@ -327,6 +329,32 @@ void Problem_Builder<Geometry>::build_tallies()
         // add this to the tallier
         d_tallier->add_source_tally(src_tally);
     }
+
+    // check for cell tallies
+    if (d_db->isSublist("cell_tally_db"))
+    {
+        // get the database
+        const ParameterList &sdb = d_db->sublist("cell_tally_db");
+
+        // validate that cells are listed
+        VALIDATE(sdb.isParameter("cells"),
+                 "Failed to define cells for cell tally.");
+
+        // get the list of cells
+        auto cells = sdb.get<OneDArray_int>("cells").toVector();
+
+        // build the tally
+        auto cell_tally = std::make_shared<Cell_Tally_t>(d_db,d_physics);
+        CHECK(cell_tally);
+
+        // set it
+        cell_tally->set_cells(cells);
+
+        // add this to the tallier
+        d_tallier->add_pathlength_tally(cell_tally);
+    }
+
+
 
     ENSURE(d_tallier);
 }
