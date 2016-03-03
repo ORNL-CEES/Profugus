@@ -62,7 +62,8 @@ void Tallier<Geometry>::add_cell_tally(SDP_Cell_Tally tally)
     REQUIRE(tally.get_device_ptr());
 
     // add the tally
-    d_cell_tally = tally.get_device_ptr();
+    d_cell_tally_host = tally.get_host_ptr();
+    d_cell_tally      = tally.get_device_ptr();
 }
 
 //---------------------------------------------------------------------------//
@@ -102,8 +103,8 @@ void Tallier<Geometry>::end_cycle(double num_particles)
 template <class Geometry>
 void Tallier<Geometry>::finalize(double num_particles)
 {
-    if( d_cell_tally )
-        d_cell_tally->finalize(num_particles);
+    if( d_cell_tally_host )
+        d_cell_tally_host->finalize(num_particles);
 }
 
 //---------------------------------------------------------------------------//
@@ -118,8 +119,8 @@ void Tallier<Geometry>::finalize(double num_particles)
 template <class Geometry>
 void Tallier<Geometry>::reset()
 {
-    if( d_cell_tally )
-        d_cell_tally->reset();
+    if( d_cell_tally_host )
+        d_cell_tally_host->reset();
 }
 
 //---------------------------------------------------------------------------//
@@ -133,11 +134,12 @@ template <class Geometry>
 void Tallier<Geometry>::swap(Tallier<Geometry> &rhs)
 {
     // swap vector internals
-    std::swap(d_cell_tally, rhs.d_cell_tally);
+    std::swap(d_cell_tally_host, rhs.d_cell_tally_host);
+    std::swap(d_cell_tally,      rhs.d_cell_tally);
 
     // swap geometry and physics
     std::swap(d_geometry, rhs.d_geometry);
-    std::swap(d_physics, rhs.d_physics);
+    std::swap(d_physics,  rhs.d_physics);
 }
 
 } // end namespace cuda_mc

@@ -53,7 +53,7 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     std::cout << "Building Cell_Tally" << std::endl;
     auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(
         sdp_geom,sdp_phys);
-    std::vector<int> cells = {4, 5};
+    std::vector<int> cells = {0, 1, 2, 3, 4, 5, 6, 7};
     sp_cell_tally->set_cells(cells);
     cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
 
@@ -80,7 +80,12 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     Transporter trans(pl,sdp_geom,sdp_phys,tallier);
     trans.solve(source);
 
-    //sp_tallier->finalize(num_particles);
+    sp_tallier->finalize(num_particles);
+    auto results = sp_cell_tally->results();
+    std::cout << "Tally result: ";
+    for( auto x : results )
+        std::cout << x << " ";
+    std::cout << std::endl;
 }
 
 } // end namespace cuda_mc

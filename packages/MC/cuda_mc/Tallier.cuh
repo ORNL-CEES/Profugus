@@ -44,6 +44,7 @@ class Tallier
     typedef cuda::Shared_Device_Ptr<Geometry_t>     SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>      SDP_Physics;
     typedef cuda::Shared_Device_Ptr<Cell_Tally_t>   SDP_Cell_Tally;
+    typedef std::shared_ptr<Cell_Tally_t>           SP_Cell_Tally;
     //@}
 
   private:
@@ -55,6 +56,7 @@ class Tallier
 
     // Pointer to each tally type for now
     // Need to figure out how to manage this in an extensible way
+    SP_Cell_Tally d_cell_tally_host;
     Cell_Tally_t *d_cell_tally;
 
   public:
