@@ -120,6 +120,8 @@ inline void swap(Tallier<Geometry> &a,
 
 } // end namespace cuda_mc
 
+#include "Tallier.i.cuh"
+
 #endif // cuda_mc_Tallier_cuh
 
 //---------------------------------------------------------------------------//

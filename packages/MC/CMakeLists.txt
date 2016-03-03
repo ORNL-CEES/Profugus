@@ -175,6 +175,7 @@ IF(USE_CUDA)
     cuda_mc/Physics.pt.cu
     cuda_mc/Source.pt.cu
     cuda_mc/Source_Transporter.pt.cu
+    cuda_mc/Tallier.pt.cu
     cuda_mc/Uniform_Source.pt.cu
     cuda_mc/VR_Roulette.pt.cu
     )

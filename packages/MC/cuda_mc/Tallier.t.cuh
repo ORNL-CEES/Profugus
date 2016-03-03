@@ -98,8 +98,6 @@ void Tallier<Geometry>::end_cycle(double num_particles)
  *
  * Does post-solve processing of tallies including parallel reductions and
  * normalization.
- *
- * \post is_finalized() == true
  */
 template <class Geometry>
 void Tallier<Geometry>::finalize(double num_particles)
