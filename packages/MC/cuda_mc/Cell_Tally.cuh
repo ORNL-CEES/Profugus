@@ -95,7 +95,7 @@ class Cell_Tally
         return host_tally;
     }
 
-    // Do post-processing on first and second moments
+    // Do post-processing
     void finalize(double num_particles);
 
     // Clear/re-initialize all tally values between solves
