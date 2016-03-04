@@ -201,8 +201,10 @@ TEST_F(Domain_Transporter_cudaTest, five_group)
     std::cout << others << " other events were detected" << std::endl;
 
     EXPECT_EQ( 0, others );
-    EXPECT_EQ( 60, escapes);
-    EXPECT_EQ( 68, absorptions);
+
+    // These are heuristic numbers
+    EXPECT_EQ( 13, escapes);
+    EXPECT_EQ( 115, absorptions);
 }
 
 TEST_F(Domain_Transporter_cudaTest, three_group)
@@ -239,8 +241,10 @@ TEST_F(Domain_Transporter_cudaTest, three_group)
     std::cout << others << " other events were detected" << std::endl;
 
     EXPECT_EQ( 0, others );
-    EXPECT_EQ( 50, escapes);
-    EXPECT_EQ( 78, absorptions);
+
+    // These are heuristic numbers
+    EXPECT_EQ( 58, escapes);
+    EXPECT_EQ( 70, absorptions);
 }
 
 //---------------------------------------------------------------------------//
