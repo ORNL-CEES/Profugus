@@ -123,10 +123,6 @@ const T& Static_Map<Key,T,Hash>::operator[](key_type key) const
 
         ++iter;
     } while (true);
-
-    // The following line should never be called and will be compiled out
-    // (at least as tested on GCC 4.7
-    return iter->second;
 }
 
 //---------------------------------------------------------------------------//
@@ -153,10 +149,6 @@ T& Static_Map<Key,T,Hash>::operator[](key_type key)
 
         ++iter;
     } while (true);
-
-    // The following line should never be called and will be compiled out
-    // (at least as tested on GCC 4.7
-    return iter->second;
 }
 
 //---------------------------------------------------------------------------//
