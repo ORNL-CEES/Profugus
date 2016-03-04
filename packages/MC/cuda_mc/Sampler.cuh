@@ -54,7 +54,7 @@ __device__ inline FloatType * sample_smallrev_dcdf(
 
 // Sample an energy in eV from a Watt fission spectrum.
 template<class RNG_State>
-__device__ inline double sample_watt(RNG_State &rng,
+__device__ inline double sample_watt(RNG_State *rng,
                                      double     a = 0.965,
                                      double     b = 2.29);
 
@@ -64,10 +64,10 @@ __device__ inline T sample_linear(T xi);
 
 // Sample a linear distribution on [0,1) with arbitrary y values
 template<class RNG_State>
-__device__ inline float sample_linear(RNG_State& rng, const float left,
+__device__ inline float sample_linear(RNG_State *rng, const float left,
                                       const float right);
 template<class RNG_State>
-__device__ inline double sample_linear(RNG_State& rng, const double left,
+__device__ inline double sample_linear(RNG_State *rng, const double left,
                                        const double right);
 
 // Sample a linear distribution on [0,1) with arbitrary y values

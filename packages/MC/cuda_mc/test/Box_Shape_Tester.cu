@@ -38,7 +38,7 @@ __global__ void compute_sample_kernel( Box_Shape           box,
      {
          curandState_t rng_state;
          curand_init(tid,0,0,&rng_state);
-         pts[tid] = box.sample(rng_state);
+         pts[tid] = box.sample(&rng_state);
      }
 }
 

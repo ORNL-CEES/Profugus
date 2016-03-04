@@ -76,12 +76,12 @@ class Box_Shape
 
     // >>> DERIVED INTERFACE
     //! Sample a point in the shape.
-    __device__ Space_Vector sample(RNG_t &rng)
+    __device__ Space_Vector sample(RNG_t *rng)
     {
         Space_Vector point =
-           { d_Dx * curand_uniform_double(&rng) + d_lox,
-             d_Dy * curand_uniform_double(&rng) + d_loy,
-             d_Dz * curand_uniform_double(&rng) + d_loz };
+           { d_Dx * curand_uniform_double(rng) + d_lox,
+             d_Dy * curand_uniform_double(rng) + d_loy,
+             d_Dz * curand_uniform_double(rng) + d_loz };
         ENSURE(is_point_inside(point));
         return point;
     }

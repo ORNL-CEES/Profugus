@@ -57,7 +57,7 @@ __global__ void test_collide_kernel( Geom          *geom,
          // Create and initialize RNG state
          curandState_t rng_state;
          curand_init(tid,0,0,&rng_state);
-         p.set_rng(rng_state);
+         p.set_rng(&rng_state);
 
          // Initialize geo state
          cuda::Space_Vector pos = {0.25, 0.75, 0.60};

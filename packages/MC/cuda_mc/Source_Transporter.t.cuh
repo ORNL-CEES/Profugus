@@ -40,15 +40,14 @@ class Source_Functor
 {
   public:
 
-    typedef Domain_Transporter<Geometry>            Transporter_t;
-    typedef cuda::Shared_Device_Ptr<Src_Type>       SDP_Source;
-    typedef cuda::Shared_Device_Ptr<Transporter_t>  SDP_Transporter;
+    typedef Domain_Transporter<Geometry>    Transporter_t;
+    typedef Tallier<Geometry>               Tallier_t;
 
     // Constructor
-    Source_Functor( SDP_Transporter trans,
-                    SDP_Source      src )
-        : d_transporter( trans.get_device_ptr() )
-        , d_src( src.get_device_ptr() )
+    Source_Functor( const Transporter_t *trans,
+                    const Src_Type      *src )
+        : d_transporter( trans )
+        , d_src( src )
     {
     }
 
@@ -56,30 +55,23 @@ class Source_Functor
     __device__ void operator()( std::size_t tid ) const
     {
         // Create and initialize RNG state
-        // FIXME: Need to seed threads with different seeds
         curandState_t rng_state;
-        curand_init(tid,0,0,&rng_state);
+        curand_init(1234,tid,0,&rng_state);
         
         // Get particle from source
-        auto p = d_src->get_particle(tid,rng_state);
+        auto p = d_src->get_particle(tid,&rng_state);
         CHECK( p.alive() );
-
-        // Do "source event" tallies on the particle
-        //d_tallier->source(p);
 
         // transport the particle through this (replicated) domain
         d_transporter->transport(p);
         CHECK(!p.alive());
-
-        // indicate completion of particle history
-        //d_tallier->end_history();
     }
 
   private:
 
     // On-device pointers
-    Src_Type        *d_src;
-    Transporter_t   *d_transporter;
+    const Src_Type      *d_src;
+    const Transporter_t *d_transporter;
 };
 
 //---------------------------------------------------------------------------//
@@ -152,7 +144,8 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
     launch_args.set_num_elements(num_particles);
 
     // Build and execute kernel
-    Source_Functor<Geometry,Src_Type> f( d_transporter, sdp_source );
+    Source_Functor<Geometry,Src_Type> f( d_transporter.get_device_ptr(), 
+                                         sdp_source.get_device_ptr() );
     cuda::parallel_launch( f, launch_args );
 
     // barrier at the end

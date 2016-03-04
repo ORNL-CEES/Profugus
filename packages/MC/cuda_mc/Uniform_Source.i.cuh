@@ -32,7 +32,7 @@ namespace cuda_mc
 template <class Geometry>
 __device__ auto
 Uniform_Source<Geometry>::get_particle(std::size_t tid,
-                                       RNG_t      &rng) const -> Particle_t 
+                                       RNG_t      *rng) const -> Particle_t 
 {
     REQUIRE(d_geo_shape);
 

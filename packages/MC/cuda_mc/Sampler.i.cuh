@@ -23,8 +23,7 @@ namespace sampler
 /*!
  * \brief Sample a discrete CDF.
  *
- * Given a CDF defined over the range \f$[0,N_b)\f$, where \f$N_b\f$ is the
- * number of bins, sample and return the bin of the sampled value. The domain
+ * Given a CDF defined over the range \f$[0,N_b)\f$, where \f$N_b\f$ is the * number of bins, sample and return the bin of the sampled value. The domain
  * of the CDF is \f$[0,1]\f$.  The sampling works as follows,
  * \verbatim
    Bin    0     1     2      3      4
@@ -79,7 +78,7 @@ __device__  int sample_discrete_CDF(int      nb,
  * \return sampled energy in \f$(0,\infty)\f$ in eV
  */
 template <class RNG_State>
-__device__  double sample_watt(RNG_State    rng,
+__device__  double sample_watt(RNG_State   *rng,
                                double       a,
                                double       b)
 {
@@ -95,8 +94,8 @@ __device__  double sample_watt(RNG_State    rng,
 
     while (1)
     {
-        double r1 = -log(curand_uniform_double(&rng));
-        double r2 = -log(curand_uniform_double(&rng));
+        double r1 = -log(curand_uniform_double(rng));
+        double r2 = -log(curand_uniform_double(rng));
         double c4 = r2 - c1 * (1 + r1);
         if (c4 * c4 <= c3 * r1)
             return 1.0e6 * c2 * r1;  // in eV
@@ -261,21 +260,21 @@ __device__  inline T sample_linear(T xi)
  * underlying sampler function.
  */
 template<class RNG_State>
-__device__  inline float sample_linear(RNG_State& rng,
+__device__  inline float sample_linear(RNG_State  *rng,
                                        const float left,
                                        const float right)
 {
     return sample_linear(
-            curand_uniform(&rng), curand_uniform(&rng),
+            curand_uniform(rng), curand_uniform(rng),
             left, right);
 }
 
 template<class RNG_State>
-__device__  inline double sample_linear(RNG_State& rng, const double left,
+__device__  inline double sample_linear(RNG_State *rng, const double left,
                                         const double right)
 {
     return sample_linear(
-            curand_uniform_double(&rng), curand_uniform_double(&rng),
+            curand_uniform_double(rng), curand_uniform_double(rng),
             left, right);
 }
 

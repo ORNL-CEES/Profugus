@@ -26,7 +26,7 @@ namespace cuda_mc
 
          // Create particle and assign RNG
          Particle<cuda_profugus::Mesh_Geometry> p;
-         p.set_rng(rng_state);
+         p.set_rng(&rng_state);
 
          // Generate random
          randoms[tid] = p.ran();

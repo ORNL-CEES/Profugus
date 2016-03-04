@@ -65,6 +65,7 @@ void Physics<Geometry>::collide(Particle_t &particle) const
         particle.multiply_wt(c);
     }
 
+
     // do analog transport
     else
     {
@@ -224,7 +225,6 @@ int Physics<Geometry>::sample_fission_site(const Particle_t &p,
 
     // calculate the number of fission sites (random number samples to nearest
     // integer)
-    auto rng_state = p.rng();
     int n = static_cast<int>(
         p.wt() *
         d_mat->vector(matid, XS_t::NU_SIG_F)(group) /
@@ -267,8 +267,7 @@ bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
     REQUIRE(is_fissionable(fs.m));
 
     // sample the fission group
-    auto rng_state = p.rng();
-    int group = sample_fission_group(fs.m, curand_uniform_double(&rng_state));
+    int group = sample_fission_group(fs.m, p.ran());
     CHECK(group < d_Ng);
 
     // set the particle group

@@ -54,11 +54,11 @@ class Source
     Geometry_t  *b_geometry;
 
     // Sample isotropic angle.
-    __device__ static void sample_angle(cuda::Space_Vector &omega, RNG_t rng)
+    __device__ static void sample_angle(cuda::Space_Vector &omega, RNG_t *rng)
     {
-        omega.z         = 1.0 - 2.0 * curand_uniform_double(&rng);
+        omega.z         = 1.0 - 2.0 * curand_uniform_double(rng);
         double phi      = cuda::constants::two_pi *
-                          curand_uniform_double(&rng);
+                          curand_uniform_double(rng);
         double sintheta = sqrt(1.0 - omega.z * omega.z);
 
         omega.x = sintheta * cos(phi);

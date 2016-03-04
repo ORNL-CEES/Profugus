@@ -36,7 +36,7 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
          // Create and initialize RNG state
          curandState_t rng_state;
          curand_init(tid,0,0,&rng_state);
-         p.set_rng(rng_state);
+         p.set_rng(&rng_state);
          
          // Initialize particle uniformly on [0, 1]
          double x_loc = curand_uniform_double(&rng_state);
