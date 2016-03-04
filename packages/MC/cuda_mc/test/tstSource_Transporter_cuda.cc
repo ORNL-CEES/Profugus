@@ -175,7 +175,7 @@ class Source_Transporter_cudaTest : public ::testing::Test
 
         xs->add(0, XS_t::TOTAL, tot1);
 
-        double s1[][3] = {{0.5}};
+        double s1[][3] = {{0.9}};
 
         XS_t::TwoDArray sct1(ng, ng, 0.0);
 
@@ -210,11 +210,43 @@ TEST_F(Source_Transporter_cudaTest, five_group)
     std::vector<double> edges = {0.0, 0.50, 1.0};
     std::vector<unsigned int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
 
-    int num_p = 128;
+    std::vector<double> tally;
+    int num_p = 10000;
     cuda_mc::Source_Transporter_Tester::test_transport(
-        edges,edges,edges,matids,xs,num_p);
+        edges,edges,edges,matids,xs,num_p,tally);
 
-    // No tallies yet...
+    EXPECT_EQ( tally.size(), 8 );
+    double mean0 = 0.0;
+    double mean1 = 0.0;
+    int count0 = 0;
+    int count1 = 0;
+    for( int cell = 0; cell < tally.size(); ++cell )
+    {
+        if( matids[cell] == 0 )
+        {
+            mean0 += tally[cell];
+            count0++;
+        }
+        else if( matids[cell] == 1 )
+        {
+            mean1 += tally[cell];
+            count1++;
+        }
+    }
+    mean0 /= static_cast<double>(count0);
+    mean1 /= static_cast<double>(count1);
+
+    double tol = 10.0 / std::sqrt( static_cast<double>(num_p) );
+
+    std::vector<double> exp(8);
+    for( int cell = 0; cell < matids.size(); ++cell )
+    {
+        if( matids[cell] == 0 )
+            exp[cell] = mean0;
+        else if( matids[cell] == 1 )
+            exp[cell] = mean1;
+    }
+    EXPECT_VEC_SOFTEQ( exp, tally, tol );
 }
 
 TEST_F(Source_Transporter_cudaTest, three_group)
@@ -225,11 +257,43 @@ TEST_F(Source_Transporter_cudaTest, three_group)
     std::vector<double> edges = {0.0, 0.5, 1.0};
     std::vector<unsigned int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
 
-    int num_p = 128;
+    std::vector<double> tally;
+    int num_p = 10000;
     cuda_mc::Source_Transporter_Tester::test_transport(
-        edges,edges,edges,matids,xs,num_p);
+        edges,edges,edges,matids,xs,num_p,tally);
 
-    // No tallies yet...
+    EXPECT_EQ( tally.size(), 8 );
+    double mean0 = 0.0;
+    double mean1 = 0.0;
+    int count0 = 0;
+    int count1 = 0;
+    for( int cell = 0; cell < tally.size(); ++cell )
+    {
+        if( matids[cell] == 0 )
+        {
+            mean0 += tally[cell];
+            count0++;
+        }
+        else if( matids[cell] == 1 )
+        {
+            mean1 += tally[cell];
+            count1++;
+        }
+    }
+    mean0 /= static_cast<double>(count0);
+    mean1 /= static_cast<double>(count1);
+
+    double tol = 10.0 / std::sqrt( static_cast<double>(num_p) );
+
+    std::vector<double> exp(8);
+    for( int cell = 0; cell < matids.size(); ++cell )
+    {
+        if( matids[cell] == 0 )
+            exp[cell] = mean0;
+        else if( matids[cell] == 1 )
+            exp[cell] = mean1;
+    }
+    EXPECT_VEC_SOFTEQ( exp, tally, tol );
 }
 
 TEST_F(Source_Transporter_cudaTest, one_group)
@@ -240,11 +304,21 @@ TEST_F(Source_Transporter_cudaTest, one_group)
     std::vector<double> edges = {0.0, 5.0, 10.0};
     std::vector<unsigned int> matids = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    int num_p = 128;
+    std::vector<double> tally;
+    int num_p = 10000;
     cuda_mc::Source_Transporter_Tester::test_transport(
-        edges,edges,edges,matids,xs,num_p);
+        edges,edges,edges,matids,xs,num_p,tally);
 
-    // No tallies yet...
+    EXPECT_EQ( tally.size(), 8 );
+    double mean = 0.0;
+    for( auto x : tally )
+        mean += x;
+    mean /= static_cast<double>(tally.size());
+
+    double tol = 10.0 / std::sqrt( static_cast<double>(num_p) );
+
+    std::vector<double> exp(8,mean);
+    EXPECT_VEC_SOFTEQ( exp, tally, tol );
 }
 
 //---------------------------------------------------------------------------//

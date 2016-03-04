@@ -39,7 +39,8 @@ class Source_Transporter_Tester
                                   const Vec_Dbl  &z_edges,
                                   const Vec_UInt &matids,
                                         SP_XS     xs,
-                                        int       num_particles );
+                                        int       num_particles,
+                                        Vec_Dbl  &tally);
 };
 
 } // end namespace cuda_mc

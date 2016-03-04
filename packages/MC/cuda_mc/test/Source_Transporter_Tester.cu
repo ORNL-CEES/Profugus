@@ -31,7 +31,8 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
                                                 const Vec_Dbl  &z_edges,
                                                 const Vec_UInt &matids,
                                                       SP_XS     xs,
-                                                      int       num_particles)
+                                                      int       num_particles,
+                                                      Vec_Dbl  &tally)
 {
     // Build geometry
     auto geom = std::make_shared<Geom>(x_edges,y_edges,z_edges);
@@ -81,9 +82,9 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     trans.solve(source);
 
     sp_tallier->finalize(num_particles);
-    auto results = sp_cell_tally->results();
+    tally = sp_cell_tally->results();
     std::cout << "Tally result: ";
-    for( auto x : results )
+    for( auto x : tally )
         std::cout << x << " ";
     std::cout << std::endl;
 }
