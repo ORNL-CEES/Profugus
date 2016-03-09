@@ -103,6 +103,7 @@ SET(MC_SOURCES
   mc/Fission_Matrix_Tally.pt.cc
   mc/Fission_Rebalance.pt.cc
   mc/Fission_Source.pt.cc
+  mc/Fission_Tally.pt.cc
   mc/Fixed_Source_Solver.pt.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
