@@ -49,8 +49,6 @@ class Fission_Tally : public Pathlength_Tally<Geometry>
     typedef std::pair<double, double>        Moments;
     typedef std::vector<Moments>             Result;
     typedef std::shared_ptr<Physics_t>       SP_Physics;
-    typedef Teuchos::ParameterList           ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t>    RCP_Std_DB;
     typedef profugus::Cartesian_Mesh         Mesh;
     typedef std::shared_ptr<Mesh>            SP_Mesh;
     //@}
@@ -69,12 +67,9 @@ class Fission_Tally : public Pathlength_Tally<Geometry>
     // Map of tally moments.
     Result d_tally;
 
-    // Database
-    RCP_Std_DB d_db;
-
   public:
     // Constructor.
-    Fission_Tally(RCP_Std_DB db, SP_Physics physics);
+    Fission_Tally(SP_Physics physics);
 
     // Add tally mesh.
     void set_mesh(SP_Mesh mesh);

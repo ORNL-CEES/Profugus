@@ -27,10 +27,9 @@ namespace profugus
  * \brief Constructor.
  */
 template <class Geometry>
-Fission_Tally<Geometry>::Fission_Tally(RCP_Std_DB db, SP_Physics physics)
+Fission_Tally<Geometry>::Fission_Tally(SP_Physics physics)
     : Base(physics, false)
     , d_geometry(b_physics->get_geometry())
-    , d_db(db)
 {
     REQUIRE(d_geometry);
 
@@ -107,7 +106,6 @@ void Fission_Tally<Geometry>::finalize(double num_particles)
     profugus::global_sum(&first[0],  d_tally.size());
     profugus::global_sum(&second[0], d_tally.size());
 
-
     // Store 1/N
     double inv_N = 1.0 / static_cast<double>(num_particles);
 
@@ -127,11 +125,10 @@ void Fission_Tally<Geometry>::finalize(double num_particles)
         moments.first = avg_l * inv_V;
 
         // Calculate the variance
-        double var = num_particles / (num_particles - 1) * inv_V * inv_V *
-                     (avg_l2 - avg_l * avg_l);
+        double var = (avg_l2 - avg_l * avg_l) / (num_particles - 1);
 
         // Store the error of the sample mean
-        moments.second = std::sqrt(var * inv_N);
+        moments.second = std::sqrt(var) * inv_V;
     }
 }
 
@@ -152,7 +149,7 @@ void Fission_Tally<Geometry>::reset()
  */
 template <class Geometry>
 void Fission_Tally<Geometry>::accumulate(double            step,
-                                      const Particle_t &p)
+                                         const Particle_t &p)
 {
     // Get the cell index
     Mesh::Dim_Vector ijk;
