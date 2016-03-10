@@ -8,9 +8,10 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Keff_Tally_hh
-#define mc_Keff_Tally_hh
+#ifndef cuda_mc_Keff_Tally_hh
+#define cuda_mc_Keff_Tally_hh
 
+#include "Tally.hh"
 #include "Physics.hh"
 #include "Particle_Vector.hh"
 
@@ -36,7 +37,7 @@ namespace cuda_profugus
 //===========================================================================//
 
 template <class Geometry>
-class Keff_Tally
+class Keff_Tally : public Pathlength_Tally<Geometry>
 {
   public:
     //@{
@@ -110,19 +111,23 @@ class Keff_Tally
     // >>> DERIVED INTERFACE
 
     // Track particle and do tallying.
-    void accumulate( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles );
+    void accumulate( 
+	const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles ) override;
+
+    // Query if this tally is on during inactive cycles.
+    bool inactive_cycle_tally() const override { return true; }
 
     // Begin active cycles in a kcode calculation.
-    void begin_active_cycles();
+    void begin_active_cycles() override;
 
     // Begin a new cycle in a kcode calculation.
-    void begin_cycle();
+    void begin_cycle() override;
 
     // End a cycle in a kcode calculation.
-    void end_cycle(double num_particles);
+    void end_cycle(double num_particles) override;
 
     // Clear/re-initialize all tally values between solves.
-    void reset();
+    void reset() override;
 
     // >>> SETTERS
 
@@ -132,7 +137,7 @@ class Keff_Tally
 
 } // end namespace cuda_profugus
 
-#endif // mc_Keff_Tally_hh
+#endif // cuda_mc_Keff_Tally_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Keff_Tally.hh

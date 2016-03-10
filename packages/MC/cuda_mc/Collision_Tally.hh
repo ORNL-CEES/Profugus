@@ -76,7 +76,7 @@ class Collision_Tally
     int num_batch() const { return d_num_batch; }
 
     // Tally the particles in a vector.
-    void tally( 
+    void accumulate( 
 	const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
 
     // Finalize the tally.

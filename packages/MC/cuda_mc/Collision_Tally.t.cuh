@@ -151,7 +151,7 @@ Collision_Tally<Geometry>::~Collision_Tally()
 //---------------------------------------------------------------------------//
 // Tally the particles in a vector.
 template <class Geometry>
-void Collision_Tally<Geometry>::tally( 
+void Collision_Tally<Geometry>::accumulate( 
     const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     // Get the particles that have had a collision.

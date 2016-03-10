@@ -70,13 +70,13 @@ __global__ void tally_kernel( const Geometry* geometry,
 // Finalize the tally.
 __global__ void finalize_kernel( const int num_batch,
 				 const int num_cell,
-				 const int total_num_particle,
+				 const double num_particles,
 				 double* tally )
 {
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < num_batch * num_cell ) 
     {
-	tally[idx] = (tally[idx] * num_batch) / total_num_particle;
+	tally[idx] = (tally[idx] * num_batch) / num_particles;
     }
 }
 
@@ -155,7 +155,7 @@ Cell_Tally<Geometry>::~Cell_Tally()
 //---------------------------------------------------------------------------//
 // Tally the particles in a vector.
 template <class Geometry>
-void Cell_Tally<Geometry>::tally( 
+void Cell_Tally<Geometry>::accumulate( 
     const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     // Get the particles that just had a collision.
@@ -195,7 +195,7 @@ void Cell_Tally<Geometry>::tally(
 //---------------------------------------------------------------------------//
 // Finalize the tally.
 template <class Geometry>
-void Cell_Tally<Geometry>::finalize( const std::size_t total_num_particle )
+void Cell_Tally<Geometry>::finalize( double num_particles )
 {
     // Get CUDA launch parameters.
     int size = d_num_batch * d_num_cells;
@@ -208,7 +208,7 @@ void Cell_Tally<Geometry>::finalize( const std::size_t total_num_particle )
     // Finalize the tally.
     finalize_kernel<<<num_blocks,threads_per_block>>>( d_num_batch,
 						       d_num_cells,
-						       total_num_particle,
+						       num_particles,
 						       d_tally );
 }
 

@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Keff_Tally_t_hh
-#define mc_Keff_Tally_t_hh
+#ifndef cuda_mc_Keff_Tally_t_hh
+#define cuda_mc_Keff_Tally_t_hh
 
 #include "Keff_Tally.hh"
 
@@ -144,7 +144,7 @@ double Keff_Tally<Geometry>::variance() const
  */
 template <class Geometry>
 void Keff_Tally<Geometry>::accumulate(
-    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
+    const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
     // Lazy allocate the keff work vector.
     int vector_size = particles.get_host_ptr()->size();
@@ -270,7 +270,7 @@ void Keff_Tally<Geometry>::reset()
 
 } // end namespace cuda_profugus
 
-#endif // mc_Keff_Tally_t_hh
+#endif // cuda_mc_Keff_Tally_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Keff_Tally.t.hh

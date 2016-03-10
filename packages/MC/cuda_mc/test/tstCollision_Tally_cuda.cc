@@ -57,7 +57,7 @@ TEST(Collision_Tally, construction)
     EXPECT_EQ( tally.num_batch(), num_batch );
 
     // Tally the particles.
-    tally.tally( tester.particles() );
+    tally.accumulate( tester.particles() );
 
     // Finalize the particles.
     tally.finalize( num_particle );

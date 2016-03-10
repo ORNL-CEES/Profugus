@@ -17,8 +17,8 @@
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
 #include "Definitions.hh"
-
 #include "Particle_Vector.hh"
+#include "Tally.hh"
 
 namespace cuda_profugus
 {
@@ -34,11 +34,12 @@ namespace cuda_profugus
  */
 //===========================================================================//
 template <class Geometry>
-class Cell_Tally
+class Cell_Tally : public Pathlength_Tally<Geometry>
 {
   public:
     //@{
     //! Typedefs.
+    typedef Particle_Vector<Geometry> Particle_Vector_t;
     typedef typename Geometry::Geo_State_t Geo_State_t;
     typedef events::Event Event_t;
     //@}
@@ -76,11 +77,14 @@ class Cell_Tally
     int num_batch() const { return d_num_batch; }
 
     // Tally the particles in a vector.
-    void tally( 
-	const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
+    void accumulate( 
+	const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles ) override;
+
+    // Query if this tally is on during inactive cycles.
+    bool inactive_cycle_tally() const override { return false; }
 
     // Finalize the tally.
-    void finalize( const std::size_t total_num_particle );
+    void finalize( double num_particles ) override;
 
     // Copy the first and second tally moments from the device to the
     // host. The moments are lazy-evaluated in this function and indexed by
