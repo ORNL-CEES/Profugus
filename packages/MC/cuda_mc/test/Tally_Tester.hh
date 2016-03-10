@@ -1,13 +1,13 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_mc/test/Collision_Tally_Tester.hh
+ * \file   cuda_mc/test/Tally_Tester.hh
  * \author Stuart Slattery
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_mc_test_Collision_Tally_Tester_hh
-#define cuda_mc_test_Collision_Tally_Tester_hh
+#ifndef cuda_mc_test_Tally_Tester_hh
+#define cuda_mc_test_Tally_Tester_hh
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
@@ -20,7 +20,7 @@
 #include <vector>
 
 //---------------------------------------------------------------------------//
-class Collision_Tally_Tester
+class Tally_Tester
 {
   public:
 
@@ -30,7 +30,7 @@ class Collision_Tally_Tester
     typedef typename Geometry::Geo_State_t Geo_State_t;
 
     // Constructor. Will build mesh geometry and particle vector.
-    Collision_Tally_Tester( const std::vector<double>& x_edges,
+    Tally_Tester( const std::vector<double>& x_edges,
 			    const std::vector<double>& y_edges,
 			    const std::vector<double>& z_edges,
 			    const int num_particle, 
@@ -53,8 +53,8 @@ class Collision_Tally_Tester
 
 //---------------------------------------------------------------------------//
 
-#endif // cuda_mc_test_Collision_Tally_Tester_hh
+#endif // cuda_mc_test_Tally_Tester_hh
 
 //---------------------------------------------------------------------------//
-//                 end of cuda_utils/Collision_Tally_Tester.hh
+//                 end of cuda_utils/Tally_Tester.hh
 //---------------------------------------------------------------------------//

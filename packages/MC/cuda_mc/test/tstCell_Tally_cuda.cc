@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/test/tstCollision_Tally_cuda.cc
+ * \file   cuda_mc/test/tstCell_Tally_cuda.cc
  * \author Stuart Slattery
- * \brief  Collision_Tally class test.
+ * \brief  Cell_Tally class test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "../Collision_Tally.hh"
+#include "../Cell_Tally.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
 #include "Tally_Tester.hh"
@@ -22,7 +22,7 @@
 //---------------------------------------------------------------------------//
 // TESTS
 //---------------------------------------------------------------------------//
-TEST(Collision_Tally, construction)
+TEST(Cell_Tally, construction)
 {
     // Geometry parameters.
     int N = 2;
@@ -49,7 +49,7 @@ TEST(Collision_Tally, construction)
 	x_edges, y_edges, z_edges, num_particle, control.rng(), num_batch );
 
     // Create a tally.
-    cuda_profugus::Collision_Tally<cuda_profugus::Mesh_Geometry> 
+    cuda_profugus::Cell_Tally<cuda_profugus::Mesh_Geometry> 
 	tally( tester.geometry(), num_batch );
 
     // check sizes
@@ -70,7 +70,8 @@ TEST(Collision_Tally, construction)
     EXPECT_EQ( second_moment.size(), num_cells );
 
     // Calcuate the expected tally results. Only the first half of the cells
-    // should have particles with collisions that will tally.
+    // should have particles with cells that will tally.
+    double step = 2.0;
     Teuchos::TwoDArray<double> gold_tally( num_batch, num_cells, 0.0 );
     for ( int c = 0; c < num_cells; ++c )
     {
@@ -78,7 +79,7 @@ TEST(Collision_Tally, construction)
 	{
 	    for ( int b = 0; b < num_batch; ++b )
 	    {
-		gold_tally(b,c) += (b+1)*(c+1);
+		gold_tally(b,c) += step * (b+1)*(c+1);
 	    }
 	}
     }
@@ -119,5 +120,5 @@ TEST(Collision_Tally, construction)
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstCollision_Tally_cuda.cc
+//                 end of tstCell_Tally_cuda.cc
 //---------------------------------------------------------------------------//

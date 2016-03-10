@@ -11,7 +11,7 @@ INCLUDE(UtilsTest)
 
 IF(USE_CUDA)
   SET(CUDA_SOURCES
-    Collision_Tally_Tester.cu
+    Tally_Tester.cu
     Particle_Vector_Tester.cu
     Physics_Tester.cu
     Uniform_Source_Tester.cu
@@ -34,6 +34,7 @@ ENDIF()
 
 ADD_UTILS_TEST(tstParticle_Vector_cuda.cc              NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstCollision_Tally_cuda.cc              NP 1 ${DEPS} )
+ADD_UTILS_TEST(tstCell_Tally_cuda.cc                   NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstUniform_Source_cuda.cc               NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstBank_cuda.cc                         NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstPhysics_cuda.cc                      NP 1 ${DEPS} )

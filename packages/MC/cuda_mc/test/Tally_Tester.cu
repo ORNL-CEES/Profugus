@@ -1,12 +1,12 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_mc/test/Collision_Tally_Tester.cu
+ * \file   cuda_mc/test/Tally_Tester.cu
  * \author Stuart Slattery
  * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "Collision_Tally_Tester.hh"
+#include "Tally_Tester.hh"
 
 #include "cuda_utils/Hardware.hh"
 #include "cuda_utils/CudaDBC.hh"
@@ -19,17 +19,18 @@
 // CUDA Kernels
 //---------------------------------------------------------------------------//
 __global__ 
-void set_wt_kernel( Collision_Tally_Tester::Particle_Vector* vector, 
+void set_wt_kernel( Tally_Tester::Particle_Vector* vector, 
 		    double* wt )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     vector->set_wt( i, wt[i] );
+    vector->set_step( i, 2.0 );
 }
 
 //---------------------------------------------------------------------------//
 __global__ 
-void set_event_kernel( Collision_Tally_Tester::Particle_Vector* vector, 
-		       typename Collision_Tally_Tester::Event_t* event )
+void set_event_kernel( Tally_Tester::Particle_Vector* vector, 
+		       typename Tally_Tester::Event_t* event )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     vector->set_event( i, event[i] );
@@ -38,8 +39,8 @@ void set_event_kernel( Collision_Tally_Tester::Particle_Vector* vector,
 //---------------------------------------------------------------------------//
 __global__ 
 void set_geo_state_kernel( 
-    Collision_Tally_Tester::Particle_Vector* vector, 
-    typename Collision_Tally_Tester::Geo_State_t* geo_state )
+    Tally_Tester::Particle_Vector* vector, 
+    typename Tally_Tester::Geo_State_t* geo_state )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     vector->geo_state( i ) = geo_state[i];
@@ -47,7 +48,7 @@ void set_geo_state_kernel(
 
 //---------------------------------------------------------------------------//
 __global__ 
-void set_batch_kernel( Collision_Tally_Tester::Particle_Vector* vector, 
+void set_batch_kernel( Tally_Tester::Particle_Vector* vector, 
 		       int* batch )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -56,16 +57,16 @@ void set_batch_kernel( Collision_Tally_Tester::Particle_Vector* vector,
 
 //---------------------------------------------------------------------------//
 __global__ 
-void live_kernel( Collision_Tally_Tester::Particle_Vector* vector )
+void live_kernel( Tally_Tester::Particle_Vector* vector )
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     vector->live( i );
 }
 
 //---------------------------------------------------------------------------//
-// Collision_Tally_Tester
+// Tally_Tester
 //---------------------------------------------------------------------------//
-Collision_Tally_Tester::Collision_Tally_Tester(  const std::vector<double>& x_edges,
+Tally_Tester::Tally_Tester(  const std::vector<double>& x_edges,
 						 const std::vector<double>& y_edges,
 						 const std::vector<double>& z_edges,
 						 const int num_particle, 
@@ -91,7 +92,7 @@ Collision_Tally_Tester::Collision_Tally_Tester(  const std::vector<double>& x_ed
     int num_block = num_particle / num_threads;
 
     // Set the weight. Weight assigned as a function of the cell id and the
-    // batch id.
+    // batch id. This will also set all particles to a step length of 2.
     Teuchos::Array<double> wt( num_particle );
     for ( int b = 0; b < num_batch; ++b )
     {
@@ -179,5 +180,5 @@ Collision_Tally_Tester::Collision_Tally_Tester(  const std::vector<double>& x_ed
 }
 
 //---------------------------------------------------------------------------//
-//                 end of cuda_mc/Collision_Tally_Tester.cu
+//                 end of cuda_mc/Tally_Tester.cu
 //---------------------------------------------------------------------------//
