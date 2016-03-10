@@ -34,20 +34,17 @@ __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
 				   const std::size_t num_boundary,
 				   double* keff )
 {
+    // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
     if ( idx < num_collision + num_boundary )
     {
-	int pidx = 0;
-	if ( idx < num_collision ) 
-	{
-	    pidx = idx + collision_start;
-	}
-	else
-	{
-	    pidx = idx - num_collision + boundary_start;
-	}
+	// Get the particle index.
+	int pidx = ( idx < num_collision )
+		   ? idx + collision_start
+		   : idx - num_collision + boundary_start;
     
+	// Tally keff
 	keff[idx] = particles->wt(pidx) * particles->step(pidx) *
 		    phyiscs->total( physics::NU_FISSION,
 				    particles->matid(pidx),

@@ -173,6 +173,7 @@ IF(USE_CUDA)
   FILE(GLOB CUDA_MC_HEADERS cuda_mc/*.hh)
   SET(CUDA_MC_SOURCES
     cuda_mc/Bank.pt.cu
+    cuda_mc/Cell_Tally.pt.cu
     cuda_mc/Collision_Tally.pt.cu
     cuda_mc/Group_Bounds.cu
     cuda_mc/Keff_Tally.pt.cu
