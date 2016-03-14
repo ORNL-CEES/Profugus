@@ -15,8 +15,8 @@
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
+#include "Source.hh"
 #include "Definitions.hh"
-
 #include "Particle_Vector.hh"
 
 #include "Teuchos_RCP.hpp"
@@ -50,7 +50,7 @@ namespace cuda_profugus
  */
 //===========================================================================//
 template <class Geometry, class Shape>
-class Uniform_Source
+class Uniform_Source : public Source<Geometry>
 {
   public:
     //@{
@@ -101,30 +101,30 @@ class Uniform_Source
 
     // Get particles from the source.
     void get_particles( 
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
+	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
 
     //! Boolean operator for source (true when source still has particles).
-    bool empty() const { return d_np_left == 0; }
+    bool empty() const override { return d_np_left == 0; }
 
     //! Number of particle batches.
-    int num_batch() const { return d_num_batch; }
+    int num_batch() const override { return d_num_batch; }
 
     //! Number of particles to transport in the source on the current domain.
-    std::size_t num_to_transport() const { return d_np_domain; }
+    std::size_t num_to_transport() const override { return d_np_domain; }
 
     //! Total number of particles to transport in the entire problem/cycle.
-    std::size_t total_num_to_transport() const { return d_np_total; }
+    std::size_t total_num_to_transport() const override { return d_np_total; }
 
     // >>> CLASS ACCESSORS
 
     //! Total number of requested particles.
-    std::size_t Np() const { return d_np_requested; }
+    std::size_t Np() const override { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    std::size_t num_run() const { return d_np_run; }
+    std::size_t num_run() const override { return d_np_run; }
 
     //! Number left to transport on this domain.
-    std::size_t num_left() const { return d_np_left; }
+    std::size_t num_left() const override { return d_np_left; }
 
   private:
     // >>> IMPLEMENTATION

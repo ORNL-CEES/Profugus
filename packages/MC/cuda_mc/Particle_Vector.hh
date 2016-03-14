@@ -80,6 +80,9 @@ class Particle_Vector
     // Distance of last particle step.
     double* d_step;
 
+    // Distance to next collision in mean-free-paths.
+    double* d_dist_mfp;
+
   public:
 
     // >>> HOST API
@@ -273,6 +276,24 @@ class Particle_Vector
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
 	d_step[ d_lid[i] ] = step;
+    }
+
+    //! Get the particle distance to collision.
+    PROFUGUS_DEVICE_FUNCTION
+    double dist_mfp( const std::size_t i ) const
+    {
+	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
+	return d_dist_mfp[ d_lid[i] ];
+    }
+
+    //! Set the particle distance to collision.
+    PROFUGUS_DEVICE_FUNCTION
+    void set_dist_mfp( const std::size_t i, const double dist_mfp )
+    {
+	REQUIRE( i < d_size );
+	REQUIRE( d_lid[i] < d_size );
+	d_dist_mfp[ d_lid[i] ] = dist_mfp;
     }
 };
 
