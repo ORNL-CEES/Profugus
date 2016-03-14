@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_mc_Keff_Tally_t_hh
-#define cuda_mc_Keff_Tally_t_hh
+#ifndef cuda_mc_Keff_Tally_t_cuh
+#define cuda_mc_Keff_Tally_t_cuh
 
 #include "Keff_Tally.hh"
 
@@ -270,7 +270,7 @@ void Keff_Tally<Geometry>::reset()
 
 } // end namespace cuda_profugus
 
-#endif // cuda_mc_Keff_Tally_t_hh
+#endif // cuda_mc_Keff_Tally_t_cuh
 
 //---------------------------------------------------------------------------//
 //                 end of Keff_Tally.t.hh

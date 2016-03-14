@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_VR_Roulette_t_hh
-#define mc_VR_Roulette_t_hh
+#ifndef mc_VR_Roulette_t_cuh
+#define mc_VR_Roulette_t_cuh
 
 #include "VR_Roulette.hh"
 #include "Definitions.hh"
@@ -128,7 +128,7 @@ void VR_Roulette<Geometry>::post_collision(
 
 } // end namespace cuda_profugus
 
-#endif // mc_VR_Roulette_t_hh
+#endif // mc_VR_Roulette_t_cuh
 
 //---------------------------------------------------------------------------//
 //                 end of VR_Roulette.t.hh

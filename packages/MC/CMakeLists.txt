@@ -175,6 +175,8 @@ IF(USE_CUDA)
     cuda_mc/Bank.pt.cu
     cuda_mc/Cell_Tally.pt.cu
     cuda_mc/Collision_Tally.pt.cu
+    cuda_mc/Fission_Rebalance.pt.cu
+    cuda_mc/Fission_Source.pt.cu
     cuda_mc/Group_Bounds.cu
     cuda_mc/Keff_Tally.pt.cu
     cuda_mc/Particle.pt.cu

@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_mc_Tallier_t_hh
-#define cuda_mc_Tallier_t_hh
+#ifndef cuda_mc_Tallier_t_cuh
+#define cuda_mc_Tallier_t_cuh
 
 #include <algorithm>
 #include <utility>
@@ -292,7 +292,7 @@ void Tallier<Geometry>::swap(Tallier<Geometry> &rhs)
 
 } // end namespace cuda_profugus
 
-#endif // cuda_mc_Tallier_t_hh
+#endif // cuda_mc_Tallier_t_cuh
 
 //---------------------------------------------------------------------------//
 //                 end of Tallier.t.hh
