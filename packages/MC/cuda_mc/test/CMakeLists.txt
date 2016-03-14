@@ -40,6 +40,7 @@ ADD_UTILS_TEST(tstBank_cuda.cc                         NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstPhysics_cuda.cc                      NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstKeff_Tally_cuda.cc                   NP 1 ${DEPS} )
 ADD_UTILS_TEST(tstVR_Roulette_cuda.cc                  NP 1 ${DEPS} )
+ADD_UTILS_TEST(tstFission_Rebalance.cc                 NP 1  )
 
 ##---------------------------------------------------------------------------##
 ## end of cuda_xs/test/CMakeLists.txt
