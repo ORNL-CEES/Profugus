@@ -75,8 +75,8 @@ class Fission_Source : public Source<Geometry>
     //! Typedefs.
     typedef Geometry                                    Geometry_t;
     typedef Physics<Geometry_t>                         Physics_t;
-    typedef Teuchos::ParameterList              ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
+    typedef Teuchos::ParameterList			ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>		RCP_Std_DB;
     typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
     typedef typename Geometry_t::Space_Vector           Space_Vector;
@@ -102,14 +102,16 @@ class Fission_Source : public Source<Geometry>
 
   public:
     // Constructor.
-    Fission_Source(RCP_Std_DB db, SP_Geometry geometry, SP_Physics physics,
-                   SP_RNG_Control rng_control);
+    Fission_Source(const RCP_Std_DB& db, 
+		   const SDP_Geometry& geometry, 
+		   const SDP_Physics& physics );
 
     // Build the initial fission source.
     void build_initial_source();
 
     // Build the initial source from a mesh distribution.
-    void build_initial_source(SP_Cart_Mesh mesh, Const_Array_View fis_dens);
+    void build_initial_source( const SDP_Cart_Mesh& mesh, 
+			       Const_Array_View& fis_dens);
 
     // Build a source from a fission site container.
     void build_source(SP_Fission_Sites &fission_sites);
@@ -166,15 +168,14 @@ class Fission_Source : public Source<Geometry>
   private:
     // >>> IMPLEMENTATION
 
-    typedef Source<Geometry> Base;
-    using Base::b_geometry;
-    using Base::b_physics;
-    using Base::b_rng_control;
-    using Base::b_nodes;
-    using Base::make_RNG;
+    // Geometry
+    SDP_Geometry d_geometry;
+
+    // Physics
+    SDP_Physics d_physics;
 
     // Build the domain replicated fission source.
-    void build_DR(SP_Cart_Mesh mesh, Const_Array_View fis_dens);
+    void build_DR( const SDP_Cart_Mesh& mesh, Const_Array_View& fis_dens);
 
     // Sample the geometry.
     int sample_geometry(Space_Vector &r, const Space_Vector &omega,
@@ -203,9 +204,9 @@ class Fission_Source : public Source<Geometry>
     Fission_Site_Container d_dummy_container;
 
     // Mesh-based starting distribution.
-    int          d_current_cell;
-    Vec_Int      d_fis_dist;
-    SP_Cart_Mesh d_fis_mesh;
+    int			d_current_cell;
+    Vec_Int		d_fis_dist;
+    SDP_Cart_Mesh	d_fis_mesh;
 };
 
 } // end namespace cuda_profugus

@@ -23,7 +23,7 @@
 #include "comm/global.hh"
 #include "comm/Timing.hh"
 #include "utils/Constants.hh"
-#include "cuda_mc/Global_RNG.hh"
+#include "mc/Global_RNG.hh"
 
 namespace cuda_profugus
 {
@@ -35,11 +35,11 @@ namespace cuda_profugus
  * \brief Constructor.
  */
 template <class Geometry>
-Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
-                                         SP_Geometry    geometry,
-                                         SP_Physics     physics,
-                                         SP_RNG_Control rng_control)
-    : Base(geometry, physics, rng_control)
+Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
+                                         const SDP_Geometry&    geometry,
+                                         const SDP_Physics&     physics)
+    : d_geometry(geometry)
+    , d_physics(physics)
     , d_fission_rebalance(std::make_shared<Fission_Rebalance_t>())
     , d_np_requested(0)
     , d_np_total(0)
@@ -50,9 +50,8 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
 {
     using def::I; using def::J; using def::K;
 
-    REQUIRE(b_geometry);
-    REQUIRE(b_physics);
-    REQUIRE(b_rng_control);
+    REQUIRE(d_geometry);
+    REQUIRE(d_physics);
 
     // Boundaries in -X, +X, -Y, +Y, -Z, +Z
     Teuchos::Array<double> extents(6, 0.);
@@ -72,26 +71,29 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     const Space_Vector &low_edge  = box.lower();
     const Space_Vector &high_edge = box.upper();
 
-    for (int i = 0; i < 3; ++i)
-    {
-        double lower = extents[2 * i];
-        double upper = extents[2 * i + 1];
+    double lower_x = extents[2 * I];
+    double upper_x = extents[2 * I + 1];
+    lower_x = std::max(lower_x, low_edge.x);
+    upper_x = std::min(upper_x, high_edge.x);
+    d_lower.x = lower_x;
+    d_width.x = upper_x - lower_x
 
-        lower = std::max(lower, low_edge[i]);
-        upper = std::min(upper, high_edge[i]);
+    double lower_y = extents[2 * J];
+    double upper_y = extents[2 * J + 1];
+    lower_y = std::may(lower_y, low_edge.y);
+    upper_y = std::min(upper_y, high_edge.y);
+    d_lower.y = lower_y;
+    d_width.y = upper_y - lower_y
 
-        d_lower[i] = lower;
-        d_width[i] = upper - lower;
-
-        VALIDATE(d_width[i] > 0., "Fission source width for axis " << i
-                 << " has non-positive width " << d_width[i]
-                 << " (lower=" << lower << ", upper=" << upper << ")");
-    }
+    double lower_z = extents[2 * K];
+    double upper_z = extents[2 * K + 1];
+    lower_z = std::maz(lower_z, low_edge.z);
+    upper_z = std::min(upper_z, high_edge.z);
+    d_lower.z = lower_z;
+    d_width.z = upper_z - lower_z
 
     // store the total number of requested particles per cycle
     d_np_requested = static_cast<std::size_t>(db->get("Np", 1000));
-    VALIDATE(d_np_requested > 0, "Number of source particles ("
-            << d_np_requested << ") must be positive");
 
     // initialize the total for the first cycle
     d_np_total = d_np_requested;
@@ -107,7 +109,7 @@ template <class Geometry>
 void Fission_Source<Geometry>::build_initial_source()
 {
     // send an empty mesh and view
-    SP_Cart_Mesh     mesh;
+    SDP_Cart_Mesh     mesh;
     Const_Array_View view;
     build_initial_source(mesh, view);
 
@@ -119,8 +121,8 @@ void Fission_Source<Geometry>::build_initial_source()
  * \brief Build the initial source from a mesh distribution.
  */
 template <class Geometry>
-void Fission_Source<Geometry>::build_initial_source(SP_Cart_Mesh     mesh,
-                                                    Const_Array_View fis_dens)
+void Fission_Source<Geometry>::build_initial_source(const SDP_Cart_Mesh& mesh,
+                                                    Const_Array_View& fis_dens)
 {
     REQUIRE(d_np_total > 0);
 
@@ -129,9 +131,6 @@ void Fission_Source<Geometry>::build_initial_source(SP_Cart_Mesh     mesh,
     // set the fission site container to an unassigned state
     d_fission_sites = SP_Fission_Sites();
     CHECK(!d_fission_sites);
-
-    // make the RNG for this cycle
-    make_RNG();
 
     // build the domain-replicated fission source
     build_DR(mesh, fis_dens);
@@ -146,8 +145,6 @@ void Fission_Source<Geometry>::build_initial_source(SP_Cart_Mesh     mesh,
 
     // initialize starting cell
     d_current_cell = 0;
-
-    cuda_profugus::global_barrier();
 
     ENSURE(d_wt > 0.0);
 }
@@ -175,7 +172,7 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
 
     SCOPED_TIMER("CUDA_MC::Fission_Source.build_source");
 
-    // swap the input fission sites with the internal storage fissino sites
+    // swap the input fission sites with the internal storage fission sites
     d_fission_sites.swap(fission_sites);
 
     // rebalance across sets (when number of blocks per set > 1; the
@@ -192,9 +189,6 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
                                                     // fissions at a single
                                                     // site
 
-    // make the RNG for this cycle
-    make_RNG();
-
     // set counters
     d_num_left = d_np_domain;
     d_num_run  = 0;
@@ -202,8 +196,6 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
            static_cast<double>(d_np_total);
-
-    cuda_profugus::global_barrier();
 
     ENSURE(d_wt > 0.0);
     ENSURE(fission_sites);
@@ -234,7 +226,6 @@ auto Fission_Source<Geometry>::get_particle() -> SP_Particle
     using def::I; using def::J; using def::K;
 
     REQUIRE(d_wt > 0.0);
-    REQUIRE(cuda_profugus::Global_RNG::d_rng.assigned());
 
     // particle
     SP_Particle p;
@@ -251,10 +242,6 @@ auto Fission_Source<Geometry>::get_particle() -> SP_Particle
 
     // make a particle
     p = std::make_shared<Particle_t>();
-
-    // use the global rng on this domain for the random number generator
-    p->set_rng(cuda_profugus::Global_RNG::d_rng);
-    RNG rng = p->rng();
 
     // material id
     int matid = 0;
@@ -368,7 +355,7 @@ void Fission_Source<Geometry>::build_DR(SP_Cart_Mesh     mesh,
             // there can be n or n+1 sites; with probability n+1-nu there will
             // be n sites, with probability nu-n there will be n+1 sites
             n[cell] = nu;
-            if (Global_RNG::d_rng.ran() < nu - static_cast<double>(n[cell]))
+            if (profugus::Global_RNG::d_rng.ran() < nu - static_cast<double>(n[cell]))
             {
                 ++n[cell];
             }
