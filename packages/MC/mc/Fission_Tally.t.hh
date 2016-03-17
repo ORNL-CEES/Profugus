@@ -154,11 +154,17 @@ void Fission_Tally<Geometry>::accumulate(double            step,
     // Get the cell index
     Mesh::Dim_Vector ijk;
     const Mesh::Space_Vector &xyz = p.geo_state().d_r;
-    d_mesh->find(xyz,ijk);
-    int cell = d_mesh->index( ijk[def::I], ijk[def::J], ijk[def::K] );
+    d_mesh->find_upper(xyz,ijk);
 
-    // Tally for the history
-    d_hist[cell] += p.wt() * step * b_physics->total(physics::NU_FISSION,p);
+    Mesh::size_type cell;
+    bool found = d_mesh->index( ijk[def::I], ijk[def::J], ijk[def::K], cell );
+    if( found )
+    {
+        REQUIRE( cell >= 0 && cell < d_mesh->num_cells() );
+
+        // Tally for the history
+        d_hist[cell] += p.wt() * step * b_physics->total(physics::NU_FISSION,p);
+    }
 }
 
 //---------------------------------------------------------------------------//
