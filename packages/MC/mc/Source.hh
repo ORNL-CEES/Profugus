@@ -108,10 +108,10 @@ class Source
     // >>> INHERITED INTERFACE
 
     //! Get the geometry.
-    const Geometry_t& geometry() const { return *b_geometry; }
+    SP_Geometry geometry() const { return b_geometry; }
 
     //! Get the physics.
-    const Physics_t& physics() const { return *b_physics; }
+    SP_Physics physics() const { return b_physics; }
 
     //! Get the RNG controller.
     const RNG_Control_t& rng_control() const { return *b_rng_control; }
