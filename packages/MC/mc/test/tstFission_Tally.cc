@@ -295,8 +295,16 @@ TEST_F(FissionTallyTest, multi_cell)
     EXPECT_SOFTEQ(3.840e-3,  r1.first, tol);
     EXPECT_SOFTEQ(5.456e-2,  r2.first, tol);
 
-    EXPECT_SOFTEQ(3.840e-3,          r1.second, tol);
-    EXPECT_SOFTEQ(0.019674796059934, r2.second, tol);
+    if( nodes == 1 )
+    {
+        EXPECT_SOFTEQ(3.840e-3,          r1.second, tol);
+        EXPECT_SOFTEQ(0.019674796059934, r2.second, tol);
+    }
+    if( nodes == 4 )
+    {
+        EXPECT_SOFTEQ(0.001637381501611, r1.second, tol);
+        EXPECT_SOFTEQ(0.008389361228257, r2.second, tol);
+    }
 }
 
 //---------------------------------------------------------------------------//
