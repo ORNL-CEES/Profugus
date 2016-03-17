@@ -118,7 +118,7 @@ void Anderson_Solver<Geometry,T>::set(SP_Source_Transporter transporter,
 
     // Build the operator
     d_operator = Teuchos::rcp(
-        new Operator(transporter, source, mesh, map, d_set_comm));
+        new Operator(adb, transporter, source, mesh, map, d_set_comm));
 
     // Make the Anderson nonlinear solver
     d_anderson = std::make_shared<Anderson_t>(d_operator, adb);
@@ -195,6 +195,8 @@ void Anderson_Solver<Geometry,T>::initialize()
     CHECK(b_tallier->is_built());
     CHECK(b_tallier->num_pathlength_tallies() >= 1);
 
+    d_operator->build_tallies();
+
     // build the source
     auto source = d_operator->source();
     CHECK(source);
@@ -221,17 +223,6 @@ void Anderson_Solver<Geometry,T>::run_inactive()
 
     // Timers (some required, some optional)
     Timer cycle_timer;
-
-    // First set a null tallier
-    auto first_tallier = std::make_shared<Tallier_t>();
-    first_tallier->set(b_tallier->geometry(), b_tallier->physics());
-    first_tallier->add_pathlength_tally(b_keff_tally);
-    first_tallier->build();
-    CHECK(first_tallier->is_built());
-    CHECK(first_tallier->num_tallies() == 1);
-
-    // Set the tallier in the operator
-    d_operator->set_tallier(first_tallier);
 
     // Run a cycle
     cout << ">>> Beginning inactive cycles." << endl;

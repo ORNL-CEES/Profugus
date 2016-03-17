@@ -33,12 +33,14 @@ namespace profugus
  */
 template<class Geometry, class T>
 Anderson_Operator<Geometry,T>::Anderson_Operator(
+        RCP_PL                   pl,
         SP_Source_Transporter    transporter,
         SP_Fission_Source        fission_source,
         SP_Cart_Mesh             mesh,
         RCP_MAP                  map,
         profugus::Communicator_t set_comm)
     : Base(map)
+    , d_pl(pl)
     , d_transporter(transporter)
     , d_source(fission_source)
     , d_mesh(mesh)
@@ -65,6 +67,10 @@ Anderson_Operator<Geometry,T>::Anderson_Operator(
     d_gp = VectorTraits<T>::build_vector(mesh_map);
     ENSURE(!d_gp.is_null());
     ENSURE(profugus::nodes() == d_nodes);
+
+    d_use_tally = d_pl->get("use_tally",true);
+
+    d_tallies_built = false;
 }
 
 //---------------------------------------------------------------------------//
@@ -76,9 +82,11 @@ Anderson_Operator<Geometry,T>::Anderson_Operator(
 template<class Geometry, class T>
 void Anderson_Operator<Geometry,T>::iterate(double k) const
 {
-    REQUIRE(d_tallier);
-    REQUIRE(d_tallier->is_built() && !d_tallier->is_finalized());
+    REQUIRE( d_tallier );
+    REQUIRE( d_tallier->is_built() && !d_tallier->is_finalized() );
     REQUIRE(d_fission_sites && d_fission_sites->empty());
+
+    d_transporter->set(d_tallier);
 
     // assign the current source state in the transporter (this will generally
     // be a pass through, but it gives the solver a chance to update
@@ -89,6 +97,7 @@ void Anderson_Operator<Geometry,T>::iterate(double k) const
     d_transporter->sample_fission_sites(d_fission_sites, k);
 
     // initialize keff tally to the beginning of the cycle
+    REQUIRE( d_tallier );
     d_tallier->begin_cycle();
 
     // solve the fixed source problem using the transporter
@@ -120,12 +129,47 @@ void Anderson_Operator<Geometry,T>::update_source() const
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Build tallies necessary for operator apply
+ */
+template<class Geometry, class T>
+void Anderson_Operator<Geometry,T>::build_tallies()
+{
+    // Need Tallier with Keff and Fission tallies
+    d_tallier = std::make_shared<Tallier_t>();
+    d_tallier->set( d_source->geometry(), d_source->physics() );
+    auto src_tallier = d_transporter->tallier();
+    for( const auto &tally : *src_tallier )
+    {
+        if( tally->name() == "keff" )
+        {
+            d_keff_tally = std::dynamic_pointer_cast<Keff_Tally_t>(tally);
+            ENSURE( d_keff_tally );
+            d_tallier->add_pathlength_tally(d_keff_tally);
+        }
+    }
+    ENSURE( d_tallier->num_pathlength_tallies() == 1 );
+
+    // Build Fission_Tally
+    d_fisn_tally = std::make_shared<Fission_Tally_t>(
+        d_source->physics());
+    d_fisn_tally->set_mesh(d_mesh);
+    d_tallier->add_pathlength_tally(d_fisn_tally);
+    d_tallier->build();
+    ENSURE( d_tallier->is_built() );
+    ENSURE( d_tallier->num_tallies() == 2 );
+    ENSURE( d_tallier->num_pathlength_tallies() == 2 );
+
+    d_tallies_built = true;
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Initialize Anderson solve.
  */
 template<class Geometry, class T>
 auto Anderson_Operator<Geometry,T>::initialize_Anderson() -> RCP_MV
 {
-    REQUIRE(d_transporter->tallier()->num_tallies() == 1);
+    REQUIRE( d_tallies_built );
 
     // Make the solution vector
     auto sol_vec = VectorTraits<T>::build_vector(Base::d_domain_map);
@@ -143,13 +187,8 @@ auto Anderson_Operator<Geometry,T>::initialize_Anderson() -> RCP_MV
     // Write gp into v to initialize the solution vector
     std::copy(gp.begin(), gp.end(), v.begin());
 
-    // Get the k from the initialization cycles
-    auto k_tally = std::dynamic_pointer_cast<Keff_Tally_t>(
-        *d_transporter->tallier()->begin());
-    CHECK(k_tally);
-
     // Store the latest k iterate in the initial solution vector
-    v[d_mesh->num_cells()] = k_tally->latest();
+    v[d_mesh->num_cells()] = d_keff_tally->latest();
     CHECK(v[d_mesh->num_cells()] > 0.0);
 
     // return v
@@ -168,8 +207,6 @@ auto Anderson_Operator<Geometry,T>::initialize_Anderson() -> RCP_MV
 template<class Geometry, class T>
 double Anderson_Operator<Geometry,T>::finalize_Anderson(const MV &v)
 {
-    REQUIRE(d_transporter->tallier()->num_tallies() == 0);
-
     // Number of cells in the grid
     int nc = d_mesh->num_cells();
 
@@ -204,6 +241,8 @@ double Anderson_Operator<Geometry,T>::finalize_Anderson(const MV &v)
 template<class Geometry, class T>
 void Anderson_Operator<Geometry,T>::ApplyImpl(const MV &x, MV &y) const
 {
+    REQUIRE( d_tallies_built );
+
     // Number of cells in the grid
     int nc = d_mesh->num_cells();
 
@@ -216,6 +255,11 @@ void Anderson_Operator<Geometry,T>::ApplyImpl(const MV &x, MV &y) const
     // Make views of data
     auto g = Teuchos::arrayView(in.get(), nc);
     CHECK(g.size() == nc);
+
+    std::cout << "Anderson in vector: ";
+    for( auto x : g )
+        std::cout << x << " ";
+    std::cout << std::endl;
 
     // This is an ArrayRCP
     auto gp = VectorTraits<T>::get_data_nonconst(d_gp);
@@ -236,32 +280,31 @@ void Anderson_Operator<Geometry,T>::ApplyImpl(const MV &x, MV &y) const
     // Update the fission source for the next Monte Carlo transport
     update_source();
 
+    // Reset tallier
+    d_fisn_tally->reset();
+
     // Do a Monte Carlo iteration
     iterate(k);
 
     // Restrict to get new g = Rf
     restrict(*d_fission_sites, gp());
 
+    std::cout << "New fission sites: ";
+    for( auto x : gp() )
+        std::cout << x << " ";
+    std::cout << std::endl;
+
+    std::cout << "Ran " << d_source->num_run() << " histories" << std::endl;
+    d_fisn_tally->finalize(d_source->num_run());
+    std::cout << "Fission tally result: ";
+    for( auto x : d_fisn_tally->results() )
+        std::cout << x.first << " ";
+    std::cout << std::endl;
+
     // >>> Update F(g,k)
 
-    // Get the k from the initialization cycles
-    double transport_eig = -1.0;
-    bool found_ktally = false;
-    for( auto tally =  d_transporter->tallier()->begin();
-              tally != d_transporter->tallier()->end();
-              tally++ )
-    {
-        auto k_tally = std::dynamic_pointer_cast<Keff_Tally_t>(*tally);
-
-        if( k_tally )
-        {
-            found_ktally = true;
-            transport_eig = k_tally->latest();
-        }
-    }
-
-    INSIST(found_ktally, "Anderson_Operator needs Keff_Tally.");
-    CHECK(transport_eig > 0.0);
+    double transport_eig = d_keff_tally->latest();
+    REQUIRE( transport_eig > 0.0 );
 
     // F(g)
     for (int cell = 0; cell < nc; ++cell)
@@ -376,28 +419,55 @@ void Anderson_Operator<Geometry,T>::restrict(
     // Initialize g to zero
     std::fill(g.begin(), g.end(), 0.0);
 
-    // dimension vector for each cell
-    Cartesian_Mesh::Dim_Vector ijk;
-
-    // loop through the global fission sites and add them up in each global
-    // mesh cell
-    for (const auto &site : f)
+    if( d_use_tally )
     {
-        CHECK(d_mesh->find(site.r, ijk));
+        // Get results of fission tally
+        auto fisn_result = d_fisn_tally->results();
 
-        // find the cell containing the site
-        d_mesh->find(site.r, ijk);
-        CHECK(d_mesh->index(ijk[0], ijk[1], ijk[2]) < g.size());
+        // Update g
+        double g_sum = 0.0;
+        for( int cell = 0; cell < d_mesh->num_cells(); ++cell )
+        {
+            g[cell] = fisn_result[cell].first;
+            g_sum += g[cell];
+        }
 
-        // add the site to the global field
-        g[d_mesh->index(ijk[0], ijk[1], ijk[2])] += 1.0;
-
+        // Normalize the distribution
+        // This prevents wild swings in number of fission sites
+        // in early iterations
+        for( int cell = 0; cell < d_mesh->num_cells(); ++cell )
+        {
+            g[cell] *= static_cast<double>(d_mesh->num_cells()) / g_sum;
+        }
     }
-
-    // Normalize by volume
-    for (int cell = 0; cell < d_mesh->num_cells(); ++cell)
+    else
     {
-        g[cell] /= d_mesh->volume(cell);
+        // dimension vector for each cell
+        Cartesian_Mesh::Dim_Vector ijk;
+
+        // loop through the global fission sites and add them up in each global
+        // mesh cell
+        for (const auto &site : f)
+        {
+            CHECK(d_mesh->find(site.r, ijk));
+
+            // find the cell containing the site
+            d_mesh->find(site.r, ijk);
+            CHECK(d_mesh->index(ijk[0], ijk[1], ijk[2]) < g.size());
+
+            // add the site to the global field
+            g[d_mesh->index(ijk[0], ijk[1], ijk[2])] += 1.0;
+
+        }
+
+        double num_cells = static_cast<double>(d_mesh->num_cells());
+        double num_p     = static_cast<double>(d_source->Np());
+
+        // Normalize
+        for (int cell = 0; cell < d_mesh->num_cells(); ++cell)
+        {
+            g[cell] *= num_cells / num_p;
+        }
     }
 }
 

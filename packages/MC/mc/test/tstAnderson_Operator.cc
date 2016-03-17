@@ -229,7 +229,7 @@ TEST_F(Anderson_OperatorTest, api)
         db, geometry, physics, rcon);
 
     // Make the operator
-    Operator_t anderson(transporter, fs, mesh, map, communicator);
+    Operator_t anderson(db, transporter, fs, mesh, map, communicator);
 
     // Set the tallier
     anderson.set_tallier(tallier);

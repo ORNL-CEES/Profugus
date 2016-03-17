@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "Teuchos_RCP.hpp"
+#include "Teuchos_ParameterList.hpp"
 #include "Teuchos_ArrayView.hpp"
 #include "Teuchos_BLAS.hpp"
 
@@ -25,6 +26,7 @@
 #include "Fission_Source.hh"
 #include "Tallier.hh"
 #include "Keff_Tally.hh"
+#include "Fission_Tally.hh"
 
 namespace profugus
 {
@@ -52,17 +54,25 @@ public:
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
     typedef Fission_Source<Geometry_t>              FS_t;
     typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
+    typedef Fission_Tally<Geometry_t>               Fission_Tally_t;
     typedef std::shared_ptr<FS_t>                   SP_Fission_Source;
     typedef typename FS_t::SP_Fission_Sites         SP_Fission_Sites;
-    typedef std::shared_ptr<Tallier<Geometry_t> >   SP_Tallier;
+    typedef Tallier<Geometry_t>                     Tallier_t;
+    typedef std::shared_ptr<Tallier_t>              SP_Tallier;
     typedef typename T::MV                          MV;
     typedef typename T::MAP                         MAP;
     typedef Teuchos::RCP<MAP>                       RCP_MAP;
     typedef Teuchos::RCP<MV>                        RCP_MV;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_PL;
     typedef std::shared_ptr<Cartesian_Mesh>         SP_Cart_Mesh;
+    typedef std::shared_ptr<Keff_Tally_t>           SP_Keff_Tally;
+    typedef std::shared_ptr<Fission_Tally_t>        SP_Fission_Tally;
 
   private:
     // >>> DATA
+
+    // Database
+    RCP_PL d_pl;
 
     // Source transporter.
     SP_Source_Transporter d_transporter;
@@ -74,12 +84,18 @@ public:
     // Tallier
     SP_Tallier d_tallier;
 
+    // Keff Tally
+    SP_Keff_Tally d_keff_tally;
+
+    // Fission Tally
+    SP_Fission_Tally d_fisn_tally;
+
     // Global eigenvalue mesh
     SP_Cart_Mesh d_mesh;
 
   public:
     // Constructor.
-    Anderson_Operator(SP_Source_Transporter transporter,
+    Anderson_Operator(RCP_PL pl, SP_Source_Transporter transporter,
                       SP_Fission_Source fission_source, SP_Cart_Mesh mesh,
                       RCP_MAP map, profugus::Communicator_t set_comm);
 
@@ -96,6 +112,9 @@ public:
 
     // Update the fission source with the latest fission site bank.
     void update_source() const;
+
+    // Call before first iterate
+    void build_tallies();
 
     // Call at beginning of Anderson solve.
     RCP_MV initialize_Anderson();
@@ -128,6 +147,12 @@ public:
 
     // Node and nodes
     int d_nodes, d_node;
+
+    // Have tallies been built
+    bool d_tallies_built;
+
+    // Use fission tally for eigenvector
+    bool d_use_tally;
 
     // Set-constant communicator.
     profugus::Communicator_t d_set_comm;
