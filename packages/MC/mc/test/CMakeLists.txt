@@ -35,6 +35,7 @@ ADD_UTILS_TEST(tstFission_Rebalance.cc     NP 1 4            )
 ADD_UTILS_TEST(tstKeff_Tally.cc            NP 1 4            )
 ADD_UTILS_TEST(tstCell_Tally.cc            NP 1 4            )
 ADD_UTILS_TEST(tstFission_Tally.cc         NP 1 4            )
+ADD_UTILS_TEST(tstMesh_Tally.cc            NP 1 4            )
 ADD_UTILS_TEST(tstFission_Matrix_Processor NP 1 2 3 4 5 6 7 8)
 
 ADD_UTILS_TEST(tstTallier.cc                    )
