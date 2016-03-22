@@ -64,6 +64,10 @@ class KDE_Fission_Source : public Fission_Source
     }
 
   private:
+    // >>> IMPLEMENTATION FUNCTION
+    Fission_Site& sample_fission_site(RNG &rng) const;
+
+    // >>> IMPLEMENTATION DATA
     // Stores the KDE kernel
     SP_KDE_Kernel d_kernel;
 };

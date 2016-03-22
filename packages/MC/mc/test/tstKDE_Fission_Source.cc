@@ -165,6 +165,45 @@ class KernelTest : public SourceTestBase
             return true;
         }
     }
+
+    //------------------------------------------------------------------------//
+    // Check that a given position is in one of our fuel pins
+    //
+    void check_position(const Fission_Site_Container &sites,
+                        const def::Space_Vector       pos,
+                        double                        bandwidth)
+    {
+        // Find the fission site that has the same x and y position as the
+        // sampled position
+        bool found = false;
+        int index = 0;
+        while (index < sites.size() && !found)
+        {
+            if (soft_equiv(sites[index].r[0], pos[0], 1.0e-6) &&
+                soft_equiv(sites[index].r[1], pos[1], 1.0e-6))
+            {
+                found = true;
+            }
+            else
+            {
+                ++index;
+            }
+        }
+        EXPECT_FALSE(!found);
+
+        std::cout << "Index: " << index << std::endl;
+        std::cout << "Site: (" << sites[index].r[0] << "," << sites[index].r[1]
+                  << "," << sites[index].r[2] << ")" << std::endl;
+        std::cout << "Position: (" << pos[0] << "," << pos[1] << "," << pos[2]
+                  << ")" << std::endl;
+        std::cout << "Bandwidth: " << bandwidth << std::endl;
+        std::cout << "Z-diff: " << std::fabs(pos[2]-sites[index].r[2])
+                  << std::endl;
+        std::cout << std::endl;
+
+        // Verify that z is within bandwidth
+        EXPECT_TRUE(std::fabs(pos[2]-sites[index].r[2]) <= bandwidth);
+    }
 };
 
 //---------------------------------------------------------------------------//
@@ -197,10 +236,10 @@ TEST_F(KernelTest, simple_test)
     fsrc->push_back(site);
     fsrc->push_back(site);
     site.m = 1;
-    site.r = Space_Vector(0.63, 1.89, 12.1);
+    site.r = Space_Vector(0.62, 1.90, 12.1);
     fsrc->push_back(site);
     site.m = 1;
-    site.r = Space_Vector(0.63, 1.89, 11.1);
+    site.r = Space_Vector(0.64, 1.88, 11.1);
     fsrc->push_back(site);
     fsrc->push_back(site);
     EXPECT_EQ(6, fsrc->size());
@@ -208,9 +247,9 @@ TEST_F(KernelTest, simple_test)
     site.m = 1;
     site.r = Space_Vector(1.89, 0.63, 8.4);
     fsrc->push_back(site);
-    site.r = Space_Vector(1.89, 0.63, 7.4);
+    site.r = Space_Vector(1.88, 0.64, 7.4);
     fsrc->push_back(site);
-    site.r = Space_Vector(1.89, 0.63, 9.4);
+    site.r = Space_Vector(1.90, 0.62, 9.4);
     fsrc->push_back(site);
 
     // Make a copy of the fission source sites.  Reverse them because we draw
@@ -275,9 +314,7 @@ TEST_F(KernelTest, simple_test)
 
         // Verify that the particle is in the right location (x,y same, z
         // within bandwidth)
-        EXPECT_SOFTEQ(fs.r[0], p->geo_state().d_r[0], 1.0e-6);
-        EXPECT_SOFTEQ(fs.r[1], p->geo_state().d_r[1], 1.0e-6);
-        EXPECT_TRUE(std::fabs(p->geo_state().d_r[2]-fs.r[2]) <= bw);
+        check_position(*sites, p->geo_state().d_r, bw);
 
         EXPECT_EQ(1, p->matid());
         EXPECT_SOFT_EQ(12.0 / (9 * nodes), p->wt());

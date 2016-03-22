@@ -10,6 +10,8 @@
 
 #include "KDE_Fission_Source.hh"
 
+#include <cmath>
+
 #include "Axial_KDE_Kernel.hh"
 #include "comm/Timing.hh"
 #include "mc/Global_RNG.hh"
@@ -136,8 +138,8 @@ KDE_Fission_Source::get_particle()
     {
         CHECK(!d_fission_sites->empty());
 
-        // get the last element in the site container
-        Fission_Site &fs = d_fission_sites->back();
+        // Sample the fission site randomly
+        Fission_Site &fs = this->sample_fission_site(rng);
 
         // get the location of the physics site
         r = b_physics->fission_site(fs);
@@ -154,9 +156,6 @@ KDE_Fission_Source::get_particle()
         // initialize the physics state at the fission site
         sampled = b_physics->initialize_fission(fs, *p);
         CHECK(sampled);
-
-        // pop this fission site from the list
-        d_fission_sites->pop_back();
     }
     else
     {
@@ -178,6 +177,28 @@ KDE_Fission_Source::get_particle()
 
     ENSURE(p->matid() == matid);
     return p;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Sample a fission site from the fission-site population.
+ */
+KDE_Fission_Source::Fission_Site&
+KDE_Fission_Source::sample_fission_site(RNG &rng) const
+{
+    // Get the number of fission sites
+    unsigned int num_fs = d_fission_sites->size();
+
+    // Sample a number between 0 and num_fs and floor it.  Reject in the
+    // unlikely event that random number is 1.0
+    unsigned int index;
+    do
+    {
+        index = static_cast<unsigned int>(std::floor(rng.ran()*num_fs));
+    } while(index == num_fs);
+    CHECK(index < num_fs);
+
+    return (*d_fission_sites)[index];
 }
 
 //---------------------------------------------------------------------------//
