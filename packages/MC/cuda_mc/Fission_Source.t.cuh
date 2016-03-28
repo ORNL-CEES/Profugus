@@ -18,15 +18,220 @@
 
 #include "Fission_Source.hh"
 
-#include "harness/DBC.hh"
-#include "harness/Diagnostics.hh"
+#include "cuda_utils/CudaDBC.hh"
+#include "cuda_utils/Memory.cuh"
+#include "cuda_utils/Hardware.hh"
+#include "cuda_utils/Utility_Functions.hh"
 #include "comm/global.hh"
-#include "comm/Timing.hh"
-#include "utils/Constants.hh"
 #include "mc/Global_RNG.hh"
 
 namespace cuda_profugus
 {
+//---------------------------------------------------------------------------//
+// CUDA KERNELS
+//---------------------------------------------------------------------------//
+// Sample the mesh for the initial particle state.
+template<class Geometry>
+__global__ void sample_mesh_kernel( const Geometry* geometry,
+				    const Physics<Geometry>* physics,
+				    const Cartesian_Mesh* fission_mesh,
+				    const int* fission_cells,
+				    const std::size_t start_idx,
+				    const std::size_t num_particle,
+				    const double weight,
+				    Particle_Vector<Geometry>* particles )
+{
+    using def::I; using def::J; using def::K;
+
+    // Get the thread index.
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particle )
+    {
+	// Get the particle index.
+	std::size_t pidx = idx + start_idx;
+
+	// sample the angle isotropically
+	cuda::Space_Vector omega;
+	cuda::utility::sample_angle( 
+	    omega, particles->ran(pidx), particles->ran(pidx) );
+
+	// get the logical indices of the birth cell
+	int idim, jdim, kdim;
+	fission_mesh->cardinal( fission_cells[idx], idim, jdim, kdim );
+
+        // get the low/high bounds for the cell
+        double xdims[] = {fission_mesh->edges(I)[idim],
+                          fission_mesh->edges(I)[idim + 1]};
+        double ydims[] = {fission_mesh->edges(J)[jdim],
+                          fission_mesh->edges(J)[jdim + 1]};
+        double zdims[] = {fission_mesh->edges(K)[kdim],
+                          fission_mesh->edges(K)[kdim + 1]};
+
+	// sample the mesh until a fission site is found
+	int group = -1;
+	int matid = -1;
+	bool sampled = false;
+	Space_Vector r;
+	while (!sampled)
+	{
+	    // sample a point in the geometry
+	    r.x = (xdims[1] - xdims[0]) * particles->ran(pidx) + xdims[0];
+	    r.y = (ydims[1] - ydims[0]) * particles->ran(pidx) + ydims[0];
+	    r.z = (zdims[1] - zdims[0]) * particles->ran(pidx) + zdims[0];
+
+	    // initialize the geometry state
+	    geometry->initialize( r, omega, particles->geo_state(pidx) );
+
+	    // get the material id
+	    matid = geometry->matid( particles->geo_state(pidx) );
+
+	    // try to initialize fission. exit the loop if successful.
+	    physics->initialize_fission( matid,
+					 particles->ran(pidx),
+					 group,
+					 sampled );
+	}
+
+	// set the matid
+	particles->set_matid( pidx, matid );
+
+	// set the group
+	particles->set_group( pidx, group );
+
+	// set the weight
+	particles->set_wt( pidx, weight );
+
+	// set the event.
+	particles->set_event( pidx, events::BORN );
+
+	// make particle alive
+	particles->live( pidx );
+    }
+}
+
+//---------------------------------------------------------------------------//
+// Sample the geometry for the initial particle state.
+template<class Geometry>
+__global__ void sample_geometry_kernel( const Geometry* geometry,
+					const Physics<Geometry>* physics,
+					const std::size_t start_idx,
+					const std::size_t num_particle,
+					const double weight,
+					const Space_Vector width,
+					const Space_Vector lower,
+					Particle_Vector<Geometry>* particles )
+{
+    // Get the thread index.
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particle )
+    {
+	// Get the particle index.
+	std::size_t pidx = idx + start_idx;
+
+	// sample the angle isotropically
+	cuda::Space_Vector omega;
+	cuda::utility::sample_angle( 
+	    omega, particles->ran(pidx), particles->ran(pidx) );
+
+	// sample the geometry until a fission site is found
+	int group = -1;
+	int matid = -1;
+	bool sampled = false;
+	Space_Vector r;
+	while (!sampled)
+	{
+	    // sample a point in the geometry
+	    r.x = width.x * particles->ran(pidx) + lower.x;
+	    r.y = width.y * particles->ran(pidx) + lower.y;
+	    r.z = width.z * particles->ran(pidx) + lower.z;
+
+	    // initialize the geometry state
+	    geometry->initialize( r, omega, particles->geo_state(pidx) );
+
+	    // get the material id
+	    matid = geometry->matid( particles->geo_state(pidx) );
+
+	    // try to initialize fission. exit the loop if successful.
+	    physics->initialize_fission( matid,
+					 particles->ran(pidx),
+					 group,
+					 sampled );
+	}
+
+	// set the matid
+	particles->set_matid( pidx, matid );
+
+	// set the group
+	particles->set_group( pidx, group );
+
+	// set the weight
+	particles->set_wt( pidx, weight );
+
+	// set the event.
+	particles->set_event( pidx, events::BORN );
+
+	// make particle alive
+	particles->live( pidx );
+    }
+}
+
+//---------------------------------------------------------------------------//
+// Sample the fission sites for the initial 
+template<class Geometry>
+__global__ void sample_fission_sites_kernel(
+    const Geometry* geometry,
+    const Physics<Geometry>* physics,
+    const Fission_Site* fission_sites,
+    const double weight,
+    Particle_Vector<Geometry>* particles )
+{
+    // Get the thread index.
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particle )
+    {
+	// Get the particle index.
+	std::size_t pidx = idx + start_idx;
+
+	// sample the angle isotropically
+	cuda::Space_Vector omega;
+	cuda::utility::sample_angle( 
+	    omega, particles->ran(pidx), particles->ran(pidx) );
+
+	// initialize the geometry state
+	geometry->initialize( fission_sites[idx].r, 
+			      omega, 
+			      particles->geo_state(pidx) );
+
+	// get the matid.
+	int matid = geometry->matid( particles->geo_state(pidx) );
+
+	// initialize fission
+	bool sampled = false;
+	int group = -1;
+	physics->initialize_fission( matid, 
+				     particles->ran(pidx),
+				     group,
+				     sampled );
+
+	// set the matid
+	particles->set_matid( pidx, matid );
+
+	// set the group
+	particles->set_group( pidx, group );
+
+	// set the weight
+	particles->set_wt( pidx, weight );
+
+	// set the event.
+	particles->set_event( pidx, events::BORN );
+
+	// make particle alive
+	particles->live( pidx );
+   }
+}
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -45,8 +250,8 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     , d_np_total(0)
     , d_np_domain(0)
     , d_wt(0.0)
-    , d_num_left(0)
-    , d_num_run(0)
+    , d_np_left(0)
+    , d_np_run(0)
 {
     using def::I; using def::J; using def::K;
 
@@ -61,10 +266,6 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     extents[1] = extents[3] = extents[5] =  std::numeric_limits<double>::max();
 
     extents = db->get("init_fission_src", extents);
-
-    VALIDATE(extents.size() == 6,
-             "Fission source must have 6 entries, but it has "
-             << extents.size());
 
     // get the low and upper bounds of the geometry
     auto box = geometry->get_extents();
@@ -110,8 +311,8 @@ void Fission_Source<Geometry>::build_initial_source()
 {
     // send an empty mesh and view
     SDP_Cart_Mesh     mesh;
-    Const_Array_View view;
-    build_initial_source(mesh, view);
+    Const_Array_View fis_dens;
+    build_initial_source(mesh, fis_dens);
 
     ENSURE(d_wt >= 1.0);
 }
@@ -126,8 +327,6 @@ void Fission_Source<Geometry>::build_initial_source(const SDP_Cart_Mesh& mesh,
 {
     REQUIRE(d_np_total > 0);
 
-    SCOPED_TIMER("CUDA_MC::Fission_Source.build_initial_source");
-
     // set the fission site container to an unassigned state
     d_fission_sites = SP_Fission_Sites();
     CHECK(!d_fission_sites);
@@ -136,8 +335,8 @@ void Fission_Source<Geometry>::build_initial_source(const SDP_Cart_Mesh& mesh,
     build_DR(mesh, fis_dens);
 
     // set counters
-    d_num_left = d_np_domain;
-    d_num_run  = 0;
+    d_np_left = d_np_domain;
+    d_np_run  = 0;
 
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
@@ -170,8 +369,6 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
     // the internal fission source should be empty
     REQUIRE(d_fission_sites->empty());
 
-    SCOPED_TIMER("CUDA_MC::Fission_Source.build_source");
-
     // swap the input fission sites with the internal storage fission sites
     d_fission_sites.swap(fission_sites);
 
@@ -190,8 +387,8 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
                                                     // site
 
     // set counters
-    d_num_left = d_np_domain;
-    d_num_run  = 0;
+    d_np_left = d_np_domain;
+    d_np_run  = 0;
 
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
@@ -218,88 +415,62 @@ auto Fission_Source<Geometry>::create_fission_site_container() const
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Get a particle from the source.
+ * \brief Get particles from the source.
 */
 template <class Geometry>
-auto Fission_Source<Geometry>::get_particle() -> SP_Particle
+void Fission_Source<Geometry>::get_particles(
+    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
-    using def::I; using def::J; using def::K;
-
     REQUIRE(d_wt > 0.0);
 
-    // particle
-    SP_Particle p;
-    CHECK(!p);
-
-    // return a null particle if no source
-    if (!d_num_left)
+    // do nothing if no source
+    if (!d_np_left)
     {
-        ENSURE(d_fission_sites ? d_fission_sites->empty() : true);
-        return p;
+        return;
     }
 
-    SCOPED_TIMER_2("CUDA_MC::Fission_Source.get_particle");
+    // Get the particles that are dead.
+    std::size_t start_idx = 0;
+    std::size_t num_particle = 0;
+    particles.get_host_ptr()->get_event_particles( events::DEAD,
+						   start_idx,
+						   num_particle );
 
-    // make a particle
-    p = std::make_shared<Particle_t>();
+    // Calculate the total number of particles we will create.
+    std::size_t num_to_create = std::min( d_np_left, num_particle );
 
-    // material id
-    int matid = 0;
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = num_to_create / threads_per_block;
+    if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
 
-    // particle position and isotropic direction
-    Space_Vector r, omega;
-
-    // sample the angle isotropically
-    Base::sample_angle(omega, rng);
-
-    // sample flag
-    bool sampled;
-
-    // if there is a fission site container than get the particle from there;
-    // otherwise assume this is an initial source
-    if (!is_initial_source())
+    // Sample the fission sites if we have them.
+    if ( d_fission_sites )
     {
-        CHECK(!d_fission_sites->empty());
-
-        // get the last element in the site container
-        Fission_Site &fs = d_fission_sites->back();
-
-        // get the location of the physics site
-        r = b_physics->fission_site(fs);
-
-        // intialize the geometry state
-        b_geometry->initialize(r, omega, p->geo_state());
-
-        // get the material id
-        matid = b_geometry->matid(p->geo_state());
-
-        // initialize the physics state at the fission site
-        sampled = b_physics->initialize_fission(fs, *p);
-        CHECK(sampled);
-
-        // pop this fission site from the list
-        d_fission_sites->pop_back();
+	sample_fission_sites(
+	    particles, start_idx, num_to_create, num_blocks, threads_per_block );
     }
+
+    // If this is an initial source and we have a fission mesh, sample that.
+    else if ( d_fis_mesh )
+    {
+	sample_mesh(
+	    particles, start_idx, num_to_create, num_blocks, threads_per_block );
+    }
+
+    // Otherwise this is an initial source and we have no mesh so sample the
+    // geometry.
     else
     {
-        matid = sample_geometry(r, omega, *p, rng);
+	sample_geometry(
+	    particles, start_idx, num_to_create, num_blocks, threads_per_block );
     }
 
-    // set the material id in the particle
-    p->set_matid(matid);
-
-    // set particle weight
-    p->set_wt(d_wt);
-
-    // make particle alive
-    p->live();
-
     // update counters
-    d_num_left--;
-    d_num_run++;
-
-    ENSURE(p->matid() == matid);
-    return p;
+    d_np_left -= num_to_create;
+    d_np_run += num_to_create;
 }
 
 //---------------------------------------------------------------------------//
@@ -313,7 +484,7 @@ auto Fission_Source<Geometry>::get_particle() -> SP_Particle
  * number of particles per domain.
  */
 template <class Geometry>
-void Fission_Source<Geometry>::build_DR(SP_Cart_Mesh     mesh,
+void Fission_Source<Geometry>::build_DR(SDP_Cart_Mesh     mesh,
                                         Const_Array_View fis_dens)
 {
     // calculate the number of particles per domain and set (equivalent)
@@ -328,16 +499,16 @@ void Fission_Source<Geometry>::build_DR(SP_Cart_Mesh     mesh,
     // fission distribution
     if (mesh)
     {
-        REQUIRE(mesh->num_cells() == fis_dens.size());
+        REQUIRE(mesh.get_host_ptr()->num_cells() == fis_dens.size());
 
         // number of cells in the mesh
-        int num_cells = mesh->num_cells();
+        int num_cells = mesh.get_host_ptr()->num_cells();
 
         // determine the total number of fissions
         double fissions = 0.0;
         for (int cell = 0; cell < num_cells; ++cell)
         {
-            fissions += fis_dens[cell] * mesh->volume(cell);
+            fissions += fis_dens[cell] * mesh.get_host_ptr()->volume(cell);
         }
         CHECK(fissions > 0.0);
 
@@ -350,7 +521,7 @@ void Fission_Source<Geometry>::build_DR(SP_Cart_Mesh     mesh,
         for (int cell = 0; cell < num_cells; ++cell)
         {
             // calculate the expected number of sites in this cell
-            nu = fis_dens[cell] * mesh->volume(cell) / fissions * d_np_domain;
+            nu = fis_dens[cell] * mesh.get_host_ptr()->volume(cell) / fissions * d_np_domain;
 
             // there can be n or n+1 sites; with probability n+1-nu there will
             // be n sites, with probability nu-n there will be n+1 sites
@@ -380,110 +551,118 @@ void Fission_Source<Geometry>::build_DR(SP_Cart_Mesh     mesh,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Sample geometry to get a particle.
+ * \brief Get particles from the fission sites.
  */
 template <class Geometry>
-int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
-                                              const Space_Vector &omega,
-                                              Particle_t         &p,
-                                              RNG_t               rng)
+void Fission_Source<Geometry>::sample_fission_sites(
+    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+    const std::size_t start_idx,
+    const std::size_t num_particle,
+    const unsigned int num_blocks,
+    const unsigned int threads_per_block )
 {
-    using def::I; using def::J; using def::K;
+    // Extract the fission sites.
+    Fission_Site* fission_sites_device;
+    cuda::memory::Malloc( fission_sites_device, num_particle );
+    int copy_start = d_fission_sites->size() - num_particle;
+    cuda::memory::Copy_To_Device( fission_sites_device,
+				  d_fission_sites->data() + copy_start );
 
-    // sampled complete flag
-    bool sampled = false;
+    // Remove the fission sites from the host that we just copied to the
+    // device.
+    d_fission_sites->resize( copy_start );
 
-    // material id
-    int matid = 0;
-
-    // >>> Sample the full geometry
-    if (!d_fis_mesh)
-    {
-        CHECK(d_fis_dist.empty());
-
-        // sample the geometry until a fission site is found (if there is no
-        // fission in a given domain the number of particles on that domain is
-        // zero, and we never get here) --> so, fission sampling should always
-        // be successful
-        while (!sampled)
-        {
-            // sample a point in the geometry
-            r[I] = d_width[I] * rng.ran() + d_lower[I];
-            r[J] = d_width[J] * rng.ran() + d_lower[J];
-            r[K] = d_width[K] * rng.ran() + d_lower[K];
-
-            // intialize the geometry state
-            b_geometry->initialize(r, omega, p.geo_state());
-
-            // get the material id
-            matid = b_geometry->matid(p.geo_state());
-
-            // try initializing fission here, if it is successful we are
-            // finished
-            if (b_physics->initialize_fission(matid, p))
-            {
-                sampled = true;
-            }
-
-            DIAGNOSTICS_TWO(integers["fission_src_samples"]++);
-        }
-    }
-    // >>> Sample the mesh source
-    else
-    {
-        CHECK(d_fis_dist.size() == d_fis_mesh->num_cells());
-        CHECK(d_current_cell < d_fis_dist.size());
-        CHECK(d_fis_dist[d_current_cell] >= 0);
-
-        // determine the particle birth cell
-        while (d_fis_dist[d_current_cell] == 0)
-        {
-            ++d_current_cell;
-            CHECK(d_current_cell < d_fis_dist.size());
-        }
-
-        // get the logical cell indices in the mesh
-        auto ijk = d_fis_mesh->cardinal(d_current_cell);
-
-        // get the low/high bounds for the cell
-        double xdims[] = {d_fis_mesh->edges(I)[ijk[I]],
-                          d_fis_mesh->edges(I)[ijk[I] + 1]};
-        double ydims[] = {d_fis_mesh->edges(J)[ijk[J]],
-                          d_fis_mesh->edges(J)[ijk[J] + 1]};
-        double zdims[] = {d_fis_mesh->edges(K)[ijk[K]],
-                          d_fis_mesh->edges(K)[ijk[K] + 1]};
-
-        // sample the appropriate cell until a fissionable region is found
-        while (!sampled)
-        {
-            // sample a point in the geometry
-            r[I] = (xdims[1] - xdims[0]) * rng.ran() + xdims[0];
-            r[J] = (ydims[1] - ydims[0]) * rng.ran() + ydims[0];
-            r[K] = (zdims[1] - zdims[0]) * rng.ran() + zdims[0];
-
-            // intialize the geometry state
-            b_geometry->initialize(r, omega, p.geo_state());
-
-            // get the material id
-            matid = b_geometry->matid(p.geo_state());
-
-            // try initializing fission here, if it is successful we are
-            // finished
-            if (b_physics->initialize_fission(matid, p))
-            {
-                sampled = true;
-            }
-
-            DIAGNOSTICS_TWO(integers["fission_src_samples"]++);
-        }
-
-        // subtract a particle from the current cell
-        --d_fis_dist[d_current_cell];
-        CHECK(d_fis_dist[d_current_cell] >= 0);
-    }
-
-    return matid;
+    // Launch the kernel.
+    sample_fission_sites_kernel<<<num_blocks,threads_per_block>>>(
+	d_geometry.get_device_ptr(),
+	d_physics.get_device_ptr(),
+	fission_sites_device,
+	d_wt,
+	particles.get_device_ptr() );
+    
+    // Free the device fission sites.
+    cuda::memory::Free( fission_sites_device );
 }
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get particles from the fission mesh.
+ */
+template <class Geometry>
+void Fission_Source<Geometry>::sample_mesh(
+    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+    const std::size_t start_idx,
+    const std::size_t num_particle,
+    const unsigned int num_blocks,
+    const unsigned int threads_per_block )
+{
+    // Extract and unroll the fission distribution.
+    std::vector<int> fission_cells( num_particle );
+    int num_extracted = 0;
+    int current_cell = 0;
+    while ( num_extracted < num_particle )
+    {
+	CHECK( current_cell < d_fis_dist.size() );
+
+	if ( d_fis_dist[current_cell] )
+	{
+	    fission_cells[num_extracted] = current_cell;
+	    ++num_extracted;
+	    --d_fis_dist[current_cell];
+	}
+	else
+	{
+	    ++current_cell;
+	}
+    }
+
+    // Copy the fission cells to the device.
+    int* fission_cells_device;
+    cuda::memory::Malloc( fission_cells_device, num_particle );
+    cuda::memory::Copy_To_Device( fission_cells_device,
+				  fission_cells.data(),
+				  num_particle );
+
+    // Launch the kernel.
+    sample_mesh_kernel<<<num_blocks,threads_per_block>>>(
+	d_geometry.get_device_ptr(),
+	d_physics.get_device_ptr(),
+	d_fis_mesh.get_device_ptr(),
+	fission_cells_device,
+	start_idx,
+	num_particle,
+	d_wt,
+	particles.get_device_ptr() );
+
+    // Free the device fission cells.
+    cuda::Memory::Free( fission_cells_device );
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get particles from the geometry.
+ */
+template <class Geometry>
+void Fission_Source<Geometry>::sample_geometry(
+    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+    const std::size_t start_idx,
+    const std::size_t num_particle,
+    const unsigned int num_blocks,
+    const unsigned int threads_per_block )
+{
+    // Launch the kernel.
+    sample_geometry_kernel<<<num_blocks,threads_per_block>>>(
+	d_geometry.get_device_ptr(),
+	d_physics.get_device_ptr(),
+	start_idx,
+	num_particle,
+	d_wt,
+	d_width,
+	d_lower,
+	particles.get_device_ptr() );
+}
+
+//---------------------------------------------------------------------------//
 
 } // end namespace cuda_profugus
 

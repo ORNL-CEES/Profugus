@@ -227,7 +227,7 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
     unsigned int num_blocks = num_to_create / threads_per_block;
-    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+    if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
 
     // Create the particles.
     sample_source_kernel<<<num_blocks,threads_per_block>>>(

@@ -13,7 +13,7 @@
 
 #include "Teuchos_ArrayView.hpp"
 
-#include "geometry/Cartesian_Mesh.hh"
+#include "cuda_geometry/Cartesian_Mesh.hh"
 #include "Fission_Rebalance.hh"
 #include "Source.hh"
 #include "Particle_Vector.hh"
@@ -91,15 +91,6 @@ class Fission_Source : public Source<Geometry>
     typedef def::Vec_Int                                Vec_Int;
     //@}
 
-  private:
-    // >>> DATA
-
-    // Fission site container.
-    SP_Fission_Sites d_fission_sites;
-
-    // Fission rebalance (across sets).
-    SP_Fission_Rebalance d_fission_rebalance;
-
   public:
     // Constructor.
     Fission_Source(const RCP_Std_DB& db, 
@@ -122,11 +113,11 @@ class Fission_Source : public Source<Geometry>
     // >>> DERIVED PUBLIC INTERFACE
 
     //! Get particles from the source.
-    virtual void get_particles( 
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) = 0;
+    void get_particles( 
+	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
 
     //! Boolean operator for source (true when source still has particles).
-    bool empty() const override { return d_num_left == 0; }
+    bool empty() const override { return d_np_left == 0; }
 
     //! Whether this is the initial source distribution or is unbuilt
     bool is_initial_source() const override { return !d_fission_sites; }
@@ -141,10 +132,10 @@ class Fission_Source : public Source<Geometry>
     std::size_t Np() const override { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    std::size_t num_run() const override { return d_num_run; }
+    std::size_t num_run() const override { return d_np_run; }
 
     //! Number left to transport on this domain.
-    std::size_t num_left() const override { return d_num_left; }
+    std::size_t num_left() const override { return d_np_left; }
 
     // >>> CLASS ACCESSORS
 
@@ -168,18 +159,47 @@ class Fission_Source : public Source<Geometry>
   private:
     // >>> IMPLEMENTATION
 
+    // Build the domain replicated fission source.
+    void build_DR( const SDP_Cart_Mesh& mesh, Const_Array_View& fis_dens);
+
+    // Sample the geometry to generate particles
+    void sample_geometry(
+	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+	const std::size_t start_idx,
+	const std::size_t num_particle,
+	const unsigned int num_blocks,
+	const unsigned int threads_per_block );
+
+    // Sample the fission mesh to generate particles
+    void sample_mesh(
+	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+	const std::size_t start_idx,
+	const std::size_t num_particle,
+	const unsigned int num_blocks,
+	const unsigned int threads_per_block );
+
+    // Sample the fission_sites to generate particles
+    void sample_fission_sites(
+	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+	const std::size_t start_idx,
+	const std::size_t num_particle,
+	const unsigned int num_blocks,
+	const unsigned int threads_per_block );
+
+  private:
+    // >>> DATA
+
     // Geometry
     SDP_Geometry d_geometry;
 
     // Physics
     SDP_Physics d_physics;
 
-    // Build the domain replicated fission source.
-    void build_DR( const SDP_Cart_Mesh& mesh, Const_Array_View& fis_dens);
+    // Fission site container.
+    SP_Fission_Sites d_fission_sites;
 
-    // Sample the geometry.
-    int sample_geometry(Space_Vector &r, const Space_Vector &omega,
-                        Particle_t &p, RNG_t rng);
+    // Fission rebalance (across sets).
+    SP_Fission_Rebalance d_fission_rebalance;
 
     // Initial fission source lower coords and width.
     Space_Vector d_lower;
@@ -195,10 +215,10 @@ class Fission_Source : public Source<Geometry>
     double d_wt;
 
     // Number of source particles left in the current domain.
-    std::size_t d_num_left;
+    std::size_t d_np_left;
 
     // Number of particles run on the current domain.
-    std::size_t d_num_run;
+    std::size_t d_np_run;
 
     // Dummy fission site container.
     Fission_Site_Container d_dummy_container;
