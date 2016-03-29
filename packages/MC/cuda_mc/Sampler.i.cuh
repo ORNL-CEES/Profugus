@@ -12,6 +12,7 @@
 #define cuda_mc_Sampler_i_cuh
 
 #include "cuda_utils/Utility_Functions.hh"
+#include "cuda_utils/Constants.hh"
 
 namespace cuda_mc
 {
@@ -276,6 +277,20 @@ __device__  inline double sample_linear(RNG_State *rng, const double left,
     return sample_linear(
             curand_uniform_double(rng), curand_uniform_double(rng),
             left, right);
+}
+
+//---------------------------------------------------------------------------//
+//!\brief Sample an isotropic angular distribution
+__device__ inline void sample_isotropic(cuda::Space_Vector &omega,
+                                        RNG_State_t        *rng)
+{
+    omega.z         = 1.0 - 2.0 * curand_uniform_double(rng);
+    double phi      = cuda::constants::two_pi *
+                      curand_uniform_double(rng);
+    double sintheta = sqrt(1.0 - omega.z * omega.z);
+
+    omega.x = sintheta * cos(phi);
+    omega.y = sintheta * sin(phi);
 }
 
 //---------------------------------------------------------------------------//

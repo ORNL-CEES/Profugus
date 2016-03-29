@@ -49,7 +49,7 @@ Uniform_Source<Geometry>::get_particle(std::size_t  tid,
     cuda::Space_Vector r, omega;
 
     // sample the angle isotropically
-    Base::sample_angle(omega, rng);
+    sampler::sample_isotropic(omega, rng);
 
     // sample the geometry shape-->we should not get here if there are no
     // particles on this domain

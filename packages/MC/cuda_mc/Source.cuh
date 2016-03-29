@@ -12,13 +12,9 @@
 #define cuda_mc_Source_cuh
 
 #include <memory>
-#include <curand_kernel.h>
 
 #include "utils/Definitions.hh"
-#include "cuda_utils/Definitions.hh"
-#include "cuda_utils/Constants.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
-#include "Definitions.cuh"
 
 namespace cuda_mc
 {
@@ -53,22 +49,12 @@ class Source
     // Geometry and physics.
     Geometry_t  *b_geometry;
 
-    // Sample isotropic angle.
-    __device__ static void sample_angle(cuda::Space_Vector &omega, 
-                                        RNG_State_t        *rng)
-    {
-        omega.z         = 1.0 - 2.0 * curand_uniform_double(rng);
-        double phi      = cuda::constants::two_pi *
-                          curand_uniform_double(rng);
-        double sintheta = sqrt(1.0 - omega.z * omega.z);
-
-        omega.x = sintheta * cos(phi);
-        omega.y = sintheta * sin(phi);
-    }
-
   public:
     // Constructor.
     Source(SDP_Geometry geometry);
+
+    // Virtual destructor for polymorphism.
+    virtual ~Source(){}
 
     // Derived classes should implement the following functions,
     // but because this is an on-device class there can be NO virtual
@@ -89,9 +75,6 @@ class Source
 
     //! Get the geometry.
     const Geometry_t& geometry() const { return *b_geometry; }
-
-  private:
-    // >>> DATA
 };
 
 } // end namespace cuda_mc
