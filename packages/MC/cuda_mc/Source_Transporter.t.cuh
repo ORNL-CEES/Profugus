@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
+#include <thrust/device_vector.h>
 
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Launch_Args.t.cuh"
@@ -33,31 +34,28 @@ namespace cuda_mc
 {
 
 // Functor to transport source particles
-template <class Geometry, class Src_Type>
-class Source_Functor
+template <class Geometry>
+class Transport_Functor
 {
   public:
 
     typedef Domain_Transporter<Geometry>    Transporter_t;
     typedef Tallier<Geometry>               Tallier_t;
+    typedef Particle<Geometry>              Particle_t;
 
     // Constructor
-    Source_Functor( const Transporter_t *trans,
-                    const Src_Type      *src )
+    Transport_Functor( const Transporter_t *trans,
+                             Particle_t    *particles )
         : d_transporter( trans )
-        , d_src( src )
+        , d_particles( particles )
     {
     }
 
     // Operator apply for functor (transport 1 particle)
     __device__ void operator()( std::size_t tid ) const
     {
-        // Create and initialize RNG state
-        curandState_t rng_state;
-        curand_init(1234,tid,0,&rng_state);
-        
         // Get particle from source
-        auto p = d_src->get_particle(tid,&rng_state);
+        auto &p = d_particles[tid];
         CHECK( p.alive() );
 
         // transport the particle through this (replicated) domain
@@ -68,9 +66,29 @@ class Source_Functor
   private:
 
     // On-device pointers
-    const Src_Type      *d_src;
     const Transporter_t *d_transporter;
+    Particle_t          *d_particles;
 };
+
+// Functor to initialize RNG
+class RNG_Init
+{
+  public:
+
+    RNG_Init( RNG_State_t *rngs)
+      : d_rngs(rngs)
+    {}
+
+    __device__ void operator()( std::size_t tid ) const
+    {
+        curand_init(1234,tid,0,d_rngs+tid);
+    }
+
+  private:
+
+    RNG_State_t *d_rngs;
+};
+        
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -141,10 +159,22 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
     cuda::Launch_Args<cuda::arch::Device> launch_args;
     launch_args.set_num_elements(num_particles);
 
+    // Initialize RNG
+    thrust::device_vector<RNG_State_t> rngs(num_particles);
+    RNG_Init init( rngs.data().get() );
+    cuda::parallel_launch( init, launch_args );
+    cudaDeviceSynchronize();
+
+    // Get source particles
+    auto particles = get_particles( sdp_source, rngs );
+    CHECK( particles.size() == num_particles );
+    cudaDeviceSynchronize();
+
     // Build and execute kernel
-    Source_Functor<Geometry,Src_Type> f( d_transporter.get_device_ptr(), 
-                                         sdp_source.get_device_ptr() );
+    Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
+                                   particles.data().get() );
     cuda::parallel_launch( f, launch_args );
+    cudaDeviceSynchronize();
 
     // barrier at the end
     profugus::global_barrier();
