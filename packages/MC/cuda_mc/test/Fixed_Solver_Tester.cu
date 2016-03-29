@@ -86,7 +86,6 @@ void Fixed_Solver_Tester::test_transport( const Vec_Dbl  &x_edges,
     solver.set(trans,source);
     solver.solve();
 
-    sp_tallier->finalize(num_particles);
     tally = sp_cell_tally->results();
     std::cout << "Tally result: ";
     for( auto x : tally )
