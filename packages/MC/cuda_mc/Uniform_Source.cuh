@@ -12,10 +12,12 @@
 #define cuda_mc_Uniform_Source_cuh
 
 #include <vector>
+#include <thrust/device_vector.h>
 
 #include "Box_Shape.cuh"
 #include "Source.cuh"
 #include "Particle.cuh"
+#include "Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
 
 #include "Teuchos_ParameterList.hpp"
@@ -114,6 +116,12 @@ class Uniform_Source : public Source<Geometry>
     int d_np_total;
     int d_np_domain;
 };
+
+// Non-member function to return list of particles from source
+template <class Geometry>
+thrust::device_vector<Particle<Geometry> > get_particles(
+        cuda::Shared_Device_Ptr<Uniform_Source<Geometry>> &source,
+        thrust::device_vector<cuda_mc::RNG_State_t>       &rngs);
 
 } // end namespace cuda_mc
 

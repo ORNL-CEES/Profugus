@@ -40,6 +40,15 @@ class Uniform_Source_Tester
                                      Vec_Dbl    &mu,
                                      Vec_Dbl    &eta,
                                      Vec_Dbl    &xi);
+
+      static void test_host_api( const Vec_Dbl    &geom_bounds,
+                                 const Vec_Dbl    &src_bounds,
+                                       Vec_Dbl    &x_loc,
+                                       Vec_Dbl    &y_loc,
+                                       Vec_Dbl    &z_loc,
+                                       Vec_Dbl    &mu,
+                                       Vec_Dbl    &eta,
+                                       Vec_Dbl    &xi);
 };
 
 } // end namespace cuda_mc
