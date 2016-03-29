@@ -172,6 +172,7 @@ IF(USE_CUDA)
     cuda_mc/Box_Shape.cu
     cuda_mc/Cell_Tally.pt.cu
     cuda_mc/Domain_Transporter.pt.cu
+    cuda_mc/Fixed_Source_Solver.pt.cu
     cuda_mc/Physics.pt.cu
     cuda_mc/Source.pt.cu
     cuda_mc/Source_Transporter.pt.cu
