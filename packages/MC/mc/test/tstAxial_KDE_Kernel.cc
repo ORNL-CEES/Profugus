@@ -21,7 +21,8 @@ class KernelTest : public SourceTestBase
 
   protected:
     // >>> TYPEDEFS
-    typedef profugus::Axial_KDE_Kernel Axial_KDE_Kernel;
+    typedef profugus::Core                       Geometry;
+    typedef profugus::Axial_KDE_Kernel<Geometry> Axial_KDE_Kernel_t;
 
   protected:
     virtual int get_seed() const
@@ -165,9 +166,9 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
     double exponent = -0.7;
 
     // Create a Axial KDE kernel
-    Axial_KDE_Kernel kernel(b_geometry, b_physics,
-                            Axial_KDE_Kernel::FISSION_REJECTION,
-                            coeff, exponent);
+    Axial_KDE_Kernel_t kernel(b_geometry, b_physics,
+                              Axial_KDE_Kernel_t::FISSION_REJECTION,
+                              coeff, exponent);
 
     // Create a bunch of fission sites
     std::vector<Fission_Site> fis_sites;
@@ -237,8 +238,8 @@ TEST_F(KernelTest, axial_kernel_bandwidth_calc)
 TEST_F(KernelTest, test_bounds)
 {
     // Create a KDE kernel
-    Axial_KDE_Kernel kernel(b_geometry, b_physics,
-                            Axial_KDE_Kernel::FISSION_REJECTION);
+    Axial_KDE_Kernel_t kernel(b_geometry, b_physics,
+                              Axial_KDE_Kernel_t::FISSION_REJECTION);
 
     // Set the bandwidth in the pin (cell 1)
     double bandwidth = 2.5;
@@ -269,8 +270,8 @@ TEST_F(KernelTest, test_bounds)
 TEST_F(KernelTest, test_in_pin)
 {
     // Create a KDE kernel
-    Axial_KDE_Kernel kernel(b_geometry, b_physics,
-                            Axial_KDE_Kernel::FISSION_REJECTION);
+    Axial_KDE_Kernel_t kernel(b_geometry, b_physics,
+                              Axial_KDE_Kernel_t::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -304,8 +305,8 @@ TEST_F(KernelTest, test_in_pin)
 TEST_F(KernelTest, heuristic_test_resample)
 {
     // Create a KDE kernel
-    Axial_KDE_Kernel kernel(b_geometry, b_physics,
-                            Axial_KDE_Kernel::FISSION_REJECTION);
+    Axial_KDE_Kernel_t kernel(b_geometry, b_physics,
+                              Axial_KDE_Kernel_t::FISSION_REJECTION);
 
     // Create random number generator
     profugus::RNG rng = b_rcon->rng();
@@ -394,8 +395,8 @@ TEST_F(KernelTest, fission_rejection_test)
     profugus::RNG rng = b_rcon->rng();
 
     // Create a KDE kernel
-    Axial_KDE_Kernel kernel(b_geometry, b_physics,
-                            Axial_KDE_Kernel::FISSION_REJECTION);
+    Axial_KDE_Kernel_t kernel(b_geometry, b_physics,
+                              Axial_KDE_Kernel_t::FISSION_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;
@@ -432,8 +433,8 @@ TEST_F(KernelTest, cell_rejection_test)
     profugus::RNG rng = b_rcon->rng();
 
     // Create a KDE kernel
-    Axial_KDE_Kernel kernel(b_geometry, b_physics,
-                            Axial_KDE_Kernel::CELL_REJECTION);
+    Axial_KDE_Kernel_t kernel(b_geometry, b_physics,
+                              Axial_KDE_Kernel_t::CELL_REJECTION);
 
     // Set the bandwidth
     double bandwidth = 2.5;

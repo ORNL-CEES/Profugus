@@ -16,7 +16,6 @@
 namespace profugus
 {
 
-
 //===========================================================================//
 /*!
  * \class Axial_KDE_Kernel
@@ -29,17 +28,19 @@ namespace profugus
  */
 //===========================================================================//
 
-
-class Axial_KDE_Kernel : public KDE_Kernel
+template<class Geometry>
+class Axial_KDE_Kernel : public KDE_Kernel<Geometry>
 {
-    typedef KDE_Kernel  Base;
+    typedef KDE_Kernel<Geometry>  Base;
 
   public:
     //@{
     //! Useful typedefs
-    typedef Base::SP_Geometry   SP_Geometry;
-    typedef Base::SP_Physics    SP_Physics;
-    typedef Base::Space_Vector  Space_Vector;
+    typedef typename Base::SP_Geometry   SP_Geometry;
+    typedef typename Base::SP_Physics    SP_Physics;
+    typedef typename Base::Space_Vector  Space_Vector;
+    typedef typename Base::size_type     size_type;
+    typedef typename Base::cell_type     cell_type;
     //@}
 
     //! Enumeration describing the rejection method.  Fission rejection
@@ -48,15 +49,25 @@ class Axial_KDE_Kernel : public KDE_Kernel
     enum Reject_Method { FISSION_REJECTION, CELL_REJECTION };
 
   private:
+    // Expose base class data members
+    using Base::b_geometry;
+    using Base::b_physics;
+    using Base::b_coefficient;
+    using Base::b_exponent;
+    using Base::b_bndwidth_map;
+    using Base::b_num_sampled;
+    using Base::b_num_accepted;
+
+    // Stores the rejection method
     Reject_Method d_method;
 
   public:
     //! Constructor
     Axial_KDE_Kernel(SP_Geometry   geometry,
-                        SP_Physics    physics,
-                        Reject_Method method,
-                        double        coefficient = 1.06,
-                        double        exponent = -0.20);
+                     SP_Physics    physics,
+                     Reject_Method method,
+                     double        coefficient = 1.06,
+                     double        exponent = -0.20);
 
     //! Return the rejection method
     Reject_Method reject_method() const { return d_method; }
