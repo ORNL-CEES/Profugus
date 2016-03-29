@@ -25,6 +25,7 @@
 #include "xs/XS.hh"
 #include "mc/Definitions.hh"
 #include "Particle.cuh"
+#include "Definitions.cuh"
 
 namespace cuda_mc
 {
@@ -62,7 +63,6 @@ class Physics
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef std::shared_ptr<Particle_t>         SP_Particle;
 
-    typedef curandState_t                       RNG_State;
     typedef cuda_profugus::XS_Device            XS_Dev_t;
     typedef cuda::Shared_Device_Ptr<XS_Dev_t>   SDP_XS_Dev;
     typedef profugus::XS                        XS_t;

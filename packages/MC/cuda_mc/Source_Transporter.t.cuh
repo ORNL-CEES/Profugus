@@ -15,8 +15,6 @@
 #include <iostream>
 #include <cmath>
 
-#include <curand_kernel.h>
-
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Launch_Args.t.cuh"
 #include "harness/Diagnostics.hh"

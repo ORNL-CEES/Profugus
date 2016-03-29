@@ -17,7 +17,7 @@
 #include "Box_Shape.cuh"
 #include "Source.cuh"
 #include "Particle.cuh"
-#include "Definitions.hh"
+#include "Definitions.cuh"
 #include "cuda_utils/Device_Vector.hh"
 
 #include "Teuchos_ParameterList.hpp"
@@ -65,7 +65,6 @@ class Uniform_Source : public Source<Geometry>
     typedef cuda::Shared_Device_Ptr<Box_Shape>  SDP_Shape;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef std::shared_ptr<Particle_t>         SP_Particle;
-    typedef curandState_t                       RNG_t;
     typedef def::Vec_Dbl                        Vec_Dbl;
     typedef def::size_type                      size_type;
     typedef cuda::arch::Device                  Arch_t;
@@ -91,7 +90,7 @@ class Uniform_Source : public Source<Geometry>
     // >>> REQUIRED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    __device__ Particle_t get_particle(std::size_t idx, RNG_t *rng) const;
+    __device__ Particle_t get_particle(std::size_t idx, RNG_State_t *rng) const;
 
     //! Number of particles to transport in the source on the current domain.
     __host__ __device__

@@ -13,6 +13,7 @@
 
 #include <curand_kernel.h>
 
+#include "Definitions.cuh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/CudaDBC.hh"
 
@@ -44,7 +45,6 @@ class Box_Shape
     //@{
     //! Base-class typedefs.
     typedef cuda::Space_Vector Space_Vector;
-    typedef curandState_t      RNG_t;
     //@}
 
   private:
@@ -76,7 +76,7 @@ class Box_Shape
 
     // >>> DERIVED INTERFACE
     //! Sample a point in the shape.
-    __device__ Space_Vector sample(RNG_t *rng)
+    __device__ Space_Vector sample(RNG_State_t *rng)
     {
         Space_Vector point =
            { d_Dx * curand_uniform_double(rng) + d_lox,
