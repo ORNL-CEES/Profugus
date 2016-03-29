@@ -169,6 +169,35 @@ template double sample_linear<double>(double, double, double, double);
 template float  sample_linear<float >(float, float, float, float);
 
 //---------------------------------------------------------------------------//
+/*!
+ * \brief Sample Epanechnikov (parabolic) kernel on [-1,1].
+ *
+ * This is used for KDE sampling.
+ */
+template<class RNG>
+double sample_epan(RNG &rng)
+{
+    // Draw three random numbers
+    double xi_1 = 2.0 * rng.ran() - 1.0;
+    double xi_2 = 2.0 * rng.ran() - 1.0;
+    double xi_3 = 2.0 * rng.ran() - 1.0;
+
+    // Sample the bandwidth fraction [-1,1]
+    if (   (std::fabs(xi_3) >= std::fabs(xi_2))
+        && (std::fabs(xi_3) >= std::fabs(xi_1)))
+    {
+        return xi_2;
+    }
+    else
+    {
+        return xi_3;
+    }
+}
+
+// Explicit instantiation for SPRNG
+template double sample_epan(RNG &rng);
+
+//---------------------------------------------------------------------------//
 } // end namespace sampler
 
 } // end namespace profugus

@@ -93,7 +93,7 @@ class Fission_Source : public Source<Geometry>
     typedef def::size_type                              size_type;
     //@}
 
-  private:
+  protected:
     // >>> DATA
 
     // Fission site container.
@@ -114,7 +114,7 @@ class Fission_Source : public Source<Geometry>
     void build_initial_source(SP_Cart_Mesh mesh, Const_Array_View fis_dens);
 
     // Build a source from a fission site container.
-    void build_source(SP_Fission_Sites &fission_sites);
+    virtual void build_source(SP_Fission_Sites &fission_sites);
 
     // Create a fission site container.
     SP_Fission_Sites create_fission_site_container() const;
@@ -122,7 +122,7 @@ class Fission_Source : public Source<Geometry>
     // >>> DERIVED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    SP_Particle get_particle();
+    virtual SP_Particle get_particle();
 
     //! Boolean operator for source (true when source still has particles).
     bool empty() const { return d_num_left == 0; }
@@ -164,7 +164,7 @@ class Fission_Source : public Source<Geometry>
     //! Set a new number per cycle.
     void update_Np(size_type np) { d_np_requested = np; }
 
-  private:
+  protected:
     // >>> IMPLEMENTATION
 
     typedef Source<Geometry> Base;

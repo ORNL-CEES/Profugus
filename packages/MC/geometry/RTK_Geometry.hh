@@ -102,7 +102,7 @@ class RTK_Geometry : public Tracking_Geometry<RTK_State>
 
     //! Initialize a track.
     void initialize(const Space_Vector &r, const Space_Vector &direction,
-                    Geo_State_t &state);
+                    Geo_State_t &state) const;
 
     //! Get distance to next boundary.
     double distance_to_boundary(Geo_State_t &state)
@@ -160,11 +160,23 @@ class RTK_Geometry : public Tracking_Geometry<RTK_State>
         return d_array->cellid(state);
     }
 
+    //! Return the cell ID from the given location
+    geometry::cell_type cell(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<RTK_State>::cell(r);
+    }
+
     //! Return the current material ID
     geometry::matid_type matid(const Geo_State_t &state) const
     {
         // we need a better mechanism later on....TME
         return d_array->matid(state);
+    }
+
+    //! Return the material ID from the given location
+    geometry::matid_type matid(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<RTK_State>::matid(r);
     }
 
     //! Return the state with respect to outer geometry boundary
@@ -184,6 +196,12 @@ class RTK_Geometry : public Tracking_Geometry<RTK_State>
             return geometry::REFLECT;
         }
         return geometry::INSIDE;
+    }
+
+    //! Return the boundary state for a given position
+    geometry::Boundary_State boundary_state(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<RTK_State>::boundary_state(r);
     }
 
     //! Return the current position.

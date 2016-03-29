@@ -28,6 +28,7 @@ using profugus::sampler::sample_small_dcdf;
 using profugus::sampler::sample_smallrev_dcdf;
 using profugus::sampler::sample_watt;
 using profugus::sampler::sample_linear;
+using profugus::sampler::sample_epan;
 using profugus::RNG;
 
 //---------------------------------------------------------------------------//
@@ -212,6 +213,33 @@ TEST(SampleArbLinear, Samples)
 
     EXPECT_SOFTEQ(5.0/9.0, mean, eps);
 }
+
+//---------------------------------------------------------------------------//
+
+TEST(Epanechnikov, samples)
+{
+    const int num_samples = 25000;
+    double sum = 0.0;
+
+    // make a RNG object
+    int *id = init_sprng(0, 1, 141279835, 1);
+    RNG rng(id, 0);
+
+    // Loop over samples
+    for (int i = 0; i < num_samples; ++i)
+    {
+        double result = sample_epan(rng);
+        sum += result;
+        ASSERT_GE(result, -1.0);
+        ASSERT_LE(result,  1.0);
+    }
+
+    // Calc mean (exact = 0.0)
+    double mean = sum / static_cast<double>(num_samples);
+
+    EXPECT_SOFTEQ(0.0, mean, 1 / std::sqrt(num_samples));
+}
+
 
 //---------------------------------------------------------------------------//
 //                        end of tstSampler.cc
