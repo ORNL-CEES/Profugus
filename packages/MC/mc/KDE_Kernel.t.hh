@@ -1,12 +1,15 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/kde/KDE_Kernel.cc
+ * \file   MC/mc/kde/KDE_Kernel.t.hh
  * \author Gregory Davidson
  * \date   Mon Feb 16 14:21:15 2015
  * \brief  KDE_Kernel class definitions.
  * \note   Copyright (c) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
+
+#ifndef MC_mc_KDE_Kernel_t_hh
+#define MC_mc_KDE_Kernel_t_hh
 
 #include "KDE_Kernel.hh"
 
@@ -23,10 +26,11 @@ namespace profugus
 /*!
  * \brief Constructor.
  */
-KDE_Kernel::KDE_Kernel(SP_Geometry geometry,
-                       SP_Physics  physics,
-                       double      coefficient,
-                       double      exponent)
+template<class Geometry>
+KDE_Kernel<Geometry>::KDE_Kernel(SP_Geometry geometry,
+                                 SP_Physics  physics,
+                                 double      coefficient,
+                                 double      exponent)
     : b_geometry(geometry)
     , b_physics(physics)
     , b_coefficient(coefficient)
@@ -53,8 +57,9 @@ KDE_Kernel::KDE_Kernel(SP_Geometry geometry,
 /*!
  * \brief Set the bandwidth for a cell.
  */
-void KDE_Kernel::calc_bandwidths(
-    const Physics::Fission_Site_Container &fis_sites)
+template<class Geometry>
+void KDE_Kernel<Geometry>::calc_bandwidths(
+    const Fission_Site_Container &fis_sites)
 {
     typedef geometry::cell_type  cell_type;
 
@@ -116,7 +121,8 @@ void KDE_Kernel::calc_bandwidths(
 /*!
  * \brief Return the bandwidth for a given cell.
  */
-double KDE_Kernel::bandwidth(cell_type cellid) const
+template<class Geometry>
+double KDE_Kernel<Geometry>::bandwidth(cell_type cellid) const
 {
     REQUIRE(b_bndwidth_map.count(cellid) == 1);
 
@@ -127,8 +133,9 @@ double KDE_Kernel::bandwidth(cell_type cellid) const
 /*!
  * \brief Return the bandwidths for all cells.
  */
+template<class Geometry>
 std::vector<double>
-KDE_Kernel::get_bandwidths() const
+KDE_Kernel<Geometry>::get_bandwidths() const
 {
     // Create the vector to hold the bandwidths
     std::vector<double> bandwidths(b_bndwidth_map.size());
@@ -150,20 +157,21 @@ KDE_Kernel::get_bandwidths() const
 /*!
  * \brief Set the bandwidth for a given cell.
  */
-void KDE_Kernel::set_bandwidth(geometry::cell_type cell,
-                               double              bandwidth)
+template<class Geometry>
+void KDE_Kernel<Geometry>::set_bandwidth(geometry::cell_type cell,
+                                         double              bandwidth)
 {
     REQUIRE(b_bndwidth_map.find(cell) != b_bndwidth_map.end());
 
     b_bndwidth_map[cell] = bandwidth;
 }
 
-
 //---------------------------------------------------------------------------//
 /*!
  * \brief Return the fraction of samples accepted inside the kernel.
  */
-double KDE_Kernel::acceptance_fraction() const
+template<class Geometry>
+double KDE_Kernel<Geometry>::acceptance_fraction() const
 {
     REQUIRE(b_num_sampled > 0);
 
@@ -178,9 +186,10 @@ double KDE_Kernel::acceptance_fraction() const
  * \brief Extract the local z-locations of the Space_Vector and broadcast to
  *        all cores.
  */
-std::vector<KDE_Kernel::Space_Vector>
-KDE_Kernel::communicate_sites(
-    const Physics::Fission_Site_Container &fis_sites) const
+template<class Geometry>
+std::vector<typename KDE_Kernel<Geometry>::Space_Vector>
+KDE_Kernel<Geometry>::communicate_sites(
+    const Fission_Site_Container &fis_sites) const
 {
     // >>> COMMUNICATE SIZES
     // Create a vector to hold all of the local sizes
@@ -211,7 +220,8 @@ KDE_Kernel::communicate_sites(
         // Fill the local portion with the z locations
         std::transform(fis_sites.begin(), fis_sites.end(),
                        global_locs.begin() + begin_index,
-                       [](const Physics::Fission_Site &fs) { return fs.r; });
+                       [](const typename Physics_t::Fission_Site &fs)
+                       { return fs.r; });
 
         // Communicate the vector
         profugus::global_sum(&global_locs[0][def::X], 3*global_locs.size());
@@ -223,6 +233,8 @@ KDE_Kernel::communicate_sites(
 //---------------------------------------------------------------------------//
 } // end namespace profugus
 
+#endif // MC_mc_KDE_Kernel_t_hh
+
 //---------------------------------------------------------------------------//
-// end of MC/mc/kde/KDE_Kernel.cc
+// end of MC/mc/kde/KDE_Kernel.t.hh
 //---------------------------------------------------------------------------//

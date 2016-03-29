@@ -17,7 +17,7 @@
 
 #include "utils/Definitions.hh"
 #include "rng/RNG_Control.hh"
-#include "geometry/Geometry.hh"
+#include "geometry/Definitions.hh"
 #include "Physics.hh"
 #include "Particle.hh"
 
@@ -35,20 +35,22 @@ namespace profugus
  * Test of KDE_Kernel.
  */
 //===========================================================================//
-
+template<class Geometry>
 class KDE_Kernel
 {
   public:
     //@{
     //! Useful typedefs.
-    typedef def::Space_Vector                   Space_Vector;
-    typedef def::size_type                      size_type;
-    typedef geometry::cell_type                 cell_type;
-    typedef Core                                Geometry_t;
-    typedef std::shared_ptr<Geometry_t>         SP_Geometry;
-    typedef std::shared_ptr<profugus::Physics>  SP_Physics;
-    typedef std::pair<cell_type, double>        Bandwidth_Element;
-    typedef std::map<cell_type, double>         Bandwidth_Map;
+    typedef def::Space_Vector                          Space_Vector;
+    typedef def::size_type                             size_type;
+    typedef geometry::cell_type                        cell_type;
+    typedef Geometry                                   Geometry_t;
+    typedef std::shared_ptr<Geometry_t>                SP_Geometry;
+    typedef profugus::Physics<Geometry>                Physics_t;
+    typedef std::shared_ptr<Physics_t>                 SP_Physics;
+    typedef typename Physics_t::Fission_Site_Container Fission_Site_Container;
+    typedef std::pair<cell_type, double>               Bandwidth_Element;
+    typedef std::map<cell_type, double>                Bandwidth_Map;
     //@}
 
   protected:
@@ -79,7 +81,7 @@ class KDE_Kernel
     double exponent() const { return b_exponent; }
 
     //! Calculate the bandwidths
-    void calc_bandwidths(const Physics::Fission_Site_Container &fis_sites);
+    void calc_bandwidths(const Fission_Site_Container &fis_sites);
 
     //! Return the bandwidth for a given cell
     double bandwidth(cell_type cellid) const;
@@ -101,7 +103,7 @@ class KDE_Kernel
   protected:
     // >>> IMPLEMENTATION FUNCTIONS
     std::vector<Space_Vector> communicate_sites(
-        const Physics::Fission_Site_Container &fis_sites) const;
+        const Fission_Site_Container &fis_sites) const;
 
     // >>> IMPLEMENTATION DATA
 
