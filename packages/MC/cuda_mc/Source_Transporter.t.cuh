@@ -160,6 +160,8 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
     launch_args.set_num_elements(num_particles);
 
     // Initialize RNG
+    // FIXME: For KCODE problems this needs to happen ONCE
+    //  instead of every iteration
     thrust::device_vector<RNG_State_t> rngs(num_particles);
     RNG_Init init( rngs.data().get() );
     cuda::parallel_launch( init, launch_args );

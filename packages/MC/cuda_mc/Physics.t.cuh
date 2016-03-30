@@ -32,7 +32,7 @@ namespace cuda_mc
  */
 template <class Geometry>
 Physics<Geometry>::Physics(RCP_Std_DB db,
-                           SP_XS      mat_host,
+                           RCP_XS     mat_host,
                            SDP_XS_Dev mat)
 {
     REQUIRE(!db.is_null());

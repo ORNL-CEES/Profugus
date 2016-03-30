@@ -66,7 +66,7 @@ class Physics
     typedef cuda_profugus::XS_Device            XS_Dev_t;
     typedef cuda::Shared_Device_Ptr<XS_Dev_t>   SDP_XS_Dev;
     typedef profugus::XS                        XS_t;
-    typedef std::shared_ptr<XS_t>               SP_XS;
+    typedef Teuchos::RCP<XS_t>                  RCP_XS;
     typedef Teuchos::ParameterList              ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     typedef typename Geometry_t::Space_Vector   Space_Vector;
@@ -91,7 +91,7 @@ class Physics
 
   public:
     // Constructor that auto-creates group bounds.
-    explicit Physics(RCP_Std_DB db, SP_XS mat_host, SDP_XS_Dev mat);
+    explicit Physics(RCP_Std_DB db, RCP_XS mat_host, SDP_XS_Dev mat);
 
     // Due to Cuda memory management, disallow copy and assignment
     Physics(const Physics &phys)            = delete;

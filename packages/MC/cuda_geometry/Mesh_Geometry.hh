@@ -46,14 +46,13 @@ class Mesh_Geometry
 
     typedef size_t                               size_type;
     typedef profugus::geometry::cell_type        cell_type;
-    typedef profugus::geometry::matid_type       matid_type;
     typedef std::vector<double>                  Vec_Dbl;
-    typedef std::vector<matid_type>              Vec_Matids;
+    typedef std::vector<int>                     Vec_Int;
     typedef cuda::arch::Device                   Arch;
     typedef cuda::Device_Vector<Arch,double>     Dev_Dbl_Vec;
     typedef std::shared_ptr<Dev_Dbl_Vec>         SP_Dev_Dbl_Vec;
-    typedef cuda::Device_Vector<Arch,matid_type> Dev_Matid_Vec;
-    typedef std::shared_ptr<Dev_Matid_Vec>       SP_Dev_Matid_Vec;
+    typedef cuda::Device_Vector<Arch,int>        Dev_Int_Vec;
+    typedef std::shared_ptr<Dev_Int_Vec>         SP_Dev_Int_Vec;
     typedef cuda::Coordinates                    Coordinates;
     typedef cuda::Space_Vector                   Space_Vector;
     typedef Mesh_State                           Geo_State_t;
@@ -70,11 +69,11 @@ class Mesh_Geometry
     // >>> HOST API
 
     //! Set materials
-    void set_matids(const Vec_Matids& matids)
+    void set_matids(const Vec_Int & matids)
     {
         REQUIRE( matids.size() == num_cells() );
         d_matid_vec =
-            std::make_shared<Dev_Matid_Vec>(profugus::make_view(matids));
+            std::make_shared<Dev_Int_Vec>(profugus::make_view(matids));
         dd_matids = d_matid_vec->data();
     }
 
@@ -129,7 +128,7 @@ class Mesh_Geometry
     }
 
     //! Return the current material ID
-    __device__ matid_type matid(const Geo_State_t& state) const
+    __device__ int matid(const Geo_State_t& state) const
     {
         REQUIRE(cell(state) < num_cells());
 
@@ -236,8 +235,8 @@ class Mesh_Geometry
 
     Cartesian_Mesh d_mesh;
 
-    SP_Dev_Matid_Vec d_matid_vec;
-    matid_type *dd_matids;
+    SP_Dev_Int_Vec d_matid_vec;
+    int *dd_matids;
 };
 
 //---------------------------------------------------------------------------//
