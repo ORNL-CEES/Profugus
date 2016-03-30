@@ -94,8 +94,27 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
     SCREEN_MSG("Building " << prob_type << " solver");
 
     // get the tallier
-    //SP_Tallier tallier = builder.get_tallier();
-    SDP_Tallier tallier;
+    auto tallier_host = std::make_shared<Tallier<Geom_t>>();
+    tallier_host->set(d_geometry,d_physics);
+
+    if( d_db->isSublist("cell_tally_db") )
+    {
+        auto tally_db = Teuchos::sublist(d_db,"cell_tally_db");
+
+        INSIST( tally_db->isType<Array_Int>("cells"), "Must have cell list" );
+
+        auto cells = tally_db->get<Array_Int>("cells");
+
+        auto cell_tally_host = std::make_shared<Cell_Tally<Geom_t>>(
+            d_geometry, d_physics);
+        cell_tally_host->set_cells( cells.toVector() );
+
+        auto cell_tally =
+            cuda::Shared_Device_Ptr<Cell_Tally<Geom_t>>(cell_tally_host);
+        tallier_host->add_cell_tally(cell_tally);
+    }
+
+    auto tallier = cuda::Shared_Device_Ptr<Tallier<Geom_t>>(tallier_host);
 
     // make the transporter
     SP_Transporter transporter(std::make_shared<Transporter_t>(
