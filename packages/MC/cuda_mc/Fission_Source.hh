@@ -110,6 +110,9 @@ class Fission_Source : public Source<Geometry>
     // Create a fission site container.
     SP_Fission_Sites create_fission_site_container() const;
 
+    //! Whether this is the initial source distribution or is unbuilt
+    bool is_initial_source() const { return !d_fission_sites; }
+
     // >>> DERIVED PUBLIC INTERFACE
 
     //! Get particles from the source.
@@ -118,9 +121,6 @@ class Fission_Source : public Source<Geometry>
 
     //! Boolean operator for source (true when source still has particles).
     bool empty() const override { return d_np_left == 0; }
-
-    //! Whether this is the initial source distribution or is unbuilt
-    bool is_initial_source() const override { return !d_fission_sites; }
 
     //! Number of particles to transport in the source on the current domain.
     std::size_t num_to_transport() const override { return d_np_domain; }

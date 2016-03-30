@@ -107,7 +107,7 @@ class Uniform_Source : public Source<Geometry>
     bool empty() const override { return d_np_left == 0; }
 
     //! Number of particle batches.
-    int num_batch() const override { return d_num_batch; }
+    int num_batch() const { return d_num_batch; }
 
     //! Number of particles to transport in the source on the current domain.
     std::size_t num_to_transport() const override { return d_np_domain; }

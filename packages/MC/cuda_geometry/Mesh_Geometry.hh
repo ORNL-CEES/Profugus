@@ -78,6 +78,14 @@ class Mesh_Geometry
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
 
+    //! Get the lower bounds of the geometry.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    const Space_Vector& lower() const { return d_lower_bounds; }
+
+    //! Get the upper bounds of the geometry.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    const Space_Vector& upper() const { return d_upper_bounds; }
+
     // Bounding box (is this needed?)
     //profugus::Bounding_Box get_extents() const;
 
@@ -229,11 +237,17 @@ class Mesh_Geometry
     PROFUGUS_DEVICE_FUNCTION 
     double distance_to_interior(Geo_State_t &state);
 
-    //! Get cell volume
+    //! Get cell volume on the device.
     PROFUGUS_DEVICE_FUNCTION 
     double volume(size_type cell) const
     {
         return d_mesh.volume(cell);
+    }
+
+    //! Get cell volume on the host.
+    double volume_host(size_type cell) const
+    {
+        return d_mesh.volume_host(cell);
     }
 
   private:
@@ -269,6 +283,9 @@ class Mesh_Geometry
 
     SP_Dev_Matid_Vec d_matid_vec;
     matid_type *dd_matids;
+
+    Space_Vector d_lower_bounds;
+    Space_Vector d_upper_bounds;
 };
 
 //---------------------------------------------------------------------------//

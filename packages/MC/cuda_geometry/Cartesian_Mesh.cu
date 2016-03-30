@@ -13,7 +13,6 @@
 #include "Cartesian_Mesh.hh"
 #include "utils/Container_Props.hh"
 #include "utils/View_Field.hh"
-#include "cuda_utils/Host_Vector.hh"
 
 namespace cuda_profugus
 {
@@ -55,7 +54,7 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
     d_num_cells = d_cells_x * d_cells_y * d_cells_z;
 
     // Compute cell volumes on host
-    cuda::Host_Vector<double> host_volumes(d_num_cells);
+    d_volumes_vec_host = std::make_shared<Host_Vector<double> >(d_num_cells);
     for( int cell_k = 0; cell_k < d_cells_z; ++cell_k )
     {
         double width_k = z_edges[cell_k+1] - z_edges[cell_k];
@@ -70,12 +69,12 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
                 REQUIRE( width_j > 0.0 );
                 cell_type cell;
                 this->index(cell_i,cell_j,cell_k,cell);
-                host_volumes[cell] = width_i * width_j * width_k;
+                (*d_volumes_vec_host)[cell] = width_i * width_j * width_k;
             }
         }
     }
     d_volumes_vec = std::make_shared<Device_Vector<double> >(d_num_cells);
-    d_volumes_vec->assign(host_volumes);
+    d_volumes_vec->assign(*d_volumes_vec_host);
     dd_volumes = d_volumes_vec->data();
 
     ENSURE(d_num_cells >= 1);

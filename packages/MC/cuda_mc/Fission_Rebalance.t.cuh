@@ -17,7 +17,7 @@
 #include <sstream>
 #include <numeric>
 
-#include "harness/DBC.hh"
+#include "cuda_utils/CudaDBC.hh"
 #include "comm/Timing.hh"
 
 namespace cuda_profugus
@@ -31,8 +31,8 @@ namespace cuda_profugus
  */
 template <class Geometry>
 Fission_Rebalance<Geometry>::Fission_Rebalance()
-    : d_num_sets(cuda_profugus::nodes())
-    , d_set(cuda_profugus::node())
+    : d_num_sets(profugus::nodes())
+    , d_set(profugus::node())
     , d_left(-1)
     , d_right(-1)
     , d_num_nbors(0)
@@ -99,7 +99,7 @@ void Fission_Rebalance<Geometry>::rebalance(
 
     // set-up global/local fission bank parameters
     fission_bank_parameters(fission_bank);
-    cuda_profugus::global_barrier();
+    profugus::global_barrier();
 
     // actual fissions on the set
     int set_sites = 0;
@@ -117,7 +117,7 @@ void Fission_Rebalance<Geometry>::rebalance(
         // check for convergence
         converged_sets = 0;
         if (set_sites == d_target_set) converged_sets = 1;
-        cuda_profugus::global_sum(converged_sets);
+        profugus::global_sum(converged_sets);
 
         // update the number of sites on each domain if we are not converged
         if (converged_sets < d_num_sets)
@@ -134,7 +134,7 @@ void Fission_Rebalance<Geometry>::rebalance(
 
 #ifdef ENSURE_ON
     int global_check = fission_bank.size();
-    cuda_profugus::global_sum(global_check);
+    profugus::global_sum(global_check);
     VALIDATE(global_check == d_num_global,
              "Failed to preserve global fission sites: Calculated = "
              << global_check << "; Expected = " << d_num_global
@@ -191,7 +191,7 @@ void Fission_Rebalance<Geometry>::fission_bank_parameters(
 
 #ifdef CHECK_ON
     int global_check = d_target_set;
-    cuda_profugus::global_sum(global_check);
+    profugus::global_sum(global_check);
     VALIDATE(global_check == d_num_global,
             "Failed to accurately pad sets for non-uniform fission sites.");
 #endif
@@ -283,13 +283,13 @@ void Fission_Rebalance<Geometry>::calc_num_sites(
     const Fission_Site_Container_t &fission_bank)
 {
     REQUIRE(d_sites_set.size() == d_num_sets);
-    REQUIRE(cuda_profugus::nodes() == d_num_sets);
+    REQUIRE(profugus::nodes() == d_num_sets);
 
     // do a global reduction to determine the current number of sites on all
     // sets
     std::fill(d_sites_set.begin(), d_sites_set.end(), 0);
     d_sites_set[d_set] = fission_bank.size();
-    cuda_profugus::global_sum(&d_sites_set[0], d_num_sets);
+    profugus::global_sum(&d_sites_set[0], d_num_sets);
 
     // make the array bounds on this set --> the array bounds are (first,last)
     d_bnds.first  = std::accumulate(&d_sites_set[0], &d_sites_set[0]+d_set, 0);
@@ -306,7 +306,7 @@ void Fission_Rebalance<Geometry>::post_receives(
         int                       num_recv,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
-        cuda_profugus::Request         &handle,
+        profugus::Request         &handle,
         int                       tag)
 {
     if (num_recv)
@@ -320,7 +320,7 @@ void Fission_Rebalance<Geometry>::post_receives(
         void *buffer = &recv_bank[0];
 
         // post the receive
-        cuda_profugus::receive_async(handle, reinterpret_cast<char *>(buffer),
+        profugus::receive_async(handle, reinterpret_cast<char *>(buffer),
                                num_recv * d_size_fs, destination, tag);
 
         // increment receive counter
@@ -340,7 +340,6 @@ void Fission_Rebalance<Geometry>::send(
         int                       tag)
 {
     REQUIRE(bank.size() >= num_send);
-    REMEMBER(int size = bank.size());
 
     if (num_send)
     {
@@ -350,7 +349,7 @@ void Fission_Rebalance<Geometry>::send(
         const void *buffer = &bank[0] + (bank.size() - num_send);
 
         // send the first *num_send* sites in the fission bank
-        cuda_profugus::Request handle = cuda_profugus::send_async(
+        profugus::Request handle = profugus::send_async(
             reinterpret_cast<const char *>(buffer), num_send * d_size_fs,
             destination, tag);
         handle.wait();
@@ -365,8 +364,6 @@ void Fission_Rebalance<Geometry>::send(
         // increment send counter
         ++d_num_send;
     }
-
-    ENSURE(bank.size() == size - num_send);
 }
 
 //---------------------------------------------------------------------------//
@@ -379,11 +376,9 @@ void Fission_Rebalance<Geometry>::receive(
         Fission_Site_Container_t &bank,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
-        cuda_profugus::Request        &handle,
+        profugus::Request        &handle,
         int                       tag)
 {
-    REMEMBER(int size = bank.size());
-
    if (num_recv)
     {
         REQUIRE(destination >= 0 && destination < d_num_sets);
@@ -403,7 +398,6 @@ void Fission_Rebalance<Geometry>::receive(
     }
 
     ENSURE(!handle.inuse());
-    ENSURE(bank.size() == size + num_recv);
 }
 
 } // end namespace cuda_profugus

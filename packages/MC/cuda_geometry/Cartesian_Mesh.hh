@@ -21,6 +21,7 @@
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
 #include "cuda_utils/Utility_Functions.hh"
+#include "cuda_utils/Host_Vector.hh"
 #include "geometry/Definitions.hh"
 #include "utils/Definitions.hh"
 
@@ -52,10 +53,12 @@ class Cartesian_Mesh
     typedef cuda::Space_Vector            Space_Vector;
     typedef cuda::Coordinates             Coordinates;
     typedef std::vector<double>           Vec_Dbl;
-    typedef cuda::arch::Device            Arch;
 
     template <class T>
-    using Device_Vector = cuda::Device_Vector<Arch,T>;
+    using Device_Vector = cuda::Device_Vector<cuda::arch::Device,T>;
+
+    template <class T>
+    using Host_Vector = cuda::Host_Vector<T>;
 
     template <class T>
     using SP = std::shared_ptr<T>;
@@ -87,6 +90,7 @@ class Cartesian_Mesh
 
     // Cell volumes
     SP<Device_Vector<double> > d_volumes_vec;
+    SP<Host_Vector<double> > d_volumes_vec_host;
 
     // On-device pointer
     double *dd_volumes;
@@ -174,12 +178,19 @@ class Cartesian_Mesh
 
     // >>> VOLUME CALCULATION
 
-    //! Calculate volume from the global cell id
+    //! Calculate volume from the global cell id on the device.
     PROFUGUS_DEVICE_FUNCTION 
-    double volume(cell_type global_cell) const
+    double volume(cell_type global_cell ) const
     {
         REQUIRE( global_cell < d_num_cells );
         return dd_volumes[global_cell];
+    }
+
+    //! Calculate volume from the global cell id on the host.
+    double volume_host(cell_type global_cell ) const
+    {
+        REQUIRE( global_cell < d_num_cells );
+        return (*d_volumes_vec_host)[global_cell];
     }
 
     // >>> SPATIAL LOCATION

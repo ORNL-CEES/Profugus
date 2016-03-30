@@ -22,6 +22,7 @@
 #include "cuda_utils/Memory.cuh"
 #include "cuda_utils/Hardware.hh"
 #include "cuda_utils/Utility_Functions.hh"
+#include "cuda_utils/Definitions.hh"
 #include "comm/global.hh"
 #include "mc/Global_RNG.hh"
 
@@ -72,7 +73,7 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 	int group = -1;
 	int matid = -1;
 	bool sampled = false;
-	Space_Vector r;
+	cuda::Space_Vector r;
 	while (!sampled)
 	{
 	    // sample a point in the geometry
@@ -118,8 +119,8 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 					const std::size_t start_idx,
 					const std::size_t num_particle,
 					const double weight,
-					const Space_Vector width,
-					const Space_Vector lower,
+					const cuda::Space_Vector width,
+					const cuda::Space_Vector lower,
 					Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
@@ -139,7 +140,7 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 	int group = -1;
 	int matid = -1;
 	bool sampled = false;
-	Space_Vector r;
+	cuda::Space_Vector r;
 	while (!sampled)
 	{
 	    // sample a point in the geometry
@@ -183,7 +184,9 @@ template<class Geometry>
 __global__ void sample_fission_sites_kernel(
     const Geometry* geometry,
     const Physics<Geometry>* physics,
-    const Fission_Site* fission_sites,
+    const std::size_t start_idx,
+    const std::size_t num_particle,
+    const typename Physics<Geometry>::Fission_Site* fission_sites,
     const double weight,
     Particle_Vector<Geometry>* particles )
 {
@@ -241,8 +244,8 @@ __global__ void sample_fission_sites_kernel(
  */
 template <class Geometry>
 Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
-                                         const SDP_Geometry&    geometry,
-                                         const SDP_Physics&     physics)
+                                         const SDP_Geometry&   geometry,
+                                         const SDP_Physics&    physics)
     : d_geometry(geometry)
     , d_physics(physics)
     , d_fission_rebalance(std::make_shared<Fission_Rebalance_t>())
@@ -268,30 +271,29 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     extents = db->get("init_fission_src", extents);
 
     // get the low and upper bounds of the geometry
-    auto box = geometry->get_extents();
-    const Space_Vector &low_edge  = box.lower();
-    const Space_Vector &high_edge = box.upper();
+    const cuda::Space_Vector &low_edge  = d_geometry.get_host_ptr()->lower();
+    const cuda::Space_Vector &high_edge = d_geometry.get_host_ptr()->upper();
 
     double lower_x = extents[2 * I];
     double upper_x = extents[2 * I + 1];
     lower_x = std::max(lower_x, low_edge.x);
     upper_x = std::min(upper_x, high_edge.x);
     d_lower.x = lower_x;
-    d_width.x = upper_x - lower_x
+    d_width.x = upper_x - lower_x;
 
     double lower_y = extents[2 * J];
     double upper_y = extents[2 * J + 1];
-    lower_y = std::may(lower_y, low_edge.y);
+    lower_y = std::max(lower_y, low_edge.y);
     upper_y = std::min(upper_y, high_edge.y);
     d_lower.y = lower_y;
-    d_width.y = upper_y - lower_y
+    d_width.y = upper_y - lower_y;
 
     double lower_z = extents[2 * K];
     double upper_z = extents[2 * K + 1];
-    lower_z = std::maz(lower_z, low_edge.z);
+    lower_z = std::max(lower_z, low_edge.z);
     upper_z = std::min(upper_z, high_edge.z);
     d_lower.z = lower_z;
-    d_width.z = upper_z - lower_z
+    d_width.z = upper_z - lower_z;
 
     // store the total number of requested particles per cycle
     d_np_requested = static_cast<std::size_t>(db->get("Np", 1000));
@@ -484,16 +486,16 @@ void Fission_Source<Geometry>::get_particles(
  * number of particles per domain.
  */
 template <class Geometry>
-void Fission_Source<Geometry>::build_DR(SDP_Cart_Mesh     mesh,
-                                        Const_Array_View fis_dens)
+void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
+                                        Const_Array_View& fis_dens)
 {
     // calculate the number of particles per domain and set (equivalent)
-    d_np_domain = d_np_total / b_nodes;
+    d_np_domain = d_np_total / profugus::nodes();
 
     // recalculate the total number of particles (we want the same number of
     // particles in each domain, so the total may change slightly from the
     // requested value)
-    d_np_total = d_np_domain * b_nodes;
+    d_np_total = d_np_domain * profugus::nodes();
 
     // if there is a mesh then do stratified sampling to calculate the initial
     // fission distribution
@@ -508,7 +510,7 @@ void Fission_Source<Geometry>::build_DR(SDP_Cart_Mesh     mesh,
         double fissions = 0.0;
         for (int cell = 0; cell < num_cells; ++cell)
         {
-            fissions += fis_dens[cell] * mesh.get_host_ptr()->volume(cell);
+            fissions += fis_dens[cell] * mesh.get_host_ptr()->volume_host(cell);
         }
         CHECK(fissions > 0.0);
 
@@ -521,7 +523,8 @@ void Fission_Source<Geometry>::build_DR(SDP_Cart_Mesh     mesh,
         for (int cell = 0; cell < num_cells; ++cell)
         {
             // calculate the expected number of sites in this cell
-            nu = fis_dens[cell] * mesh.get_host_ptr()->volume(cell) / fissions * d_np_domain;
+            nu = fis_dens[cell] * d_np_domain * 
+		 mesh.get_host_ptr()->volume_host(cell) / fissions;
 
             // there can be n or n+1 sites; with probability n+1-nu there will
             // be n sites, with probability nu-n there will be n+1 sites
@@ -542,7 +545,7 @@ void Fission_Source<Geometry>::build_DR(SDP_Cart_Mesh     mesh,
         // update the number of particles globally and on the domain
         d_np_domain = new_np_domain;
         d_np_total  = d_np_domain;
-        cuda_profugus::global_sum(&d_np_total, 1);
+        profugus::global_sum(&d_np_total, 1);
 
         // store the mesh for later use
         d_fis_mesh = mesh;
@@ -566,7 +569,8 @@ void Fission_Source<Geometry>::sample_fission_sites(
     cuda::memory::Malloc( fission_sites_device, num_particle );
     int copy_start = d_fission_sites->size() - num_particle;
     cuda::memory::Copy_To_Device( fission_sites_device,
-				  d_fission_sites->data() + copy_start );
+				  d_fission_sites->data() + copy_start,
+				  num_particle );
 
     // Remove the fission sites from the host that we just copied to the
     // device.
@@ -576,6 +580,8 @@ void Fission_Source<Geometry>::sample_fission_sites(
     sample_fission_sites_kernel<<<num_blocks,threads_per_block>>>(
 	d_geometry.get_device_ptr(),
 	d_physics.get_device_ptr(),
+	start_idx,
+	num_particle,
 	fission_sites_device,
 	d_wt,
 	particles.get_device_ptr() );
@@ -635,7 +641,7 @@ void Fission_Source<Geometry>::sample_mesh(
 	particles.get_device_ptr() );
 
     // Free the device fission cells.
-    cuda::Memory::Free( fission_cells_device );
+    cuda::memory::Free( fission_cells_device );
 }
 
 //---------------------------------------------------------------------------//
