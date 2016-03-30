@@ -45,11 +45,16 @@ class Physics_Tester
 		    const int vector_size,
 		    const profugus::RNG& rng,
 		    Teuchos::ParameterList& db,
-		    const profugus::XS& xs );
+		    const profugus::XS& xs,
+		    const int matid );
 
     // Get the physics.
     cuda::Shared_Device_Ptr<Physics>& physics()
     { return d_physics; }
+
+    // Get the geometry.
+    cuda::Shared_Device_Ptr<Geometry>& geometry()
+    { return d_geometry; }
 
     // Get the particles
     cuda::Shared_Device_Ptr<Particle_Vector>& particles()

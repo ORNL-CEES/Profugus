@@ -161,7 +161,7 @@ TYPED_TEST(PhysicsTest, Collisions_no_capture)
     // make the physics tester.
     int Np = 50000;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-				   Np, this->rng, *(this->db), *(this->xs) );
+				   Np, this->rng, *(this->db), *(this->xs), 0 );
 
     // initialize particles with the geometry and set to collide.
     Space_Vector r, d;
@@ -357,7 +357,7 @@ TYPED_TEST(PhysicsTest, Collisions_with_capture)
     // make the physics tester.
     int Np = 50000;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-				   Np, this->rng, *(this->db), *(this->xs) );
+				   Np, this->rng, *(this->db), *(this->xs), 0 );
 
     // initialize particles with the geometry and set to collide.
     Space_Vector r, d;
@@ -489,7 +489,7 @@ TYPED_TEST(PhysicsTest, Access)
     // make the physics tester.
     int Np = 50;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-				   Np, this->rng, *(this->db), *(this->xs) );
+				   Np, this->rng, *(this->db), *(this->xs), 0 );
 
     EXPECT_FALSE(physics_tester.is_fissionable(0));
     EXPECT_TRUE(physics_tester.is_fissionable(1));
@@ -547,7 +547,7 @@ TYPED_TEST(PhysicsTest, initialization)
     // make the physics tester.
     int Np = 16;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-				   Np, this->rng, *(this->db), *(this->xs) );
+				   Np, this->rng, *(this->db), *(this->xs), 0 );
 
     // Create initializization energies.
     std::vector<double> energy =
@@ -600,7 +600,7 @@ TYPED_TEST(PhysicsTest, fission_sampling)
     // make the physics tester.
     int Np = 15;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-				   Np, this->rng, *(this->db), *(this->xs) );
+				   Np, this->rng, *(this->db), *(this->xs), 0 );
 
     // initialize particles with the geometry and set to collide.
     Space_Vector r, d;

@@ -115,7 +115,7 @@ class Keff_TallyTest : public testing::Test
 	int num_particle = 1000;
 	std::vector<double> edges = {0.0,1.0};
 	physics_tester = Teuchos::rcp( 
-	    new Physics_Tester(edges,edges,edges,num_particle,rng,db,*xs) );
+	    new Physics_Tester(edges,edges,edges,num_particle,rng,db,*xs,0) );
     }
 
   protected:

@@ -658,14 +658,14 @@ void Fission_Source<Geometry>::sample_geometry(
 {
     // Launch the kernel.
     sample_geometry_kernel<<<num_blocks,threads_per_block>>>(
-	d_geometry.get_device_ptr(),
-	d_physics.get_device_ptr(),
-	start_idx,
-	num_particle,
-	d_wt,
-	d_width,
-	d_lower,
-	particles.get_device_ptr() );
+    	d_geometry.get_device_ptr(),
+    	d_physics.get_device_ptr(),
+    	start_idx,
+    	num_particle,
+    	d_wt,
+    	d_width,
+    	d_lower,
+    	particles.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//

@@ -114,7 +114,8 @@ Physics_Tester::Physics_Tester(
     const int vector_size,
     const profugus::RNG& rng,
     Teuchos::ParameterList& db,
-    const profugus::XS& xs )
+    const profugus::XS& xs,
+    const int matid )
     : d_size( vector_size )
     , d_particle_tester( vector_size, rng )
 {
@@ -128,7 +129,7 @@ Physics_Tester::Physics_Tester(
     int num_cells = host_geom->num_cells();
 
     // Set matids with the geometry on the host.
-    std::vector<typename Geometry::matid_type> matids( num_cells, 0 );
+    std::vector<typename Geometry::matid_type> matids( num_cells, matid );
     host_geom->set_matids( matids );
 
     // Create a device copy of the geometry.
