@@ -23,7 +23,7 @@ class Physics_cudaTest : public ::testing::Test
   protected:
     // >>> TYPEDEFS
     typedef profugus::XS          XS_t;
-    typedef std::shared_ptr<XS_t> SP_XS;
+    typedef Teuchos::RCP<XS_t>    RCP_XS;
 
   protected:
     void SetUp()
@@ -33,7 +33,7 @@ class Physics_cudaTest : public ::testing::Test
 
     void build_xs()
     {
-        xs = SP_XS(new XS_t());
+        xs = Teuchos::rcp(new XS_t());
         xs->set(0, 5);
 
         std::vector<double> bnd(6, 0.0);
@@ -98,7 +98,7 @@ class Physics_cudaTest : public ::testing::Test
 
   protected:
     // >>> DATA
-    SP_XS xs;
+    RCP_XS xs;
 };
 
 //---------------------------------------------------------------------------//
@@ -109,7 +109,7 @@ TEST_F(Physics_cudaTest, total)
 {
     // Mesh edges
     std::vector<double> edges = {0.0, 0.50, 1.0};
-    std::vector<unsigned int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
+    std::vector<int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
 
     int num_p = 16;
     std::vector<double> totals(num_p);
@@ -128,7 +128,7 @@ TEST_F(Physics_cudaTest, collide)
 {
     // Mesh edges
     std::vector<double> edges = {0.0, 0.50, 1.0};
-    std::vector<unsigned int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
+    std::vector<int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
 
     int num_p = 16;
     //std::vector<double> totals(num_p);

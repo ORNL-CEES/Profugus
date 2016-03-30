@@ -76,8 +76,8 @@ __global__ void test_collide_kernel( Geom          *geom,
 void Physics_Tester::test_total( const Vec_Dbl  &x_edges,
                                  const Vec_Dbl  &y_edges,
                                  const Vec_Dbl  &z_edges,
-                                 const Vec_UInt &matids,
-                                       SP_XS     xs,
+                                 const Vec_Int  &matids,
+                                       RCP_XS    xs,
                                        Vec_Dbl  &host_totals )
 {
     cudaDeviceSynchronize();
@@ -114,8 +114,8 @@ void Physics_Tester::test_total( const Vec_Dbl  &x_edges,
 void Physics_Tester::test_collide( const Vec_Dbl  &x_edges,
                                    const Vec_Dbl  &y_edges,
                                    const Vec_Dbl  &z_edges,
-                                   const Vec_UInt &matids,
-                                         SP_XS     xs,
+                                   const Vec_Int  &matids,
+                                         RCP_XS    xs,
                                          int       num_particles )
 {
     cudaDeviceSynchronize();

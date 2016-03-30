@@ -31,8 +31,8 @@ typedef cuda_mc::Fixed_Source_Solver<Geom> Fixed_Solver;
 void Fixed_Solver_Tester::test_transport( const Vec_Dbl  &x_edges,
                                           const Vec_Dbl  &y_edges,
                                           const Vec_Dbl  &z_edges,
-                                          const Vec_UInt &matids,
-                                                SP_XS     xs,
+                                          const Vec_Int  &matids,
+                                                RCP_XS    xs,
                                                 int       num_particles,
                                                 Vec_Dbl  &tally)
 {

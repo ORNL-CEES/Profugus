@@ -67,7 +67,7 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
 void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
                                     const Vec_Dbl  &y_edges,
                                     const Vec_Dbl  &z_edges,
-                                          SP_XS     xs,
+                                          RCP_XS     xs,
                                     const Vec_Int  &cells,
                                           Vec_Dbl  &tally_result,
                                           int       num_particles )
@@ -75,7 +75,7 @@ void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     // Build geometry
     auto geom = std::make_shared<Geom>(x_edges,
         y_edges,z_edges);
-    std::vector<unsigned int> matids(geom->num_cells(),0);
+    std::vector<int> matids(geom->num_cells(),0);
     geom->set_matids(matids);
     cuda::Shared_Device_Ptr<Geom> sdp_geom(geom);
 

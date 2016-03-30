@@ -30,15 +30,14 @@ class Fixed_Solver_Tester
   public:
 
       typedef std::vector<int>              Vec_Int;
-      typedef std::vector<unsigned int>     Vec_UInt;
       typedef std::vector<double>           Vec_Dbl;
-      typedef std::shared_ptr<profugus::XS> SP_XS;
+      typedef Teuchos::RCP<profugus::XS>    RCP_XS;
 
       static void test_transport( const Vec_Dbl  &x_edges,
                                   const Vec_Dbl  &y_edges,
                                   const Vec_Dbl  &z_edges,
-                                  const Vec_UInt &matids,
-                                        SP_XS     xs,
+                                  const Vec_Int  &matids,
+                                        RCP_XS    xs,
                                         int       num_particles,
                                         Vec_Dbl  &tally);
 };

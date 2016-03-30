@@ -24,7 +24,7 @@ class Cell_Tally_cudaTest : public ::testing::Test
   protected:
     // >>> TYPEDEFS
     typedef profugus::XS          XS_t;
-    typedef std::shared_ptr<XS_t> SP_XS;
+    typedef Teuchos::RCP<XS_t>    RCP_XS;
 
   protected:
     void SetUp()
@@ -35,7 +35,7 @@ class Cell_Tally_cudaTest : public ::testing::Test
     void build_xs()
     {
         const int ng = 1;
-        xs = SP_XS(new XS_t());
+        xs = Teuchos::rcp(new XS_t());
         xs->set(0, ng);
 
         // make group boundaries
@@ -69,7 +69,7 @@ class Cell_Tally_cudaTest : public ::testing::Test
 
   protected:
     // >>> DATA
-    SP_XS xs;
+    RCP_XS xs;
 };
 
 //---------------------------------------------------------------------------//

@@ -220,7 +220,7 @@ void Uniform_Source_Tester::test_host_api( const Vec_Dbl &geom_bounds,
 
     // Build Geometry
     auto geom_host = std::make_shared<Geometry>(x_edges,y_edges,z_edges);
-    std::vector<unsigned int> matids(Nx*Ny*Nz,0);
+    std::vector<int> matids(Nx*Ny*Nz,0);
     geom_host->set_matids(matids);
     cuda::Shared_Device_Ptr<Geometry> geom(geom_host);
     //auto geom = cuda::shared_device_ptr<Geometry>(x_edges,y_edges,z_edges);
