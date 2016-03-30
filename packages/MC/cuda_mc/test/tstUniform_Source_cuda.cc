@@ -48,7 +48,7 @@ TEST(Uniform_Source, construction)
 
     // Source parameters.
     int num_batch = 2;
-    int num_source = num_batch*vector_size;
+    int num_source = num_batch*vector_size*profugus::nodes();
     int num_group = 4;
     Teuchos::Array<double> spectral_shape( num_group, 1.0 );
     Teuchos::RCP<Teuchos::ParameterList> db = Teuchos::parameterList();

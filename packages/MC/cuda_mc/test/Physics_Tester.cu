@@ -135,6 +135,9 @@ Physics_Tester::Physics_Tester(
     // Create a device copy of the geometry.
     d_geometry = cuda::Shared_Device_Ptr<Geometry>( host_geom );
 
+    // Create the cartesian mesh.
+    d_cart_mesh = cuda::shared_device_ptr<Cartesian_Mesh>( host_geom->mesh() );
+
     // Create the physics.
     d_physics = cuda::shared_device_ptr<Physics>( db, xs );
 

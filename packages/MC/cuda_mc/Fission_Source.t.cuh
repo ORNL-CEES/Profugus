@@ -489,6 +489,8 @@ template <class Geometry>
 void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
                                         Const_Array_View& fis_dens)
 {
+    REQUIRE(profugus::Global_RNG::d_rng.assigned());
+
     // calculate the number of particles per domain and set (equivalent)
     d_np_domain = d_np_total / profugus::nodes();
 
@@ -505,7 +507,6 @@ void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
 
         // number of cells in the mesh
         int num_cells = mesh.get_host_ptr()->num_cells();
-
         // determine the total number of fissions
         double fissions = 0.0;
         for (int cell = 0; cell < num_cells; ++cell)
@@ -513,7 +514,6 @@ void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
             fissions += fis_dens[cell] * mesh.get_host_ptr()->volume_host(cell);
         }
         CHECK(fissions > 0.0);
-
         // allocate fission distribution
         Vec_Int n(num_cells, 0);
 

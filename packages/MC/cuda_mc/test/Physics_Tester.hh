@@ -31,6 +31,7 @@ class Physics_Tester
 {
   public:
 
+    typedef cuda_profugus::Cartesian_Mesh Cartesian_Mesh;
     typedef cuda_profugus::Mesh_Geometry Geometry;
     typedef cuda_profugus::Particle_Vector<Geometry> Particle_Vector;
     typedef typename Particle_Vector::Event_t Event_t;
@@ -55,6 +56,10 @@ class Physics_Tester
     // Get the geometry.
     cuda::Shared_Device_Ptr<Geometry>& geometry()
     { return d_geometry; }
+
+    // Get the cartesian mesh under the geometry.
+    cuda::Shared_Device_Ptr<Cartesian_Mesh>& cart_mesh()
+    { return d_cart_mesh; }
 
     // Get the particles
     cuda::Shared_Device_Ptr<Particle_Vector>& particles()
@@ -98,6 +103,7 @@ class Physics_Tester
     
     cuda::Shared_Device_Ptr<Physics> d_physics;
     cuda::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda::Shared_Device_Ptr<Cartesian_Mesh> d_cart_mesh;
     Particle_Vector_Tester d_particle_tester;
     int d_size;    
 };

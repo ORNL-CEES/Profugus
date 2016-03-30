@@ -17,6 +17,7 @@
 #include "cuda_geometry/Cartesian_Mesh.hh"
 #include "utils/Definitions.hh"
 #include "rng/RNG_Control.hh"
+#include "mc/Global_RNG.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
@@ -53,6 +54,7 @@ class FissionSourceTest : public testing::Test
         int seed = 342412;
         profugus::RNG_Control control(seed);
         rng = control.rng();
+	profugus::Global_RNG::d_rng = rng;
 
         // make db
 	np = 800;
@@ -176,9 +178,9 @@ TYPED_TEST(FissionSourceTest, sample_geometry)
 
     // Initialize with no mesh - sample the geometry.
     source.build_initial_source();
-    EXPECT_EQ( this->np, source.num_to_transport() / profugus::nodes() );
+    EXPECT_EQ( this->np / profugus::nodes(), source.num_to_transport() );
     EXPECT_EQ( this->np, source.total_num_to_transport() );
-    EXPECT_EQ( this->np, source.num_left() );
+    EXPECT_EQ( this->np / profugus::nodes(), source.num_left() );
     EXPECT_EQ( 0, source.num_run() );
     EXPECT_FALSE( source.empty() );
     EXPECT_TRUE( source.is_initial_source() );
@@ -215,14 +217,126 @@ TYPED_TEST(FissionSourceTest, sample_geometry)
 // sample the initial source using the mesh
 TYPED_TEST(FissionSourceTest, sample_mesh)
 {
+    typedef typename TestFixture::Fission_Source Fission_Source;
 
+    // Create the fission source.
+    Fission_Source source( this->db, 
+			   this->physics_tester->geometry(),
+			   this->physics_tester->physics() );
+
+    EXPECT_EQ( this->np, source.Np() );
+    EXPECT_EQ( this->edges[0], source.lower_coords().x );
+    EXPECT_EQ( this->edges[0], source.lower_coords().y );
+    EXPECT_EQ( this->edges[0], source.lower_coords().z );
+    EXPECT_EQ( this->edges[1], source.width().x );
+    EXPECT_EQ( this->edges[1], source.width().y );
+    EXPECT_EQ( this->edges[1], source.width().z );
+
+    // Initialize with mesh and fission density.
+    Teuchos::Array<double> density( 1, this->np );
+    Teuchos::ArrayView<const double> dens_view = density();
+    source.build_initial_source( this->physics_tester->cart_mesh(), dens_view );
+    EXPECT_EQ( this->np / profugus::nodes(), source.num_to_transport() );
+    EXPECT_EQ( this->np, source.total_num_to_transport() );
+    EXPECT_EQ( this->np / profugus::nodes(), source.num_left() );
+    EXPECT_EQ( 0, source.num_run() );
+    EXPECT_FALSE( source.empty() );
+    EXPECT_TRUE( source.is_initial_source() );
+
+    // Set all the particles to dead.
+    Teuchos::Array<cuda_profugus::events::Event> dead_event( 
+	this->vector_size, cuda_profugus::events::DEAD );
+    this->physics_tester->particle_tester().set_event( dead_event );
+
+    // Get particles from the source.
+    source.get_particles( this->physics_tester->particles() );
+    EXPECT_EQ( source.num_to_transport() - this->vector_size, source.num_left() );
+    EXPECT_EQ( this->vector_size, source.num_run() );
+    
+    // check particles
+    Teuchos::Array<cuda_profugus::events::Event> events =
+    	this->physics_tester->particle_tester().event();
+    Teuchos::Array<int> matids = 
+    	this->physics_tester->particle_tester().matid();
+    Teuchos::Array<int> alive = 
+    	this->physics_tester->particle_tester().alive();
+    Teuchos::Array<double> wts = 
+    	this->physics_tester->particle_tester().wt();
+    for ( int i = 0; i < this->vector_size; ++i )
+    {
+    	EXPECT_EQ( cuda_profugus::events::BORN, events[i] );
+    	EXPECT_EQ( 1, matids[i] );
+	EXPECT_TRUE( alive[i] );
+    	EXPECT_EQ( 1.0, wts[i] );	
+    }
 }
 
 //---------------------------------------------------------------------------//
 // sample the source with fission sites
-// TYPED_TEST(FissionSourceTest, sample_fission_sites)
-// {
-// }
+TYPED_TEST(FissionSourceTest, sample_fission_sites)
+{
+    typedef typename TestFixture::Fission_Source Fission_Source;
+    typedef typename TestFixture::Fission_Site Fission_Site;
+
+    // Create the fission source.
+    Fission_Source source( this->db, 
+			   this->physics_tester->geometry(),
+			   this->physics_tester->physics() );
+
+    EXPECT_EQ( this->np, source.Np() );
+    EXPECT_EQ( this->edges[0], source.lower_coords().x );
+    EXPECT_EQ( this->edges[0], source.lower_coords().y );
+    EXPECT_EQ( this->edges[0], source.lower_coords().z );
+    EXPECT_EQ( this->edges[1], source.width().x );
+    EXPECT_EQ( this->edges[1], source.width().y );
+    EXPECT_EQ( this->edges[1], source.width().z );
+
+    // Initialize with fission sites
+    auto fission_sites = source.create_fission_site_container();
+    Fission_Site site;
+    site.m = 1;
+    site.r.x = 50.0;
+    site.r.y = 50.0;
+    site.r.z = 50.0;
+    for ( int n = 0; n < this->np; ++n )
+    {
+	fission_sites->push_back( site );
+    }
+    source.build_source( fission_sites );
+    EXPECT_EQ( this->np, source.num_to_transport() );
+    EXPECT_EQ( this->np * profugus::nodes(), source.total_num_to_transport() );
+    EXPECT_EQ( this->np, source.num_left() );
+    EXPECT_EQ( 0, source.num_run() );
+    EXPECT_FALSE( source.empty() );
+    EXPECT_TRUE( !source.is_initial_source() );
+
+    // Set all the particles to dead.
+    Teuchos::Array<cuda_profugus::events::Event> dead_event( 
+	this->vector_size, cuda_profugus::events::DEAD );
+    this->physics_tester->particle_tester().set_event( dead_event );
+
+    // Get particles from the source.
+    source.get_particles( this->physics_tester->particles() );
+    EXPECT_EQ( source.num_to_transport() - this->vector_size, source.num_left() );
+    EXPECT_EQ( this->vector_size, source.num_run() );
+    
+    // check particles
+    Teuchos::Array<cuda_profugus::events::Event> events =
+    	this->physics_tester->particle_tester().event();
+    Teuchos::Array<int> matids = 
+    	this->physics_tester->particle_tester().matid();
+    Teuchos::Array<int> alive = 
+    	this->physics_tester->particle_tester().alive();
+    Teuchos::Array<double> wts = 
+    	this->physics_tester->particle_tester().wt();
+    for ( int i = 0; i < this->vector_size; ++i )
+    {
+    	EXPECT_EQ( cuda_profugus::events::BORN, events[i] );
+    	EXPECT_EQ( 1, matids[i] );
+	EXPECT_TRUE( alive[i] );
+    	EXPECT_EQ( 1.0/profugus::nodes(), wts[i] );	
+    }
+}
 
 //---------------------------------------------------------------------------//
 //                 end of tstFission_Source_cuda.cc
