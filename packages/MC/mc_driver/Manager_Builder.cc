@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include "CudaUtils/config.h"
+
 #include "Manager_Builder.hh"
 #include "Manager.hh"
 
@@ -16,6 +18,10 @@
 
 #include "Teuchos_DefaultComm.hpp"
 #include "Teuchos_XMLParameterListHelpers.hpp"
+
+#ifdef USE_CUDA
+#include "cuda_mc/Manager_Builder_Cuda.hh"
+#endif
 
 namespace mc
 {
@@ -34,20 +40,34 @@ auto Manager_Builder::build(const std::string &xml_file) -> SP_Manager_Base
 
     SP_Manager_Base manager;
 
-    // If a "CORE" db is present, we're building an RTK_Geometry
-    if( master->isSublist("CORE") )
+    auto problem_db = Teuchos::sublist(master,"PROBLEM");
+    auto arch = problem_db->get("architecture",std::string("cpu"));
+    VALIDATE(arch=="cpu" || arch=="gpu", "Unknown architecture.");
+    if( arch == "cpu" )
     {
-        manager = std::make_shared<Manager<profugus::Core> >();
+        // If a "CORE" db is present, we're building an RTK_Geometry
+        if( master->isSublist("CORE") )
+        {
+            manager = std::make_shared<Manager<profugus::Core> >();
+        }
+        // If "MESH" db is present, we're building a Mesh_Geometry
+        else if( master->isSublist("MESH") )
+        {
+            manager = std::make_shared<Manager<profugus::Mesh_Geometry> >();
+        }
+        // No other options currently
+        else
+        {
+            VALIDATE(false,"Either CORE or MESH db must be present.");
+        }
     }
-    // If "MESH" db is present, we're building a Mesh_Geometry
-    else if( master->isSublist("MESH") )
+    else if( arch == "gpu" )
     {
-        manager = std::make_shared<Manager<profugus::Mesh_Geometry> >();
-    }
-    // No other options currently
-    else
-    {
-        VALIDATE(false,"Either CORE or MESH db must be present.");
+#ifdef USE_CUDA
+        manager = cuda_mc::Manager_Builder_Cuda::build(master);
+#else
+        VALIDATE(false,"Cuda not enabled in this build.");
+#endif
     }
 
     ENSURE( manager );
