@@ -77,7 +77,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Initialize track.
     void initialize(const Space_Vector& r,
                     const Space_Vector& direction,
-                    Geo_State_t       & state);
+                    Geo_State_t       & state) const;
 
     //! Get distance to next boundary.
     double distance_to_boundary(Geo_State_t& state);
@@ -113,6 +113,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         return c;
     }
 
+    //! Return the current cell ID from a position inside the mesh
+    geometry::cell_type cell(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<Mesh_State>::cell(r);
+    }
+
     //! Return the current material ID
     geometry::matid_type matid(const Geo_State_t &state) const
     {
@@ -121,6 +127,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
 
         ENSURE((*d_materials)[cell(state)] >= 0);
         return (*d_materials)[cell(state)];
+    }
+
+    //! Return the material ID for the given location
+    geometry::matid_type matid(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<Mesh_State>::matid(r);
     }
 
     //! Return the state with respect to outer geometry boundary
@@ -139,6 +151,12 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
             return geometry::OUTSIDE;
         }
         return geometry::INSIDE;
+    }
+
+    //! Return the boundary state for the given location
+    geometry::Boundary_State boundary_state(const Space_Vector &r) const
+    {
+        return Tracking_Geometry<Mesh_State>::boundary_state(r);
     }
 
     //! Return the current position.

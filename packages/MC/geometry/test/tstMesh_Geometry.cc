@@ -120,6 +120,8 @@ TEST_F(MeshGeometryTest, initialization)
 
     // check cell index
     EXPECT_EQ(1 + 2 * 4 + 2 * 4 * 3, geo.cell(state));
+    Space_Vector pos = geo.position(state);
+    EXPECT_EQ(1 + 2 * 4 + 2 * 4 * 3, geo.cell(pos));
 
     // check direction, position
     EXPECT_VEC_SOFT_EQ(r,     geo.position(state));
@@ -164,6 +166,9 @@ TEST_F(MeshGeometryTest, tags)
         EXPECT_EQ(cell * 2 + 1, geo.matid(state));
 
         EXPECT_EQ(INSIDE, geo.boundary_state(state));
+
+        // Check matid search
+        EXPECT_EQ(geo.matid(state), geo.matid(r));
     }
 
     r[Z] = 100.;

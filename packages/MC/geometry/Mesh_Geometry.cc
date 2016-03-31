@@ -57,7 +57,7 @@ void Mesh_Geometry::set_matids(SP_Vec_Int matids)
 void Mesh_Geometry::initialize(
         const Space_Vector& r,
         const Space_Vector& direction,
-        Geo_State_t       & state)
+        Geo_State_t       & state) const
 {
     using profugus::soft_equiv;
     using def::I; using def::J; using def::K;
