@@ -145,22 +145,24 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     // build the appropriate solver (default is eigenvalue)
     if (prob_type == "eigenvalue")
     {
-        std::shared_ptr<profugus::Fission_Source> source;
+        std::shared_ptr< profugus::Fission_Source<Geometry> > source;
         if (d_db->isSublist("kde_db"))
         {
             SCREEN_MSG("Using KDE fission source");
             source =
-                std::make_shared<profugus::KDE_Fission_Source>(d_db, d_geometry,
-                                                               d_physics,
-                                                               d_rnd_control);
+                std::make_shared< profugus::KDE_Fission_Source<Geometry> >(
+                    d_db, d_geometry,
+                    d_physics,
+                    d_rnd_control);
         }
         else
         {
             SCREEN_MSG("Using traditional fission source");
             source =
-                std::make_shared<profugus::Fission_Source>(d_db, d_geometry,
-                                                           d_physics,
-                                                           d_rnd_control);
+                std::make_shared< profugus::Fission_Source<Geometry> >(
+                    d_db, d_geometry,
+                    d_physics,
+                    d_rnd_control);
         }
         CHECK(source);
 
