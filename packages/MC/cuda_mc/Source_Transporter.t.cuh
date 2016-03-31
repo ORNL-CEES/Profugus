@@ -14,6 +14,8 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
+#include <random>
+#include <limits>
 #include <thrust/device_vector.h>
 
 #include "cuda_utils/CudaDBC.hh"
@@ -75,18 +77,20 @@ class RNG_Init
 {
   public:
 
-    RNG_Init( RNG_State_t *rngs)
+    RNG_Init( RNG_State_t *rngs, unsigned long long *seeds )
       : d_rngs(rngs)
+      , d_seeds(seeds)
     {}
 
     __device__ void operator()( std::size_t tid ) const
     {
-        curand_init(1234,tid,0,d_rngs+tid);
+        curand_init(d_seeds[tid],0,0,d_rngs+tid);
     }
 
   private:
 
-    RNG_State_t *d_rngs;
+    RNG_State_t         *d_rngs;
+    unsigned long long  *d_seeds;
 };
         
 
@@ -120,6 +124,8 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     {
         d_vr = cuda::shared_device_ptr<VR_Roulette_t>(db);
     }
+
+    d_seed = db->get("seed",1234);
 
     // Build domain transporter
     d_transporter = cuda::shared_device_ptr<Transporter_t>(
@@ -163,7 +169,17 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
     // FIXME: For KCODE problems this needs to happen ONCE
     //  instead of every iteration
     thrust::device_vector<RNG_State_t> rngs(num_particles);
-    RNG_Init init( rngs.data().get() );
+    thrust::host_vector<unsigned long long> seeds_host(num_particles);
+    std::mt19937 gen(d_seed);
+    std::uniform_int_distribution<unsigned long long> dist(
+            std::numeric_limits<unsigned long long>::min(),
+            std::numeric_limits<unsigned long long>::max());
+    for( auto &s : seeds_host )
+        s = dist(gen);
+
+    thrust::device_vector<unsigned long long> seeds(seeds_host);
+
+    RNG_Init init( rngs.data().get(), seeds.data().get() );
     cuda::parallel_launch( init, launch_args );
     cudaDeviceSynchronize();
 

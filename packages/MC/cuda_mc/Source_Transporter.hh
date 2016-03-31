@@ -119,6 +119,9 @@ class Source_Transporter
 
     // Nodes and node id.
     int d_node, d_nodes;
+
+    // Seed for CPU RNG
+    int d_seed;
 };
 
 } // end namespace cuda_mc
