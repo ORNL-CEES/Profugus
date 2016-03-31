@@ -140,10 +140,6 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
     // Get number of particles in source
     int num_particles = source->num_to_transport();
 
-    // Build launch args
-    cuda::Launch_Args<cuda::arch::Device> launch_args;
-    launch_args.set_num_elements(num_particles);
-
     // Initialize RNG states
     d_rng_control->initialize(num_particles);
 
@@ -151,6 +147,10 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
     auto particles = get_particles( sdp_source, d_rng_control->get_states());
     CHECK( particles.size() == num_particles );
     cudaDeviceSynchronize();
+
+    // Build launch args
+    cuda::Launch_Args<cuda::arch::Device> launch_args;
+    launch_args.set_num_elements(num_particles);
 
     // Build and execute kernel
     Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
