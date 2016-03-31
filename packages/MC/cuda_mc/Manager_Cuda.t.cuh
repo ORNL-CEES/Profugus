@@ -114,11 +114,11 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
         tallier_host->add_cell_tally(cell_tally);
     }
 
-    auto tallier = cuda::Shared_Device_Ptr<Tallier<Geom_t>>(tallier_host);
+    d_tallier = cuda::Shared_Device_Ptr<Tallier<Geom_t>>(tallier_host);
 
     // make the transporter
     SP_Transporter transporter(std::make_shared<Transporter_t>(
-                                   d_db, d_geometry, d_physics, tallier));
+                                   d_db, d_geometry, d_physics, d_tallier));
 
     // build the appropriate solver (default is eigenvalue)
     if (prob_type == "eigenvalue")

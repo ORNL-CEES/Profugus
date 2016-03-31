@@ -80,6 +80,9 @@ class Manager_Cuda : public mc::Manager_Base
     // Source shape
     SDP_Shape d_shape;
 
+    // Tallier
+    SDP_Tallier d_tallier;
+
     // Solvers.
     SP_Solver              d_solver;
     //SP_Keff_Solver         d_keff_solver;

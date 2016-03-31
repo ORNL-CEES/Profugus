@@ -62,7 +62,7 @@ void Tallier<Geometry>::add_cell_tally(SDP_Cell_Tally tally)
     REQUIRE(tally.get_device_ptr());
 
     // add the tally
-    d_cell_tally_host = tally.get_host_ptr();
+    d_cell_tally_host = tally;
     d_cell_tally      = tally.get_device_ptr();
 }
 
@@ -103,8 +103,8 @@ void Tallier<Geometry>::end_cycle(double num_particles)
 template <class Geometry>
 void Tallier<Geometry>::finalize(double num_particles)
 {
-    if( d_cell_tally_host )
-        d_cell_tally_host->finalize(num_particles);
+    if( d_cell_tally_host.get_host_ptr() )
+        d_cell_tally_host.get_host_ptr()->finalize(num_particles);
 }
 
 //---------------------------------------------------------------------------//
@@ -119,8 +119,8 @@ void Tallier<Geometry>::finalize(double num_particles)
 template <class Geometry>
 void Tallier<Geometry>::reset()
 {
-    if( d_cell_tally_host )
-        d_cell_tally_host->reset();
+    if( d_cell_tally_host.get_host_ptr() )
+        d_cell_tally_host.get_host_ptr()->reset();
 }
 
 //---------------------------------------------------------------------------//

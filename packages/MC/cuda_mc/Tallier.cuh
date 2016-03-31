@@ -56,7 +56,7 @@ class Tallier
 
     // Pointer to each tally type for now
     // Need to figure out how to manage this in an extensible way
-    SP_Cell_Tally d_cell_tally_host;
+    SDP_Cell_Tally d_cell_tally_host;
     Cell_Tally_t *d_cell_tally;
 
   public:
