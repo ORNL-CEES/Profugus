@@ -123,6 +123,11 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
         host_tally[ind] *= norm_factor;
     }
 
+    std::cout << "Cell tally: ";
+    for( const auto &t : host_tally )
+        std::cout << t << " ";
+    std::cout << std::endl;
+
     // Copy results back to device
     cudaMemcpy( d_tally, &host_tally[0], d_num_cells*sizeof(double),
                 cudaMemcpyHostToDevice);
