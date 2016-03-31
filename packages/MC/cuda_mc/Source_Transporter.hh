@@ -32,6 +32,7 @@ template <class Geom> class Physics;
 template <class Geom> class Domain_Transporter;
 template <class Geom> class Tallier;
 template <class Geom> class VR_Roulette;
+class RNG_Control;
 
 //===========================================================================//
 /*!
@@ -70,6 +71,7 @@ class Source_Transporter
     typedef cuda::Shared_Device_Ptr<Transporter_t>        SDP_Transporter;
     typedef cuda::Shared_Device_Ptr<Tallier_t>            SDP_Tallier;
     typedef cuda::Shared_Device_Ptr<VR_Roulette_t>        SDP_VR;
+    typedef std::shared_ptr<RNG_Control>                  SP_RNG_Control;
     typedef Teuchos::RCP<Teuchos::ParameterList>          RCP_Std_DB;
     typedef def::size_type                                size_type;
     //@}
@@ -91,6 +93,9 @@ class Source_Transporter
 
     // Domain transporter.
     SDP_Transporter d_transporter;
+
+    // RNG Control
+    SP_RNG_Control d_rng_control;
 
   public:
     // Constructor.
@@ -119,9 +124,6 @@ class Source_Transporter
 
     // Nodes and node id.
     int d_node, d_nodes;
-
-    // Seed for CPU RNG
-    int d_seed;
 };
 
 } // end namespace cuda_mc

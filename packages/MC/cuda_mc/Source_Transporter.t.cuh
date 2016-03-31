@@ -14,8 +14,6 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
-#include <random>
-#include <limits>
 #include <thrust/device_vector.h>
 
 #include "cuda_utils/CudaDBC.hh"
@@ -31,6 +29,7 @@
 #include "Domain_Transporter.cuh"
 #include "VR_Roulette.cuh"
 #include "Tallier.cuh"
+#include "RNG_Control.cuh"
 
 namespace cuda_mc
 {
@@ -72,28 +71,6 @@ class Transport_Functor
     Particle_t          *d_particles;
 };
 
-// Functor to initialize RNG
-class RNG_Init
-{
-  public:
-
-    RNG_Init( RNG_State_t *rngs, unsigned long long *seeds )
-      : d_rngs(rngs)
-      , d_seeds(seeds)
-    {}
-
-    __device__ void operator()( std::size_t tid ) const
-    {
-        curand_init(d_seeds[tid],0,0,d_rngs+tid);
-    }
-
-  private:
-
-    RNG_State_t         *d_rngs;
-    unsigned long long  *d_seeds;
-};
-        
-
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
@@ -125,7 +102,9 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
         d_vr = cuda::shared_device_ptr<VR_Roulette_t>(db);
     }
 
-    d_seed = db->get("seed",1234);
+    int seed = db->get("seed",1234);
+
+    d_rng_control = std::make_shared<RNG_Control>(seed);
 
     // Build domain transporter
     d_transporter = cuda::shared_device_ptr<Transporter_t>(
@@ -165,26 +144,11 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
     cuda::Launch_Args<cuda::arch::Device> launch_args;
     launch_args.set_num_elements(num_particles);
 
-    // Initialize RNG
-    // FIXME: For KCODE problems this needs to happen ONCE
-    //  instead of every iteration
-    thrust::device_vector<RNG_State_t> rngs(num_particles);
-    thrust::host_vector<unsigned long long> seeds_host(num_particles);
-    std::mt19937 gen(d_seed);
-    std::uniform_int_distribution<unsigned long long> dist(
-            std::numeric_limits<unsigned long long>::min(),
-            std::numeric_limits<unsigned long long>::max());
-    for( auto &s : seeds_host )
-        s = dist(gen);
-
-    thrust::device_vector<unsigned long long> seeds(seeds_host);
-
-    RNG_Init init( rngs.data().get(), seeds.data().get() );
-    cuda::parallel_launch( init, launch_args );
-    cudaDeviceSynchronize();
+    // Initialize RNG states
+    d_rng_control->initialize(num_particles);
 
     // Get source particles
-    auto particles = get_particles( sdp_source, rngs );
+    auto particles = get_particles( sdp_source, d_rng_control->get_states());
     CHECK( particles.size() == num_particles );
     cudaDeviceSynchronize();
 

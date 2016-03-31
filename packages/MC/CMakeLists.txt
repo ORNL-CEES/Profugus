@@ -176,6 +176,7 @@ IF(USE_CUDA)
     cuda_mc/Manager_Builder_Cuda.cu
     cuda_mc/Manager_Cuda.pt.cu
     cuda_mc/Physics.pt.cu
+    cuda_mc/RNG_Control.cu
     cuda_mc/Source.pt.cu
     cuda_mc/Source_Transporter.pt.cu
     cuda_mc/Tallier.pt.cu
