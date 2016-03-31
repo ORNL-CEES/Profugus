@@ -16,9 +16,10 @@
 #include <memory>
 
 #include "comm/P_Stream.hh"
-#include "cuda_mc/Fixed_Source_Solver.hh"
-//#include "cuda_mc/Keff_Solver.hh"
-#include "cuda_mc/Source_Transporter.hh"
+#include "Box_Shape.cuh"
+#include "Fixed_Source_Solver.hh"
+//#include "Keff_Solver.hh"
+#include "Source_Transporter.hh"
 #include "cuda_xs/XS_Device.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "mc_driver/Manager_Base.hh"
@@ -53,6 +54,7 @@ class Manager_Cuda : public mc::Manager_Base
     typedef std::shared_ptr<Fixed_Source_Solver_t>      SP_Fixed_Source_Solver;
     typedef Tallier<Geom_t>                             Tallier_t;
     typedef cuda::Shared_Device_Ptr<Tallier_t>          SDP_Tallier;
+    typedef cuda::Shared_Device_Ptr<Box_Shape>          SDP_Shape;
     typedef Source_Transporter<Geom_t>                  Transporter_t;
     typedef std::shared_ptr<Transporter_t>              SP_Transporter;
     //typedef profugus::Fission_Source<Geom_t>            Fission_Source_t;
@@ -74,6 +76,9 @@ class Manager_Cuda : public mc::Manager_Base
 
     // On-device xs lib.
     SDP_XS_Dev d_xs_dev;
+
+    // Source shape
+    SDP_Shape d_shape;
 
     // Solvers.
     SP_Solver              d_solver;

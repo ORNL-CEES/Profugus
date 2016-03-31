@@ -160,9 +160,8 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
         const auto &box = source_db->get<Array_Dbl>("box");
         CHECK( box.size() == 6 );
 
-        auto shape_host = std::make_shared<cuda_mc::Box_Shape>(
+        d_shape = cuda::shared_device_ptr<cuda_mc::Box_Shape>(
             box[0], box[1], box[2], box[3], box[4], box[5] );
-        auto shape = cuda::Shared_Device_Ptr<cuda_mc::Box_Shape>(shape_host);
 
         // Source spectrum
         const auto &spectrum = source_db->get<Array_Dbl>("spectrum");
@@ -172,7 +171,7 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
         // make the uniform source
         auto source = std::make_shared<cuda_mc::Uniform_Source<Geometry> >(
                 d_db, d_geometry);
-        source->build_source(shape);
+        source->build_source(d_shape);
 
         // make the solver
         d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>();
@@ -374,6 +373,7 @@ void Manager_Cuda<Geometry>::build_physics(RCP_ParameterList master_db)
     RCP_XS xs = builder.get_xs();
     CHECK(xs->num_mat() == matids.size());
     CHECK(xs->num_groups() == 1 + (g_last - g_first));
+    d_db->set("num_groups",xs->num_groups());
 
     // Cuda physics also needs device pointer
     d_xs_dev = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
