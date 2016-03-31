@@ -40,7 +40,7 @@ __global__ void compute_volumes_kernel(Mesh_Geometry    mesh,
 __global__ void compute_matids_kernel(Mesh_Geometry   mesh,
                                       int             num_points,
                                       const Point    *points,
-                                      matid_type     *matids)
+                                      int            *matids)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
@@ -176,7 +176,7 @@ void Mesh_Geometry_Tester::test_matid()
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,Point> device_points(
         profugus::make_view(host_points));
-    cuda::Device_Vector<Arch,matid_type> device_cell_matids(num_points);
+    cuda::Device_Vector<Arch,int> device_cell_matids(num_points);
 
     // Execute kernel
     compute_matids_kernel<<<1,num_points>>>(
