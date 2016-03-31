@@ -31,19 +31,34 @@ namespace profugus
  */
 //===========================================================================//
 
-class KDE_Fission_Source : public Fission_Source
+template<class Geometry>
+class KDE_Fission_Source : public Fission_Source<Geometry>
 {
-    typedef Fission_Source  Base;
+    typedef Fission_Source<Geometry>  Base;
 
   public:
     //@{
     //! Useful typedefs
-    typedef Base::RCP_Std_DB            RCP_Std_DB;
-    typedef Base::SP_Fission_Sites      SP_Fission_Sites;
-    typedef std::shared_ptr<KDE_Kernel> SP_KDE_Kernel;
-    typedef KDE_Kernel::cell_type       cell_type;
+    typedef typename Base::RCP_Std_DB        RCP_Std_DB;
+    typedef typename Base::SP_Geometry       SP_Geometry;
+    typedef typename Base::SP_Physics        SP_Physics;
+    typedef typename Base::SP_RNG_Control    SP_RNG_Control;
+    typedef typename Base::SP_Particle       SP_Particle;
+    typedef typename Base::SP_Fission_Sites  SP_Fission_Sites;
+    typedef typename Base::Fission_Site      Fission_Site;
+    typedef typename Base::Particle_t        Particle_t;
+    typedef typename Base::Space_Vector      Space_Vector;
+    typedef KDE_Kernel<Geometry>             KDE_Kernel_t;
+    typedef std::shared_ptr<KDE_Kernel_t>    SP_KDE_Kernel;
+    typedef typename KDE_Kernel_t::cell_type cell_type;
     //@}
 
+  private:
+    // Expose base class data
+    using Base::d_fission_sites;
+    using Base::d_wt;
+    using Base::d_num_left;
+    
   public:
     // Constructor
     KDE_Fission_Source(RCP_Std_DB     db,
