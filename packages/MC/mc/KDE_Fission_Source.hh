@@ -58,7 +58,10 @@ class KDE_Fission_Source : public Fission_Source<Geometry>
     using Base::d_fission_sites;
     using Base::d_wt;
     using Base::d_num_left;
-    
+    using Base::b_physics;
+    using Base::b_geometry;
+    using Base::d_num_run;
+
   public:
     // Constructor
     KDE_Fission_Source(RCP_Std_DB     db,

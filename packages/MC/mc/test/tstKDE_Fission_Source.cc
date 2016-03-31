@@ -34,13 +34,14 @@ class KernelTest : public SourceTestBase
     typedef SourceTestBase Base;
 
   protected:
-    typedef profugus::KDE_Fission_Source  KDE_Source;
+    typedef profugus::Core                         Geometry;
+    typedef profugus::KDE_Fission_Source<Geometry> KDE_Source;
 
-    typedef KDE_Source::Fission_Site_Container Fission_Site_Container;
-    typedef KDE_Source::Fission_Site           Fission_Site;
-    typedef KDE_Source::SP_Physics             SP_Physics;
-    typedef KDE_Source::SP_Fission_Sites       SP_Fission_Sites;
-    typedef KDE_Source::SP_Particle            SP_Particle;
+    typedef typename KDE_Source::Fission_Site_Container Fission_Site_Container;
+    typedef typename KDE_Source::Fission_Site           Fission_Site;
+    typedef typename KDE_Source::SP_Physics             SP_Physics;
+    typedef typename KDE_Source::SP_Fission_Sites       SP_Fission_Sites;
+    typedef typename KDE_Source::SP_Particle            SP_Particle;
 
     virtual int get_seed() const
     {

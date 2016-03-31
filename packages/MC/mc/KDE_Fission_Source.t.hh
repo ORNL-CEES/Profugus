@@ -36,7 +36,7 @@ KDE_Fission_Source<Geometry>::KDE_Fission_Source(RCP_Std_DB     db,
     : Base(db, geometry, physics, rng_control)
 {
     typedef Axial_KDE_Kernel<Geometry>  Axial_KDE_Kernel_t;
-    
+
     REQUIRE(db.is_valid_ptr());
     REQUIRE(db->isSublist("kde_db"));
 
@@ -143,7 +143,7 @@ KDE_Fission_Source<Geometry>::get_particle()
 
     // if there is a fission site container than get the particle from there;
     // otherwise assume this is an initial source
-    if (!is_initial_source())
+    if (!this->is_initial_source())
     {
         CHECK(!d_fission_sites->empty());
 
@@ -168,7 +168,7 @@ KDE_Fission_Source<Geometry>::get_particle()
     }
     else
     {
-        matid = sample_geometry(r, omega, *p, rng);
+        matid = this->sample_geometry(r, omega, *p, rng);
     }
 
     // set the material id in the particle
