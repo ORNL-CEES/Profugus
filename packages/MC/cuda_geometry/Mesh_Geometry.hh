@@ -80,8 +80,17 @@ class Mesh_Geometry
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
 
-    // Bounding box (is this needed?)
-    //profugus::Bounding_Box get_extents() const;
+    //! Low corner of problem domain
+    cuda::Space_Vector lower() const
+    {
+        return d_mesh.lower();
+    }
+
+    //! High corner of problem domain
+    cuda::Space_Vector upper() const
+    {
+        return d_mesh.upper();
+    }
 
     // >>> DEVICE API
 
@@ -224,8 +233,8 @@ class Mesh_Geometry
     {
         REQUIRE(dist >= 0.0);
         REQUIRE(cuda::utility::soft_equiv(
-                    cuda::utility::vector_magnitude(state.d_dir),
-                        1.0, 1.0e-6));
+                cuda::utility::vector_magnitude(state.d_dir),
+                1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
         state.d_r.x += dist * state.d_dir.x;

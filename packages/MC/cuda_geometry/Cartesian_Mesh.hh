@@ -210,6 +210,33 @@ class Cartesian_Mesh
             - edges_start - 1;
     }
 
+    //! Get lower corner of domain
+    cuda::Space_Vector lower() const
+    {
+        cuda::Space_Vector xyz;
+
+        cudaMemcpy(&xyz.x, dd_x_edges, sizeof(double), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.y, dd_y_edges, sizeof(double), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.z, dd_z_edges, sizeof(double), cudaMemcpyDeviceToHost);
+
+        return xyz;
+    }
+
+    //! Get high corner of domain
+    cuda::Space_Vector upper() const
+    {
+        cuda::Space_Vector xyz;
+
+        cudaMemcpy(&xyz.x, dd_x_edges+d_cells_x, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.y, dd_y_edges+d_cells_y, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.z, dd_z_edges+d_cells_z, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+
+        return xyz;
+    }
+
     //! Low corner of mesh in \e (i,j,k) direction.
     __device__ double low_corner(dim_type d) const
     {
