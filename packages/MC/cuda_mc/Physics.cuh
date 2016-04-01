@@ -119,7 +119,7 @@ class Physics
 
     // Sample fission site.
     __device__ int sample_fission_site(const Particle_t &p, Fission_Site *fsc,
-                            double keff) const;
+                                       double keff) const;
 
     // Sample fission spectrum and initialize the physics state.
     __device__ bool initialize_fission(unsigned int matid, Particle_t &p) const;
