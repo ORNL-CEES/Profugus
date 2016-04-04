@@ -180,7 +180,7 @@ Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
 template <class Geometry>
 __device__ void
 Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
-                                                double dist) const
+                                                double      dist) const
 {
     REQUIRE(particle.event() == profugus::events::COLLISION);
 
@@ -188,15 +188,30 @@ Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
     d_geometry->move_to_point(dist, particle.geo_state());
 
     // sample fission sites
-    /*
     if (d_sample_fission_sites)
     {
         CHECK(d_fission_sites);
         CHECK(d_keff > 0.0);
-        d_num_fission_sites += d_physics->sample_fission_site(
-            particle, *d_fission_sites, d_keff);
+        int num_sites = d_physics->sample_fission_site(particle, d_keff);
+
+        if( num_sites > 0 )
+        {
+            // Create fission site
+            Fission_Site site;
+            site.m = particle.matid();
+            site.r = d_geometry->position(particle.geo_state());
+
+            // Get index of first site to be written using an atomic
+            int offset = atomicAdd(&d_num_fission_sites,num_sites);
+            
+            // Don't write past end of allocated array
+            num_sites = min(num_sites,d_max_fission_sites-offset);
+
+            // Add fission sites
+            for( int i = 0; i < num_sites; ++i )
+                d_fission_sites[i] = site;
+        }
     }
-    */
 
     // use the physics package to process the collision
     d_physics->collide(particle);

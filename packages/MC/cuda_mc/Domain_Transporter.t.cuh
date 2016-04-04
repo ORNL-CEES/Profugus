@@ -73,19 +73,22 @@ Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
  * \param fission_sites
  * \param keff
  */
-/*
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(SP_Fission_Sites fission_sites,
-                                       double           keff)
+void Domain_Transporter<Geometry>::set(Fission_Site *fission_sites,
+                                       int           num_sites,
+                                       double        keff)
 {
     // assign the container
     d_fission_sites = fission_sites;
+
+    // Number of allocated sites
+    d_max_fission_sites = num_sites;
 
     // initialize the sampling flag
     d_sample_fission_sites = false;
 
     // set the flag indicating whether fission sites should be sampled or not
-    if (d_fission_sites)
+    if (num_sites > 0)
     {
         d_sample_fission_sites = true;
     }
@@ -93,10 +96,10 @@ void Domain_Transporter<Geometry>::set(SP_Fission_Sites fission_sites,
     // assign current iterate of keff
     d_keff = keff;
 
+
     // initialize the number of fission sites to 0
     d_num_fission_sites = 0;
 }
-*/
 
 } // end namespace cuda_mc
 

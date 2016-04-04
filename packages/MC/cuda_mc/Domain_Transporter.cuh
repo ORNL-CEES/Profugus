@@ -46,9 +46,9 @@ class Domain_Transporter
     typedef typename Geometry_t::Space_Vector          Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef typename Physics_t::Particle_t             Particle_t;
+    typedef typename Physics_t::Fission_Site           Fission_Site;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
-    //typedef Fission_Site_Container Fission_Site_Container;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;
     //@}
 
@@ -59,7 +59,6 @@ class Domain_Transporter
     typedef cuda::Shared_Device_Ptr<Particle_t>       SDP_Particle;
     typedef cuda::Shared_Device_Ptr<VR_Roulette_t>    SDP_VR;
     typedef cuda::Shared_Device_Ptr<Tallier_t>        SDP_Tallier;
-    //typedef std::shared_ptr<Fission_Site_Container> SP_Fission_Sites;
     //@}
 
   private:
@@ -78,7 +77,7 @@ class Domain_Transporter
     VR_Roulette_t *d_vr;
 
     // Fission sites.
-    //SP_Fission_Sites d_fission_sites;
+    Fission_Site *d_fission_sites;
 
   public:
 
@@ -89,7 +88,7 @@ class Domain_Transporter
                        SDP_VR       vr      = SDP_VR() );
 
     // Set fission site sampling.
-    //void set(SP_Fission_Sites fission_sites, double keff);
+    void set(Fission_Site *fission_sites, int num_sites, double keff);
 
     // Transport a particle through the domain.
     __device__ void transport(Particle_t &particle) const;
@@ -108,7 +107,10 @@ class Domain_Transporter
     bool d_sample_fission_sites;
 
     // Number of fission sites sampled.
-    int d_num_fission_sites;
+    mutable int d_num_fission_sites;
+
+    // Number of fission sites allocated
+    int d_max_fission_sites;
 
     // Current keff iterate.
     double d_keff;

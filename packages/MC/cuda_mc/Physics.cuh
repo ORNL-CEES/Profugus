@@ -118,8 +118,8 @@ class Physics
     __device__ void collide(Particle_t &particle) const;
 
     // Sample fission site.
-    __device__ int sample_fission_site(const Particle_t &p, Fission_Site *fsc,
-                                       double keff) const;
+    __device__ int sample_fission_site(const Particle_t   &p,
+                                             double        keff) const;
 
     // Sample fission spectrum and initialize the physics state.
     __device__ bool initialize_fission(unsigned int matid, Particle_t &p) const;
@@ -134,12 +134,6 @@ class Physics
     }
 
     // >>> FISSION SITE CONTAINER OPERATIONS
-
-    //! Fission site position.
-    __device__ static Space_Vector fission_site(const Fission_Site &fs)
-    {
-        return fs.r;
-    }
 
     // >>> CLASS FUNCTIONS
 

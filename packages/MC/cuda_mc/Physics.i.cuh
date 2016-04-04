@@ -204,9 +204,8 @@ bool Physics<Geometry>::initialize_fission(unsigned int  matid,
  */
 template <class Geometry>
 __device__
-int Physics<Geometry>::sample_fission_site(const Particle_t &p,
-                                           Fission_Site     *fsc,
-                                           double            keff) const
+int Physics<Geometry>::sample_fission_site(const Particle_t   &p,
+                                                 double        keff) const
 {
     REQUIRE(d_geometry);
     REQUIRE(p.matid() < d_mat->num_mat() );
@@ -217,8 +216,6 @@ int Physics<Geometry>::sample_fission_site(const Particle_t &p,
     // if the material is not fissionable exit
     if (!is_fissionable(matid))
         return 0;
-
-    // otherwise make a fission site and sample
 
     // get the group from the particle
     int group = p.group();
@@ -231,16 +228,8 @@ int Physics<Geometry>::sample_fission_site(const Particle_t &p,
         d_mat->vector(matid, XS_t::TOTAL)(group) /
         keff + p.ran());
 
-    // add sites to the fission site container
-    for (int i = 0; i < n; ++i)
-    {
-        Fission_Site site;
-        site.m = matid;
-        site.r = d_geometry->position(p.geo_state());
-        INSIST(false,"FSC not implemented");
-        //fsc.push_back(site);
-        REQUIRE(false);
-    }
+    // NOTE: Unlike cpu version, we put creation of actual fission site
+    // into Domain_Transporter
 
     return n;
 }

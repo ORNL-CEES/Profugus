@@ -208,7 +208,7 @@ auto Fission_Source<Geometry>::get_particle(
     int matid = 0;
 
     // particle position and isotropic direction
-    Space_Vector r, omega;
+    Space_Vector omega;
 
     // sample the angle isotropically
     sampler::sample_isotropic(omega, rng);
@@ -223,11 +223,8 @@ auto Fission_Source<Geometry>::get_particle(
         // get the last element in the site container
         Fission_Site &fs = d_fission_sites[tid];
 
-        // get the location of the physics site
-        r = d_physics->fission_site(fs);
-
         // intialize the geometry state
-        b_geometry->initialize(r, omega, p.geo_state());
+        b_geometry->initialize(fs.r, omega, p.geo_state());
 
         // get the material id
         matid = b_geometry->matid(p.geo_state());
@@ -238,6 +235,7 @@ auto Fission_Source<Geometry>::get_particle(
     }
     else
     {
+        Space_Vector r;
         matid = sample_geometry(r, omega, p, rng);
     }
 
