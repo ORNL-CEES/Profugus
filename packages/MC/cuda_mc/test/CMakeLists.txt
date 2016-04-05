@@ -23,6 +23,7 @@ SET(CUDA_SOURCES
   Cell_Tally_Tester.cu
   Domain_Transporter_Tester.cu
   Fixed_Solver_Tester.cu
+  Keff_Tally_Tester.cu
   Particle_Tester.cu
   Physics_Tester.cu
   Source_Transporter_Tester.cu
@@ -44,6 +45,7 @@ ADD_UTILS_TEST(tstBox_Shape_cuda.cc             NP 1 ${DEPS})
 ADD_UTILS_TEST(tstCell_Tally_cuda.cc            NP 1 ${DEPS})
 ADD_UTILS_TEST(tstDomain_Transporter_cuda.cc    NP 1 ${DEPS})
 ADD_UTILS_TEST(tstFixed_Source_Solver_cuda.cc   NP 1 ${DEPS})
+ADD_UTILS_TEST(tstKeff_Tally_cuda.cc            NP 1 ${DEPS})
 ADD_UTILS_TEST(tstParticle_cuda.cc              NP 1 ${DEPS})
 ADD_UTILS_TEST(tstPhysics_cuda.cc               NP 1 ${DEPS})
 ADD_UTILS_TEST(tstSource_Transporter_cuda.cc    NP 1 ${DEPS})

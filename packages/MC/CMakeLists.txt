@@ -174,6 +174,7 @@ IF(USE_CUDA)
     cuda_mc/Domain_Transporter.pt.cu
     cuda_mc/Fission_Source.pt.cu
     cuda_mc/Fixed_Source_Solver.pt.cu
+    cuda_mc/Keff_Tally.pt.cu
     cuda_mc/Manager_Builder_Cuda.cu
     cuda_mc/Manager_Cuda.pt.cu
     cuda_mc/Physics.pt.cu
