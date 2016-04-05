@@ -11,7 +11,7 @@
 #ifndef cuda_mc_Sampler_cuh
 #define cuda_mc_Sampler_cuh
 
-#include "Definitions.cuh"
+#include "Definitions.hh"
 
 namespace cuda_mc
 {

@@ -8,12 +8,9 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "../Box_Shape.cuh"
 #include "Box_Shape_Tester.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
-
-using cuda_mc::Box_Shape;
 
 //---------------------------------------------------------------------------//
 // Test fixture

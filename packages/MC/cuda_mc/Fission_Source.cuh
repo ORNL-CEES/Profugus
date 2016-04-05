@@ -19,6 +19,7 @@
 #include "Particle.cuh"
 #include "RNG_Control.cuh"
 #include "Source.cuh"
+#include "Definitions.hh"
 
 namespace cuda_mc
 {
@@ -75,7 +76,6 @@ class Fission_Source : public Source<Geometry>
     //! Typedefs.
     typedef Geometry                                    Geometry_t;
     typedef Physics<Geometry_t>                         Physics_t;
-    typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef thrust::device_vector<Fission_Site>         Fission_Site_Vector;
     typedef Particle<Geometry_t>                        Particle_t;
     typedef cuda::Space_Vector                          Space_Vector;

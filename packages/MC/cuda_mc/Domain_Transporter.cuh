@@ -16,6 +16,7 @@
 #include "Step_Selector.cuh"
 #include "VR_Roulette.cuh"
 #include "Tallier.cuh"
+#include "Definitions.hh"
 
 namespace cuda_mc
 {
@@ -46,7 +47,6 @@ class Domain_Transporter
     typedef typename Geometry_t::Space_Vector          Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef typename Physics_t::Particle_t             Particle_t;
-    typedef typename Physics_t::Fission_Site           Fission_Site;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;

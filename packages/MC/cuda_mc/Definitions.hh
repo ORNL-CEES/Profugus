@@ -11,14 +11,27 @@
 #ifndef cuda_mc_Definitions_hh
 #define cuda_mc_Definitions_hh
 
+#ifdef __CUDACC__
 #include <curand_kernel.h>
+#endif
+
+#include "cuda_utils/Definitions.hh"
 
 namespace cuda_mc
 {
 
 //---------------------------------------------------------------------------//
 
+#ifdef __CUDACC__
 typedef curandState_t RNG_State_t;
+#endif
+
+//! Fission site structure for storing fission sites in k-code.
+struct Fission_Site
+{
+    int                m;
+    cuda::Space_Vector r;
+};
 
 
 //---------------------------------------------------------------------------//

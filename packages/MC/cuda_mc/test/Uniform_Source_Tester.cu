@@ -10,7 +10,7 @@
 
 #include "Uniform_Source_Tester.hh"
 #include "../Uniform_Source.cuh"
-#include "../Definitions.cuh"
+#include "../Definitions.hh"
 
 #include "utils/View_Field.hh"
 #include "cuda_utils/Device_Vector.hh"

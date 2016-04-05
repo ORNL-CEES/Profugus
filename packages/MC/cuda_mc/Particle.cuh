@@ -16,7 +16,7 @@
 #include "CudaUtils/cuda_utils/Definitions.hh"
 #include "MC/mc/Definitions.hh"
 #include "CudaUtils/cuda_utils/CudaDBC.hh"
-#include "Definitions.cuh"
+#include "Definitions.hh"
 
 namespace cuda_mc
 {

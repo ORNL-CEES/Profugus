@@ -23,7 +23,6 @@
 #include "comm/global.hh"
 #include "Sampler.cuh"
 #include "Uniform_Source.cuh"
-#include "Definitions.cuh"
 
 namespace cuda_mc
 {

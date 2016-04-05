@@ -13,7 +13,7 @@
 
 #include <curand_kernel.h>
 
-#include "Definitions.cuh"
+#include "Definitions.hh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/CudaDBC.hh"
 

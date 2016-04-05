@@ -17,7 +17,7 @@
 #include "Box_Shape.cuh"
 #include "Source.cuh"
 #include "Particle.cuh"
-#include "Definitions.cuh"
+#include "Definitions.hh"
 #include "cuda_utils/Device_Vector.hh"
 
 #include "Teuchos_ParameterList.hpp"

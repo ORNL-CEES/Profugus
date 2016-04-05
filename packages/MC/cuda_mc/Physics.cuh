@@ -25,7 +25,7 @@
 #include "xs/XS.hh"
 #include "mc/Definitions.hh"
 #include "Particle.cuh"
-#include "Definitions.cuh"
+#include "Definitions.hh"
 
 namespace cuda_mc
 {
@@ -72,13 +72,6 @@ class Physics
     typedef typename Geometry_t::Space_Vector   Space_Vector;
     typedef profugus::physics::Reaction_Type    Reaction_Type;
     //@}
-
-    //! Fission site structure for storing fission sites in k-code.
-    struct Fission_Site
-    {
-        int          m;
-        Space_Vector r;
-    };
 
   private:
     // >>> DATA
