@@ -14,7 +14,7 @@
 #include <thrust/device_vector.h>
 
 #include "cuda_geometry/Cartesian_Mesh.hh"
-//#include "Fission_Rebalance.hh"
+#include "Fission_Rebalance.hh"
 #include "Physics.cuh"
 #include "Particle.cuh"
 #include "RNG_Control.cuh"
@@ -82,8 +82,7 @@ class Fission_Source : public Source<Geometry>
     typedef RNG_Control::RNG_State_t                    RNG_State_t;
     typedef cuda::Shared_Device_Ptr<Geometry>           SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>          SDP_Physics;
-    //typedef Fission_Rebalance<Geometry_t>               Fission_Rebalance_t;
-    //typedef std::shared_ptr<Fission_Rebalance_t>        SP_Fission_Rebalance;
+    typedef std::shared_ptr<Fission_Rebalance>          SP_Fission_Rebalance;
     typedef Teuchos::RCP<Teuchos::ParameterList>        RCP_Std_DB;
     typedef def::size_type                              size_type;
     //@}
@@ -96,7 +95,7 @@ class Fission_Source : public Source<Geometry>
     Fission_Site       *d_fission_sites;
 
     // Fission rebalance (across sets).
-    //SP_Fission_Rebalance d_fission_rebalance;
+    SP_Fission_Rebalance d_fission_rebalance;
 
     // Physics
     SDP_Physics d_physics_host;

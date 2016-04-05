@@ -39,7 +39,7 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
                                          SDP_Geometry   geometry,
                                          SDP_Physics    physics)
     : Base(geometry)
-    //, d_fission_rebalance(std::make_shared<Fission_Rebalance_t>())
+    , d_fission_rebalance(std::make_shared<Fission_Rebalance>())
     , d_physics_host(physics)
     , d_nodes(profugus::nodes())
     , d_have_sites(false)
@@ -160,14 +160,17 @@ void Fission_Source<Geometry>::build_source(Fission_Site_Vector &fission_sites)
     // set-rebalance may try to do some load-balancing when it can, that is
     // why this call should comm after the gather; otherwise the
     // load-balancing could provide poor results)
-    //d_fission_rebalance->rebalance(d_fission_sites);
+    std::vector<Fission_Site> host_sites(d_fission_site_vec.size());
+    thrust::copy(d_fission_site_vec.begin(),
+                 d_fission_site_vec.end(),
+                 host_sites.begin());
+    d_fission_rebalance->rebalance(host_sites);
+    d_fission_site_vec = host_sites;
 
     // get the number of fission sites on this domain, on this set, and
     // globally from the fission-rebalance
-    //d_np_domain = d_fission_rebalance->num_fissions();
-    //d_np_total  = d_fission_rebalance->num_global_fissions();
-    d_np_domain = d_fission_site_vec.size();
-    d_np_total  = d_np_domain;
+    d_np_domain = d_fission_rebalance->num_fissions();
+    d_np_total  = d_fission_rebalance->num_global_fissions();
     CHECK(d_np_domain >= d_fission_site_vec.size()); // there could be multiple
                                                      // fissions at a single
                                                      // site
