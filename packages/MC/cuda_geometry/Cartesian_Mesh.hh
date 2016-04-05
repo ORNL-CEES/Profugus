@@ -167,6 +167,16 @@ class Cartesian_Mesh
 
     // >>> VOLUME CALCULATION
 
+    //! Get all volumes on host
+    std::vector<double> volumes() const
+    {
+        REQUIRE( d_num_cells > 0 );
+        std::vector<double> host_volumes(d_num_cells);
+        cudaMemcpy( &host_volumes[0], dd_volumes, d_num_cells*sizeof(double),
+                    cudaMemcpyDeviceToHost );
+        return host_volumes;
+    }
+
     //! Calculate volume from the global cell id
     __device__ inline double volume(cell_type global_cell) const
     {

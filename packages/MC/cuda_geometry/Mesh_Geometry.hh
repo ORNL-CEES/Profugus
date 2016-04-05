@@ -215,6 +215,11 @@ class Mesh_Geometry
         return d_mesh.volume(cell);
     }
 
+    std::vector<double> volumes() const
+    {
+        return d_mesh.volumes();
+    }
+
   private:
 
     // >>> IMPLEMENTATION
