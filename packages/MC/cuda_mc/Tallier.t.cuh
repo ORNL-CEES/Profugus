@@ -104,7 +104,10 @@ template <class Geometry>
 void Tallier<Geometry>::finalize(double num_particles)
 {
     if( d_cell_tally_host.get_host_ptr() )
-        d_cell_tally_host.get_host_ptr()->finalize(num_particles);
+    {
+        d_cell_tally_host.get_host_ptr()->finalize(
+            num_particles, d_cell_tally);
+    }
 }
 
 //---------------------------------------------------------------------------//

@@ -126,7 +126,7 @@ void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     cudaDeviceSynchronize();
 
     std::cout << "Finalizing tallies" << std::endl;
-    sp_tally->finalize(num_particles);
+    sp_tally->finalize(num_particles,tally.get_device_ptr());
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy tally result to host

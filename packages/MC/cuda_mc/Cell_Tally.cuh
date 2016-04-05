@@ -11,6 +11,9 @@
 #ifndef MC_cuda_mc_Cell_Tally_cuh
 #define MC_cuda_mc_Cell_Tally_cuh
 
+#include <vector>
+#include <thrust/device_vector.h>
+
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "Physics.cuh"
 #include "Particle.cuh"
@@ -48,23 +51,35 @@ class Cell_Tally
     //@}
 
   private:
-    // >>> DATA
 
-    // Geometry and physics.
+    // >>> DEVICE-SIDE DATA
+
+    // Geometry and physics (device pointers)
     Geometry_t *d_geometry;
     Physics_t  *d_physics;
-
-    // Vector of tally result (single value, only batch statistics)
-    double *d_tally;
 
     // List of cells we're tallying
     int *d_cells;
 
-    // Volumes of tally cells
-    double *d_volumes;
+    // Vector of tally result (single value per entry, only batch statistics)
+    double *d_tally;
 
     // Number of cells being tallied
     int d_num_cells;
+
+    // >>> HOST-SIDE DATA
+
+    // Shared pointers
+    SDP_Geometry d_geometry_shared;
+
+    // Thrust vectors
+    thrust::device_vector<int>    d_cell_vec;
+    thrust::device_vector<double> d_tally_vec;
+
+    // Storage for host tally
+    std::vector<int>    d_host_cells;
+    std::vector<double> d_host_tally;
+    std::vector<double> d_host_volumes;
 
   public:
 
@@ -75,28 +90,18 @@ class Cell_Tally
     Cell_Tally(const Cell_Tally &phys)            = delete;
     Cell_Tally& operator=(const Cell_Tally &phys) = delete;
 
-    // Destructor
-    ~Cell_Tally()
-    {
-        cudaFree(d_tally);
-        cudaFree(d_cells);
-        cudaFree(d_volumes);
-    }
-
     // Set cell list for tally
     void set_cells(const std::vector<int> &cells);
 
     // Get tally results.
-    std::vector<double> results() const
+    const std::vector<double> & results() const
     {
-        std::vector<double> host_tally(d_num_cells);
-        cudaMemcpy( &host_tally[0], d_tally, d_num_cells*sizeof(double),
-                    cudaMemcpyDeviceToHost );
-        return host_tally;
+        REQUIRE( d_host_tally.size() == d_num_cells );
+        return d_host_tally;
     }
 
     // Do post-processing
-    void finalize(double num_particles);
+    void finalize(double num_particles, Cell_Tally<Geometry> *cell_tally_dev);
 
     // Clear/re-initialize all tally values between solves
     void reset();
