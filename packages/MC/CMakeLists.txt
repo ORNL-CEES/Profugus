@@ -106,6 +106,7 @@ SET(MC_SOURCES
   mc/Fission_Source.pt.cc
   mc/Fission_Tally.pt.cc
   mc/Fixed_Source_Solver.pt.cc
+  mc/General_Source.pt.cc
   mc/Global_RNG.cc
   mc/Group_Bounds.cc
   mc/KCode_Solver.pt.cc
