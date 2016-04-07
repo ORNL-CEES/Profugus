@@ -18,6 +18,7 @@
 #include "utils/Definitions.hh"
 #include "utils/Vector_Lite.hh"
 #include "RTK_State.hh"
+#include "Definitions.hh"
 
 namespace profugus
 {
@@ -156,6 +157,17 @@ class RTK_Cell
 
     // Get extents of this geometry element in the parent reference frame
     inline void get_extents(Space_Vector &lower, Space_Vector &upper) const;
+
+    // Get extents of this geometry element in the local reference frame
+    void get_cell_extents(geometry::cell_type cell,
+                          Space_Vector       &lower,
+                          Space_Vector       &upper) const;
+
+    //! Lower corner of cell
+    Space_Vector corner() const
+    {
+        return {-0.5*d_xy[def::I], -0.5*d_xy[def::J], 0.0};
+    }
 
     // Return the material id for a region in the pin-cell.
     inline int matid(int region) const;

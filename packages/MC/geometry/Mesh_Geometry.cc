@@ -412,9 +412,31 @@ Bounding_Box Mesh_Geometry::get_extents() const
 {
     using def::I;  using def::J;  using def::K;
 
-    return Bounding_Box(d_mesh.edges(I).front(), d_mesh.edges(I).back(),
-                        d_mesh.edges(J).front(), d_mesh.edges(J).back(),
-                        d_mesh.edges(K).front(), d_mesh.edges(K).back() );
+    return Bounding_Box( d_mesh.edges(I).front(), d_mesh.edges(I).back(),
+                         d_mesh.edges(J).front(), d_mesh.edges(J).back(),
+                         d_mesh.edges(K).front(), d_mesh.edges(K).back() );
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get bounding box for cell
+ */
+Bounding_Box Mesh_Geometry::get_cell_extents(geometry::cell_type cell) const
+{
+    REQUIRE( cell < d_mesh.num_cells() );
+
+    using def::I;  using def::J;  using def::K;
+
+    auto ijk = d_mesh.cardinal(cell);
+
+    const auto &edges = d_mesh.edges();
+
+    return Bounding_Box( edges(I)[ijk[I]],
+                         edges(I)[ijk[I]+1],
+                         edges(J)[ijk[J]],
+                         edges(J)[ijk[J]+1],
+                         edges(K)[ijk[K]],
+                         edges(K)[ijk[K]+1]);
 }
 
 //---------------------------------------------------------------------------//

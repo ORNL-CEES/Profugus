@@ -1051,6 +1051,56 @@ void RTK_Array<T>::output(std::ostream &out,
         << "----------------------------------------" << endl;
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return bounding box for given cell
+ */
+template<class T>
+void RTK_Array<T>::get_cell_extents(geometry::cell_type cell,
+                                    Space_Vector       &lower,
+                                    Space_Vector       &upper) const
+{
+    REQUIRE( cell < d_total_cells );
+
+    using def::I;
+    using def::J;
+    using def::K;
+
+    // Locate cell in array
+    int elem = std::upper_bound(d_Nc_offset.begin(),d_Nc_offset.end(),cell)
+               - d_Nc_offset.begin() - 1;
+    ENSURE( elem < d_Nc_offset.size() );
+
+    // Get array element at this location and compute it's bounding box
+    CHECK( elem < d_layout.size() );
+    CHECK( d_layout[elem] < d_objects.size() );
+    auto obj = d_objects[d_layout[elem]];
+    ENSURE( obj );
+
+    // Get local bounding box for this element
+    CHECK( d_Nc_offset[elem] <= cell );
+    obj->get_cell_extents(cell - d_Nc_offset[elem], lower, upper);
+
+    // Offset by lower corner of object in its local frame
+    auto obj_corner = obj->corner();
+    for( auto ijk : {I, J, K} )
+    {
+        lower[ijk] -= obj_corner[ijk];
+        upper[ijk] -= obj_corner[ijk];
+    }
+
+    // Compute ijk index of element
+    int k = elem / (d_N[I] * d_N[J]);
+    elem = elem % (d_N[I] * d_N[J]);
+    int j = elem / d_N[I];
+    int i = elem % d_N[I];
+
+    // Offset by lower corner of object in this frame
+    Space_Vector corner = {d_x[i], d_y[j], d_z[k]};
+    lower += corner;
+    upper += corner;
+}
+
 } // end namespace profugus
 
 #endif // geometry_RTK_Array_t_hh

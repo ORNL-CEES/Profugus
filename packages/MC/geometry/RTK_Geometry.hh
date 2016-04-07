@@ -247,6 +247,9 @@ class RTK_Geometry : public Tracking_Geometry<RTK_State>
     // Get bounding box
     Bounding_Box get_extents() const;
 
+    // Get bounding box for a cell
+    Bounding_Box get_cell_extents(geometry::cell_type cell) const;
+
     // Diagnostic output.
     void output(std::ostream &out) const
     {
