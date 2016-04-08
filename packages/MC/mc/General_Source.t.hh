@@ -182,6 +182,10 @@ auto General_Source<Geometry>::get_particle() -> SP_Particle
     }
     ENSURE( found );
 
+    auto matid = b_geometry->matid(p->geo_state());
+
+    p->set_matid(matid);
+
     p->live();
 
     // Update counters
