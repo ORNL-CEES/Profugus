@@ -259,6 +259,60 @@ TEST(Core, Heuristic)
     cout << endl;
 
     csites.close();
+
+    // Check cell bounding boxes
+    {
+        using def::I; using def::J; using def::K;
+        def::Space_Vector lower, upper;
+
+        // Cell 0
+        auto bbox = rtk_core.get_cell_extents(0);
+        lower = bbox.lower();
+        upper = bbox.upper();
+
+        EXPECT_SOFT_EQ( 0.0,   lower[I] );
+        EXPECT_SOFT_EQ( 1.26,  upper[I] );
+        EXPECT_SOFT_EQ( 0.0,   lower[J] );
+        EXPECT_SOFT_EQ( 1.26,  upper[J] );
+        EXPECT_SOFT_EQ( 0.0,   lower[K] );
+        EXPECT_SOFT_EQ( 14.28, upper[K] );
+
+        // Cell 12, Core Location (1,0,0), Lattice Location (0, 1)
+        bbox = rtk_core.get_cell_extents(12);
+        lower = bbox.lower();
+        upper = bbox.upper();
+
+        EXPECT_SOFT_EQ( 2.52,  lower[I] );
+        EXPECT_SOFT_EQ( 3.78,  upper[I] );
+        EXPECT_SOFT_EQ( 1.26,  lower[J] );
+        EXPECT_SOFT_EQ( 2.52,  upper[J] );
+        EXPECT_SOFT_EQ( 0.0,   lower[K] );
+        EXPECT_SOFT_EQ( 14.28, upper[K] );
+
+        // Cell 35, Core Location (1,2,0)
+        bbox = rtk_core.get_cell_extents(35);
+        lower = bbox.lower();
+        upper = bbox.upper();
+
+        EXPECT_SOFT_EQ( 2.52,  lower[I] );
+        EXPECT_SOFT_EQ( 5.04,  upper[I] );
+        EXPECT_SOFT_EQ( 5.04,  lower[J] );
+        EXPECT_SOFT_EQ( 7.56,  upper[J] );
+        EXPECT_SOFT_EQ( 0.0,   lower[K] );
+        EXPECT_SOFT_EQ( 14.28, upper[K] );
+
+        // Cell 42, Core Location (2,1,1)
+        bbox = rtk_core.get_cell_extents(42);
+        lower = bbox.lower();
+        upper = bbox.upper();
+
+        EXPECT_SOFT_EQ( 5.04,  lower[I] );
+        EXPECT_SOFT_EQ( 7.56,  upper[I] );
+        EXPECT_SOFT_EQ( 2.52,  lower[J] );
+        EXPECT_SOFT_EQ( 5.04,  upper[J] );
+        EXPECT_SOFT_EQ( 14.28, lower[K] );
+        EXPECT_SOFT_EQ( 28.56, upper[K] );
+    }
 }
 
 //---------------------------------------------------------------------------//

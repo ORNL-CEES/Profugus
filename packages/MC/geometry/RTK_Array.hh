@@ -167,6 +167,11 @@ class RTK_Array
     // Get extents of this geometry element in the parent reference frame
     inline void get_extents(Space_Vector &lower, Space_Vector &upper) const;
 
+    //! Get bounding box for given cell
+    void get_cell_extents(geometry::cell_type cell,
+                          Space_Vector       &lower,
+                          Space_Vector       &upper) const;
+
     //@{
     //! Array size.
     int size(int dimension) const { return d_N[dimension]; }

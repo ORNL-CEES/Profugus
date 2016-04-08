@@ -415,5 +415,42 @@ TEST_F(MeshGeometryTest, tracking)
 }
 
 //---------------------------------------------------------------------------//
+
+TEST_F(MeshGeometryTest, cell_box)
+{
+    using def::I;
+    using def::J;
+    using def::K;
+
+    Mesh_Geometry geo(x, y, z);
+
+    int Nx = x.size() - 1;
+    int Ny = y.size() - 1;
+    int Nz = z.size() - 1;
+
+    for( int k = 0; k < Nz; ++k )
+    {
+        for( int j = 0; j < Ny; ++j )
+        {
+            for( int i = 0; i < Nx; ++i )
+            {
+                int cell = i + Nx * (j + Ny * k);
+
+                auto box = geo.get_cell_extents(cell);
+                auto lower = box.lower();
+                auto upper = box.upper();
+
+                EXPECT_SOFT_EQ( lower[I], x[i] );
+                EXPECT_SOFT_EQ( lower[J], y[j] );
+                EXPECT_SOFT_EQ( lower[K], z[k] );
+                EXPECT_SOFT_EQ( upper[I], x[i+1] );
+                EXPECT_SOFT_EQ( upper[J], y[j+1] );
+                EXPECT_SOFT_EQ( upper[K], z[k+1] );
+            }
+        }
+    }
+}
+
+//---------------------------------------------------------------------------//
 //                        end of tstMesh_Geometry.cc
 //---------------------------------------------------------------------------//

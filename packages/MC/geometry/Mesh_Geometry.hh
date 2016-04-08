@@ -223,6 +223,9 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     // Bounding box
     Bounding_Box get_extents() const;
 
+    //! Get bounding box for a cell
+    Bounding_Box get_cell_extents(geometry::cell_type cell) const;
+
     void output(std::ostream &out) const
     {
     }

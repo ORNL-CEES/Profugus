@@ -119,17 +119,16 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     CHECK(var_reduction);
 
     // get the external source shape (it could be null)
-    auto shape = builder.get_source_shape();
+    auto source = builder.get_source();
 
     // problem type
-    std::string prob_type = shape ? "fixed" : "eigenvalue";
+    std::string prob_type = source ? "fixed" : "eigenvalue";
 
     // set the problem type in the final db
     d_db->set("problem_type", prob_type);
 
     // build the random controller
-    d_rnd_control = std::make_shared<RNG_Control_t>(
-        d_db->template get<int>("seed", 32442));
+    d_rng_control = builder.get_rng_control();
 
     SCREEN_MSG("Building " << prob_type << " solver");
 
@@ -153,7 +152,7 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
                 std::make_shared< profugus::KDE_Fission_Source<Geometry> >(
                     d_db, d_geometry,
                     d_physics,
-                    d_rnd_control);
+                    d_rng_control);
         }
         else
         {
@@ -162,7 +161,7 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
                 std::make_shared< profugus::Fission_Source<Geometry> >(
                     d_db, d_geometry,
                     d_physics,
-                    d_rnd_control);
+                    d_rng_control);
         }
         CHECK(source);
 
@@ -212,13 +211,10 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     }
     else if (prob_type == "fixed")
     {
-        // make the uniform source
-        std::shared_ptr<profugus::Uniform_Source<Geometry> > source(
-            std::make_shared<profugus::Uniform_Source<Geometry> >(
-                d_db, d_geometry, d_physics, d_rnd_control));
-        source->build_source(shape);
+        REQUIRE( transporter );
+        REQUIRE( source );
 
-        // make the solver
+        // Build fixed solver
         d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>();
 
         // set it

@@ -104,6 +104,9 @@ class Tracking_Geometry
 
     //! Get bounding box
     virtual Bounding_Box get_extents() const = 0;
+
+    //! Get bounding box for a cell
+    virtual Bounding_Box get_cell_extents(geometry::cell_type cell) const = 0;
 };
 
 //---------------------------------------------------------------------------//

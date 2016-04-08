@@ -188,6 +188,22 @@ Bounding_Box RTK_Geometry<Array>::get_extents() const
                         d_lower[def::K], d_upper[def::K] );
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the bounding box for this geometry for a cell
+ */
+template<class Array>
+Bounding_Box
+RTK_Geometry<Array>::get_cell_extents(geometry::cell_type cell) const
+{
+    REQUIRE( cell < num_cells() );
+
+    Space_Vector lower, upper;
+    d_array->get_cell_extents(cell,lower,upper);
+
+    return Bounding_Box( lower, upper );
+}
+
 } // end namespace profugus
 
 #endif // geometry_RTK_Geometry_t_hh

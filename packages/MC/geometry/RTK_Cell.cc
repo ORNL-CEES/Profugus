@@ -1070,6 +1070,21 @@ void RTK_Cell::dist_to_shell(double x,
     }
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get bounding box for a given cell
+ *
+ * Here we return the full extents of this RTK cell instance.
+ */
+void RTK_Cell::get_cell_extents(geometry::cell_type cell,
+                                Space_Vector       &lower,
+                                Space_Vector       &upper) const
+{
+    REQUIRE( cell < d_num_cells );
+
+    get_extents(lower,upper);
+}
+
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//
