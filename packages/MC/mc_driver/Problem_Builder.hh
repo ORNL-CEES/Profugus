@@ -20,8 +20,9 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_Array.hpp"
 
+#include "mc/Global_RNG.hh"
 #include "mc/Physics.hh"
-#include "mc/Shape.hh"
+#include "mc/Source.hh"
 #include "mc/Variance_Reduction.hh"
 #include "mc/Tallier.hh"
 #include "mc/Fission_Matrix_Acceleration.hh"
@@ -50,12 +51,14 @@ class Problem_Builder
     typedef profugus::Fission_Matrix_Acceleration<Geom_t> FM_Acceleration_t;
     typedef std::shared_ptr<Physics_t>                    SP_Physics;
     typedef std::shared_ptr<Geom_t>                       SP_Geometry;
-    typedef std::shared_ptr<profugus::Shape>              SP_Shape;
     typedef profugus::Variance_Reduction<Geom_t>          VR_t;
     typedef std::shared_ptr<VR_t>                         SP_Var_Reduction;
     typedef std::shared_ptr<Tallier_t>                    SP_Tallier;
     typedef typename Tallier_t::SP_Tally                  SP_Tally;
     typedef std::shared_ptr<FM_Acceleration_t>            SP_FM_Acceleration;
+    typedef std::shared_ptr<profugus::Source<Geom_t>>     SP_Source;
+    typedef profugus::Global_RNG::RNG_Control_t           RNG_Control_t;
+    typedef std::shared_ptr<RNG_Control_t>                SP_RNG_Control;
     //@}
 
   private:
@@ -63,6 +66,9 @@ class Problem_Builder
 
     // Problem-parameterlist (talks to solver components).
     RCP_ParameterList d_db;
+
+    // RNG Control
+    SP_RNG_Control d_rng_control;
 
     // Physics and geometry.
     SP_Physics  d_physics;
@@ -74,8 +80,8 @@ class Problem_Builder
     // Fission matrix acceleration.
     SP_FM_Acceleration d_fm_acceleration;
 
-    // External source shape.
-    SP_Shape d_shape;
+    // External source
+    SP_Source d_source;
 
     // Problem talliers.
     SP_Tallier d_tallier;
@@ -92,14 +98,17 @@ class Problem_Builder
     //! Get problem database.
     RCP_ParameterList problem_db() const { return d_db; }
 
+    //! Get the rng control
+    SP_RNG_Control get_rng_control() const { return d_rng_control; }
+
     //! Get the geometry.
     SP_Geometry get_geometry() const { return d_geometry; }
 
     //! Get the physics.
     SP_Physics get_physics() const { return d_physics; }
 
-    //! Get the external source shape (could be null).
-    SP_Shape get_source_shape() const { return d_shape; }
+    //! Get the external source (could be null).
+    SP_Source get_source() const { return d_source; }
 
     //! Get the variance reduction.
     SP_Var_Reduction get_var_reduction() const { return d_var_reduction; }
@@ -117,6 +126,7 @@ class Problem_Builder
     typedef Teuchos::Array<int>         OneDArray_int;
     typedef Teuchos::Array<double>      OneDArray_dbl;
     typedef Teuchos::Array<std::string> OneDArray_str;
+    typedef Teuchos::TwoDArray<double>  TwoDArray_dbl;
 
     // Acceleration typedefs.
     typedef typename FM_Acceleration_t::Problem_Builder_t SPN_Builder;

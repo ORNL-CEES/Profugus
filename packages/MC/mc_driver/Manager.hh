@@ -75,7 +75,7 @@ class Manager : public Manager_Base
     SP_Fixed_Source_Solver d_fixed_solver;
 
     // Random number controller.
-    SP_RNG_Control d_rnd_control;
+    SP_RNG_Control d_rng_control;
 
   public:
     // Constructor.

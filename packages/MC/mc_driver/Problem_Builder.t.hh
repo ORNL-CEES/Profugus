@@ -22,6 +22,8 @@
 #include "solvers/LinAlgTypedefs.hh"
 #include "geometry/Mesh_Geometry.hh"
 #include "mc/Box_Shape.hh"
+#include "mc/Uniform_Source.hh"
+#include "mc/General_Source.hh"
 #include "mc/VR_Analog.hh"
 #include "mc/VR_Roulette.hh"
 #include "mc/Cell_Tally.hh"
@@ -85,6 +87,10 @@ void Problem_Builder<Geometry>::setup(RCP_ParameterList master)
             d_db->set("boundary_db", boundary);
         }
     }
+
+    // Build RNG control
+    d_rng_control = std::make_shared<RNG_Control_t>(
+        d_db->template get<int>("seed", 32442));
 
     // build the geometry
     Geometry_Builder<Geometry> geom_builder;
@@ -218,25 +224,61 @@ void Problem_Builder<Geometry>::build_var_reduction()
 template <class Geometry>
 void Problem_Builder<Geometry>::build_source(const ParameterList &source_db)
 {
-    REQUIRE(source_db.isParameter("box"));
-    REQUIRE(source_db.isParameter("spectrum"));
-    REQUIRE(d_physics);
+    if( source_db.isParameter("box") )
+    {
+        // Uniform source
+        REQUIRE(source_db.isParameter("spectrum"));
+        REQUIRE(d_geometry);
+        REQUIRE(d_physics);
+        REQUIRE(d_rng_control);
 
-    // get the source box coordinates
-    const auto &box = source_db.get<OneDArray_dbl>("box");
-    CHECK(box.size() == 6);
+        // get the source box coordinates
+        const auto &box = source_db.get<OneDArray_dbl>("box");
+        CHECK(box.size() == 6);
 
-    // make the box shape
-    d_shape = std::make_shared<profugus::Box_Shape>(
-        box[0], box[1], box[2], box[3], box[4], box[5]);
+        // make the box shape
+        auto box_shape = std::make_shared<profugus::Box_Shape>(
+            box[0], box[1], box[2], box[3], box[4], box[5]);
 
-    // get the source spectrum and add it to the main database
-    const auto &shape = source_db.get<OneDArray_dbl>("spectrum");
-    CHECK(shape.size() == d_physics->num_groups());
+        // get the source spectrum and add it to the main database
+        const auto &shape = source_db.get<OneDArray_dbl>("spectrum");
+        CHECK(shape.size() == d_physics->num_groups());
 
-    // add the shape to the main database because the MC source gets the
-    // spectral shape from the main db
-    d_db->set("spectral_shape", shape);
+        // add the shape to the main database because the MC source gets the
+        // spectral shape from the main db
+        d_db->set("spectral_shape", shape);
+
+        // Build uniform source
+        auto uni_source = std::make_shared<profugus::Uniform_Source<Geometry>>(
+            d_db, d_geometry, d_physics, d_rng_control);
+
+        uni_source->build_source(box_shape);
+
+        // Assign to base class pointer
+        d_source = uni_source;
+    }
+    else
+    {
+        // General source
+        REQUIRE(source_db.isParameter("general_source"));
+        REQUIRE(d_physics);
+        REQUIRE(d_geometry);
+        REQUIRE(d_rng_control);
+
+        // Get source shape (cells x groups)
+        auto src_shape = source_db.get<TwoDArray_dbl>("general_source");
+        CHECK( src_shape.getNumRows() == d_geometry->num_cells() );
+        CHECK( src_shape.getNumCols() == d_physics->num_groups() );
+
+        // Build gneral source
+        auto source = std::make_shared<profugus::General_Source<Geometry>>(
+            d_db, d_geometry, d_physics, d_rng_control);
+
+        source->build_source(src_shape);
+
+        // Assign to base class member
+        d_source = source;
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -266,7 +308,7 @@ void Problem_Builder<Geometry>::build_tallies()
         // if this is a tally then add it
         if (fdb.isSublist("tally"))
         {
-            INSIST(!d_shape,
+            INSIST(!d_source,
                    "Cannot run fission matrix on fixed-source problems.");
 
             // get the database
@@ -300,7 +342,7 @@ void Problem_Builder<Geometry>::build_tallies()
     // check for source tallies
     if (d_db->isSublist("source_diagnostic_db"))
     {
-        INSIST(!d_shape,
+        INSIST(!d_source,
                "Cannot run source diagnostic on fixed-source problems.");
 
         // get the database
@@ -412,7 +454,7 @@ void Problem_Builder<Geometry>::build_spn_problem()
         // if this is an acceleration, then build the SPN problem builder
         if (fdb.isSublist("acceleration"))
         {
-            INSIST(!d_shape,
+            INSIST(!d_source,
                    "Cannot run fission matrix on fixed-source problems.");
 
             // get the database
