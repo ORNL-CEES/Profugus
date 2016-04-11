@@ -107,10 +107,13 @@ void Cell_Tally<Geometry>::finalize(double                num_particles,
         d_host_tally[ind] *= norm_factor;
     }
 
-    std::cout << "Cell tally: ";
-    for( const auto &t : d_host_tally )
-        std::cout << t << " ";
-    std::cout << std::endl;
+    if( profugus::node() == 0 )
+    {
+        std::cout << "Cell tally: ";
+        for( const auto &t : d_host_tally )
+            std::cout << t << " ";
+        std::cout << std::endl;
+    }
 }
 
 //---------------------------------------------------------------------------//

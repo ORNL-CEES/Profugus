@@ -59,8 +59,24 @@ Manager_Cuda<Geometry>::Manager_Cuda()
 template <class Geometry>
 void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
 {
-    SCOPED_TIMER("Manager_Cuda.setup");
+    // Get number of visible GPUs
+    int num_devices;
+    auto err = cudaGetDeviceCount(&num_devices);
+    CHECK( cudaSuccess == err );
 
+    std::cout << "Setting node " << d_node << " to run on device "
+        << d_node % num_devices << std::endl;
+
+    // Assign MPI tasks to devices by MPI rank
+    // We're assuming here that MPI ranks are assigned "depth first," filling
+    //  up an entire node before assigning tasks to other nodes.
+    // If MPI ranks are assigned "breadth first" or round-robin, this might
+    //  result in ranks on the same node getting assigned to the same device,
+    //  which would be terrible for performance.
+    err = cudaSetDevice(d_node % num_devices);
+    CHECK( cudaSuccess == err );
+
+    SCOPED_TIMER("Manager_Cuda.setup");
     SCREEN_MSG("Building and initializing geometry, physics, "
                << "variance reduction, and tallies");
 
