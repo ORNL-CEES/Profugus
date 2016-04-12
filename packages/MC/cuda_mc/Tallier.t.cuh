@@ -27,6 +27,7 @@ template <class Geometry>
 Tallier<Geometry>::Tallier()
 {
     d_cell_tally = nullptr;
+    d_keff_tally = nullptr;
 }
 
 //---------------------------------------------------------------------------//
@@ -53,7 +54,7 @@ void Tallier<Geometry>::set(SDP_Geometry geometry,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Add a pathlength tally.
+ * \brief Add a cell tally.
  */
 template <class Geometry>
 void Tallier<Geometry>::add_cell_tally(SDP_Cell_Tally tally)
@@ -64,6 +65,21 @@ void Tallier<Geometry>::add_cell_tally(SDP_Cell_Tally tally)
     // add the tally
     d_cell_tally_host = tally;
     d_cell_tally      = tally.get_device_ptr();
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Add a keff tally.
+ */
+template <class Geometry>
+void Tallier<Geometry>::add_keff_tally(SDP_Keff_Tally tally)
+{
+    REQUIRE(tally.get_host_ptr());
+    REQUIRE(tally.get_device_ptr());
+
+    // add the tally
+    d_keff_tally_host = tally;
+    d_keff_tally      = tally.get_device_ptr();
 }
 
 //---------------------------------------------------------------------------//
@@ -108,6 +124,11 @@ void Tallier<Geometry>::finalize(double num_particles)
         d_cell_tally_host.get_host_ptr()->finalize(
             num_particles, d_cell_tally);
     }
+    if( d_keff_tally_host.get_host_ptr() )
+    {
+        d_keff_tally_host.get_host_ptr()->finalize(
+            num_particles, d_keff_tally);
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -124,6 +145,8 @@ void Tallier<Geometry>::reset()
 {
     if( d_cell_tally_host.get_host_ptr() )
         d_cell_tally_host.get_host_ptr()->reset();
+    if( d_keff_tally_host.get_host_ptr() )
+        d_keff_tally_host.get_host_ptr()->reset();
 }
 
 //---------------------------------------------------------------------------//
@@ -139,6 +162,10 @@ void Tallier<Geometry>::swap(Tallier<Geometry> &rhs)
     // swap vector internals
     std::swap(d_cell_tally_host, rhs.d_cell_tally_host);
     std::swap(d_cell_tally,      rhs.d_cell_tally);
+
+    // swap vector internals
+    std::swap(d_keff_tally_host, rhs.d_keff_tally_host);
+    std::swap(d_keff_tally,      rhs.d_keff_tally);
 
     // swap geometry and physics
     std::swap(d_geometry, rhs.d_geometry);

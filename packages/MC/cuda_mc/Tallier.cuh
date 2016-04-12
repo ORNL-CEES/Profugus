@@ -15,6 +15,7 @@
 #include "Particle.cuh"
 #include "Physics.cuh"
 #include "Cell_Tally.cuh"
+#include "Keff_Tally.cuh"
 
 namespace cuda_mc
 {
@@ -41,10 +42,11 @@ class Tallier
     typedef Physics<Geometry_t>                     Physics_t;
     typedef Particle<Geometry_t>                    Particle_t;
     typedef Cell_Tally<Geometry_t>                  Cell_Tally_t;
+    typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
     typedef cuda::Shared_Device_Ptr<Geometry_t>     SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>      SDP_Physics;
     typedef cuda::Shared_Device_Ptr<Cell_Tally_t>   SDP_Cell_Tally;
-    typedef std::shared_ptr<Cell_Tally_t>           SP_Cell_Tally;
+    typedef cuda::Shared_Device_Ptr<Keff_Tally_t>   SDP_Keff_Tally;
     //@}
 
   private:
@@ -56,8 +58,12 @@ class Tallier
 
     // Pointer to each tally type for now
     // Need to figure out how to manage this in an extensible way
-    SDP_Cell_Tally d_cell_tally_host;
     Cell_Tally_t *d_cell_tally;
+    Keff_Tally_t *d_keff_tally;
+
+    // Host-side objects
+    SDP_Cell_Tally d_cell_tally_host;
+    SDP_Keff_Tally d_keff_tally_host;
 
   public:
 
@@ -67,8 +73,11 @@ class Tallier
     // Set the geometry and physics classes.
     void set(SDP_Geometry geometry, SDP_Physics physics);
 
-    // Add tallies.
+    // Add cell tally.
     void add_cell_tally(SDP_Cell_Tally tally);
+
+    // Add keff tally.
+    void add_keff_tally(SDP_Keff_Tally tally);
 
     // Swap with another tallier
     void swap(Tallier<Geometry_t> &rhs);

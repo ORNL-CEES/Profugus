@@ -83,6 +83,8 @@ class Keff_Tally
 
     // >>> ACCESSORS
 
+    void finalize( int Np, Keff_Tally<Geometry> *device_tally ) {}
+
     //! Access all keff estimators, both active and inactive
     const Vec_Dbl& all_keff() const { return d_all_keff; }
 
