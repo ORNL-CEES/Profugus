@@ -116,6 +116,12 @@ class Source_Transporter
     //! Get the tallies.
     SDP_Tallier tallier() const { return d_tallier; }
 
+    //! Get the geometry.
+    SDP_Geometry geometry() const { return d_geometry; }
+
+    //! Get the physics.
+    SDP_Physics physics() const { return d_physics; }
+
     //! Get the transporter.
     SDP_Transporter transporter() const { return d_transporter; }
 
