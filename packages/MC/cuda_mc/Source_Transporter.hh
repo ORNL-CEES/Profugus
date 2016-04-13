@@ -12,6 +12,7 @@
 #define cuda_mc_Source_Transporter_hh
 
 #include <memory>
+#include <thrust/device_vector.h>
 
 #include "utils/Definitions.hh"
 
@@ -22,6 +23,8 @@
 // No "raw" cuda headers should appear here
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "cuda_utils/CudaDBC.hh"
+
+#include "Definitions.hh"
 
 namespace cuda_mc
 {
@@ -74,6 +77,8 @@ class Source_Transporter
     typedef std::shared_ptr<RNG_Control>                  SP_RNG_Control;
     typedef Teuchos::RCP<Teuchos::ParameterList>          RCP_Std_DB;
     typedef def::size_type                                size_type;
+    typedef thrust::device_vector<Fission_Site>           Fission_Site_Vector;
+    typedef std::shared_ptr<Fission_Site_Vector>          SP_Fission_Site_Vec;
     //@}
 
   private:
@@ -109,7 +114,7 @@ class Source_Transporter
     void solve(std::shared_ptr<Src_Type> source) const;
 
     // Set fission sampling.
-    //void sample_fission_sites(SP_Fission_Sites fis_sites, double keff);
+    void sample_fission_sites(SP_Fission_Site_Vec fis_sites, double keff);
 
     // >>> ACCESSORS
 

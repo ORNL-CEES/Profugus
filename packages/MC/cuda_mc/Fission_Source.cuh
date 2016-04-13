@@ -85,13 +85,14 @@ class Fission_Source : public Source<Geometry>
     typedef std::shared_ptr<Fission_Rebalance>          SP_Fission_Rebalance;
     typedef Teuchos::RCP<Teuchos::ParameterList>        RCP_Std_DB;
     typedef def::size_type                              size_type;
+    typedef std::shared_ptr<Fission_Site_Vector>        SP_Fission_Site_Vec;
     //@}
 
   private:
     // >>> DATA
 
     // Fission site container.
-    Fission_Site_Vector d_fission_site_vec;
+    SP_Fission_Site_Vec d_fission_site_vec;
     Fission_Site       *d_fission_sites;
 
     // Fission rebalance (across sets).
@@ -109,7 +110,10 @@ class Fission_Source : public Source<Geometry>
     void build_initial_source();
 
     // Build a source from a fission site container.
-    void build_source(Fission_Site_Vector &fission_sites);
+    void build_source(SP_Fission_Site_Vec &fission_sites);
+
+    // Is this the initial source
+    bool is_initial_source() const { return !d_have_sites; }
 
     // >>> DERIVED PUBLIC INTERFACE
 
@@ -127,7 +131,7 @@ class Fission_Source : public Source<Geometry>
     // >>> CLASS ACCESSORS
 
     //! Get the current fission site container.
-    const Fission_Site_Vector & fission_sites() const
+    SP_Fission_Site_Vec fission_sites() const
     {
         return d_fission_site_vec;
     }
@@ -170,6 +174,14 @@ class Fission_Source : public Source<Geometry>
     // Particle weight.
     double d_wt;
 };
+
+template <class Geometry>
+thrust::device_vector<Particle<Geometry>> get_particles(
+        cuda::Shared_Device_Ptr<Fission_Source<Geometry>> &source,
+        thrust::device_vector<cuda_mc::RNG_State_t>       &rngs)
+{
+    INSIST(false,"Get particles not implemented yet for Fission Source.");
+}
 
 } // end namespace cuda_mc
 

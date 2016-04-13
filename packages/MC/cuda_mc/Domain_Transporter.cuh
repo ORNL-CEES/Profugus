@@ -11,6 +11,9 @@
 #ifndef cuda_mc_Domain_Transporter_cuh
 #define cuda_mc_Domain_Transporter_cuh
 
+#include <memory>
+#include <thrust/device_vector.h>
+
 #include "Particle.cuh"
 #include "Physics.cuh"
 #include "Step_Selector.cuh"
@@ -50,6 +53,8 @@ class Domain_Transporter
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;
+    typedef thrust::device_vector<Fission_Site>        Fission_Site_Vector;
+    typedef std::shared_ptr<Fission_Site_Vector>       SP_Fission_Site_Vec;
     //@}
 
     //@{
@@ -88,7 +93,7 @@ class Domain_Transporter
                        SDP_VR       vr      = SDP_VR() );
 
     // Set fission site sampling.
-    void set(Fission_Site *fission_sites, int num_sites, double keff);
+    void set(SP_Fission_Site_Vec fission_sites, double keff);
 
     // Transport a particle through the domain.
     __device__ void transport(Particle_t &particle) const;

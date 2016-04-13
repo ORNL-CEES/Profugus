@@ -74,28 +74,26 @@ Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
  * \param keff
  */
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(Fission_Site *fission_sites,
-                                       int           num_sites,
-                                       double        keff)
+void Domain_Transporter<Geometry>::set(SP_Fission_Site_Vec fission_sites,
+                                       double              keff)
 {
     // assign the container
-    d_fission_sites = fission_sites;
+    d_fission_sites = fission_sites->data().get();
 
     // Number of allocated sites
-    d_max_fission_sites = num_sites;
+    d_max_fission_sites = fission_sites->size();
 
     // initialize the sampling flag
     d_sample_fission_sites = false;
 
     // set the flag indicating whether fission sites should be sampled or not
-    if (num_sites > 0)
+    if (d_max_fission_sites > 0)
     {
         d_sample_fission_sites = true;
     }
 
     // assign current iterate of keff
     d_keff = keff;
-
 
     // initialize the number of fission sites to 0
     d_num_fission_sites = 0;

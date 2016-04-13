@@ -182,16 +182,15 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
  *
  * Fission sites are added to the container, it is \b not emptied.
  */
-#if 0
 template <class Geometry>
-void Source_Transporter<Geometry>::sample_fission_sites(SP_Fission_Sites fis_sites,
-                                              double           keff)
+void Source_Transporter<Geometry>::sample_fission_sites(
+    SP_Fission_Site_Vec fis_sites, double keff)
 {
     // set the transporter with the fission site container and the latest keff
     // iterate
-    d_transporter.set(fis_sites, keff);
+    d_transporter.get_host_ptr()->set(fis_sites, keff);
+    d_transporter.update_device();
 }
-#endif
 
 } // end namespace cuda_mc
 
