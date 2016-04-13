@@ -118,7 +118,8 @@ class Fission_Source : public Source<Geometry>
     // >>> DERIVED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    __device__ Particle_t get_particle(std::size_t idx, RNG_State_t *rng) const;
+    __device__ inline Particle_t get_particle(
+        std::size_t idx, RNG_State_t *rng) const;
 
     //! Number of particles to transport in the source on the current domain.
     __host__ __device__
@@ -152,7 +153,7 @@ class Fission_Source : public Source<Geometry>
     void build_DR();
 
     // Sample the geometry.
-    __device__
+    __device__ inline
     int sample_geometry(Space_Vector &r, const Space_Vector &omega,
                         Particle_t &p, RNG_State_t *rng) const;
 
@@ -175,15 +176,9 @@ class Fission_Source : public Source<Geometry>
     double d_wt;
 };
 
-template <class Geometry>
-thrust::device_vector<Particle<Geometry>> get_particles(
-        cuda::Shared_Device_Ptr<Fission_Source<Geometry>> &source,
-        thrust::device_vector<cuda_mc::RNG_State_t>       &rngs)
-{
-    INSIST(false,"Get particles not implemented yet for Fission Source.");
-}
-
 } // end namespace cuda_mc
+
+#include "Fission_Source.i.cuh"
 
 #endif // cuda_mc_Fission_Source_cuh
 

@@ -191,72 +191,6 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Site_Vec &fission_sites)
 }
 
 //---------------------------------------------------------------------------//
-/*!
- * \brief Get a particle from the source.
-*/
-template <class Geometry>
-__device__
-auto Fission_Source<Geometry>::get_particle(
-    std::size_t tid, RNG_State_t *rng) const -> Particle_t
-{
-    REQUIRE(d_wt > 0.0);
-
-    // particle
-    Particle_t p;
-    CHECK(!p.alive());
-
-    // use the global rng on this domain for the random number generator
-    p.set_rng(rng);
-
-    // material id
-    int matid = 0;
-
-    // particle position and isotropic direction
-    Space_Vector omega;
-
-    // sample the angle isotropically
-    sampler::sample_isotropic(omega, rng);
-
-    // sample flag
-    bool sampled;
-
-    // if there is a fission site container than get the particle from there;
-    // otherwise assume this is an initial source
-    if (d_have_sites)
-    {
-        // get the last element in the site container
-        Fission_Site &fs = d_fission_sites[tid];
-
-        // intialize the geometry state
-        b_geometry->initialize(fs.r, omega, p.geo_state());
-
-        // get the material id
-        matid = b_geometry->matid(p.geo_state());
-
-        // initialize the physics state at the fission site
-        sampled = d_physics->initialize_fission(fs, p);
-        CHECK(sampled);
-    }
-    else
-    {
-        Space_Vector r;
-        matid = sample_geometry(r, omega, p, rng);
-    }
-
-    // set the material id in the particle
-    p.set_matid(matid);
-
-    // set particle weight
-    p.set_wt(d_wt);
-
-    // make particle alive
-    p.live();
-
-    ENSURE(p.matid() == matid);
-    return p;
-}
-
-//---------------------------------------------------------------------------//
 // PRIVATE FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
@@ -276,53 +210,6 @@ void Fission_Source<Geometry>::build_DR()
     // particles in each domain, so the total may change slightly from the
     // requested value)
     d_np_total = d_np_domain * d_nodes;
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Sample geometry to get a particle.
- */
-template <class Geometry>
-__device__
-int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
-                                              const Space_Vector &omega,
-                                              Particle_t         &p,
-                                              RNG_State_t        *rng) const
-{
-    // sampled complete flag
-    bool sampled = false;
-
-    // material id
-    int matid = 0;
-
-    // >>> Sample the full geometry
-
-    // sample the geometry until a fission site is found (if there is no
-    // fission in a given domain the number of particles on that domain is
-    // zero, and we never get here) --> so, fission sampling should always
-    // be successful
-    while (!sampled)
-    {
-        // sample a point in the geometry
-        r.x = d_width.x * curand_uniform_double(rng) + d_lower.x;
-        r.y = d_width.y * curand_uniform_double(rng) + d_lower.y;
-        r.z = d_width.z * curand_uniform_double(rng) + d_lower.z;
-
-        // intialize the geometry state
-        b_geometry->initialize(r, omega, p.geo_state());
-
-        // get the material id
-        matid = b_geometry->matid(p.geo_state());
-
-        // try initializing fission here, if it is successful we are
-        // finished
-        if (d_physics->initialize_fission(matid, p))
-        {
-            sampled = true;
-        }
-    }
-
-    return matid;
 }
 
 } // end namespace cuda_mc
