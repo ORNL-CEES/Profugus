@@ -11,6 +11,7 @@
 #include "Uniform_Source_Tester.hh"
 #include "../Uniform_Source.cuh"
 #include "../Definitions.hh"
+#include "../Source_Provider.cuh"
 
 #include "utils/View_Field.hh"
 #include "cuda_utils/Device_Vector.hh"
@@ -48,14 +49,6 @@ __global__ void compute_source_kernel( Uniform_Src           source,
          dirs[tid].y = omega.y;
          dirs[tid].z = omega.z;
      }
-}
-
-// Initialize RNG
-__global__ void init_rng( cuda_mc::RNG_State_t *state, int N )
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    if( tid < N )
-        curand_init( 345, tid, 0, &state[tid] );
 }
 
 // Extract data from particles
@@ -239,14 +232,15 @@ void Uniform_Source_Tester::test_host_api( const Vec_Dbl &geom_bounds,
     // Build source
     auto source_host = std::make_shared<Uniform_Src>(db,geom);
     source_host->build_source(src_shape);
-    auto sdp_source = cuda::Shared_Device_Ptr<Uniform_Src>(source_host);
 
     // Initialize RNG
-    thrust::device_vector<RNG_State> rngs( Np );
-    init_rng<<<1,Np>>>( rngs.data().get(), Np );
+    auto rng_control = std::make_shared<cuda_mc::RNG_Control>(1234);
 
     // Get vector of particles from source
-    auto particles = cuda_mc::get_particles(sdp_source,rngs);
+    thrust::device_vector<Particle<Geometry>> particles;
+
+    cuda_mc::Source_Provider<Geometry> provider;
+    provider.get_particles(source_host,rng_control,particles);
     REQUIRE( particles.size() == source_host->num_to_transport() );
 
     // Extract data from particles

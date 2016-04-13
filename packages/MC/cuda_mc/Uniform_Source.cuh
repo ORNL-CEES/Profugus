@@ -90,7 +90,8 @@ class Uniform_Source : public Source<Geometry>
     // >>> REQUIRED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    __device__ Particle_t get_particle(std::size_t idx, RNG_State_t *rng) const;
+    __device__ inline Particle_t get_particle(
+        std::size_t idx, RNG_State_t *rng) const;
 
     //! Number of particles to transport in the source on the current domain.
     __host__ __device__
@@ -115,12 +116,6 @@ class Uniform_Source : public Source<Geometry>
     int d_np_total;
     int d_np_domain;
 };
-
-// Non-member function to return list of particles from source
-template <class Geometry>
-thrust::device_vector<Particle<Geometry> > get_particles(
-        cuda::Shared_Device_Ptr<Uniform_Source<Geometry>> &source,
-        thrust::device_vector<cuda_mc::RNG_State_t>       &rngs);
 
 } // end namespace cuda_mc
 

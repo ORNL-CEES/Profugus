@@ -26,39 +26,6 @@
 
 namespace cuda_mc
 {
-//---------------------------------------------------------------------------//
-// Functor to populate vector with particles from source
-//---------------------------------------------------------------------------//
-template <class Geometry>
-class Compute_Source
-{
-  public:
-
-    typedef Uniform_Source<Geometry> UniSource;
-    typedef cuda_mc::RNG_State_t     RNG_State;
-    typedef Particle<Geometry>       Particle_t;
-
-    Compute_Source( const UniSource *source,
-                    RNG_State       *rngs,
-                    Particle_t      *particles)
-        : d_source(source)
-        , d_rngs(rngs)
-        , d_particles(particles)
-    {
-    }
-
-    __device__ void operator()( std::size_t tid ) const
-    {
-        d_particles[tid] = d_source->get_particle(tid,&d_rngs[tid]);
-        ENSURE( d_particles[tid].alive() );
-    }
-
-  private:
-
-    const Uniform_Source<Geometry> *d_source;
-    RNG_State *d_rngs;
-    Particle_t *d_particles;
-};
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -138,35 +105,6 @@ void Uniform_Source<Geometry>::build_source(SDP_Shape geometric_shape)
     d_geo_shape = geometric_shape.get_device_ptr();
 
     profugus::global_barrier();
-}
-
-//---------------------------------------------------------------------------//
-//! \brief Build vector of particles
-//---------------------------------------------------------------------------//
-
-template <class Geometry>
-thrust::device_vector<Particle<Geometry> > get_particles(
-    cuda::Shared_Device_Ptr<Uniform_Source<Geometry>> &source,
-    thrust::device_vector<cuda_mc::RNG_State_t> &rngs )
-{
-    int Np = source.get_host_ptr()->num_to_transport();
-    REQUIRE( rngs.size() > 0 );
-    REQUIRE( rngs.size() >= Np );
-
-    // Build particle vector
-    thrust::device_vector<Particle<Geometry>> particles(Np);
-
-    // Functor to populate vector
-    Compute_Source<Geometry> f( source.get_device_ptr(),
-            rngs.data().get(), particles.data().get() );
-
-    // Launch kernel
-    cuda::Launch_Args<cuda::arch::Device> launch_args;
-    launch_args.set_num_elements( Np );
-
-    cuda::parallel_launch( f, launch_args );
-
-    return particles;
 }
 
 } // end namespace cuda_mc

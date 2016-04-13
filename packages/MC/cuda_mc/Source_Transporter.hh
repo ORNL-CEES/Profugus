@@ -35,6 +35,7 @@ template <class Geom> class Physics;
 template <class Geom> class Domain_Transporter;
 template <class Geom> class Tallier;
 template <class Geom> class VR_Roulette;
+template <class Geom> class Source;
 class RNG_Control;
 
 //===========================================================================//
@@ -79,6 +80,8 @@ class Source_Transporter
     typedef def::size_type                                size_type;
     typedef thrust::device_vector<Fission_Site>           Fission_Site_Vector;
     typedef std::shared_ptr<Fission_Site_Vector>          SP_Fission_Site_Vec;
+    typedef Source<Geometry>                              Source_t;
+    typedef std::shared_ptr<Source_t>                     SP_Source;
     //@}
 
   private:
@@ -110,8 +113,7 @@ class Source_Transporter
                        SDP_Tallier  tallier = SDP_Tallier());
 
     // Solve the fixed-source problem.
-    template <class Src_Type>
-    void solve(std::shared_ptr<Src_Type> source) const;
+    void solve(SP_Source source) const;
 
     // Set fission sampling.
     void sample_fission_sites(SP_Fission_Site_Vec fis_sites, double keff);

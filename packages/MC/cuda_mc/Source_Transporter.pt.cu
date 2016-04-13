@@ -23,16 +23,6 @@ typedef cuda_profugus::Mesh_Geometry Mesh_Geom;
 // Instantiate class on geometry types
 template class Source_Transporter<Mesh_Geom>;
 
-// Instantiate solve function on Geometry/Source combinations
-typedef Uniform_Source<Mesh_Geom> UniSource;
-template void Source_Transporter<Mesh_Geom>::solve<UniSource>(
-    std::shared_ptr<UniSource>) const;
-
-// Instantiate solve function on Geometry/Source combinations
-typedef Fission_Source<Mesh_Geom> FisnSource;
-template void Source_Transporter<Mesh_Geom>::solve<FisnSource>(
-    std::shared_ptr<FisnSource>) const;
-
 } // end namespace cuda_mc
 
 //---------------------------------------------------------------------------//

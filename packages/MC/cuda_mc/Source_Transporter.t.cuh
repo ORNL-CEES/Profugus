@@ -30,6 +30,7 @@
 #include "VR_Roulette.cuh"
 #include "Tallier.cuh"
 #include "RNG_Control.cuh"
+#include "Source_Provider.cuh"
 
 namespace cuda_mc
 {
@@ -120,9 +121,7 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
  * \brief Solve the fixed-source problem.
  */
 template <class Geometry>
-template <class Src_Type>
-void
-Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
+void Source_Transporter<Geometry>::solve(SP_Source source) const
 {
     REQUIRE(source);
 
@@ -131,22 +130,13 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
 
     SCOPED_TIMER("MC::Source_Transporter.solve");
 
-    // Copy class to device
-    // Is it better to have this method take an SDP<Src_Type> and push
-    // the copy-to-device outside of the Source_Transporter?
-    cuda::Shared_Device_Ptr<Src_Type> sdp_source(source);
-    ENSURE( sdp_source.get_device_ptr() );
+    // Get source particles
+    Source_Provider<Geometry> provider;
+    thrust::device_vector<Particle_t> particles;
+    provider.get_particles( source, d_rng_control, particles );
 
     // Get number of particles in source
-    int num_particles = source->num_to_transport();
-
-    // Initialize RNG states
-    d_rng_control->initialize(num_particles);
-
-    // Get source particles
-    auto particles = get_particles( sdp_source, d_rng_control->get_states());
-    CHECK( particles.size() == num_particles );
-    cudaDeviceSynchronize();
+    int num_particles = particles.size();
 
     // Build launch args
     cuda::Launch_Args<cuda::arch::Device> launch_args;
@@ -163,11 +153,6 @@ Source_Transporter<Geometry>::solve(std::shared_ptr<Src_Type> source) const
 
     // increment the particle counter
     DIAGNOSTICS_ONE(integers["particles_transported"] += num_particles);
-
-#ifdef REMEMBER_ON
-    profugus::global_sum(num_particles);
-    ENSURE(num_particles== source->total_num_to_transport());
-#endif
 }
 
 //---------------------------------------------------------------------------//
