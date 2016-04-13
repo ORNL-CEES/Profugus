@@ -63,6 +63,18 @@ class Shared_Device_Ptr
     T* get_device_ptr() { return d_device_ptr.get(); }
     inline const T* get_device_ptr() const { return d_device_ptr.get(); }
 
+    //! Update device-side object from host object
+    void update_device()
+    {
+#ifdef __NVCC__
+        REQUIRE( d_host_ptr );
+        REQUIRE( d_device_ptr );
+        cudaMemcpy( d_device_ptr.get(), d_host_ptr.get(), sizeof(T),
+                    cudaMemcpyHostToDevice );
+#endif
+    }
+
+
   private:
 
     // Smart pointer to HOST object.
