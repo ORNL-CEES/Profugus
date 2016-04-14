@@ -99,7 +99,7 @@ void Keff_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Keff_Tally<Geom> > tally(sp_tally);
 
     sp_tally->begin_active_cycles();
-    sp_tally->begin_cycle();
+    sp_tally->begin_cycle(num_particles);
     tally.update_device();
 
     // Launch kernel

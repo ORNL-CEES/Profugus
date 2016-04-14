@@ -308,7 +308,7 @@ void KCode_Solver<Geometry>::iterate()
                                         d_keff_tally_host->latest());
 
     // initialize keff tally to the beginning of the cycle
-    b_tallier.get_host_ptr()->begin_cycle();
+    b_tallier.get_host_ptr()->begin_cycle(d_fission_sites->size());
 
     // solve the fixed source problem using the transporter
     d_transporter->solve(d_source);

@@ -37,8 +37,9 @@ __device__ void Keff_Tally<Geometry>::accumulate(double            step,
 {
     REQUIRE(d_physics);
 
-    cuda::utility::atomic_add_double( &d_keff_cycle,
-        p.wt() * step * d_physics->total(profugus::physics::NU_FISSION, p) );
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    d_thread_keff[tid] += p.wt() * step *
+        d_physics->total(profugus::physics::NU_FISSION, p);
 }
 
 } // end namespace cuda_mc

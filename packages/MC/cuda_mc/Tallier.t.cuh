@@ -109,11 +109,11 @@ void Tallier<Geometry>::begin_active_cycles()
  * \brief Tell the tallies to begin a new cycle in a kcode calculation.
  */
 template <class Geometry>
-void Tallier<Geometry>::begin_cycle()
+void Tallier<Geometry>::begin_cycle(int num_particles)
 {
     if( d_keff_tally_host.get_host_ptr() )
     {
-        d_keff_tally_host.get_host_ptr()->begin_cycle();
+        d_keff_tally_host.get_host_ptr()->begin_cycle(num_particles);
         d_keff_tally_host.update_device();
     }
 }

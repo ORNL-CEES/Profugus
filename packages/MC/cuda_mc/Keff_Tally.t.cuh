@@ -107,9 +107,12 @@ void Keff_Tally<Geometry>::begin_active_cycles()
  * This clears the current accumulated path lengths.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::begin_cycle()
+void Keff_Tally<Geometry>::begin_cycle(int num_particles)
 {
     d_keff_cycle = 0.;
+    d_keff_data.resize(num_particles);
+    thrust::fill(d_keff_data.begin(),d_keff_data.end(),0.0);
+    d_thread_keff = d_keff_data.data().get();
 }
 
 //---------------------------------------------------------------------------//
@@ -128,6 +131,8 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
     REQUIRE(num_particles > 0.);
 
     // Keff estimate is total nu-sigma-f reaction rate / num particles
+    d_keff_cycle = thrust::reduce( d_keff_data.begin(), d_keff_data.end(),
+                                   0.0, thrust::plus<double>() );
     d_keff_cycle /= num_particles;
 
     // Do a global sum (since num_particles is global)

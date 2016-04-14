@@ -11,6 +11,8 @@
 #ifndef cuda_mc_Keff_Tally_cuh
 #define cuda_mc_Keff_Tally_cuh
 
+#include <thrust/device_vector.h>
+
 #include "utils/Definitions.hh"
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
@@ -52,13 +54,16 @@ class Keff_Tally
 
     Physics_t *d_physics;
 
-    //! Estimate of k-effective from this cycle
-    double d_keff_cycle;
-
     //! Number of active cycles completed so far
     unsigned int d_cycle;
 
+    double *d_thread_keff;
+
     // >>> HOST-SIDE DATA
+
+    //! Estimate of k-effective from this cycle
+    // This should only be updated from host
+    double d_keff_cycle;
 
     //! Store individual keff estimators over all (active + inactive) cycles
     Vec_Dbl d_all_keff;
@@ -68,6 +73,9 @@ class Keff_Tally
 
     //! Accumulated second moment of keff for calculating variance
     double d_keff_sum_sq;
+
+    //! Thread-local data for tally
+    thrust::device_vector<double> d_keff_data;
 
   public:
     // Kcode solver should construct this with initial keff estimate
@@ -112,7 +120,7 @@ class Keff_Tally
     void begin_active_cycles();
 
     // Begin a new cycle in a kcode calculation.
-    void begin_cycle();
+    void begin_cycle(int num_particles);
 
     // End a cycle in a kcode calculation.
     void end_cycle(double num_particles);
