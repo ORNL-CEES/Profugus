@@ -68,7 +68,6 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     INSIST(extents.size() == 6, "Fission source must have 6 entries");
 
     // get the low and upper bounds of the geometry
-    INSIST(false, "Need bounding box data from geometry.");
     auto low_edge  = geometry.get_host_ptr()->lower();
     auto high_edge = geometry.get_host_ptr()->upper();
 
@@ -147,10 +146,10 @@ template <class Geometry>
 void Fission_Source<Geometry>::build_source(SP_Fission_Site_Vec &fission_sites)
 {
     REQUIRE(fission_sites);
-    REQUIRE(!fission_sites->empty());
 
-    // the internal fission source should be empty
-    REQUIRE(d_fission_site_vec->empty());
+    // Make fission site vector if it hasn't been built yet
+    if( !d_fission_site_vec )
+        d_fission_site_vec = std::make_shared<Fission_Site_Vector>();
 
     SCOPED_TIMER("MC::Fission_Source.build_source");
 
@@ -187,7 +186,6 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Site_Vec &fission_sites)
     d_have_sites = true;
 
     ENSURE(d_wt > 0.0);
-    ENSURE(fission_sites->empty());
 }
 
 //---------------------------------------------------------------------------//

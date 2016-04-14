@@ -62,7 +62,7 @@ auto Fission_Source<Geometry>::get_particle(
     // otherwise assume this is an initial source
     if (d_have_sites)
     {
-        // get the last element in the site container
+        // get the corresponding element in the site container
         Fission_Site &fs = d_fission_sites[tid];
 
         // intialize the geometry state
