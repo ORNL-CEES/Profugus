@@ -25,10 +25,8 @@
 #include "utils/Parallel_HDF5_Writer.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
-//#include "mc/Fission_Source.hh"
 #include "Uniform_Source.cuh"
 #include "Tallier.cuh"
-//#include "KCode_Solver.hh"
 #include "Manager_Cuda.hh"
 
 namespace cuda_mc
