@@ -70,7 +70,9 @@ class Particle
 
   public:
     // Constructor
-    __device__ Particle(){};
+    __device__ Particle()
+        : d_alive(false)
+    {};
 
     // >>> PARTICLE FUNCTIONS
 
