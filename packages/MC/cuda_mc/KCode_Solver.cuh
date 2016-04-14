@@ -119,6 +119,9 @@ class KCode_Solver : public Solver<Geometry>
         return d_keff_tally_host->cycle_count();
     }
 
+    // Get keff value
+    double keff() const { return d_keff_tally_host->mean(); }
+
     /*
      * \brief Access inactive tallier
      *
