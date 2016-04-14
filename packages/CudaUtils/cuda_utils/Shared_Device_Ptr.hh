@@ -71,6 +71,23 @@ class Shared_Device_Ptr
         REQUIRE( d_device_ptr );
         cudaMemcpy( d_device_ptr.get(), d_host_ptr.get(), sizeof(T),
                     cudaMemcpyHostToDevice );
+
+        // No need to synchronize, no kernel launch on this stream can
+        // start until transfer has completed
+#endif
+    }
+
+    //! Update host-side object from device object
+    void update_host()
+    {
+#ifdef __NVCC__
+        REQUIRE( d_host_ptr );
+        REQUIRE( d_device_ptr );
+        cudaMemcpy( d_host_ptr.get(), d_device_ptr.get(), sizeof(T),
+                    cudaMemcpyDeviceToHost );
+
+        // Need to synchronize, transfer is asynchronous with respect to host
+        cudaDeviceSynchronize();
 #endif
     }
 
