@@ -89,8 +89,10 @@ class Domain_Transporter
     // Constructor.
     Domain_Transporter(SDP_Geometry geometry,
                        SDP_Physics  physics,
-                       SDP_Tallier  tallier = SDP_Tallier(),
                        SDP_VR       vr      = SDP_VR() );
+
+    // Set tallier
+    void set(SDP_Tallier tallier);
 
     // Set fission site sampling.
     void set(SP_Fission_Site_Vec fission_sites, double keff);

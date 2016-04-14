@@ -109,14 +109,19 @@ class Source_Transporter
     // Constructor.
     Source_Transporter(RCP_Std_DB   db,
                        SDP_Geometry geometry,
-                       SDP_Physics  physics,
-                       SDP_Tallier  tallier = SDP_Tallier());
+                       SDP_Physics  physics);
+
+    // Set tallier
+    void set(SDP_Tallier tallier);
 
     // Solve the fixed-source problem.
     void solve(SP_Source source) const;
 
     // Set fission sampling.
     void sample_fission_sites(SP_Fission_Site_Vec fis_sites, double keff);
+
+    //! Get number of fission sites created during last transport.
+    int num_sampled_fission_sites();
 
     // >>> ACCESSORS
 

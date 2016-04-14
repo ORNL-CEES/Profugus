@@ -110,8 +110,8 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
     SCREEN_MSG("Building " << prob_type << " solver");
 
     // get the tallier
-    auto tallier_host = std::make_shared<Tallier<Geom_t>>();
-    tallier_host->set(d_geometry,d_physics);
+    d_tallier = std::make_shared<Tallier<Geom_t>>();
+    d_tallier->set(d_geometry,d_physics);
 
     if( d_db->isSublist("cell_tally_db") )
     {
@@ -127,14 +127,12 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
 
         auto cell_tally =
             cuda::Shared_Device_Ptr<Cell_Tally<Geom_t>>(cell_tally_host);
-        tallier_host->add_cell_tally(cell_tally);
+        d_tallier->add_cell_tally(cell_tally);
     }
-
-    d_tallier = cuda::Shared_Device_Ptr<Tallier<Geom_t>>(tallier_host);
 
     // make the transporter
     SP_Transporter transporter(std::make_shared<Transporter_t>(
-                                   d_db, d_geometry, d_physics, d_tallier));
+                               d_db, d_geometry, d_physics));
 
     // build the appropriate solver (default is eigenvalue)
     if (prob_type == "eigenvalue")
@@ -193,7 +191,7 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
         d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>();
 
         // set it
-        d_fixed_solver->set(transporter, source);
+        d_fixed_solver->set(transporter, source, d_tallier);
 
         // assign the base solver
         d_solver = d_fixed_solver;

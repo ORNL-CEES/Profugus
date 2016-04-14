@@ -76,6 +76,7 @@ class KCode_Solver : public Solver<Geometry>
     typedef thrust::device_vector<Fission_Site>         Fission_Site_Vector;
     typedef std::shared_ptr<FS_t>                       SP_Fission_Source;
     typedef std::shared_ptr<Fission_Site_Vector>        SP_Fission_Site_Vector;
+    typedef std::shared_ptr<Tallier_t>                  SP_Tallier;
     typedef cuda::Shared_Device_Ptr<Tallier_t>          SDP_Tallier;
     typedef std::shared_ptr<Keff_Tally_t>               SP_Keff_Tally;
     typedef cuda::Shared_Device_Ptr<Keff_Tally_t>       SDP_Keff_Tally;
@@ -106,7 +107,9 @@ class KCode_Solver : public Solver<Geometry>
     KCode_Solver(RCP_Std_DB db);
 
     // Set the underlying fixed-source transporter and fission source.
-    void set(SP_Source_Transporter transporter, SP_Fission_Source source);
+    void set(SP_Source_Transporter transporter,
+             SP_Fission_Source     source,
+             SP_Tallier            tallier);
 
     // >>> ACCESSORS
 

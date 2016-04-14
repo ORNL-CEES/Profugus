@@ -81,11 +81,9 @@ class Transport_Functor
 template <class Geometry>
 Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
                                                  SDP_Geometry geometry,
-                                                 SDP_Physics  physics,
-                                                 SDP_Tallier  tallier)
+                                                 SDP_Physics  physics)
     : d_geometry(geometry)
     , d_physics(physics)
-    , d_tallier(tallier)
     , d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
@@ -109,7 +107,22 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
 
     // Build domain transporter
     d_transporter = cuda::shared_device_ptr<Transporter_t>(
-        d_geometry, d_physics, d_tallier, d_vr );
+        d_geometry, d_physics, d_vr );
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set new tallier
+ */
+template <class Geometry>
+void Source_Transporter<Geometry>::set(SDP_Tallier tallier)
+{
+    REQUIRE( tallier.get_host_ptr() );
+    REQUIRE( tallier.get_device_ptr() );
+    d_tallier = tallier;
+
+    d_transporter.get_host_ptr()->set(d_tallier);
+    d_transporter.update_device();
 }
 
 //---------------------------------------------------------------------------//
@@ -176,6 +189,29 @@ void Source_Transporter<Geometry>::sample_fission_sites(
     d_transporter.get_host_ptr()->set(fis_sites, keff);
     d_transporter.update_device();
 }
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Get number of fission sites sampled during last transport.
+ *
+ * The size of the fission site vector is not changed during transport
+ * (dynamic reallocation inside a kernel is slow and dangerous), so we 
+ * need to resize the vector to the number of sites that were actually created.
+ * Here we get the number of sampled sites from the Domain_Transporter.
+ * Note that this requires updating the host-side copy of the
+ * Domain_Transporter because the number of fission sites is accumulated as
+ * a member variable during transport.
+ *
+ */
+template <class Geometry>
+int Source_Transporter<Geometry>::num_sampled_fission_sites()
+{
+    d_transporter.update_host();
+    int num_fission_sites =
+        d_transporter.get_host_ptr()->num_sampled_fission_sites();
+    return num_fission_sites;
+}
+
 
 } // end namespace cuda_mc
 

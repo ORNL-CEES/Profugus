@@ -18,7 +18,7 @@
 #include "comm/P_Stream.hh"
 #include "Box_Shape.cuh"
 #include "Fixed_Source_Solver.hh"
-//#include "Keff_Solver.hh"
+//#include "KCode_Solver.hh"
 #include "Source_Transporter.hh"
 #include "cuda_xs/XS_Device.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
@@ -53,7 +53,7 @@ class Manager_Cuda : public mc::Manager_Base
     typedef Fixed_Source_Solver<Geom_t>                 Fixed_Source_Solver_t;
     typedef std::shared_ptr<Fixed_Source_Solver_t>      SP_Fixed_Source_Solver;
     typedef Tallier<Geom_t>                             Tallier_t;
-    typedef cuda::Shared_Device_Ptr<Tallier_t>          SDP_Tallier;
+    typedef std::shared_ptr<Tallier_t>                  SP_Tallier;
     typedef cuda::Shared_Device_Ptr<Box_Shape>          SDP_Shape;
     typedef Source_Transporter<Geom_t>                  Transporter_t;
     typedef std::shared_ptr<Transporter_t>              SP_Transporter;
@@ -81,7 +81,7 @@ class Manager_Cuda : public mc::Manager_Base
     SDP_Shape d_shape;
 
     // Tallier
-    SDP_Tallier d_tallier;
+    SP_Tallier d_tallier;
 
     // Solvers.
     SP_Solver              d_solver;

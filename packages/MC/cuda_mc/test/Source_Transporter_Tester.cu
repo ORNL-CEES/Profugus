@@ -78,7 +78,8 @@ void Source_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     source->build_source(src_shape);
 
     // Build source transporter
-    Transporter trans(pl,sdp_geom,sdp_phys,tallier);
+    Transporter trans(pl,sdp_geom,sdp_phys);
+    trans.set(tallier);
     trans.solve(source);
 
     sp_tallier->finalize(num_particles);

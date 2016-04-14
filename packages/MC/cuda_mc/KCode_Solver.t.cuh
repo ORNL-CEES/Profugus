@@ -19,6 +19,7 @@
 #include "harness/Diagnostics.hh"
 #include "comm/global.hh"
 #include "comm/Timing.hh"
+#include "comm/Logger.hh"
 
 namespace cuda_mc
 {
@@ -48,11 +49,13 @@ KCode_Solver<Geometry>::KCode_Solver(RCP_Std_DB db)
  */
 template <class Geometry>
 void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
-                                 SP_Fission_Source     source)
+                                 SP_Fission_Source     source,
+                                 SP_Tallier            tallier)
 {
     REQUIRE(d_build_phase == CONSTRUCTED);
     REQUIRE(transporter);
     REQUIRE(source);
+    REQUIRE(tallier);
 
     // assign the solver
     d_transporter = transporter;
@@ -66,8 +69,7 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     CHECK(d_Np > 0.0);
 
     // get a reference to the tallier
-    b_tallier = d_transporter->tallier();
-    INSIST(b_tallier.get_host_ptr(), "The tallier has not been assigned.");
+    b_tallier = cuda::Shared_Device_Ptr<Tallier_t>(tallier);
 
     // get initial k and build keff tally
     double init_keff = d_db->get("keff_init", 1.0);
@@ -80,6 +82,9 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     auto inactive_tallier = std::make_shared<Tallier_t>();
     inactive_tallier->set(d_transporter->geometry(), d_transporter->physics());
     d_inactive_tallier = cuda::Shared_Device_Ptr<Tallier_t>(inactive_tallier);
+
+    // Build fission site vector
+    d_fission_sites = std::make_shared<Fission_Site_Vector>();
 
     d_build_phase = ASSIGNED;
 
@@ -256,20 +261,15 @@ void KCode_Solver<Geometry>::initialize()
     // Add the keff tally to the ACTIVE cycle tallier and build it
     auto host_active_tallier = b_tallier.get_host_ptr();
     host_active_tallier->add_keff_tally(d_keff_tally);
+    b_tallier.update_device();
 
     // Create tallier for inactive cycles
     // Currentely only keff tally is enabled
-    auto host_tallier = std::make_shared<Tallier_t>();
-    host_tallier->add_keff_tally(d_keff_tally);
-
-    // Swap our temp tallier with the user-specified tallies so that we
-    // initially only tally k effective.
-    // b_tallier is always the one actively getting called by transporter
-    swap(*d_inactive_tallier.get_host_ptr(), *host_active_tallier);
-
-    // Update data on device
+    auto host_inactive_tallier = d_inactive_tallier.get_host_ptr();
+    host_inactive_tallier->add_keff_tally(d_keff_tally);
     d_inactive_tallier.update_device();
-    b_tallier.update_device();
+
+    d_transporter->set(d_inactive_tallier);
 
     // build the initial fission source
     if (d_source->is_initial_source())
@@ -291,7 +291,6 @@ template <class Geometry>
 void KCode_Solver<Geometry>::iterate()
 {
     REQUIRE(d_fission_sites);
-    REQUIRE(d_fission_sites->empty());
     //REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
     REQUIRE(d_build_phase == INACTIVE_SOLVE || d_build_phase == ACTIVE_SOLVE);
 
@@ -302,6 +301,9 @@ void KCode_Solver<Geometry>::iterate()
                         d_source->num_to_transport()));
 
     // set the solver to sample fission sites
+    double safety_factor = 1.2;
+    int available_sites = safety_factor * d_Np;
+    d_fission_sites->resize(available_sites);
     d_transporter->sample_fission_sites(d_fission_sites,
                                         d_keff_tally_host->latest());
 
@@ -310,6 +312,26 @@ void KCode_Solver<Geometry>::iterate()
 
     // solve the fixed source problem using the transporter
     d_transporter->solve(d_source);
+
+    // update fission site vector
+    int num_sites = d_transporter->num_sampled_fission_sites();
+    if( num_sites > available_sites )
+    {
+        if( d_build_phase == INACTIVE_SOLVE )
+        {
+            profugus::log(profugus::WARNING) << "Not enough space allocated "
+                << "for fission sites on cycle " << num_cycles() << ". "
+                << available_sites << " were allocated but " << num_sites
+                << " were required.";
+        }
+        else
+        {
+            INSIST(false,"Not enough space allocated for fission sites "
+                    "during active cycle");
+        }
+    }
+    d_fission_sites->resize(std::min(available_sites,num_sites));
+
 
     // do end-of-cycle tally processing including global sum Note: this is the
     // total *requested* number of particles, not the actual number of
@@ -321,7 +343,6 @@ void KCode_Solver<Geometry>::iterate()
     d_source->build_source(d_fission_sites);
 
     ENSURE(d_fission_sites);
-    ENSURE(d_fission_sites->empty());
 }
 
 //---------------------------------------------------------------------------//
@@ -337,18 +358,8 @@ void KCode_Solver<Geometry>::begin_active_cycles()
     //REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
     REQUIRE(d_inactive_tallier.get_host_ptr());
     REQUIRE(d_inactive_tallier.get_device_ptr());
-
-    INSIST(d_build_phase == INACTIVE_SOLVE,
-            "begin_active_cycles must be called only after "
-            "initializing and iterating on inactive cycles.");
-
-    // Swap the saved user-specified tallies with the inactive-cycle tallier
-    // so that we start tallying all the other functions
-    swap(*d_inactive_tallier.get_host_ptr(), *b_tallier.get_host_ptr());
-
-    // Update device objects
-    d_inactive_tallier.update_device();
-    b_tallier.update_device();
+    REQUIRE(b_tallier.get_host_ptr());
+    REQUIRE(b_tallier.get_device_ptr());
 
     // Finalize the inactive tallier (will set the state to FINALIZED, but
     // shouldn't do anything else unless the user has explicitly added a tally
@@ -361,6 +372,9 @@ void KCode_Solver<Geometry>::begin_active_cycles()
 
     // Tell all tallies to begin tallying active cycles
     b_tallier.get_host_ptr()->begin_active_cycles();
+    b_tallier.update_device();
+
+    d_transporter->set(b_tallier);
 
     d_build_phase = ACTIVE_SOLVE;
 

@@ -46,6 +46,8 @@ class Fixed_Source_Solver : public Solver<Geometry>
     typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
     typedef std::shared_ptr<Source<Geometry>>       SP_Source;
+    typedef Tallier<Geometry>                       Tallier_t;
+    typedef std::shared_ptr<Tallier_t>              SP_Tallier;
     //@}
 
   private:
@@ -64,7 +66,9 @@ class Fixed_Source_Solver : public Solver<Geometry>
     Fixed_Source_Solver();
 
     // Set the underlying source transporter and source.
-    void set(SP_Source_Transporter transporter, SP_Source source);
+    void set(SP_Source_Transporter transporter,
+             SP_Source             source,
+             SP_Tallier            tallier);
 
     // >>> INHERITED INTERFACE
 

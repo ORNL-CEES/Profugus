@@ -45,10 +45,12 @@ Fixed_Source_Solver<Geometry>::Fixed_Source_Solver()
  */
 template <class Geometry>
 void Fixed_Source_Solver<Geometry>::set(SP_Source_Transporter transporter,
-                                        SP_Source             source)
+                                        SP_Source             source,
+                                        SP_Tallier            tallier)
 {
     REQUIRE(transporter);
     REQUIRE(source);
+    REQUIRE(tallier);
 
     // assign the solver
     d_transporter = transporter;
@@ -57,11 +59,8 @@ void Fixed_Source_Solver<Geometry>::set(SP_Source_Transporter transporter,
     d_source = source;
 
     // get the tallies and assign them
-    b_tallier = d_transporter->tallier();
-    INSIST(b_tallier.get_host_ptr(),
-            "Tally not assigned in Source_Transporter in fixed-source solver.");
-    INSIST(b_tallier.get_device_ptr(),
-            "Tally not assigned in Source_Transporter in fixed-source solver.");
+    b_tallier = cuda::Shared_Device_Ptr<Tallier_t>(tallier);
+    d_transporter->set(b_tallier);
 }
 
 //---------------------------------------------------------------------------//

@@ -61,9 +61,8 @@ void Fixed_Solver_Tester::test_transport( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
 
     std::cout << "Building Tallier" << std::endl;
-    auto sp_tallier = std::make_shared<Tallier<Geom> >();
-    sp_tallier->add_cell_tally(cell_tally);
-    cuda::Shared_Device_Ptr<Tallier<Geom>> tallier(sp_tallier);
+    auto tallier = std::make_shared<Tallier<Geom> >();
+    tallier->add_cell_tally(cell_tally);
 
     // Build box shape for source
     Vec_Dbl src_bounds = {x_edges.front(), x_edges.back(),
@@ -80,10 +79,10 @@ void Fixed_Solver_Tester::test_transport( const Vec_Dbl  &x_edges,
     source->build_source(src_shape);
 
     // Build source transporter
-    auto trans = std::make_shared<Transporter>(pl,sdp_geom,sdp_phys,tallier);
+    auto trans = std::make_shared<Transporter>(pl,sdp_geom,sdp_phys);
 
     Fixed_Solver solver;
-    solver.set(trans,source);
+    solver.set(trans,source,tallier);
     solver.solve();
 
     tally = sp_cell_tally->results();

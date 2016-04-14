@@ -33,6 +33,8 @@ __device__ void Tallier<Geometry>::path_length(double            step,
     // accumulate results for all pathlength tallies
     if( d_cell_tally )
         d_cell_tally->accumulate(step, p);
+    if( d_keff_tally )
+        d_keff_tally->accumulate(step, p);
 }
 
 //---------------------------------------------------------------------------//

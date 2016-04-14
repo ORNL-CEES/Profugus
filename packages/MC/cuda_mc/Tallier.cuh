@@ -112,23 +112,6 @@ class Tallier
 
 };
 
-//---------------------------------------------------------------------------//
-// NON-MEMBER FUNCTIONS
-//---------------------------------------------------------------------------//
-/*!
- * \brief Swap two talliers.
- *
- * This is useful for deactivating tallying (like in a KCODE problem).
- *
- * This provides a std-like swap solution using Koenig namespace lookup.
- */
-template <class Geometry>
-inline void swap(Tallier<Geometry> &a,
-                 Tallier<Geometry> &b)
-{
-    a.swap(b);
-}
-
 } // end namespace cuda_mc
 
 #include "Tallier.i.cuh"

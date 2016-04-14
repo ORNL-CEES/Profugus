@@ -32,7 +32,6 @@ namespace cuda_mc
 template <class Geometry>
 Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
                                                  SDP_Physics  physics,
-                                                 SDP_Tallier  tallier,
                                                  SDP_VR       vr)
     : d_sample_fission_sites(false)
     , d_keff(0.0)
@@ -44,17 +43,10 @@ Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
     d_geometry = geometry.get_device_ptr();
     d_physics  = physics.get_device_ptr();
 
-    // VR and Tallier are optional
-    if( tallier.get_host_ptr() )
-    {
-        d_tallier = tallier.get_device_ptr();
-        REQUIRE( d_tallier );
-    }
-    else
-    {
-        d_tallier = nullptr;
-    }
+    // Initialize tallier to null
+    d_tallier = nullptr;
 
+    // VR is optional
     if( vr.get_host_ptr() )
     {
         d_vr = vr.get_device_ptr();
@@ -64,6 +56,17 @@ Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
     {
         d_vr = nullptr;
     }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set tallier
+ */
+template <class Geometry>
+void Domain_Transporter<Geometry>::set(SDP_Tallier tallier)
+{
+    REQUIRE( tallier.get_device_ptr() );
+    d_tallier = tallier.get_device_ptr();
 }
 
 //---------------------------------------------------------------------------//
