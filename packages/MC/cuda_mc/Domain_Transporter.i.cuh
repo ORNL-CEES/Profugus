@@ -32,7 +32,6 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
 {
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
-    //REQUIRE(d_tallier);
     REQUIRE(particle.alive());
 
     // particle state
@@ -209,7 +208,7 @@ Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
 
             // Add fission sites
             for( int i = 0; i < num_sites; ++i )
-                d_fission_sites[i] = site;
+                d_fission_sites[offset+i] = site;
         }
     }
 
