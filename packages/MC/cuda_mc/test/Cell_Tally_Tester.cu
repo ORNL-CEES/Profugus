@@ -32,6 +32,7 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
          p.set_group(0);
          p.set_matid(0);
          p.set_wt(1.0);
+         p.live();
 
          // Create and initialize RNG state
          curandState_t rng_state;
