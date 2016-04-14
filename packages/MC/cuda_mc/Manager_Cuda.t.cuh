@@ -137,30 +137,19 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
     // build the appropriate solver (default is eigenvalue)
     if (prob_type == "eigenvalue")
     {
-#if 0
         // make the fission source
-        SP_Fission_Source source(
-            std::make_shared<Fission_Source_t>(
-                d_db, d_geometry, d_physics, d_rnd_control));
+        auto source =
+            std::make_shared<Fission_Source_t>(d_db, d_geometry, d_physics);
 
         // make the kcode solver
-        auto kcode_solver =
-            std::make_shared<profugus::KCode_Solver<Geom_t> >(d_db);
+        d_keff_solver =
+            std::make_shared<KCode_Solver_t>(d_db);
 
         // set the solver
-        kcode_solver->set(transporter, source);
-
-        // set hybrid acceleration
-        kcode_solver->set(builder.get_acceleration());
-
-        // assign the base solver
-        d_keff_solver = kcode_solver;
+        d_keff_solver->set(transporter, source, d_tallier);
 
         // assign the base solver
         d_solver = d_keff_solver;
-#else
-        INSIST(false,"KCODE solver for Cuda not yet implemented.");
-#endif
 
     }
     else if (prob_type == "fixed")
@@ -219,15 +208,12 @@ void Manager_Cuda<Geometry>::solve()
         SCREEN_MSG("Executing solver");
 
         // run the appropriate solver
-#if 0
         if (d_keff_solver)
         {
             CHECK(!d_fixed_solver);
             d_keff_solver->solve();
         }
-        else
-#endif
-        if (d_fixed_solver)
+        else if (d_fixed_solver)
         {
             //CHECK(!d_keff_solver);
             d_fixed_solver->solve();

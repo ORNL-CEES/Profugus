@@ -18,7 +18,7 @@
 #include "comm/P_Stream.hh"
 #include "Box_Shape.cuh"
 #include "Fixed_Source_Solver.hh"
-//#include "KCode_Solver.hh"
+#include "KCode_Solver.cuh"
 #include "Source_Transporter.hh"
 #include "cuda_xs/XS_Device.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
@@ -48,8 +48,8 @@ class Manager_Cuda : public mc::Manager_Base
     typedef cuda::Shared_Device_Ptr<XS_Dev>             SDP_XS_Dev;
     typedef Solver<Geom_t>                              Solver_t;
     typedef std::shared_ptr<Solver_t>                   SP_Solver;
-    //typedef cuda_mc::Keff_Solver<Geom_t>                Keff_Solver_t;
-    //typedef std::shared_ptr<Keff_Solver_t>              SP_Keff_Solver;
+    typedef KCode_Solver<Geom_t>                        KCode_Solver_t;
+    typedef std::shared_ptr<KCode_Solver_t>             SP_KCode_Solver;
     typedef Fixed_Source_Solver<Geom_t>                 Fixed_Source_Solver_t;
     typedef std::shared_ptr<Fixed_Source_Solver_t>      SP_Fixed_Source_Solver;
     typedef Tallier<Geom_t>                             Tallier_t;
@@ -57,8 +57,8 @@ class Manager_Cuda : public mc::Manager_Base
     typedef cuda::Shared_Device_Ptr<Box_Shape>          SDP_Shape;
     typedef Source_Transporter<Geom_t>                  Transporter_t;
     typedef std::shared_ptr<Transporter_t>              SP_Transporter;
-    //typedef profugus::Fission_Source<Geom_t>            Fission_Source_t;
-    //typedef std::shared_ptr<Fission_Source_t>           SP_Fission_Source;
+    typedef Fission_Source<Geom_t>                      Fission_Source_t;
+    typedef std::shared_ptr<Fission_Source_t>           SP_Fission_Source;
     typedef Teuchos::Array<double>                      Array_Dbl;
     typedef Teuchos::Array<int>                         Array_Int;
     typedef Teuchos::Array<std::string>                 Array_Str;
@@ -85,7 +85,7 @@ class Manager_Cuda : public mc::Manager_Base
 
     // Solvers.
     SP_Solver              d_solver;
-    //SP_Keff_Solver         d_keff_solver;
+    SP_KCode_Solver        d_keff_solver;
     SP_Fixed_Source_Solver d_fixed_solver;
 
 
