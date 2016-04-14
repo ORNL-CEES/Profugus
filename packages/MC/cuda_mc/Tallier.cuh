@@ -79,9 +79,6 @@ class Tallier
     // Add keff tally.
     void add_keff_tally(SDP_Keff_Tally tally);
 
-    // Swap with another tallier
-    void swap(Tallier<Geometry_t> &rhs);
-
     // >>> HOST-SIDE TALLY OPERATIONS
 
     // Tell the tallies to begin active kcode cycles
