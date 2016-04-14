@@ -87,10 +87,9 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
  * \brief Do post-processing of tally
  */
 template <class Geometry>
-void Cell_Tally<Geometry>::finalize(double                num_particles,
-                                    Cell_Tally<Geometry> *cell_tally_dev)
+void Cell_Tally<Geometry>::finalize(double num_particles)
 {
-    REQUIRE(num_particles > 1);
+    REQUIRE(num_particles > 0);
 
     // Copy results to host to normalize tally results
     d_host_tally.resize(d_num_cells);

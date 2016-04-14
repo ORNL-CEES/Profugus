@@ -101,7 +101,7 @@ class Cell_Tally
     }
 
     // Do post-processing
-    void finalize(double num_particles, Cell_Tally<Geometry> *cell_tally_dev);
+    void finalize(double num_particles);
 
     // Clear/re-initialize all tally values between solves
     void reset();

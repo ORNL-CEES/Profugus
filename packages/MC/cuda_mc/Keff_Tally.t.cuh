@@ -107,12 +107,9 @@ void Keff_Tally<Geometry>::begin_active_cycles()
  * This clears the current accumulated path lengths.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::begin_cycle(Keff_Tally<Geometry> *tally_dev)
+void Keff_Tally<Geometry>::begin_cycle()
 {
     d_keff_cycle = 0.;
-
-    // Copy this to device
-    cudaMemcpy( tally_dev, this, sizeof(*this), cudaMemcpyHostToDevice );
 }
 
 //---------------------------------------------------------------------------//
@@ -126,21 +123,11 @@ void Keff_Tally<Geometry>::begin_cycle(Keff_Tally<Geometry> *tally_dev)
  * averages and variances.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::end_cycle(double                 num_particles,
-                                     Keff_Tally<Geometry>  *tally_dev)
+void Keff_Tally<Geometry>::end_cycle(double num_particles)
 {
     REQUIRE(num_particles > 0.);
 
-    cudaDeviceSynchronize();
-
-    // Copy device object to host
-    Keff_Tally<Geometry> *dev_copy;
-    dev_copy = (Keff_Tally<Geometry> *)malloc(sizeof(Keff_Tally<Geometry>));
-    cudaMemcpy(dev_copy,tally_dev,sizeof(Keff_Tally<Geometry>),
-               cudaMemcpyDeviceToHost);
-
     // Keff estimate is total nu-sigma-f reaction rate / num particles
-    d_keff_cycle = dev_copy->d_keff_cycle;
     d_keff_cycle /= num_particles;
 
     // Do a global sum (since num_particles is global)
@@ -153,8 +140,6 @@ void Keff_Tally<Geometry>::end_cycle(double                 num_particles,
 
     // Store keff estimate
     d_all_keff.push_back(d_keff_cycle);
-
-    free(dev_copy);
 }
 
 //---------------------------------------------------------------------------//

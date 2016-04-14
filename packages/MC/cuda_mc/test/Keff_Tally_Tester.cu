@@ -99,7 +99,8 @@ void Keff_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Keff_Tally<Geom> > tally(sp_tally);
 
     sp_tally->begin_active_cycles();
-    sp_tally->begin_cycle(tally.get_device_ptr());
+    sp_tally->begin_cycle();
+    tally.update_device();
 
     // Launch kernel
     std::cout << "Launching kernel" << std::endl;
@@ -127,7 +128,8 @@ void Keff_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     REQUIRE( cudaGetLastError() == cudaSuccess );
     cudaDeviceSynchronize();
 
-    sp_tally->end_cycle(num_particles,tally.get_device_ptr());
+    tally.update_host();
+    sp_tally->end_cycle(num_particles);
 
     // Copy tally result to host
     keff = sp_tally->mean();

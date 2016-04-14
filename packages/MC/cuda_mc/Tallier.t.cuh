@@ -65,6 +65,10 @@ void Tallier<Geometry>::add_cell_tally(SDP_Cell_Tally tally)
     // add the tally
     d_cell_tally_host = tally;
     d_cell_tally      = tally.get_device_ptr();
+
+    ENSURE( d_cell_tally_host.get_host_ptr() );
+    ENSURE( d_cell_tally_host.get_device_ptr() );
+    ENSURE( d_cell_tally );
 }
 
 //---------------------------------------------------------------------------//
@@ -80,6 +84,10 @@ void Tallier<Geometry>::add_keff_tally(SDP_Keff_Tally tally)
     // add the tally
     d_keff_tally_host = tally;
     d_keff_tally      = tally.get_device_ptr();
+
+    ENSURE( d_keff_tally_host.get_host_ptr() );
+    ENSURE( d_keff_tally_host.get_device_ptr() );
+    ENSURE( d_keff_tally );
 }
 
 //---------------------------------------------------------------------------//
@@ -89,6 +97,11 @@ void Tallier<Geometry>::add_keff_tally(SDP_Keff_Tally tally)
 template <class Geometry>
 void Tallier<Geometry>::begin_active_cycles()
 {
+    if( d_keff_tally_host.get_host_ptr() )
+    {
+        d_keff_tally_host.get_host_ptr()->begin_active_cycles();
+        d_keff_tally_host.update_device();
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -98,6 +111,11 @@ void Tallier<Geometry>::begin_active_cycles()
 template <class Geometry>
 void Tallier<Geometry>::begin_cycle()
 {
+    if( d_keff_tally_host.get_host_ptr() )
+    {
+        d_keff_tally_host.get_host_ptr()->begin_cycle();
+        d_keff_tally_host.update_device();
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -107,6 +125,12 @@ void Tallier<Geometry>::begin_cycle()
 template <class Geometry>
 void Tallier<Geometry>::end_cycle(double num_particles)
 {
+    if( d_keff_tally_host.get_host_ptr() )
+    {
+        d_keff_tally_host.update_host();
+        d_keff_tally_host.get_host_ptr()->end_cycle(num_particles);
+        d_keff_tally_host.update_device();
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -121,13 +145,13 @@ void Tallier<Geometry>::finalize(double num_particles)
 {
     if( d_cell_tally_host.get_host_ptr() )
     {
-        d_cell_tally_host.get_host_ptr()->finalize(
-            num_particles, d_cell_tally);
+        d_cell_tally_host.update_host();
+        d_cell_tally_host.get_host_ptr()->finalize(num_particles);
     }
     if( d_keff_tally_host.get_host_ptr() )
     {
-        d_keff_tally_host.get_host_ptr()->finalize(
-            num_particles, d_keff_tally);
+        d_keff_tally_host.update_host();
+        d_keff_tally_host.get_host_ptr()->finalize(num_particles);
     }
 }
 
@@ -144,32 +168,15 @@ template <class Geometry>
 void Tallier<Geometry>::reset()
 {
     if( d_cell_tally_host.get_host_ptr() )
+    {
         d_cell_tally_host.get_host_ptr()->reset();
+        d_cell_tally_host.update_device();
+    }
     if( d_keff_tally_host.get_host_ptr() )
+    {
         d_keff_tally_host.get_host_ptr()->reset();
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Swap two talliers.
- *
- * This is useful for temporarily deactivating tallying (say, during inactive
- * cycles in a kcode calculation).
- */
-template <class Geometry>
-void Tallier<Geometry>::swap(Tallier<Geometry> &rhs)
-{
-    // swap vector internals
-    std::swap(d_cell_tally_host, rhs.d_cell_tally_host);
-    std::swap(d_cell_tally,      rhs.d_cell_tally);
-
-    // swap vector internals
-    std::swap(d_keff_tally_host, rhs.d_keff_tally_host);
-    std::swap(d_keff_tally,      rhs.d_keff_tally);
-
-    // swap geometry and physics
-    std::swap(d_geometry, rhs.d_geometry);
-    std::swap(d_physics,  rhs.d_physics);
+        d_keff_tally_host.update_device();
+    }
 }
 
 } // end namespace cuda_mc

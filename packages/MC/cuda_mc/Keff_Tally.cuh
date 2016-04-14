@@ -83,7 +83,7 @@ class Keff_Tally
 
     // >>> ACCESSORS
 
-    void finalize( int Np, Keff_Tally<Geometry> *device_tally ) {}
+    void finalize( int Np ) {}
 
     //! Access all keff estimators, both active and inactive
     const Vec_Dbl& all_keff() const { return d_all_keff; }
@@ -112,10 +112,10 @@ class Keff_Tally
     void begin_active_cycles();
 
     // Begin a new cycle in a kcode calculation.
-    void begin_cycle(Keff_Tally<Geometry> *tally_dev);
+    void begin_cycle();
 
     // End a cycle in a kcode calculation.
-    void end_cycle(double num_particles, Keff_Tally<Geometry> *tally_dev);
+    void end_cycle(double num_particles);
 
     // Clear/re-initialize all tally values between solves.
     void reset();
