@@ -223,7 +223,7 @@ TEST_F(KCode_Solver_cudaTest, five_group)
     std::vector<int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
 
     std::vector<double> tally;
-    int num_p = 1000;
+    int num_p = 10000;
     double keff;
     cuda_mc::KCode_Solver_Tester::test_transport(
         edges,edges,edges,matids,xs,num_p,keff,tally);
@@ -256,7 +256,7 @@ TEST_F(KCode_Solver_cudaTest, five_group)
     mean0 /= static_cast<double>(count0);
     mean1 /= static_cast<double>(count1);
 
-    double tol = 10.0 / std::sqrt( static_cast<double>(num_p) );
+    double tol = 20.0 / std::sqrt( static_cast<double>(num_p) );
 
     std::vector<double> exp(8);
     for( int cell = 0; cell < matids.size(); ++cell )
