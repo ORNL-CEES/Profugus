@@ -20,6 +20,7 @@ using def::I; using def::J; using def::K;
 using def::X; using def::Y; using def::Z;
 using profugus::geometry::INSIDE;
 using profugus::geometry::OUTSIDE;
+using profugus::geometry::REFLECT;
 
 const double sqrt_third = 1./std::sqrt(3.0);
 const double sqrt_half  = 1./std::sqrt(2.0);
@@ -44,14 +45,9 @@ class MeshGeometryTest : public ::testing::Test
     // Initialization that are performed for each test
     void SetUp()
     {
-        x.resize(5);
-        x[0] = 0.0; x[1] = 0.10; x[2] = 0.25; x[3] = 0.30; x[4] = 0.42;
-
-        y.resize(4);
-        y[0] = 0.0; y[1] = 0.20; y[2] = 0.40; y[3] = 0.50;
-
-        z.resize(4);
-        z[0] = -0.1; z[1] = 0.0; z[2] = 0.15; z[3] = 0.50;
+        x = {0.0, 0.10, 0.25, 0.30, 0.42};
+        y = {0.0, 0.20, 0.40, 0.50};
+        z = {-0.1, 0.0, 0.15, 0.50};
     }
 
   protected:
@@ -407,6 +403,114 @@ TEST_F(MeshGeometryTest, tracking)
 
     cout << "Done:" << "cell " << setw(4) << cell << " = " << state.ijk << "; "
          << "pos = " << geo.position(state) << endl;
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(MeshGeometryTest, reflect)
+{
+    using def::I;
+    using def::J;
+    using def::K;
+
+    Mesh_Geometry geo(x, y, z);
+
+    std::vector<int> refl = {1, 0, 0, 0, 1, 1};
+    geo.set_reflecting(refl);
+
+    int Nx = x.size() - 1;
+    int Ny = y.size() - 1;
+    int Nz = z.size() - 1;
+
+    //x = {0.0, 0.10, 0.25, 0.30, 0.42};
+    //y = {0.0, 0.20, 0.40, 0.50};
+    //z = {-0.1, 0.0, 0.15, 0.50};
+
+    //
+    // Test 1: reflection on reflecting surface
+    //
+
+    // Create state
+    Geo_State_t state;
+    def::Space_Vector r   = {0.05, 0.42, 0.10};
+    def::Space_Vector dir = {-4.0, 0.1, -0.5};
+    vector_normalize(dir);
+    geo.initialize(r,dir,state);
+
+    // Expect initial cell indices
+    EXPECT_EQ( 0, state.ijk[I] );
+    EXPECT_EQ( 2, state.ijk[J] );
+    EXPECT_EQ( 1, state.ijk[K] );
+
+    // Move to surface
+    geo.distance_to_boundary(state);
+    geo.move_to_surface(state);
+
+    EXPECT_EQ( Geo_State_t::MINUS_X, state.exiting_face );
+    EXPECT_EQ( Geo_State_t::MINUS_X, state.reflecting_face);
+    EXPECT_EQ( REFLECT,              geo.boundary_state(state) );
+
+    // Cell indices should be unchanged
+    EXPECT_EQ( 0, state.ijk[I] );
+    EXPECT_EQ( 2, state.ijk[J] );
+    EXPECT_EQ( 1, state.ijk[K] );
+
+    // Now reflect
+    bool reflected = geo.reflect(state);
+    EXPECT_TRUE( reflected );
+
+    // Check direction
+    dir[I] = -dir[I];
+    EXPECT_SOFT_EQ( dir[I], state.d_dir[I] );
+    EXPECT_SOFT_EQ( dir[J], state.d_dir[J] );
+    EXPECT_SOFT_EQ( dir[K], state.d_dir[K] );
+
+    // Cell index shouldn't change during reflection
+    EXPECT_EQ( 0, state.ijk[I] );
+    EXPECT_EQ( 2, state.ijk[J] );
+    EXPECT_EQ( 1, state.ijk[K] );
+
+    //
+    // Test 2: reflection on non-reflecting surface
+    //
+
+    // Create state
+    r   = {0.20, 0.45, 0.35};
+    dir = {-1.0, 2.0, 1.0};
+    vector_normalize(dir);
+    geo.initialize(r,dir,state);
+
+    // Initial cell indices
+    EXPECT_EQ( 1,  state.ijk[I] );
+    EXPECT_EQ( 2, state.ijk[J] );
+    EXPECT_EQ( 2,  state.ijk[K] );
+
+    // Move to surface
+    geo.distance_to_boundary(state);
+    geo.move_to_surface(state);
+
+    EXPECT_EQ( Geo_State_t::PLUS_Y,  state.exiting_face );
+    EXPECT_EQ( Geo_State_t::NONE,    state.reflecting_face);
+    EXPECT_EQ( OUTSIDE,              geo.boundary_state(state) );
+
+    // Y index should be changed
+    EXPECT_EQ( 1,  state.ijk[I] );
+    EXPECT_EQ( Ny, state.ijk[J] );
+    EXPECT_EQ( 2,  state.ijk[K] );
+
+    // Test reflection on non-reflecting face
+    reflected = geo.reflect(state);
+    EXPECT_FALSE( reflected );
+
+    // Check direction
+    EXPECT_SOFT_EQ( dir[I], state.d_dir[I] );
+    EXPECT_SOFT_EQ( dir[J], state.d_dir[J] );
+    EXPECT_SOFT_EQ( dir[K], state.d_dir[K] );
+
+    EXPECT_EQ( 1,  state.ijk[I] );
+    EXPECT_EQ( Ny, state.ijk[J] );
+    EXPECT_EQ( 2,  state.ijk[K] );
+
 }
 
 //---------------------------------------------------------------------------//
