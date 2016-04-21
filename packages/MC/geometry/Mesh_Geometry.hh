@@ -63,6 +63,9 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     // Cell volumes.
     SP_Vec_Dbl d_volumes;
 
+    // Reflecting faces
+    Vec_Int d_reflect;
+
   public:
     //! Construct with global edges
     Mesh_Geometry(const Vec_Dbl& x_edges,
@@ -71,6 +74,13 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
 
     // Set materials (optional).
     void set_matids(SP_Vec_Int matids);
+
+    // Set reflecting boundaries
+    void set_reflecting(const Vec_Int &reflecting_faces)
+    {
+        REQUIRE( reflecting_faces.size() == 6 );
+        d_reflect = reflecting_faces;
+    }
 
     // >>> DERIVED INTERFACE from Tracking_Geometry
 
@@ -85,8 +95,57 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
     //! Move to and cross a surface in the current direction.
     void move_to_surface(Geo_State_t& state)
     {
+        using def::I; using def::J; using def::K;
+
         move(state.next_dist, state);
-        state.ijk = state.next_ijk;
+
+        // Set exiting and reflecting faces
+        state.exiting_face    = Geo_State_t::NONE;
+        state.reflecting_face = Geo_State_t::NONE;
+
+        const Cartesian_Mesh::Dim_Vector& extents = d_mesh.extents();
+
+        constexpr int face_start = Geo_State_t::MINUS_X;
+        if( state.next_ijk[I] < 0 )
+        {
+            state.exiting_face = Geo_State_t::MINUS_X;
+            if( d_reflect[Geo_State_t::MINUS_X-face_start] )
+                state.reflecting_face = Geo_State_t::MINUS_X;
+        }
+        else if( state.next_ijk[I] == extents[I] )
+        {
+            state.exiting_face = Geo_State_t::PLUS_X;
+            if( d_reflect[Geo_State_t::PLUS_X-face_start] )
+                state.reflecting_face = Geo_State_t::PLUS_X;
+        }
+        else if( state.next_ijk[J] < 0 )
+        {
+            state.exiting_face = Geo_State_t::MINUS_Y;
+            if( d_reflect[Geo_State_t::MINUS_Y-face_start] )
+                state.reflecting_face = Geo_State_t::MINUS_Y;
+        }
+        else if( state.next_ijk[J] == extents[J] )
+        {
+            state.exiting_face = Geo_State_t::PLUS_Y;
+            if( d_reflect[Geo_State_t::PLUS_Y-face_start] )
+                state.reflecting_face = Geo_State_t::PLUS_Y;
+        }
+        else if( state.next_ijk[K] < 0 )
+        {
+            state.exiting_face = Geo_State_t::MINUS_Z;
+            if( d_reflect[Geo_State_t::MINUS_Z-face_start] )
+                state.reflecting_face = Geo_State_t::MINUS_Z;
+        }
+        else if( state.next_ijk[K] == extents[K] )
+        {
+            state.exiting_face = Geo_State_t::PLUS_Z;
+            if( d_reflect[Geo_State_t::PLUS_Z-face_start] )
+                state.reflecting_face = Geo_State_t::PLUS_Z;
+        }
+
+        // If we're not reflecting, update cell index
+        if( state.reflecting_face == Geo_State_t::NONE )
+            state.ijk = state.next_ijk;
     }
 
     //! Move a distance \e d to a point in the current direction.
@@ -109,6 +168,14 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         Cartesian_Mesh::size_type c = num_cells();
         bool found = d_mesh.index(state.ijk[I], state.ijk[J], state.ijk[K], c);
 
+        if( !found )
+        {
+            std::cout << "Particle not found at: "
+                << state.d_r[I] << " " << state.d_r[J] << " " << state.d_r[K]
+                << std::endl;
+            std::shared_ptr<Cartesian_Mesh> p;
+            p->num_cells();
+        }
         ENSURE(found);
         return c;
     }
@@ -129,12 +196,16 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         using def::I; using def::J; using def::K;
         const Cartesian_Mesh::Dim_Vector& extents = d_mesh.extents();
 
-        if (   (state.ijk[I] == -1)
-            || (state.ijk[J] == -1)
-            || (state.ijk[K] == -1)
-            || (state.ijk[I] == extents[I])
-            || (state.ijk[J] == extents[J])
-            || (state.ijk[K] == extents[K]))
+        if( state.reflecting_face != Geo_State_t::NONE )
+        {
+            return geometry::REFLECT;
+        }
+        else if ( (state.ijk[I] == -1)
+               || (state.ijk[J] == -1)
+               || (state.ijk[K] == -1)
+               || (state.ijk[I] == extents[I])
+               || (state.ijk[J] == extents[J])
+               || (state.ijk[K] == extents[K]))
         {
             return geometry::OUTSIDE;
         }
@@ -158,7 +229,7 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
             const Space_Vector& new_direction,
             Geo_State_t& state)
     {
-        // update and mnormalizethe direction
+        // update and normalize the direction
         state.d_dir = new_direction;
         vector_normalize(state.d_dir);
     }
@@ -172,17 +243,11 @@ class Mesh_Geometry : public Tracking_Geometry<Mesh_State>
         cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
-    //! Reflect the direction at a reflecting surface.
-    bool reflect(Geo_State_t& state)
-    {
-        NOT_IMPLEMENTED("reflect in mesh_geometry");
-    }
+    // Reflect the direction at a reflecting surface.
+    bool reflect(Geo_State_t& state);
 
-    //! Return the outward normal at the location dictated by the state.
-    Space_Vector normal(const Geo_State_t& state) const
-    {
-        NOT_IMPLEMENTED("normal in mesh_geometry");
-    }
+    // Return the outward normal at the location dictated by the state.
+    Space_Vector normal(const Geo_State_t& state) const;
 
     // >>> PUBLIC INTERFACE
 
