@@ -30,6 +30,7 @@ Mesh_Geometry::Mesh_Geometry(
         const Vec_Dbl& y_edges,
         const Vec_Dbl& z_edges)
     : d_mesh(x_edges, y_edges, z_edges)
+    , d_reflect(6,0)
 {
     INSIST(d_mesh.dimension() == 3, "Only 3-D meshes are supported.");
 
@@ -70,6 +71,9 @@ void Mesh_Geometry::initialize(
 
     update_state(state);
 
+    state.exiting_face    = Geo_State_t::NONE;
+    state.reflecting_face = Geo_State_t::NONE;
+
     ENSURE(state.ijk[I] >= -1 && state.ijk[I] <= d_mesh.num_cells_along(I));
     ENSURE(state.ijk[J] >= -1 && state.ijk[J] <= d_mesh.num_cells_along(J));
     ENSURE(state.ijk[K] >= -1 && state.ijk[K] <= d_mesh.num_cells_along(K));
@@ -98,6 +102,13 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
 
     // initialize the next surface
     state.next_ijk = state.ijk;
+
+    /*
+    std::cout << "Distance to boundary at " << state.d_r[I] << " " << state.d_r[J]
+        << " " << state.d_r[K] << " in cell " << state.ijk[I]
+        << " " << state.ijk[J] << " " << state.ijk[K]
+        << " with next distance of " << state.next_dist << std::endl;
+        */
 
     // unrolled check
 
@@ -164,6 +175,13 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state)
         state.next_ijk[K] = test_next;
     }
 
+    if( state.next_dist < 0.0 )
+    {
+        std::cout << "Negative distance at " << state.d_r[I] << " " << state.d_r[J]
+            << " " << state.d_r[K] << " in direction " << state.d_dir[I]
+            << " " << state.d_dir[J] << " " << state.d_dir[K]
+            << " with next distance of " << state.next_dist << std::endl;
+    }
     ENSURE(state.next_dist >= 0.);
     return state.next_dist;
 }
@@ -438,6 +456,76 @@ Bounding_Box Mesh_Geometry::get_cell_extents(geometry::cell_type cell) const
                          edges(K)[ijk[K]],
                          edges(K)[ijk[K]+1]);
 }
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Reflect the direction on a reflecting surface
+ */
+bool Mesh_Geometry::reflect(Geo_State_t& state)
+{
+    using def::X; using def::Y; using def::Z;
+    REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+
+    // If we're not in a reflecting state, return
+    if( state.reflecting_face == Geo_State_t::NONE )
+        return false;
+
+    // get the outward normal
+    Space_Vector n = normal(state);
+
+    // calculate the dot-product of the incoming angle and outward normal
+    double dot = state.d_dir[X]*n[X] +
+                 state.d_dir[Y]*n[Y] +
+                 state.d_dir[Z]*n[Z];
+
+    CHECK( dot != 0.0 );
+
+    state.d_dir[X] -= 2.0 * n[X] * dot;
+    state.d_dir[Y] -= 2.0 * n[Y] * dot;
+    state.d_dir[Z] -= 2.0 * n[Z] * dot;
+
+    ENSURE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+
+    return true;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the outward normal at the location dictated by the state.
+ */
+def::Space_Vector Mesh_Geometry::normal(const Geo_State_t& state) const
+{
+    // Choose normal based on exiting face
+    if( state.exiting_face == Geo_State_t::MINUS_X )
+    {
+        return {-1.0, 0.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::PLUS_X )
+    {
+        return {1.0, 0.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::MINUS_Y )
+    {
+        return {0.0, -1.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::PLUS_Y )
+    {
+        return {0.0, 1.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::MINUS_Z )
+    {
+        return {0.0, 0.0, -1.0};
+    }
+    else if( state.exiting_face == Geo_State_t::PLUS_Z )
+    {
+        return {0.0, 0.0, 1.0};
+    }
+
+    // We weren't on a boundary
+    return {0.0, 0.0, 0.0};
+}
+
+
 
 //---------------------------------------------------------------------------//
 // PRIVATE FUNCTIONS
