@@ -17,6 +17,7 @@ Mesh_Geometry::Mesh_Geometry(const Vec_Dbl &x_edges,
                              const Vec_Dbl &y_edges,
                              const Vec_Dbl &z_edges)
     : d_mesh(x_edges,y_edges,z_edges)
+    , d_reflect_vec(6,0)
 {
 }
 
