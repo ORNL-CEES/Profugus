@@ -136,7 +136,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     // update running value of distance to boundary
     if (test_dist < state.next_dist)
     {
-        state.next_dist   = test_dist;
+        state.next_dist  = test_dist;
         state.next_ijk.i = state.ijk.i;
         state.next_ijk.j = state.ijk.j;
         state.next_ijk.k = test_next;
@@ -145,6 +145,80 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     ENSURE(state.next_dist >= 0.);
     return state.next_dist;
 }
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Reflect the direction on a reflecting surface
+ */
+__device__
+bool Mesh_Geometry::reflect(Geo_State_t& state) const
+{
+    using def::X; using def::Y; using def::Z;
+    using cuda::utility::soft_equiv;
+    using cuda::utility::vector_magnitude;
+    REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+
+    // If we're not in a reflecting state, return
+    if( state.reflecting_face == Geo_State_t::NONE )
+        return false;
+
+    // get the outward normal
+    Space_Vector n = normal(state);
+
+    // calculate the dot-product of the incoming angle and outward normal
+    double dot = state.d_dir.x*n.x +
+                 state.d_dir.y*n.y +
+                 state.d_dir.z*n.z;
+
+    CHECK( dot != 0.0 );
+
+    state.d_dir.x -= 2.0 * n.x * dot;
+    state.d_dir.y -= 2.0 * n.y * dot;
+    state.d_dir.z -= 2.0 * n.z * dot;
+
+    ENSURE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+
+    return true;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the outward normal at the location dictated by the state.
+ */
+__device__
+cuda::Space_Vector Mesh_Geometry::normal(const Geo_State_t& state) const
+{
+    // Choose normal based on exiting face
+    if( state.exiting_face == Geo_State_t::MINUS_X )
+    {
+        return {-1.0, 0.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::PLUS_X )
+    {
+        return {1.0, 0.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::MINUS_Y )
+    {
+        return {0.0, -1.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::PLUS_Y )
+    {
+        return {0.0, 1.0, 0.0};
+    }
+    else if( state.exiting_face == Geo_State_t::MINUS_Z )
+    {
+        return {0.0, 0.0, -1.0};
+    }
+    else if( state.exiting_face == Geo_State_t::PLUS_Z )
+    {
+        return {0.0, 0.0, 1.0};
+    }
+
+    // We weren't on a boundary
+    return {0.0, 0.0, 0.0};
+}
+
+
 
 } // end namespace cuda_profugus
 

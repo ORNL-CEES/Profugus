@@ -33,10 +33,11 @@ struct Mesh_State
 
     //! Faces in pin-cell.
     enum Face {
-        MINUS_X = 0,
-        PLUS_X ,
+        NONE = 0,
+        MINUS_X,
+        PLUS_X,
         MINUS_Y,
-        PLUS_Y ,
+        PLUS_Y,
         MINUS_Z,
         PLUS_Z,
         END_FACES
@@ -59,6 +60,12 @@ struct Mesh_State
 
     //! Distance to next cell
     double next_dist;
+
+    //! Face exiting geometry
+    int exiting_face;
+
+    //! Reflecting face (same as exiting face if on a reflecting boundary)
+    int reflecting_face;
 };
 
 } // end namespace profugus

@@ -12,6 +12,7 @@
 #define MC_cuda_geometry_Mesh_Geometry_hh
 
 #include <vector>
+#include <thrust/device_vector.h>
 
 #include "utils/View_Field.hh"
 #include "cuda_utils/CudaDBC.hh"
@@ -77,6 +78,14 @@ class Mesh_Geometry
         dd_matids = d_matid_vec->data();
     }
 
+    //! Set reflecting boundaries
+    void set_reflecting(const Vec_Int &reflecting_faces)
+    {
+        REQUIRE( reflecting_faces.size() == 6 );
+        d_reflect_vec = reflecting_faces;
+        d_reflect = d_reflect_vec.data().get();
+    }
+
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
 
@@ -107,6 +116,57 @@ class Mesh_Geometry
     {
         move(state.next_dist, state);
         state.ijk = state.next_ijk;
+
+        using def::I; using def::J; using def::K;
+        const double *x_edges = d_mesh.edges(I);
+        const double *y_edges = d_mesh.edges(J);
+        const double *z_edges = d_mesh.edges(K);
+
+        const int num_cells_x = d_mesh.num_cells_along(I);
+        const int num_cells_y = d_mesh.num_cells_along(J);
+        const int num_cells_z = d_mesh.num_cells_along(K);
+
+        constexpr int face_start = Geo_State_t::MINUS_X;
+        if( state.next_ijk.i < 0 )
+        {
+            state.exiting_face = Geo_State_t::MINUS_X;
+            if( d_reflect[Geo_State_t::MINUS_X-face_start] )
+                state.reflecting_face = Geo_State_t::MINUS_X;
+        }
+        else if( state.next_ijk.i == num_cells_x )
+        {
+            state.exiting_face = Geo_State_t::PLUS_X;
+            if( d_reflect[Geo_State_t::PLUS_X-face_start] )
+                state.reflecting_face = Geo_State_t::PLUS_X;
+        }
+        else if( state.next_ijk.j < 0 )
+        {
+            state.exiting_face = Geo_State_t::MINUS_Y;
+            if( d_reflect[Geo_State_t::MINUS_Y-face_start] )
+                state.reflecting_face = Geo_State_t::MINUS_Y;
+        }
+        else if( state.next_ijk.j = num_cells_y )
+        {
+            state.exiting_face = Geo_State_t::PLUS_Y;
+            if( d_reflect[Geo_State_t::PLUS_Y-face_start] )
+                state.reflecting_face = Geo_State_t::PLUS_Y;
+        }
+        else if( state.next_ijk.k < 0 )
+        {
+            state.exiting_face = Geo_State_t::MINUS_Z;
+            if( d_reflect[Geo_State_t::MINUS_Z-face_start] )
+                state.reflecting_face = Geo_State_t::MINUS_Z;
+        }
+        else if( state.next_ijk.k == num_cells_z )
+        {
+            state.exiting_face = Geo_State_t::PLUS_Z;
+            if( d_reflect[Geo_State_t::PLUS_Z-face_start] )
+                state.reflecting_face = Geo_State_t::PLUS_Z;
+        }
+
+        // If we're not reflecting, update cell index
+        if( state.reflecting_face == Geo_State_t::NONE )
+            state.ijk = state.next_ijk;
     }
 
     //! Move a distance \e d to a point in the current direction.
@@ -192,22 +252,10 @@ class Mesh_Geometry
     }
 
     //! Reflect the direction at a reflecting surface.
-    __device__ bool reflect(Geo_State_t& state) const
-    {
-        INSIST(false, "no reflect in mesh_geometry");
-        return false;
-    }
+    __device__ inline bool reflect(Geo_State_t& state) const;
 
     //! Return the outward normal at the location dictated by the state.
-    __device__ Space_Vector normal(const Geo_State_t& state) const
-    {
-        INSIST(false, "normal in mesh_geometry");
-        Space_Vector dir = {0.0, 0.0, 0.0};
-        return dir;
-    }
-
-    // If the particle is outside the geometry, find distance
-    __device__ double distance_to_interior(Geo_State_t &state);
+    __device__ inline Space_Vector normal(const Geo_State_t& state) const;
 
     //! Get cell volume
     __device__ double volume(size_type cell) const
@@ -251,6 +299,8 @@ class Mesh_Geometry
 
     SP_Dev_Int_Vec d_matid_vec;
     int *dd_matids;
+    thrust::device_vector<int> d_reflect_vec;
+    int *d_reflect;
 };
 
 //---------------------------------------------------------------------------//
