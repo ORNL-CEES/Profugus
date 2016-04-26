@@ -31,38 +31,6 @@ using std::endl;
 using profugus::soft_equiv;
 
 //---------------------------------------------------------------------------//
-// TESTING MACROS
-//---------------------------------------------------------------------------//
-
-//! Soft equivalence macro
-#define EXPECT_SOFTEQ(expected, actual, rel_error) \
-    EXPECT_PRED_FORMAT3(::profugus::IsSoftEquiv, expected, actual, rel_error)
-
-//! Soft equivalence macro with default argument (like google test)
-#define EXPECT_SOFT_EQ(expected, actual) \
-    EXPECT_PRED_FORMAT2(::profugus::IsSoftEquiv, expected, actual)
-
-//! Soft equivalence macro for containers of doubles
-#define EXPECT_VEC_SOFTEQ(expected, actual, rel_error) \
-    EXPECT_PRED_FORMAT3(::profugus::IsVecSoftEquiv, expected, actual, rel_error)
-
-//! Soft equivalence macro for containers of doubles
-#define EXPECT_VEC_SOFT_EQ(expected, actual) \
-    EXPECT_VEC_SOFTEQ(expected, actual, 1e-12)
-
-//! Equivalence macro for containers of integers or whatever
-#define EXPECT_VEC_EQ(expected, actual) \
-    EXPECT_PRED_FORMAT2(::profugus::IsVecEq, expected, actual)
-
-//! Macro to skip a unit test and print a colored warning
-#define SKIP_TEST(REASON_STRING_STREAM) \
-    do { \
-        ::profugus::print_skip_message(); \
-        std::cout << REASON_STRING_STREAM << std::endl; \
-        return; \
-    } while (0)
-
-//---------------------------------------------------------------------------//
 // MAIN FUNCTION
 //---------------------------------------------------------------------------//
 /*!
