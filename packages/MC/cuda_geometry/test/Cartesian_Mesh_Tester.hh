@@ -24,6 +24,7 @@ class Cartesian_Mesh_Tester
       static void test_index();
       static void test_cardinal();
       static void test_volume();
+      static void test_find_upper();
 };
 
 #endif // MC_cuda_geometry_test_Cartesian_Mesh_Tester_hh

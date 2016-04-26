@@ -21,6 +21,13 @@ TEST(MeshGeometry, matid)
     Mesh_Geometry_Tester::test_matid();
 }
 
+#if 0
+TEST(MeshGeometry, dist_to_bdry)
+{
+    Mesh_Geometry_Tester::test_dist_to_bdry();
+}
+#endif
+
 //---------------------------------------------------------------------------//
 // end of MC/cuda_geometry/test/tstMesh_Geometry.cc
 //---------------------------------------------------------------------------//

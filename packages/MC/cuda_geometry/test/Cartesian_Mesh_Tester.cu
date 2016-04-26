@@ -14,11 +14,14 @@
 #include "utils/View_Field.hh"
 #include "gtest/Gtest_Functions.hh"
 #include "cuda_utils/CudaDBC.hh"
+#include "cuda_utils/Device_Vector_device.t.hh"
 
 #include "../Cartesian_Mesh.hh"
 #include "Cartesian_Mesh_Tester.hh"
 
 typedef profugus::geometry::cell_type cell_type;
+typedef cuda::Space_Vector            Point;
+typedef cuda::Coordinates             Coords;
 typedef cuda_profugus::Cartesian_Mesh Cartesian_Mesh;
 
 __global__ void compute_indices_kernel(Cartesian_Mesh mesh,
@@ -60,6 +63,18 @@ __global__ void compute_volumes_kernel(Cartesian_Mesh mesh,
     if( tid < num_points )
     {
         volumes[tid] = mesh.volume(cells[tid]);
+    }
+}
+
+__global__ void compute_coords_kernel(Cartesian_Mesh   mesh,
+                                      int              num_points,
+                                      const Point     *points,
+                                      Coords          *coords)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    if( tid < num_points )
+    {
+        mesh.find_upper(points[tid],coords[tid]);
     }
 }
 
@@ -198,6 +213,48 @@ void Cartesian_Mesh_Tester::test_volume()
                                             0.1 * 0.4 * 0.8};
     
     EXPECT_VEC_SOFT_EQ(expected_volumes,host_volumes);
+}
+
+//---------------------------------------------------------------------------//
+// Test locating points in mesh
+//---------------------------------------------------------------------------//
+void Cartesian_Mesh_Tester::test_find_upper()
+{
+    auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
+    auto y_edges = {0.0, 0.20, 0.40, 0.50};
+    auto z_edges = {-0.1, 0.0, 0.15, 0.50};
+
+    auto mesh = std::make_shared<Cartesian_Mesh>(x_edges,y_edges,z_edges);
+
+    std::vector<Point> host_points = {{-1.0, 1.0, 0.1}, {0.2, 0.45, 0.4}};
+    int num_points = host_points.size();
+
+    // Create memroy on device
+    typedef cuda::arch::Device Arch;
+    cuda::Device_Vector<Arch,Point> device_points(
+        profugus::make_view(host_points));
+    cuda::Device_Vector<Arch,Coords> device_coords(num_points);
+
+    // Execute kernel
+    compute_coords_kernel<<<1,num_points>>>( *mesh,
+                                              num_points,
+                                              device_points.data(),
+                                              device_coords.data() );
+
+    REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    // Copy data back to host
+    std::vector<Coords> host_coords(num_points);
+    device_coords.to_host(profugus::make_view(host_coords));
+
+    std::vector<Coords> expected_coords = {{-1, 3, 1}, {1, 2, 2}};
+    
+    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
+    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
+    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
+    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
+    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
+    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
 }
 
 //---------------------------------------------------------------------------//

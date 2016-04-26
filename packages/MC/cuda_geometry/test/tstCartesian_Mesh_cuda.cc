@@ -28,6 +28,11 @@ TEST(CartesianMesh, volumes)
     Cartesian_Mesh_Tester::test_volume();
 }
 
+TEST(CartesianMesh, find_upper)
+{
+    Cartesian_Mesh_Tester::test_find_upper();
+}
+
 //---------------------------------------------------------------------------//
 // end of MC/cuda_geometry/test/tstCartesian_Mesh.cc
 //---------------------------------------------------------------------------//

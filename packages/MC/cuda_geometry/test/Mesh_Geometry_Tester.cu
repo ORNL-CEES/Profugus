@@ -20,6 +20,7 @@
 typedef profugus::geometry::cell_type  cell_type;
 typedef profugus::geometry::matid_type matid_type;
 typedef cuda::Space_Vector             Point;
+typedef cuda::Coordinates              Coords;
 typedef cuda_profugus::Mesh_Geometry   Mesh_Geometry;
 
 // Get volume from the mesh for each specified cell
@@ -54,6 +55,28 @@ __global__ void compute_matids_kernel(Mesh_Geometry   mesh,
         matids[tid] = mesh.matid(state);
     }
 }
+
+#if 0
+// Compute the distance to boundary
+__global__ void compute_distance_kernel(Mesh_Geometry   mesh,
+                                        int             num_points,
+                                        const Point    *points,
+                                        const Point    *dirs,
+                                        double         *distances,
+                                        Coords         *next_ijk)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    if( tid < num_points )
+    {
+        // Create and initialize state on each thread
+        cuda_profugus::Mesh_State state;
+        mesh.initialize(points[tid],dirs[tid],state);
+
+        distances[tid] = mesh.distance_to_boundary(state);
+        next_ijk[tid] = state.next_ijk;
+    }
+}
+#endif
 
 namespace
 {
@@ -154,6 +177,66 @@ void Mesh_Geometry_Tester::test_matid()
 
     EXPECT_VEC_EQ( expected_matids, host_cell_matids);
 }
+
+#if 0
+//---------------------------------------------------------------------------//
+// Test distance to boundary
+//---------------------------------------------------------------------------//
+void Mesh_Geometry_Tester::test_dist_to_bdry()
+{
+    // Build mesh
+    auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
+    auto y_edges = {0.0, 0.20, 0.40, 0.50};
+    auto z_edges = {-0.1, 0.0, 0.15, 0.50};
+    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+
+
+    double sqrt_half = sqrt(0.5);
+    std::vector<Point> host_points = {{0.01, 0.01, -0.01},
+                                      {0.26, 0.35, -0.01}};
+    std::vector<Point> host_dirs   = {{1.0,  0.0,   0.0},
+                                      {sqrt_half, sqrt_half, 0.0}};
+
+    int num_points = host_points.size();
+
+    // Create memroy on device
+    typedef cuda::arch::Device Arch;
+    cuda::Device_Vector<Arch,Point> device_points(
+        profugus::make_view(host_points));
+    cuda::Device_Vector<Arch,Point> device_dirs(
+        profugus::make_view(host_dirs));
+    cuda::Device_Vector<Arch,double> device_distances(num_points);
+    cuda::Device_Vector<Arch,Coords> device_coords(num_points);
+
+    // Execute kernel
+    compute_distance_kernel<<<1,num_points>>>(
+            *mesh,
+             num_points,
+             device_points.data(),
+             device_dirs.data(),
+             device_distances.data(),
+             device_coords.data());
+
+    REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    // Copy matids back to host
+    std::vector<double> host_distances(num_points);
+    device_distances.to_host(profugus::make_view(host_distances));
+    std::vector<Coords> host_coords(num_points);
+    device_coords.to_host(profugus::make_view(host_coords));
+
+    std::vector<double> expected_distances = {0.1 - 0.01, , 0.04 / sqrt_half};
+    std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
+
+    EXPECT_VEC_SOFT_EQ(expected_distances, host_distances);
+    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
+    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
+    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
+    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
+    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
+    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+}
+#endif
 
 //---------------------------------------------------------------------------//
 // end of MC/cuda_geometry/test/Mesh_Geometry_Tester.cu
