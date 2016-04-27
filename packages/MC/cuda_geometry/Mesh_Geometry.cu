@@ -19,6 +19,7 @@ Mesh_Geometry::Mesh_Geometry(const Vec_Dbl &x_edges,
     : d_mesh(x_edges,y_edges,z_edges)
     , d_reflect_vec(6,0)
 {
+    d_reflect = d_reflect_vec.data().get();
 }
 
 //---------------------------------------------------------------------------//
