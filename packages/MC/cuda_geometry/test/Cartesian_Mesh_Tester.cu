@@ -108,7 +108,7 @@ void Cartesian_Mesh_Tester::test_index()
 
     int num_points = host_ii.size();
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,int> device_ii(profugus::make_view(host_ii));
     cuda::Device_Vector<Arch,int> device_jj(profugus::make_view(host_jj));
@@ -144,7 +144,7 @@ void Cartesian_Mesh_Tester::test_cardinal()
 
     int num_points = host_cells.size();
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,cell_type> device_cells(
         profugus::make_view(host_cells));
@@ -189,7 +189,7 @@ void Cartesian_Mesh_Tester::test_volume()
 
     int num_points = host_cells.size();
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,cell_type> device_cells(
         profugus::make_view(host_cells));
@@ -229,7 +229,7 @@ void Cartesian_Mesh_Tester::test_find_upper()
     std::vector<Point> host_points = {{-1.0, 1.0, 0.1}, {0.2, 0.45, 0.4}};
     int num_points = host_points.size();
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,Point> device_points(
         profugus::make_view(host_points));

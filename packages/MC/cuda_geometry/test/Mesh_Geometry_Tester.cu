@@ -372,7 +372,7 @@ void Mesh_Geometry_Tester::test_reflect()
 
     int num_points = host_points.size();
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,Point> device_points(
         profugus::make_view(host_points));
