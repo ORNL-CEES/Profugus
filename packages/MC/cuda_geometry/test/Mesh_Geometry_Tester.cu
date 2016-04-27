@@ -57,9 +57,9 @@ __global__ void compute_matids_kernel(Mesh_Geometry   mesh,
 }
 
 // Compute the distance to boundary
-__global__ void compute_distance_kernel(Mesh_Geometry   mesh,
-                                        int             num_points,
-                                        const Point    *points,
+__global__ void distance_kernel(Mesh_Geometry   mesh,
+                                int             num_points,
+                                const Point    *points,
                                         const Point    *dirs,
                                         double         *distances,
                                         Coords         *next_ijk)
@@ -77,11 +77,11 @@ __global__ void compute_distance_kernel(Mesh_Geometry   mesh,
 }
 
 // Compute the distance to boundary
-__global__ void compute_move_to_surf_kernel(Mesh_Geometry   mesh,
-                                            int             num_points,
-                                            const Point    *points,
-                                            const Point    *dirs,
-                                            Coords         *ijk)
+__global__ void move_to_surf_kernel(Mesh_Geometry   mesh,
+                                    int             num_points,
+                                    const Point    *points,
+                                    const Point    *dirs,
+                                    Coords         *ijk)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
@@ -93,6 +93,36 @@ __global__ void compute_move_to_surf_kernel(Mesh_Geometry   mesh,
         mesh.distance_to_boundary(state);
         mesh.move_to_surface(state);
         ijk[tid] = state.ijk;
+    }
+}
+
+// Compute the distance to boundary
+__global__ void reflect_kernel(Mesh_Geometry   mesh,
+                               int             num_points,
+                               const Point    *points,
+                               const Point    *dirs_in,
+                               int            *reflected,
+                               Point          *dirs_out,
+                               Coords         *ijk_out,
+                               int            *exit_face,
+                               int            *refl_face)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    if( tid < num_points )
+    {
+        // Create and initialize state on each thread
+        cuda_profugus::Mesh_State state;
+        mesh.initialize(points[tid],dirs_in[tid],state);
+
+        // Move particle to boundary and reflect
+        mesh.distance_to_boundary(state);
+        mesh.move_to_surface(state);
+        reflected[tid] = mesh.reflect(state);
+
+        dirs_out[tid] = state.d_dir;
+        ijk_out[tid]  = state.ijk;
+        exit_face[tid] = state.exiting_face;
+        refl_face[tid] = state.reflecting_face;
     }
 }
 
@@ -172,7 +202,7 @@ void Mesh_Geometry_Tester::test_matid()
     // Set matids with mesh (host call)
     mesh->set_matids(all_matids);
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,Point> device_points(
         profugus::make_view(host_points));
@@ -216,7 +246,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
 
     int num_points = host_points.size();
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,Point> device_points(
         profugus::make_view(host_points));
@@ -226,7 +256,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     cuda::Device_Vector<Arch,Coords> device_coords(num_points);
 
     // Execute kernel
-    compute_distance_kernel<<<1,num_points>>>(
+    distance_kernel<<<1,num_points>>>(
             *mesh,
              num_points,
              device_points.data(),
@@ -236,7 +266,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    // Copy matids back to host
+    // Copy data back to host
     std::vector<double> host_distances(num_points);
     device_distances.to_host(profugus::make_view(host_distances));
     std::vector<Coords> host_coords(num_points);
@@ -255,7 +285,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
 }
 
 //---------------------------------------------------------------------------//
-// Test move to boundary
+// Test move to surface
 //---------------------------------------------------------------------------//
 void Mesh_Geometry_Tester::test_move_to_surf()
 {
@@ -265,7 +295,6 @@ void Mesh_Geometry_Tester::test_move_to_surf()
     auto z_edges = {-0.1, 0.0, 0.15, 0.50};
     auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
 
-
     double sqrt_half = sqrt(0.5);
     std::vector<Point> host_points = {{0.01, 0.01, -0.01},
                                       {0.26, 0.35, -0.01}};
@@ -274,7 +303,7 @@ void Mesh_Geometry_Tester::test_move_to_surf()
 
     int num_points = host_points.size();
 
-    // Create memroy on device
+    // Create memory on device
     typedef cuda::arch::Device Arch;
     cuda::Device_Vector<Arch,Point> device_points(
         profugus::make_view(host_points));
@@ -283,7 +312,7 @@ void Mesh_Geometry_Tester::test_move_to_surf()
     cuda::Device_Vector<Arch,Coords> device_coords(num_points);
 
     // Execute kernel
-    compute_move_to_surf_kernel<<<1,num_points>>>(
+    move_to_surf_kernel<<<1,num_points>>>(
             *mesh,
              num_points,
              device_points.data(),
@@ -292,7 +321,7 @@ void Mesh_Geometry_Tester::test_move_to_surf()
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    // Copy matids back to host
+    // Copy data back to host
     std::vector<Coords> host_coords(num_points);
     device_coords.to_host(profugus::make_view(host_coords));
 
@@ -304,6 +333,117 @@ void Mesh_Geometry_Tester::test_move_to_surf()
     EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
     EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
     EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+}
+
+//---------------------------------------------------------------------------//
+// Test reflection
+//---------------------------------------------------------------------------//
+void Mesh_Geometry_Tester::test_reflect()
+{
+    typedef cuda_profugus::Mesh_State Geo_State_t;
+
+    // Build mesh
+    auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
+    auto y_edges = {0.0, 0.20, 0.40, 0.50};
+    auto z_edges = {-0.1, 0.0, 0.15, 0.50};
+    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+
+    std::vector<int> refl = {1, 0, 0, 0, 1, 1};
+    mesh->set_reflecting(refl);
+
+    std::vector<Point> host_points = {{0.05, 0.42, 0.10},
+                                      {0.20, 0.45, 0.35}};
+    std::vector<Point> host_dirs   = {{-4.0, 0.1, -0.5},
+                                      {-1.0, 2.0, 1.0}};
+    // Normalize directions
+    double nrm = std::sqrt(host_dirs[0].x*host_dirs[0].x +
+                           host_dirs[0].y*host_dirs[0].y +
+                           host_dirs[0].z*host_dirs[0].z);
+    host_dirs[0].x /= nrm;
+    host_dirs[0].y /= nrm;
+    host_dirs[0].z /= nrm;
+
+    nrm = std::sqrt(host_dirs[1].x*host_dirs[1].x +
+                    host_dirs[1].y*host_dirs[1].y +
+                    host_dirs[1].z*host_dirs[1].z);
+    host_dirs[1].x /= nrm;
+    host_dirs[1].y /= nrm;
+    host_dirs[1].z /= nrm;
+
+    int num_points = host_points.size();
+
+    // Create memroy on device
+    typedef cuda::arch::Device Arch;
+    cuda::Device_Vector<Arch,Point> device_points(
+        profugus::make_view(host_points));
+    cuda::Device_Vector<Arch,Point> device_dirs_in(
+        profugus::make_view(host_dirs));
+    cuda::Device_Vector<Arch,Point>  device_dirs_out(num_points);
+    cuda::Device_Vector<Arch,Coords> device_ijk_out(num_points);
+    cuda::Device_Vector<Arch,int> device_exit_face(num_points);
+    cuda::Device_Vector<Arch,int> device_refl_face(num_points);
+    cuda::Device_Vector<Arch,int> device_reflected(num_points);
+
+    // Execute kernel
+    reflect_kernel<<<1,num_points>>>(
+            *mesh,
+             num_points,
+             device_points.data(),
+             device_dirs_in.data(),
+             device_reflected.data(),
+             device_dirs_out.data(),
+             device_ijk_out.data(),
+             device_exit_face.data(),
+             device_refl_face.data());
+
+    REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    // Test reflected directions
+    std::vector<Point> host_dirs_out(num_points);
+    device_dirs_out.to_host(profugus::make_view(host_dirs_out));
+    std::vector<Point> expected_dirs = {{-host_dirs[0].x,
+                                         host_dirs[0].y,
+                                         host_dirs[0].z},
+                                        {host_dirs[1].x,
+                                         host_dirs[1].y,
+                                         host_dirs[1].z}};
+    EXPECT_SOFT_EQ(expected_dirs[0].x, host_dirs_out[0].x);
+    EXPECT_SOFT_EQ(expected_dirs[0].y, host_dirs_out[0].y);
+    EXPECT_SOFT_EQ(expected_dirs[0].z, host_dirs_out[0].z);
+    EXPECT_SOFT_EQ(expected_dirs[1].x, host_dirs_out[1].x);
+    EXPECT_SOFT_EQ(expected_dirs[1].y, host_dirs_out[1].y);
+    EXPECT_SOFT_EQ(expected_dirs[1].z, host_dirs_out[1].z);
+
+    // Test reflected cell indices
+    std::vector<Coords> host_ijk_out(num_points);
+    device_ijk_out.to_host(profugus::make_view(host_ijk_out));
+    std::vector<Coords> expected_ijk = {{0, 2, 1}, {1, 3, 2}};
+    EXPECT_EQ(expected_ijk[0].i, host_ijk_out[0].i);
+    EXPECT_EQ(expected_ijk[0].j, host_ijk_out[0].j);
+    EXPECT_EQ(expected_ijk[0].k, host_ijk_out[0].k);
+    EXPECT_EQ(expected_ijk[1].i, host_ijk_out[1].i);
+    EXPECT_EQ(expected_ijk[1].j, host_ijk_out[1].j);
+    EXPECT_EQ(expected_ijk[1].k, host_ijk_out[1].k);
+
+    // Test reflected flag
+    std::vector<int> host_reflected(num_points);
+    device_reflected.to_host(profugus::make_view(host_reflected));
+    std::vector<int> expected_reflected= {1, 0};
+    EXPECT_VEC_EQ(expected_reflected, host_reflected);
+
+    // Test exiting faces
+    std::vector<int> host_exit_face(num_points);
+    device_exit_face.to_host(profugus::make_view(host_exit_face));
+    std::vector<int> expected_exit_face = {Geo_State_t::MINUS_X,
+                                           Geo_State_t::PLUS_Y};
+    EXPECT_VEC_EQ(expected_exit_face, host_exit_face);
+
+    // Test reflecting faces
+    std::vector<int> host_refl_face(num_points);
+    device_refl_face.to_host(profugus::make_view(host_refl_face));
+    std::vector<int> expected_refl_face = {Geo_State_t::MINUS_X,
+                                           Geo_State_t::NONE};
+    EXPECT_VEC_EQ(expected_refl_face, host_refl_face);
 }
 
 //---------------------------------------------------------------------------//
