@@ -103,7 +103,6 @@ class Mesh_Geometry
     __device__ void move_to_surface(Geo_State_t& state) const
     {
         move(state.next_dist, state);
-        state.ijk = state.next_ijk;
 
         using def::I; using def::J; using def::K;
         const double *x_edges = d_mesh.edges(I);
@@ -115,6 +114,8 @@ class Mesh_Geometry
         const int num_cells_z = d_mesh.num_cells_along(K);
 
         constexpr int face_start = Geo_State_t::MINUS_X;
+        state.exiting_face    = Geo_State_t::NONE;
+        state.reflecting_face = Geo_State_t::NONE;
         if( state.next_ijk.i < 0 )
         {
             state.exiting_face = Geo_State_t::MINUS_X;

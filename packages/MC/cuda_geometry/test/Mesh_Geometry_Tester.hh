@@ -25,6 +25,7 @@ class Mesh_Geometry_Tester
       static void test_matid();
       static void test_dist_to_bdry();
       static void test_move_to_surf();
+      static void test_reflect();
 };
 
 #endif // MC_cuda_geometry_test_Mesh_Geometry_Tester_hh
