@@ -133,7 +133,7 @@ class Mesh_Geometry
             if( d_reflect[Geo_State_t::MINUS_Y-face_start] )
                 state.reflecting_face = Geo_State_t::MINUS_Y;
         }
-        else if( state.next_ijk.j = num_cells_y )
+        else if( state.next_ijk.j == num_cells_y )
         {
             state.exiting_face = Geo_State_t::PLUS_Y;
             if( d_reflect[Geo_State_t::PLUS_Y-face_start] )
