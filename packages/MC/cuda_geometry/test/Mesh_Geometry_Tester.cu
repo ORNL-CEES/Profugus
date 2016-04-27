@@ -56,7 +56,6 @@ __global__ void compute_matids_kernel(Mesh_Geometry   mesh,
     }
 }
 
-#if 0
 // Compute the distance to boundary
 __global__ void compute_distance_kernel(Mesh_Geometry   mesh,
                                         int             num_points,
@@ -76,7 +75,26 @@ __global__ void compute_distance_kernel(Mesh_Geometry   mesh,
         next_ijk[tid] = state.next_ijk;
     }
 }
-#endif
+
+// Compute the distance to boundary
+__global__ void compute_move_to_surf_kernel(Mesh_Geometry   mesh,
+                                            int             num_points,
+                                            const Point    *points,
+                                            const Point    *dirs,
+                                            Coords         *ijk)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    if( tid < num_points )
+    {
+        // Create and initialize state on each thread
+        cuda_profugus::Mesh_State state;
+        mesh.initialize(points[tid],dirs[tid],state);
+
+        mesh.distance_to_boundary(state);
+        mesh.move_to_surface(state);
+        ijk[tid] = state.ijk;
+    }
+}
 
 namespace
 {
@@ -178,7 +196,6 @@ void Mesh_Geometry_Tester::test_matid()
     EXPECT_VEC_EQ( expected_matids, host_cell_matids);
 }
 
-#if 0
 //---------------------------------------------------------------------------//
 // Test distance to boundary
 //---------------------------------------------------------------------------//
@@ -225,7 +242,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     std::vector<Coords> host_coords(num_points);
     device_coords.to_host(profugus::make_view(host_coords));
 
-    std::vector<double> expected_distances = {0.1 - 0.01, , 0.04 / sqrt_half};
+    std::vector<double> expected_distances = {0.1 - 0.01, 0.04 / sqrt_half};
     std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
 
     EXPECT_VEC_SOFT_EQ(expected_distances, host_distances);
@@ -236,7 +253,58 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
     EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
 }
-#endif
+
+//---------------------------------------------------------------------------//
+// Test move to boundary
+//---------------------------------------------------------------------------//
+void Mesh_Geometry_Tester::test_move_to_surf()
+{
+    // Build mesh
+    auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
+    auto y_edges = {0.0, 0.20, 0.40, 0.50};
+    auto z_edges = {-0.1, 0.0, 0.15, 0.50};
+    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+
+
+    double sqrt_half = sqrt(0.5);
+    std::vector<Point> host_points = {{0.01, 0.01, -0.01},
+                                      {0.26, 0.35, -0.01}};
+    std::vector<Point> host_dirs   = {{1.0,  0.0,   0.0},
+                                      {sqrt_half, sqrt_half, 0.0}};
+
+    int num_points = host_points.size();
+
+    // Create memroy on device
+    typedef cuda::arch::Device Arch;
+    cuda::Device_Vector<Arch,Point> device_points(
+        profugus::make_view(host_points));
+    cuda::Device_Vector<Arch,Point> device_dirs(
+        profugus::make_view(host_dirs));
+    cuda::Device_Vector<Arch,Coords> device_coords(num_points);
+
+    // Execute kernel
+    compute_move_to_surf_kernel<<<1,num_points>>>(
+            *mesh,
+             num_points,
+             device_points.data(),
+             device_dirs.data(),
+             device_coords.data());
+
+    REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    // Copy matids back to host
+    std::vector<Coords> host_coords(num_points);
+    device_coords.to_host(profugus::make_view(host_coords));
+
+    std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
+
+    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
+    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
+    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
+    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
+    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
+    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+}
 
 //---------------------------------------------------------------------------//
 // end of MC/cuda_geometry/test/Mesh_Geometry_Tester.cu
