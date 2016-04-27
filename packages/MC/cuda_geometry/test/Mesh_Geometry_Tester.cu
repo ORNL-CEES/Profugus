@@ -18,9 +18,8 @@
 #include "Mesh_Geometry_Tester.hh"
 
 typedef profugus::geometry::cell_type  cell_type;
-typedef profugus::geometry::matid_type matid_type;
-typedef cuda::Space_Vector             Point;
-typedef cuda::Coordinates              Coords;
+typedef cuda_utils::Space_Vector       Point;
+typedef cuda_utils::Coordinates        Coords;
 typedef cuda_profugus::Mesh_Geometry   Mesh_Geometry;
 
 // Get volume from the mesh for each specified cell
@@ -40,7 +39,7 @@ __global__ void compute_volumes_kernel(Mesh_Geometry    mesh,
 __global__ void compute_matids_kernel(Mesh_Geometry   mesh,
                                       int             num_points,
                                       const Point    *points,
-                                      matid_type     *matids)
+                                      int            *matids)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
@@ -155,12 +154,12 @@ void Mesh_Geometry_Tester::test_matid()
 {
     auto mesh = get_mesh();
 
-    std::vector<matid_type> all_matids = {1, 3, 2, 0,
-                                          3, 1, 4, 1,
-                                          2, 5, 2, 1,
-                                          0, 1, 2, 3,
-                                          1, 2, 3, 4,
-                                          2, 3, 4, 5};
+    std::vector<int> all_matids = {1, 3, 2, 0,
+                                   3, 1, 4, 1,
+                                   2, 5, 2, 1,
+                                   0, 1, 2, 3,
+                                   1, 2, 3, 4,
+                                   2, 3, 4, 5};
 
     std::vector<Point> host_points = {{0.7,  -0.9,  2.1},
                                       {0.5,  -0.5,  2.5},
@@ -188,10 +187,10 @@ void Mesh_Geometry_Tester::test_matid()
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy matids back to host
-    std::vector<matid_type> host_cell_matids(num_points);
+    std::vector<int> host_cell_matids(num_points);
     device_cell_matids.to_host(profugus::make_view(host_cell_matids));
 
-    std::vector<matid_type> expected_matids = {2, 1, 5, 1};
+    std::vector<int> expected_matids = {2, 1, 5, 1};
 
     EXPECT_VEC_EQ( expected_matids, host_cell_matids);
 }

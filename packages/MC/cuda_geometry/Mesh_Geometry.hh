@@ -49,7 +49,7 @@ class Mesh_Geometry
     typedef profugus::geometry::cell_type        cell_type;
     typedef profugus::geometry::matid_type       matid_type;
     typedef std::vector<double>                  Vec_Dbl;
-    typedef std::vector<matid_type>              Vec_Matids;
+    typedef std::vector<int>                     Vec_Int;
     typedef cuda::arch::Device                   Arch;
     typedef cuda::Device_Vector<Arch,double>     Dev_Dbl_Vec;
     typedef std::shared_ptr<Dev_Dbl_Vec>         SP_Dev_Dbl_Vec;
@@ -68,7 +68,7 @@ class Mesh_Geometry
     // >>> HOST API
 
     //! Set materials
-    void set_matids(const Vec_Matids& matids)
+    void set_matids(const Vec_Int& matids)
     {
         d_matid_vec =
             std::make_shared<Dev_Matid_Vec>(profugus::make_view(matids));
