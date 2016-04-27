@@ -613,7 +613,6 @@ TYPED_TEST(TallierTest, swap)
 {
     typedef typename TestFixture::Tallier_t     Tallier_t;
     typedef typename TestFixture::Keff_Tally_t  Keff_Tally_t;
-    typedef typename TestFixture::Particle_t    Particle_t;
 
     Tallier_t tallier, inactive_tallier;
     tallier.set(this->geometry, this->physics);
@@ -679,7 +678,6 @@ TYPED_TEST(TallierTest, add)
     typedef typename TestFixture::Tallier_t     Tallier_t;
     typedef typename TestFixture::Geometry_t    Geometry_t;
     typedef typename TestFixture::Keff_Tally_t  Keff_Tally_t;
-    typedef typename TestFixture::Particle_t    Particle_t;
 
     Tallier_t tallier;
     tallier.set(this->geometry, this->physics);

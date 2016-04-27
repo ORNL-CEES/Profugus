@@ -506,8 +506,6 @@ TYPED_TEST(PhysicsTest, Access)
     typedef typename TestFixture::Particle      Particle;
     typedef typename TestFixture::SP_Particle   SP_Particle;
     typedef typename TestFixture::Physics_t     Physics_t;
-    typedef typename TestFixture::SP_Physics    SP_Physics;
-    typedef typename TestFixture::Space_Vector  Space_Vector;
 
     using profugus::physics::TOTAL;
     using profugus::physics::SCATTERING;
@@ -592,8 +590,6 @@ TYPED_TEST(PhysicsTest, initialization)
     typedef typename TestFixture::Particle      Particle;
     typedef typename TestFixture::SP_Particle   SP_Particle;
     typedef typename TestFixture::Physics_t     Physics_t;
-    typedef typename TestFixture::SP_Physics    SP_Physics;
-    typedef typename TestFixture::Space_Vector  Space_Vector;
 
     // make a particle
     SP_Particle p(make_shared<Particle>());
