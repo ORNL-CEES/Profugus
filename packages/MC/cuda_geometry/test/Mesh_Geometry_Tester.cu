@@ -155,12 +155,12 @@ void Mesh_Geometry_Tester::test_matid()
 {
     auto mesh = get_mesh();
 
-    std::vector<matid_type> all_matids = {1, 3, 2, 0,
-                                          3, 1, 4, 1,
-                                          2, 5, 2, 1,
-                                          0, 1, 2, 3,
-                                          1, 2, 3, 4,
-                                          2, 3, 4, 5};
+    std::vector<int> all_matids = {1, 3, 2, 0,
+                                   3, 1, 4, 1,
+                                   2, 5, 2, 1,
+                                   0, 1, 2, 3,
+                                   1, 2, 3, 4,
+                                   2, 3, 4, 5};
 
     std::vector<Point> host_points = {{0.7,  -0.9,  2.1},
                                       {0.5,  -0.5,  2.5},
@@ -188,10 +188,10 @@ void Mesh_Geometry_Tester::test_matid()
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy matids back to host
-    std::vector<matid_type> host_cell_matids(num_points);
+    std::vector<int> host_cell_matids(num_points);
     device_cell_matids.to_host(profugus::make_view(host_cell_matids));
 
-    std::vector<matid_type> expected_matids = {2, 1, 5, 1};
+    std::vector<int> expected_matids = {2, 1, 5, 1};
 
     EXPECT_VEC_EQ( expected_matids, host_cell_matids);
 }
