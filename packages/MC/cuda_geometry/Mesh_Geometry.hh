@@ -199,12 +199,16 @@ class Mesh_Geometry
     {
         using def::I; using def::J; using def::K;
 
-        if (   (state.ijk.i == -1)
-            || (state.ijk.j == -1)
-            || (state.ijk.k == -1)
-            || (state.ijk.i == d_mesh.num_cells_along(I))
-            || (state.ijk.j == d_mesh.num_cells_along(J))
-            || (state.ijk.k == d_mesh.num_cells_along(K)))
+        if (state.reflecting_face != Geo_State_t::NONE)
+        {
+            return profugus::geometry::REFLECT;
+        }
+        else if (   (state.ijk.i == -1)
+                 || (state.ijk.j == -1)
+                 || (state.ijk.k == -1)
+                 || (state.ijk.i == d_mesh.num_cells_along(I))
+                 || (state.ijk.j == d_mesh.num_cells_along(J))
+                 || (state.ijk.k == d_mesh.num_cells_along(K)))
         {
             return profugus::geometry::OUTSIDE;
         }
