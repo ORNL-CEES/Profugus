@@ -317,6 +317,40 @@ void Manager_Cuda<Geometry>::build_geometry(RCP_ParameterList master_db)
                                 (z_edges.size()-1) ) );
     geometry_host->set_matids(matids.toVector());
 
+    // Get reflecting data
+    auto problem_db = Teuchos::sublist(master_db,"PROBLEM");
+    typedef Teuchos::Array<int> OneDArray_int;
+
+    // set the boundary conditions -- default to reflection
+    if (!problem_db->isType<std::string>("boundary"))
+        problem_db->set("boundary",std::string("reflect"));
+
+    std::vector<int> boundary(6, 0);
+    if (problem_db->get<std::string>("boundary","reflect") == "reflect")
+    {
+        if (!problem_db->isSublist("boundary_db"))
+        {
+            boundary = {1, 1, 1, 1, 1, 1};
+        }
+        else
+        {
+            const auto &bdry_db = Teuchos::sublist(problem_db,"boundary_db");
+
+            if (!bdry_db->isType<OneDArray_int>("reflect"))
+            {
+                boundary = {1, 1, 1, 1, 1};
+            }
+            else
+            {
+                const auto &bnd_array =
+                    bdry_db->get<OneDArray_int>("reflect");
+                std::copy(bnd_array.begin(), bnd_array.end(),
+                          boundary.begin());
+            }
+        }
+    }
+    geometry_host->set_reflecting(boundary);
+
     d_geometry = SDP_Geometry( geometry_host );
 }
 
