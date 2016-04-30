@@ -27,6 +27,9 @@ template class Pathlength_Tally<Mesh_Geometry>;
 template class Compound_Tally<Core>;
 template class Compound_Tally<Mesh_Geometry>;
 
+template class Surface_Tally<Core>;
+template class Surface_Tally<Mesh_Geometry>;
+
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//

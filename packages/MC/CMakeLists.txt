@@ -97,6 +97,7 @@ SET(MC_SOURCES
   mc/Axial_KDE_Kernel.pt.cc
   mc/Box_Shape.cc
   mc/Cell_Tally.pt.cc
+  mc/Current_Tally.pt.cc
   mc/Domain_Transporter.pt.cc
   mc/Fission_Matrix_Acceleration.pt.cc
   mc/Fission_Matrix_Processor.cc

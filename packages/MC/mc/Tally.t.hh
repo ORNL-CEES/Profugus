@@ -56,6 +56,15 @@ Compound_Tally<Geometry>::~Compound_Tally()
 {
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Pure virtual destructor definition.
+ */
+template <class Geometry>
+Surface_Tally<Geometry>::~Surface_Tally()
+{
+}
+
 } // end namespace profugus
 
 #endif // mc_Tally_t_hh

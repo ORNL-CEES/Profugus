@@ -196,6 +196,35 @@ class Compound_Tally : public Tally<Geometry>
     SP_Source_Tally get_src_tally() const { return b_src_tally; }
 };
 
+//---------------------------------------------------------------------------//
+/*!
+ * \class Surface_Tally
+ * \brief Defines surface tally interfaces.
+ */
+template <class Geometry>
+class Surface_Tally : public Tally<Geometry>
+{
+    typedef Tally<Geometry>                 Base;
+    typedef Physics<Geometry>               Physics_t;
+    typedef typename Physics_t::Particle_t  Particle_t;
+    typedef std::shared_ptr<Physics_t>      SP_Physics;
+
+  public:
+    // Constructor.
+    Surface_Tally(SP_Physics physics, bool inactive)
+        : Base(physics, inactive)
+    { /*...*/ }
+
+    // Destructor.
+    virtual ~Surface_Tally();
+
+    // >>> TALLY INTERFACE
+
+    //! Tally on surface
+    virtual void tally_surface(const Particle_t &p) = 0;
+};
+
+
 } // end namespace profugus
 
 #endif // mc_Tally_hh
