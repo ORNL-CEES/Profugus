@@ -47,8 +47,8 @@ class Cartesian_Mesh
     typedef int                           dim_type;
     typedef size_t                        size_type;
     typedef profugus::geometry::cell_type cell_type;
-    typedef cuda::Space_Vector            Space_Vector;
-    typedef cuda::Coordinates             Coordinates;
+    typedef cuda_utils::Space_Vector      Space_Vector;
+    typedef cuda_utils::Coordinates       Coordinates;
     typedef std::vector<double>           Vec_Dbl;
     //@}
 
@@ -200,6 +200,33 @@ class Cartesian_Mesh
         }
         return cuda::utility::lower_bound(edges_start,edges_end,r)
             - edges_start - 1;
+    }
+
+    //! Get lower corner of domain
+    Space_Vector lower() const
+    {
+        Space_Vector xyz;
+
+        cudaMemcpy(&xyz.x, dd_x_edges, sizeof(double), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.y, dd_y_edges, sizeof(double), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.z, dd_z_edges, sizeof(double), cudaMemcpyDeviceToHost);
+
+        return xyz;
+    }
+
+    //! Get high corner of domain
+    Space_Vector upper() const
+    {
+        Space_Vector xyz;
+
+        cudaMemcpy(&xyz.x, dd_x_edges+d_cells_x, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.y, dd_y_edges+d_cells_y, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz.z, dd_z_edges+d_cells_z, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+
+        return xyz;
     }
 
     //! Low corner of mesh in \e (i,j,k) direction.

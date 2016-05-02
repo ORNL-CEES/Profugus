@@ -19,8 +19,8 @@
 #include "Cartesian_Mesh_Tester.hh"
 
 typedef profugus::geometry::cell_type cell_type;
-typedef cuda::Space_Vector            Point;
-typedef cuda::Coordinates             Coords;
+typedef cuda_utils::Space_Vector      Point;
+typedef cuda_utils::Coordinates       Coords;
 typedef cuda_profugus::Cartesian_Mesh Cartesian_Mesh;
 
 __global__ void compute_indices_kernel(Cartesian_Mesh mesh,

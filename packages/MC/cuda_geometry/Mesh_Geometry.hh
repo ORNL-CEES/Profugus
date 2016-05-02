@@ -52,10 +52,9 @@ class Mesh_Geometry
     typedef cuda::arch::Device                   Arch;
     typedef thrust::device_vector<double>        Dev_Dbl_Vec;
     typedef thrust::device_vector<int>           Dev_Int_Vec;
-    typedef cuda::Coordinates                    Coordinates;
-    typedef cuda::Space_Vector                   Space_Vector;
+    typedef cuda_utils::Coordinates              Coordinates;
+    typedef cuda_utils::Space_Vector             Space_Vector;
     typedef Mesh_State                           Geo_State_t;
-
 
     //! Constructor
     Mesh_Geometry(const Vec_Dbl &x_edges,
@@ -83,8 +82,17 @@ class Mesh_Geometry
     //! Access the underlying mesh directly
     const Cartesian_Mesh& mesh() const { return d_mesh; }
 
-    // Bounding box (is this needed?)
-    //profugus::Bounding_Box get_extents() const;
+    //! Low corner of problem domain
+    Space_Vector lower() const
+    {
+        return d_mesh.lower();
+    }
+
+    //! High corner of problem domain
+    Space_Vector upper() const
+    {
+        return d_mesh.upper();
+    }
 
     // >>> DEVICE API
 
