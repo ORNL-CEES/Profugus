@@ -41,7 +41,6 @@ template <class Geometry>
 Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
                                          SDP_Geometry   geometry)
     : Base(geometry)
-    , d_erg_cdf(db->get<int>("num_groups"))
     , d_np_total(0)
 {
     REQUIRE(!db.is_null());
@@ -56,6 +55,8 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     const auto &shape = db->get(
         "spectral_shape", Teuchos::Array<double>(d_num_groups, 1.0));
     CHECK(shape.size() == d_num_groups);
+
+    d_erg_cdf_vec.resize(d_num_groups);
 
     // calculate the normalization
     double norm = std::accumulate(shape.begin(), shape.end(), 0.0);
@@ -76,7 +77,8 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     ENSURE(cuda::utility::soft_equiv(sum, 1.0));
 
     // Copy to device
-    d_erg_cdf.assign(profugus::make_view(erg_cdf));
+    d_erg_cdf_vec = erg_cdf;
+    d_erg_cdf = d_erg_cdf_vec.data().get();
 
     // initialize timers in this class, which may be necessary because domains
     // with no source will not make this timer otherwise

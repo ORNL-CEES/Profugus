@@ -98,16 +98,16 @@ void Physics_Tester::test_total( const Vec_Dbl  &x_edges,
 
     // Allocate data on device
     int num_vals = host_totals.size();
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,double> device_totals(num_vals);
+    thrust::device_vector<double> device_totals(num_vals);
 
     test_total_kernel<<<1,num_vals>>>( sdp_phys.get_device_ptr(),
-                                       device_totals.data(),
+                                       device_totals.data().get(),
                                        num_vals );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    device_totals.to_host(profugus::make_view(host_totals));
+    thrust::copy(device_totals.begin(),device_totals.end(),
+                 host_totals.begin());
 
     cudaDeviceSynchronize();
 }
@@ -134,10 +134,6 @@ void Physics_Tester::test_collide( const Vec_Dbl  &x_edges,
     auto phys = std::make_shared<Physics<Geom> >(pl,xs,sdp_mat);
     phys->set_geometry(sdp_geom);
     auto sdp_phys = cuda::Shared_Device_Ptr<Physics<Geom> >(phys);
-
-    // Allocate data on device
-    //typedef cuda::arch::Device Arch;
-    //cuda::Device_Vector<Arch,double> device_totals(num_particles);
 
     test_collide_kernel<<<1,num_particles>>>( sdp_geom.get_device_ptr(),
                                               sdp_phys.get_device_ptr(),

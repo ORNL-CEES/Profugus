@@ -18,7 +18,6 @@
 #include "Source.cuh"
 #include "Particle.cuh"
 #include "Definitions.hh"
-#include "cuda_utils/Device_Vector.hh"
 
 #include "Teuchos_ParameterList.hpp"
 
@@ -68,7 +67,7 @@ class Uniform_Source : public Source<Geometry>
     typedef def::Vec_Dbl                        Vec_Dbl;
     typedef def::size_type                      size_type;
     typedef cuda::arch::Device                  Arch_t;
-    typedef cuda::Device_Vector<Arch_t,double>  Device_Dbl;
+    typedef thrust::device_vector<double>       Device_Dbl;
     //@}
 
   private:
@@ -78,7 +77,8 @@ class Uniform_Source : public Source<Geometry>
     Box_Shape  *d_geo_shape;
 
     // Energy shape CDF.
-    Device_Dbl d_erg_cdf;
+    Device_Dbl d_erg_cdf_vec;
+    double *d_erg_cdf;
 
   public:
     // Constructor.

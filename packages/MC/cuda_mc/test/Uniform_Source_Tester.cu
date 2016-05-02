@@ -14,7 +14,6 @@
 #include "../Source_Provider.cuh"
 
 #include "utils/View_Field.hh"
-#include "cuda_utils/Device_Vector.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
 namespace cuda_mc
@@ -96,9 +95,8 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
     REQUIRE( Np == mu.size() );
     REQUIRE( Np == eta.size() );
     REQUIRE( Np == xi.size() );
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Space_Vector> pts_device(Np);
-    cuda::Device_Vector<Arch,Space_Vector> dirs_device(Np);
+    thrust::device_vector<Space_Vector> device_pts(Np);
+    thrust::device_vector<Space_Vector> device_dirs(Np);
 
     REQUIRE( geom_bounds.size() == 6 );
 
@@ -147,24 +145,24 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
 
     // Launch kernel
     std::cout << "Launching kernel with " << Np << " particles" << std::endl;
-    compute_source_kernel<<<1,Np>>>(source, pts_device.data(),
-                                    dirs_device.data(), Np);
+    compute_source_kernel<<<1,Np>>>(source, device_pts.data().get(),
+                                    device_dirs.data().get(), Np);
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy back to host
-    std::vector<Space_Vector> pts_host(Np);
-    std::vector<Space_Vector> dirs_host(Np);
-    pts_device.to_host(profugus::make_view(pts_host));
-    dirs_device.to_host(profugus::make_view(dirs_host));
+    std::vector<Space_Vector> host_pts(Np);
+    std::vector<Space_Vector> host_dirs(Np);
+    thrust::copy(device_pts.begin(),device_pts.end(),host_pts.begin());
+    thrust::copy(device_dirs.begin(),device_dirs.end(),host_dirs.begin());
 
     for( int ip = 0; ip < Np; ++ip )
     {
-        x_locs[ip] = pts_host[ip].x;
-        y_locs[ip] = pts_host[ip].y;
-        z_locs[ip] = pts_host[ip].z;
-        mu[ip]     = dirs_host[ip].x;
-        eta[ip]    = dirs_host[ip].y;
-        xi[ip]     = dirs_host[ip].z;
+        x_locs[ip] = host_pts[ip].x;
+        y_locs[ip] = host_pts[ip].y;
+        z_locs[ip] = host_pts[ip].z;
+        mu[ip]     = host_dirs[ip].x;
+        eta[ip]    = host_dirs[ip].y;
+        xi[ip]     = host_dirs[ip].z;
     }
 }
 
@@ -217,7 +215,6 @@ void Uniform_Source_Tester::test_host_api( const Vec_Dbl &geom_bounds,
     std::vector<int> matids(Nx*Ny*Nz,0);
     geom_host->set_matids(matids);
     cuda::Shared_Device_Ptr<Geometry> geom(geom_host);
-    //auto geom = cuda::shared_device_ptr<Geometry>(x_edges,y_edges,z_edges);
 
     auto db = Teuchos::rcp( new Teuchos::ParameterList() );
     db->set("Np",Np);

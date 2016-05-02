@@ -69,14 +69,14 @@ void Particle_Tester::test_randoms( Vec_Dbl &host_rands )
 {
     int num_vals = host_rands.size();
 
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,double> device_rands(num_vals);
+    thrust::device_vector<double> device_rands(num_vals);
 
-    compute_randoms_kernel<<<1,num_vals>>>( device_rands.data(), num_vals );
+    compute_randoms_kernel<<<1,num_vals>>>(device_rands.data().get(),
+                                           num_vals );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    device_rands.to_host(profugus::make_view(host_rands));
+    thrust::copy(device_rands.begin(),device_rands.end(),host_rands.begin());
 }
 
 void Particle_Tester::test_groups( const Vec_Int &host_groups_in,
@@ -85,19 +85,17 @@ void Particle_Tester::test_groups( const Vec_Int &host_groups_in,
     int num_vals = host_groups_in.size();
     REQUIRE( host_groups_out.size() == num_vals );
 
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,int> device_groups_in(num_vals);
-    cuda::Device_Vector<Arch,int> device_groups_out(num_vals);
+    thrust::device_vector<int> device_groups_in(host_groups_in);
+    thrust::device_vector<int> device_groups_out(num_vals);
 
-    device_groups_in.assign(profugus::make_view(host_groups_in));
-
-    compute_groups_kernel<<<1,num_vals>>>( device_groups_in.data(), 
-                                           device_groups_out.data(),
+    compute_groups_kernel<<<1,num_vals>>>( device_groups_in.data().get(), 
+                                           device_groups_out.data().get(),
                                            num_vals );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    device_groups_out.to_host(profugus::make_view(host_groups_out));
+    thrust::copy(device_groups_out.begin(),device_groups_out.end(),
+                 host_groups_out.begin());
 }
 
 void Particle_Tester::test_matids( const Vec_Int &host_matids_in,
@@ -106,19 +104,17 @@ void Particle_Tester::test_matids( const Vec_Int &host_matids_in,
     int num_vals = host_matids_in.size();
     REQUIRE( host_matids_out.size() == num_vals );
 
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,int> device_matids_in(num_vals);
-    cuda::Device_Vector<Arch,int> device_matids_out(num_vals);
+    thrust::device_vector<int> device_matids_in(host_matids_in);
+    thrust::device_vector<int> device_matids_out(num_vals);
 
-    device_matids_in.assign(profugus::make_view(host_matids_in));
-
-    compute_matids_kernel<<<1,num_vals>>>( device_matids_in.data(), 
-                                           device_matids_out.data(),
+    compute_matids_kernel<<<1,num_vals>>>( device_matids_in.data().get(), 
+                                           device_matids_out.data().get(),
                                            num_vals );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    device_matids_out.to_host(profugus::make_view(host_matids_out));
+    thrust::copy(device_matids_out.begin(),device_matids_out.end(),
+                 host_matids_out.begin());
 }
 } // end namespace cuda_mc
 

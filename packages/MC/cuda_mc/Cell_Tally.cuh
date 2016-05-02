@@ -45,9 +45,8 @@ class Cell_Tally
     typedef Particle<Geometry>                  Particle_t;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>  SDP_Physics;
-    typedef cuda::arch::Device                  Arch_t;
-    typedef cuda::Device_Vector<Arch_t,double>  Dev_Dbl;
-    typedef cuda::Device_Vector<Arch_t,int>     Dev_Int;
+    typedef thrust::device_vector<double>       Dev_Dbl;
+    typedef thrust::device_vector<int>          Dev_Int;
     //@}
 
   private:

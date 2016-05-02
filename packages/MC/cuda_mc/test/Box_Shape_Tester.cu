@@ -8,11 +8,12 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <thrust/device_vector.h>
+
 #include "Box_Shape_Tester.hh"
 #include "../Box_Shape.cuh"
 
 #include "utils/View_Field.hh"
-#include "cuda_utils/Device_Vector.hh"
 
 namespace cuda_mc
 {
@@ -45,14 +46,12 @@ __global__ void compute_sample_kernel( Box_Shape     box,
 }
 
 void Box_Shape_Tester::test_inside( const Vec_Dbl       &box_bounds,
-                                    const Vec_Space_Vec &pts_host,
-                                    Vec_Int             &inside_host)
+                                    const Vec_Space_Vec &host_pts,
+                                    Vec_Int             &host_inside)
 {
     // Copy values to device
-    int num_vals = pts_host.size();
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Space_Vector> pts_device(num_vals);
-    pts_device.assign(profugus::make_view(pts_host));
+    int num_vals = host_pts.size();
+    thrust::device_vector<Space_Vector> device_pts(host_pts);
 
     // Build box to be copied to device
     REQUIRE( box_bounds.size() == 6 );
@@ -61,24 +60,25 @@ void Box_Shape_Tester::test_inside( const Vec_Dbl       &box_bounds,
                               box_bounds[4], box_bounds[5]};
 
     // Storage for result of kernel
-    cuda::Device_Vector<Arch,int> inside_device(num_vals);
+    thrust::device_vector<int> device_inside(num_vals);
 
     // Launch kernel
-    compute_inside_kernel<<<1,num_vals>>>( box, pts_device.data(),
-                                           inside_device.data(), num_vals );
+    compute_inside_kernel<<<1,num_vals>>>( box,
+                                           device_pts.data().get(),
+                                           device_inside.data().get(),
+                                           num_vals );
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy back to host
-    inside_device.to_host(profugus::make_view(inside_host));
+    thrust::copy(device_inside.begin(),device_inside.end(),host_inside.begin());
 }
 
 void Box_Shape_Tester::test_sample( const Vec_Dbl &box_bounds,
-                                    Vec_Space_Vec &pts_host)
+                                    Vec_Space_Vec &host_pts)
 {
     // Copy values to device
-    int num_vals = pts_host.size();
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Space_Vector> pts_device(num_vals);
+    int num_vals = host_pts.size();
+    thrust::device_vector<Space_Vector> device_pts(num_vals);
 
     // Build box to be copied to device
     REQUIRE( box_bounds.size() == 6 );
@@ -87,11 +87,12 @@ void Box_Shape_Tester::test_sample( const Vec_Dbl &box_bounds,
                               box_bounds[4], box_bounds[5]};
 
     // Launch kernel
-    compute_sample_kernel<<<1,num_vals>>>( box, pts_device.data(), num_vals );
+    compute_sample_kernel<<<1,num_vals>>>(box, device_pts.data().get(),
+                                          num_vals );
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy back to host
-    pts_device.to_host(profugus::make_view(pts_host));
+    thrust::copy(device_pts.begin(),device_pts.end(),host_pts.begin());
 }
 
 } // end namespace cuda_mc

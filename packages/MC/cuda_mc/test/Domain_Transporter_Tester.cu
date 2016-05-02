@@ -90,18 +90,17 @@ void Domain_Transporter_Tester::test_transport( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Uniform_Src> sdp_source(sp_source);
 
     // Allocate data on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,int> device_events(num_particles);
+    thrust::device_vector<int> device_events(num_particles);
 
     test_transport_kernel<<<1,num_particles>>>( sdp_source.get_device_ptr(),
                                                 transp.get_device_ptr(),
-                                                device_events.data(),
+                                                device_events.data().get(),
                                                 num_particles );
 
     cudaDeviceSynchronize();
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    device_events.to_host(profugus::make_view(events));
+    thrust::copy(device_events.begin(),device_events.end(),events.begin());
 }
 
 } // end namespace cuda_mc

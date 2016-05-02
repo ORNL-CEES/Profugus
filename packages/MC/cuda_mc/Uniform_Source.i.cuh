@@ -63,7 +63,7 @@ Uniform_Source<Geometry>::get_particle(std::size_t  tid,
 
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
-        d_erg_cdf.size(), d_erg_cdf.data(), p.ran());
+        d_num_groups, d_erg_cdf, p.ran());
     CHECK(group < d_num_groups);
     p.set_group(group);
 

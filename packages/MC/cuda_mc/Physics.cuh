@@ -19,7 +19,6 @@
 
 #include "CudaUtils/cuda_utils/Shared_Device_Ptr.hh"
 #include "Matprop/cuda_xs/XS_Device.hh"
-#include "CudaUtils/cuda_utils/Device_Vector.hh"
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "xs/XS.hh"
@@ -62,7 +61,6 @@ class Physics
     typedef Particle<Geometry_t>                Particle_t;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef std::shared_ptr<Particle_t>         SP_Particle;
-
     typedef cuda_profugus::XS_Device            XS_Dev_t;
     typedef cuda::Shared_Device_Ptr<XS_Dev_t>   SDP_XS_Dev;
     typedef profugus::XS                        XS_t;
