@@ -17,7 +17,6 @@
 #include "utils/View_Field.hh"
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Definitions.hh"
-#include "cuda_utils/Device_Vector.hh"
 #include "cuda_utils/Utility_Functions.hh"
 #include "geometry/Definitions.hh"
 #include "geometry/Bounding_Box.hh"
@@ -51,10 +50,8 @@ class Mesh_Geometry
     typedef std::vector<double>                  Vec_Dbl;
     typedef std::vector<int>                     Vec_Int;
     typedef cuda::arch::Device                   Arch;
-    typedef cuda::Device_Vector<Arch,double>     Dev_Dbl_Vec;
-    typedef std::shared_ptr<Dev_Dbl_Vec>         SP_Dev_Dbl_Vec;
-    typedef cuda::Device_Vector<Arch,matid_type> Dev_Matid_Vec;
-    typedef std::shared_ptr<Dev_Matid_Vec>       SP_Dev_Matid_Vec;
+    typedef thrust::device_vector<double>        Dev_Dbl_Vec;
+    typedef thrust::device_vector<int>           Dev_Int_Vec;
     typedef cuda::Coordinates                    Coordinates;
     typedef cuda::Space_Vector                   Space_Vector;
     typedef Mesh_State                           Geo_State_t;
@@ -70,9 +67,9 @@ class Mesh_Geometry
     //! Set materials
     void set_matids(const Vec_Int& matids)
     {
-        d_matid_vec =
-            std::make_shared<Dev_Matid_Vec>(profugus::make_view(matids));
-        dd_matids = d_matid_vec->data();
+        REQUIRE( matids.size() == num_cells() );
+        d_matid_vec = matids;
+        d_matids = d_matid_vec.data().get();
     }
 
     //! Set reflecting boundaries
@@ -190,7 +187,7 @@ class Mesh_Geometry
     {
         REQUIRE(cell(state) < num_cells());
 
-        return dd_matids[cell(state)];
+        return d_matids[cell(state)];
     }
 
     //! Return the state with respect to outer geometry boundary
@@ -285,9 +282,10 @@ class Mesh_Geometry
 
     Cartesian_Mesh d_mesh;
 
-    SP_Dev_Int_Vec d_matid_vec;
-    int *dd_matids;
+    thrust::device_vector<int> d_matid_vec;
     thrust::device_vector<int> d_reflect_vec;
+
+    int *d_matids;
     int *d_reflect;
 };
 
