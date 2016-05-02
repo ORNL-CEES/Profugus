@@ -20,15 +20,16 @@
 namespace cuda_mc
 {
 
+typedef cuda_utils::Space_Vector            Space_Vector;
 typedef cuda_profugus::Mesh_Geometry        Geometry;
 typedef cuda_mc::Uniform_Source<Geometry>   Uniform_Src;
 typedef cuda_mc::Particle<Geometry>         Particle_t;
 typedef cuda_mc::RNG_State_t                RNG_State;
 
-__global__ void compute_source_kernel( Uniform_Src           source,
-                                       cuda::Space_Vector   *pts,
-                                       cuda::Space_Vector   *dirs,
-                                       int                   num_vals )
+__global__ void compute_source_kernel( Uniform_Src   source,
+                                       Space_Vector *pts,
+                                       Space_Vector *dirs,
+                                       int           num_vals )
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
@@ -96,8 +97,8 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
     REQUIRE( Np == eta.size() );
     REQUIRE( Np == xi.size() );
     typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,cuda::Space_Vector> pts_device(Np);
-    cuda::Device_Vector<Arch,cuda::Space_Vector> dirs_device(Np);
+    cuda::Device_Vector<Arch,Space_Vector> pts_device(Np);
+    cuda::Device_Vector<Arch,Space_Vector> dirs_device(Np);
 
     REQUIRE( geom_bounds.size() == 6 );
 
@@ -151,8 +152,8 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy back to host
-    std::vector<cuda::Space_Vector> pts_host(Np);
-    std::vector<cuda::Space_Vector> dirs_host(Np);
+    std::vector<Space_Vector> pts_host(Np);
+    std::vector<Space_Vector> dirs_host(Np);
     pts_device.to_host(profugus::make_view(pts_host));
     dirs_device.to_host(profugus::make_view(dirs_host));
 

@@ -29,9 +29,9 @@ class Box_Shape_Tester
 
   public:
 
-      typedef std::vector<int>                Vec_Int;
-      typedef std::vector<double>             Vec_Dbl;
-      typedef std::vector<cuda::Space_Vector> Vec_Space_Vec;
+      typedef std::vector<int>                      Vec_Int;
+      typedef std::vector<double>                   Vec_Dbl;
+      typedef std::vector<cuda_utils::Space_Vector> Vec_Space_Vec;
 
       static void test_inside( const Vec_Dbl       &box_bounds,
                                const Vec_Space_Vec &pts,

@@ -46,7 +46,7 @@ Uniform_Source<Geometry>::get_particle(std::size_t  tid,
     int matid = 0;
 
     // particle position and direction
-    cuda::Space_Vector r, omega;
+    cuda_utils::Space_Vector r, omega;
 
     // sample the angle isotropically
     sampler::sample_isotropic(omega, rng);

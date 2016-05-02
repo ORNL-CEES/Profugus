@@ -19,8 +19,8 @@
 
 typedef profugus::geometry::cell_type  cell_type;
 typedef profugus::geometry::matid_type matid_type;
-typedef cuda::Space_Vector             Point;
-typedef cuda::Coordinates              Coords;
+typedef cuda_utils::Space_Vector       Point;
+typedef cuda_utils::Coordinates        Coords;
 typedef cuda_profugus::Mesh_Geometry   Mesh_Geometry;
 
 // Get volume from the mesh for each specified cell

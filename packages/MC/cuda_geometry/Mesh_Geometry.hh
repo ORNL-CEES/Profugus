@@ -54,8 +54,8 @@ class Mesh_Geometry
     typedef std::shared_ptr<Dev_Dbl_Vec>         SP_Dev_Dbl_Vec;
     typedef cuda::Device_Vector<Arch,int>        Dev_Int_Vec;
     typedef std::shared_ptr<Dev_Int_Vec>         SP_Dev_Int_Vec;
-    typedef cuda::Coordinates                    Coordinates;
-    typedef cuda::Space_Vector                   Space_Vector;
+    typedef cuda_utils::Coordinates              Coordinates;
+    typedef cuda_utils::Space_Vector             Space_Vector;
     typedef Mesh_State                           Geo_State_t;
 
 
@@ -90,13 +90,13 @@ class Mesh_Geometry
     const Cartesian_Mesh& mesh() const { return d_mesh; }
 
     //! Low corner of problem domain
-    cuda::Space_Vector lower() const
+    Space_Vector lower() const
     {
         return d_mesh.lower();
     }
 
     //! High corner of problem domain
-    cuda::Space_Vector upper() const
+    Space_Vector upper() const
     {
         return d_mesh.upper();
     }

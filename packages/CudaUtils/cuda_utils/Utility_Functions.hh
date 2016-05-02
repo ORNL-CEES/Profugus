@@ -98,7 +98,8 @@ double __device__ inline atomic_add_double( volatile double * const dest,
  *
  * \return vector magnitude
  */
-__device__ inline double vector_magnitude(const cuda::Space_Vector &vector)
+__device__ inline double vector_magnitude(
+    const cuda_utils::Space_Vector &vector)
 {
     return sqrt(vector.x * vector.x +
                 vector.y * vector.y +
@@ -116,8 +117,8 @@ __device__ inline double vector_magnitude(const cuda::Space_Vector &vector)
  *
  * \return dot product
  */
-__device__ inline double dot_product(const cuda::Space_Vector &v,
-                                     const cuda::Space_Vector &w)
+__device__ inline double dot_product(const cuda_utils::Space_Vector &v,
+                                     const cuda_utils::Space_Vector &w)
 {
     return v.x*w.x + v.y*w.y + v.z*w.z;
 }
@@ -134,7 +135,7 @@ __device__ inline double dot_product(const cuda::Space_Vector &v,
  * This function is unrolled for efficiency, which is why we don't have a
  * general normalize function.
  */
-__device__ inline void vector_normalize(cuda::Space_Vector &vector)
+__device__ inline void vector_normalize(cuda_utils::Space_Vector &vector)
 {
     double norm     = 1.0 / vector_magnitude(vector);
     vector.x *= norm;
@@ -178,8 +179,8 @@ __device__ inline void vector_normalize(cuda::Space_Vector &vector)
  *
  * \pre the vector must be a unit-vector (magnitude == 1)
  */
-__device__ inline void cartesian_vector_transform(double costheta, double phi,
-                                                  cuda::Space_Vector &vector)
+__device__ inline void cartesian_vector_transform(
+    double costheta, double phi, cuda_utils::Space_Vector &vector)
 {
     REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 
@@ -189,7 +190,7 @@ __device__ inline void cartesian_vector_transform(double costheta, double phi,
     const double sintheta = sqrt(1.0 - costheta * costheta);
 
     // make a copy of the old direction
-    cuda::Space_Vector old = vector;
+    cuda_utils::Space_Vector old = vector;
 
     // calculate alpha
     const double alpha = sqrt(1.0 - old.z * old.z);

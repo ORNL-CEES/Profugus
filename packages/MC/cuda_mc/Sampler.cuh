@@ -78,8 +78,8 @@ __device__ inline T sample_linear(const T xi_lr, const T xi_linear,
                                   const T left,  const T right);
 
 // Sample an isotropic angular distribution
-__device__ inline void sample_isotropic(cuda::Space_Vector &omega,
-                                        RNG_State_t        *rng);
+__device__ inline void sample_isotropic(cuda_utils::Space_Vector &omega,
+                                        RNG_State_t             *rng);
 
 //---------------------------------------------------------------------------//
 } // end namespace sampler

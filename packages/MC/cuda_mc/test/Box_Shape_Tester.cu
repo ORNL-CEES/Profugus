@@ -17,10 +17,12 @@
 namespace cuda_mc
 {
 
-__global__ void compute_inside_kernel( Box_Shape                 box,
-                                       const cuda::Space_Vector *pts,
-                                       int                      *inside,
-                                       int                       num_vals )
+typedef cuda_utils::Space_Vector Space_Vector;
+
+__global__ void compute_inside_kernel( Box_Shape           box,
+                                       const Space_Vector *pts,
+                                       int                *inside,
+                                       int                 num_vals )
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
@@ -29,9 +31,9 @@ __global__ void compute_inside_kernel( Box_Shape                 box,
      }
 }
 
-__global__ void compute_sample_kernel( Box_Shape           box,
-                                       cuda::Space_Vector *pts,
-                                       int                 num_vals )
+__global__ void compute_sample_kernel( Box_Shape     box,
+                                       Space_Vector *pts,
+                                       int           num_vals )
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
@@ -49,7 +51,7 @@ void Box_Shape_Tester::test_inside( const Vec_Dbl       &box_bounds,
     // Copy values to device
     int num_vals = pts_host.size();
     typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,cuda::Space_Vector> pts_device(num_vals);
+    cuda::Device_Vector<Arch,Space_Vector> pts_device(num_vals);
     pts_device.assign(profugus::make_view(pts_host));
 
     // Build box to be copied to device
@@ -76,7 +78,7 @@ void Box_Shape_Tester::test_sample( const Vec_Dbl &box_bounds,
     // Copy values to device
     int num_vals = pts_host.size();
     typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,cuda::Space_Vector> pts_device(num_vals);
+    cuda::Device_Vector<Arch,Space_Vector> pts_device(num_vals);
 
     // Build box to be copied to device
     REQUIRE( box_bounds.size() == 6 );

@@ -48,8 +48,8 @@ class Cartesian_Mesh
     typedef int                           dim_type;
     typedef size_t                        size_type;
     typedef profugus::geometry::cell_type cell_type;
-    typedef cuda::Space_Vector            Space_Vector;
-    typedef cuda::Coordinates             Coordinates;
+    typedef cuda_utils::Space_Vector      Space_Vector;
+    typedef cuda_utils::Coordinates       Coordinates;
     typedef std::vector<double>           Vec_Dbl;
     typedef cuda::arch::Device            Arch;
 
@@ -221,9 +221,9 @@ class Cartesian_Mesh
     }
 
     //! Get lower corner of domain
-    cuda::Space_Vector lower() const
+    Space_Vector lower() const
     {
-        cuda::Space_Vector xyz;
+        Space_Vector xyz;
 
         cudaMemcpy(&xyz.x, dd_x_edges, sizeof(double), cudaMemcpyDeviceToHost);
         cudaMemcpy(&xyz.y, dd_y_edges, sizeof(double), cudaMemcpyDeviceToHost);
@@ -233,9 +233,9 @@ class Cartesian_Mesh
     }
 
     //! Get high corner of domain
-    cuda::Space_Vector upper() const
+    Space_Vector upper() const
     {
-        cuda::Space_Vector xyz;
+        Space_Vector xyz;
 
         cudaMemcpy(&xyz.x, dd_x_edges+d_cells_x, sizeof(double),
                    cudaMemcpyDeviceToHost);

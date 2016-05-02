@@ -39,7 +39,7 @@ TEST_F(Box_ShapeTest, inside)
     std::vector<double> box_bounds = {0.0, 1.0, -1.0, 1.0, 3.0, 5.0};
 
     int num_vals = 4;
-    std::vector<cuda::Space_Vector> pts = {{1.2,   0.0, 3.5},
+    std::vector<cuda_utils::Space_Vector> pts = {{1.2,   0.0, 3.5},
                                            {0.5,   0.1, 4.9},
                                            {0.75, -2.0, 4.0},
                                            {0.1,  -0.4, 5.01}};
@@ -56,7 +56,7 @@ TEST_F(Box_ShapeTest, sample)
     std::vector<double> box_bounds = {0.0, 1.0, -1.0, 1.0, 3.0, 5.0};
 
     int num_vals = 4;
-    std::vector<cuda::Space_Vector> pts(num_vals);
+    std::vector<cuda_utils::Space_Vector> pts(num_vals);
 
     cuda_mc::Box_Shape_Tester::test_sample(box_bounds,pts);
 

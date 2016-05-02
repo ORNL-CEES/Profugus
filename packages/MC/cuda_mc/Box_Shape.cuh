@@ -44,7 +44,7 @@ class Box_Shape
   public:
     //@{
     //! Base-class typedefs.
-    typedef cuda::Space_Vector Space_Vector;
+    typedef cuda_utils::Space_Vector Space_Vector;
     //@}
 
   private:

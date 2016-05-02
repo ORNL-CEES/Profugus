@@ -63,7 +63,7 @@ class VR_Roulette
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
     typedef Particle<Geometry_t>                Particle_t;
-    typedef cuda::Space_Vector                  Space_Vector;
+    typedef cuda_utils::Space_Vector            Space_Vector;
     typedef Teuchos::ParameterList              ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     //@}

@@ -28,8 +28,8 @@ struct Mesh_State
 {
   public:
 
-      typedef cuda::Coordinates  Coordinates;
-      typedef cuda::Space_Vector Space_Vector;
+      typedef cuda_utils::Coordinates  Coordinates;
+      typedef cuda_utils::Space_Vector Space_Vector;
 
     //! Faces in pin-cell.
     enum Face {

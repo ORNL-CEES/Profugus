@@ -30,7 +30,6 @@ class Uniform_Source_Tester
   public:
 
       typedef std::vector<double>             Vec_Dbl;
-      typedef std::vector<cuda::Space_Vector> Vec_Space_Vec;
 
       static void test_source( const Vec_Dbl    &geom_bounds,
                                const Vec_Dbl    &src_bounds,

@@ -19,6 +19,7 @@ namespace cuda_mc
 {
 
 typedef cuda_profugus::Mesh_Geometry Geom;
+typedef cuda_utils::Space_Vector     Space_Vector;
 
 __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
                                    Geom             *geom,
@@ -43,10 +44,10 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
          double x_loc = curand_uniform_double(&rng_state);
          double y_loc = curand_uniform_double(&rng_state);
          double z_loc = curand_uniform_double(&rng_state);
-         cuda::Space_Vector pos = {x_loc, y_loc, z_loc};
+         Space_Vector pos = {x_loc, y_loc, z_loc};
 
          // Direction doesn't matter
-         cuda::Space_Vector dir = {1.0, 0.0, 0.0};
+         Space_Vector dir = {1.0, 0.0, 0.0};
 
          geom->initialize(pos,dir,p.geo_state());
 

@@ -19,6 +19,7 @@ namespace cuda_mc
 {
 
 typedef cuda_profugus::Mesh_Geometry Geom;
+typedef cuda_utils::Space_Vector     Space_Vector;
 
 __global__ void test_total_kernel( Physics<Geom> *phys,
                                    double        *totals,
@@ -60,8 +61,8 @@ __global__ void test_collide_kernel( Geom          *geom,
          p.set_rng(&rng_state);
 
          // Initialize geo state
-         cuda::Space_Vector pos = {0.25, 0.75, 0.60};
-         cuda::Space_Vector dir = {1.0, 0.0, 0.0};
+         Space_Vector pos = {0.25, 0.75, 0.60};
+         Space_Vector dir = {1.0, 0.0, 0.0};
          geom->initialize(pos,dir,p.geo_state());
          p.set_matid(geom->matid(p.geo_state()));
 

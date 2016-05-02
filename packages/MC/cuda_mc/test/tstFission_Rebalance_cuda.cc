@@ -28,7 +28,6 @@ class Fission_RebalanceTest : public testing::Test
     typedef cuda_mc::Fission_Rebalance              Rebalance;
     typedef std::shared_ptr<Rebalance>              SP_Rebalance;
     typedef std::vector<cuda_mc::Fission_Site>      Fission_Container_t;
-    typedef cuda::Space_Vector                      Space_Vector;
 
   protected:
     // Initialization that are performed for each test

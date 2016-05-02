@@ -65,9 +65,9 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     const double * edges_x(d_mesh.edges(I));
     const double * edges_y(d_mesh.edges(J));
     const double * edges_z(d_mesh.edges(K));
-    cuda::Coordinates extents = {d_mesh.num_cells_along(I),
-                                 d_mesh.num_cells_along(J),
-                                 d_mesh.num_cells_along(K)};
+    cuda_utils::Coordinates extents = {d_mesh.num_cells_along(I),
+                                       d_mesh.num_cells_along(J),
+                                       d_mesh.num_cells_along(K)};
 
     // min distance to boundary; initializing test_dist to a large number before
     // each surface check implicitly handles the case where omega[dir] == 0.0
@@ -186,7 +186,7 @@ bool Mesh_Geometry::reflect(Geo_State_t& state) const
  * \brief Return the outward normal at the location dictated by the state.
  */
 __device__
-cuda::Space_Vector Mesh_Geometry::normal(const Geo_State_t& state) const
+cuda_utils::Space_Vector Mesh_Geometry::normal(const Geo_State_t& state) const
 {
     // Choose normal based on exiting face
     if( state.exiting_face == Geo_State_t::MINUS_X )

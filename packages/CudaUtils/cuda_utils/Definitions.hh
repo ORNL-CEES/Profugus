@@ -36,6 +36,12 @@ struct Device
 //---------------------------------------------------------------------------//
 } // end namespace arch
 
+//===========================================================================//
+} // end namespace cuda
+
+namespace cuda_utils
+{
+
 struct Coordinates
 {
     int i;
@@ -51,7 +57,7 @@ struct Space_Vector
 };
 
 //===========================================================================//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Definitions_hh
 
