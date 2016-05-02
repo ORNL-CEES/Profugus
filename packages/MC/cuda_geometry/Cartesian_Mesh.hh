@@ -14,11 +14,10 @@
 #include <math_constants.h>
 
 #include <vector>
-#include <memory>
+#include <thrust/device_vector.h>
 
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Definitions.hh"
-#include "cuda_utils/Device_Vector.hh"
 #include "cuda_utils/Utility_Functions.hh"
 #include "geometry/Definitions.hh"
 #include "utils/Definitions.hh"
@@ -51,22 +50,15 @@ class Cartesian_Mesh
     typedef cuda_utils::Space_Vector      Space_Vector;
     typedef cuda_utils::Coordinates       Coordinates;
     typedef std::vector<double>           Vec_Dbl;
-    typedef cuda::arch::Device            Arch;
-
-    template <class T>
-    using Device_Vector = cuda::Device_Vector<Arch,T>;
-
-    template <class T>
-    using SP = std::shared_ptr<T>;
     //@}
 
   private:
     // >>> DATA
 
     // Cell edges.
-    Device_Vector<double> d_x_edges_vec;
-    Device_Vector<double> d_y_edges_vec;
-    Device_Vector<double> d_z_edges_vec;
+    thrust::device_vector<double> d_x_edges_vec;
+    thrust::device_vector<double> d_y_edges_vec;
+    thrust::device_vector<double> d_z_edges_vec;
 
     // On-device pointers
     double *dd_x_edges;
@@ -85,7 +77,7 @@ class Cartesian_Mesh
     dim_type d_dimension;
 
     // Cell volumes
-    SP<Device_Vector<double> > d_volumes_vec;
+    thrust::device_vector<double> d_volumes_vec;
 
     // On-device pointer
     double *dd_volumes;

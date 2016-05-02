@@ -11,7 +11,6 @@
 #include "gtest/Gtest_Functions.hh"
 #include "utils/View_Field.hh"
 #include "cuda_utils/Definitions.hh"
-#include "cuda_utils/Device_Vector_device.t.hh"
 #include "cuda_utils/CudaDBC.hh"
 
 #include "../Mesh_Geometry.hh"
@@ -153,22 +152,21 @@ void Mesh_Geometry_Tester::test_volume()
     int num_points = host_cells.size();
 
     // Create memory on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,cell_type> device_cells(
-        profugus::make_view(host_cells));
-    cuda::Device_Vector<Arch,double> device_volumes(num_points);
+    thrust::device_vector<cell_type> device_cells(host_cells);
+    thrust::device_vector<double> device_volumes(num_points);
 
     // Execute kernel
     compute_volumes_kernel<<<1,num_points>>>( *mesh,
                                                num_points,
-                                               device_cells.data(),
-                                               device_volumes.data());
+                                               device_cells.data().get(),
+                                               device_volumes.data().get());
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy volumes back to host
     std::vector<double> host_volumes(num_points);
-    device_volumes.to_host(profugus::make_view(host_volumes));
+    thrust::copy(device_volumes.begin(),device_volumes.end(),
+                 host_volumes.begin());
 
     std::vector<double> expected_volumes = {0.1 * 0.6 * 0.6,
                                             0.5 * 0.4 * 0.6,
@@ -203,23 +201,22 @@ void Mesh_Geometry_Tester::test_matid()
     mesh->set_matids(all_matids);
 
     // Create memory on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Point> device_points(
-        profugus::make_view(host_points));
-    cuda::Device_Vector<Arch,int> device_cell_matids(num_points);
+    thrust::device_vector<Point> device_points(host_points);
+    thrust::device_vector<int> device_cell_matids(num_points);
 
     // Execute kernel
     compute_matids_kernel<<<1,num_points>>>(
             *mesh,
              num_points,
-             device_points.data(),
-             device_cell_matids.data());
+             device_points.data().get(),
+             device_cell_matids.data().get());
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy matids back to host
     std::vector<int> host_cell_matids(num_points);
-    device_cell_matids.to_host(profugus::make_view(host_cell_matids));
+    thrust::copy(device_cell_matids.begin(),device_cell_matids.end(),
+                 host_cell_matids.begin());
 
     std::vector<int> expected_matids = {2, 1, 5, 1};
 
@@ -247,30 +244,29 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     int num_points = host_points.size();
 
     // Create memory on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Point> device_points(
-        profugus::make_view(host_points));
-    cuda::Device_Vector<Arch,Point> device_dirs(
-        profugus::make_view(host_dirs));
-    cuda::Device_Vector<Arch,double> device_distances(num_points);
-    cuda::Device_Vector<Arch,Coords> device_coords(num_points);
+    thrust::device_vector<Point> device_points(host_points);
+    thrust::device_vector<Point> device_dirs(host_dirs);
+    thrust::device_vector<double> device_distances(num_points);
+    thrust::device_vector<Coords> device_coords(num_points);
 
     // Execute kernel
     distance_kernel<<<1,num_points>>>(
             *mesh,
              num_points,
-             device_points.data(),
-             device_dirs.data(),
-             device_distances.data(),
-             device_coords.data());
+             device_points.data().get(),
+             device_dirs.data().get(),
+             device_distances.data().get(),
+             device_coords.data().get());
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy data back to host
     std::vector<double> host_distances(num_points);
-    device_distances.to_host(profugus::make_view(host_distances));
+    thrust::copy(device_distances.begin(),device_distances.end(),
+                 host_distances.begin());
     std::vector<Coords> host_coords(num_points);
-    device_coords.to_host(profugus::make_view(host_coords));
+    thrust::copy(device_coords.begin(),device_coords.end(),
+                 host_coords.begin());
 
     std::vector<double> expected_distances = {0.1 - 0.01, 0.04 / sqrt_half};
     std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
@@ -304,26 +300,24 @@ void Mesh_Geometry_Tester::test_move_to_surf()
     int num_points = host_points.size();
 
     // Create memory on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Point> device_points(
-        profugus::make_view(host_points));
-    cuda::Device_Vector<Arch,Point> device_dirs(
-        profugus::make_view(host_dirs));
-    cuda::Device_Vector<Arch,Coords> device_coords(num_points);
+    thrust::device_vector<Point> device_points(host_points);
+    thrust::device_vector<Point> device_dirs(host_dirs);
+    thrust::device_vector<Coords> device_coords(num_points);
 
     // Execute kernel
     move_to_surf_kernel<<<1,num_points>>>(
             *mesh,
              num_points,
-             device_points.data(),
-             device_dirs.data(),
-             device_coords.data());
+             device_points.data().get(),
+             device_dirs.data().get(),
+             device_coords.data().get());
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy data back to host
     std::vector<Coords> host_coords(num_points);
-    device_coords.to_host(profugus::make_view(host_coords));
+    thrust::copy(device_coords.begin(),device_coords.end(),
+                 host_coords.begin());
 
     std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
 
@@ -373,34 +367,32 @@ void Mesh_Geometry_Tester::test_reflect()
     int num_points = host_points.size();
 
     // Create memory on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Point> device_points(
-        profugus::make_view(host_points));
-    cuda::Device_Vector<Arch,Point> device_dirs_in(
-        profugus::make_view(host_dirs));
-    cuda::Device_Vector<Arch,Point>  device_dirs_out(num_points);
-    cuda::Device_Vector<Arch,Coords> device_ijk_out(num_points);
-    cuda::Device_Vector<Arch,int> device_exit_face(num_points);
-    cuda::Device_Vector<Arch,int> device_refl_face(num_points);
-    cuda::Device_Vector<Arch,int> device_reflected(num_points);
+    thrust::device_vector<Point> device_points(host_points);
+    thrust::device_vector<Point> device_dirs_in(host_dirs);
+    thrust::device_vector<Point>  device_dirs_out(num_points);
+    thrust::device_vector<Coords> device_ijk_out(num_points);
+    thrust::device_vector<int> device_exit_face(num_points);
+    thrust::device_vector<int> device_refl_face(num_points);
+    thrust::device_vector<int> device_reflected(num_points);
 
     // Execute kernel
     reflect_kernel<<<1,num_points>>>(
             *mesh,
              num_points,
-             device_points.data(),
-             device_dirs_in.data(),
-             device_reflected.data(),
-             device_dirs_out.data(),
-             device_ijk_out.data(),
-             device_exit_face.data(),
-             device_refl_face.data());
+             device_points.data().get(),
+             device_dirs_in.data().get(),
+             device_reflected.data().get(),
+             device_dirs_out.data().get(),
+             device_ijk_out.data().get(),
+             device_exit_face.data().get(),
+             device_refl_face.data().get());
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Test reflected directions
     std::vector<Point> host_dirs_out(num_points);
-    device_dirs_out.to_host(profugus::make_view(host_dirs_out));
+    thrust::copy(device_dirs_out.begin(),device_dirs_out.end(),
+                 host_dirs_out.begin());
     std::vector<Point> expected_dirs = {{-host_dirs[0].x,
                                          host_dirs[0].y,
                                          host_dirs[0].z},
@@ -416,7 +408,8 @@ void Mesh_Geometry_Tester::test_reflect()
 
     // Test reflected cell indices
     std::vector<Coords> host_ijk_out(num_points);
-    device_ijk_out.to_host(profugus::make_view(host_ijk_out));
+    thrust::copy(device_ijk_out.begin(),device_ijk_out.end(),
+                 host_ijk_out.begin());
     std::vector<Coords> expected_ijk = {{0, 2, 1}, {1, 3, 2}};
     EXPECT_EQ(expected_ijk[0].i, host_ijk_out[0].i);
     EXPECT_EQ(expected_ijk[0].j, host_ijk_out[0].j);
@@ -427,20 +420,23 @@ void Mesh_Geometry_Tester::test_reflect()
 
     // Test reflected flag
     std::vector<int> host_reflected(num_points);
-    device_reflected.to_host(profugus::make_view(host_reflected));
+    thrust::copy(device_reflected.begin(),device_reflected.end(),
+                 host_reflected.begin());
     std::vector<int> expected_reflected= {1, 0};
     EXPECT_VEC_EQ(expected_reflected, host_reflected);
 
     // Test exiting faces
     std::vector<int> host_exit_face(num_points);
-    device_exit_face.to_host(profugus::make_view(host_exit_face));
+    thrust::copy(device_exit_face.begin(),device_exit_face.end(),
+                 host_exit_face.begin());
     std::vector<int> expected_exit_face = {Geo_State_t::MINUS_X,
                                            Geo_State_t::PLUS_Y};
     EXPECT_VEC_EQ(expected_exit_face, host_exit_face);
 
     // Test reflecting faces
     std::vector<int> host_refl_face(num_points);
-    device_refl_face.to_host(profugus::make_view(host_refl_face));
+    thrust::copy(device_refl_face.begin(),device_refl_face.end(),
+                 host_refl_face.begin());
     std::vector<int> expected_refl_face = {Geo_State_t::MINUS_X,
                                            Geo_State_t::NONE};
     EXPECT_VEC_EQ(expected_refl_face, host_refl_face);

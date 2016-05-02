@@ -13,7 +13,6 @@
 #include "Cartesian_Mesh.hh"
 #include "utils/Container_Props.hh"
 #include "utils/View_Field.hh"
-#include "cuda_utils/Host_Vector.hh"
 
 namespace cuda_profugus
 {
@@ -25,9 +24,9 @@ namespace cuda_profugus
 Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
                                const Vec_Dbl& y_edges,
                                const Vec_Dbl& z_edges)
-    : d_x_edges_vec(profugus::make_view(x_edges))
-    , d_y_edges_vec(profugus::make_view(y_edges))
-    , d_z_edges_vec(profugus::make_view(z_edges))
+    : d_x_edges_vec(x_edges)
+    , d_y_edges_vec(y_edges)
+    , d_z_edges_vec(z_edges)
 {
     // Hard-coded to 3D
     d_dimension = 3;
@@ -41,9 +40,9 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
     REQUIRE( d_cells_z > 0 );
 
     // Get raw pointers from device vectors
-    dd_x_edges = d_x_edges_vec.data();
-    dd_y_edges = d_y_edges_vec.data();
-    dd_z_edges = d_z_edges_vec.data();
+    dd_x_edges = d_x_edges_vec.data().get();
+    dd_y_edges = d_y_edges_vec.data().get();
+    dd_z_edges = d_z_edges_vec.data().get();
 
     INSIST(profugus::is_sorted(x_edges.begin(), x_edges.end()),
            "Mesh along x axis is not monotonically increasing.");
@@ -55,7 +54,7 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
     d_num_cells = d_cells_x * d_cells_y * d_cells_z;
 
     // Compute cell volumes on host
-    cuda::Host_Vector<double> host_volumes(d_num_cells);
+    thrust::host_vector<double> host_volumes(d_num_cells);
     for( int cell_k = 0; cell_k < d_cells_z; ++cell_k )
     {
         double width_k = z_edges[cell_k+1] - z_edges[cell_k];
@@ -74,9 +73,8 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
             }
         }
     }
-    d_volumes_vec = std::make_shared<Device_Vector<double> >(d_num_cells);
-    d_volumes_vec->assign(host_volumes);
-    dd_volumes = d_volumes_vec->data();
+    d_volumes_vec = host_volumes;
+    dd_volumes = d_volumes_vec.data().get();
 
     ENSURE(d_num_cells >= 1);
 }
