@@ -93,7 +93,7 @@ class Current_Tally : public Surface_Tally<Geometry>
 
   private:
 
-    //void write_output();
+    std::string d_problem_name;
 
     // Edges defining tally mesh
     std::vector<double> d_x_edges;

@@ -15,10 +15,11 @@
 
 #include "Current_Tally.hh"
 
+#include "comm/global.hh"
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
-#include "comm/global.hh"
 #include "utils/Vector_Functions.hh"
+#include "utils/Serial_HDF5_Writer.hh"
 
 namespace profugus
 {
@@ -43,6 +44,9 @@ Current_Tally<Geometry>::Current_Tally(RCP_ParameterList db,
     REQUIRE(x_edges.size() > 1);
     REQUIRE(y_edges.size() > 1);
     REQUIRE(z_edges.size() > 1);
+
+    REQUIRE(db->isType<std::string>("problem_name"));
+    d_problem_name = db->get<std::string>("problem_name");
 
     int num_x_edges = x_edges.size();
     int num_y_edges = y_edges.size();
@@ -331,6 +335,33 @@ void Current_Tally<Geometry>::finalize(double num_particles)
 
         d_z_std_dev[i] = std::sqrt(var * inv_N);
     }
+
+#ifdef USE_HDF5
+    std::string filename = d_problem_name + "_current.h5";
+
+    Serial_HDF5_Writer writer;
+    writer.open(filename);
+
+    // Write edges
+    writer.write("x_edges",d_x_edges);
+    writer.write("y_edges",d_y_edges);
+    writer.write("z_edges",d_z_edges);
+
+    // Surface areas
+    writer.write("x_areas",d_x_areas);
+    writer.write("y_areas",d_y_areas);
+    writer.write("z_areas",d_z_areas);
+
+    // Current
+    writer.write("x_current",d_x_current);
+    writer.write("y_current",d_y_current);
+    writer.write("z_current",d_z_current);
+
+    // Std dev
+    writer.write("x_current_std_dev",d_x_std_dev);
+    writer.write("y_current_std_dev",d_y_std_dev);
+    writer.write("z_current_std_dev",d_z_std_dev);
+#endif
 }
 
 //---------------------------------------------------------------------------//
