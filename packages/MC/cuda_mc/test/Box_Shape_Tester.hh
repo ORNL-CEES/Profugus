@@ -11,12 +11,6 @@
 #ifndef cuda_mc_Box_Shape_Tester_hh
 #define cuda_mc_Box_Shape_Tester_hh
 
-#include <vector>
-#include "cuda_utils/Definitions.hh"
-
-namespace cuda_mc
-{
-
 //===========================================================================//
 /*!
  * \class Box_Shape_Tester
@@ -29,18 +23,9 @@ class Box_Shape_Tester
 
   public:
 
-      typedef std::vector<int>                      Vec_Int;
-      typedef std::vector<double>                   Vec_Dbl;
-      typedef std::vector<cuda_utils::Space_Vector> Vec_Space_Vec;
-
-      static void test_inside( const Vec_Dbl       &box_bounds,
-                               const Vec_Space_Vec &pts,
-                                     Vec_Int       &inside );
-      static void test_sample( const Vec_Dbl       &box_bounds,
-                                     Vec_Space_Vec &pts );
+      static void test_inside();
+      static void test_sample();
 };
-
-} // end namespace cuda_mc
 
 #endif // cuda_mc_Box_Shape_Tester_hh
 
