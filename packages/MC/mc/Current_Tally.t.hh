@@ -157,6 +157,8 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
     // Locate z region of particle
     int z_face = -1;
     auto itr = std::lower_bound(d_z_edges.begin(), d_z_edges.end(), xyz[K]);
+    if (itr == d_z_edges.end())
+        return;
     if (soft_equiv(*itr,xyz[K],tol))
     {
         edge = K;
@@ -170,6 +172,8 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
     // Locate y region of particle
     int y_face = -1;
     itr = std::lower_bound(d_y_edges.begin(), d_y_edges.end(), xyz[J]);
+    if (itr == d_y_edges.end())
+        return;
     if (soft_equiv(*itr,xyz[J],tol))
     {
         edge = J;
@@ -183,6 +187,8 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
     // Locate x region of particle
     int x_face = -1;
     itr = std::lower_bound(d_x_edges.begin(), d_x_edges.end(), xyz[I]);
+    if (itr == d_x_edges.end())
+        return;
     if (soft_equiv(*itr,xyz[I],tol))
     {
         edge = I;
@@ -198,7 +204,6 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
         int ind = x_face + d_x_edges.size() *
             (y_face + (d_y_edges.size() - 1) * z_face);
         ENSURE (ind < d_x_hist.size());
-
 
         const auto &dir = particle.geo_state().d_dir;
         double dot = profugus::dot_product(dir, {1.0, 0.0, 0.0});
