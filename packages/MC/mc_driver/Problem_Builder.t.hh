@@ -27,6 +27,7 @@
 #include "mc/VR_Analog.hh"
 #include "mc/VR_Roulette.hh"
 #include "mc/Cell_Tally.hh"
+#include "mc/Current_Tally.hh"
 #include "mc/Mesh_Tally.hh"
 #include "mc/Fission_Matrix_Tally.hh"
 #include "mc/Source_Diagnostic_Tally.hh"
@@ -293,6 +294,7 @@ void Problem_Builder<Geometry>::build_tallies()
     typedef profugus::Fission_Matrix_Tally<Geom_t>    FM_Tally_t;
     typedef profugus::Source_Diagnostic_Tally<Geom_t> SD_Tally_t;
     typedef profugus::Cell_Tally<Geom_t>              Cell_Tally_t;
+    typedef profugus::Current_Tally<Geom_t>           Current_Tally_t;
     typedef profugus::Mesh_Tally<Geom_t>              Mesh_Tally_t;
 
     // make the tallier
@@ -428,6 +430,34 @@ void Problem_Builder<Geometry>::build_tallies()
 
         // add this to the tallier
         d_tallier->add_pathlength_tally(mesh_tally);
+    }
+
+    // check for cell tallies
+    if (d_db->isSublist("current_tally_db"))
+    {
+        // get the database
+        const ParameterList &sdb = d_db->sublist("current_tally_db");
+
+        // validate that cells are listed
+        VALIDATE(sdb.isType<OneDArray_dbl>("x_edges"),
+                 "Failed to define x_edges for mesh tally.");
+        VALIDATE(sdb.isType<OneDArray_dbl>("y_edges"),
+                 "Failed to define y_edges for mesh tally.");
+        VALIDATE(sdb.isType<OneDArray_dbl>("z_edges"),
+                 "Failed to define z_edges for mesh tally.");
+
+        // get the list of cells
+        auto x_edges = sdb.get<OneDArray_dbl>("x_edges").toVector();
+        auto y_edges = sdb.get<OneDArray_dbl>("y_edges").toVector();
+        auto z_edges = sdb.get<OneDArray_dbl>("z_edges").toVector();
+
+        // build the tally
+        auto current_tally = std::make_shared<Current_Tally_t>(
+                d_db,d_physics,x_edges,y_edges,z_edges);
+        CHECK(current_tally);
+
+        // add this to the tallier
+        d_tallier->add_surface_tally(current_tally);
     }
 
     ENSURE(d_tallier);
