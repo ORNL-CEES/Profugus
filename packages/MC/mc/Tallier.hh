@@ -45,10 +45,12 @@ class Tallier
     typedef Pathlength_Tally<Geometry_t>        Pathlength_Tally_t;
     typedef Source_Tally<Geometry_t>            Source_Tally_t;
     typedef Compound_Tally<Geometry_t>          Compound_Tally_t;
+    typedef Surface_Tally<Geometry_t>           Surface_Tally_t;
     typedef std::shared_ptr<Tally_t>            SP_Tally;
     typedef std::shared_ptr<Pathlength_Tally_t> SP_Pathlength_Tally;
     typedef std::shared_ptr<Source_Tally_t>     SP_Source_Tally;
     typedef std::shared_ptr<Compound_Tally_t>   SP_Compound_Tally;
+    typedef std::shared_ptr<Surface_Tally_t>    SP_Surface_Tally;
     typedef std::shared_ptr<Geometry_t>         SP_Geometry;
     typedef std::shared_ptr<Physics_t>          SP_Physics;
     typedef std::vector<SP_Tally>               Vec_Tallies;
@@ -68,6 +70,7 @@ class Tallier
     std::vector<SP_Pathlength_Tally> d_pl;
     std::vector<SP_Source_Tally>     d_src;
     std::vector<SP_Compound_Tally>   d_comp;
+    std::vector<SP_Surface_Tally>    d_surf;
 
   public:
     // Constructor.
@@ -86,6 +89,7 @@ class Tallier
     void add_pathlength_tally(SP_Pathlength_Tally tally);
     void add_source_tally(SP_Source_Tally tally);
     void add_compound_tally(SP_Compound_Tally tally);
+    void add_surface_tally(SP_Surface_Tally tally);
 
     //@{
     //! Number of tallies.
@@ -105,6 +109,10 @@ class Tallier
     {
         return d_comp.size();
     }
+    auto num_surface_tallies() const -> decltype(d_surf.size())
+    {
+        return d_surf.size();
+    }
     //@}
 
     //@{
@@ -123,6 +131,9 @@ class Tallier
 
     // Tally any source events.
     void source(const Particle_t &p);
+
+    // Tally any surface events.
+    void surface(const Particle_t &p);
 
     // Tell the tallies to begin active kcode cycles
     void begin_active_cycles();

@@ -154,6 +154,20 @@ void Tallier<Geometry>::add_compound_tally(SP_Compound_Tally tally)
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Add a surface tally.
+ */
+template <class Geometry>
+void Tallier<Geometry>::add_surface_tally(SP_Surface_Tally tally)
+{
+    REQUIRE(tally);
+    REQUIRE(d_build_phase < BUILT);
+
+    // add the tally
+    d_surf.push_back(tally);
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Initialize internal data structures after adding tallies.
  */
 template <class Geometry>
@@ -166,13 +180,15 @@ void Tallier<Geometry>::build()
     prune(d_pl);
     prune(d_src);
     prune(d_comp);
+    prune(d_surf);
 
     // add pathlength, source, and compound tallies to the "totals"
-    d_tallies.insert(d_tallies.end(), d_pl.begin(), d_pl.end());
-    d_tallies.insert(d_tallies.end(), d_src.begin(), d_src.end());
+    d_tallies.insert(d_tallies.end(), d_pl.begin(),   d_pl.end());
+    d_tallies.insert(d_tallies.end(), d_src.begin(),  d_src.end());
     d_tallies.insert(d_tallies.end(), d_comp.begin(), d_comp.end());
+    d_tallies.insert(d_tallies.end(), d_surf.begin(), d_surf.end());
     CHECK(num_tallies() == num_source_tallies() + num_pathlength_tallies() +
-          num_compound_tallies());
+          num_compound_tallies() + num_surface_tallies());
 
     // Set the build phase
     d_build_phase = BUILT;
@@ -232,6 +248,29 @@ void Tallier<Geometry>::source(const Particle_t &p)
     for (auto t : d_src)
     {
         t->birth(p);
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Tally any surface events.
+ *
+ * \param p particle
+ */
+template <class Geometry>
+void Tallier<Geometry>::surface(const Particle_t &p)
+{
+    REQUIRE(d_build_phase == BUILT);
+
+    if (!num_surface_tallies())
+        return;
+
+    SCOPED_TIMER_3("MC::Tallier.tally_surface");
+
+    // accumulate results for all pathlength tallies
+    for (auto t : d_surf)
+    {
+        t->tally_surface(p);
     }
 }
 
@@ -383,6 +422,7 @@ void Tallier<Geometry>::swap(Tallier<Geometry> &rhs)
     d_pl.swap(rhs.d_pl);
     d_src.swap(rhs.d_src);
     d_comp.swap(rhs.d_comp);
+    d_surf.swap(rhs.d_surf);
     d_tallies.swap(rhs.d_tallies);
 
     // swap geometry and physics
