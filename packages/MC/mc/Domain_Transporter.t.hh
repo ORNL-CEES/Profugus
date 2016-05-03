@@ -233,11 +233,12 @@ void Domain_Transporter<Geometry>::process_boundary(Particle_t &particle,
     // move a particle to the surface and process the event through the surface
     d_geometry->move_to_surface(particle.geo_state());
 
-    // process surface tally events
-    d_tallier->surface(particle);
-
     // get the in/out state of the particle
     int state = d_geometry->boundary_state(particle.geo_state());
+
+    // process surface tally events on non-reflecting surfaces
+    if (state != geometry::REFLECT)
+        d_tallier->surface(particle);
 
     // reflected flag
     bool reflected = false;
