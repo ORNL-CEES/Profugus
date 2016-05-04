@@ -19,12 +19,14 @@ namespace cuda_mc
 {
 
 typedef cuda_profugus::Mesh_Geometry Geom;
-typedef cuda_utils::Space_Vector     Space_Vector;
+typedef cuda_profugus::Space_Vector  Space_Vector;
 
 __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
                                    Geom             *geom,
                                    int               num_vals)
 {
+     using def::I; using def::J; using def::K;
+
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
      {
@@ -55,9 +57,9 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
          tally->accumulate(1.0,p);
 
          // Move particle to new location
-         pos.x = curand_uniform_double(&rng_state);
-         pos.y = curand_uniform_double(&rng_state);
-         pos.z = curand_uniform_double(&rng_state);
+         pos[I] = curand_uniform_double(&rng_state);
+         pos[J] = curand_uniform_double(&rng_state);
+         pos[K] = curand_uniform_double(&rng_state);
 
          geom->initialize(pos,dir,p.geo_state());
 

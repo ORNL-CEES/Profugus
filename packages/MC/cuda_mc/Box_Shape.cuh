@@ -13,6 +13,7 @@
 
 #include <curand_kernel.h>
 
+#include "utils/Definitions.hh"
 #include "Definitions.hh"
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/CudaDBC.hh"
@@ -44,7 +45,7 @@ class Box_Shape
   public:
     //@{
     //! Base-class typedefs.
-    typedef cuda_utils::Space_Vector Space_Vector;
+    typedef cuda_profugus::Space_Vector Space_Vector;
     //@}
 
   private:
@@ -92,21 +93,23 @@ class Box_Shape
     // Whether a point is on or inside this shape
     __device__ bool is_point_inside(const Space_Vector& x) const
     {
-        return (x.x >= d_lox && x.x <= d_lox + d_Dx) &&
-               (x.y >= d_loy && x.y <= d_loy + d_Dy) &&
-               (x.z >= d_loz && x.z <= d_loz + d_Dz);
+        using def::I; using def::J; using def::K;
+        return (x[I] >= d_lox && x[I] <= d_lox + d_Dx) &&
+               (x[J] >= d_loy && x[J] <= d_loy + d_Dy) &&
+               (x[K] >= d_loz && x[K] <= d_loz + d_Dz);
     }
 
     // Get the bounding box
     __device__ void get_bbox( Space_Vector& low_corner,
                               Space_Vector& high_corner) const
     {
-        low_corner.x  = d_lox;
-        low_corner.y  = d_loy;
-        low_corner.z  = d_loz;
-        high_corner.x = d_lox + d_Dx;
-        high_corner.y = d_loy + d_Dy;
-        high_corner.z = d_loz + d_Dz;
+        using def::I; using def::J; using def::K;
+        low_corner[I]  = d_lox;
+        low_corner[J]  = d_loy;
+        low_corner[K]  = d_loz;
+        high_corner[I] = d_lox + d_Dx;
+        high_corner[J] = d_loy + d_Dy;
+        high_corner[K] = d_loz + d_Dz;
     }
     
 };

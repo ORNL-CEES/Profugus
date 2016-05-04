@@ -18,7 +18,7 @@
 
 using namespace cuda_mc;
 
-typedef cuda_utils::Space_Vector Space_Vector;
+typedef cuda_profugus::Space_Vector Space_Vector;
 
 __global__ void compute_inside_kernel( Box_Shape           box,
                                        const Space_Vector *pts,
@@ -48,7 +48,7 @@ __global__ void compute_sample_kernel( Box_Shape     box,
 void Box_Shape_Tester::test_inside()
 {
     int num_vals = 4;
-    std::vector<cuda_utils::Space_Vector> host_pts =
+    std::vector<Space_Vector> host_pts =
         {{1.2,   0.0, 3.5},
          {0.5,   0.1, 4.9},
          {0.75, -2.0, 4.0},
@@ -93,18 +93,19 @@ void Box_Shape_Tester::test_sample()
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy back to host
-    std::vector<cuda_utils::Space_Vector> host_pts(num_vals);
+    std::vector<Space_Vector> host_pts(num_vals);
     thrust::copy(device_pts.begin(),device_pts.end(),host_pts.begin());
 
     // Make sure all points are in bounding box
+    using def::I; using def::J; using def::K;
     for (const auto &pt : host_pts)
     {
-        EXPECT_GE(pt.x,0.0);
-        EXPECT_LE(pt.x,1.0);
-        EXPECT_GE(pt.y,-1.0);
-        EXPECT_LE(pt.y,1.0);
-        EXPECT_GE(pt.z,3.0);
-        EXPECT_LE(pt.z,5.0);
+        EXPECT_GE(pt[I],0.0);
+        EXPECT_LE(pt[I],1.0);
+        EXPECT_GE(pt[J],-1.0);
+        EXPECT_LE(pt[J],1.0);
+        EXPECT_GE(pt[K],3.0);
+        EXPECT_LE(pt[K],5.0);
     }
 }
 

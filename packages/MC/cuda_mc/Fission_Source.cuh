@@ -78,7 +78,7 @@ class Fission_Source : public Source<Geometry>
     typedef Physics<Geometry_t>                         Physics_t;
     typedef thrust::device_vector<Fission_Site>         Fission_Site_Vector;
     typedef Particle<Geometry_t>                        Particle_t;
-    typedef cuda_utils::Space_Vector                    Space_Vector;
+    typedef cuda_profugus::Space_Vector                 Space_Vector;
     typedef RNG_Control::RNG_State_t                    RNG_State_t;
     typedef cuda::Shared_Device_Ptr<Geometry>           SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>          SDP_Physics;

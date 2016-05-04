@@ -86,6 +86,8 @@ class Fission_RebalanceTest : public testing::Test
 
     void check(int N)
     {
+        using def::I; using def::J; using def::K;
+
         std::vector<int> count(N, 0);
         int sum = 0;
 
@@ -94,9 +96,9 @@ class Fission_RebalanceTest : public testing::Test
             ++sum;
             ++count[bank[n].m];
 
-            EXPECT_EQ(bank[n].m, static_cast<int>(bank[n].r.x));
-            EXPECT_EQ(bank[n].m, static_cast<int>(bank[n].r.y));
-            EXPECT_EQ(bank[n].m, static_cast<int>(bank[n].r.z));
+            EXPECT_EQ(bank[n].m, static_cast<int>(bank[n].r[I]));
+            EXPECT_EQ(bank[n].m, static_cast<int>(bank[n].r[J]));
+            EXPECT_EQ(bank[n].m, static_cast<int>(bank[n].r[K]));
         }
 
         profugus::global_sum(&count[0], N);

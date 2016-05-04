@@ -19,51 +19,53 @@ namespace cuda_mc
 {
 
 typedef cuda_profugus::Mesh_Geometry Geom;
-typedef cuda_utils::Space_Vector     Space_Vector;
+typedef cuda_profugus::Space_Vector  Space_Vector;
 
 __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
                                    Geom             *geom,
                                    int               num_groups,
                                    int               num_vals)
 {
-     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-     if( tid < num_vals )
-     {
-         // Create particle
-         Particle<Geom> p;
-         p.set_group(tid % num_groups);
-         p.set_matid(0);
-         p.set_wt(1.0);
+    using def::I; using def::J; using def::K;
 
-         // Create and initialize RNG state
-         curandState_t rng_state;
-         curand_init(tid,0,0,&rng_state);
-         p.set_rng(&rng_state);
-         
-         // Initialize particle uniformly on [0, 1]
-         double x_loc = curand_uniform_double(&rng_state);
-         double y_loc = curand_uniform_double(&rng_state);
-         double z_loc = curand_uniform_double(&rng_state);
-         Space_Vector pos = {x_loc, y_loc, z_loc};
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    if( tid < num_vals )
+    {
+        // Create particle
+        Particle<Geom> p;
+        p.set_group(tid % num_groups);
+        p.set_matid(0);
+        p.set_wt(1.0);
 
-         // Direction doesn't matter
-         Space_Vector dir = {1.0, 0.0, 0.0};
+        // Create and initialize RNG state
+        curandState_t rng_state;
+        curand_init(tid,0,0,&rng_state);
+        p.set_rng(&rng_state);
 
-         geom->initialize(pos,dir,p.geo_state());
+        // Initialize particle uniformly on [0, 1]
+        double x_loc = curand_uniform_double(&rng_state);
+        double y_loc = curand_uniform_double(&rng_state);
+        double z_loc = curand_uniform_double(&rng_state);
+        Space_Vector pos = {x_loc, y_loc, z_loc};
 
-         // Tally with step length of 1.0
-         tally->accumulate(1.0,p);
+        // Direction doesn't matter
+        Space_Vector dir = {1.0, 0.0, 0.0};
 
-         // Move particle to new location
-         pos.x = curand_uniform_double(&rng_state);
-         pos.y = curand_uniform_double(&rng_state);
-         pos.z = curand_uniform_double(&rng_state);
+        geom->initialize(pos,dir,p.geo_state());
 
-         geom->initialize(pos,dir,p.geo_state());
+        // Tally with step length of 1.0
+        tally->accumulate(1.0,p);
 
-         // Tally with step length of 0.5
-         tally->accumulate(0.5,p);
-     }
+        // Move particle to new location
+        pos[I] = curand_uniform_double(&rng_state);
+        pos[J] = curand_uniform_double(&rng_state);
+        pos[K] = curand_uniform_double(&rng_state);
+
+        geom->initialize(pos,dir,p.geo_state());
+
+        // Tally with step length of 0.5
+        tally->accumulate(0.5,p);
+    }
 }
 
 void Keff_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,

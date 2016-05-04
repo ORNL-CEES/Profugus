@@ -39,7 +39,7 @@ class Particle
   public:
     //@{
     //! Typedefs.
-    typedef cuda_utils::Space_Vector        Space_Vector;
+    typedef cuda_profugus::Space_Vector     Space_Vector;
     typedef profugus::events::Event         Event_Type;
     typedef typename Geometry::Geo_State_t  Geo_State_t;
     //@}

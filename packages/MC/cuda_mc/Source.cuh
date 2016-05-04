@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "utils/Definitions.hh"
+#include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
 namespace cuda_mc
@@ -34,7 +35,7 @@ class Source
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
-    typedef typename Geometry_t::Space_Vector   Space_Vector;
+    typedef cuda_profugus::Space_Vector         Space_Vector;
     typedef def::size_type                      size_type;
     //@}
 

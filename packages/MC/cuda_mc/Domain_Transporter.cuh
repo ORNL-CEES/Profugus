@@ -47,9 +47,9 @@ class Domain_Transporter
     //! Useful typedefs.
     typedef Geometry                                   Geometry_t;
     typedef Physics<Geometry_t>                        Physics_t;
-    typedef typename Geometry_t::Space_Vector          Space_Vector;
+    typedef cuda_profugus::Space_Vector                Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
-    typedef typename Physics_t::Particle_t             Particle_t;
+    typedef Particle<Geometry_t>                       Particle_t;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;

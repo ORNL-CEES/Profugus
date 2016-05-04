@@ -105,6 +105,8 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
                                               Particle_t         &p,
                                               RNG_State_t        *rng) const
 {
+    using def::I; using def::J; using def::K;
+
     // sampled complete flag
     bool sampled = false;
 
@@ -120,9 +122,9 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
     while (!sampled)
     {
         // sample a point in the geometry
-        r.x = d_width.x * curand_uniform_double(rng) + d_lower.x;
-        r.y = d_width.y * curand_uniform_double(rng) + d_lower.y;
-        r.z = d_width.z * curand_uniform_double(rng) + d_lower.z;
+        r[I] = d_width[I] * curand_uniform_double(rng) + d_lower[I];
+        r[J] = d_width[J] * curand_uniform_double(rng) + d_lower[J];
+        r[K] = d_width[K] * curand_uniform_double(rng) + d_lower[K];
 
         // intialize the geometry state
         b_geometry->initialize(r, omega, p.geo_state());

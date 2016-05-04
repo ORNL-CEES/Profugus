@@ -281,16 +281,16 @@ __device__  inline double sample_linear(RNG_State *rng, const double left,
 
 //---------------------------------------------------------------------------//
 //!\brief Sample an isotropic angular distribution
-__device__ inline void sample_isotropic(cuda_utils::Space_Vector &omega,
-                                        RNG_State_t              *rng)
+__device__ inline void sample_isotropic(cuda_profugus::Space_Vector &omega,
+                                        RNG_State_t                 *rng)
 {
-    omega.z         = 1.0 - 2.0 * curand_uniform_double(rng);
+    omega[def::K]   = 1.0 - 2.0 * curand_uniform_double(rng);
     double phi      = cuda::constants::two_pi *
                       curand_uniform_double(rng);
-    double sintheta = sqrt(1.0 - omega.z * omega.z);
+    double sintheta = sqrt(1.0 - omega[def::K] * omega[def::K]);
 
-    omega.x = sintheta * cos(phi);
-    omega.y = sintheta * sin(phi);
+    omega[def::I] = sintheta * cos(phi);
+    omega[def::J] = sintheta * sin(phi);
 }
 
 //---------------------------------------------------------------------------//

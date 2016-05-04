@@ -55,19 +55,18 @@ class Uniform_Source : public Source<Geometry>
   public:
     //@{
     //! Typedefs.
-    typedef Source<Geometry>                    Base;
-    typedef Geometry                            Geometry_t;
+    typedef Source<Geometry>                     Base;
+    typedef Geometry                             Geometry_t;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_Std_DB;
-    typedef Particle<Geometry>                  Particle_t;
-    typedef typename Geometry_t::Space_Vector   Space_Vector;
-    typedef std::shared_ptr<Box_Shape>          SP_Shape;
-    typedef cuda::Shared_Device_Ptr<Box_Shape>  SDP_Shape;
-    typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
-    typedef std::shared_ptr<Particle_t>         SP_Particle;
-    typedef def::Vec_Dbl                        Vec_Dbl;
-    typedef def::size_type                      size_type;
-    typedef cuda::arch::Device                  Arch_t;
-    typedef thrust::device_vector<double>       Device_Dbl;
+    typedef Particle<Geometry>                   Particle_t;
+    typedef cuda_profugus::Space_Vector          Space_Vector;
+    typedef std::shared_ptr<Box_Shape>           SP_Shape;
+    typedef cuda::Shared_Device_Ptr<Box_Shape>   SDP_Shape;
+    typedef cuda::Shared_Device_Ptr<Geometry_t>  SDP_Geometry;
+    typedef std::shared_ptr<Particle_t>          SP_Particle;
+    typedef def::Vec_Dbl                         Vec_Dbl;
+    typedef def::size_type                       size_type;
+    typedef thrust::device_vector<double>        Device_Dbl;
     //@}
 
   private:

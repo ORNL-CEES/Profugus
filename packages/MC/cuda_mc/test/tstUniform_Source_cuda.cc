@@ -58,7 +58,6 @@ TEST_F(Uniform_SourceTest, coincident)
         geom_bounds,src_bounds,x_locs,y_locs,z_locs,
         mu_vals,eta_vals,xi_vals);
 
-
     // Now compute mean of position in each direction
     double x_expected = 0.5 * (xlo + xhi);
     double x_mean = 0.0;

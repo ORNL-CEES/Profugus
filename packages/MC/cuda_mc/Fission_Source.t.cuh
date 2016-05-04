@@ -75,35 +75,35 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     double lower = extents[0];
     double upper = extents[1];
 
-    lower = std::max(lower, low_edge.x);
-    upper = std::min(upper, high_edge.x);
+    lower = std::max(lower, low_edge[I]);
+    upper = std::min(upper, high_edge[I]);
 
-    d_lower.x = lower;
-    d_width.x = upper - lower;
+    d_lower[I] = lower;
+    d_width[I] = upper - lower;
 
     // Y Bounds
     lower = extents[2];
     upper = extents[3];
 
-    lower = std::max(lower, low_edge.y);
-    upper = std::min(upper, high_edge.y);
+    lower = std::max(lower, low_edge[J]);
+    upper = std::min(upper, high_edge[J]);
 
-    d_lower.y = lower;
-    d_width.y = upper - lower;
+    d_lower[J] = lower;
+    d_width[J] = upper - lower;
 
     // Z Bounds
     lower = extents[4];
     upper = extents[5];
 
-    lower = std::max(lower, low_edge.z);
-    upper = std::min(upper, high_edge.z);
+    lower = std::max(lower, low_edge[K]);
+    upper = std::min(upper, high_edge[K]);
 
-    d_lower.z = lower;
-    d_width.z = upper - lower;
+    d_lower[K] = lower;
+    d_width[K] = upper - lower;
 
-    INSIST(d_width.x > 0., "Fission source x width is non-positive");
-    INSIST(d_width.y > 0., "Fission source y width is non-positive");
-    INSIST(d_width.z > 0., "Fission source z width is non-positive");
+    INSIST(d_width[I] > 0., "Fission source x width is non-positive");
+    INSIST(d_width[J] > 0., "Fission source y width is non-positive");
+    INSIST(d_width[K] > 0., "Fission source z width is non-positive");
 
     // store the total number of requested particles per cycle
     d_np_requested = static_cast<size_type>(db->get("Np", 1000));

@@ -19,7 +19,7 @@
 namespace cuda_mc
 {
 
-typedef cuda_utils::Space_Vector            Space_Vector;
+typedef cuda_profugus::Space_Vector         Space_Vector;
 typedef cuda_profugus::Mesh_Geometry        Geometry;
 typedef cuda_mc::Uniform_Source<Geometry>   Uniform_Src;
 typedef cuda_mc::Particle<Geometry>         Particle_t;
@@ -30,6 +30,8 @@ __global__ void compute_source_kernel( Uniform_Src   source,
                                        Space_Vector *dirs,
                                        int           num_vals )
 {
+     using def::I; using def::J; using def::K;
+
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
      {
@@ -39,15 +41,8 @@ __global__ void compute_source_kernel( Uniform_Src   source,
          auto p = source.get_particle(tid,&rng);
 
          auto geo_state = p.geo_state();
-         auto r = geo_state.d_r;
-         pts[tid].x = r.x;
-         pts[tid].y = r.y;
-         pts[tid].z = r.z;
-
-         auto omega = geo_state.d_dir;
-         dirs[tid].x = omega.x;
-         dirs[tid].y = omega.y;
-         dirs[tid].z = omega.z;
+         pts[tid]  = geo_state.d_r;
+         dirs[tid] = geo_state.d_dir;
      }
 }
 
@@ -61,6 +56,8 @@ __global__ void extract_data( Particle_t         *parts,
                               double             *xi,
                               int                 N )
 {
+    using def::I; using def::J; using def::K;
+
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < N )
     {
@@ -68,14 +65,14 @@ __global__ void extract_data( Particle_t         *parts,
 
         auto geo_state = p.geo_state();
         auto r = geo_state.d_r;
-        x[tid] = r.x;
-        y[tid] = r.y;
-        z[tid] = r.z;
+        x[tid] = r[I];
+        y[tid] = r[J];
+        z[tid] = r[K];
 
         auto omega = geo_state.d_dir;
-        mu[tid]  = omega.x;
-        eta[tid] = omega.y;
-        xi[tid]  = omega.z;
+        mu[tid]  = omega[I];
+        eta[tid] = omega[J];
+        xi[tid]  = omega[K];
     }
 }
 
@@ -88,6 +85,8 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
                                                Vec_Dbl &eta,
                                                Vec_Dbl &xi)
 {
+    using def::I; using def::J; using def::K;
+
     // Copy values to device
     int Np = x_locs.size();
     REQUIRE( Np == y_locs.size() );
@@ -126,7 +125,10 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
         z_edges[iz] = zlo + static_cast<double>(iz) * dz;
 
     // Build Geometry
-    auto geom = cuda::shared_device_ptr<Geometry>(x_edges,y_edges,z_edges);
+    auto geom_host = std::make_shared<Geometry>(x_edges,y_edges,z_edges);
+    std::vector<int> matids(Nx*Ny*Nz,0);
+    geom_host->set_matids(matids);
+    auto geom = cuda::Shared_Device_Ptr<Geometry>(geom_host);
 
     auto db = Teuchos::rcp( new Teuchos::ParameterList() );
     db->set("Np",Np);
@@ -143,11 +145,15 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
     Uniform_Src source(db,geom);
     source.build_source(src_shape);
 
+    cudaDeviceSynchronize();
+
     // Launch kernel
     std::cout << "Launching kernel with " << Np << " particles" << std::endl;
     compute_source_kernel<<<1,Np>>>(source, device_pts.data().get(),
                                     device_dirs.data().get(), Np);
     REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    cudaDeviceSynchronize();
 
     // Copy back to host
     std::vector<Space_Vector> host_pts(Np);
@@ -157,12 +163,12 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
 
     for( int ip = 0; ip < Np; ++ip )
     {
-        x_locs[ip] = host_pts[ip].x;
-        y_locs[ip] = host_pts[ip].y;
-        z_locs[ip] = host_pts[ip].z;
-        mu[ip]     = host_dirs[ip].x;
-        eta[ip]    = host_dirs[ip].y;
-        xi[ip]     = host_dirs[ip].z;
+        x_locs[ip] = host_pts[ip][I];
+        y_locs[ip] = host_pts[ip][J];
+        z_locs[ip] = host_pts[ip][K];
+        mu[ip]     = host_dirs[ip][I];
+        eta[ip]    = host_dirs[ip][J];
+        xi[ip]     = host_dirs[ip][K];
     }
 }
 
@@ -259,18 +265,12 @@ void Uniform_Source_Tester::test_host_api( const Vec_Dbl &geom_bounds,
                             Np );
 
     // Copy back to host
-    thrust::host_vector<double> x_host(Np);
-    thrust::host_vector<double> y_host(Np);
-    thrust::host_vector<double> z_host(Np);
-    thrust::host_vector<double> mu_host(Np);
-    thrust::host_vector<double> eta_host(Np);
-    thrust::host_vector<double> xi_host(Np);
-    x_host   = x_dev;
-    y_host   = y_dev;
-    z_host   = z_dev;
-    mu_host  = mu_dev;
-    eta_host = eta_dev;
-    xi_host  = xi_dev;
+    thrust::host_vector<double> x_host   = x_dev;
+    thrust::host_vector<double> y_host   = y_dev;
+    thrust::host_vector<double> z_host   = z_dev;
+    thrust::host_vector<double> mu_host  = mu_dev;
+    thrust::host_vector<double> eta_host = eta_dev;
+    thrust::host_vector<double> xi_host  = xi_dev;
 
     for( int ip = 0; ip < Np; ++ip )
     {
