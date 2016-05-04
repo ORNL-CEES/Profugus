@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "Cell_Tally_Tester.hh"
+#include "Test_XS.hh"
 #include "../Cell_Tally.cuh"
 #include "gtest/Gtest_Functions.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
@@ -71,48 +72,6 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
      }
 }
 
-namespace
-{
-
-Teuchos::RCP<profugus::XS> build_xs()
-{
-    const int ng = 1;
-    Teuchos::RCP<profugus::XS> xs = Teuchos::rcp(new XS_t());
-    xs->set(0, ng);
-
-    // make group boundaries
-    XS_t::OneDArray nbnd(ng+1, 0.0);
-    nbnd[0] = 100.0;
-    nbnd[1] = 0.00001;
-    xs->set_bounds(nbnd);
-
-    double t1[ng] = {1.0};
-
-    XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
-
-    xs->add(0, XS_t::TOTAL, tot1);
-
-    double s1[][3] = {{0.5}};
-
-    XS_t::TwoDArray sct1(ng, ng, 0.0);
-
-    for (int g = 0; g < ng; ++g)
-    {
-        for (int gp = 0; gp < ng; ++gp)
-        {
-            sct1(g, gp) = s1[g][gp];
-        }
-    }
-
-    xs->add(0, 0, sct1);
-
-    xs->complete();
-
-    return xs;
-}
-
-}
-
 void Cell_Tally_Tester::test_tally()
 {
     // Mesh edges
@@ -129,7 +88,7 @@ void Cell_Tally_Tester::test_tally()
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    auto xs = build_xs();
+    auto xs = Test_XS::build_xs(1);
 
     int num_particles = 8192;
     std::vector<int> cells = {0, 1, 2, 4, 7};

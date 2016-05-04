@@ -14,10 +14,6 @@ INCLUDE(UtilsTest)
 ## TEST LIBRARIES
 ##---------------------------------------------------------------------------##
 
-# C++ code
-SET(SOURCES
-  )
-
 SET(CUDA_SOURCES
   Box_Shape_Tester.cu
   Cell_Tally_Tester.cu
@@ -37,10 +33,16 @@ PACKAGE_ADD_CUDA_LIBRARY(
   DEPLIBS MC MC_cuda
   TESTONLY)
 
+TRIBITS_ADD_LIBRARY(mc_cuda_mc_test_lib
+  SOURCES
+  Test_XS.cc
+  TESTONLY
+  DEPLIBS MC)
+
 ##---------------------------------------------------------------------------##
 ## TESTS
 ##---------------------------------------------------------------------------##
-SET(DEPS DEPLIBS mc_cuda_mc_test_cuda)
+SET(DEPS DEPLIBS mc_cuda_mc_test_cuda mc_cuda_mc_test_lib)
 
 ADD_UTILS_TEST(tstBox_Shape_cuda.cc             NP 1 ${DEPS})
 ADD_UTILS_TEST(tstCell_Tally_cuda.cc            NP 1 ${DEPS})

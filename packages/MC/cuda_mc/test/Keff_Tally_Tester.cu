@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "Keff_Tally_Tester.hh"
+#include "Test_XS.hh"
 #include "../Keff_Tally.cuh"
 #include "gtest/Gtest_Functions.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
@@ -20,7 +21,6 @@ using namespace cuda_mc;
 
 typedef cuda_profugus::Mesh_Geometry Geom;
 typedef cuda_profugus::Space_Vector  Space_Vector;
-typedef profugus::XS                 XS_t;
 
 __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
                                    Geom             *geom,
@@ -69,120 +69,14 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
     }
 }
 
-namespace
-{
-
-Teuchos::RCP<XS_t> build_1grp_xs()
-{
-    constexpr int ng = 1;
-    Teuchos::RCP<XS_t> xs = Teuchos::rcp(new XS_t());
-    xs->set(0, ng);
-
-    // make group boundaries
-    XS_t::OneDArray nbnd(ng+1, 0.0);
-    nbnd[0] = 100.0;
-    nbnd[1] = 0.00001;
-    xs->set_bounds(nbnd);
-
-    double t1[ng] = {1.0};
-
-    XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
-
-    xs->add(0, XS_t::TOTAL, tot1);
-
-    double s1[][ng] = {{0.5}};
-
-    XS_t::TwoDArray sct1(ng, ng, 0.0);
-
-    for (int g = 0; g < ng; ++g)
-    {
-        for (int gp = 0; gp < ng; ++gp)
-        {
-            sct1(g, gp) = s1[g][gp];
-        }
-    }
-
-    xs->add(0, 0, sct1);
-
-    double c[] = {1.0};
-    double f[] = {0.2};
-    double n[] = {0.4};
-
-    XS_t::OneDArray chi(std::begin(c),std::end(c));
-    XS_t::OneDArray fis(std::begin(f),std::end(f));
-    XS_t::OneDArray nuf(std::begin(n),std::end(n));
-
-    xs->add(0, XS_t::CHI,       chi);
-    xs->add(0, XS_t::SIG_F,     fis);
-    xs->add(0, XS_t::NU_SIG_F,  nuf);
-
-    xs->complete();
-    return xs;
-}
-
-Teuchos::RCP<XS_t> build_2grp_xs()
-{
-    constexpr int ng = 2;
-    Teuchos::RCP<XS_t> xs = Teuchos::rcp(new XS_t());
-    xs->set(0, ng);
-
-    // make group boundaries
-    XS_t::OneDArray nbnd(ng+1, 0.0);
-    nbnd[0] = 100.0;
-    nbnd[1] = 1.0;
-    nbnd[2] = 0.00001;
-    xs->set_bounds(nbnd);
-
-    double t1[ng] = {1.0, 0.1};
-
-    XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
-
-    xs->add(0, XS_t::TOTAL, tot1);
-
-    double s1[][ng] = {{0.5, 0.0},{0.1, 0.05}};
-
-    XS_t::TwoDArray sct1(ng, ng, 0.0);
-
-    for (int g = 0; g < ng; ++g)
-    {
-        for (int gp = 0; gp < ng; ++gp)
-        {
-            sct1(g, gp) = s1[g][gp];
-        }
-    }
-
-    xs->add(0, 0, sct1);
-
-    double c[] = {0.9, 0.10};
-    double f[] = {0.2, 0.02};
-    double n[] = {0.4, 0.05};
-
-    XS_t::OneDArray chi(std::begin(c),std::end(c));
-    XS_t::OneDArray fis(std::begin(f),std::end(f));
-    XS_t::OneDArray nuf(std::begin(n),std::end(n));
-
-    xs->add(0, XS_t::CHI,       chi);
-    xs->add(0, XS_t::SIG_F,     fis);
-    xs->add(0, XS_t::NU_SIG_F,  nuf);
-
-    xs->complete();
-
-    return xs;
-}
-
-}
-
 void Keff_Tally_Tester::test_tally(int num_groups)
 {
     int num_particles = 64;
 
     REQUIRE( num_groups==1 || num_groups==2 );
 
-    Teuchos::RCP<XS_t> xs;
-    if (num_groups == 1)
-        xs = build_1grp_xs();
-    else
-        xs = build_2grp_xs();
+    auto xs = Test_XS::build_xs(num_groups);
+    REQUIRE(xs != Teuchos::null);
 
     // Build geometry
     std::vector<double> x_edges = {0.0, 0.20, 1.0};
