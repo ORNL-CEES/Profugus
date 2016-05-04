@@ -13,17 +13,16 @@
 #include "../Definitions.hh"
 #include "../Source_Provider.cuh"
 
+#include "gtest/Gtest_Functions.hh"
 #include "utils/View_Field.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
-namespace cuda_mc
-{
+using namespace cuda_mc;
 
-typedef cuda_profugus::Space_Vector         Space_Vector;
-typedef cuda_profugus::Mesh_Geometry        Geometry;
-typedef cuda_mc::Uniform_Source<Geometry>   Uniform_Src;
-typedef cuda_mc::Particle<Geometry>         Particle_t;
-typedef cuda_mc::RNG_State_t                RNG_State;
+typedef cuda_profugus::Space_Vector     Space_Vector;
+typedef cuda_profugus::Mesh_Geometry    Geometry;
+typedef Uniform_Source<Geometry>        Uniform_Src;
+typedef Particle<Geometry>              Particle_t;
 
 __global__ void compute_source_kernel( Uniform_Src   source,
                                        Space_Vector *pts,
@@ -48,12 +47,8 @@ __global__ void compute_source_kernel( Uniform_Src   source,
 
 // Extract data from particles
 __global__ void extract_data( Particle_t         *parts,
-                              double             *x,
-                              double             *y,
-                              double             *z,
-                              double             *mu,
-                              double             *eta,
-                              double             *xi,
+                              Space_Vector       *pts,
+                              Space_Vector       *dirs,
                               int                 N )
 {
     using def::I; using def::J; using def::K;
@@ -64,88 +59,140 @@ __global__ void extract_data( Particle_t         *parts,
         auto p = parts[tid];
 
         auto geo_state = p.geo_state();
-        auto r = geo_state.d_r;
-        x[tid] = r[I];
-        y[tid] = r[J];
-        z[tid] = r[K];
-
-        auto omega = geo_state.d_dir;
-        mu[tid]  = omega[I];
-        eta[tid] = omega[J];
-        xi[tid]  = omega[K];
+        pts[tid]  = geo_state.d_r;
+        dirs[tid] = geo_state.d_dir;
     }
 }
 
-void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
-                                         const Vec_Dbl &src_bounds,
-                                               Vec_Dbl &x_locs,
-                                               Vec_Dbl &y_locs,
-                                               Vec_Dbl &z_locs,
-                                               Vec_Dbl &mu,
-                                               Vec_Dbl &eta,
-                                               Vec_Dbl &xi)
+cuda::Shared_Device_Ptr<Geometry> get_geometry()
 {
-    using def::I; using def::J; using def::K;
-
-    // Copy values to device
-    int Np = x_locs.size();
-    REQUIRE( Np == y_locs.size() );
-    REQUIRE( Np == z_locs.size() );
-    REQUIRE( Np == mu.size() );
-    REQUIRE( Np == eta.size() );
-    REQUIRE( Np == xi.size() );
-    thrust::device_vector<Space_Vector> device_pts(Np);
-    thrust::device_vector<Space_Vector> device_dirs(Np);
-
-    REQUIRE( geom_bounds.size() == 6 );
-
     // Build geometry edges, mesh doesn't really matter
+    std::vector<double> geom_bounds = {-4.0, 2.0, -1.0, 1.0, 1.0, 12.0};
+    double xlo_geom = -4.0;
+    double xhi_geom =  2.0;
+    double ylo_geom = -1.0;
+    double yhi_geom =  1.0;
+    double zlo_geom =  1.0;
+    double zhi_geom = 12.0;
     int Nx = 10;
-    double xlo = geom_bounds[0];
-    double xhi = geom_bounds[1];
-    double dx = (xhi - xlo) / static_cast<double>(Nx);
+    double dx = (xhi_geom - xlo_geom) / static_cast<double>(Nx);
     std::vector<double> x_edges(Nx+1,0.0);
     for( int ix = 0; ix < Nx+1; ++ix )
-        x_edges[ix] = xlo + static_cast<double>(ix) * dx;
+        x_edges[ix] = xlo_geom + static_cast<double>(ix) * dx;
 
     int Ny = 10;
-    double ylo = geom_bounds[2];
-    double yhi = geom_bounds[3];
-    double dy = (yhi - ylo) / static_cast<double>(Ny);
+    double dy = (yhi_geom - ylo_geom) / static_cast<double>(Ny);
     std::vector<double> y_edges(Ny+1,0.0);
     for( int iy = 0; iy < Ny+1; ++iy )
-        y_edges[iy] = ylo + static_cast<double>(iy) * dy;
+        y_edges[iy] = ylo_geom + static_cast<double>(iy) * dy;
 
     int Nz = 10;
-    double zlo = geom_bounds[4];
-    double zhi = geom_bounds[5];
-    double dz = (zhi - zlo) / static_cast<double>(Nz);
+    double dz = (zhi_geom - zlo_geom) / static_cast<double>(Nz);
     std::vector<double> z_edges(Nz+1,0.0);
     for( int iz = 0; iz < Nz+1; ++iz )
-        z_edges[iz] = zlo + static_cast<double>(iz) * dz;
+        z_edges[iz] = zlo_geom + static_cast<double>(iz) * dz;
 
     // Build Geometry
     auto geom_host = std::make_shared<Geometry>(x_edges,y_edges,z_edges);
     std::vector<int> matids(Nx*Ny*Nz,0);
     geom_host->set_matids(matids);
-    auto geom = cuda::Shared_Device_Ptr<Geometry>(geom_host);
+    return cuda::Shared_Device_Ptr<Geometry>(geom_host);
+}
+
+void test_data(const thrust::device_vector<Space_Vector> &pts,
+               const thrust::device_vector<Space_Vector> &dirs,
+                     std::vector<double>                  bounds)
+{
+    using def::I; using def::J; using def::K;
+
+    int Np = pts.size();
+    EXPECT_EQ(dirs.size(),Np);
+
+    // Copy data to host
+    thrust::host_vector<Space_Vector> host_pts  = pts;
+    thrust::host_vector<Space_Vector> host_dirs = dirs;
+
+    // Now compute mean of position in each direction
+    double x_expected = 0.5 * (bounds[0] + bounds[1]);
+    double y_expected = 0.5 * (bounds[2] + bounds[3]);
+    double z_expected = 0.5 * (bounds[4] + bounds[5]);
+    double x_mean = 0.0;
+    double y_mean = 0.0;
+    double z_mean = 0.0;
+    for( auto pt : host_pts )
+    {
+        x_mean += pt[I];
+        y_mean += pt[J];
+        z_mean += pt[K];
+    }
+    x_mean /= static_cast<double>(Np);
+    y_mean /= static_cast<double>(Np);
+    z_mean /= static_cast<double>(Np);
+
+    std::cout << "Expecting mean position of (" << x_expected
+        << ", " << y_expected << ", " << z_expected << ")" << std::endl;
+    std::cout << "Actual mean x = " << x_mean << std::endl;
+    std::cout << "Actual mean y = " << y_mean << std::endl;
+    std::cout << "Actual mean z = " << z_mean << std::endl;
+
+    double sqrt_N = std::sqrt(static_cast<double>(Np));
+    EXPECT_TRUE( std::abs(x_mean - x_expected) < (bounds[1] - bounds[0])/sqrt_N );
+    EXPECT_TRUE( std::abs(y_mean - y_expected) < (bounds[3] - bounds[2])/sqrt_N );
+    EXPECT_TRUE( std::abs(z_mean - z_expected) < (bounds[5] - bounds[4])/sqrt_N );
+
+    // Now compute mean of each direction component
+    double mu_mean = 0.0;
+    double eta_mean = 0.0;
+    double xi_mean = 0.0;
+    for( auto dir : host_dirs)
+    {
+        mu_mean  += dir[I];
+        eta_mean += dir[J];
+        xi_mean  += dir[K];
+    }
+    mu_mean  /= static_cast<double>(Np);
+    eta_mean /= static_cast<double>(Np);
+    xi_mean  /= static_cast<double>(Np);
+
+    std::cout << "Expecting mean angle of (0,0,0)" << std::endl;
+    std::cout << "Actual mean mu = " << mu_mean << std::endl;
+    std::cout << "Actual mean eta = " << eta_mean << std::endl;
+    std::cout << "Actual mean xi = " << xi_mean << std::endl;
+
+    // All angle sampling is isotropic so expected mean is zero
+    double mean_expected = 0.0;
+    EXPECT_TRUE( std::abs(mu_mean  - mean_expected) < 1.0/sqrt_N );
+    EXPECT_TRUE( std::abs(eta_mean - mean_expected) < 1.0/sqrt_N );
+    EXPECT_TRUE( std::abs(xi_mean  - mean_expected) < 1.0/sqrt_N );
+}
+
+void Uniform_Source_Tester::test_source()
+{
+    int Np = 1024;
+
+    auto geom = get_geometry();
 
     auto db = Teuchos::rcp( new Teuchos::ParameterList() );
     db->set("Np",Np);
     db->set("num_groups",2);
 
     // Build box shape for source
-    REQUIRE( src_bounds.size() == 6 );
+    double xlo =  0.0;
+    double xhi =  1.0;
+    double ylo = -1.0;
+    double yhi =  1.0;
+    double zlo =  3.0;
+    double zhi =  5.0;
     auto src_shape = cuda::shared_device_ptr<cuda_mc::Box_Shape>(
-            src_bounds[0], src_bounds[1],
-            src_bounds[2], src_bounds[3],
-            src_bounds[4], src_bounds[5]);
+            xlo, xhi, ylo, yhi, zlo, zhi);
 
     // Build source
     Uniform_Src source(db,geom);
     source.build_source(src_shape);
 
-    cudaDeviceSynchronize();
+    // Allocate device vectors
+    thrust::device_vector<Space_Vector> device_pts(Np);
+    thrust::device_vector<Space_Vector> device_dirs(Np);
 
     // Launch kernel
     std::cout << "Launching kernel with " << Np << " particles" << std::endl;
@@ -153,85 +200,30 @@ void Uniform_Source_Tester::test_source( const Vec_Dbl &geom_bounds,
                                     device_dirs.data().get(), Np);
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    cudaDeviceSynchronize();
-
-    // Copy back to host
-    std::vector<Space_Vector> host_pts(Np);
-    std::vector<Space_Vector> host_dirs(Np);
-    thrust::copy(device_pts.begin(),device_pts.end(),host_pts.begin());
-    thrust::copy(device_dirs.begin(),device_dirs.end(),host_dirs.begin());
-
-    for( int ip = 0; ip < Np; ++ip )
-    {
-        x_locs[ip] = host_pts[ip][I];
-        y_locs[ip] = host_pts[ip][J];
-        z_locs[ip] = host_pts[ip][K];
-        mu[ip]     = host_dirs[ip][I];
-        eta[ip]    = host_dirs[ip][J];
-        xi[ip]     = host_dirs[ip][K];
-    }
+    test_data(device_pts,device_dirs,{xlo, xhi, ylo, yhi, zlo, zhi});
 }
 
-void Uniform_Source_Tester::test_host_api( const Vec_Dbl &geom_bounds,
-                                           const Vec_Dbl &src_bounds,
-                                                 Vec_Dbl &x_locs,
-                                                 Vec_Dbl &y_locs,
-                                                 Vec_Dbl &z_locs,
-                                                 Vec_Dbl &mu,
-                                                 Vec_Dbl &eta,
-                                                 Vec_Dbl &xi)
+void Uniform_Source_Tester::test_host_api()
 {
+
     // Copy values to device
-    int Np = x_locs.size();
-    REQUIRE( Np == y_locs.size() );
-    REQUIRE( Np == z_locs.size() );
-    REQUIRE( Np == mu.size() );
-    REQUIRE( Np == eta.size() );
-    REQUIRE( Np == xi.size() );
+    int Np = 1024;
 
-    REQUIRE( geom_bounds.size() == 6 );
-
-    // Build geometry edges, mesh doesn't really matter
-    int Nx = 10;
-    double xlo = geom_bounds[0];
-    double xhi = geom_bounds[1];
-    double dx = (xhi - xlo) / static_cast<double>(Nx);
-    std::vector<double> x_edges(Nx+1,0.0);
-    for( int ix = 0; ix < Nx+1; ++ix )
-        x_edges[ix] = xlo + static_cast<double>(ix) * dx;
-
-    int Ny = 10;
-    double ylo = geom_bounds[2];
-    double yhi = geom_bounds[3];
-    double dy = (yhi - ylo) / static_cast<double>(Ny);
-    std::vector<double> y_edges(Ny+1,0.0);
-    for( int iy = 0; iy < Ny+1; ++iy )
-        y_edges[iy] = ylo + static_cast<double>(iy) * dy;
-
-    int Nz = 10;
-    double zlo = geom_bounds[4];
-    double zhi = geom_bounds[5];
-    double dz = (zhi - zlo) / static_cast<double>(Nz);
-    std::vector<double> z_edges(Nz+1,0.0);
-    for( int iz = 0; iz < Nz+1; ++iz )
-        z_edges[iz] = zlo + static_cast<double>(iz) * dz;
-
-    // Build Geometry
-    auto geom_host = std::make_shared<Geometry>(x_edges,y_edges,z_edges);
-    std::vector<int> matids(Nx*Ny*Nz,0);
-    geom_host->set_matids(matids);
-    cuda::Shared_Device_Ptr<Geometry> geom(geom_host);
+    auto geom = get_geometry();
 
     auto db = Teuchos::rcp( new Teuchos::ParameterList() );
     db->set("Np",Np);
     db->set("num_groups",2);
 
     // Build box shape for source
-    REQUIRE( src_bounds.size() == 6 );
+    double xlo =  0.0;
+    double xhi =  1.0;
+    double ylo = -1.0;
+    double yhi =  1.0;
+    double zlo =  3.0;
+    double zhi =  5.0;
     auto src_shape = cuda::shared_device_ptr<cuda_mc::Box_Shape>(
-            src_bounds[0], src_bounds[1],
-            src_bounds[2], src_bounds[3],
-            src_bounds[4], src_bounds[5]);
+            xlo, xhi, ylo, yhi, zlo, zhi);
 
     // Build source
     auto source_host = std::make_shared<Uniform_Src>(db,geom);
@@ -245,45 +237,23 @@ void Uniform_Source_Tester::test_host_api( const Vec_Dbl &geom_bounds,
 
     cuda_mc::Source_Provider<Geometry> provider;
     provider.get_particles(source_host,rng_control,particles);
-    REQUIRE( particles.size() == source_host->num_to_transport() );
+
+    EXPECT_EQ( particles.size(), Np );
+    EXPECT_EQ( source_host->num_to_transport(), Np );
 
     // Extract data from particles
-    thrust::device_vector<double> x_dev(   Np );
-    thrust::device_vector<double> y_dev(   Np );
-    thrust::device_vector<double> z_dev(   Np );
-    thrust::device_vector<double> mu_dev(  Np );
-    thrust::device_vector<double> eta_dev( Np );
-    thrust::device_vector<double> xi_dev(  Np );
+    thrust::device_vector<Space_Vector> pts(Np);
+    thrust::device_vector<Space_Vector> dirs(Np);
 
     extract_data<<<1,Np>>>( particles.data().get(),
-                            x_dev.data().get(),
-                            y_dev.data().get(),
-                            z_dev.data().get(),
-                            mu_dev.data().get(),
-                            eta_dev.data().get(),
-                            xi_dev.data().get(),
+                            pts.data().get(),
+                            dirs.data().get(),
                             Np );
 
-    // Copy back to host
-    thrust::host_vector<double> x_host   = x_dev;
-    thrust::host_vector<double> y_host   = y_dev;
-    thrust::host_vector<double> z_host   = z_dev;
-    thrust::host_vector<double> mu_host  = mu_dev;
-    thrust::host_vector<double> eta_host = eta_dev;
-    thrust::host_vector<double> xi_host  = xi_dev;
 
-    for( int ip = 0; ip < Np; ++ip )
-    {
-        x_locs[ip] = x_host[ip];
-        y_locs[ip] = y_host[ip];
-        z_locs[ip] = z_host[ip];
-        mu[ip]     = mu_host[ip];
-        eta[ip]    = eta_host[ip];
-        xi[ip]     = xi_host[ip];
-    }
+    test_data(pts,dirs,{xlo, xhi, ylo, yhi, zlo, zhi});
+
 }
-
-} // end namespace cuda_mc
 
 //---------------------------------------------------------------------------//
 //                 end of Uniform_Source_Tester.cc

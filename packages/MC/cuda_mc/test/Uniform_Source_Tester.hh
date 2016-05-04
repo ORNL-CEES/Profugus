@@ -11,12 +11,6 @@
 #ifndef cuda_mc_Uniform_Source_Tester_hh
 #define cuda_mc_Uniform_Source_Tester_hh
 
-#include <vector>
-#include "cuda_utils/Definitions.hh"
-
-namespace cuda_mc
-{
-
 //===========================================================================//
 /*!
  * \class Uniform_Source_Tester
@@ -29,28 +23,10 @@ class Uniform_Source_Tester
 
   public:
 
-      typedef std::vector<double>             Vec_Dbl;
+      static void test_source();
 
-      static void test_source( const Vec_Dbl    &geom_bounds,
-                               const Vec_Dbl    &src_bounds,
-                                     Vec_Dbl    &x_loc,
-                                     Vec_Dbl    &y_loc,
-                                     Vec_Dbl    &z_loc,
-                                     Vec_Dbl    &mu,
-                                     Vec_Dbl    &eta,
-                                     Vec_Dbl    &xi);
-
-      static void test_host_api( const Vec_Dbl    &geom_bounds,
-                                 const Vec_Dbl    &src_bounds,
-                                       Vec_Dbl    &x_loc,
-                                       Vec_Dbl    &y_loc,
-                                       Vec_Dbl    &z_loc,
-                                       Vec_Dbl    &mu,
-                                       Vec_Dbl    &eta,
-                                       Vec_Dbl    &xi);
+      static void test_host_api();
 };
-
-} // end namespace cuda_mc
 
 #endif // cuda_mc_Uniform_Source_Tester_hh
 

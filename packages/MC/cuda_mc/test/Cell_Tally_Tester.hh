@@ -11,13 +11,6 @@
 #ifndef cuda_mc_Cell_Tally_Tester_hh
 #define cuda_mc_Cell_Tally_Tester_hh
 
-#include <vector>
-#include <memory>
-#include "Matprop/xs/XS.hh"
-
-namespace cuda_mc
-{
-
 //===========================================================================//
 /*!
  * \class Cell_Tally_Tester
@@ -29,21 +22,9 @@ class Cell_Tally_Tester
 {
   public:
 
-      typedef std::vector<int>              Vec_Int;
-      typedef std::vector<unsigned int>     Vec_UInt;
-      typedef std::vector<double>           Vec_Dbl;
-      typedef Teuchos::RCP<profugus::XS>    RCP_XS;
 
-      static void test_tally( const Vec_Dbl  &x_edges,
-                              const Vec_Dbl  &y_edges,
-                              const Vec_Dbl  &z_edges,
-                                    RCP_XS    xs,
-                              const Vec_Int  &cells,
-                                    Vec_Dbl  &tally_result,
-                                    int       num_particles );
+      static void test_tally();
 };
-
-} // end namespace cuda_mc
 
 #endif // cuda_mc_Cell_Tally_Tester_hh
 

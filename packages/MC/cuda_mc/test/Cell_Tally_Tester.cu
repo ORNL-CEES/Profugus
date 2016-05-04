@@ -10,14 +10,17 @@
 
 #include "Cell_Tally_Tester.hh"
 #include "../Cell_Tally.cuh"
+#include "gtest/Gtest_Functions.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "xs/XS.hh"
+#include "cuda_xs/XS_Device.hh"
 #include "CudaUtils/cuda_utils/Shared_Device_Ptr.hh"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
-namespace cuda_mc
-{
+using namespace cuda_mc;
 
+typedef profugus::XS                 XS_t;
 typedef cuda_profugus::Mesh_Geometry Geom;
 typedef cuda_profugus::Space_Vector  Space_Vector;
 
@@ -68,14 +71,50 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
      }
 }
 
-void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
-                                    const Vec_Dbl  &y_edges,
-                                    const Vec_Dbl  &z_edges,
-                                          RCP_XS     xs,
-                                    const Vec_Int  &cells,
-                                          Vec_Dbl  &tally_result,
-                                          int       num_particles )
+Teuchos::RCP<profugus::XS> build_xs()
 {
+    const int ng = 1;
+    Teuchos::RCP<profugus::XS> xs = Teuchos::rcp(new XS_t());
+    xs->set(0, ng);
+
+    // make group boundaries
+    XS_t::OneDArray nbnd(ng+1, 0.0);
+    nbnd[0] = 100.0;
+    nbnd[1] = 0.00001;
+    xs->set_bounds(nbnd);
+
+    double t1[ng] = {1.0};
+
+    XS_t::OneDArray tot1(std::begin(t1), std::end(t1));
+
+    xs->add(0, XS_t::TOTAL, tot1);
+
+    double s1[][3] = {{0.5}};
+
+    XS_t::TwoDArray sct1(ng, ng, 0.0);
+
+    for (int g = 0; g < ng; ++g)
+    {
+        for (int gp = 0; gp < ng; ++gp)
+        {
+            sct1(g, gp) = s1[g][gp];
+        }
+    }
+
+    xs->add(0, 0, sct1);
+
+    xs->complete();
+
+    return xs;
+}
+
+void Cell_Tally_Tester::test_tally()
+{
+    // Mesh edges
+    std::vector<double> x_edges = {0.0, 0.20, 1.0};
+    std::vector<double> y_edges = {0.0, 0.50, 1.0};
+    std::vector<double> z_edges = {0.0, 0.70, 1.0};
+    
     // Build geometry
     auto geom = std::make_shared<Geom>(x_edges,
         y_edges,z_edges);
@@ -84,6 +123,11 @@ void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     cuda::Shared_Device_Ptr<Geom> sdp_geom(geom);
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    auto xs = build_xs();
+
+    int num_particles = 8192;
+    std::vector<int> cells = {0, 1, 2, 4, 7};
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
@@ -98,7 +142,6 @@ void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Build cell tally
-    std::cout << "Building Cell_Tally" << std::endl;
     auto sp_tally = std::make_shared<Cell_Tally<Geom> >(sdp_geom,sdp_phys);
     sp_tally->set_cells(cells);
     cuda::Shared_Device_Ptr<Cell_Tally<Geom> > tally(sp_tally);
@@ -106,14 +149,12 @@ void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Launch kernel
-    std::cout << "Launching kernel" << std::endl;
     int block_size = 256;
     int num_blocks = num_particles / block_size;
     if( num_blocks > 0 )
     {
-        test_tally_kernel<<<num_blocks,block_size>>>( tally.get_device_ptr(),
-                                                      sdp_geom.get_device_ptr(),
-                                                      num_particles );
+        test_tally_kernel<<<num_blocks,block_size>>>(
+            tally.get_device_ptr(), sdp_geom.get_device_ptr(), num_particles );
     }
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
@@ -121,25 +162,27 @@ void Cell_Tally_Tester::test_tally( const Vec_Dbl  &x_edges,
 
     if( num_particles % block_size != 0 )
     {
-        test_tally_kernel<<<1,num_particles%block_size>>>( tally.get_device_ptr(),
-                                                           sdp_geom.get_device_ptr(),
-                                                           num_particles );
+        test_tally_kernel<<<1,num_particles%block_size>>>(
+            tally.get_device_ptr(), sdp_geom.get_device_ptr(), num_particles );
     }
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
     cudaDeviceSynchronize();
 
-    std::cout << "Finalizing tallies" << std::endl;
     tally.update_host();
     sp_tally->finalize(num_particles);
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy tally result to host
-    tally_result = sp_tally->results();
-    REQUIRE( tally_result.size() == cells.size() );
-}
+    auto tally_result = sp_tally->results();
+    EXPECT_EQ( tally_result.size(), cells.size() );
 
-} // end namespace cuda_mc
+    // Each value should be 1.5 within statistical noise
+    std::vector<double> expected(cells.size(),1.5);
+    double tol = 10.0 / std::sqrt( static_cast<double>(num_particles) );
+    EXPECT_VEC_SOFTEQ( expected, tally_result, tol );
+    
+}
 
 //---------------------------------------------------------------------------//
 //                 end of Cell_Tally_Tester.cc
