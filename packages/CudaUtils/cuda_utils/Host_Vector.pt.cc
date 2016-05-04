@@ -13,13 +13,11 @@
 
 namespace cuda
 {
-typedef cuda_utils::Space_Vector Space_Vector;
 
 template class Host_Vector<int>;
 template class Host_Vector<unsigned int>;
 template class Host_Vector<float>;
 template class Host_Vector<double>;
-template class Host_Vector<Space_Vector>;
 
 } // end namespace cuda
 

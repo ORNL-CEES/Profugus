@@ -18,8 +18,8 @@
 
 typedef profugus::geometry::cell_type  cell_type;
 typedef profugus::geometry::matid_type matid_type;
-typedef cuda_utils::Space_Vector       Point;
-typedef cuda_utils::Coordinates        Coords;
+typedef cuda_profugus::Space_Vector    Point;
+typedef cuda_profugus::Coordinates     Coords;
 typedef cuda_profugus::Mesh_Geometry   Mesh_Geometry;
 
 // Get volume from the mesh for each specified cell
@@ -228,6 +228,8 @@ void Mesh_Geometry_Tester::test_matid()
 //---------------------------------------------------------------------------//
 void Mesh_Geometry_Tester::test_dist_to_bdry()
 {
+    using def::I; using def::J; using def::K;
+
     // Build mesh
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
@@ -272,12 +274,12 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
 
     EXPECT_VEC_SOFT_EQ(expected_distances, host_distances);
-    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
-    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
-    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
-    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
-    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
-    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+    EXPECT_EQ(expected_coords[0][I], host_coords[0][I]);
+    EXPECT_EQ(expected_coords[0][J], host_coords[0][J]);
+    EXPECT_EQ(expected_coords[0][K], host_coords[0][K]);
+    EXPECT_EQ(expected_coords[1][I], host_coords[1][I]);
+    EXPECT_EQ(expected_coords[1][J], host_coords[1][J]);
+    EXPECT_EQ(expected_coords[1][K], host_coords[1][K]);
 }
 
 //---------------------------------------------------------------------------//
@@ -285,6 +287,8 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
 //---------------------------------------------------------------------------//
 void Mesh_Geometry_Tester::test_move_to_surf()
 {
+    using def::I; using def::J; using def::K;
+
     // Build mesh
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
@@ -320,13 +324,12 @@ void Mesh_Geometry_Tester::test_move_to_surf()
                  host_coords.begin());
 
     std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
-
-    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
-    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
-    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
-    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
-    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
-    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+    EXPECT_EQ(expected_coords[0][I], host_coords[0][I]);
+    EXPECT_EQ(expected_coords[0][J], host_coords[0][J]);
+    EXPECT_EQ(expected_coords[0][K], host_coords[0][K]);
+    EXPECT_EQ(expected_coords[1][I], host_coords[1][I]);
+    EXPECT_EQ(expected_coords[1][J], host_coords[1][J]);
+    EXPECT_EQ(expected_coords[1][K], host_coords[1][K]);
 }
 
 //---------------------------------------------------------------------------//
@@ -335,6 +338,7 @@ void Mesh_Geometry_Tester::test_move_to_surf()
 void Mesh_Geometry_Tester::test_reflect()
 {
     typedef cuda_profugus::Mesh_State Geo_State_t;
+    using def::I; using def::J; using def::K;
 
     // Build mesh
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
@@ -350,19 +354,19 @@ void Mesh_Geometry_Tester::test_reflect()
     std::vector<Point> host_dirs   = {{-4.0, 0.1, -0.5},
                                       {-1.0, 2.0, 1.0}};
     // Normalize directions
-    double nrm = std::sqrt(host_dirs[0].x*host_dirs[0].x +
-                           host_dirs[0].y*host_dirs[0].y +
-                           host_dirs[0].z*host_dirs[0].z);
-    host_dirs[0].x /= nrm;
-    host_dirs[0].y /= nrm;
-    host_dirs[0].z /= nrm;
+    double nrm = std::sqrt(host_dirs[0][I]*host_dirs[0][I] +
+                           host_dirs[0][J]*host_dirs[0][J] +
+                           host_dirs[0][K]*host_dirs[0][K]);
+    host_dirs[0][I] /= nrm;
+    host_dirs[0][J] /= nrm;
+    host_dirs[0][K] /= nrm;
 
-    nrm = std::sqrt(host_dirs[1].x*host_dirs[1].x +
-                    host_dirs[1].y*host_dirs[1].y +
-                    host_dirs[1].z*host_dirs[1].z);
-    host_dirs[1].x /= nrm;
-    host_dirs[1].y /= nrm;
-    host_dirs[1].z /= nrm;
+    nrm = std::sqrt(host_dirs[1][I]*host_dirs[1][I] +
+                    host_dirs[1][J]*host_dirs[1][J] +
+                    host_dirs[1][K]*host_dirs[1][K]);
+    host_dirs[1][I] /= nrm;
+    host_dirs[1][J] /= nrm;
+    host_dirs[1][K] /= nrm;
 
     int num_points = host_points.size();
 
@@ -393,30 +397,30 @@ void Mesh_Geometry_Tester::test_reflect()
     std::vector<Point> host_dirs_out(num_points);
     thrust::copy(device_dirs_out.begin(),device_dirs_out.end(),
                  host_dirs_out.begin());
-    std::vector<Point> expected_dirs = {{-host_dirs[0].x,
-                                         host_dirs[0].y,
-                                         host_dirs[0].z},
-                                        {host_dirs[1].x,
-                                         host_dirs[1].y,
-                                         host_dirs[1].z}};
-    EXPECT_SOFT_EQ(expected_dirs[0].x, host_dirs_out[0].x);
-    EXPECT_SOFT_EQ(expected_dirs[0].y, host_dirs_out[0].y);
-    EXPECT_SOFT_EQ(expected_dirs[0].z, host_dirs_out[0].z);
-    EXPECT_SOFT_EQ(expected_dirs[1].x, host_dirs_out[1].x);
-    EXPECT_SOFT_EQ(expected_dirs[1].y, host_dirs_out[1].y);
-    EXPECT_SOFT_EQ(expected_dirs[1].z, host_dirs_out[1].z);
+    std::vector<Point> expected_dirs = {{-host_dirs[0][I],
+                                         host_dirs[0][J],
+                                         host_dirs[0][K]},
+                                        {host_dirs[1][I],
+                                         host_dirs[1][J],
+                                         host_dirs[1][K]}};
+    EXPECT_SOFT_EQ(expected_dirs[0][I], host_dirs_out[0][I]);
+    EXPECT_SOFT_EQ(expected_dirs[0][J], host_dirs_out[0][J]);
+    EXPECT_SOFT_EQ(expected_dirs[0][K], host_dirs_out[0][K]);
+    EXPECT_SOFT_EQ(expected_dirs[1][I], host_dirs_out[1][I]);
+    EXPECT_SOFT_EQ(expected_dirs[1][J], host_dirs_out[1][J]);
+    EXPECT_SOFT_EQ(expected_dirs[1][K], host_dirs_out[1][K]);
 
     // Test reflected cell indices
     std::vector<Coords> host_ijk_out(num_points);
     thrust::copy(device_ijk_out.begin(),device_ijk_out.end(),
                  host_ijk_out.begin());
     std::vector<Coords> expected_ijk = {{0, 2, 1}, {1, 3, 2}};
-    EXPECT_EQ(expected_ijk[0].i, host_ijk_out[0].i);
-    EXPECT_EQ(expected_ijk[0].j, host_ijk_out[0].j);
-    EXPECT_EQ(expected_ijk[0].k, host_ijk_out[0].k);
-    EXPECT_EQ(expected_ijk[1].i, host_ijk_out[1].i);
-    EXPECT_EQ(expected_ijk[1].j, host_ijk_out[1].j);
-    EXPECT_EQ(expected_ijk[1].k, host_ijk_out[1].k);
+    EXPECT_EQ(expected_ijk[0][I], host_ijk_out[0][I]);
+    EXPECT_EQ(expected_ijk[0][J], host_ijk_out[0][J]);
+    EXPECT_EQ(expected_ijk[0][K], host_ijk_out[0][K]);
+    EXPECT_EQ(expected_ijk[1][I], host_ijk_out[1][I]);
+    EXPECT_EQ(expected_ijk[1][J], host_ijk_out[1][J]);
+    EXPECT_EQ(expected_ijk[1][K], host_ijk_out[1][K]);
 
     // Test reflected flag
     std::vector<int> host_reflected(num_points);

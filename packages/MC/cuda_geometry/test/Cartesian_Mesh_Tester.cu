@@ -19,8 +19,8 @@
 #include "Cartesian_Mesh_Tester.hh"
 
 typedef profugus::geometry::cell_type cell_type;
-typedef cuda_utils::Space_Vector      Point;
-typedef cuda_utils::Coordinates       Coords;
+typedef cuda_profugus::Space_Vector   Point;
+typedef cuda_profugus::Coordinates    Coords;
 typedef cuda_profugus::Cartesian_Mesh Cartesian_Mesh;
 
 __global__ void compute_indices_kernel(Cartesian_Mesh mesh,
@@ -242,12 +242,13 @@ void Cartesian_Mesh_Tester::test_find_upper()
 
     std::vector<Coords> expected_coords = {{-1, 3, 1}, {1, 2, 2}};
     
-    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
-    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
-    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
-    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
-    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
-    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+    using def::I; using def::J; using def::K;
+    EXPECT_EQ(expected_coords[0][I], host_coords[0][I]);
+    EXPECT_EQ(expected_coords[0][J], host_coords[0][J]);
+    EXPECT_EQ(expected_coords[0][K], host_coords[0][K]);
+    EXPECT_EQ(expected_coords[1][I], host_coords[1][I]);
+    EXPECT_EQ(expected_coords[1][J], host_coords[1][J]);
+    EXPECT_EQ(expected_coords[1][K], host_coords[1][K]);
 }
 
 //---------------------------------------------------------------------------//

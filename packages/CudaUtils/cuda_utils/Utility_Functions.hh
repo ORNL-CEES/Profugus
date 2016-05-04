@@ -12,6 +12,7 @@
 #define CudaUtils_cuda_utils_Utility_Functions_hh
 
 #include "Definitions.hh"
+#include "utils/Definitions.hh"
 
 namespace cuda
 {
@@ -99,11 +100,12 @@ double __device__ inline atomic_add_double( volatile double * const dest,
  * \return vector magnitude
  */
 __device__ inline double vector_magnitude(
-    const cuda_utils::Space_Vector &vector)
+    const cuda_profugus::Space_Vector &vector)
 {
-    return sqrt(vector.x * vector.x +
-                vector.y * vector.y +
-                vector.z * vector.z);
+    using def::I; using def::J; using def::K;
+    return sqrt(vector[I] * vector[I] +
+                vector[J] * vector[J] +
+                vector[K] * vector[K]);
 }
 
 //---------------------------------------------------------------------------//
@@ -117,10 +119,11 @@ __device__ inline double vector_magnitude(
  *
  * \return dot product
  */
-__device__ inline double dot_product(const cuda_utils::Space_Vector &v,
-                                     const cuda_utils::Space_Vector &w)
+__device__ inline double dot_product(const cuda_profugus::Space_Vector &v,
+                                     const cuda_profugus::Space_Vector &w)
 {
-    return v.x*w.x + v.y*w.y + v.z*w.z;
+    using def::I; using def::J; using def::K;
+    return v[I]*w[I] + v[J]*w[J] + v[K]*w[K];
 }
 
 //---------------------------------------------------------------------------//
@@ -135,12 +138,13 @@ __device__ inline double dot_product(const cuda_utils::Space_Vector &v,
  * This function is unrolled for efficiency, which is why we don't have a
  * general normalize function.
  */
-__device__ inline void vector_normalize(cuda_utils::Space_Vector &vector)
+__device__ inline void vector_normalize(cuda_profugus::Space_Vector &vector)
 {
+    using def::I; using def::J; using def::K;
     double norm     = 1.0 / vector_magnitude(vector);
-    vector.x *= norm;
-    vector.y *= norm;
-    vector.z *= norm;
+    vector[I] *= norm;
+    vector[J] *= norm;
+    vector[K] *= norm;
 
     ENSURE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 }
@@ -180,8 +184,9 @@ __device__ inline void vector_normalize(cuda_utils::Space_Vector &vector)
  * \pre the vector must be a unit-vector (magnitude == 1)
  */
 __device__ inline void cartesian_vector_transform(
-    double costheta, double phi, cuda_utils::Space_Vector &vector)
+    double costheta, double phi, cuda_profugus::Space_Vector &vector)
 {
+    using def::I; using def::J; using def::K;
     REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 
     // cos/sin factors
@@ -190,17 +195,17 @@ __device__ inline void cartesian_vector_transform(
     const double sintheta = sqrt(1.0 - costheta * costheta);
 
     // make a copy of the old direction
-    cuda_utils::Space_Vector old = vector;
+    cuda_profugus::Space_Vector old = vector;
 
     // calculate alpha
-    const double alpha = sqrt(1.0 - old.z * old.z);
+    const double alpha = sqrt(1.0 - old[K] * old[K]);
 
     // now transform into new cooordinate direction; degenerate case first
     if (alpha < 1.e-6)
     {
-        vector.x = sintheta * cosphi;
-        vector.y = sintheta * sinphi;
-        vector.z = (old.z < 0.0 ? -1.0 : 1.0) * costheta;
+        vector[I] = sintheta * cosphi;
+        vector[J] = sintheta * sinphi;
+        vector[K] = (old[K] < 0.0 ? -1.0 : 1.0) * costheta;
     }
 
     // do standard transformation
@@ -210,15 +215,15 @@ __device__ inline void cartesian_vector_transform(
         const double inv_alpha = 1.0 / alpha;
 
         // calculate new z-direction
-        vector.z = old.z * costheta - alpha * sintheta * cosphi;
+        vector[K] = old[K] * costheta - alpha * sintheta * cosphi;
 
         // calculate new x-direction
-        vector.x = old.x * costheta + inv_alpha * (
-            old.x * old.z * sintheta * cosphi - old.y * sintheta * sinphi);
+        vector[I] = old[I] * costheta + inv_alpha * (
+            old[I] * old[K] * sintheta * cosphi - old[J] * sintheta * sinphi);
 
         // calculate new y-direction
-        vector.y = old.y * costheta + inv_alpha * (
-            old.y * old.z * sintheta * cosphi + old.x * sintheta * sinphi);
+        vector[J] = old[J] * costheta + inv_alpha * (
+            old[J] * old[K] * sintheta * cosphi + old[I] * sintheta * sinphi);
     }
 
     // normalize the particle to avoid roundoff errors

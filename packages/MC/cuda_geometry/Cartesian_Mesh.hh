@@ -47,8 +47,6 @@ class Cartesian_Mesh
     typedef int                           dim_type;
     typedef size_t                        size_type;
     typedef profugus::geometry::cell_type cell_type;
-    typedef cuda_utils::Space_Vector      Space_Vector;
-    typedef cuda_utils::Coordinates       Coordinates;
     typedef std::vector<double>           Vec_Dbl;
     //@}
 
@@ -181,9 +179,9 @@ class Cartesian_Mesh
     // Locate the positon's ijk coordinates with upper edges begin "inside"
     __device__ void find_upper(const Space_Vector &r, Coordinates &ijk ) const
     {
-        ijk.i = find_upper(r.x, def::I);
-        ijk.j = find_upper(r.y, def::J);
-        ijk.k = find_upper(r.z, def::K);
+        using def::I; using def::J; using def::K;
+        for (int dim : {I, J, K})
+            ijk[dim] = find_upper(r[dim], dim);
     }
 
     // Locate a coordinate along a single axis
@@ -217,9 +215,12 @@ class Cartesian_Mesh
     {
         Space_Vector xyz;
 
-        cudaMemcpy(&xyz.x, dd_x_edges, sizeof(double), cudaMemcpyDeviceToHost);
-        cudaMemcpy(&xyz.y, dd_y_edges, sizeof(double), cudaMemcpyDeviceToHost);
-        cudaMemcpy(&xyz.z, dd_z_edges, sizeof(double), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz[def::I], dd_x_edges, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz[def::J], dd_y_edges, sizeof(double),
+                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(&xyz[def::K], dd_z_edges, sizeof(double),
+                   cudaMemcpyDeviceToHost);
 
         return xyz;
     }
@@ -229,11 +230,11 @@ class Cartesian_Mesh
     {
         Space_Vector xyz;
 
-        cudaMemcpy(&xyz.x, dd_x_edges+d_cells_x, sizeof(double),
+        cudaMemcpy(&xyz[def::I], dd_x_edges+d_cells_x, sizeof(double),
                    cudaMemcpyDeviceToHost);
-        cudaMemcpy(&xyz.y, dd_y_edges+d_cells_y, sizeof(double),
+        cudaMemcpy(&xyz[def::J], dd_y_edges+d_cells_y, sizeof(double),
                    cudaMemcpyDeviceToHost);
-        cudaMemcpy(&xyz.z, dd_z_edges+d_cells_z, sizeof(double),
+        cudaMemcpy(&xyz[def::K], dd_z_edges+d_cells_z, sizeof(double),
                    cudaMemcpyDeviceToHost);
 
         return xyz;

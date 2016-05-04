@@ -39,25 +39,16 @@ struct Device
 //===========================================================================//
 } // end namespace cuda
 
-namespace cuda_utils
+#include "Device_Vector_Lite.hh"
+
+namespace cuda_profugus
 {
 
-struct Coordinates
-{
-    int i;
-    int j;
-    int k;
-};
-
-struct Space_Vector
-{
-    double x;
-    double y;
-    double z;
-};
+typedef cuda_profugus::Device_Vector_Lite<int,3>    Coordinates;
+typedef cuda_profugus::Device_Vector_Lite<double,3> Space_Vector;
 
 //===========================================================================//
-} // end namespace cuda_utils
+} // end namespace cuda_profugus
 
 #endif // cuda_utils_Definitions_hh
 

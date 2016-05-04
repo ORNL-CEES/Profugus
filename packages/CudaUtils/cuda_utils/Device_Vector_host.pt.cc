@@ -14,13 +14,11 @@
 namespace cuda
 {
 typedef arch::Host Arch_t;
-typedef cuda_utils::Space_Vector Space_Vector;
 
 template class Device_Vector<Arch_t,float>;
 template class Device_Vector<Arch_t,double>;
 template class Device_Vector<Arch_t,int>;
 template class Device_Vector<Arch_t,unsigned int>;
-template class Device_Vector<Arch_t,Space_Vector>;
 
 template void device_to_host(
         const Device_Vector<Arch_t,float>&,
@@ -34,9 +32,6 @@ template void device_to_host(
 template void device_to_host(
         const Device_Vector<Arch_t,unsigned int>&,
         profugus::View_Field<unsigned int>);
-template void device_to_host(
-        const Device_Vector<Arch_t,Space_Vector>&,
-        profugus::View_Field<Space_Vector>);
 
 template void device_to_host(
         const Device_Vector<Arch_t,float>&,
@@ -50,9 +45,6 @@ template void device_to_host(
 template void device_to_host(
         const Device_Vector<Arch_t,unsigned int>&,
         Host_Vector<unsigned int>&);
-template void device_to_host(
-        const Device_Vector<Arch_t,Space_Vector>&,
-        Host_Vector<Space_Vector>&);
 
 } // end namespace cuda
 

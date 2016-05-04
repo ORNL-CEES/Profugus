@@ -51,10 +51,7 @@ class Mesh_Geometry
     typedef cuda::arch::Device                   Arch;
     typedef thrust::device_vector<double>        Dev_Dbl_Vec;
     typedef thrust::device_vector<int>           Dev_Int_Vec;
-    typedef cuda_utils::Coordinates              Coordinates;
-    typedef cuda_utils::Space_Vector             Space_Vector;
     typedef Mesh_State                           Geo_State_t;
-
 
     //! Constructor
     Mesh_Geometry(const Vec_Dbl &x_edges,
@@ -124,37 +121,37 @@ class Mesh_Geometry
         constexpr int face_start = Geo_State_t::MINUS_X;
         state.exiting_face    = Geo_State_t::NONE;
         state.reflecting_face = Geo_State_t::NONE;
-        if( state.next_ijk.i < 0 )
+        if( state.next_ijk[I] < 0 )
         {
             state.exiting_face = Geo_State_t::MINUS_X;
             if( d_reflect[Geo_State_t::MINUS_X-face_start] )
                 state.reflecting_face = Geo_State_t::MINUS_X;
         }
-        else if( state.next_ijk.i == num_cells_x )
+        else if( state.next_ijk[I] == num_cells_x )
         {
             state.exiting_face = Geo_State_t::PLUS_X;
             if( d_reflect[Geo_State_t::PLUS_X-face_start] )
                 state.reflecting_face = Geo_State_t::PLUS_X;
         }
-        else if( state.next_ijk.j < 0 )
+        else if( state.next_ijk[J] < 0 )
         {
             state.exiting_face = Geo_State_t::MINUS_Y;
             if( d_reflect[Geo_State_t::MINUS_Y-face_start] )
                 state.reflecting_face = Geo_State_t::MINUS_Y;
         }
-        else if( state.next_ijk.j == num_cells_y )
+        else if( state.next_ijk[J] == num_cells_y )
         {
             state.exiting_face = Geo_State_t::PLUS_Y;
             if( d_reflect[Geo_State_t::PLUS_Y-face_start] )
                 state.reflecting_face = Geo_State_t::PLUS_Y;
         }
-        else if( state.next_ijk.k < 0 )
+        else if( state.next_ijk[K] < 0 )
         {
             state.exiting_face = Geo_State_t::MINUS_Z;
             if( d_reflect[Geo_State_t::MINUS_Z-face_start] )
                 state.reflecting_face = Geo_State_t::MINUS_Z;
         }
-        else if( state.next_ijk.k == num_cells_z )
+        else if( state.next_ijk[K] == num_cells_z )
         {
             state.exiting_face = Geo_State_t::PLUS_Z;
             if( d_reflect[Geo_State_t::PLUS_Z-face_start] )
@@ -187,7 +184,7 @@ class Mesh_Geometry
 
         using def::I; using def::J; using def::K;
         cell_type c = num_cells();
-        bool found = d_mesh.index(state.ijk.i, state.ijk.j, state.ijk.k, c);
+        bool found = d_mesh.index(state.ijk[I], state.ijk[J], state.ijk[K], c);
 
         ENSURE(found);
         return c;
@@ -211,12 +208,12 @@ class Mesh_Geometry
         {
             return profugus::geometry::REFLECT;
         }
-        else if (   (state.ijk.i == -1)
-                 || (state.ijk.j == -1)
-                 || (state.ijk.k == -1)
-                 || (state.ijk.i == d_mesh.num_cells_along(I))
-                 || (state.ijk.j == d_mesh.num_cells_along(J))
-                 || (state.ijk.k == d_mesh.num_cells_along(K)))
+        else if (   (state.ijk[I] == -1)
+                 || (state.ijk[J] == -1)
+                 || (state.ijk[K] == -1)
+                 || (state.ijk[I] == d_mesh.num_cells_along(I))
+                 || (state.ijk[J] == d_mesh.num_cells_along(J))
+                 || (state.ijk[K] == d_mesh.num_cells_along(K)))
         {
             return profugus::geometry::OUTSIDE;
         }
@@ -276,8 +273,6 @@ class Mesh_Geometry
     // Update state tracking information
     __device__ void update_state(Geo_State_t &state) const
     {
-        using def::I; using def::J; using def::K;
-
         // Find the logical indices of the cell along each axis
         d_mesh.find_upper(state.d_r, state.ijk);
     }
@@ -285,15 +280,16 @@ class Mesh_Geometry
     //! Move a particle a distance \e d in the current direction.
     __device__ void move(double dist, Geo_State_t &state) const
     {
+        using def::I; using def::J; using def::K;
         REQUIRE(dist >= 0.0);
         REQUIRE(cuda::utility::soft_equiv(
                 cuda::utility::vector_magnitude(state.d_dir),
                 1.0, 1.0e-6));
 
-        // advance the particle (unrolled loop)
-        state.d_r.x += dist * state.d_dir.x;
-        state.d_r.y += dist * state.d_dir.y;
-        state.d_r.z += dist * state.d_dir.z;
+        // advance the particle
+        // su
+        for (int dim : {I, J, K})
+            state.d_r[dim] += dist * state.d_dir[dim];
     }
 
     Cartesian_Mesh d_mesh;
