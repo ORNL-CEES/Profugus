@@ -33,13 +33,19 @@ class Device_Vector_Lite
 {
   public:
 
-    __host__ __device__ T & operator[](int i)
+#ifdef __NVCC__
+    __host__ __device__
+#endif
+    T & operator[](int i)
     {
         REQUIRE( i < N );
         return d_data[i];
     }
 
-    __host__ __device__ const T & operator[](int i) const
+#ifdef __NVCC__
+    __host__ __device__
+#endif
+    const T & operator[](int i) const
     {
         REQUIRE( i < N );
         return d_data[i];
