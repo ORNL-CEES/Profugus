@@ -11,11 +11,6 @@
 #ifndef cuda_mc_Particle_Tester_hh
 #define cuda_mc_Particle_Tester_hh
 
-#include <vector>
-
-namespace cuda_mc
-{
-
 //===========================================================================//
 /*!
  * \class Particle_Tester
@@ -28,16 +23,11 @@ class Particle_Tester
 
   public:
 
-      typedef std::vector<double>   Vec_Dbl;
-      typedef std::vector<int>      Vec_Int;
-
-      static void test_randoms( Vec_Dbl &randoms );
-      static void test_groups( const Vec_Int &groups_in, Vec_Int &groups_out);
-      static void test_matids( const Vec_Int &matids_in, Vec_Int &matids_out);
+      static void test_randoms();
+      static void test_groups();
+      static void test_matids();
 
 };
-
-} // end namespace cuda_mc
 
 #endif // cuda_mc_Particle_Tester_hh
 

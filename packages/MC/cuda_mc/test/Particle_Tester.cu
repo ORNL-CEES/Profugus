@@ -10,10 +10,10 @@
 
 #include "Particle_Tester.hh"
 #include "../Particle.cuh"
-#include "../../cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_geometry/Mesh_Geometry.hh"
+#include "gtest/Gtest_Functions.hh"
 
-namespace cuda_mc
-{
+using namespace cuda_mc;
 
  __global__ void compute_randoms_kernel( double *randoms, int num_vals )
  {
@@ -65,27 +65,43 @@ __global__ void compute_matids_kernel( int *matids_in,
     }
 }
 
-void Particle_Tester::test_randoms( Vec_Dbl &host_rands )
+void Particle_Tester::test_randoms()
 {
-    int num_vals = host_rands.size();
+    for (int num_vals : {16, 64, 256, 1024})
+    {
+        thrust::device_vector<double> device_rands(num_vals);
 
-    thrust::device_vector<double> device_rands(num_vals);
+        compute_randoms_kernel<<<1,num_vals>>>(device_rands.data().get(),
+                                               num_vals );
 
-    compute_randoms_kernel<<<1,num_vals>>>(device_rands.data().get(),
-                                           num_vals );
+        REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    REQUIRE( cudaGetLastError() == cudaSuccess );
+        thrust::host_vector<double> host_rands = device_rands;
 
-    thrust::copy(device_rands.begin(),device_rands.end(),host_rands.begin());
+        // Test statistics on values
+        double mean = 0.0;
+        for (auto val : host_rands)
+        {
+            EXPECT_GT(val,0.0);
+            EXPECT_LT(val,1.0);
+            mean += val;
+        }
+        double N = static_cast<double>(num_vals);
+        mean /= N;
+
+        EXPECT_SOFTEQ(0.5,mean,1.0/std::sqrt(N));
+    }
 }
 
-void Particle_Tester::test_groups( const Vec_Int &host_groups_in,
-                                         Vec_Int &host_groups_out)
+void Particle_Tester::test_groups()
 {
-    int num_vals = host_groups_in.size();
-    REQUIRE( host_groups_out.size() == num_vals );
+    int num_vals = 16;
 
-    thrust::device_vector<int> device_groups_in(host_groups_in);
+    thrust::host_vector<int> host_groups_in(num_vals);
+    for (int i = 0; i < num_vals; ++i)
+        host_groups_in[i] = i % 4;
+
+    thrust::device_vector<int> device_groups_in = host_groups_in;
     thrust::device_vector<int> device_groups_out(num_vals);
 
     compute_groups_kernel<<<1,num_vals>>>( device_groups_in.data().get(), 
@@ -94,17 +110,20 @@ void Particle_Tester::test_groups( const Vec_Int &host_groups_in,
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    thrust::copy(device_groups_out.begin(),device_groups_out.end(),
-                 host_groups_out.begin());
+    thrust::host_vector<int> host_groups_out = device_groups_out;
+    for (int i = 0; i < num_vals; ++i)
+        EXPECT_EQ(i%4,host_groups_out[i]);
 }
 
-void Particle_Tester::test_matids( const Vec_Int &host_matids_in,
-                                         Vec_Int &host_matids_out)
+void Particle_Tester::test_matids()
 {
-    int num_vals = host_matids_in.size();
-    REQUIRE( host_matids_out.size() == num_vals );
+    int num_vals = 16;
 
-    thrust::device_vector<int> device_matids_in(host_matids_in);
+    thrust::host_vector<int> host_matids_in(num_vals);
+    for (int i = 0; i < num_vals; ++i)
+        host_matids_in[i] = i % 4;
+
+    thrust::device_vector<int> device_matids_in = host_matids_in;
     thrust::device_vector<int> device_matids_out(num_vals);
 
     compute_matids_kernel<<<1,num_vals>>>( device_matids_in.data().get(), 
@@ -113,10 +132,10 @@ void Particle_Tester::test_matids( const Vec_Int &host_matids_in,
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    thrust::copy(device_matids_out.begin(),device_matids_out.end(),
-                 host_matids_out.begin());
+    thrust::host_vector<int> host_matids_out = device_matids_out;
+    for (int i = 0; i < num_vals; ++i)
+        EXPECT_EQ(i%4,host_matids_out[i]);
 }
-} // end namespace cuda_mc
 
 //---------------------------------------------------------------------------//
 //                 end of Particle_Tester.cc

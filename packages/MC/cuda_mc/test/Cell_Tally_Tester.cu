@@ -71,6 +71,9 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
      }
 }
 
+namespace
+{
+
 Teuchos::RCP<profugus::XS> build_xs()
 {
     const int ng = 1;
@@ -106,6 +109,8 @@ Teuchos::RCP<profugus::XS> build_xs()
     xs->complete();
 
     return xs;
+}
+
 }
 
 void Cell_Tally_Tester::test_tally()
