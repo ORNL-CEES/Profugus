@@ -44,7 +44,6 @@ TEST(Particle, metadata)
         metadata.access<int>(fm_cell) = 101;
 
         EXPECT_EQ(101, p.metadata().access<int>(fm_cell));
-        EXPECT_EQ(0, q.metadata().access<int>(fm_cell));
     }
 
     Particle::Metadata::reset();
