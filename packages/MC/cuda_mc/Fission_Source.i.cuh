@@ -55,9 +55,6 @@ auto Fission_Source<Geometry>::get_particle(
     // sample the angle isotropically
     sampler::sample_isotropic(omega, rng);
 
-    // sample flag
-    bool sampled;
-
     // if there is a fission site container than get the particle from there;
     // otherwise assume this is an initial source
     if (d_have_sites)
@@ -72,7 +69,7 @@ auto Fission_Source<Geometry>::get_particle(
         matid = b_geometry->matid(p.geo_state());
 
         // initialize the physics state at the fission site
-        sampled = d_physics->initialize_fission(fs, p);
+        bool sampled = d_physics->initialize_fission(fs, p);
         CHECK(sampled);
     }
     else

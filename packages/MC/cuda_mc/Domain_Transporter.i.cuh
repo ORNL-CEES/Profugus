@@ -134,30 +134,30 @@ Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
     // get the in/out state of the particle
     int state = d_geometry->boundary_state(particle.geo_state());
 
-    // reflected flag
-    bool reflected = false;
-
     // process the boundary crossing based on the geometric state of the
     // particle
     switch (state)
     {
         case profugus::geometry::OUTSIDE:
+        {
             // the particle has left the problem geometry
             particle.set_event(profugus::events::ESCAPE);
             particle.kill();
 
             ENSURE(particle.event() == profugus::events::ESCAPE);
             break;
-
+        }
         case profugus::geometry::REFLECT:
+        {
             // the particle has hit a reflecting surface
-            reflected = d_geometry->reflect(particle.geo_state());
+            bool reflected = d_geometry->reflect(particle.geo_state());
             CHECK(reflected);
 
             ENSURE(particle.event() == profugus::events::BOUNDARY);
             break;
-
+        }
         case profugus::geometry::INSIDE:
+        {
             // otherwise the particle is at an internal geometry boundary;
             // update the material id of the region the particle has entered
             particle.set_matid(d_geometry->matid(particle.geo_state()));
@@ -169,6 +169,7 @@ Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
             ENSURE(particle.event() == profugus::events::BOUNDARY);
             break;
 
+        }
         default:
             CHECK(0);
     }
