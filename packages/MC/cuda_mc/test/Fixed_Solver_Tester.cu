@@ -9,35 +9,49 @@
 //---------------------------------------------------------------------------//
 
 #include "Fixed_Solver_Tester.hh"
+#include "Test_XS.hh"
 #include "../Fixed_Source_Solver.hh"
 #include "../Source_Transporter.hh"
 #include "../Uniform_Source.cuh"
 #include "../Physics.cuh"
 #include "../Cell_Tally.cuh"
 #include "../Tallier.cuh"
+#include "gtest/Gtest_Functions.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "CudaUtils/cuda_utils/Shared_Device_Ptr.hh"
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
 
-namespace cuda_mc
-{
+using namespace cuda_mc;
 
 typedef cuda_profugus::Mesh_Geometry       Geom;
 typedef cuda_mc::Uniform_Source<Geom>      Uniform_Src;
 typedef cuda_mc::Source_Transporter<Geom>  Transporter;
 typedef cuda_mc::Fixed_Source_Solver<Geom> Fixed_Solver;
 
-void Fixed_Solver_Tester::test_transport( const Vec_Dbl  &x_edges,
-                                          const Vec_Dbl  &y_edges,
-                                          const Vec_Dbl  &z_edges,
-                                          const Vec_Int  &matids,
-                                                RCP_XS    xs,
-                                                int       num_particles,
-                                                Vec_Dbl  &tally)
+void Fixed_Solver_Tester::test_transport(int num_groups)
 {
+    REQUIRE(num_groups==1 || num_groups==3 || num_groups==5);
+
+    auto xs = Test_XS::build_xs(num_groups);
+
+    std::vector<double> edges;
+    std::vector<int> matids;
+    if (num_groups==1)
+    {
+        edges = {0.0, 5.0, 10.0};
+        matids = {0, 0, 0, 0, 0, 0, 0, 0};
+    }
+    else
+    {
+        edges = {0.0, 0.50, 1.0};
+        matids = {0, 1, 1, 0, 0, 1, 1, 0};
+    }
+
+    int num_particles = 10000;
+
     // Build geometry
-    auto geom = std::make_shared<Geom>(x_edges,y_edges,z_edges);
+    auto geom = std::make_shared<Geom>(edges,edges,edges);
     geom->set_matids(matids);
     cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
 
@@ -65,9 +79,9 @@ void Fixed_Solver_Tester::test_transport( const Vec_Dbl  &x_edges,
     tallier->add_cell_tally(cell_tally);
 
     // Build box shape for source
-    Vec_Dbl src_bounds = {x_edges.front(), x_edges.back(),
-                          y_edges.front(), y_edges.back(),
-                          z_edges.front(), z_edges.back()};
+    std::vector<double> src_bounds = {edges.front(), edges.back(),
+                                      edges.front(), edges.back(),
+                                      edges.front(), edges.back()};
     REQUIRE( src_bounds.size() == 6 );
     auto src_shape = cuda::shared_device_ptr<cuda_mc::Box_Shape>(
             src_bounds[0], src_bounds[1],
@@ -85,14 +99,63 @@ void Fixed_Solver_Tester::test_transport( const Vec_Dbl  &x_edges,
     solver.set(trans,source,tallier);
     solver.solve();
 
-    tally = sp_cell_tally->results();
+    auto tally = sp_cell_tally->results();
     std::cout << "Tally result: ";
     for( auto x : tally )
         std::cout << x << " ";
     std::cout << std::endl;
-}
 
-} // end namespace cuda_mc
+    // Symmetry checks on tally
+    EXPECT_EQ( tally.size(), 8 );
+    if (num_groups==1)
+    {
+        double mean = 0.0;
+        for( auto x : tally )
+            mean += x;
+        mean /= static_cast<double>(tally.size());
+
+        double tol = 10.0 / std::sqrt( static_cast<double>(num_particles) );
+
+        std::vector<double> exp(8,mean);
+        EXPECT_VEC_SOFTEQ( exp, tally, tol );
+    }
+    else
+    {
+        double mean0 = 0.0;
+        double mean1 = 0.0;
+        int count0 = 0;
+        int count1 = 0;
+        for (int cell = 0; cell < tally.size(); ++cell)
+        {
+            if (matids[cell] == 0)
+            {
+                mean0 += tally[cell];
+                count0++;
+            }
+            else if (matids[cell] == 1)
+            {
+                mean1 += tally[cell];
+                count1++;
+            }
+        }
+        mean0 /= static_cast<double>(count0);
+        mean1 /= static_cast<double>(count1);
+
+        double tol = 10.0 / std::sqrt( static_cast<double>(num_particles) );
+
+        std::vector<double> exp(8);
+        for (int cell = 0; cell < matids.size(); ++cell)
+        {
+            if (matids[cell] == 0)
+                exp[cell] = mean0;
+            else if (matids[cell] == 1)
+                exp[cell] = mean1;
+        }
+        EXPECT_VEC_SOFTEQ( exp, tally, tol );
+        
+    }
+    
+}
 
 //---------------------------------------------------------------------------//
 //                 end of Fixed_Solver_Tester.cc
