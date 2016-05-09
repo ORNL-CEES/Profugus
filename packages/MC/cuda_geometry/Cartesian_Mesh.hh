@@ -215,17 +215,17 @@ class Cartesian_Mesh
         if( axis == def::I )
         {
             edges_start = dd_x_edges;
-            edges_end   = dd_x_edges+d_cells_x;
+            edges_end   = dd_x_edges+d_cells_x+1;
         }
         if( axis == def::J )
         {
             edges_start = dd_y_edges;
-            edges_end   = dd_y_edges+d_cells_y;
+            edges_end   = dd_y_edges+d_cells_y+1;
         }
         if( axis == def::K )
         {
             edges_start = dd_z_edges;
-            edges_end   = dd_z_edges+d_cells_z;
+            edges_end   = dd_z_edges+d_cells_z+1;
         }
         return cuda::utility::lower_bound(edges_start,edges_end,r)
             - edges_start - 1;
