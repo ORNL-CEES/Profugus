@@ -41,6 +41,7 @@ ADD_UTILS_TEST(tstPhysics_cuda.cc                      NP ${DEPS} )
 ADD_UTILS_TEST(tstKeff_Tally_cuda.cc                   NP ${DEPS} )
 ADD_UTILS_TEST(tstVR_Roulette_cuda.cc                  NP ${DEPS} )
 ADD_UTILS_TEST(tstFission_Source_cuda.cc               NP ${DEPS} )
+ADD_UTILS_TEST(tstDomain_Transporter_cuda.cc           NP ${DEPS} )
 
 ##---------------------------------------------------------------------------##
 ## end of cuda_xs/test/CMakeLists.txt

@@ -27,15 +27,6 @@ namespace cuda_profugus
 //---------------------------------------------------------------------------//
 // GLOBAL CUDA KERNELS
 //---------------------------------------------------------------------------//
-// Prepare particles for transport by setting the intial mean free path
-// distance and the event to boundary.
-template<class Geometry>
-__global__ void initialize_particles( Particle_Vector<Geometry>* particles )
-{
-
-}
-
-//---------------------------------------------------------------------------//
 // Transport a particle one step.
 template<class Geometry>
 __global__ void take_step_kernel( const Geometry* geometry,
