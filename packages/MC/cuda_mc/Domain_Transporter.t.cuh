@@ -20,7 +20,6 @@
 #include "cuda_utils/Hardware.hh"
 #include "Definitions.hh"
 #include "Domain_Transporter.hh"
-#include "Step_Selector.hh"
 
 namespace cuda_profugus
 {
@@ -43,9 +42,6 @@ __global__ void take_step_kernel( const Geometry* geometry,
 	// Get the particle index.
 	std::size_t pidx = start_idx + idx;
 
-	// Create a step selector.
-	Step_Selector selector;
-
 	// Get the total cross section.
 	double xs_tot = physics->total( physics::TOTAL,
 					particles->matid(pidx),
@@ -56,22 +52,22 @@ __global__ void take_step_kernel( const Geometry* geometry,
 			  ? particles->dist_mfp( pidx ) / xs_tot
 			  : profugus::constants::huge;
 
-	// Initialize the distance to collision in the step selector.
-	selector.initialize(dist_col, events::COLLISION);
-
 	// Calculate distance to next geometry boundary
 	double dist_bnd = 
             geometry->distance_to_boundary( particles->geo_state(pidx) );
-	selector.submit(dist_bnd, events::BOUNDARY);
+
+        // Calculate the next step and event.
+        events::Event event = (dist_bnd < dist_col) 
+                              ? events::BOUNDARY : events::COLLISION;
+        double step = (dist_bnd < dist_col) ? dist_bnd : dist_col;
 
 	// Set the next event in the particle.
-	particles->set_event( pidx, 
-			      static_cast<events::Event>(selector.tag()) );
-	particles->set_step( pidx, selector.step() );
+	particles->set_event( pidx, event );
+	particles->set_step( pidx, step );
 
 	// Update the mfp distance.
 	particles->set_dist_mfp( 
-	    pidx, particles->dist_mfp(pidx) - particles->step(pidx) * xs_tot );
+	    pidx, particles->dist_mfp(pidx) - step * xs_tot );
     }
 }				  
 
@@ -152,6 +148,9 @@ __global__ void move_to_collision_kernel( const Geometry* geometry,
 	// move the particle to the collision site
 	geometry->move_to_point( particles->step(pidx), 
 				 particles->geo_state(pidx) );
+
+        // Reset distance to next collision
+        particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
     }
 }				  
 
@@ -170,7 +169,7 @@ __global__ void set_next_step_kernel( const std::size_t start_idx,
 	// Get the particle index.
 	std::size_t pidx = start_idx + idx;
 
-        // Set survivors to take another step
+        // Set survivors to take another step.
         if ( particles->alive(pidx) )
         {
             particles->set_event( pidx, events::TAKE_STEP );
@@ -294,17 +293,17 @@ void Domain_Transporter<Geometry>::transport_step(
     // get CUDA launch parameters
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+        cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // move the particles a step
     take_step_kernel<<<num_blocks,threads_per_block>>>(
-	d_geometry.get_device_ptr(),
-	d_physics.get_device_ptr(),
-	start_idx,
-	num_particle,
-	particles.get_device_ptr() );
+        d_geometry.get_device_ptr(),
+        d_physics.get_device_ptr(),
+        start_idx,
+        num_particle,
+        particles.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//
@@ -354,6 +353,12 @@ void Domain_Transporter<Geometry>::process_boundary(
     // process the boundary
     process_boundary_kernel<<<num_blocks,threads_per_block>>>(
 	d_geometry.get_device_ptr(),
+	start_idx,
+	num_particle,
+	particles.get_device_ptr() );
+
+    // take any surviving particles and set them to take another step    
+    set_next_step_kernel<<<num_blocks,threads_per_block>>>(
 	start_idx,
 	num_particle,
 	particles.get_device_ptr() );

@@ -212,7 +212,6 @@ class Particle_Vector
     Event_t event( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
 	return d_event[i];
     }
 
@@ -221,7 +220,6 @@ class Particle_Vector
     void set_event( const std::size_t i, const Event_t event )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
 	d_event[i] = event; 
     }
 

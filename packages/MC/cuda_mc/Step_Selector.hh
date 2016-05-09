@@ -12,6 +12,7 @@
 #define cuda_mc_Step_Selector_hh
 
 #include "cuda_utils/CudaMacros.hh"
+#include "Definitions.hh"
 
 namespace cuda_profugus
 {
@@ -30,19 +31,19 @@ class Step_Selector
 
     // Current step and tag.
     double d_step;
-    int    d_tag;
+    events::Event    d_tag;
 
   public:
     //! Constructor.
     PROFUGUS_HOST_DEVICE_FUNCTION
     Step_Selector()
         : d_step(0.0)
-        , d_tag(0)
+        , d_tag(events::DEAD)
     { /* ... */ }
 
     //! Initialize the selection process with a tag and step.
     PROFUGUS_HOST_DEVICE_FUNCTION
-    void initialize(double step, int tag)
+    void initialize(double step, events::Event tag)
     {
         d_step = step;
         d_tag  = tag;
@@ -50,7 +51,7 @@ class Step_Selector
 
     //! Submit a new step length and compare to the current step.
     PROFUGUS_HOST_DEVICE_FUNCTION
-    void submit(double step, int tag)
+    void submit(double step, events::Event tag)
     {
         if (step < d_step)
         {
@@ -67,7 +68,7 @@ class Step_Selector
 
     //! Return the tag associated with the current step.
     PROFUGUS_HOST_DEVICE_FUNCTION
-    int tag() const { return d_tag; }
+    events::Event tag() const { return d_tag; }
 };
 
 } // end namespace cuda_profugus

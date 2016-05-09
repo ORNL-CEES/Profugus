@@ -35,6 +35,7 @@ __global__ void geometry_initialize_kernel(
 	vector->set_matid( i, matid );
 	vector->set_event( i, cuda_profugus::events::COLLISION );
 	vector->set_wt( i, 0.9 );
+        vector->set_dist_mfp( i, 1.0 );
     }
 }
 
