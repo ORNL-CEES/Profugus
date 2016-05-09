@@ -121,8 +121,6 @@ TEST_F(VR_RouletteTest, default_settings)
     for ( auto i : wt ) EXPECT_EQ( 0.5, i );
     event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_SURVIVE, i );
-
-    EXPECT_EQ(0, bank.size());
 }
 
 //---------------------------------------------------------------------------//
@@ -167,9 +165,6 @@ TEST_F(VR_RouletteTest, zero_cutoff)
 
     tester.live();
     tester.set_event(events);
-
-    // should be no particles in the bank
-    EXPECT_EQ(0, bank.size());
 }
 
 //---------------------------------------------------------------------------//

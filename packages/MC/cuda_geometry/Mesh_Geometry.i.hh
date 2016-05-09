@@ -25,10 +25,10 @@ namespace cuda_profugus
  * This finds the closest ijk coords on each axis to the location. A particle
  * can be born "outside" and have ijk extents that are outside [0,N) .
  */
-__device__ void Mesh_Geometry::initialize(
-        const Space_Vector& r,
-        const Space_Vector& direction,
-        Geo_State_t       & state) const
+PROFUGUS_DEVICE_FUNCTION 
+void Mesh_Geometry::initialize( const Space_Vector& r,
+                                const Space_Vector& direction,
+                                Geo_State_t       & state) const
 {
     using cuda::utility::soft_equiv;
     using cuda::utility::vector_normalize;
@@ -52,7 +52,7 @@ __device__ void Mesh_Geometry::initialize(
 /*!
  * \brief Calculate distance to the next cell
  */
-__device__
+PROFUGUS_DEVICE_FUNCTION
 double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
 {
     using def::I; using def::J; using def::K;

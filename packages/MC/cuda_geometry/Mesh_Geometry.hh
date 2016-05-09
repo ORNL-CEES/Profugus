@@ -92,9 +92,9 @@ class Mesh_Geometry
     // >>> DEVICE API
 
     //! Initialize track.
-    __device__ inline void initialize(const Space_Vector& r,
-                                      const Space_Vector& direction,
-                                            Geo_State_t&  state) const;
+    PROFUGUS_DEVICE_FUNCTION void initialize(const Space_Vector& r,
+                                             const Space_Vector& direction,
+                                             Geo_State_t&  state) const;
 
     //! Get distance to next boundary
     PROFUGUS_DEVICE_FUNCTION
