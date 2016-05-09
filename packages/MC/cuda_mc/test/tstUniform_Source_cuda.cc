@@ -94,7 +94,7 @@ TEST(Uniform_Source, construction)
     	EXPECT_EQ( wts[i], 1.0 );
     	EXPECT_TRUE( alive[i] );
     	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
-    	EXPECT_EQ( events[i], cuda_profugus::events::BORN );
+    	EXPECT_EQ( events[i], cuda_profugus::events::TAKE_STEP );
     	EXPECT_EQ( batches[i], 0 );
     }
 
@@ -122,7 +122,7 @@ TEST(Uniform_Source, construction)
     	EXPECT_EQ( wts[i], 1.0 );
     	EXPECT_TRUE( alive[i] );
     	EXPECT_TRUE( (groups[i] >= 0) && (groups[i] < num_group) );
-    	EXPECT_EQ( events[i], cuda_profugus::events::BORN );
+    	EXPECT_EQ( events[i], cuda_profugus::events::TAKE_STEP );
     	EXPECT_EQ( batches[i], 1 );
     }
 

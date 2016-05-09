@@ -44,6 +44,7 @@ void pop_kernel( const Particle<Geometry>* bank,
 	particles->set_event( pidx, bank[idx].event() );
 	particles->geo_state( pidx ) =  bank[idx].geo_state();
 	particles->set_batch( pidx, bank[idx].batch() );
+        particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
 	particles->live( pidx );
     }    
 }
@@ -81,7 +82,7 @@ void Bank<Geometry>::pop(
 	host_bank[i].set_matid( d_particles.back()->matid() );
 	host_bank[i].set_batch( d_particles.back()->batch() );
 	host_bank[i].geo_state() = d_particles.back()->geo_state();
-	host_bank[i].set_event( events::BORN );
+	host_bank[i].set_event( events::TAKE_STEP );
 
 	// Pop the back of the stack either by decrementing the count or
 	// actually popping if zero.

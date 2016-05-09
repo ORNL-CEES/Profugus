@@ -60,7 +60,7 @@ __global__ void take_step_kernel( const Geometry* geometry,
         events::Event event = (dist_bnd < dist_col) 
                               ? events::BOUNDARY : events::COLLISION;
         double step = (dist_bnd < dist_col) ? dist_bnd : dist_col;
-        printf( "DIST %f %f\n", dist_bnd, dist_col );
+
 	// Set the next event in the particle.
 	particles->set_event( pidx, event );
 	particles->set_step( pidx, step );
@@ -109,7 +109,6 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
 		// the particle has hit a reflecting surface. the particle is
 		// still alive and the boundary does not change
 		geometry->reflect( particles->geo_state(pidx) );
-		particles->set_event( pidx, events::TAKE_STEP );
 		break;
 
 	    case profugus::geometry::INSIDE:
@@ -121,7 +120,6 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
 		// the next step.
 		particles->set_matid( 
 		    pidx, geometry->matid(particles->geo_state(pidx)) );
-		particles->set_event( pidx, events::TAKE_STEP );
                 break;
 
 	    default:

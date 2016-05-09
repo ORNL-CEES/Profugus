@@ -103,8 +103,11 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 	// set the weight
 	particles->set_wt( pidx, weight );
 
+        // sample the initial distance to collision
+        particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
+
 	// set the event.
-	particles->set_event( pidx, events::BORN );
+	particles->set_event( pidx, events::TAKE_STEP );
 
 	// make particle alive
 	particles->live( pidx );
@@ -170,8 +173,11 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 	// set the weight
 	particles->set_wt( pidx, weight );
 
+        // sample the initial distance to collision
+        particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
+
 	// set the event.
-	particles->set_event( pidx, events::BORN );
+	particles->set_event( pidx, events::TAKE_STEP );
 
 	// make particle alive
 	particles->live( pidx );
@@ -228,8 +234,11 @@ __global__ void sample_fission_sites_kernel(
 	// set the weight
 	particles->set_wt( pidx, weight );
 
+        // sample the initial distance to collision
+        particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
+
 	// set the event.
-	particles->set_event( pidx, events::BORN );
+	particles->set_event( pidx, events::TAKE_STEP );
 
 	// make particle alive
 	particles->live( pidx );

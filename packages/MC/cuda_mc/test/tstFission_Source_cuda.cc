@@ -206,7 +206,7 @@ TYPED_TEST(FissionSourceTest, sample_geometry)
     	this->physics_tester->particle_tester().wt();
     for ( int i = 0; i < this->vector_size; ++i )
     {
-    	EXPECT_EQ( cuda_profugus::events::BORN, events[i] );
+    	EXPECT_EQ( cuda_profugus::events::TAKE_STEP, events[i] );
     	EXPECT_EQ( 1, matids[i] );
 	EXPECT_TRUE( alive[i] );
     	EXPECT_EQ( 1.0, wts[i] );	
@@ -264,7 +264,7 @@ TYPED_TEST(FissionSourceTest, sample_mesh)
     	this->physics_tester->particle_tester().wt();
     for ( int i = 0; i < this->vector_size; ++i )
     {
-    	EXPECT_EQ( cuda_profugus::events::BORN, events[i] );
+    	EXPECT_EQ( cuda_profugus::events::TAKE_STEP, events[i] );
     	EXPECT_EQ( 1, matids[i] );
 	EXPECT_TRUE( alive[i] );
     	EXPECT_EQ( 1.0, wts[i] );	
@@ -331,7 +331,7 @@ TYPED_TEST(FissionSourceTest, sample_fission_sites)
     	this->physics_tester->particle_tester().wt();
     for ( int i = 0; i < this->vector_size; ++i )
     {
-    	EXPECT_EQ( cuda_profugus::events::BORN, events[i] );
+    	EXPECT_EQ( cuda_profugus::events::TAKE_STEP, events[i] );
     	EXPECT_EQ( 1, matids[i] );
 	EXPECT_TRUE( alive[i] );
     	EXPECT_EQ( 1.0/profugus::nodes(), wts[i] );	

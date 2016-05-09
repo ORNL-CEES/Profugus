@@ -82,11 +82,14 @@ void sample_source_kernel( const Geometry* geometry,
 	particles->set_wt( pidx, wt );
 
 	// set the event.
-	particles->set_event( pidx, events::BORN );
+	particles->set_event( pidx, events::TAKE_STEP );
 
 	// set the batch.
 	int batch = (num_run + idx) / batch_size;
 	particles->set_batch( pidx, batch );
+
+        // sample the initial distance to collision
+        particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
 
 	// make particle alive
 	particles->live( pidx );
