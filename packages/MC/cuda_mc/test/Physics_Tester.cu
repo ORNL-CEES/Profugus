@@ -35,7 +35,7 @@ __global__ void geometry_initialize_kernel(
 	vector->set_matid( i, matid );
 	vector->set_event( i, cuda_profugus::events::COLLISION );
 	vector->set_wt( i, 0.9 );
-        vector->set_dist_mfp( i, 1.0 );
+        vector->set_dist_mfp( i, 500.0 );
     }
 }
 
@@ -157,8 +157,8 @@ void Physics_Tester::geometry_initialize(
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
     geometry_initialize_kernel<<<num_blocks,threads_per_block>>>(
-	particles().get_device_ptr(), d_geometry.get_device_ptr(),
-	r, d, matid, d_size );
+        particles().get_device_ptr(), d_geometry.get_device_ptr(),
+        r, d, matid, d_size );
 }
 
 //---------------------------------------------------------------------------//

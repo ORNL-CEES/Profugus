@@ -77,6 +77,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_lid, d_size );
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
+    cuda::memory::Malloc( d_dist_mfp, d_size );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -123,6 +124,7 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_lid );
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
+    cuda::memory::Free( d_dist_mfp );
 }
 
 //---------------------------------------------------------------------------//

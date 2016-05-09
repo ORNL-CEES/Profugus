@@ -60,7 +60,7 @@ __global__ void take_step_kernel( const Geometry* geometry,
         events::Event event = (dist_bnd < dist_col) 
                               ? events::BOUNDARY : events::COLLISION;
         double step = (dist_bnd < dist_col) ? dist_bnd : dist_col;
-
+        printf( "DIST %f %f\n", dist_bnd, dist_col );
 	// Set the next event in the particle.
 	particles->set_event( pidx, event );
 	particles->set_step( pidx, step );
@@ -122,6 +122,7 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
 		particles->set_matid( 
 		    pidx, geometry->matid(particles->geo_state(pidx)) );
 		particles->set_event( pidx, events::TAKE_STEP );
+                break;
 
 	    default:
 		CHECK(0);
@@ -174,6 +175,12 @@ __global__ void set_next_step_kernel( const std::size_t start_idx,
         {
             particles->set_event( pidx, events::TAKE_STEP );
         }
+        // Otherwise they are dead.
+        else
+        {
+            particles->set_event( pidx, events::DEAD );
+        }
+        
     }
 }				  
 
