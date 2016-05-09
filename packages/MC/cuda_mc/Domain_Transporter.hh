@@ -16,6 +16,7 @@
 #include "Physics.hh"
 #include "Variance_Reduction.hh"
 #include "Tallier.hh"
+#include "Bank.hh"
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
@@ -48,7 +49,7 @@ class Domain_Transporter
     typedef typename Geometry_t::Space_Vector		Space_Vector;
     typedef typename Geometry_t::Geo_State_t		Geo_State_t;
     typedef typename Physics_t::Particle_Vector_t       Particle_Vector_t;
-    typedef typename Physics_t::Bank_t			Bank_t;
+    typedef Bank<Geometry>           			Bank_t;
     typedef typename Physics_t::Fission_Site_Container	Fission_Site_Container;
     typedef Variance_Reduction<Geometry_t>		Variance_Reduction_t;
     typedef Tallier<Geometry_t>				Tallier_t;
@@ -100,17 +101,22 @@ class Domain_Transporter
     void set(const SP_Fission_Sites& fission_sites, double keff);
 
     // Transport a particle one step through the domain to either a collision
-    // or a boundary and do the pathlength tallies.
-    void transport_step(SDP_Particle_Vector_t& particles, SDP_Bank_t& bank);
+    // or a boundary.
+    void transport_step(SDP_Particle_Vector& particles, SDP_Bank& bank);
 
-    // Process particles that have hit a boundary.
-    void process_boundary(SDP_Particle_Vector_t& particles, SDP_Bank_t& bank);
-
-    // Process particles that have hit a collision.
-    void process_collision(SDP_Particle_Vector_t& particles, SDP_Bank_t& bank);
+    // Post-process a transport step.
+    void process_step(SDP_Particle_Vector& particles, SDP_Bank& bank);
 
     //! Return the number of sampled fission sites.
     int num_sampled_fission_sites() const { return d_num_fission_sites; }
+
+  private:
+
+    // Process particles that have hit a boundary.
+    void process_boundary(SDP_Particle_Vector& particles, SDP_Bank& bank);
+
+    // Process particles that have hit a collision.
+    void process_collision(SDP_Particle_Vector& particles, SDP_Bank& bank);
 
   private:
     // >>> IMPLEMENTATION
@@ -123,10 +129,6 @@ class Domain_Transporter
 
     // Current keff iterate.
     double d_keff;
-
-    // Process collisions and boundaries.
-    void process_boundary(SDP_Particle_Vector_t &particle, Bank_t &bank);
-    void process_collision(SDP_Particle_Vector_t &particle, Bank_t &bank);
 };
 
 } // end namespace cuda_profugus

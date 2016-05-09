@@ -8,7 +8,7 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Domain_Transporter.t.hh"
+#include "Domain_Transporter.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
 namespace cuda_profugus

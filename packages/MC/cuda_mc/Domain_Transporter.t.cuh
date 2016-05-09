@@ -14,43 +14,177 @@
 #include <future>
 #include <cmath>
 
+#include "utils/Constants.hh"
 #include "cuda_utils/CudaDBC.hh"
-#include "harness/Diagnostics.hh"
 #include "geometry/Definitions.hh"
+#include "cuda_utils/Hardware.hh"
 #include "Definitions.hh"
 #include "Domain_Transporter.hh"
+#include "Step_Selector.hh"
 
 namespace cuda_profugus
 {
 //---------------------------------------------------------------------------//
 // GLOBAL CUDA KERNELS
 //---------------------------------------------------------------------------//
-// Transport a particle one step.
+// Prepare particles for transport by setting the intial mean free path
+// distance and the event to boundary.
 template<class Geometry>
-__global__ void transport_kernel( const Geometry* geometry,
-				  const Physics<Geometry>* physics,
-				  Particle_Vector<Geometry>* particles )
+__global__ void initialize_particles( Particle_Vector<Geometry>* particles )
 {
 
+}
+
+//---------------------------------------------------------------------------//
+// Transport a particle one step.
+template<class Geometry>
+__global__ void take_step_kernel( const Geometry* geometry,
+				  const Physics<Geometry>* physics,
+				  const std::size_t start_idx,
+				  const std::size_t num_particles,
+				  Particle_Vector<Geometry>* particles )
+{
+    // Get the thread index.
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particles )
+    {
+	// Get the particle index.
+	std::size_t pidx = start_idx + idx;
+
+	// Create a step selector.
+	Step_Selector selector;
+
+	// Get the total cross section.
+	double xs_tot = physics->total( physics::TOTAL,
+					particles->matid(pidx),
+					particles->group(pidx) );
+
+	// Sample the distance to the next collision.
+	double dist_col = (xs_tot > 0.0) 
+			  ? particles->dist_mfp( pidx ) / xs_tot
+			  : profugus::constants::huge;
+
+	// Initialize the distance to collision in the step selector.
+	selector.initialize(dist_col, events::COLLISION);
+
+	// Calculate distance to next geometry boundary
+	double dist_bnd = 
+            geometry->distance_to_boundary( particles->geo_state(pidx) );
+	selector.submit(dist_bnd, events::BOUNDARY);
+
+	// Set the next event in the particle.
+	particles->set_event( pidx, 
+			      static_cast<events::Event>(selector.tag()) );
+	particles->set_step( pidx, selector.step() );
+
+	// Update the mfp distance.
+	particles->set_dist_mfp( 
+	    pidx, particles->dist_mfp(pidx) - particles->step(pidx) * xs_tot );
+    }
 }				  
 
 //---------------------------------------------------------------------------//
 // Process a boundary.
 template<class Geometry>
 __global__ void process_boundary_kernel( const Geometry* geometry,
+					 const std::size_t start_idx,
+					 const std::size_t num_particles,
 					 Particle_Vector<Geometry>* particles )
 {
+    // Get the thread index.
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
 
+    if ( idx < num_particles )
+    {
+	// Get the particle index.
+	std::size_t pidx = start_idx + idx;
+
+	// move the particle to the surface.
+	geometry->move_to_surface( particles->geo_state(pidx) );
+
+	// get the in/out state of the particle
+	auto state = geometry->boundary_state( particles->geo_state(pidx) );
+
+	// process the boundary crossing
+	switch( state )
+	{
+	    case profugus::geometry::OUTSIDE:
+
+		// the particle has left the problem geometry. set the event
+		// to escape and kill
+		particles->set_event( pidx, events::ESCAPE );
+		particles->kill( pidx );
+		break;
+
+	    case profugus::geometry::REFLECT:
+
+		// the particle has hit a reflecting surface. the particle is
+		// still alive and the boundary does not change
+		geometry->reflect( particles->geo_state(pidx) );
+		particles->set_event( pidx, events::TAKE_STEP );
+		break;
+
+	    case profugus::geometry::INSIDE:
+
+		// otherwise the particle is at an internal geometry boundary;
+		// update the material id of the region the particle has
+		// entered and set the event to post-surface for variance
+		// reduction. For now we have no post-surface VR so just take
+		// the next step.
+		particles->set_matid( 
+		    pidx, geometry->matid(particles->geo_state(pidx)) );
+		particles->set_event( pidx, events::TAKE_STEP );
+
+	    default:
+		CHECK(0);
+	}
+    }
 }				  
 
 //---------------------------------------------------------------------------//
-// Process a collision.
+// Move particles to the collision site.
 template<class Geometry>
-__global__ void process_collision_kernel( const Geometry* geometry,
-					  const Physics<Geometry>* physics,
+__global__ void move_to_collision_kernel( const Geometry* geometry,
+					  const std::size_t start_idx,
+					  const std::size_t num_particles,
 					  Particle_Vector<Geometry>* particles )
 {
+    // Get the thread index.
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
 
+    if ( idx < num_particles )
+    {
+	// Get the particle index.
+	std::size_t pidx = start_idx + idx;
+
+	// move the particle to the collision site
+	geometry->move_to_point( particles->step(pidx), 
+				 particles->geo_state(pidx) );
+    }
+}				  
+
+//---------------------------------------------------------------------------//
+// Set surviving particles to take another step.
+template<class Geometry>
+__global__ void set_next_step_kernel( const std::size_t start_idx,
+                                      const std::size_t num_particles,
+                                      Particle_Vector<Geometry>* particles )
+{
+    // Get the thread index.
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particles )
+    {
+	// Get the particle index.
+	std::size_t pidx = start_idx + idx;
+
+        // Set survivors to take another step
+        if ( particles->alive(pidx) )
+        {
+            particles->set_event( pidx, events::TAKE_STEP );
+        }
+    }
 }				  
 
 //---------------------------------------------------------------------------//
@@ -63,8 +197,7 @@ template <class Geometry>
 Domain_Transporter<Geometry>::Domain_Transporter()
     : d_sample_fission_sites(false)
     , d_keff(0.0)
-{
-}
+{ /* ... */ }
 
 //---------------------------------------------------------------------------//
 // PUBLIC FUNCTIONS
@@ -99,7 +232,7 @@ void Domain_Transporter<Geometry>::set(const SDP_Geometry& geometry,
  * \param reduction
  */
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(SP_Variance_Reduction reduction)
+void Domain_Transporter<Geometry>::set(const SP_Variance_Reduction& reduction)
 {
     REQUIRE(reduction);
     d_var_reduction = reduction;
@@ -117,7 +250,7 @@ void Domain_Transporter<Geometry>::set(SP_Variance_Reduction reduction)
  * \param tallies
  */
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(SP_Tallier tallies)
+void Domain_Transporter<Geometry>::set(const SP_Tallier& tallies)
 {
     REQUIRE(tallies);
     d_tallier = tallies;
@@ -131,14 +264,14 @@ void Domain_Transporter<Geometry>::set(SP_Tallier tallies)
  * \param keff
  */
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(SP_Fission_Sites fission_sites,
-                                       double           keff)
+void Domain_Transporter<Geometry>::set(const SP_Fission_Sites& fission_sites,
+                                       double keff)
 {
     // assign the container
     d_fission_sites = fission_sites;
 
     // initialize the sampling flag
-    d_sample_fission_sites = (nullptr == d_fission_sites );
+    d_sample_fission_sites = (nullptr == d_fission_sites);
 
     // assign current iterate of keff
     d_keff = keff;
@@ -149,200 +282,149 @@ void Domain_Transporter<Geometry>::set(SP_Fission_Sites fission_sites,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Transport a particle through the domain.
- *
- * \param particle
- * \param bank
+ * \brief Transport a particle one step through the domain to either a
+ * collision or a boundary.
  */
 template <class Geometry>
-void Domain_Transporter<Geometry>::transport(SDP_Particle_Vector_t &particle,
-                                             SDP_Bank_t     &bank)
+void Domain_Transporter<Geometry>::transport_step(
+    SDP_Particle_Vector &particles,
+    SDP_Bank &bank)
 {
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
-    REQUIRE(d_var_reduction);
+
+    // get the particles that will take a step
+    std::size_t start_idx = 0;
+    std::size_t num_particle = 0;
+    particles.get_host_ptr()->get_event_particles( events::TAKE_STEP,
+						   start_idx,
+						   num_particle );
+    
+    // get CUDA launch parameters
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = num_particle / threads_per_block;
+    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+
+    // move the particles a step
+    take_step_kernel<<<num_blocks,threads_per_block>>>(
+	d_geometry.get_device_ptr(),
+	d_physics.get_device_ptr(),
+	start_idx,
+	num_particle,
+	particles.get_device_ptr() );
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Post-process a tranpsort step
+ */
+template <class Geometry>
+void Domain_Transporter<Geometry>::process_step(
+    SDP_Particle_Vector &particles,
+    SDP_Bank &bank)
+{
     REQUIRE(d_tallier);
 
-    // particle state
-    Geo_State_t &geo_state = particle.geo_state();
+    // Do pathlength tallies.
+    d_tallier->path_length( particles );
 
-    // Tracking distances.
-    double dist_bnd, dist_col;
+    // Process boundaries
+    process_boundary( particles, bank );
 
-    // Total cross section in region.
-    double xs_tot;
-
-    // Step selector.
-    Step_Selector step;
-
-    // step particle through domain while particle is alive; life is relative
-    // to the domain, so a particle leaving the domain would be no longer
-    // alive wrt the current domain even though the particle might be alive to
-    // another domain
-    while (particle.alive())
-    {
-        // calculate distance to collision in mean-free-paths
-        particle.set_dist_mfp( -std::log(particle.rng().ran()) );
-
-        // while we are hitting boundaries, continue to transport until we get
-        // to the collision site
-        particle.set_event(events::BOUNDARY);
-
-        // process particles through internal boundaries until it hits a
-        // collision site or leaves the domain
-        //
-        // >>>>>>> IMPORTANT <<<<<<<<
-        // it is absolutely essential to check the geometry distance first,
-        // before the distance to boundary mesh; this naturally takes care of
-        // coincident boundary mesh and problem geometry surfaces (you may end
-        // up with a small, negative distance to boundary mesh on the
-        // subsequent step, but who cares)
-        // >>>>>>>>>>>>-<<<<<<<<<<<<<
-        while (particle.event() == events::BOUNDARY)
-        {
-            CHECK(particle.alive());
-            CHECK(particle.dist_mfp() > 0.0);
-
-            // total interaction cross section
-            xs_tot = d_physics->total(physics::TOTAL, particle);
-            CHECK(xs_tot >= 0.0);
-
-            // sample distance to next collision
-            if (xs_tot > 0.0)
-                dist_col = particle.dist_mfp() / xs_tot;
-            else
-                dist_col = constants::huge;
-
-            // initialize the distance to collision in the step selector
-            step.initialize(dist_col, events::COLLISION);
-
-            // calculate distance to next geometry boundary
-            dist_bnd = d_geometry->distance_to_boundary(geo_state);
-            step.submit(dist_bnd, events::BOUNDARY);
-
-            // set the next event in the particle
-            CHECK(step.tag() < events::END_EVENT);
-            particle.set_event(static_cast<events::Event>(step.tag()));
-	    particle.set_step( step.step() );
-
-            // path-length tallies (the actual movement of the particle will
-            // take place when we process the various events)
-            d_tallier->path_length(particle.step(), particle);
-
-            // update the mfp distance travelled
-            particle.set_dist_mfp( particle.dist_mfp() - particle.step() * xs_tot );
-
-            // process a particle through the geometric boundary
-            if (particle.event() == events::BOUNDARY)
-                process_boundary(particle, bank);
-        }
-
-        // we are done moving to a problem boundary, now process the
-        // collision; the particle is actually moved from its current position
-        // in each of these calls
-
-        // process particle at a collision
-        if (particle.event() == events::COLLISION)
-            process_collision(particle, bank);
-
-        // any future events go here ...
-    }
+    // Process collisions
+    process_collision( particles, bank );
 }
 
 //---------------------------------------------------------------------------//
-// PRIVATE FUNCTIONS
-//---------------------------------------------------------------------------//
-
+/*
+ * \brief Process particles that have hit a boundary.
+ */
 template <class Geometry>
-void Domain_Transporter<Geometry>::process_boundary(SDP_Particle_Vector_t &particle,
-                                                    SDP_Bank_t     &bank)
+void Domain_Transporter<Geometry>::process_boundary(
+    SDP_Particle_Vector &particles,
+    SDP_Bank     &bank)
 {
-    REQUIRE(particle.alive());
-    REQUIRE(particle.event() == events::BOUNDARY);
+    // get the particles that have hit a boundary
+    std::size_t start_idx = 0;
+    std::size_t num_particle = 0;
+    particles.get_host_ptr()->get_event_particles( events::BOUNDARY,
+						   start_idx,
+						   num_particle );
+    
+    // get CUDA launch parameters
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = num_particle / threads_per_block;
+    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
-    // return if not a boundary event
-
-    // move a particle to the surface and process the event through the surface
-    d_geometry->move_to_surface(particle.geo_state());
-
-    // get the in/out state of the particle
-    int state = d_geometry->boundary_state(particle.geo_state());
-
-    // reflected flag
-    bool reflected = false;
-
-    // process the boundary crossing based on the geometric state of the
-    // particle
-    switch (state)
-    {
-        case geometry::OUTSIDE:
-            // the particle has left the problem geometry
-            particle.set_event(events::ESCAPE);
-            particle.kill();
-
-            // add a escape diagnostic
-            DIAGNOSTICS_TWO(integers["geo_escape"]++);
-
-            ENSURE(particle.event() == events::ESCAPE);
-            break;
-
-        case geometry::REFLECT:
-            // the particle has hit a reflecting surface
-            reflected = d_geometry->reflect(particle.geo_state());
-            CHECK(reflected);
-
-            // add a reflecting face diagnostic
-            DIAGNOSTICS_TWO(integers["geo_reflect"]++);
-
-            ENSURE(particle.event() == events::BOUNDARY);
-            break;
-
-        case geometry::INSIDE:
-            // otherwise the particle is at an internal geometry boundary;
-            // update the material id of the region the particle has entered
-            particle.set_matid(d_geometry->matid(particle.geo_state()));
-
-            // add variance reduction at surface crossings
-            d_var_reduction->post_surface(particle, bank);
-
-            // add a boundary crossing diagnostic
-            DIAGNOSTICS_TWO(integers["geo_surface"]++);
-
-            ENSURE(particle.event() == events::BOUNDARY);
-            break;
-
-        default:
-            CHECK(0);
-    }
+    // process the boundary
+    process_boundary_kernel<<<num_blocks,threads_per_block>>>(
+	d_geometry.get_device_ptr(),
+	start_idx,
+	num_particle,
+	particles.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//
-
+/*
+ * \brief Process particles that have had a collision.
+ */
 template <class Geometry>
-void Domain_Transporter<Geometry>::process_collision(SDP_Particle_Vector_t &particle,
-                                                     SDP_Bank_t     &bank)
+void Domain_Transporter<Geometry>::process_collision(
+    SDP_Particle_Vector &particles,
+    SDP_Bank     &bank)
 {
-    REQUIRE(d_var_reduction);
-    REQUIRE(particle.event() == events::COLLISION);
+    REQUIRE( d_physics );
+    REQUIRE( d_geometry );
+    REQUIRE( d_var_reduction );
 
-    // move the particle to the collision site
-    d_geometry->move_to_point(particle.step(), particle.geo_state());
+    // get the particles that will have a collision
+    std::size_t start_idx = 0;
+    std::size_t num_particle = 0;
+    particles.get_host_ptr()->get_event_particles( events::COLLISION,
+						   start_idx,
+						   num_particle );
+    
+    // get CUDA launch parameters
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = num_particle / threads_per_block;
+    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+
+    // Move particles to the collision site
+    move_to_collision_kernel<<<num_blocks,threads_per_block>>>(
+	d_geometry.get_device_ptr(),
+	start_idx,
+	num_particle,
+	particles.get_device_ptr() );
 
     // sample fission sites
     if (d_sample_fission_sites)
     {
         CHECK(d_fission_sites);
         CHECK(d_keff > 0.0);
-        d_num_fission_sites += d_physics->sample_fission_site(
-            particle, *d_fission_sites, d_keff);
+        d_num_fission_sites += d_physics.get_host_ptr()->sample_fission_site(
+            particles, *d_fission_sites, d_keff);
     }
 
-    // use the physics package to process the collision
-    d_physics->collide(particle, bank);
+    // process the collision
+    d_physics.get_host_ptr()->collide(particles);
 
     // apply weight windows
-    d_var_reduction->post_collision(particle, bank);
+    d_var_reduction->post_collision(particles, bank);
+
+    // take any surviving particles and set them to take another step    
+    set_next_step_kernel<<<num_blocks,threads_per_block>>>(
+	start_idx,
+	num_particle,
+	particles.get_device_ptr() );
 }
+
+//---------------------------------------------------------------------------//
 
 } // end namespace cuda_profugus
 

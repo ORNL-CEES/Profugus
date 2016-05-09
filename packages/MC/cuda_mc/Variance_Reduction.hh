@@ -63,12 +63,12 @@ class Variance_Reduction
     //! Apply variance reduction method after a surface crossing
     virtual void post_surface(
 	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	Bank_t& bank) const = 0;
+	cuda::Shared_Device_Ptr<Bank_t>& bank) const = 0;
 
     //! Apply variance reduction method after a collision
     virtual void post_collision(
 	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	Bank_t& bank) const = 0;
+	cuda::Shared_Device_Ptr<Bank_t>& bank) const = 0;
 
   protected:
     // Problem geometry implementation.

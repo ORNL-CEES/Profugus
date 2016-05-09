@@ -21,21 +21,23 @@ namespace events
 
 //! Monte Carlo event descriptors.
 enum Event {
-    COLLISION = 0,    //!< Collided
-    ABSORPTION,       //!< Was absorbed
-    SCATTER,          //!< Scattered
-    BOUNDARY,         //!< Hit internal boundary
-    CUTOFF,           //!< Cutoff by energy
-    ESCAPE,           //!< Left problem through external boundary
-    ERROR_KILLED,     //!< Encountered unexpected error
-    IMPLICIT_CAPTURE, //!< Weight decreased through implicit absorption
-    ROULETTE_KILLED,  //!< Killed by Russian roulette
-    ROULETTE_SURVIVE, //!< Survived Russian roulette
-    SPLIT,            //!< Split by weight window
-    WEIGHT_WINDOW,    //!< Passed through weight window successfully
-    BOUNDARY_MESH,    //!< Encountered domain decomposition boundary
-    BORN,             //!< Born
-    DEAD,             //!< The particle is dead and has no more events
+    COLLISION = 0,		//!< Collided
+    ABSORPTION,			//!< Was absorbed
+    SCATTER,			//!< Scattered
+    BOUNDARY,			//!< Hit internal boundary
+    CUTOFF,			//!< Cutoff by energy
+    ESCAPE,			//!< Left problem through external boundary
+    ERROR_KILLED,		//!< Encountered unexpected error
+    IMPLICIT_CAPTURE,		//!< Weight decreased through implicit absorption
+    VR_POST_SURFACE,		//!< Ready for post-surface variance reduction
+    ROULETTE_KILLED,		//!< Killed by Russian roulette
+    ROULETTE_SURVIVE,		//!< Survived Russian roulette
+    SPLIT,			//!< Split by weight window
+    WEIGHT_WINDOW,		//!< Passed through weight window successfully
+    BOUNDARY_MESH,		//!< Encountered domain decomposition boundary
+    TAKE_STEP,                  //!< Take a transport step
+    BORN,			//!< Born
+    DEAD,			//!< The particle is dead and has no more events
     END_EVENT
 };
 

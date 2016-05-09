@@ -87,13 +87,13 @@ class VR_Roulette : public Variance_Reduction<Geometry>
     //! Do nothing at surfaces
     void post_surface(
 	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	Bank_t& bank) const override 
+	cuda::Shared_Device_Ptr<Bank_t>& bank) const override 
     { /* * */ }
 
     // Do weight roulette at collisions
     void post_collision(
 	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	Bank_t& bank) const override;
+	cuda::Shared_Device_Ptr<Bank_t>& bank) const override;
 
     // >>> ACCESSORS
 

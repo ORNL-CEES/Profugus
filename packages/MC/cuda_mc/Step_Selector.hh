@@ -20,45 +20,6 @@ namespace cuda_profugus
 /*!
  * \class Step_Selector
  * \brief Chooses the minimum step size from multiple choices.
- *
- * This class tracks the minimum step size (along with an associated tag)
- * among many choices.  For example,
- * \code
-   Step_Selector step;
-
-   while (transport)
-   {
-       // get distance to next boundary
-       step.initialize(d_bnd, DIST_TO_BND);
-
-       // calculate dist to collision
-       step.submit(d_col, DIST_TO_COL);
-
-       // calculate dist to tally surface
-       step.submit(d_sur, DIST_TO_SUR);
-
-       // now, get the minimum step
-       d_step = step.step();
-
-       // process the results
-       if (step.tag() == DIST_TO_COL)
-           process_collision();
-       else if (step.tag() == DIST_TO_BND)
-           process_boundary();
-       else
-           tally_surface();
-
-       // ...
-   }
- * \endcode
- *
- * Down the road we may template on operation type so that we can take the
- * minimum or maximum step size.
- */
-/*!
- * \example cuda_mc/test/tstStep_Selector.cc
- *
- * Test of Step_Selector.
  */
 //===========================================================================//
 
@@ -73,11 +34,11 @@ class Step_Selector
 
   public:
     //! Constructor.
+    PROFUGUS_HOST_DEVICE_FUNCTION
     Step_Selector()
         : d_step(0.0)
         , d_tag(0)
-    {
-    }
+    { /* ... */ }
 
     //! Initialize the selection process with a tag and step.
     PROFUGUS_HOST_DEVICE_FUNCTION

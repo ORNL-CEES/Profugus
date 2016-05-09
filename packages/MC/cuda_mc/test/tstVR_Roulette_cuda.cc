@@ -42,7 +42,7 @@ class VR_RouletteTest : public testing::Test
   protected:
     Teuchos::ParameterList db;
     profugus::RNG_Control::RNG_t rng;
-    Bank_t bank;
+    cuda::Shared_Device_Ptr<Bank_t> bank;
 };
 
 //---------------------------------------------------------------------------//

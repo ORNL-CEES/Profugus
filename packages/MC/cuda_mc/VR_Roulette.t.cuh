@@ -99,7 +99,8 @@ VR_Roulette<Geometry>::VR_Roulette( ParameterList_t& db)
  */
 template <class Geometry>
 void VR_Roulette<Geometry>::post_collision(
-    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, Bank_t& bank) const
+    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
+    cuda::Shared_Device_Ptr<Bank_t>& bank) const
 {
     // Get the particles that have had a collision.
     std::size_t start_idx = 0;

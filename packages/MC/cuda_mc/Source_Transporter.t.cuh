@@ -172,7 +172,7 @@ void Source_Transporter<Geometry>::solve()
  * Fission sites are added to the container, it is \b not emptied.
  */
 template <class Geometry>
-void Source_Transporter<Geometry>::sample_fission_sites(\
+void Source_Transporter<Geometry>::sample_fission_sites(
     SP_Fission_Sites fis_sites,
     double           keff)
 {
