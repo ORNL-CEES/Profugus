@@ -87,7 +87,8 @@ class Domain_Transporter
   public:
 
     // Constructor.
-    Domain_Transporter(SDP_Geometry geometry,
+    Domain_Transporter(RCP_Std_DB   db,
+                       SDP_Geometry geometry,
                        SDP_Physics  physics,
                        SDP_VR       vr      = SDP_VR() );
 
@@ -121,6 +122,9 @@ class Domain_Transporter
 
     // Current keff iterate.
     double d_keff;
+
+    // Number of steps per transport solve
+    int d_max_steps;
 
     // Process collisions and boundaries.
     __device__ void process_boundary(Particle_t &particle) const;

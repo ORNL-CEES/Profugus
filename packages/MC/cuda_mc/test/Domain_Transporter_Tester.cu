@@ -74,7 +74,7 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
     // Build domain transporter
-    auto transp = cuda::shared_device_ptr<Transporter>(sdp_geom,sdp_phys);
+    auto transp = cuda::shared_device_ptr<Transporter>(pl,sdp_geom,sdp_phys);
 
     // Build box shape for source
     std::vector<double> src_bounds = {edges.front(), edges.back(),

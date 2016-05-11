@@ -40,11 +40,13 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
     Step_Selector step;
     double dist_mfp, dist_col, dist_bnd, xs_tot;
 
+    int num_steps = 0;
+
     // step particle through domain while particle is alive; life is relative
     // to the domain, so a particle leaving the domain would be no longer
     // alive wrt the current domain even though the particle might be alive to
     // another domain
-    while (particle.alive())
+    while (particle.alive() && num_steps < d_max_steps)
     {
         // calculate distance to collision in mean-free-paths
         dist_mfp = -log(particle.ran());
@@ -112,6 +114,7 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
             process_collision(particle,step.step());
 
         // any future events go here ...
+        num_steps++;
     }
 }
 

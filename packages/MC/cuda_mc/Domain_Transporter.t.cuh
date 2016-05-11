@@ -30,9 +30,10 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
-                                                 SDP_Physics  physics,
-                                                 SDP_VR       vr)
+Domain_Transporter<Geometry>::Domain_Transporter(RCP_Std_DB     db,
+                                                 SDP_Geometry   geometry,
+                                                 SDP_Physics    physics,
+                                                 SDP_VR         vr)
     : d_sample_fission_sites(false)
     , d_keff(0.0)
 {
@@ -42,6 +43,8 @@ Domain_Transporter<Geometry>::Domain_Transporter(SDP_Geometry geometry,
     REQUIRE(physics.get_device_ptr());
     d_geometry = geometry.get_device_ptr();
     d_physics  = physics.get_device_ptr();
+
+    d_max_steps = db->get("max_steps",std::numeric_limits<int>::max());
 
     // Initialize tallier to null
     d_tallier = nullptr;

@@ -14,7 +14,10 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
+#include <chrono>
 #include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include <thrust/count.h>
 
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Launch_Args.t.cuh"
@@ -62,7 +65,6 @@ class Transport_Functor
 
         // transport the particle through this (replicated) domain
         d_transporter->transport(p);
-        CHECK(!p.alive());
     }
 
   private:
@@ -71,6 +73,38 @@ class Transport_Functor
     const Transporter_t *d_transporter;
     Particle_t          *d_particles;
 };
+
+template <class Particle>
+struct AliveComp
+{
+    __device__ bool operator()(const Particle &lhs, const Particle &rhs) const
+    {
+        return lhs.alive() && !rhs.alive();
+    }
+};
+
+template <class Particle>
+struct MatidComp 
+{
+    __device__ bool operator()(const Particle &lhs, const Particle &rhs) const
+    {
+        return comp(lhs,rhs) || ((lhs.alive() && rhs.alive()) &&
+               (lhs.matid() < rhs.matid()));
+    }
+
+    AliveComp<Particle> comp;
+};
+
+template <class Particle>
+struct IsAlive
+{
+    __host__ __device__ bool operator()(const Particle &p) const
+    {
+        return p.alive();
+    }
+};
+
+
 
 //---------------------------------------------------------------------------//
 // CONSTRUCTOR
@@ -107,7 +141,7 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
 
     // Build domain transporter
     d_transporter = cuda::shared_device_ptr<Transporter_t>(
-        d_geometry, d_physics, d_vr );
+        db, d_geometry, d_physics, d_vr );
 }
 
 //---------------------------------------------------------------------------//
@@ -144,22 +178,47 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     SCOPED_TIMER("MC::Source_Transporter.solve");
 
     // Get source particles
-    Source_Provider<Geometry> provider;
     thrust::device_vector<Particle_t> particles;
-    provider.get_particles( source, d_rng_control, particles );
+    {
+        SCOPED_TIMER("MC::Source_Transporter.get_particles");
+        Source_Provider<Geometry> provider;
+        provider.get_particles( source, d_rng_control, particles );
+    }
 
     // Get number of particles in source
     int num_particles = particles.size();
 
-    // Build launch args
-    cuda::Launch_Args<cuda::arch::Device> launch_args;
-    launch_args.set_num_elements(num_particles);
+    std::cout << "Starting with " << num_particles << " particles" << std::endl;
+    while (num_particles>0)
+    {
+        {
+            SCOPED_TIMER("MC::Source_Transporter.transport");
 
-    // Build and execute kernel
-    Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
-                                   particles.data().get() );
-    cuda::parallel_launch( f, launch_args );
-    cudaDeviceSynchronize();
+            // Build launch args
+            cuda::Launch_Args<cuda::arch::Device> launch_args;
+            launch_args.set_num_elements(num_particles);
+
+            // Build and execute kernel
+            Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
+                                           particles.data().get() );
+            cuda::parallel_launch( f, launch_args );
+            cudaDeviceSynchronize();
+        }
+        {
+            SCOPED_TIMER("MC::Source_Transporter.particle_sort");
+
+            // Sort particles to put active particles up front
+            thrust::sort( particles.begin(), particles.begin() + num_particles,
+                          AliveComp<Particle_t>() );
+
+            // Count particles still alive
+            num_particles = thrust::count_if( particles.begin(),
+                    particles.begin() + num_particles, IsAlive<Particle_t>() );
+        }
+
+            std::cout << num_particles << " still alive" << std::endl;
+
+    }
 
     // barrier at the end
     profugus::global_barrier();
