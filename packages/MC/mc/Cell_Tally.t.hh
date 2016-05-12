@@ -57,6 +57,8 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
     // Iterate through the cells and insert them into the map
     for (const auto &cell : cells)
     {
+        VALIDATE(cell < d_geometry->num_cells(),
+                "Cell tally index exceeds number of cells in geometry.");
         tally.insert({cell, {0.0, 0.0}});
     }
 
@@ -166,6 +168,33 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
         ++ctr;
     }
     CHECK(ctr == d_tally.size());
+
+    // Determine permutation vector for sorted cells
+    std::vector<std::pair<int,int>> sort_vec;
+    for (int i = 0; i < cells.size(); ++i)
+        sort_vec.push_back({cells[i],i});
+
+    std::sort(sort_vec.begin(), sort_vec.end(),
+        [](const std::pair<int,int> &lhs, const std::pair<int,int> &rhs)
+        { return lhs.first < rhs.first; } );
+
+    std::vector<int> cell_map(cells.size());
+    for (int i = 0; i < sort_vec.size(); ++i)
+        cell_map[i] = sort_vec[i].second;
+
+    // Reorder vectors
+    {
+        std::vector<int>    tmp_cells  = cells;
+        std::vector<double> tmp_first  = first;
+        std::vector<double> tmp_second = second;
+        for (int i = 0; i < cell_map.size(); ++i)
+        {
+            int ind = cell_map[i];
+            cells[i]  = tmp_cells[ind];
+            first[i]  = tmp_first[ind];
+            second[i] = tmp_second[ind];
+        }
+    }
 
 #ifdef USE_HDF5
     REQUIRE( d_db->isType<std::string>("problem_name") );
