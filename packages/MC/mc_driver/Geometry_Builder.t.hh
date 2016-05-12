@@ -284,10 +284,10 @@ auto Geometry_Builder<profugus::Mesh_Geometry>::build(
     auto mesh_db    = Teuchos::sublist(master, "MESH");
 
     // Ensure all required parameters are present
-    REQUIRE( mesh_db->isParameter("x_edges") );
-    REQUIRE( mesh_db->isParameter("y_edges") );
-    REQUIRE( mesh_db->isParameter("z_edges") );
-    REQUIRE( mesh_db->isParameter("matids") );
+    VALIDATE( mesh_db->isParameter("x_edges"), "Must specify x_edges." );
+    VALIDATE( mesh_db->isParameter("y_edges"), "Must specify y_edges." );
+    VALIDATE( mesh_db->isParameter("z_edges"), "Must specify z_edges." );
+    VALIDATE( mesh_db->isParameter("matids"),  "Must specify matids." );
 
     auto x_edges = mesh_db->get<OneDArray_dbl>("x_edges");
     auto y_edges = mesh_db->get<OneDArray_dbl>("y_edges");
@@ -302,9 +302,9 @@ auto Geometry_Builder<profugus::Mesh_Geometry>::build(
     auto sp_matids = std::make_shared<def::Vec_Int>(
         matids.begin(),matids.end());
 
-    REQUIRE( sp_matids->size() == ( (x_edges.size()-1) *
-                                    (y_edges.size()-1) *
-                                    (z_edges.size()-1) ) );
+    VALIDATE(sp_matids->size() == geom->num_cells(),
+             "Number of matids " << sp_matids->size() <<
+             " does not match number of cells " << geom->num_cells());
     geom->set_matids(sp_matids);
 
     // set the boundary conditions
