@@ -96,6 +96,32 @@ struct MatidComp
 };
 
 template <class Particle>
+struct GroupComp 
+{
+    __device__ bool operator()(const Particle &lhs, const Particle &rhs) const
+    {
+        return comp(lhs,rhs) || ((lhs.alive() && rhs.alive()) &&
+               (lhs.group() < rhs.group()));
+    }
+
+    AliveComp<Particle> comp;
+};
+
+template <class Geometry>
+struct CellComp 
+{
+    typedef Particle<Geometry> Particle_t;
+    __device__ bool operator()(const Particle_t &lhs, const Particle_t &rhs) const
+    {
+        return comp(lhs,rhs) || ((lhs.alive() && rhs.alive()) &&
+               (geom->cell(lhs.geo_state()) < geom->cell(rhs.geo_state())));
+    }
+
+    AliveComp<Particle_t> comp;
+    const Geometry *geom;
+};
+
+template <class Particle>
 struct IsAlive
 {
     __host__ __device__ bool operator()(const Particle &p) const
@@ -120,6 +146,9 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     , d_physics(physics)
     , d_node(profugus::node())
     , d_nodes(profugus::nodes())
+    , d_sort_time(0.0)
+    , d_transport_time(0.0)
+    , d_source_time(0.0)
 {
     REQUIRE(!db.is_null());
     REQUIRE(d_geometry.get_host_ptr());
@@ -136,6 +165,19 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     }
 
     int seed = db->get("seed",1234);
+
+    std::string sort_type = profugus::to_lower(db->get<std::string>("sort_type",
+            std::string("alive")));
+    if (sort_type == "alive" )
+        d_sort_type = ALIVE;
+    else if (sort_type == "matid")
+        d_sort_type = MATID;
+    else if (sort_type == "group")
+        d_sort_type = GROUP;
+    else if (sort_type == "cell")
+        d_sort_type = CELL;
+    else
+        INSIST(false,"Invalid sort type.");
 
     d_rng_control = std::make_shared<RNG_Control>(seed);
 
@@ -177,13 +219,18 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
 
     SCOPED_TIMER("MC::Source_Transporter.solve");
 
+    std::chrono::high_resolution_clock::time_point start, end;
+    std::chrono::duration<double> diff;
+
     // Get source particles
+    start = std::chrono::high_resolution_clock::now();
+    Source_Provider<Geometry> provider;
     thrust::device_vector<Particle_t> particles;
-    {
-        SCOPED_TIMER("MC::Source_Transporter.get_particles");
-        Source_Provider<Geometry> provider;
-        provider.get_particles( source, d_rng_control, particles );
-    }
+    provider.get_particles( source, d_rng_control, particles );
+    cudaDeviceSynchronize();
+    end = std::chrono::high_resolution_clock::now();
+    diff = end - start;
+    d_source_time += diff.count();
 
     // Get number of particles in source
     int num_particles = particles.size();
@@ -191,32 +238,59 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     std::cout << "Starting with " << num_particles << " particles" << std::endl;
     while (num_particles>0)
     {
+        // Build launch args
+        cuda::Launch_Args<cuda::arch::Device> launch_args;
+        launch_args.set_num_elements(num_particles);
+
+        // Build and execute kernel
+        cudaDeviceSynchronize();
+        start = std::chrono::high_resolution_clock::now();
+        Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
+                                       particles.data().get() );
+        cuda::parallel_launch( f, launch_args );
+        cudaDeviceSynchronize();
+        end = std::chrono::high_resolution_clock::now();
+        diff = end - start;
+        d_transport_time += diff.count();
+
+        // Sort particles to put active particles up front
+        start = std::chrono::high_resolution_clock::now();
+
+        switch (d_sort_type)
         {
-            SCOPED_TIMER("MC::Source_Transporter.transport");
-
-            // Build launch args
-            cuda::Launch_Args<cuda::arch::Device> launch_args;
-            launch_args.set_num_elements(num_particles);
-
-            // Build and execute kernel
-            Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
-                                           particles.data().get() );
-            cuda::parallel_launch( f, launch_args );
-            cudaDeviceSynchronize();
+            case ALIVE:
+                thrust::sort( particles.begin(),
+                              particles.begin() + num_particles,
+                              AliveComp<Particle_t>() );
+                break;
+            case MATID:
+                thrust::sort( particles.begin(),
+                              particles.begin() + num_particles,
+                              MatidComp<Particle_t>() );
+                break;
+            case GROUP:
+                thrust::sort( particles.begin(),
+                              particles.begin() + num_particles,
+                              GroupComp<Particle_t>() );
+                break;
+            case CELL:
+                CellComp<Geometry> comp;
+                comp.geom = d_geometry.get_device_ptr();
+                thrust::sort(particles.begin(),
+                             particles.begin() + num_particles,
+                             comp);
+                break;
         }
-        {
-            SCOPED_TIMER("MC::Source_Transporter.particle_sort");
 
-            // Sort particles to put active particles up front
-            thrust::sort( particles.begin(), particles.begin() + num_particles,
-                          AliveComp<Particle_t>() );
+        // Count particles still alive
+        num_particles = thrust::count_if( particles.begin(),
+                particles.begin() + num_particles, IsAlive<Particle_t>() );
+        cudaDeviceSynchronize();
+        end = std::chrono::high_resolution_clock::now();
+        diff = end - start;
+        d_sort_time += diff.count();
 
-            // Count particles still alive
-            num_particles = thrust::count_if( particles.begin(),
-                    particles.begin() + num_particles, IsAlive<Particle_t>() );
-        }
-
-            std::cout << num_particles << " still alive" << std::endl;
+        std::cout << num_particles << " still alive" << std::endl;
 
     }
 
