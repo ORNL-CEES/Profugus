@@ -8,14 +8,12 @@
  */
 //---------------------------------------------------------------------------//
 
-#include "Source_Transporter.t.hh"
-#include "geometry/RTK_Geometry.hh"
-#include "geometry/Mesh_Geometry.hh"
+#include "Source_Transporter.t.cuh"
+#include "cuda_geometry/Mesh_Geometry.hh"
 
 namespace cuda_profugus
 {
 
-template class Source_Transporter<Core>;
 template class Source_Transporter<Mesh_Geometry>;
 
 } // end namespace cuda_profugus

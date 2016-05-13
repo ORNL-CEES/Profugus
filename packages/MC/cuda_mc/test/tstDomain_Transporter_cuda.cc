@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/test/tstDomain_Transporter.cc
+ * \file   cuda_mc/test/tstDomain_Transporter_cuda.cc
  * \author Stuart Slattery
  * \brief  Domain tranpsporter test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -235,7 +235,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     // Sort the particles.
     physics_tester.particles().get_host_ptr()->sort_by_event();
 
-    // Check that we have only dead particles are particles that will take
+    // Check that we have only dead particles and particles that will take
     // another step.
     events = physics_tester.particle_tester().event();
     Teuchos::Array<int> live = physics_tester.particle_tester().alive();
@@ -253,5 +253,5 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstPhysics.cc
+//                 end of tstDomain_Transporter_cuda.cc
 //---------------------------------------------------------------------------//

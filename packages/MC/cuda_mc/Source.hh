@@ -11,7 +11,7 @@
 #ifndef cuda_mc_Source_hh
 #define cuda_mc_Source_hh
 
-#include <cuda_utils/Shared_Device_Ptr.hh>
+#include "cuda_utils/Shared_Device_Ptr.hh"
 
 #include "Definitions.hh"
 #include "Particle_Vector.hh"

@@ -18,6 +18,7 @@
 #include "harness/Diagnostics.hh"
 #include "comm/global.hh"
 #include "comm/Timing.hh"
+#include "mc/Global_RNG.hh"
 #include "Source_Transporter.hh"
 
 namespace cuda_profugus
@@ -30,13 +31,13 @@ namespace cuda_profugus
  * \brief Constructor/
  */
 template <class Geometry>
-Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB  db,
-                                                 SP_Geometry geometry,
-                                                 SP_Physics  physics)
+Source_Transporter<Geometry>::Source_Transporter(const RCP_Std_DB& db,
+                                                 const SDP_Geometry& geometry,
+                                                 const SDP_Physics& physics)
     : d_geometry(geometry)
     , d_physics(physics)
-    , d_node(cuda_profugus::node())
-    , d_nodes(cuda_profugus::nodes())
+    , d_node(profugus::node())
+    , d_nodes(profugus::nodes())
 {
     REQUIRE(!db.is_null());
     REQUIRE(d_geometry);
@@ -47,6 +48,9 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB  db,
 
     // set the output frequency for particle transport diagnostics
     d_print_fraction = db->get("cuda_mc_diag_frac", 1.1);
+
+    // Get the particle vector size.
+    d_vector_size = db->get("particle_vector_size",10000);
 }
 
 //---------------------------------------------------------------------------//
@@ -56,7 +60,7 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB  db,
  * \brief Assign the source.
  */
 template <class Geometry>
-void Source_Transporter<Geometry>::assign_source(SP_Source source)
+void Source_Transporter<Geometry>::assign_source(const SP_Source& source)
 {
     using std::ceil;
 
@@ -81,65 +85,53 @@ void Source_Transporter<Geometry>::solve()
     REQUIRE(d_source);
 
     // barrier at the start
-    cuda_profugus::global_barrier();
+    profugus::global_barrier();
 
     SCOPED_TIMER("CUDA_MC::Source_Transporter.solve");
 
-    // particle counter
+    // event counter
     size_type counter = 0;
 
-    // get a base class reference to the source
-    Source_t &source = *d_source;
-
     // make a particle bank
-    typename Transporter_t::Bank_t bank;
-    CHECK(bank.empty());
+    cuda::Shared_Device_Ptr<typename Transporter_t::Bank_t> bank;
 
-    // run all the local histories while the source exists, there is no need
-    // to communicate particles because the problem is replicated
-    while (!source.empty())
+    // make a particle vector
+    auto particles = cuda::shared_device_ptr<Particle_Vector<Geometry> >(
+        d_vector_size, profugus::Global_RNG::d_rng );
+
+    // run all the local histories while the source exists and there are live
+    // particles in the vector. we know when all the particles are dead when
+    // the starting point for dead events is at the front of the vector. there
+    // is no need to communicate particles because the problem is replicated
+    size_type dead_start = 0;
+    size_type dead_end = 0;
+    while ( !d_source->empty() || (0 != dead_start) )
     {
-        // get a particle from the source
-        SP_Particle p = source.get_particle();
-        CHECK(p);
-        CHECK(p->alive());
+        // Run the events. Right now this works sequentially because there are
+        // only 3 events - sampling the source, stepping to a collision or
+        // boundary, and processing a collision or boundary. In the
+        // future, we will first have to find the vector slots each event
+        // kernel will operate on and then launch the kernels.
+        d_source->get_particles( particles );
+        d_transporter.transport_step( particles, bank );
+        d_transporter.process_step( particles, bank );
 
-        // Do "source event" tallies on the particle
-        d_tallier->source(*p);
+        // Sort the vector.
+        particles.get_host_ptr()->sort_by_event();
 
-        // transport the particle through this (replicated) domain
-        d_transporter.transport(*p, bank);
-        CHECK(!p->alive());
+        // Find where the dead particles start.
+        particles.get_host_ptr()->get_event_particles( 
+            events::DEAD, dead_start, dead_end );
 
-        // transport any secondary particles that are part of this history
-        // (from splitting or physics) that get put into the bank
-        while (!bank.empty())
-        {
-            // get a particle from the bank
-            SP_Particle bank_particle = bank.pop();
-            CHECK(bank_particle);
-            CHECK(bank_particle->alive());
-
-            // make particle alive
-            bank_particle->live();
-
-            // transport it
-            d_transporter.transport(*bank_particle, bank);
-            CHECK(!bank_particle->alive());
-        }
-
-        // update the counter
+        // update the event counter
         ++counter;
-
-        // indicate completion of particle history
-        d_tallier->end_history();
 
         // print message if needed
         if (counter % d_print_count == 0)
         {
             double percent_complete
-                = (100. * counter) / source.num_to_transport();
-            cout << ">>> Finished " << counter << "("
+                = (100. * counter) / (d_source->num_to_transport() + dead_start);
+            cout << ">>> Finished " << counter << " events and ("
                  << std::setw(6) << std::fixed << std::setprecision(2)
                  << percent_complete << "%) particles on domain "
                  << d_node << endl;
@@ -147,16 +139,7 @@ void Source_Transporter<Geometry>::solve()
     }
 
     // barrier at the end
-    cuda_profugus::global_barrier();
-
-    // increment the particle counter
-    DIAGNOSTICS_ONE(integers["particles_transported"] += counter);
-
-#ifdef REMEMBER_ON
-    cuda_profugus::global_sum(counter);
-    ENSURE(counter == source.total_num_to_transport());
-    ENSURE(bank.empty());
-#endif
+    profugus::global_barrier();
 }
 
 //---------------------------------------------------------------------------//
@@ -173,8 +156,8 @@ void Source_Transporter<Geometry>::solve()
  */
 template <class Geometry>
 void Source_Transporter<Geometry>::sample_fission_sites(
-    SP_Fission_Sites fis_sites,
-    double           keff)
+    const SP_Fission_Sites& fis_sites,
+    double keff)
 {
     // set the transporter with the fission site container and the latest keff
     // iterate
@@ -183,10 +166,26 @@ void Source_Transporter<Geometry>::sample_fission_sites(
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Set the variance reduction.
+ */
+template <class Geometry>
+void Source_Transporter<Geometry>::set(SP_Variance_Reduction vr)
+{
+    REQUIRE(vr);
+
+    // set the variance reduction in the domain transporter and locally
+    d_transporter.set(vr);
+    d_var_reduction = vr;
+
+    ENSURE(d_var_reduction);
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Set the tally controller
  */
 template <class Geometry>
-void Source_Transporter<Geometry>::set(SP_Tallier tallier)
+void Source_Transporter<Geometry>::set(const SP_Tallier& tallier)
 {
     REQUIRE(tallier);
 
@@ -196,6 +195,8 @@ void Source_Transporter<Geometry>::set(SP_Tallier tallier)
 
     ENSURE(d_tallier);
 }
+
+//---------------------------------------------------------------------------//
 
 } // end namespace cuda_profugus
 

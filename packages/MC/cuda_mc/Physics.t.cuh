@@ -211,6 +211,9 @@ __global__ void sample_fission_site_kernel(
 	// get the particle index
 	int pidx = idx + start_idx;
 
+	REQUIRE(geometry);
+	REQUIRE(particles->event(pidx) == events::COLLISION);
+
 	// material id
 	unsigned int matid = particles->matid(pidx);
 

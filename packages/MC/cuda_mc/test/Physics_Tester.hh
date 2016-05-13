@@ -18,6 +18,7 @@
 #include "xs/XS.hh"
 
 #include "../Physics.hh"
+#include "../Box_Shape.hh"
 
 #include "Particle_Vector_Tester.hh"
 
@@ -38,6 +39,7 @@ class Physics_Tester
     typedef cuda_profugus::Physics<Geometry> Physics;
     typedef Physics::Fission_Site Fission_Site;
     typedef typename Geometry::Space_Vector Space_Vector;
+    typedef cuda_profugus::Box_Shape Shape;
 
     // Constructor. Will build mesh geometry and particle vector.
     Physics_Tester( const std::vector<double>& x_edges,
@@ -99,11 +101,16 @@ class Physics_Tester
 				       int& group,
 				       bool& sampled ) const;
 
+    // Get the source shape.
+    cuda::Shared_Device_Ptr<Shape> source_shape() const 
+    { return d_shape; }
+
   private:
     
     cuda::Shared_Device_Ptr<Physics> d_physics;
     cuda::Shared_Device_Ptr<Geometry> d_geometry;
     cuda::Shared_Device_Ptr<Cartesian_Mesh> d_cart_mesh;
+    cuda::Shared_Device_Ptr<Shape> d_shape;
     Particle_Vector_Tester d_particle_tester;
     int d_size;    
 };

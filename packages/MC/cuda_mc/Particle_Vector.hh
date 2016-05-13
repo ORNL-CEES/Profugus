@@ -19,6 +19,8 @@
 
 #include "Definitions.hh"
 
+#include <Teuchos_Array.hpp>
+
 #include <curand_kernel.h>
 
 namespace cuda_profugus
@@ -83,6 +85,12 @@ class Particle_Vector
     // Distance to next collision in mean-free-paths.
     double* d_dist_mfp;
 
+    // Event start offsets. Host only. Updated at every sort.
+    Teuchos::Array<std::size_t> d_event_offsets;
+
+    // Number of particles with a given event.. Host only. Updated at every sort.
+    Teuchos::Array<std::size_t> d_event_sizes;
+
   public:
 
     // >>> HOST API
@@ -97,7 +105,8 @@ class Particle_Vector
     void sort_by_event();
 
     // Given an event, get the index at which it starts and the number of
-    // particles with that event.
+    // particles with that event. This is only updated every sort and does not
+    // reflect the intermediate state of the vector.
     void get_event_particles( const Event_t event, 
 			      std::size_t& start_index,
 			      std::size_t& num_particle ) const;

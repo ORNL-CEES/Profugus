@@ -144,6 +144,15 @@ Physics_Tester::Physics_Tester(
 
     // Set the geometry with the physics.
     d_physics.get_host_ptr()->set_geometry( d_geometry );
+
+    // Create the source shape.
+    d_shape = cuda::shared_device_ptr<Shape>( 
+	*std::min_element(x_edges.begin(),x_edges.end()),
+	*std::max_element(x_edges.begin(),x_edges.end()),
+	*std::min_element(y_edges.begin(),y_edges.end()),
+	*std::max_element(y_edges.begin(),y_edges.end()),
+	*std::min_element(z_edges.begin(),z_edges.end()),
+	*std::max_element(z_edges.begin(),z_edges.end()) );
 }
 
 //---------------------------------------------------------------------------//
@@ -159,6 +168,8 @@ void Physics_Tester::geometry_initialize(
     geometry_initialize_kernel<<<num_blocks,threads_per_block>>>(
         particles().get_device_ptr(), d_geometry.get_device_ptr(),
         r, d, matid, d_size );
+
+    particles().get_host_ptr()->sort_by_event();
 }
 
 //---------------------------------------------------------------------------//

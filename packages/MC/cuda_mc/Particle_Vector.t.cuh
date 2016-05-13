@@ -64,7 +64,9 @@ __global__ void init_event_kernel( const std::size_t size,
 template <class Geometry>
 Particle_Vector<Geometry>::Particle_Vector( const int num_particle, 
 					    const profugus::RNG& rng )
-: d_size( num_particle )
+    : d_size( num_particle )
+    , d_event_offsets( static_cast<int>(events::END_EVENT), -1 )
+    , d_event_sizes( static_cast<int>(events::END_EVENT), -1 )
 {
     // Allocate data arrays.
     cuda::memory::Malloc( d_matid, d_size );
@@ -106,7 +108,10 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
 
     // Initialize all particles to DEAD.
-    init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );    
+    init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );
+
+    // Do the first sort to initialize particle event state.
+    sort_by_event();
 }
     
 //---------------------------------------------------------------------------//
@@ -132,10 +137,22 @@ Particle_Vector<Geometry>::~Particle_Vector()
 template <class Geometry>
 void Particle_Vector<Geometry>::sort_by_event()
 {
+    // Sort the events.
     thrust::device_ptr<Event_t> event_begin( d_event );
     thrust::device_ptr<Event_t> event_end( d_event + d_size );
     thrust::device_ptr<std::size_t> lid_begin( d_lid );
     thrust::sort_by_key( event_begin, event_end, lid_begin );
+
+    // Bin them.
+    for ( int i = 0; i < static_cast<int>(events::END_EVENT); ++i )
+    {
+        auto event_range = thrust::equal_range( event_begin, 
+                                                event_end, 
+                                                static_cast<events::Event>(i) );
+        d_event_offsets[i] = thrust::distance( event_begin, event_range.first );
+        d_event_sizes[i] = thrust::distance( event_range.first, 
+                                             event_range.second );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -147,11 +164,9 @@ void Particle_Vector<Geometry>::get_event_particles(
     std::size_t& start_index, 
     std::size_t& num_particle ) const
 {
-    thrust::device_ptr<const Event_t> event_begin( d_event );
-    thrust::device_ptr<const Event_t> event_end( d_event + d_size );
-    auto event_range = thrust::equal_range( event_begin, event_end, event );
-    start_index = thrust::distance( event_begin, event_range.first );
-    num_particle = thrust::distance( event_range.first, event_range.second );
+    int lid = static_cast<int>(event);
+    start_index = d_event_offsets[ lid ];
+    num_particle = d_event_sizes[ lid ];
 }
 
 //---------------------------------------------------------------------------//

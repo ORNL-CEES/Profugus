@@ -13,10 +13,14 @@
 
 #include <memory>
 
+#include "cuda_utils/Shared_Device_Ptr.hh"
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "Source.hh"
 #include "Domain_Transporter.hh"
+
+#include <Teuchos_RCP.hpp>
+#include <Teuchos_ParameterList.hpp>
 
 namespace cuda_profugus
 {
@@ -51,13 +55,14 @@ class Source_Transporter
     typedef Source<Geometry>                              Source_t;
     typedef typename Transporter_t::Physics_t             Physics_t;
     typedef typename Transporter_t::Geometry_t            Geometry_t;
-    typedef typename Transporter_t::SP_Physics            SP_Physics;
-    typedef typename Transporter_t::SP_Geometry           SP_Geometry;
-    typedef typename Transporter_t::SP_Particle           SP_Particle;
+    typedef typename Transporter_t::SDP_Physics           SDP_Physics;
+    typedef typename Transporter_t::SDP_Geometry          SDP_Geometry;
+    typedef typename Transporter_t::SDP_Particle_Vector   SDP_Particle_Vector;
     typedef typename Transporter_t::SP_Fission_Sites      SP_Fission_Sites;
     typedef typename Transporter_t::SP_Tallier            SP_Tallier;
+    typedef typename Transporter_t::SP_Variance_Reduction SP_Variance_Reduction;
     typedef std::shared_ptr<Source_t>                     SP_Source;
-    typedef typename Physics_t::RCP_Std_DB                RCP_Std_DB;
+    typedef Teuchos::RCP<Teuchos::ParameterList>          RCP_Std_DB;
     typedef def::size_type                                size_type;
     //@}
 
@@ -65,13 +70,16 @@ class Source_Transporter
     // >>> DATA
 
     // Problem geometry implementation.
-    SP_Geometry d_geometry;
+    SDP_Geometry d_geometry;
 
     // Problem physics implementation.
-    SP_Physics d_physics;
+    SDP_Physics d_physics;
 
     // Fixed source.
     SP_Source d_source;
+
+    // Variance reduction.
+    SP_Variance_Reduction d_var_reduction;
 
     // Tally controller.
     SP_Tallier d_tallier;
@@ -81,19 +89,24 @@ class Source_Transporter
 
   public:
     // Constructor.
-    Source_Transporter(RCP_Std_DB db, SP_Geometry geometry, SP_Physics physics);
+    Source_Transporter(const RCP_Std_DB& db, 
+                       const SDP_Geometry& geometry, 
+                       const SDP_Physics& physics);
 
     // Assign the source.
-    void assign_source(SP_Source source);
+    void assign_source(const SP_Source& source);
 
     // Solve the fixed-source problem.
     void solve();
 
     // Set fission sampling.
-    void sample_fission_sites(SP_Fission_Sites fis_sites, double keff);
+    void sample_fission_sites(const SP_Fission_Sites& fis_sites, double keff);
+
+    // Set the variance reduction.
+    void set(SP_Variance_Reduction vr);
 
     // Set the tally controller
-    void set(SP_Tallier tallier);
+    void set(const SP_Tallier& tallier);
 
     // >>> ACCESSORS
 
@@ -115,6 +128,9 @@ class Source_Transporter
     // Print out frequency for particle histories.
     double d_print_fraction;
     size_type d_print_count;
+
+    // particle vector size.
+    size_type d_vector_size;
 };
 
 } // end namespace cuda_profugus

@@ -113,15 +113,8 @@ TEST(Particle_Vector, construction)
 			 : cuda_profugus::events::ABSORPTION;
     }
 
-    // Check event assignment
-    tester.set_event( host_events );
-    device_events = tester.event();
-    for ( int i = 0; i < num_particle; ++i )
-    {
-	EXPECT_EQ( host_events[i], device_events[i] );
-    }
-
     // Check event sorting.
+    tester.set_event( host_events );
     tester.sort_by_event();
     std::sort( host_events.begin(), host_events.end() );
     device_events = tester.event();

@@ -113,10 +113,10 @@ class Domain_Transporter
   private:
 
     // Process particles that have hit a boundary.
-    void process_boundary(SDP_Particle_Vector& particles, SDP_Bank& bank);
+    void process_boundary( SDP_Particle_Vector& particles, SDP_Bank& bank );
 
     // Process particles that have hit a collision.
-    void process_collision(SDP_Particle_Vector& particles, SDP_Bank& bank);
+    void process_collision( SDP_Particle_Vector& particles, SDP_Bank& bank );
 
   private:
     // >>> IMPLEMENTATION
