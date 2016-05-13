@@ -178,11 +178,14 @@ IF(USE_CUDA)
     cuda_mc/Domain_Transporter.pt.cu    
     cuda_mc/Fission_Rebalance.pt.cu
     cuda_mc/Fission_Source.pt.cu
+    cuda_mc/Fixed_Source_Solver.pt.cc
     cuda_mc/Group_Bounds.cu
+    cuda_mc/KCode_Solver.pt.cc    
     cuda_mc/Keff_Tally.pt.cu
     cuda_mc/Particle.pt.cu
     cuda_mc/Particle_Vector.pt.cu
     cuda_mc/Physics.pt.cu
+    cuda_mc/Solver.pt.cu
     cuda_mc/Source_Transporter.pt.cu    
     cuda_mc/Tallier.pt.cu
     cuda_mc/Uniform_Source.pt.cu
