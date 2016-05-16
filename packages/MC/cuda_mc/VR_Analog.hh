@@ -13,7 +13,7 @@
 
 #include "Variance_Reduction.hh"
 
-namespace profugus
+namespace cuda_profugus
 {
 
 //===========================================================================//
@@ -31,8 +31,8 @@ class VR_Analog : public Variance_Reduction<Geometry>
   public:
     //@{
     //! Base-class typedefs.
-    typedef typename Base::Particle_t Particle_t;
-    typedef typename Base::Bank_t     Bank_t;
+    typedef typename Base::Particle_Vector_t Particle_Vector_t;
+    typedef typename Base::Bank_t            Bank_t;
     //@}
 
   public:

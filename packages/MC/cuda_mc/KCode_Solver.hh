@@ -70,7 +70,6 @@ class KCode_Solver : public Keff_Solver<Geometry>
     typedef Keff_Tally<Geometry_t>                      Keff_Tally_t;
     typedef Pathlength_Tally<Geometry_t>                Pathlength_Tally_t;
     typedef Source_Tally<Geometry_t>                    Source_Tally_t;
-    typedef Compound_Tally<Geometry_t>                  Compound_Tally_t;
     typedef typename FS_t::SP_Fission_Sites             SP_Fission_Sites;
     typedef typename Base::SP_Fission_Source            SP_Fission_Source;
     typedef typename Base::SP_Tallier                   SP_Tallier;

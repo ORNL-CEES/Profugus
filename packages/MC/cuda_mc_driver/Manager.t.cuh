@@ -91,6 +91,9 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     d_rnd_control = std::make_shared<RNG_Control_t>(
         d_db->template get<int>("seed", 32442));
 
+    // get the number of batches.
+    int num_batch = d_db->template get<int>("num_batch", 1);
+
     SCREEN_MSG("Building " << prob_type << " solver");
 
     // get the tallier
@@ -107,8 +110,7 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     {
         // make the fission source
         SP_Fission_Source source(
-            std::make_shared<Fission_Source_t>(
-                d_db, d_geometry, d_physics, d_rnd_control));
+            std::make_shared<Fission_Source_t>(d_db, d_geometry, d_physics) );
 
         // >>> determine eigensolver
 
@@ -116,13 +118,10 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
         {
             // make the solver
             auto kcode_solver =
-                std::make_shared<profugus::KCode_Solver<Geom_t> >(d_db);
+                std::make_shared<cuda_profugus::KCode_Solver<Geom_t> >(d_db);
 
             // set the solver
             kcode_solver->set(transporter, source);
-
-            // set hybrid acceleration
-            kcode_solver->set(builder.get_acceleration());
 
             // assign the base solver
             d_keff_solver = kcode_solver;
@@ -134,9 +133,12 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     else if (prob_type == "fixed")
     {
         // make the uniform source
-        std::shared_ptr<profugus::Uniform_Source<Geometry> > source(
-            std::make_shared<profugus::Uniform_Source<Geometry> >(
-                d_db, d_geometry, d_physics, d_rnd_control));
+        std::shared_ptr<cuda_profugus::Uniform_Source<Geometry,cuda_profugus::Box_Shape> > source =
+            std::make_shared<cuda_profugus::Uniform_Source<Geometry,cuda_profugus::Box_Shape> >(
+                d_db, 
+                d_geometry, 
+                d_physics.get_host_ptr()->num_groups(), 
+                num_batch );
         source->build_source(shape);
 
         // make the solver
@@ -150,8 +152,8 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     }
     else
     {
-        throw profugus::assertion(
-            "Undefined problem type; choose eigenvalue or fixed");
+        INSIST( prob_type == "eigenvalue" || prob_type == "fixed",
+                "Undefined problem type; choose eigenvalue or fixed");
     }
 
     ENSURE(d_geometry);
@@ -185,7 +187,8 @@ void Manager<Geometry>::solve()
         }
         else
         {
-            throw profugus::assertion("No legitimate solver built");
+            INSIST( d_keff_solver || d_fixed_solver,
+                    "No legitimate solver built" );
         }
     }
 }
@@ -242,12 +245,6 @@ void Manager<Geometry>::output()
         writer.write(string("num_active_cycles"),
                      static_cast<int>(keff->cycle_count()));
         writer.write(string("cycle_estimates"), keff->all_keff());
-
-        // do diagnostics on acceleration if it exists
-        if (d_keff_solver->acceleration())
-        {
-            d_keff_solver->acceleration()->diagnostics(writer);
-        }
 
         writer.end_group();
 

@@ -19,6 +19,7 @@
 #include "harness/Diagnostics.hh"
 #include "comm/global.hh"
 #include "comm/Timing.hh"
+#include "cuda_utils/CudaDBC.hh"
 
 namespace cuda_profugus
 {
@@ -36,7 +37,7 @@ KCode_Solver<Geometry>::KCode_Solver(RCP_Std_DB db)
     , d_quiet(db->get("quiet", false))
 {
     // set quiet off on work nodes
-    if (cuda_profugus::node() != 0)
+    if (profugus::node() != 0)
         d_quiet = true;
 
     ENSURE(d_build_phase == CONSTRUCTED);
@@ -73,19 +74,16 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     // get a reference to the tallier
     b_tallier = d_transporter->tallier();
     INSIST(b_tallier, "The tallier has not been assigned.");
-    CHECK(b_tallier->geometry() && b_tallier->physics());
+    CHECK(d_transporter->geometry() && d_transporter->physics());
 
     // get initial k and build keff tally
     double init_keff = d_db->get("keff_init", 1.0);
-    VALIDATE(init_keff >= 0., "Initial keff guess (keff_init="
-            << init_keff << ") must be nonnegative.");
+    INSIST(init_keff >= 0., "Initial keff guess must be nonnegative.");
     b_keff_tally = std::make_shared<Keff_Tally_t>(init_keff,
-                                                b_tallier->physics());
+                                                  d_transporter->physics());
 
     // create our "disabled" (inactive cycle) tallier
     d_inactive_tallier = std::make_shared<Tallier_t>();
-    d_inactive_tallier->set(b_tallier->geometry(), b_tallier->physics());
-
     d_build_phase = ASSIGNED;
 
     ENSURE(b_tallier);
@@ -116,23 +114,16 @@ void KCode_Solver<Geometry>::solve()
     const int num_inactive = d_db->get("num_inactive_cycles", 10);
     const int num_active   = num_total - num_inactive;
 
-    VALIDATE(num_inactive > 0,
-            "The number of  inactive keff cycles (num_inactive_cycles="
-            << num_inactive << ") must be positive");
-    VALIDATE(num_total > num_inactive,
-            "The number of keff cycles (num_cycles=" << num_total << ") "
-            "must be greater than the number of inactive cycles ("
-            "num_inactive_cycles=" << num_inactive << ")");
+    INSIST(num_inactive > 0,
+           "The number of  inactive keff cycles must be positive");
+    INSIST(num_total > num_inactive,
+           "The number of keff cycles must be greater than the number of inactive cycles" );
 
     ENSURE(num_inactive + num_active == num_total);
     ENSURE(num_total > 0);
 
-    // Preallocate diagnostics
-    DIAGNOSTICS_ONE(vec_integers["np_fission"]      .reserve(num_total );)
-    DIAGNOSTICS_TWO(vec_doubles ["local_np_fission"].reserve(num_total );)
-
     // Timers (some required, some optional)
-    Timer cycle_timer;
+    profugus::Timer cycle_timer;
 
     // Set up initial source etc.
     this->initialize();
@@ -208,7 +199,7 @@ void KCode_Solver<Geometry>::solve()
     if (!d_quiet)
         cout << endl;
 
-    cuda_profugus::global_barrier();
+    profugus::global_barrier();
 
     // Finalize
     this->finalize();
@@ -286,27 +277,19 @@ void KCode_Solver<Geometry>::initialize()
             // create tallies (only 1 can be valid)
             auto pl_t  = std::dynamic_pointer_cast<Pathlength_Tally_t>(tally);
             auto src_t = std::dynamic_pointer_cast<Source_Tally_t>(tally);
-            auto cpd_t = std::dynamic_pointer_cast<Compound_Tally_t>(tally);
 
             // attempt to cast to valid tally types and add the tally
             if (pl_t)
             {
-                CHECK(!src_t && !cpd_t);
                 d_inactive_tallier->add_pathlength_tally(pl_t);
             }
             else if (src_t)
             {
-                CHECK(!pl_t && !cpd_t);
                 d_inactive_tallier->add_source_tally(src_t);
-            }
-            else if (cpd_t)
-            {
-                CHECK(!pl_t && !src_t);
-                d_inactive_tallier->add_compound_tally(cpd_t);
             }
             else
             {
-                throw cuda_profugus::assertion("Unknown tally type.");
+                INSIST( pl_t || src_t, "Unknown tally type.");
             }
         }
     }

@@ -145,19 +145,6 @@ SET(DRIVER_SOURCES
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
 
-# cuda driver sources
-
-FILE(GLOB CUDA_DRIVER_HEADERS cuda_mc_driver/*.hh)
-SET(CUDA_DRIVER_SOURCES
-  cuda_mc_driver/Manager.pt.cuh
-  cuda_mc_driver/Manager_Builder.cc
-  cuda_mc_driver/Problem_Builder.pt.cuh
-  cuda_mc_driver/Geometry_Builder.pt.cuh
-  cuda_mc_driver/mc.cc
-  )
-LIST(APPEND HEADERS ${CUDA_DRIVER_HEADERS})
-LIST(APPEND SOURCES ${CUDA_DRIVER_SOURCES})
-
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 ##---------------------------------------------------------------------------##
@@ -191,9 +178,9 @@ IF(USE_CUDA)
     cuda_mc/Domain_Transporter.pt.cu    
     cuda_mc/Fission_Rebalance.pt.cu
     cuda_mc/Fission_Source.pt.cu
-    cuda_mc/Fixed_Source_Solver.pt.cc
+    cuda_mc/Fixed_Source_Solver.pt.cu
     cuda_mc/Group_Bounds.cu
-    cuda_mc/KCode_Solver.pt.cc    
+    cuda_mc/KCode_Solver.pt.cu
     cuda_mc/Keff_Tally.pt.cu
     cuda_mc/Particle.pt.cu
     cuda_mc/Particle_Vector.pt.cu
@@ -207,6 +194,17 @@ IF(USE_CUDA)
   LIST(APPEND CUDA_HEADERS ${CUDA_MC_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_MC_SOURCES})
 
+  # cuda driver sources
+  FILE(GLOB CUDA_DRIVER_HEADERS cuda_mc_driver/*.hh)
+  SET(CUDA_DRIVER_SOURCES
+    cuda_mc_driver/Manager.pt.cu
+    cuda_mc_driver/Manager_Builder.cc
+    cuda_mc_driver/Problem_Builder.pt.cu
+    cuda_mc_driver/Geometry_Builder.pt.cu
+    )
+  LIST(APPEND CUDA_HEADERS ${CUDA_DRIVER_HEADERS})
+  LIST(APPEND CUDA_SOURCES ${CUDA_DRIVER_SOURCES})
+
 ENDIF()
 
 ##---------------------------------------------------------------------------##
@@ -217,13 +215,6 @@ TRIBITS_ADD_LIBRARY(
   NOINSTALLHEADERS ${HEADERS}
   SOURCES ${SOURCES})
 
-IF(USE_CUDA)
-  PACKAGE_ADD_CUDA_LIBRARY(
-    MC_cuda
-    NOINSTALLHEADERS ${CUDA_HEADERS}
-    SOURCES ${CUDA_SOURCES})
-ENDIF()
-
 TRIBITS_ADD_EXECUTABLE(
   xmc
   NOEXESUFFIX
@@ -232,13 +223,20 @@ TRIBITS_ADD_EXECUTABLE(
   INSTALLABLE
   )
 
-TRIBITS_ADD_EXECUTABLE(
-  cuda_xmc
-  NOEXESUFFIX
-  NOEXEPREFIX
-  SOURCES cudda_mc_driver/mc.cc
-  INSTALLABLE
-  )
+IF(USE_CUDA)
+  PACKAGE_ADD_CUDA_LIBRARY(
+    MC_cuda
+    NOINSTALLHEADERS ${CUDA_HEADERS}
+    SOURCES ${CUDA_SOURCES})
+
+  TRIBITS_ADD_EXECUTABLE(
+    cuda_xmc
+    NOEXESUFFIX
+    NOEXEPREFIX
+    SOURCES cuda_mc_driver/mc.cc
+    INSTALLABLE
+    )
+ENDIF()
 
 ##---------------------------------------------------------------------------##
 # Add tests to this package

@@ -46,12 +46,12 @@ class Problem_Builder
     typedef Geometry                                          Geom_t;
     typedef Teuchos::ParameterList                            ParameterList;
     typedef Teuchos::RCP<ParameterList>                       RCP_ParameterList;
-    typedef profugus::Physics<Geom_t>                         Physics_t;
-    typedef profugus::Tallier<Geom_t>                         Tallier_t;
+    typedef cuda_profugus::Physics<Geom_t>                    Physics_t;
+    typedef cuda_profugus::Tallier<Geom_t>                    Tallier_t;
     typedef cuda::Shared_Device_Ptr<Physics_t>                SDP_Physics;
     typedef cuda::Shared_Device_Ptr<Geom_t>                   SDP_Geometry;
-    typedef cuda::Shared_Devoce_Ptr<cuda_profugus::Box_Shape> SDP_Shape;
-    typedef profugus::Variance_Reduction<Geom_t>              VR_t;
+    typedef cuda::Shared_Device_Ptr<cuda_profugus::Box_Shape> SDP_Shape;
+    typedef cuda_profugus::Variance_Reduction<Geom_t>         VR_t;
     typedef std::shared_ptr<VR_t>                             SP_Var_Reduction;
     typedef std::shared_ptr<Tallier_t>                        SP_Tallier;
     typedef typename Tallier_t::SP_Tally                      SP_Tally;

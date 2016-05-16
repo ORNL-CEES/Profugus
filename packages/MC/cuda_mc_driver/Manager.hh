@@ -38,9 +38,10 @@ class Manager : public Manager_Base
 {
   private:
     // Typedefs.
+    typedef Manager_Base                               Base;
     typedef Geometry                                   Geom_t;
     typedef Problem_Builder<Geometry>                  Prob_Builder;
-    typedef typename Prob_Builder::RCP_ParameterList   RCP_ParameterList;
+    typedef typename Base::RCP_ParameterList           RCP_ParameterList;
     typedef typename Prob_Builder::SDP_Physics         SDP_Physics;
     typedef typename Prob_Builder::SDP_Geometry        SDP_Geometry;
     typedef cuda_profugus::Solver<Geom_t>              Solver_t;
@@ -82,13 +83,13 @@ class Manager : public Manager_Base
     Manager();
 
     // Setup the problem.
-    void setup(RCP_ParameterList master);
+    void setup(RCP_ParameterList master) override;
 
     // Solve the problem.
-    void solve();
+    void solve() override;
 
     // Output.
-    void output();
+    void output() override;
 
   private:
     // >>> IMPLEMENTATION

@@ -12,6 +12,7 @@
 #define cuda_mc_driver_Geometry_Builder_t_hh
 
 #include "Geometry_Builder.hh"
+#include "cuda_utils/CudaDBC.hh"
 
 namespace cuda_mc
 {
@@ -37,12 +38,12 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
         x_edges.toVector(),y_edges.toVector(),z_edges.toVector());
 
     // Convert matids to SP<Vec_Int> and pass to geometry
-    auto sp_matids = std::make_shared<def::Vec_Int>(
-        matids.begin(),matids.end());
+    typename cuda_profugus::Mesh_Geometry::Vec_Matids 
+        sp_matids(matids.begin(),matids.end());
 
-    REQUIRE( sp_matids->size() == ( (x_edges.size()-1) *
-                                    (y_edges.size()-1) *
-                                    (z_edges.size()-1) ) );
+    REQUIRE( sp_matids.size() == ( (x_edges.size()-1) *
+                                   (y_edges.size()-1) *
+                                   (z_edges.size()-1) ) );
     geom->set_matids(sp_matids);
 
     return SDP_Geometry(geom);

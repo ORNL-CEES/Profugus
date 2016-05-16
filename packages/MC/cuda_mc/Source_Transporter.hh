@@ -119,6 +119,12 @@ class Source_Transporter
     //! Get the source.
     const Source_t& source() const { REQUIRE(d_source); return *d_source; }
 
+    //! Get the geometry.
+    SDP_Geometry geometry() const { REQUIRE(d_geometry); return d_geometry; }
+
+    //! Get the physics.
+    SDP_Physics physics() const { REQUIRE(d_physics); return d_physics; }
+
   private:
     // >>> IMPLEMENTATION
 

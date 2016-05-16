@@ -124,7 +124,7 @@ void Problem_Builder<Geometry>::build_physics()
     typedef profugus::XS_Builder::RCP_XS    RCP_XS;
 
     REQUIRE(d_matdb->isParameter("mat list"));
-    VALIDATE(d_matdb->isParameter("xs library"),
+    INSIST(d_matdb->isParameter("xs library"),
               "Inline cross sections not implemented yet.");
 
     // get the material list off of the database
@@ -152,9 +152,8 @@ void Problem_Builder<Geometry>::build_physics()
     // get the number of groups required
     int g_first = d_db->get("g_first", 0);
     int g_last  = d_db->get("g_last", Ng_data - 1);
-    VALIDATE(1 + (g_last - g_first) <= Ng_data, "Energy group range exceeds "
-              << "number of groups in data, 1 + g_last - g_first = "
-              << 1 + (g_last - g_first) << " > " << Ng_data);
+    INSIST(1 + (g_last - g_first) <= Ng_data, 
+           "Energy group range exceeds number of groups in data" );
 
     // build the cross sections (always build P0 for Monte Carlo)
     builder.build(matids, 0, g_first, g_last);
@@ -163,7 +162,7 @@ void Problem_Builder<Geometry>::build_physics()
     CHECK(xs->num_groups() == 1 + (g_last - g_first));
 
     // make the physics
-    auto physics = std::make_shared<Physics_t>(d_db, *xs);
+    auto physics = std::make_shared<Physics_t>(*d_db, *xs);
 
     // set the geometry in the physics
     physics->set_geometry(d_geometry);
@@ -191,18 +190,18 @@ void Problem_Builder<Geometry>::build_var_reduction()
     if (to_lower(var) == "roulette")
     {
         d_var_reduction =
-            std::make_shared<profugus::VR_Roulette<Geom_t> >(d_db);
+            std::make_shared<cuda_profugus::VR_Roulette<Geom_t> >(*d_db);
     }
     else if (to_lower(var) == "analog")
     {
         d_var_reduction =
-            std::make_shared<profugus::VR_Analog<Geom_t> >();
+            std::make_shared<cuda_profugus::VR_Analog<Geom_t> >();
     }
     else
     {
-        std::ostringstream m;
-        m << "Variance reduction type " << var << "unknown.";
-        throw profugus::assertion(m.str());
+        INSIST( to_lower(var) == "roulette" ||
+                to_lower(var) == "analog",
+                "Variance reduction type unknown" );
     }
 
     ENSURE(d_var_reduction);
@@ -232,7 +231,7 @@ void Problem_Builder<Geometry>::build_source(const ParameterList &source_db)
 
     // get the source spectrum and add it to the main database
     const auto &shape = source_db.get<OneDArray_dbl>("spectrum");
-    CHECK(shape.size() == d_physics->num_groups());
+    CHECK(shape.size() == d_physics.get_host_ptr()->num_groups());
 
     // add the shape to the main database because the MC source gets the
     // spectral shape from the main db
@@ -250,7 +249,6 @@ void Problem_Builder<Geometry>::build_tallies()
 
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
-    d_tallier->set(d_geometry, d_physics);
 
     ENSURE(d_tallier);
 }

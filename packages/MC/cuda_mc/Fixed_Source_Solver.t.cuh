@@ -17,6 +17,7 @@
 #include "comm/global.hh"
 #include "comm/P_Stream.hh"
 #include "comm/Timing.hh"
+#include "cuda_utils/CudaDBC.hh"
 
 namespace cuda_profugus
 {
@@ -29,8 +30,8 @@ namespace cuda_profugus
  */
 template <class Geometry>
 Fixed_Source_Solver<Geometry>::Fixed_Source_Solver()
-    : d_node(cuda_profugus::node())
-    , d_nodes(cuda_profugus::nodes())
+    : d_node(profugus::node())
+    , d_nodes(profugus::nodes())
 {
 }
 
@@ -72,7 +73,7 @@ void Fixed_Source_Solver<Geometry>::set(SP_Source_Transporter transporter,
 template <class Geometry>
 void Fixed_Source_Solver<Geometry>::solve()
 {
-    using cuda_profugus::endl; using cuda_profugus::pcout;
+    using profugus::endl; using profugus::pcout;
 
     REQUIRE(d_source);
     REQUIRE(b_tallier);
@@ -94,21 +95,21 @@ void Fixed_Source_Solver<Geometry>::solve()
     d_transporter->assign_source(d_source);
 
     // start the timer
-    cuda_profugus::Timer fixed_source_timer;
+    profugus::Timer fixed_source_timer;
     fixed_source_timer.start();
 
     // solve the fixed source problem using the transporter
     d_transporter->solve();
 
     // stop the timer
-    cuda_profugus::global_barrier();
+    profugus::global_barrier();
     fixed_source_timer.stop();
 
     // output
-    pcout << ">>> Finished transporting " << cuda_profugus::setw(8)
+    pcout << ">>> Finished transporting " << profugus::setw(8)
           << d_source->total_num_to_transport()  << " particles in "
-          << cuda_profugus::fixed << cuda_profugus::setw(12)
-          << cuda_profugus::setprecision(6) << fixed_source_timer.TIMER_CLOCK()
+          << profugus::fixed << profugus::setw(12)
+          << profugus::setprecision(6) << fixed_source_timer.TIMER_CLOCK()
           << " seconds" << endl;
 
     // Finalize tallies using global number of particles

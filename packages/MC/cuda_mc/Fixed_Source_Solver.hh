@@ -69,7 +69,7 @@ class Fixed_Source_Solver : public Solver<Geometry>
     void solve();
 
     // Reset the problem.
-    void reset() { NOT_IMPLEMENTED("Resetting a fixed source calculation."); }
+    void reset() { /* ... */ }
 
   private:
     // >>> IMPLEMENTATION
