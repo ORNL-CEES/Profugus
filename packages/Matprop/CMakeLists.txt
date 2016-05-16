@@ -33,9 +33,6 @@ TRIBITS_ADD_DEBUG_OPTION()
 # to allow includes like #include "comm/Comm.h"
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-# to allow includes like #include "Utils/config.h"
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/..)
-
 IF(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
   PROFUGUS_ADD_CXX_FLAGS(
     -Wno-sign-compare
@@ -68,6 +65,7 @@ FILE(GLOB XS_HEADERS xs/*.hh)
 SET(XS_SOURCES
   xs/Energy_Collapse.cc
   xs/Mat_DB.cc
+  xs/Mix_Table.cc
   xs/XS.cc
   xs/XS_Builder.cc
   )

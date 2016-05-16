@@ -52,9 +52,6 @@ TRIBITS_ADD_DEBUG_OPTION()
 # to allow includes like #include "comm/Comm.h"
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-# to allow includes like #include "Utils/config.h"
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/..)
-
 IF(CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
   PROFUGUS_ADD_CXX_FLAGS(
     -Wno-sign-compare

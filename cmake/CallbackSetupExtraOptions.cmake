@@ -10,6 +10,12 @@ IF (Profugus_SOURCE_DIR)
   SET(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH} "${Profugus_SOURCE_DIR}/cmake")
 ENDIF()
 
+# to allow includes like #include "Utils/comm/Comm.h"
+INCLUDE_DIRECTORIES(${Profugus_SOURCE_DIR}/packages)
+
+# to allow includes like #include "Utils/config.h"
+INCLUDE_DIRECTORIES(${Profugus_BINARY_DIR}/packages)
+
 ##---------------------------------------------------------------------------##
 
 # Enable documentation for this project

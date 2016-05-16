@@ -62,9 +62,6 @@ TRIBITS_ADD_DEBUG_OPTION()
 # to allow includes like #include "comm/Comm.h"
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-# to allow includes like #include "Utils/config.h"
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/..)
-
 ##---------------------------------------------------------------------------##
 ## DBC
 
