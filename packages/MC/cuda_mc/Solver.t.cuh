@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Solver.t.hh
+ * \file   mc/Solver.t.cuh
  * \author Thomas M. Evans
  * \date   Tue May 13 14:56:00 2014
  * \brief  Solver member definitions.

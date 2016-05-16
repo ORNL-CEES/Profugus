@@ -21,11 +21,11 @@
 #include "Teuchos_Array.hpp"
 
 #include "cuda_mc/Physics.hh"
-#include "cuda_mc/Shape.hh"
+#include "cuda_mc/Box_Shape.hh"
 #include "cuda_mc/Variance_Reduction.hh"
 #include "cuda_mc/Tallier.hh"
 
-#include "cuda_cuda_mc/Shared_Device_Ptr.hh"
+#include "cuda_utils/Shared_Device_Ptr.hh"
 
 namespace cuda_mc
 {
@@ -43,18 +43,18 @@ class Problem_Builder
   public:
     //@{
     //! Typedefs.
-    typedef Geometry                                      Geom_t;
-    typedef Teuchos::ParameterList                        ParameterList;
-    typedef Teuchos::RCP<ParameterList>                   RCP_ParameterList;
-    typedef profugus::Physics<Geom_t>                     Physics_t;
-    typedef profugus::Tallier<Geom_t>                     Tallier_t;
-    typedef cuda::Shared_Device_Ptr<Physics_t>            SDP_Physics;
-    typedef cuda::Shared_Device_Ptr<Geom_t>               SDP_Geometry;
-    typedef std::shared_ptr<profugus::Shape>              SP_Shape;
-    typedef profugus::Variance_Reduction<Geom_t>          VR_t;
-    typedef std::shared_ptr<VR_t>                         SP_Var_Reduction;
-    typedef std::shared_ptr<Tallier_t>                    SP_Tallier;
-    typedef typename Tallier_t::SP_Tally                  SP_Tally;
+    typedef Geometry                                          Geom_t;
+    typedef Teuchos::ParameterList                            ParameterList;
+    typedef Teuchos::RCP<ParameterList>                       RCP_ParameterList;
+    typedef profugus::Physics<Geom_t>                         Physics_t;
+    typedef profugus::Tallier<Geom_t>                         Tallier_t;
+    typedef cuda::Shared_Device_Ptr<Physics_t>                SDP_Physics;
+    typedef cuda::Shared_Device_Ptr<Geom_t>                   SDP_Geometry;
+    typedef cuda::Shared_Devoce_Ptr<cuda_profugus::Box_Shape> SDP_Shape;
+    typedef profugus::Variance_Reduction<Geom_t>              VR_t;
+    typedef std::shared_ptr<VR_t>                             SP_Var_Reduction;
+    typedef std::shared_ptr<Tallier_t>                        SP_Tallier;
+    typedef typename Tallier_t::SP_Tally                      SP_Tally;
     //@}
 
   private:
@@ -71,7 +71,7 @@ class Problem_Builder
     SP_Var_Reduction d_var_reduction;
 
     // External source shape.
-    SP_Shape d_shape;
+    SDP_Shape d_shape;
 
     // Problem talliers.
     SP_Tallier d_tallier;
@@ -95,7 +95,7 @@ class Problem_Builder
     SDP_Physics get_physics() const { return d_physics; }
 
     //! Get the external source shape (could be null).
-    SP_Shape get_source_shape() const { return d_shape; }
+    SDP_Shape get_source_shape() const { return d_shape; }
 
     //! Get the variance reduction.
     SP_Var_Reduction get_var_reduction() const { return d_var_reduction; }

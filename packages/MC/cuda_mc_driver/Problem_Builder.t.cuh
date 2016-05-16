@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc_driver/Problem_Builder.t.hh
+ * \file   cuda_mc_driver/Problem_Builder.t.cuh
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder member definitions.
@@ -169,7 +169,7 @@ void Problem_Builder<Geometry>::build_physics()
     physics->set_geometry(d_geometry);
 
     // copy physics to the device.
-    d_physics = cuda::Shared_Device_Ptr<Physics_t>( physics );
+    d_physics = SDP_Physics( physics );
 }
 
 //---------------------------------------------------------------------------//
@@ -228,7 +228,7 @@ void Problem_Builder<Geometry>::build_source(const ParameterList &source_db)
     // make the box shape
     auto box_shape = std::make_shared<cuda_profugus::Box_Shape>(
         box[0], box[1], box[2], box[3], box[4], box[5]);
-    d_shape = cuda::Shared_Device_Ptr<cuda_profugus::Box_Shape>( box_shape );
+    d_shape = SDP_Shape( box_shape );
 
     // get the source spectrum and add it to the main database
     const auto &shape = source_db.get<OneDArray_dbl>("spectrum");
@@ -265,7 +265,7 @@ void Problem_Builder<Geometry>::build_spn_problem()
 
 } // end namespace cuda_mc
 
-#endif // cuda_mc_driver_Problem_Builder_t_hh
+#endif // cuda_mc_driver_Problem_Builder_t_cuh
 
 //---------------------------------------------------------------------------//
 //                 end of Problem_Builder.t.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc_driver/Geometry_Builder.t.hh
+ * \file   cuda_mc_driver/Geometry_Builder.t.cuh
  * \author Steven Hamilton
  * \date   Wed Nov 25 12:58:58 2015
  * \brief  Geometry_Builder template member definitions.
@@ -33,7 +33,7 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
     auto matids  = mesh_db->get<OneDArray_int>("matids");
 
     // Build Mesh
-    auto geom = std::make_shared<profugus::Mesh_Geometry>(
+    auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(
         x_edges.toVector(),y_edges.toVector(),z_edges.toVector());
 
     // Convert matids to SP<Vec_Int> and pass to geometry
@@ -45,7 +45,7 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
                                     (z_edges.size()-1) ) );
     geom->set_matids(sp_matids);
 
-    return cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry>(geom);
+    return SDP_Geometry(geom);
 }
 
 } // end namespace cuda_mc
@@ -53,5 +53,5 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
 #endif // cuda_mc_driver_Geometry_Builder_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Geometry_Builder.t.hh
+//                 end of Geometry_Builder.t.cuh
 //---------------------------------------------------------------------------//

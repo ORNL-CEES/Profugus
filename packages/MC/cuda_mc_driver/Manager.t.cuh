@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc_driver/Manager.t.hh
+ * \file   cuda_mc_driver/Manager.t.cuh
  * \author Thomas M. Evans
  * \date   Wed Jun 18 11:21:16 2014
  * \brief  Manager member definitions.
@@ -262,5 +262,5 @@ void Manager<Geometry>::output()
 #endif // cuda_mc_driver_Manager_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Manager.t.hh
+//                 end of Manager.t.cuh
 //---------------------------------------------------------------------------//

@@ -1,24 +1,23 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc_driver/Geometry_Builder.pt.cc
+ * \file   cuda_mc/Fixed_Source_Solver.pt.cuh
  * \author Steven Hamilton
- * \date   Wed Nov 25 12:58:58 2015
- * \brief  Geometry_Builder member definitions.
+ * \date   Thu Nov 05 11:14:30 2015
+ * \brief  Fixed_Source_Solver template instantiations
  * \note   Copyright (C) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "Geometry_Builder.t.hh"
-
+#include "Fixed_Source_Solver.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
-namespace cuda_mc
+namespace cuda_profugus
 {
 
-template class Geometry_Builder<cuda_profugus::Mesh_Geometry>;
+template class Fixed_Source_Solver<Mesh_Geometry>;
 
-} // end namespace cuda_mc
+} // end namespace cuda_profugus
 
 //---------------------------------------------------------------------------//
-//                 end of Geometry_Builder.pt.cc
+//                 end of Fixed_Source_Solver.pt.cc
 //---------------------------------------------------------------------------//

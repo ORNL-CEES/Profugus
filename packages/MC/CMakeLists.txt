@@ -149,10 +149,10 @@ LIST(APPEND SOURCES ${DRIVER_SOURCES})
 
 FILE(GLOB CUDA_DRIVER_HEADERS cuda_mc_driver/*.hh)
 SET(CUDA_DRIVER_SOURCES
-  cuda_mc_driver/Manager.pt.cc
+  cuda_mc_driver/Manager.pt.cuh
   cuda_mc_driver/Manager_Builder.cc
-  cuda_mc_driver/Problem_Builder.pt.cc
-  cuda_mc_driver/Geometry_Builder.pt.cc
+  cuda_mc_driver/Problem_Builder.pt.cuh
+  cuda_mc_driver/Geometry_Builder.pt.cuh
   cuda_mc_driver/mc.cc
   )
 LIST(APPEND HEADERS ${CUDA_DRIVER_HEADERS})

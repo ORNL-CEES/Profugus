@@ -18,7 +18,7 @@
 #include "comm/P_Stream.hh"
 #include "cuda_mc/Fixed_Source_Solver.hh"
 #include "cuda_mc/Keff_Solver.hh"
-#include "cuda_mc/Global_RNG.hh"
+#include "mc/Global_RNG.hh"
 #include "cuda_mc/Source_Transporter.hh"
 #include "Problem_Builder.hh"
 #include "Manager_Base.hh"
@@ -53,7 +53,7 @@ class Manager : public Manager_Base
     typedef typename Solver_t::SP_Tallier              SP_Tallier;
     typedef cuda_profugus::Source_Transporter<Geom_t>  Transporter_t;
     typedef std::shared_ptr<Transporter_t>             SP_Transporter;
-    typedef cuda_profugus::Global_RNG::RNG_Control_t   RNG_Control_t;
+    typedef profugus::Global_RNG::RNG_Control_t        RNG_Control_t;
     typedef std::shared_ptr<RNG_Control_t>             SP_RNG_Control;
     typedef cuda_profugus::Fission_Source<Geom_t>      Fission_Source_t;
     typedef std::shared_ptr<Fission_Source_t>          SP_Fission_Source;

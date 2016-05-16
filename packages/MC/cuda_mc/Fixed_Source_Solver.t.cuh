@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/Fixed_Source_Solver.t.hh
+ * \file   cuda_mc/Fixed_Source_Solver.t.cuh
  * \author Thomas M. Evans
  * \date   Tue May 13 14:40:06 2014
  * \brief  Fixed_Source_Solver member definitions.

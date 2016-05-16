@@ -1,23 +1,23 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc_driver/Manager.pt.cc
+ * \file   cuda_mc/KCode_Solver.pt.cu
  * \author Steven Hamilton
- * \date   Wed Nov 25 11:42:29 2015
- * \brief  Manager template instantiations
+ * \date   Thu Nov 05 11:14:30 2015
+ * \brief  KCode_Solver template instantiations
  * \note   Copyright (C) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "Manager.t.hh"
+#include "KCode_Solver.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 
-namespace cuda_mc
+namespace cuda_profugus
 {
 
-template class Manager<cuda_profugus::Mesh_Geometry>;
+template class KCode_Solver<Mesh_Geometry>;
 
-} // end namespace cuda_mc
+} // end namespace cuda_profugus
 
 //---------------------------------------------------------------------------//
-//                 end of Manager.pt.cc
+//                 end of KCode_Solver.pt.cc
 //---------------------------------------------------------------------------//

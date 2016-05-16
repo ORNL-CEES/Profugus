@@ -1,23 +1,24 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/KCode_Solver.pt.cc
+ * \file   cuda_mc_driver/Problem_Builder.pt.cu
  * \author Steven Hamilton
- * \date   Thu Nov 05 11:14:30 2015
- * \brief  KCode_Solver template instantiations
+ * \date   Wed Nov 25 11:50:17 2015
+ * \brief  Problem_Builder template instantiations.
  * \note   Copyright (C) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "KCode_Solver.t.hh"
+#include "Problem_Builder.t.cuh"
+
 #include "cuda_geometry/Mesh_Geometry.hh"
 
-namespace cuda_profugus
+namespace cuda_mc
 {
 
-template class KCode_Solver<Mesh_Geometry>;
+template class Problem_Builder<cuda_profugus::Mesh_Geometry>;
 
-} // end namespace cuda_profugus
+} // end namespace cuda_mc
 
 //---------------------------------------------------------------------------//
-//                 end of KCode_Solver.pt.cc
+//                 end of Problem_Builder.pt.cu
 //---------------------------------------------------------------------------//

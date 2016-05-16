@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_mc/KCode_Solver.t.hh
+ * \file   cuda_mc/KCode_Solver.t.cuh
  * \author Thomas M. Evans
  * \date   Mon May 19 10:30:32 2014
  * \brief  KCode_Solver member definitions.
