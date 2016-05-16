@@ -145,6 +145,19 @@ SET(DRIVER_SOURCES
 LIST(APPEND HEADERS ${DRIVER_HEADERS})
 LIST(APPEND SOURCES ${DRIVER_SOURCES})
 
+# cuda driver sources
+
+FILE(GLOB CUDA_DRIVER_HEADERS cuda_mc_driver/*.hh)
+SET(CUDA_DRIVER_SOURCES
+  cuda_mc_driver/Manager.pt.cc
+  cuda_mc_driver/Manager_Builder.cc
+  cuda_mc_driver/Problem_Builder.pt.cc
+  cuda_mc_driver/Geometry_Builder.pt.cc
+  cuda_mc_driver/mc.cc
+  )
+LIST(APPEND HEADERS ${CUDA_DRIVER_HEADERS})
+LIST(APPEND SOURCES ${CUDA_DRIVER_SOURCES})
+
 LIST(APPEND HEADERS ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 ##---------------------------------------------------------------------------##
@@ -216,6 +229,14 @@ TRIBITS_ADD_EXECUTABLE(
   NOEXESUFFIX
   NOEXEPREFIX
   SOURCES mc_driver/mc.cc
+  INSTALLABLE
+  )
+
+TRIBITS_ADD_EXECUTABLE(
+  cuda_xmc
+  NOEXESUFFIX
+  NOEXEPREFIX
+  SOURCES cudda_mc_driver/mc.cc
   INSTALLABLE
   )
 
