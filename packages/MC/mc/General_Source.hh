@@ -76,13 +76,13 @@ class General_Source : public Source<Geometry>
       }
 
       //! Number of particles to transport on this domain.
-      def::size_type num_to_transport() const
+      def::size_type num_to_transport() const override
       {
           return d_np_domain;
       }
 
       //! Total number of particles to transport on all domains.
-      def::size_type total_num_to_transport() const
+      def::size_type total_num_to_transport() const override
       {
           return d_np_total;
       }
