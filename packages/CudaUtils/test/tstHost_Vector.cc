@@ -122,7 +122,7 @@ TEST_F(HostVectorTest, mapped_memory)
         EXPECT_FLOAT_EQ(original[i], result[i]) << "Failure at index " << i;
     }
 #else
-    // No cuda, no mapped memory; Insist should be raised
+    // No cuda, no mapped memory; INSIST should be raised
     EXPECT_THROW({Host_Vector_t hv(original.size(), 0.f,
             cuda::alloc::MAPPED_WRITE_COMBINED);}, profugus::assertion);
 #endif

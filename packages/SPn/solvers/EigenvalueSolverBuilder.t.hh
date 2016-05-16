@@ -26,7 +26,7 @@ namespace profugus
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build a denovo EigenvalueSolver for standard eigenvalue problem.
+ * \brief Build a profugus EigenvalueSolver for standard eigenvalue problem.
  *
  * This function creates a EigenvalueSolver object from a given database
  * and a single Epetra operator.  The type of solver to be constructed is
@@ -68,7 +68,7 @@ EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build a denovo EigenvalueSolver for generalized eigenvalue problem.
+ * \brief Build a profugus EigenvalueSolver for generalized eigenvalue problem.
  *
  * This function creates a EigenvalueSolver object from a given database
  * and two Epetra operators.  The type of solver to be constructed is

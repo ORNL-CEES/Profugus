@@ -30,7 +30,7 @@ void toss_cuda_cookies(
     std::ostringstream out;
     out << "CUDA runtime failure: " << message
         << " {" << detail << "}";
-#if NEMESIS_DBC > 0
+#if PROFUGUS_DBC > 0
     out << "\n ^^^ at " << file << ":" << line << "\n";
 #else
     // Debug mode is off, so don't trouble the user with the particulars

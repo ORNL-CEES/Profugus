@@ -450,7 +450,7 @@ void Linear_System_FV<T>::build_fission_matrix()
  *
  * Only isotropic external sources are allowed in this solver.
  *
- * \sa denovo::Source_DB
+ * \sa profugus::Source_DB
  */
 template <class T>
 void Linear_System_FV<T>::build_RHS(const External_Source &q)

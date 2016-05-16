@@ -25,7 +25,7 @@ namespace profugus
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build a denovo LinearSolver.
+ * \brief Build a profugus LinearSolver.
  *
  * This function creates a LinearSolver object from a given database.  The
  * logic of selecting a particular solver is designed to maintain backwards

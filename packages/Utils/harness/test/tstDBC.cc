@@ -214,7 +214,7 @@ TEST(DBC, Ensure)
 
 //---------------------------------------------------------------------------//
 
-TEST(DBC, Insist)
+TEST(DBC, insist)
 {
     bool caught = false;
 
