@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstAtomic_Add.cc
+ * \file   CudaUtils/test/tstAtomic_Add.cc
  * \author Seth R Johnson
  * \date   Thu Aug 15 11:22:01 2013
  * \brief

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Current_Tally.hh
+ * \file   MC/mc/Current_Tally.hh
  * \author Steven Hamilton
  * \date   Thu Apr 28 20:19:42 2016
  * \brief  Current_Tally class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Current_Tally_hh
-#define mc_Current_Tally_hh
+#ifndef MC_mc_Current_Tally_hh
+#define MC_mc_Current_Tally_hh
 
 #include <memory>
 
@@ -123,7 +123,7 @@ class Current_Tally : public Surface_Tally<Geometry>
 
 } // end namespace profugus
 
-#endif // mc_Current_Tally_hh
+#endif // MC_mc_Current_Tally_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Current_Tally.hh

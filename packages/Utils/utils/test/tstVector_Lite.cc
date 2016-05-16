@@ -1,20 +1,23 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstVector_Lite.cc
+ * \file   Utils/utils/test/tstVector_Lite.cc
  * \author Thomas M. Evans
  * \date   Thu Jan  3 11:52:10 2008
  * \brief  Vector_Lite test.
- * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "gtest/utils_gtest.hh"
+#include "../Vector_Lite.hh"
+
 #include <vector>
 #include <cmath>
 #include <sstream>
 #include <algorithm>
+#include <functional>
 
-#include "../Vector_Lite.hh"
+#include "Utils/gtest/utils_gtest.hh"
+#include "Utils/utils/Hash_Functions.hh"
 
 using namespace std;
 using namespace profugus;
@@ -32,16 +35,6 @@ TEST(VectorLite, basic)
     cout << "constructor from scalar" << endl;
     Vector_Lite<double, m> x(0.0);
     EXPECT_EQ(m, std::count(x.begin(), x.end(), 0.0));
-
-    {
-        cout << "fill in from C array" << endl;
-        double v1[5];
-        for (size_t i=0; i<5; i++) {v1[i] = 1.*i;}
-        Vector_Lite<double, 5> v2; v2.fill(v1);
-        for (size_t i=0; i<5; i++) {
-            EXPECT_EQ(v2[i], v1[i]);
-        }
-    }
 
     cout << "assignment from another Vector_Lite" << endl;
     Vector_Lite<int, 3> ix(0, 1, 2);
@@ -110,14 +103,12 @@ TEST(VectorLite, basic)
         Vector_Lite<double, m> ans(c1*y0, c1*y1, c1*y2, c1*y3, c1*y4);
         z *= y;
         cout << " z = " << z << endl;
-        EXPECT_TRUE(profugus::soft_equiv(z.begin(), z.end(),
-                                       ans.begin(), ans.end()));
+        EXPECT_VEC_SOFT_EQ(ans, z);
 
         cout << "operator/=" << endl;
         z /= y;
         cout << " z = " << z << endl;
-        EXPECT_TRUE(profugus::soft_equiv(z.begin(), z.end(),
-                                       x.begin(), x.end()));
+        EXPECT_VEC_SOFT_EQ(x, z);
     }
 
     {
@@ -125,15 +116,11 @@ TEST(VectorLite, basic)
         Vector_Lite<double, m> z(x);
         Vector_Lite<double, m> ans(c1+y0, c1+y1, c1+y2, c1+y3, c1+y4);
         z += y;
-        cout << " z = " << z << endl;
-        EXPECT_TRUE(profugus::soft_equiv(z.begin(), z.end(),
-                                       ans.begin(), ans.end()));
+        EXPECT_VEC_SOFT_EQ(ans, z);
 
         cout << "operator-=" << endl;
         z -= y;
-        cout << " z = " << z << endl;
-        EXPECT_TRUE(profugus::soft_equiv(z.begin(), z.end(),
-                                       x.begin(), x.end()));
+        EXPECT_VEC_SOFT_EQ(x, z);
     }
 
     {
@@ -141,9 +128,7 @@ TEST(VectorLite, basic)
         Vector_Lite<double, m> z;
         Vector_Lite<double, m> ans(-c1);
         z = -x;
-        cout << " z = " << z << endl;
-        EXPECT_TRUE(profugus::soft_equiv(z.begin(), z.end(),
-                                      ans.begin(), ans.end()));
+        EXPECT_VEC_SOFT_EQ(ans, z);
     }
 
     {
@@ -156,42 +141,134 @@ TEST(VectorLite, basic)
     {
         cout << "Nested Vector_Lites ";
         Vector_Lite<Vector_Lite<double, m>, 3> xNest(x);
-        xNest(1) = y;
+        xNest[1] = y;
         cout << xNest << endl;
-        EXPECT_EQ(x, xNest(0));
-        EXPECT_EQ(y, xNest(1));
-        EXPECT_EQ(x, xNest(2));
+        EXPECT_EQ(x, xNest[0]);
+        EXPECT_EQ(y, xNest[1]);
+        EXPECT_EQ(x, xNest[2]);
     }
 
-    int i = -1;
-    cout << "Negative bounds check x(" << i << ")\n";
-    try {
-        x(i);
-    }
-    catch ( profugus::assertion &a ) {
-        EXPECT_TRUE(1);
-    }
-    catch (...) {
-        cout << "Unknown error thrown.\n";
-        EXPECT_TRUE(0);
-    }
-
-    Vector_Lite<double, m>::size_type iu(i);
-    cout << "Negative bounds check test, unsigned x(" << iu << ")\n";
-    try {
-        x(iu);
-    }
-    catch ( profugus::assertion &a ) {
-        EXPECT_TRUE(1);
-    }
-    catch (...) {
-        cout << "Unknown error thrown.\n";
-        EXPECT_TRUE(0);
-    }
-
-    i = x.size();
 #ifdef REQUIRE_ON
-    EXPECT_THROW(x(i), profugus::assertion);
+    EXPECT_THROW(x[x.size()], profugus::assertion);
+#endif
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(VectorLite, comparison)
+{
+    typedef Vector_Lite<int, 3> vec_t;
+
+    // lex comparison
+    EXPECT_TRUE( vec_t(1, 2, 3) < vec_t(2, 1, 1));
+    EXPECT_FALSE(vec_t(1, 2, 3) < vec_t(1, 2, 3));
+    EXPECT_FALSE(vec_t(1, 2, 3) < vec_t(0, 2, 3));
+
+    EXPECT_TRUE( vec_t(2, 1, 1) > vec_t(1, 2, 3));
+    EXPECT_FALSE(vec_t(1, 2, 3) > vec_t(1, 2, 3));
+    EXPECT_FALSE(vec_t(0, 2, 3) > vec_t(1, 2, 3));
+
+    EXPECT_FALSE(vec_t(1, 2, 3) <= vec_t(1, 1, 1));
+    EXPECT_TRUE( vec_t(1, 2, 3) <= vec_t(2, 1, 1));
+    EXPECT_TRUE( vec_t(1, 2, 3) <= vec_t(1, 2, 3));
+
+    EXPECT_FALSE(vec_t(1, 1, 1) >= vec_t(1, 2, 3));
+    EXPECT_TRUE( vec_t(2, 1, 1) >= vec_t(1, 2, 3));
+    EXPECT_TRUE( vec_t(1, 2, 3) >= vec_t(1, 2, 3));
+
+    // "all" comparison
+    EXPECT_TRUE( vec_t(1, 2, 3).all_lt(vec_t(2, 3, 4)));
+    EXPECT_FALSE(vec_t(1, 2, 3).all_lt(vec_t(1, 2, 3)));
+    EXPECT_FALSE(vec_t(1, 2, 3).all_lt(vec_t(0, 2, 3)));
+    EXPECT_FALSE(vec_t(1, 2, 3).all_lt(vec_t(2, 1, 1)));
+
+    EXPECT_TRUE( vec_t(2, 3, 4).all_gt(vec_t(1, 2, 3)));
+    EXPECT_FALSE(vec_t(1, 2, 3).all_gt(vec_t(1, 2, 3)));
+    EXPECT_FALSE(vec_t(0, 2, 3).all_gt(vec_t(1, 2, 3)));
+    EXPECT_FALSE(vec_t(2, 1, 1).all_gt(vec_t(1, 2, 3)));
+
+    EXPECT_TRUE( vec_t(1, 2, 3).all_le(vec_t(2, 3, 4)));
+    EXPECT_TRUE( vec_t(1, 2, 3).all_le(vec_t(1, 2, 3)));
+    EXPECT_FALSE(vec_t(1, 2, 3).all_le(vec_t(0, 2, 3)));
+    EXPECT_FALSE(vec_t(1, 2, 3).all_le(vec_t(2, 1, 1)));
+
+    EXPECT_TRUE( vec_t(2, 3, 4).all_ge(vec_t(1, 2, 3)));
+    EXPECT_TRUE( vec_t(1, 2, 3).all_ge(vec_t(1, 2, 3)));
+    EXPECT_FALSE(vec_t(0, 2, 3).all_ge(vec_t(1, 2, 3)));
+    EXPECT_FALSE(vec_t(2, 1, 1).all_ge(vec_t(1, 2, 3)));
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(VectorLite, reverse_iterators)
+{
+    typedef std::vector<int> Vec_Int;
+
+    Vector_Lite<int, 5> orig_data(1, 2, 3, 4, 5);
+    Vector_Lite<int, 5> reversed_data(5, 4, 3, 2, 1);
+
+    Vec_Int mutable_data(orig_data.rbegin(), orig_data.rend());
+    EXPECT_VEC_EQ(reversed_data, mutable_data);
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(VectorLite, initializer_lists)
+{
+    Vector_Lite<int, 1> a = {1};
+    Vector_Lite<int, 2> b = {1, 2};
+    Vector_Lite<int, 3> c = {1, 2, 3};
+    Vector_Lite<int, 4> d = {1, 2, 3, 4};
+    Vector_Lite<int, 5> e = {1, 2, 3, 4, 5};
+    Vector_Lite<int, 6> f = {1, 2, 3, 4, 5, 6};
+    Vector_Lite<int, 7> g = {1, 2, 3};
+
+    EXPECT_EQ(1, a[0]);
+
+    EXPECT_EQ(1, b[0]);
+    EXPECT_EQ(2, b[1]);
+
+    EXPECT_EQ(1, c[0]);
+    EXPECT_EQ(2, c[1]);
+    EXPECT_EQ(3, c[2]);
+
+    EXPECT_EQ(1, d[0]);
+    EXPECT_EQ(2, d[1]);
+    EXPECT_EQ(3, d[2]);
+    EXPECT_EQ(4, d[3]);
+
+    EXPECT_EQ(1, e[0]);
+    EXPECT_EQ(2, e[1]);
+    EXPECT_EQ(3, e[2]);
+    EXPECT_EQ(4, e[3]);
+    EXPECT_EQ(5, e[4]);
+
+    EXPECT_EQ(1, f[0]);
+    EXPECT_EQ(2, f[1]);
+    EXPECT_EQ(3, f[2]);
+    EXPECT_EQ(4, f[3]);
+    EXPECT_EQ(5, f[4]);
+    EXPECT_EQ(6, f[5]);
+
+    EXPECT_EQ(1, g[0]);
+    EXPECT_EQ(2, g[1]);
+    EXPECT_EQ(3, g[2]);
+    EXPECT_EQ(0, g[3]);
+    EXPECT_EQ(0, g[4]);
+    EXPECT_EQ(0, g[5]);
+    EXPECT_EQ(0, g[6]);
+
+#ifdef REQUIRE_ON
+    bool caught = false;
+    try
+    {
+        Vector_Lite<int, 2> h{1, 2, 3};
+    }
+    catch (const profugus::assertion &a)
+    {
+        caught = true;
+    }
+    EXPECT_TRUE(caught);
 #endif
 }
 

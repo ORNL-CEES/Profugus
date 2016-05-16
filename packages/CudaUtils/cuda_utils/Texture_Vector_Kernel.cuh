@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/Texture_Vector_Kernel.cuh
+ * \file   CudaUtils/cuda_utils/Texture_Vector_Kernel.cuh
  * \author Seth R Johnson
  * \date   Fri Sep 20 18:06:54 2013
  * \brief  Texture_Vector_Kernel kernel declarations.

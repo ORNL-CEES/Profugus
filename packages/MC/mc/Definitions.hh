@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Definitions.hh
+ * \file   MC/mc/Definitions.hh
  * \author Thomas M. Evans
  * \date   Friday April 25 16:46:37 2014
  * \brief  Monte Carlo Definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Definitions_hh
-#define mc_Definitions_hh
+#ifndef MC_mc_Definitions_hh
+#define MC_mc_Definitions_hh
 
 namespace profugus
 {
@@ -63,7 +63,7 @@ enum Reaction_Type {
 
 } // end namespace mc
 
-#endif // mc_Definitions_hh
+#endif // MC_mc_Definitions_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Definitions.hh

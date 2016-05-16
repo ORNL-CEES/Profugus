@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   ForwardMcKernel.cc
+ * \file   Alea/mc_solvers/ForwardMcKernel.i.hh
  * \author Steven Hamilton
  * \brief  Perform single history of adjoint MC
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_ForwardMcKernel_i_hh
-#define mc_solver_ForwardMcKernel_i_hh
+#ifndef Alea_mc_solvers_ForwardMcKernel_i_hh
+#define Alea_mc_solvers_ForwardMcKernel_i_hh
 
 #include <iterator>
 #include <random>
@@ -177,4 +177,4 @@ GO ForwardMcKernel::getNewState(const Teuchos::ArrayView<const SCALAR> cdf,
 
 } // namespace alea
 
-#endif // mc_solver_ForwardMcKernel_i_hh
+#endif // Alea_mc_solvers_ForwardMcKernel_i_hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/KCode_Solver.hh
+ * \file   MC/mc/KCode_Solver.hh
  * \author Thomas M. Evans
  * \date   Mon May 19 10:30:32 2014
  * \brief  KCode_Solver class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_KCode_Solver_hh
-#define mc_KCode_Solver_hh
+#ifndef MC_mc_KCode_Solver_hh
+#define MC_mc_KCode_Solver_hh
 
 #include "Keff_Solver.hh"
 
@@ -178,7 +178,7 @@ class KCode_Solver : public Keff_Solver<Geometry>
 
 } // end namespace profugus
 
-#endif // mc_KCode_Solver_hh
+#endif // MC_mc_KCode_Solver_hh
 
 //---------------------------------------------------------------------------//
 //                 end of KCode_Solver.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Tally.t.hh
+ * \file   MC/mc/Fission_Matrix_Tally.t.hh
  * \author Thomas M. Evans
  * \date   Tue Jul 22 15:09:01 2014
  * \brief  Fission_Matrix_Tally member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Matrix_Tally_t_hh
-#define mc_Fission_Matrix_Tally_t_hh
+#ifndef MC_mc_Fission_Matrix_Tally_t_hh
+#define MC_mc_Fission_Matrix_Tally_t_hh
 
 #include "Fission_Matrix_Tally.hh"
 
@@ -335,7 +335,7 @@ void Fission_Matrix_Tally<Geometry>::PL_Tally::accumulate(
 
 } // end namespace profugus
 
-#endif // mc_Fission_Matrix_Tally_t_hh
+#endif // MC_mc_Fission_Matrix_Tally_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fission_Matrix_Tally.t.hh

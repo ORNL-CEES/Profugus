@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/FV_Gather.hh
+ * \file   SPn/spn/FV_Gather.hh
  * \author Thomas M. Evans
  * \date   Tue Oct 30 11:04:52 2012
  * \brief  FV_Gather class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_FV_Gather_hh
-#define spn_FV_Gather_hh
+#ifndef SPn_spn_FV_Gather_hh
+#define SPn_spn_FV_Gather_hh
 
 #include "Teuchos_RCP.hpp"
 
@@ -125,7 +125,7 @@ class FV_Gather
 
 } // end namespace profugus
 
-#endif // spn_FV_Gather_hh
+#endif // SPn_spn_FV_Gather_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/FV_Gather.hh

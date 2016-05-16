@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Cartesian_Mesh.cc
+ * \file   MC/geometry/Cartesian_Mesh.cc
  * \author Thomas M. Evans
  * \date   Mon Jul 21 16:55:00 2014
  * \brief  Cartesian_Mesh member definitions.

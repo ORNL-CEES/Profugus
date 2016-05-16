@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Vector_Functions.hh
+ * \file   Utils/utils/Vector_Functions.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 14:18:9 2014
  * \brief  General vector functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Vector_Functions_hh
-#define utils_Vector_Functions_hh
+#ifndef Utils_utils_Vector_Functions_hh
+#define Utils_utils_Vector_Functions_hh
 
 #include "harness/DBC.hh"
 #include "harness/Soft_Equivalence.hh"
@@ -86,7 +86,7 @@ inline void vector_normalize(def::Space_Vector &vector)
 
 } // end namespace profugus
 
-#endif // utils_Vector_Functions_hh
+#endif // Utils_utils_Vector_Functions_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Vector_Functions.hh

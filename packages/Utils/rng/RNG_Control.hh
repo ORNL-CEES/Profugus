@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   rng/RNG_Control.hh
+ * \file   Utils/rng/RNG_Control.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 14:56:51 2014
  * \brief  RNG_Control class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef rng_RNG_Control_hh
-#define rng_RNG_Control_hh
+#ifndef Utils_rng_RNG_Control_hh
+#define Utils_rng_RNG_Control_hh
 
 #include "harness/DBC.hh"
 #include "RNG.hh"
@@ -115,7 +115,7 @@ class RNG_Control
 
 } // end namespace profugus
 
-#endif // rng_RNG_Control_hh
+#endif // Utils_rng_RNG_Control_hh
 
 //---------------------------------------------------------------------------//
 //                 end of RNG_Control.hh

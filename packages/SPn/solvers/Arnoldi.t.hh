@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Arnoldi.cc
+ * \file   SPn/solvers/Arnoldi.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:30 2014
  * \brief  Arnoldi template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_Arnoldi_t_hh
-#define solvers_Arnoldi_t_hh
+#ifndef SPn_solvers_Arnoldi_t_hh
+#define SPn_solvers_Arnoldi_t_hh
 
 #include <string>
 #include <algorithm>
@@ -131,7 +131,7 @@ void Arnoldi<T>::solve(double &eval,
 
 } // end namespace profugus
 
-#endif // solvers_Arnoldi_t_hh
+#endif // SPn_solvers_Arnoldi_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Arnoldi.t.hh

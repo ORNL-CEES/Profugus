@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tallier.hh
+ * \file   MC/mc/Tallier.hh
  * \author Thomas M. Evans and Seth Johnson
  * \date   Mon May 12 12:15:30 2014
  * \brief  Tallier class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Tallier_hh
-#define mc_Tallier_hh
+#ifndef MC_mc_Tallier_hh
+#define MC_mc_Tallier_hh
 
 #include <vector>
 #include <memory>
@@ -203,7 +203,7 @@ inline void swap(Tallier<Geometry> &a,
 
 } // end namespace profugus
 
-#endif // mc_Tallier_hh
+#endif // MC_mc_Tallier_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Tallier.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Manager.t.hh
+ * \file   MC/mc_driver/Manager.t.hh
  * \author Thomas M. Evans
  * \date   Wed Jun 18 11:21:16 2014
  * \brief  Manager member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_driver_Manager_t_hh
-#define mc_driver_Manager_t_hh
+#ifndef MC_mc_driver_Manager_t_hh
+#define MC_mc_driver_Manager_t_hh
 
 #include <fstream>
 #include <iomanip>
@@ -334,7 +334,7 @@ void Manager<Geometry>::output()
 
 } // end namespace mc
 
-#endif // mc_driver_Manager_t_hh
+#endif // MC_mc_driver_Manager_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Manager.t.hh

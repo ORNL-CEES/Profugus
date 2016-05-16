@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Definitions.hh
+ * \file   CudaUtils/cuda_utils/Definitions.hh
  * \author Seth R Johnson
  * \date   Wed Aug 14 11:52:04 2013
  * \brief  Common definitions for the CUDA utilities.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Definitions_hh
-#define cuda_utils_Definitions_hh
+#ifndef CudaUtils_cuda_utils_Definitions_hh
+#define CudaUtils_cuda_utils_Definitions_hh
 
 namespace cuda
 {
@@ -39,7 +39,7 @@ struct Device
 //===========================================================================//
 } // end namespace cuda
 
-#endif // cuda_utils_Definitions_hh
+#endif // CudaUtils_cuda_utils_Definitions_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Definitions.hh

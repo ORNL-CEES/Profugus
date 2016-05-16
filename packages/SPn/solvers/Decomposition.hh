@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Decomposition.hh
+ * \file   SPn/solvers/Decomposition.hh
  * \author Thomas M. Evans
  * \date   Tue Aug 28 08:28:00 2007
  * \brief  Decomposition class definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_Decomposition_hh
-#define solvers_Decomposition_hh
+#ifndef SPn_solvers_Decomposition_hh
+#define SPn_solvers_Decomposition_hh
 
 #include <SPn/config.h>
 #include "Epetra_Map.h"
@@ -119,7 +119,7 @@ int Decomposition::global(int local) const
 
 } // end namespace profugus
 
-#endif // solvers_Decomposition_hh
+#endif // SPn_solvers_Decomposition_hh
 
 //---------------------------------------------------------------------------//
 //              end of solvers/Decomposition.hh

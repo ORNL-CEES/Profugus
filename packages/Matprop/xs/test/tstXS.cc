@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/test/tstXS.cc
+ * \file   Matprop/xs/test/tstXS.cc
  * \author Thomas M. Evans
  * \date   Fri Jan 31 12:54:58 2014
  * \brief  XS container test.

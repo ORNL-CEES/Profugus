@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   material/test/tstEnergy_Collapse.cc
+ * \file   Matprop/xs/test/tstEnergy_Collapse.cc
  * \author Steven Hamilton
  * \date   Thu Mar 28 13:26:47 2013
  * \brief  Energy_Collapse unit test.

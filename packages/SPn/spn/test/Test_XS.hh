@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/Test_XS.hh
+ * \file   SPn/spn/test/Test_XS.hh
  * \author Thomas M. Evans
  * \date   Fri Oct 19 12:41:28 2012
  * \brief  Cross-sections for testing.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_test_Test_XS_hh
-#define spn_test_Test_XS_hh
+#ifndef SPn_spn_test_Test_XS_hh
+#define SPn_spn_test_Test_XS_hh
 
 #include <vector>
 
@@ -94,7 +94,7 @@ Teuchos::RCP<profugus::Mat_DB> make_mat(int Pn, const std::vector<int> &matids,
                                         const std::vector<int> &cell2mid);
 }
 
-#endif // spn_test_Test_XS_hh
+#endif // SPn_spn_test_Test_XS_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/Test_XS.hh

@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Stream.cc
+ * \file   CudaUtils/cuda_utils/Stream.cc
  * \author Seth R Johnson
  * \date   Tue Oct 01 14:37:01 2013
  * \brief  Stream member definitions.

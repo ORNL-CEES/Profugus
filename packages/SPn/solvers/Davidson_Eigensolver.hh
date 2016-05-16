@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Davidson_Eigensolver.hh
+ * \file   SPn/solvers/Davidson_Eigensolver.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:41 2014
  * \brief  Davidson_Eigensolver class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_Davidson_Eigensolver_hh
-#define solvers_Davidson_Eigensolver_hh
+#ifndef SPn_solvers_Davidson_Eigensolver_hh
+#define SPn_solvers_Davidson_Eigensolver_hh
 
 #include "AnasaziGeneralizedDavidsonSolMgr.hpp"
 #include "Epetra_MultiVector.h"
@@ -88,7 +88,7 @@ class Davidson_Eigensolver : public EigenvalueSolver<T>
 
 } // end namespace profugus
 
-#endif // solvers_Davidson_Eigensolver_hh
+#endif // SPn_solvers_Davidson_Eigensolver_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Davidson_Eigensolver.hh

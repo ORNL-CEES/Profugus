@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   NeumannPolynomial.hh
+ * \file   Alea/mc_solvers/NeumannPolynomial.hh
  * \author Steven Hamilton
  * \brief  NeumannPolynomial class declaration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_NeumannPolynomial_hh
-#define mc_solvers_NeumannPolynomial_hh
+#ifndef Alea_mc_solvers_NeumannPolynomial_hh
+#define Alea_mc_solvers_NeumannPolynomial_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -38,5 +38,5 @@ class NeumannPolynomial : public Polynomial
 
 }
 
-#endif // mc_solvers_NeumannPolynomial_hh
+#endif // Alea_mc_solvers_NeumannPolynomial_hh
 

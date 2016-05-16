@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Shape.hh
+ * \file   MC/mc/Shape.hh
  * \author Thomas M. Evans
  * \date   Tuesday May 6 16:39:24 2014
  * \brief  Shape class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Shape_hh
-#define mc_Shape_hh
+#ifndef MC_mc_Shape_hh
+#define MC_mc_Shape_hh
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
@@ -84,7 +84,7 @@ class Shape
 
 } // end namespace profugus
 
-#endif // mc_Shape_hh
+#endif // MC_mc_Shape_hh
 
 //---------------------------------------------------------------------------//
 //                        end of mc/Shape.hh

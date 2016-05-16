@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   LinearSystem.cc
+ * \file   Alea/mc_solvers/LinearSystem.cc
  * \author Steven Hamilton
  * \brief  LinearSystem class definitions.
  */

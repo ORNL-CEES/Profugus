@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstKCode_Solver.cc
+ * \file   MC/mc/test/tstKCode_Solver.cc
  * \author Thomas M. Evans
  * \date   Mon May 19 13:30:39 2014
  * \brief  KCode_Solver unit test.
@@ -71,16 +71,16 @@ class Dummy_Tally : public profugus::Pathlength_Tally<profugus::Core>
     // >>> DERIVED INTERFACE
 
     //! Track particle, using pre-calculated physics information (multipliers)
-    inline void accumulate(double step, const Particle_t& p)
+    inline void accumulate(double step, const Particle_t& p) override
     {
         d_pl_counter += 1;
     }
 
     //! Finalize is called at end of program, not cycle, so this is a null-op
-    void finalize(double np) { d_finalized_np = np; }
+    void finalize(double np) override { d_finalized_np = np; }
 
     //! Reset the counter
-    void reset() { d_pl_counter = 0; }
+    void reset() override { d_pl_counter = 0; }
 };
 
 //---------------------------------------------------------------------------//
@@ -342,7 +342,8 @@ TEST_F(KCode_SolverTest, active_cycle_test)
     EXPECT_EQ(2, tallier->num_tallies());
 
     // Get output from dummy tally
-    EXPECT_SOFTEQ(155506, dummytally->pl_counter(), 0.05);
+    EXPECT_SOFTEQ(155506.0, static_cast<double>(dummytally->pl_counter()),
+                  0.05);
     EXPECT_EQ(100 * 10, dummytally->finalized_np());
 
     // Reset the solver, which should reset tallies
@@ -371,7 +372,7 @@ TEST_F(KCode_SolverTest, active_cycle_test)
     EXPECT_EQ(100 * 1, dummytally->finalized_np());
 
     // Allow a very wide tolerance.
-    EXPECT_SOFTEQ(17790, dummytally->pl_counter(), 0.25);
+    EXPECT_SOFTEQ(17790.0, static_cast<double>(dummytally->pl_counter()), 0.25);
 }
 
 //---------------------------------------------------------------------------//

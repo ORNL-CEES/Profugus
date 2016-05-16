@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Particle.t.hh
+ * \file   MC/mc/Particle.t.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 11:26:16 2014
  * \brief  Particle member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Particle_t_hh
-#define mc_Particle_t_hh
+#ifndef MC_mc_Particle_t_hh
+#define MC_mc_Particle_t_hh
 
 #include "Particle.hh"
 
@@ -29,7 +29,7 @@ Particle<Geometry>::Particle()
 
 } // end namespace profugus
 
-#endif // mc_Particle_t_hh
+#endif // MC_mc_Particle_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Particle.t.hh

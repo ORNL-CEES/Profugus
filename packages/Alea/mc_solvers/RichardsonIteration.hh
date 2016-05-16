@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   RichardsonIteration.hh
+ * \file   Alea/mc_solvers/RichardsonIteration.hh
  * \author Steven Hamilton
  * \brief  Perform Richardson iteration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_RichardsonIteration_hh
-#define mc_solvers_RichardsonIteration_hh
+#ifndef Alea_mc_solvers_RichardsonIteration_hh
+#define Alea_mc_solvers_RichardsonIteration_hh
 
 #include "AleaSolver.hh"
 
@@ -57,5 +57,5 @@ class RichardsonIteration : public AleaSolver
 
 }
 
-#endif // mc_solvers_RichardsonIteration_hh
+#endif // Alea_mc_solvers_RichardsonIteration_hh
 

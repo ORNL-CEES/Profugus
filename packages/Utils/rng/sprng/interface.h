@@ -1,5 +1,5 @@
-#ifndef sprng_interface_h
-#define sprng_interface_h
+#ifndef Utils_rng_sprng_interface_h
+#define Utils_rng_sprng_interface_h
 
 #include <Utils/config.h>
 

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/CudaDBC.hh
+ * \file   CudaUtils/cuda_utils/CudaDBC.hh
  * \author Seth R Johnson
  * \date   Thu Jun 27 15:21:33 2013
  * \brief  DBC class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_CudaDBC_hh
-#define cuda_utils_CudaDBC_hh
+#ifndef CudaUtils_cuda_utils_CudaDBC_hh
+#define CudaUtils_cuda_utils_CudaDBC_hh
 
 #include "config.h"
 
@@ -106,7 +106,7 @@ void toss_cuda_cookies(
 #endif
 //---------------------------------------------------------------------------//
 
-#endif // cuda_utils_CudaDBC_hh
+#endif // CudaUtils_cuda_utils_CudaDBC_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/CudaDBC.hh

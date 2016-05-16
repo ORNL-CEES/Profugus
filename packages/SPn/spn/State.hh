@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/State.hh
+ * \file   SPn/spn/State.hh
  * \author Thomas M. Evans
  * \date   Mon Feb 17 13:10:27 2014
  * \brief  State class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_State_hh
-#define spn_State_hh
+#ifndef SPn_spn_State_hh
+#define SPn_spn_State_hh
 
 #include "Teuchos_ArrayView.hpp"
 #include "Teuchos_RCP.hpp"
@@ -116,7 +116,7 @@ class State
 
 } // end namespace profugus
 
-#endif // spn_State_hh
+#endif // SPn_spn_State_hh
 
 //---------------------------------------------------------------------------//
 //                 end of State.hh

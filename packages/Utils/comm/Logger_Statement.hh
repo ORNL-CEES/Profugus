@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   comm/Logger_Statement.hh
+ * \file   Utils/comm/Logger_Statement.hh
  * \author Seth R Johnson
  * \date   Sat Feb 21 00:12:15 2015
  * \brief  Logger_Statement class declaration.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Logger_Statement_hh
-#define comm_Logger_Statement_hh
+#ifndef Utils_comm_Logger_Statement_hh
+#define Utils_comm_Logger_Statement_hh
 
 #include <vector>
 #include <sstream>
@@ -125,7 +125,7 @@ class Logger_Statement
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//
-#endif // comm_Logger_Statement_hh
+#endif // Utils_comm_Logger_Statement_hh
 
 //---------------------------------------------------------------------------//
 // end of Profugus/comm/Logger_Statement.hh

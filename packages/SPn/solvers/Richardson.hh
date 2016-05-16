@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Richardson.hh
+ * \file   SPn/solvers/Richardson.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 12:06:57 2014
  * \brief  Richardson class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_Richardson_hh
-#define solvers_Richardson_hh
+#ifndef SPn_solvers_Richardson_hh
+#define SPn_solvers_Richardson_hh
 
 #include "harness/DBC.hh"
 #include "LinearSolver.hh"
@@ -92,7 +92,7 @@ class Richardson : public LinearSolver<T>
 
 } // end namespace profugus
 
-#endif // solvers_Richardson_hh
+#endif // SPn_solvers_Richardson_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Richardson.hh

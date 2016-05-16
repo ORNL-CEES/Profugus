@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstBelosSolver.cc
+ * \file   SPn/solvers/test/tstBelosSolver.cc
  * \author Steven Hamilton
  * \brief  BelosSolver unit-test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

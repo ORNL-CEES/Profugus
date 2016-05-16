@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstFission_Source.cc
+ * \file   MC/mc/test/tstFission_Source.cc
  * \author Thomas M. Evans
  * \date   Tue May 06 11:54:26 2014
  * \brief  Fission_Source unit test.

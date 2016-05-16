@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/LG_Indexer.cc
+ * \file   SPn/mesh/LG_Indexer.cc
  * \author Thomas M. Evans
  * \date   Tue Aug 28 14:43:58 2007
  * \brief  LG_Indexer member definitions.

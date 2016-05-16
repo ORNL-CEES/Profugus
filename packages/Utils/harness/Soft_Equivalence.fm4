@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------------!
-! \file   harness/Soft_Equivalence.fm4
+! \file   Utils/harness/Soft_Equivalence.fm4
 ! \author Thomas M. Evans
 ! \date   Tue Nov 10 17:06:12 2009
 ! \brief  Soft_Equivalence checks.
@@ -121,6 +121,6 @@ contains
 end module harness_soft_equivalence
 
 !-----------------------------------------------------------------------------!
-!                               end of Soft_Equivalence.fm4
+! end of Utils/harness/Soft_Equivalence.fm4
 !-----------------------------------------------------------------------------!
 

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Isotropic_Source.cc
+ * \file   SPn/spn/Isotropic_Source.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 14 18:14:05 2014
  * \brief  Isotropic_Source member definitions.

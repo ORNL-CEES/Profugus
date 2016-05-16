@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/General_Source.pt.cc
+ * \file   MC/mc/General_Source.pt.cc
  * \author Steven Hamilton
  * \date   Mon Apr 04 20:38:12 2016
  * \brief  General_Source member definitions.

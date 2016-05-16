@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tally.hh
+ * \file   MC/mc/Tally.hh
  * \author Thomas M. Evans
  * \date   Wed May 14 15:10:09 2014
  * \brief  Tally base class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Tally_hh
-#define mc_Tally_hh
+#ifndef MC_mc_Tally_hh
+#define MC_mc_Tally_hh
 
 #include <memory>
 #include <string>
@@ -227,7 +227,7 @@ class Surface_Tally : public Tally<Geometry>
 
 } // end namespace profugus
 
-#endif // mc_Tally_hh
+#endif // MC_mc_Tally_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Tally.hh

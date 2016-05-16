@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   rng/RNG.hh
+ * \file   Utils/rng/RNG.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 14:57:29 2014
  * \brief  RNG class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef rng_RNG_hh
-#define rng_RNG_hh
+#ifndef Utils_rng_RNG_hh
+#define Utils_rng_RNG_hh
 
 #include <vector>
 
@@ -194,7 +194,7 @@ RNG::~RNG()
 
 } // end namespace profugus
 
-#endif // rng_RNG_hh
+#endif // Utils_rng_RNG_hh
 
 //---------------------------------------------------------------------------//
 //                 end of RNG.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstShiftedInverseOperator.cc
+ * \file   SPn/solvers/test/tstShiftedInverseOperator.cc
  * \author Steven Hamilton
  * \brief  ShiftedInverseOperator test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

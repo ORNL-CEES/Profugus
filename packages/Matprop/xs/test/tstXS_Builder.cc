@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/test/tstXS_Builder.cc
+ * \file   Matprop/xs/test/tstXS_Builder.cc
  * \author Thomas M. Evans
  * \date   Wed Feb 05 20:07:26 2014
  * \brief  XS_Builder unit test.

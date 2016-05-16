@@ -10,7 +10,7 @@
 
 #include "../View_Field_Iterator.hh"
 
-#include "Utils/gtest/profugus_gtest.hh"
+#include "Utils/gtest/utils_gtest.hh"
 
 #include <vector>
 
@@ -57,19 +57,19 @@ TEST_F(View_Field_IteratorTest, stride_1_test)
     // Constructor
     VFI vfi(vi.data(), 1);
     EXPECT_EQ(1, vfi.stride());
-    EXPECT_EQ(1, *(vfi.get_pointer()));
+    EXPECT_EQ(1, *(vfi.ptr()));
     EXPECT_TRUE(vfi.is_valid());
 
     // Copy constructor
     VFI vfi2(vfi);
     EXPECT_EQ(1, vfi2.stride());
-    EXPECT_EQ(1, *(vfi2.get_pointer()));
+    EXPECT_EQ(1, *(vfi2.ptr()));
 
     // Copy operator
     VFI vfi3;
     vfi3 = vfi2;
     EXPECT_EQ(1, vfi3.stride());
-    EXPECT_EQ(1, *(vfi3.get_pointer()));
+    EXPECT_EQ(1, *(vfi3.ptr()));
 
     // Dereference
     EXPECT_EQ(1, *vfi);
@@ -132,18 +132,18 @@ TEST_F(View_Field_IteratorTest, stride_4_test)
     // Constructor
     VFI vfi(vi.data(), 4);
     EXPECT_EQ(4, vfi.stride());
-    EXPECT_EQ(1, *(vfi.get_pointer()));
+    EXPECT_EQ(1, *(vfi.ptr()));
 
     // Copy constructor
     VFI vfi2(vfi);
     EXPECT_EQ(4, vfi2.stride());
-    EXPECT_EQ(1, *(vfi2.get_pointer()));
+    EXPECT_EQ(1, *(vfi2.ptr()));
 
     // Copy operator
     VFI vfi3;
     vfi3 = vfi2;
     EXPECT_EQ(4, vfi3.stride());
-    EXPECT_EQ(1, *(vfi3.get_pointer()));
+    EXPECT_EQ(1, *(vfi3.ptr()));
 
     // Dereference
     EXPECT_EQ(1, *vfi);
@@ -209,13 +209,13 @@ TEST_F(View_Field_IteratorTest, const_stride_1_test)
     // Constructor
     cVFI vfi(vi.data(), 1);
     EXPECT_EQ(1, vfi.stride());
-    EXPECT_EQ(1, *(vfi.get_pointer()));
+    EXPECT_EQ(1, *(vfi.ptr()));
     EXPECT_TRUE(vfi.is_valid());
 
     // Copy constructor
     cVFI vfi2(vfi);
     EXPECT_EQ(1, vfi2.stride());
-    EXPECT_EQ(1, *(vfi2.get_pointer()));
+    EXPECT_EQ(1, *(vfi2.ptr()));
 
     // VF_Iterator -> const_VF_Iterator constructor
     VFI tmp(vi.data(), 1);
@@ -226,7 +226,7 @@ TEST_F(View_Field_IteratorTest, const_stride_1_test)
     cVFI vfi3;
     vfi3 = vfi2;
     EXPECT_EQ(1, vfi3.stride());
-    EXPECT_EQ(1, *(vfi3.get_pointer()));
+    EXPECT_EQ(1, *(vfi3.ptr()));
 
     // Dereference
     EXPECT_EQ(1, *vfi);
@@ -285,18 +285,18 @@ TEST_F(View_Field_IteratorTest, const_stride_4_test)
     // Constructor
     cVFI vfi(vi.data(), 4);
     EXPECT_EQ(4, vfi.stride());
-    EXPECT_EQ(1, *(vfi.get_pointer()));
+    EXPECT_EQ(1, *(vfi.ptr()));
 
     // Copy constructor
     cVFI vfi2(vfi);
     EXPECT_EQ(4, vfi2.stride());
-    EXPECT_EQ(1, *(vfi2.get_pointer()));
+    EXPECT_EQ(1, *(vfi2.ptr()));
 
     // Copy operator
     cVFI vfi3;
     vfi3 = vfi2;
     EXPECT_EQ(4, vfi3.stride());
-    EXPECT_EQ(1, *(vfi3.get_pointer()));
+    EXPECT_EQ(1, *(vfi3.ptr()));
 
     // Dereference
     EXPECT_EQ(1, *vfi);

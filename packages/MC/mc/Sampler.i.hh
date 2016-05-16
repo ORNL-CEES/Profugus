@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Sampler.i.hh
+ * \file   MC/mc/Sampler.i.hh
  * \author Seth R Johnson
  * \date   Friday May 2 10:26:27 2014
  * \brief  Member definitions of class Sampler.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Sampler_i_hh
-#define mc_Sampler_i_hh
+#ifndef MC_mc_Sampler_i_hh
+#define MC_mc_Sampler_i_hh
 
 #include <algorithm>
 #include <cmath>
@@ -141,7 +141,7 @@ inline T sample_linear(RNG& rng, const T left, const T right)
 
 } // end namespace profugus
 
-#endif // mc_Sampler_i_hh
+#endif // MC_mc_Sampler_i_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Sampler.i.hh

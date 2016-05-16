@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Serial.cc
+ * \file   Utils/comm/Serial.cc
  * \author Thomas M. Evans
  * \date   Wed Jan  2 14:32:30 2008
  * \brief  Serial communication function definitions.

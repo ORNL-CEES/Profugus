@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstPseudo_Cuda.cc
+ * \file   CudaUtils/test/tstPseudo_Cuda.cc
  * \author Seth R Johnson
  * \date   Tue Aug 13 14:09:29 2013
  * \brief

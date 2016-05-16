@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   gtest/gtest-internals.hh
+ * \file   Utils/gtest/gtest-internals.hh
  * \author Seth R Johnson
  * \date   Tue Apr 02 11:43:51 2013
  * \brief  Expose some google test internals that we want to use.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef gtest_gtest_internals_hh
-#define gtest_gtest_internals_hh
+#ifndef Utils_gtest_gtest_internals_hh
+#define Utils_gtest_gtest_internals_hh
 
 //---------------------------------------------------------------------------//
 // GTEST INTERNAL DECLARATIONS
@@ -33,7 +33,7 @@ void ColoredPrintf(GTestColor color, const char* fmt, ...);
 
 //---------------------------------------------------------------------------//
 
-#endif // gtest_gtest_internals_hh
+#endif // Utils_gtest_gtest_internals_hh
 
 //---------------------------------------------------------------------------//
 //              end of gtest/gtest-internals.hh

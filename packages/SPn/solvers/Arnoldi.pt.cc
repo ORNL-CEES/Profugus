@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Arnoldi.pt.cc
+ * \file   SPn/solvers/Arnoldi.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  Arnoldi explicit instantiation.

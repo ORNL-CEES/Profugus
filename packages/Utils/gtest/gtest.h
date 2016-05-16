@@ -17477,7 +17477,7 @@ INSTANTIATE_TYPED_TEST_CASE_P(My, FooTest, MyTypes);
           ::testing::internal::TypeList< Types >::type>::Register(\
               #Prefix, #CaseName, GTEST_REGISTERED_TEST_NAMES_(CaseName))
 
-#endif  // GTEST_HAS_TYPED_TEST_P
+#endif // Utils_gtest_gtest_h
 
 #endif  // GTEST_INCLUDE_GTEST_GTEST_TYPED_TEST_H_
 

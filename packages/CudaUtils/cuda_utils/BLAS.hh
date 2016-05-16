@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/BLAS.hh
+ * \file   CudaUtils/cuda_utils/BLAS.hh
  * \author Seth R Johnson
  * \date   Mon Jul 01 10:42:48 2013
  * \brief  BLAS class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_BLAS_hh
-#define cuda_utils_BLAS_hh
+#ifndef CudaUtils_cuda_utils_BLAS_hh
+#define CudaUtils_cuda_utils_BLAS_hh
 
 #include "config.h"
 
@@ -154,7 +154,7 @@ class BLAS<arch::Device, T>
 
 } // end namespace cuda
 
-#endif // cuda_utils_BLAS_hh
+#endif // CudaUtils_cuda_utils_BLAS_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/BLAS.hh

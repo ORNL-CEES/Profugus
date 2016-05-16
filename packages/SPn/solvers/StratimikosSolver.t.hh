@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/StratimikosSolver.t.hh
+ * \file   SPn/solvers/StratimikosSolver.t.hh
  * \author Chris Baker
  * \date   Thu May 17 14:18:09 2012
  * \brief  StratimikosSolver template member definitions
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_StratimikosSolver_t_hh
-#define solvers_StratimikosSolver_t_hh
+#ifndef SPn_solvers_StratimikosSolver_t_hh
+#define SPn_solvers_StratimikosSolver_t_hh
 
 #include <iostream>
 

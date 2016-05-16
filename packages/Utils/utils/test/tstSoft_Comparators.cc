@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstSoft_Comparators.cc
+ * \file   Utils/utils/test/tstSoft_Comparators.cc
  * \author Gregory G. Davidson
  * \date   Wed Sep 11 21:33:15 2013
  * \brief  Tests the Soft_Comparators

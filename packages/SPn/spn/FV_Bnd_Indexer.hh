@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/FV_Bnd_Indexer.hh
+ * \file   SPn/spn/FV_Bnd_Indexer.hh
  * \author Thomas M. Evans
  * \date   Sat Nov 24 13:26:33 2012
  * \brief  FV_Bnd_Indexer class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_FV_Bnd_Indexer_hh
-#define spn_FV_Bnd_Indexer_hh
+#ifndef SPn_spn_FV_Bnd_Indexer_hh
+#define SPn_spn_FV_Bnd_Indexer_hh
 
 #include "harness/DBC.hh"
 
@@ -87,7 +87,7 @@ class FV_Bnd_Indexer
 
 } // end namespace profugus
 
-#endif // spn_FV_Bnd_Indexer_hh
+#endif // SPn_spn_FV_Bnd_Indexer_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/FV_Bnd_Indexer.hh

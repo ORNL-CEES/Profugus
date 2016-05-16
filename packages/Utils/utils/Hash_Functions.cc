@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Hash_Functions.cc
+ * \file   Utils/utils/Hash_Functions.cc
  * \author Thomas M. Evans
  * \date   Sat Sep 03 18:55:17 2011
  * \brief  Member definitions of Hash_Functions classes.

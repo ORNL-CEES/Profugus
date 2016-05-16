@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Timing.hh
+ * \file   Utils/comm/Timing.hh
  * \author Thomas M. Evans
  * \date   Fri Nov  9 09:41:55 2007
  * \brief  Timing class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Timing_hh
-#define comm_Timing_hh
+#ifndef Utils_comm_Timing_hh
+#define Utils_comm_Timing_hh
 
 #include <Utils/config.h>
 #include "Timing_Diagnostics.hh"
@@ -214,7 +214,7 @@
 
 #endif
 
-#endif // comm_Timing_hh
+#endif // Utils_comm_Timing_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Timing.hh

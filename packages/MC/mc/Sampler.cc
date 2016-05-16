@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Sampler.cc
+ * \file   MC/mc/Sampler.cc
  * \author Thomas M. Evans
  * \date   Friday May 2 10:28:14 2014
  * \brief  Sampling function definitions.

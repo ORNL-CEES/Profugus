@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstEigenvalueSolverBuilder.cc
+ * \file   SPn/solvers/test/tstEigenvalueSolverBuilder.cc
  * \author Steven Hamilton
  * \brief  EigenvalueSolverBuilder unit-test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

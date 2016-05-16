@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   LinearSystemFactory.cc
+ * \file   Alea/mc_solvers/LinearSystemFactory.cc
  * \author Steven Hamilton
  * \brief  Construct EpetraCrsMatrix from ParameterList.
  */

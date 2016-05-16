@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstEnergy_Restriction.cc
+ * \file   SPn/spn/test/tstEnergy_Restriction.cc
  * \author Steven Hamilton
  * \date   Mon Apr 01 12:49:01 2013
  * \brief  Energy Grid Transfer test.

@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AleaSolver.hh
+ * \file   Alea/mc_solvers/AleaSolver.hh
  * \author Steven Hamilton
  * \brief  Base class for mc_solvers solvers
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_AleaSolver_hh
-#define mc_solvers_AleaSolver_hh
+#ifndef Alea_mc_solvers_AleaSolver_hh
+#define Alea_mc_solvers_AleaSolver_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -99,5 +99,5 @@ class AleaSolver : virtual public OP
 
 }
 
-#endif // mc_solvers_AleaSolver_hh
+#endif // Alea_mc_solvers_AleaSolver_hh
 

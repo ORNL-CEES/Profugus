@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstRayleighQuotient.cc
+ * \file   SPn/solvers/test/tstRayleighQuotient.cc
  * \author Steven Hamilton
  * \brief  RayleighQuotient unit-test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

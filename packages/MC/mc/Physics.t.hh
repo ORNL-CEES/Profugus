@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Physics.t.hh
+ * \file   MC/mc/Physics.t.hh
  * \author Thomas M. Evans
  * \date   Thursday May 1 11:14:55 2014
  * \brief  MG_Physics template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Physics_t_hh
-#define mc_Physics_t_hh
+#ifndef MC_mc_Physics_t_hh
+#define MC_mc_Physics_t_hh
 
 #include <sstream>
 #include <algorithm>
@@ -502,7 +502,7 @@ int Physics<Geometry>::sample_fission_group(unsigned int matid,
 
 } // end namespace profugus
 
-#endif // mc_Physics_t_hh
+#endif // MC_mc_Physics_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Physics.t.hh

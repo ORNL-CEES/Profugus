@@ -39,7 +39,7 @@ View_Field<T>::View_Field(pointer     first,
     : d_begin_iterator(first, stride)
     , d_end_iterator(last, stride)
 {
-    REQUIRE(std::distance(first, last) >= 0);
+    REQUIRE(last >= first);
 }
 
 //---------------------------------------------------------------------------//
@@ -52,7 +52,7 @@ View_Field<T>::View_Field(iterator    first,
     : d_begin_iterator(first)
     , d_end_iterator(last)
 {
-    REQUIRE(std::distance(first, last) >= 0);
+    REQUIRE(last >= first);
     REQUIRE(first.stride() == last.stride());
 }
 
@@ -73,7 +73,7 @@ void View_Field<T>::assign(const_iterator first,
     if (first.stride() == 1 && d_begin_iterator.stride() == 1)
     {
         // Static assert not compiling to trivial types...?
-        std::memmove(d_begin_iterator.get_pointer(), first.get_pointer(),
+        std::memmove(d_begin_iterator.ptr(), first.ptr(),
                      sizeof(T) * (d_end_iterator-d_begin_iterator));
     }
     else
@@ -106,7 +106,7 @@ View_Field<T>::operator[](size_type i)
 {
     REQUIRE(valid_index(i));
 
-    return *(d_begin_iterator + i);
+    return *(d_begin_iterator.ptr() + i * d_begin_iterator.stride());
 }
 
 //---------------------------------------------------------------------------//
@@ -119,7 +119,7 @@ View_Field<T>::operator[](size_type i) const
 {
     REQUIRE(valid_index(i));
 
-    return *(d_begin_iterator + i);
+    return *(d_begin_iterator.ptr() + i * d_begin_iterator.stride());
 }
 
 //---------------------------------------------------------------------------//
@@ -182,7 +182,12 @@ template<typename T>
 typename View_Field<T>::size_type
 View_Field<T>::size() const
 {
-    return std::distance(d_begin_iterator, d_end_iterator);
+    if (d_begin_iterator.stride() == 1)
+    {
+        // Optimize for special stride-1 case
+        return d_end_iterator.ptr() - d_begin_iterator.ptr();
+    }
+    return d_end_iterator - d_begin_iterator;
 }
 
 //---------------------------------------------------------------------------//
@@ -210,7 +215,7 @@ typename View_Field<T>::pointer
 View_Field<T>::data()
 {
     REQUIRE(stride() == 1);
-    return d_begin_iterator.get_pointer();
+    return d_begin_iterator.ptr();
 }
 
 //---------------------------------------------------------------------------//
@@ -222,12 +227,13 @@ typename View_Field<T>::const_pointer
 View_Field<T>::data() const
 {
     REQUIRE(stride() == 1);
-    return d_begin_iterator.get_pointer();
+    return d_begin_iterator.ptr();
 }
+
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief CHECKs that index \a i is within bounds.
+ * \brief Checks that index \a i is within bounds.
  */
 template<typename T>
 bool View_Field<T>::valid_index(size_type i) const
@@ -258,6 +264,82 @@ View_Field<T>::rend() const
 }
 
 //---------------------------------------------------------------------------//
+
+template<typename T>
+typename View_Field<T>::pointer
+View_Field<T>::pbegin()
+{
+    REQUIRE(stride() == 1);
+    return d_begin_iterator.ptr();
+}
+
+template<typename T>
+typename View_Field<T>::const_pointer
+View_Field<T>::pbegin() const
+{
+    REQUIRE(stride() == 1);
+    return d_begin_iterator.ptr();
+}
+
+template<typename T>
+typename View_Field<T>::const_pointer
+View_Field<T>::cpbegin() const
+{
+    REQUIRE(stride() == 1);
+    return d_begin_iterator.ptr();
+}
+
+template<typename T>
+typename View_Field<T>::pointer
+View_Field<T>::pend()
+{
+    REQUIRE(stride() == 1);
+    return d_end_iterator.ptr();
+}
+
+template<typename T>
+typename View_Field<T>::const_pointer
+View_Field<T>::pend() const
+{
+    REQUIRE(stride() == 1);
+    return d_end_iterator.ptr();
+}
+
+template<typename T>
+typename View_Field<T>::const_pointer
+View_Field<T>::cpend() const
+{
+    REQUIRE(stride() == 1);
+    return d_end_iterator.ptr();
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Fast range operator
+ *
+ * Return a thin container that provides optimized access for iterating.
+ */
+template<typename T>
+View_Field_Fast<T> View_Field<T>::fast_range()
+{
+    REQUIRE(stride() == 1);
+    return View_Field_Fast<T>(pbegin(), pend());
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Fast range operator
+ *
+ * Return a thin container that provides optimized access for iterating.
+ */
+template<typename T>
+const_View_Field_Fast<T> View_Field<T>::fast_range() const
+{
+    REQUIRE(stride() == 1);
+    return const_View_Field_Fast<T>(pbegin(), pend());
+}
+
+//---------------------------------------------------------------------------//
 /*!
  * \brief Divides the field into equal slices of size \a slice_size, and
  *        returns the \a slice_num-th slice (starting from 0).
@@ -280,8 +362,8 @@ View_Field<T> View_Field<T>::slice(size_type slice_size,
     CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
-    return View_Field_t(d_begin_iterator.get_pointer() + index_begin,
-                        d_begin_iterator.get_pointer() + index_end);
+    return View_Field_t(d_begin_iterator.ptr() + index_begin,
+                        d_begin_iterator.ptr() + index_end);
 }
 
 //---------------------------------------------------------------------------//
@@ -309,8 +391,8 @@ View_Field<T> View_Field<T>::slice(size_type slice_size,
     CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
-    return View_Field_t(d_begin_iterator.get_pointer() + index_begin,
-                        d_begin_iterator.get_pointer() + index_end);
+    return View_Field_t(d_begin_iterator.ptr() + index_begin,
+                        d_begin_iterator.ptr() + index_end);
 }
 
 //---------------------------------------------------------------------------//
@@ -330,8 +412,8 @@ View_Field<T> View_Field<T>::general_slice(size_type index_begin,
     REQUIRE(d_begin_iterator + index_end <= d_end_iterator);
 
     return View_Field_t(
-            d_begin_iterator.get_pointer() + index_begin,
-            d_begin_iterator.get_pointer() + index_end * stride(),
+            d_begin_iterator.ptr() + index_begin,
+            d_begin_iterator.ptr() + index_end * stride(),
             stride());
 }
 
@@ -350,8 +432,8 @@ View_Field<T> View_Field<T>::strided_slice(
     REQUIRE(stop <= size() + step - 1);
     REQUIRE((stop - start) % step == 0);
 
-    return View_Field_t(d_begin_iterator.get_pointer() + start*stride(),
-                        d_begin_iterator.get_pointer() + stop*stride(),
+    return View_Field_t(d_begin_iterator.ptr() + start*stride(),
+                        d_begin_iterator.ptr() + stop*stride(),
                         stride()*step);
 }
 
@@ -391,7 +473,7 @@ const_View_Field<T>::const_View_Field(const_pointer first,
     : d_begin_iterator(first, stride)
     , d_end_iterator(last, stride)
 {
-    REQUIRE(std::distance(first, last) >= 0);
+    REQUIRE(last >= first);
 }
 
 //---------------------------------------------------------------------------//
@@ -418,7 +500,7 @@ const_View_Field<T>::operator[](size_type i) const
 {
     REQUIRE(valid_index(i));
 
-    return *(d_begin_iterator + i);
+    return *(d_begin_iterator.ptr() + i * d_begin_iterator.stride());
 }
 
 //---------------------------------------------------------------------------//
@@ -456,7 +538,12 @@ template<typename T>
 typename const_View_Field<T>::size_type
 const_View_Field<T>::size() const
 {
-    return std::distance(d_begin_iterator, d_end_iterator);
+    if (d_begin_iterator.stride() == 1)
+    {
+        // Optimize for special stride-1 case
+        return d_end_iterator.ptr() - d_begin_iterator.ptr();
+    }
+    return d_end_iterator - d_begin_iterator;
 }
 
 //---------------------------------------------------------------------------//
@@ -480,7 +567,7 @@ typename const_View_Field<T>::const_pointer
 const_View_Field<T>::data() const
 {
     REQUIRE(stride() == 1);
-    return d_begin_iterator.get_pointer();
+    return d_begin_iterator.ptr();
 }
 
 //---------------------------------------------------------------------------//
@@ -520,6 +607,58 @@ const_View_Field<T>::rend() const
     return const_reverse_iterator(begin());
 }
 
+
+//---------------------------------------------------------------------------//
+//@{
+//! Pointer iterators
+
+template<typename T>
+typename const_View_Field<T>::const_pointer
+const_View_Field<T>::pbegin() const
+{
+    REQUIRE(stride() == 1);
+    return d_begin_iterator.ptr();
+}
+
+template<typename T>
+typename const_View_Field<T>::const_pointer
+const_View_Field<T>::cpbegin() const
+{
+    REQUIRE(stride() == 1);
+    return d_begin_iterator.ptr();
+}
+
+template<typename T>
+typename const_View_Field<T>::const_pointer
+const_View_Field<T>::pend() const
+{
+    REQUIRE(stride() == 1);
+    return d_end_iterator.ptr();
+}
+
+template<typename T>
+typename const_View_Field<T>::const_pointer
+const_View_Field<T>::cpend() const
+{
+    REQUIRE(stride() == 1);
+    return d_end_iterator.ptr();
+}
+
+//@}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Fast range operator
+ *
+ * Return a thin container that provides optimized access for iterating.
+ */
+template<typename T>
+const_View_Field_Fast<T> const_View_Field<T>::fast_range() const
+{
+    REQUIRE(stride() == 1);
+    return const_View_Field_Fast<T>(pbegin(), pend());
+}
+
 //---------------------------------------------------------------------------//
 /*!
  * \brief Divides the field into equal slices of size \a slice_size, and
@@ -543,8 +682,8 @@ const_View_Field<T> const_View_Field<T>::slice(size_type slice_size,
     CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
-    return const_View_Field_t(d_begin_iterator.get_pointer() + index_begin,
-                              d_begin_iterator.get_pointer() + index_end);
+    return const_View_Field_t(d_begin_iterator.ptr() + index_begin,
+                              d_begin_iterator.ptr() + index_end);
 }
 
 //---------------------------------------------------------------------------//
@@ -570,8 +709,8 @@ const_View_Field<T> const_View_Field<T>::slice(size_type slice_size,
     CHECK(d_begin_iterator + index_end <= d_end_iterator);
 
     // Create and return a View_Field
-    return const_View_Field_t(d_begin_iterator.get_pointer() + index_begin,
-                              d_begin_iterator.get_pointer() + index_end);
+    return const_View_Field_t(d_begin_iterator.ptr() + index_begin,
+                              d_begin_iterator.ptr() + index_end);
 }
 
 //---------------------------------------------------------------------------//
@@ -587,8 +726,8 @@ const_View_Field<T>::general_slice(size_type index_begin,
     REQUIRE(index_end <= size());
 
     return const_View_Field_t(
-            d_begin_iterator.get_pointer() + index_begin,
-            d_begin_iterator.get_pointer() + index_end * stride(),
+            d_begin_iterator.ptr() + index_begin,
+            d_begin_iterator.ptr() + index_end * stride(),
             stride());
 }
 
@@ -608,8 +747,8 @@ const_View_Field<T> const_View_Field<T>::strided_slice(
     REQUIRE(stop <= size() + step - 1);
     REQUIRE((stop - start) % step == 0);
 
-    return const_View_Field_t(d_begin_iterator.get_pointer() + start * stride(),
-                              d_begin_iterator.get_pointer() + stop * stride(),
+    return const_View_Field_t(d_begin_iterator.ptr() + start * stride(),
+                              d_begin_iterator.ptr() + stop * stride(),
                               stride()*step);
 }
 

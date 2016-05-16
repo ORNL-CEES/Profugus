@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Manager_Builder.cc
+ * \file   MC/mc_driver/Manager_Builder.cc
  * \author Steven Hamilton
  * \date   Wed Nov 25 11:25:01 2015
  * \brief  Manager_Builder member definitions.

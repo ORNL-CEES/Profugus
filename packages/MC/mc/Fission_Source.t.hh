@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Source.t.hh
+ * \file   MC/mc/Fission_Source.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 05 14:22:46 2014
  * \brief  Fission_Source template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Source_t_hh
-#define mc_Fission_Source_t_hh
+#ifndef MC_mc_Fission_Source_t_hh
+#define MC_mc_Fission_Source_t_hh
 
 #include <algorithm>
 #include <numeric>
@@ -516,7 +516,7 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
 
 } // end namespace profugus
 
-#endif // mc_Fission_Source_t_hh
+#endif // MC_mc_Fission_Source_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fission_Source.t.hh

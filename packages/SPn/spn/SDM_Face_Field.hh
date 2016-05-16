@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/SDM_Face_Field.hh
+ * \file   SPn/spn/SDM_Face_Field.hh
  * \author Thomas M. Evans
  * \date   Tue Oct 30 17:05:49 2012
  * \brief  SDM_Face_Field class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_SDM_Face_Field_hh
-#define spn_SDM_Face_Field_hh
+#ifndef SPn_spn_SDM_Face_Field_hh
+#define SPn_spn_SDM_Face_Field_hh
 
 #include <vector>
 
@@ -168,7 +168,7 @@ class SDM_Face_Field
 
 #include "SDM_Face_Field.i.hh"
 
-#endif // spn_SDM_Face_Field_hh
+#endif // SPn_spn_SDM_Face_Field_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/SDM_Face_Field.hh

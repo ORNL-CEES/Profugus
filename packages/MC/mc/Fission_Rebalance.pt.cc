@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Rebalance.pt.cc
+ * \file   MC/mc/Fission_Rebalance.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Fission_Rebalance template instantiations

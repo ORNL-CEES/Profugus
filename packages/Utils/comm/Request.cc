@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Request.cc
+ * \file   Utils/comm/Request.cc
  * \author Thomas M. Evans
  * \date   Wed Jan  2 13:53:24 2008
  * \brief  Request class definitions.

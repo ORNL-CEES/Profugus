@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Box_Shape.cc
+ * \file   MC/mc/Box_Shape.cc
  * \author Thomas M. Evans
  * \date   Fri Dec 13 13:30:08 2013
  * \brief  Box shape member definitions.

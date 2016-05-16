@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/PreconditionerBuilder.t.hh
+ * \file   SPn/solvers/PreconditionerBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 09:28:52 2014
  * \brief  PreconditionerBuilder template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_PreconditionerBuilder_t_hh
-#define solvers_PreconditionerBuilder_t_hh
+#ifndef SPn_solvers_PreconditionerBuilder_t_hh
+#define SPn_solvers_PreconditionerBuilder_t_hh
 
 #include <string>
 
@@ -61,7 +61,7 @@ PreconditionerBuilder<EpetraTypes>::build_preconditioner(
     using std::string;
 
     // Default to Ifpack
-    string prec_type = to_lower(db->get("Preconditioner", string("ifpack")));
+    string prec_type = lower(db->get("Preconditioner", string("ifpack")));
     VALIDATE(prec_type == "ifpack" || prec_type=="ml" ||
              prec_type=="none",
              "Preconditioner must be 'Ifpack', 'ML', or 'None'.");
@@ -161,7 +161,7 @@ PreconditionerBuilder<TpetraTypes>::build_preconditioner(
     typedef typename TpetraTypes::NODE   NODE;
 
     std::string prec_type =
-        to_lower(db->get("Preconditioner", std::string("Ifpack2")));
+        lower(db->get("Preconditioner", std::string("Ifpack2")));
     Teuchos::RCP<OP> prec;
     if( prec_type == "ifpack2" )
     {
@@ -213,7 +213,7 @@ PreconditionerBuilder<TpetraTypes>::build_preconditioner(
 
 } // end namespace profugus
 
-#endif // solvers_PreconditionerBuilder_t_hh
+#endif // SPn_solvers_PreconditionerBuilder_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of PreconditionerBuilder.t.hh

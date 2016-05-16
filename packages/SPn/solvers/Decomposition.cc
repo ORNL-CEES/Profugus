@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Decomposition.cc
+ * \file   SPn/solvers/Decomposition.cc
  * \author Thomas M. Evans
  * \date   Tue Aug 28 08:28:00 2007
  * \brief  Decomposition member definitions.

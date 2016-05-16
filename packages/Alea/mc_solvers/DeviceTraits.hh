@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   DeviceTraits.hh
+ * \file   Alea/mc_solvers/DeviceTraits.hh
  * \author Steven Hamilton
  * \brief  Templated interface for Kokkos devices.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_DeviceTraits_hh
-#define mc_solvers_DeviceTraits_hh
+#ifndef Alea_mc_solvers_DeviceTraits_hh
+#define Alea_mc_solvers_DeviceTraits_hh
 
 #include "KokkosCore_config.h"
 
@@ -170,5 +170,5 @@ class DeviceTraits<Kokkos::Cuda>
 
 } // namespace alea
 
-#endif // mc_solvers_DeviceTraits_hh
+#endif // Alea_mc_solvers_DeviceTraits_hh
 

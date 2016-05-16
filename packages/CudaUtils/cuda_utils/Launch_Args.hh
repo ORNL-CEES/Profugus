@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Launch_Args.hh
+ * \file   CudaUtils/cuda_utils/Launch_Args.hh
  * \author Seth R Johnson
  * \date   Wed Oct 02 13:16:37 2013
  * \brief  Launch class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Launch_Args_hh
-#define cuda_utils_Launch_Args_hh
+#ifndef CudaUtils_cuda_utils_Launch_Args_hh
+#define CudaUtils_cuda_utils_Launch_Args_hh
 
 #include "harness/DBC.hh"
 #include "Stream.hh"
@@ -179,7 +179,7 @@ void parallel_launch( Kernel& kernel,
 
 } // end namespace cuda
 
-#endif // cuda_utils_Launch_Args_hh
+#endif // CudaUtils_cuda_utils_Launch_Args_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Launch_Args.hh

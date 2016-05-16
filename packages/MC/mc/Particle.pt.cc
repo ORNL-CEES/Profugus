@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Particle.pt.cc
+ * \file   MC/mc/Particle.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Particle template instantiations

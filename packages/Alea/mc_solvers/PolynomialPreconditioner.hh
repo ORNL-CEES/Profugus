@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PolynomialPreconditioner.hh
+ * \file   Alea/mc_solvers/PolynomialPreconditioner.hh
  * \author Steven Hamilton
  * \brief  Perform Chebyshev iteration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_PolynomialPreconditioner_hh
-#define mc_solvers_PolynomialPreconditioner_hh
+#ifndef Alea_mc_solvers_PolynomialPreconditioner_hh
+#define Alea_mc_solvers_PolynomialPreconditioner_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayRCP.hpp"
@@ -48,5 +48,5 @@ class PolynomialPreconditioner : public AleaSolver
 
 }
 
-#endif // mc_solvers_PolynomialPreconditioner_hh
+#endif // Alea_mc_solvers_PolynomialPreconditioner_hh
 

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Problem_Builder.pt.cc
+ * \file   MC/mc_driver/Problem_Builder.pt.cc
  * \author Steven Hamilton
  * \date   Wed Nov 25 11:50:17 2015
  * \brief  Problem_Builder template instantiations.

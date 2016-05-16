@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/Energy_Collapse.cc
+ * \file   Matprop/xs/Energy_Collapse.cc
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 13:39:38 2014
  * \brief  Energy_Collapse member definitions.

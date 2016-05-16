@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Linear_System.hh
+ * \file   SPn/spn/Linear_System.hh
  * \author Thomas M. Evans
  * \date   Sun Oct 28 18:37:01 2012
  * \brief  Linear_System class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Linear_System_hh
-#define spn_Linear_System_hh
+#ifndef SPn_spn_Linear_System_hh
+#define SPn_spn_Linear_System_hh
 
 #include <string>
 #include <SPn/config.h>
@@ -174,7 +174,7 @@ void Linear_System<EpetraTypes>::set_adjoint(bool adjoint);
 
 }                               // end namespace profugus
 
-#endif                          // spn_Linear_System_hh
+#endif // SPn_spn_Linear_System_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/Linear_System.hh

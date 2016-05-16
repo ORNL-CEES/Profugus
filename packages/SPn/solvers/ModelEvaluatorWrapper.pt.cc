@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ModelEvaluatorWrapper.pt.cc
+ * \file   SPn/solvers/ModelEvaluatorWrapper.pt.cc
  * \author Steven Hamilton
  * \date   Wed Apr 01 12:39:40 2015
  * \brief  ModelEvaluatorWrapper explicit instantiations

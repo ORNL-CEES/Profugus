@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testRichardsonIteration.cc
+ * \file   Alea/mc_solvers/test/tstRichardsonIteration.cc
  * \author Steven Hamilton
  * \brief  Test of RichardsonIteration class.
  */

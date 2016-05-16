@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PolynomialUtils.cc
+ * \file   Alea/mc_solvers/PolynomialUtils.cc
  * \author Steven Hamilton
  * \brief  Construct data necessary for Monte Carlo solvers.
  */

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Packing_Utils.hh
+ * \file   Utils/utils/Packing_Utils.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 15:19:02 2014
  * \brief  Packing_Utils class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Packing_Utils_hh
-#define utils_Packing_Utils_hh
+#ifndef Utils_utils_Packing_Utils_hh
+#define Utils_utils_Packing_Utils_hh
 
 #include <string>
 #include <vector>
@@ -363,7 +363,7 @@ void unpack_data(FT &field, const std::vector<char> &packed)
 
 #include "Packing_Utils.i.hh"
 
-#endif // utils_Packing_Utils_hh
+#endif // Utils_utils_Packing_Utils_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Packing_Utils.hh

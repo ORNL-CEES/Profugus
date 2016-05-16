@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/LG_Indexer.hh
+ * \file   SPn/mesh/LG_Indexer.hh
  * \author Thomas M. Evans
  * \date   Wednesday February 12 10:30:50 2014
  * \brief  LG_Indexer class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mesh_LG_Indexer_hh
-#define mesh_LG_Indexer_hh
+#ifndef SPn_mesh_LG_Indexer_hh
+#define SPn_mesh_LG_Indexer_hh
 
 #include <vector>
 
@@ -378,7 +378,7 @@ int LG_Indexer::offset(int dir) const
 
 } // end namespace profugus
 
-#endif // mesh_LG_Indexer_hh
+#endif // SPn_mesh_LG_Indexer_hh
 
 //---------------------------------------------------------------------------//
 //              end of mesh/LG_Indexer.hh

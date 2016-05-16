@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Solver.pt.cc
+ * \file   MC/mc/Fission_Matrix_Solver.pt.cc
  * \author Thomas M. Evans
  * \date   Mon Dec 08 17:18:34 2014
  * \brief  Fission_Matrix_Solver member definitions.

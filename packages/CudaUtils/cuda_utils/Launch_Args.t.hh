@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Launch_Args.t.hh
+ * \file   CudaUtils/cuda_utils/Launch_Args.t.hh
  * \author Stuart Slattery
  * \date   Wed Oct 02 13:16:37 2013
  * \brief  Launch class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Launch_Args_t_hh
-#define cuda_utils_Launch_Args_t_hh
+#ifndef CudaUtils_cuda_utils_Launch_Args_t_hh
+#define CudaUtils_cuda_utils_Launch_Args_t_hh
 
 #include "harness/DBC.hh"
 #include "Launch_Args.hh"
@@ -34,7 +34,7 @@ void parallel_launch(
 
 } // end namespace cuda
 
-#endif // cuda_utils_Launch_Args_t_hh
+#endif // CudaUtils_cuda_utils_Launch_Args_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Launch_Args.t.hh

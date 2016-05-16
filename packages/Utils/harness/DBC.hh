@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/DBC.hh
+ * \file   Utils/harness/DBC.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 11:31:52 2008
  * \brief  DBC class and type definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef harness_DBC_hh
-#define harness_DBC_hh
+#ifndef Utils_harness_DBC_hh
+#define Utils_harness_DBC_hh
 
 #include <stdexcept>
 #include <string>
@@ -162,7 +162,7 @@ void toss_validation_cookies(
 #include "DBC_def.hh"
 //---------------------------------------------------------------------------//
 
-#endif // harness_DBC_hh
+#endif // Utils_harness_DBC_hh
 
 //---------------------------------------------------------------------------//
 //              end of harness/DBC.hh

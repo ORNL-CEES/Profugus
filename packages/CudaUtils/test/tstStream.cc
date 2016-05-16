@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstStream.cc
+ * \file   CudaUtils/test/tstStream.cc
  * \author Seth R Johnson
  * \date   Wed Oct 02 15:11:19 2013
  * \brief

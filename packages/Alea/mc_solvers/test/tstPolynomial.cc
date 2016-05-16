@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testPolynomial
+ * \file   Alea/mc_solvers/test/tstPolynomial.cc
  * \author Steven Hamilton
  * \brief  Test of Polynomial class.
  */

@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   Profugus/comm/Logger.hh
+ * \file   Utils/comm/Logger.hh
  * \author Seth R Johnson
  * \date   Tue Feb 03 08:39:27 2015
  * \brief  Logger class declaration.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef Profugus_comm_Logger_hh
-#define Profugus_comm_Logger_hh
+#ifndef Utils_comm_Logger_hh
+#define Utils_comm_Logger_hh
 
 // Workaround for Windows, which loves to break code by #defining max, min,
 // ERROR, and all sorts of other names that no one would ever possibly want to
@@ -243,7 +243,7 @@ inline Logger_Statement log_local(Log_Level level = INFO)
 } // end namespace profugus
 
 //---------------------------------------------------------------------------//
-#endif // Profugus_comm_Logger_hh
+#endif // Utils_comm_Logger_hh
 
 //---------------------------------------------------------------------------//
 // end of Profugus/comm/Logger.hh

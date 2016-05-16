@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstDimensions.cc
+ * \file   SPn/spn/test/tstDimensions.cc
  * \author Thomas M. Evans
  * \date   Tue Oct 23 22:38:34 2012
  * \brief  SPN Dimensions test.

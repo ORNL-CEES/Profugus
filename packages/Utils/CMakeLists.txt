@@ -62,9 +62,6 @@ TRIBITS_ADD_DEBUG_OPTION()
 # to allow includes like #include "comm/Comm.h"
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-# to allow includes like #include "Utils/config.h"
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/..)
-
 ##---------------------------------------------------------------------------##
 ## DBC
 
@@ -302,6 +299,7 @@ INSTALL(FILES ${RNG_HEADERS} DESTINATION include/Utils/rng)
 FILE(GLOB GTEST_HEADERS gtest/*.hh)
 SET(GTEST_SOURCES
   gtest/Gtest_Functions.cc
+  gtest/Test.cc
   gtest/gtest-all.cc)
 
 LIST(APPEND SOURCES ${GTEST_SOURCES})

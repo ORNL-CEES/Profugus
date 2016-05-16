@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstBank.cc
+ * \file   MC/mc/test/tstBank.cc
  * \author Thomas M. Evans
  * \date   Fri Apr 25 16:50:26 2014
  * \brief  Bank test.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstTexture_Vector.cc
+ * \file   CudaUtils/test/tstTexture_Vector.cc
  * \author Seth R Johnson
  * \date   Fri Sep 20 15:32:41 2013
  * \brief

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/InverseOperator.t.hh
+ * \file   SPn/solvers/InverseOperator.t.hh
  * \author Thomas Evans, Steven Hamilton
  * \date   Fri Feb 21 13:05:35 2014
  * \brief  InverseOperator template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_InverseOperator_t_hh
-#define solvers_InverseOperator_t_hh
+#ifndef SPn_solvers_InverseOperator_t_hh
+#define SPn_solvers_InverseOperator_t_hh
 
 #include "InverseOperator.hh"
 #include "LinearSolverBuilder.hh"
@@ -123,7 +123,7 @@ void InverseOperatorBase<T>::ApplyImpl(const MV &x, MV &y ) const
 
 } // end namespace profugus
 
-#endif // solvers_InverseOperator_t_hh
+#endif // SPn_solvers_InverseOperator_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of InverseOperator.t.hh

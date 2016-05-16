@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstSerial_HDF5_Writer.cc
+ * \file   Utils/utils/test/tstSerial_HDF5_Writer.cc
  * \author Thomas M. Evans
  * \date   Thu Nov 07 22:29:22 2013
  * \brief  Unit test of HDF5_IO.

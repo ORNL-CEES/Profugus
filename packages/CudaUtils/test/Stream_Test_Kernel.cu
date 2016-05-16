@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Stream_Test_Kernel.cu
+ * \file   CudaUtils/test/Stream_Test_Kernel.cu
  * \author Seth R Johnson
  * \date   Wed Oct 02 15:12:07 2013
  * \brief  Stream_Test_Kernel kernel definitions.

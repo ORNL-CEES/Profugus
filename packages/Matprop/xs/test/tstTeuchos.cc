@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/test/tstTeuchos.cc
+ * \file   Matprop/xs/test/tstTeuchos.cc
  * \author Thomas M. Evans
  * \date   Wed Jan 29 15:27:12 2014
  * \brief  Test teuchos capabilities.

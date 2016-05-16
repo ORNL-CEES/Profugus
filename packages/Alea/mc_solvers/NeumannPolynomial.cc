@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   NeumannPolynomial.cc
+ * \file   Alea/mc_solvers/NeumannPolynomial.cc
  * \author Steven Hamilton
  * \brief  NeumannPolynomial class definitions.
  */

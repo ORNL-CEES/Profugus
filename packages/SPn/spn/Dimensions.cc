@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Dimensions.cc
+ * \file   SPn/spn/Dimensions.cc
  * \author Thomas M. Evans
  * \date   Tue Oct 23 21:17:05 2012
  * \brief  Dimensions member definitions.

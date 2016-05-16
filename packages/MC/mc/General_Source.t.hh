@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/General_Source.t.hh
+ * \file   MC/mc/General_Source.t.hh
  * \author Steven Hamilton
  * \date   Mon Apr 04 20:38:12 2016
  * \brief  General_Source template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_General_Source_t_hh
-#define mc_General_Source_t_hh
+#ifndef MC_mc_General_Source_t_hh
+#define MC_mc_General_Source_t_hh
 
 #include "comm/global.hh"
 #include "General_Source.hh"
@@ -197,7 +197,7 @@ auto General_Source<Geometry>::get_particle() -> SP_Particle
 
 } // end namespace profugus
 
-#endif // mc_General_Source_t_hh
+#endif // MC_mc_General_Source_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of General_Source.t.hh

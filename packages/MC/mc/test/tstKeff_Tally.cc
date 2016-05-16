@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstKeff_Tally.cc
+ * \file   MC/mc/test/tstKeff_Tally.cc
  * \author Thomas M. Evans
  * \date   Thu May 15 14:50:01 2014
  * \brief  Keff_Tally unit-test.

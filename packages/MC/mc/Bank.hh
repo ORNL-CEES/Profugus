@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Bank.hh
+ * \file   MC/mc/Bank.hh
  * \author Seth R Johnson and Thomas M. Evans
  * \date   Friday April 25 16:46:18 2014
  * \brief  Bank class definition
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Bank_hh
-#define mc_Bank_hh
+#ifndef MC_mc_Bank_hh
+#define MC_mc_Bank_hh
 
 #include <vector>
 #include <memory>
@@ -152,7 +152,7 @@ class Bank
 
 //---------------------------------------------------------------------------//
 
-#endif // mc_Bank_hh
+#endif // MC_mc_Bank_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Bank.hh

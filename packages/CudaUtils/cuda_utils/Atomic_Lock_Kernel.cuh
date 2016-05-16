@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/Atomic_Lock_Kernel.cuh
+ * \file   CudaUtils/cuda_utils/Atomic_Lock_Kernel.cuh
  * \author Seth R Johnson
  * \date   Thu Aug 15 07:57:35 2013
  * \brief  Atomic_Lock_Kernel kernel declarations.

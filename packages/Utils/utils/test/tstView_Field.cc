@@ -1,7 +1,7 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
  * \file   Utils/utils/test/tstView_Field.cc
- * \author Thomas M. Evans
+ * \author Thomas M. Evans et al
  * \date   Thu Oct 20 13:26:04 2011
  * \brief  View_Field unit test.
  * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -11,7 +11,7 @@
 #include "../View_Field.hh"
 #include "../View_Field_Struct.hh"
 
-#include "Utils/gtest/profugus_gtest.hh"
+#include "Utils/gtest/utils_gtest.hh"
 
 #include <vector>
 #include <cmath>
@@ -26,7 +26,7 @@ typedef profugus::const_View_Field<double> const_View_Field_Dbl;
 
 using namespace std;
 using def::Vec_Dbl;
-
+using def::Vec_Int;
 
 //---------------------------------------------------------------------------//
 // TESTS
@@ -36,9 +36,11 @@ TEST(View, basic)
 {
     // Test a default View_Field_Dbl
     View_Field_Dbl empty_vf;
-    EXPECT_EQ(empty_vf.begin().get_pointer(), nullptr);
-    EXPECT_EQ(empty_vf.end().get_pointer(), nullptr);
+    EXPECT_EQ(empty_vf.begin().ptr(), nullptr);
+    EXPECT_EQ(empty_vf.end().ptr(), nullptr);
     EXPECT_EQ(empty_vf.data(), nullptr);
+    EXPECT_EQ(empty_vf.pbegin(), nullptr);
+    EXPECT_EQ(empty_vf.pend(), nullptr);
 
     // >>> Test a View_Field_Dbl with pointers
 
@@ -103,7 +105,6 @@ TEST(View, basic)
 
 TEST(View, reverse_iterators)
 {
-    typedef std::vector<int>               Vec_Int;
     typedef profugus::View_Field<int>       View_Field_Int;
     typedef profugus::const_View_Field<int> const_View_Field_Int;
 
@@ -131,8 +132,8 @@ TEST(Const, View)
 
     // Test a default View_Field_Dbl
     const_View_Field_Dbl empty_vf;
-    EXPECT_EQ(empty_vf.begin().get_pointer(), nullptr);
-    EXPECT_EQ(empty_vf.end().get_pointer(), nullptr);
+    EXPECT_EQ(empty_vf.begin().ptr(), nullptr);
+    EXPECT_EQ(empty_vf.end().ptr(), nullptr);
     EXPECT_EQ(empty_vf.data(), nullptr);
 
     // Make a field
@@ -533,6 +534,55 @@ TEST(StructView, wacky)
 
     double expected_cvalues[] = {100, 1000, 10000};
     EXPECT_VEC_EQ(expected_cvalues, cview);
+}
+
+//---------------------------------------------------------------------------//
+
+TEST(RangeView, range)
+{
+    Vec_Int vars{1, 2, 3, 6};
+    auto view = profugus::make_view(vars);
+
+    for (auto& v : view.fast_range())
+    {
+        v += 3;
+    }
+
+    EXPECT_VEC_EQ((Vec_Int{4, 5, 6, 9}), vars);
+
+    // Check iterating on an empty field
+    profugus::View_Field<int> empty_view;
+    int ctr = 0;
+    for (auto v : empty_view)
+    {
+        ++ctr;
+    }
+    EXPECT_EQ(0, ctr);
+
+#ifdef REQUIRE_ON
+    profugus::View_Field<int> strided_view(vars.data(),
+                                          vars.data() + vars.size(),
+                                          2);
+    EXPECT_THROW(strided_view.fast_range(), profugus::assertion);
+#endif
+}
+
+TEST(RangeView, piter)
+{
+    Vec_Int vars{1, 2, 3, 6};
+    auto view = profugus::make_view(vars);
+
+    EXPECT_EQ(view.data(), view.pbegin());
+    EXPECT_EQ(view.data(), view.cpbegin());
+    EXPECT_EQ(view.data() + view.size(), view.pend());
+    EXPECT_EQ(view.data() + view.size(), view.cpend());
+
+#ifdef REQUIRE_ON
+    profugus::View_Field<int> strided_view(vars.data(),
+                                          vars.data() + vars.size(),
+                                          2);
+    EXPECT_THROW(strided_view.pbegin(), profugus::assertion);
+#endif
 }
 
 //---------------------------------------------------------------------------//

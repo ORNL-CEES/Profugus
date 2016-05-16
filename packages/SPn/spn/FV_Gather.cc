@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/FV_Gather.cc
+ * \file   SPn/spn/FV_Gather.cc
  * \author Thomas M. Evans
  * \date   Tue Oct 30 11:04:52 2012
  * \brief  FV_Gather member definitions.

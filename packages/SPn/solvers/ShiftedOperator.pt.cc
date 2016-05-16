@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ShiftedOperator.pt.cc
+ * \file   SPn/solvers/ShiftedOperator.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  ShiftedOperator explicit instantiation.

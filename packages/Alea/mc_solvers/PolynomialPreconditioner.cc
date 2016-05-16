@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PolynomialPreconditioner.cc
+ * \file   Alea/mc_solvers/PolynomialPreconditioner.cc
  * \author Steven Hamilton
  * \brief  Perform Adjoint Monte Carlo on linear system
  */

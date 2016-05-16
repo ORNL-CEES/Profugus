@@ -131,10 +131,10 @@ template<typename T>
 typename VF_Iterator<T>::difference_type
 VF_Iterator<T>::operator-(const This &vf_iter) const
 {
-    REQUIRE(d_stride > 0);
-    REQUIRE((d_ptr - vf_iter.d_ptr) % d_stride == 0);
-
-    return (d_ptr - vf_iter.d_ptr) / d_stride;
+    difference_type delta = d_ptr - vf_iter.d_ptr;
+    if (d_stride == 1)
+        return delta;
+    return delta / d_stride;
 }
 
 //---------------------------------------------------------------------------//
@@ -211,7 +211,7 @@ const_VF_Iterator<T>::const_VF_Iterator(pointer ptr_in, unsigned int stride)
  */
 template<typename T>
 const_VF_Iterator<T>::const_VF_Iterator(const VF_Iterator<T> &iter)
-    : d_ptr(iter.get_pointer())
+    : d_ptr(iter.ptr())
     , d_stride(iter.stride())
 {
     ENSURE(d_stride > 0);
@@ -306,10 +306,10 @@ template<typename T>
 typename const_VF_Iterator<T>::difference_type
 const_VF_Iterator<T>::operator-(const This &vf_iter) const
 {
-    REQUIRE(d_stride > 0);
-    REQUIRE((d_ptr - vf_iter.d_ptr) % d_stride == 0);
-
-    return (d_ptr - vf_iter.d_ptr) / d_stride;
+    difference_type delta = d_ptr - vf_iter.d_ptr;
+    if (d_stride == 1)
+        return delta;
+    return delta / d_stride;
 }
 
 //---------------------------------------------------------------------------//
@@ -348,7 +348,7 @@ template<typename T>
 bool operator==(const VF_Iterator<T>       &left,
                 const const_VF_Iterator<T> &right)
 {
-    return left.get_pointer() == right.get_pointer();
+    return left.ptr() == right.ptr();
 }
 
 } // end namespace profugus

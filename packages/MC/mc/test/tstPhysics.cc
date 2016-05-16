@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstPhysics.cc
+ * \file   MC/mc/test/tstPhysics.cc
  * \author Thomas M. Evans
  * \date   Fri May 02 00:58:54 2014
  * \brief  Physics unit test.

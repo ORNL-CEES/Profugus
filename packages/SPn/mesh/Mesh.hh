@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Mesh.hh
+ * \file   SPn/mesh/Mesh.hh
  * \author Tom Evans
  * \date   Wednesday February 12 0:15:45 2014
  * \brief  Declaration of Mesh
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Mesh_kba_hh
-#define spn_Mesh_kba_hh
+#ifndef SPn_mesh_Mesh_hh
+#define SPn_mesh_Mesh_hh
 
 #include <vector>
 
@@ -243,7 +243,7 @@ class Mesh
 
 #include "Mesh.i.hh"
 
-#endif // spn_Mesh_hh
+#endif // SPn_mesh_Mesh_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/Mesh.hh

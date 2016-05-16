@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Diagnostic_Tally.t.hh
+ * \file   MC/mc/Source_Diagnostic_Tally.t.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 09 16:32:04 2014
  * \brief  Source_Diagnostic_Tally member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Source_Diagnostic_Tally_t_hh
-#define mc_Source_Diagnostic_Tally_t_hh
+#ifndef MC_mc_Source_Diagnostic_Tally_t_hh
+#define MC_mc_Source_Diagnostic_Tally_t_hh
 
 #include <algorithm>
 #include <sstream>
@@ -186,7 +186,7 @@ void Source_Diagnostic_Tally<Geometry>::reset()
 
 } // end namespace profugus
 
-#endif // mc_Source_Diagnostic_Tally_t_hh
+#endif // MC_mc_Source_Diagnostic_Tally_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Source_Diagnostic_Tally.t.hh

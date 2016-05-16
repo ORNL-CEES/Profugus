@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/EigenvalueSolverBuilder.t.hh
+ * \file   SPn/solvers/EigenvalueSolverBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Feb 24 13:49:22 2014
  * \brief  EigenvalueSolverBuilder template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solver_EigenvalueSolverBuilder_t_hh
-#define solver_EigenvalueSolverBuilder_t_hh
+#ifndef SPn_solvers_EigenvalueSolverBuilder_t_hh
+#define SPn_solvers_EigenvalueSolverBuilder_t_hh
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ namespace profugus
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build a denovo EigenvalueSolver for standard eigenvalue problem.
+ * \brief Build a profugus EigenvalueSolver for standard eigenvalue problem.
  *
  * This function creates a EigenvalueSolver object from a given database
  * and a single Epetra operator.  The type of solver to be constructed is
@@ -41,7 +41,7 @@ EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
     RCP_EigenvalueSolver solver;
 
     // Determine type of solver to be constructed.
-    std::string eigensolver = to_lower(
+    std::string eigensolver = lower(
         db->get("eigensolver", std::string("Arnoldi")));
 
     if( eigensolver=="arnoldi" )
@@ -68,7 +68,7 @@ EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build a denovo EigenvalueSolver for generalized eigenvalue problem.
+ * \brief Build a profugus EigenvalueSolver for generalized eigenvalue problem.
  *
  * This function creates a EigenvalueSolver object from a given database
  * and two Epetra operators.  The type of solver to be constructed is
@@ -103,7 +103,7 @@ EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
     RCP_EigenvalueSolver solver;
 
     // Determine type of solver to be constructed.
-    std::string eigensolver = to_lower(
+    std::string eigensolver = lower(
         db->get("eigensolver", string("Arnoldi")));
 
     if( eigensolver=="arnoldi" )

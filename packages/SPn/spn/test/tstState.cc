@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstState.cc
+ * \file   SPn/spn/test/tstState.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 17 14:01:48 2014
  * \brief  State unit test.

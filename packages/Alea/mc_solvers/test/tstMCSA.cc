@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testMCSA.cc
+ * \file   Alea/mc_solvers/test/tstMCSA.cc
  * \author Steven Hamilton
  * \brief  Test of MCSA class.
  */

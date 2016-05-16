@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/MPI_Traits.hh
+ * \file   Utils/comm/MPI_Traits.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 15:00:39 2008
  * \brief  MPI_Traits class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_MPI_Traits_hh
-#define comm_MPI_Traits_hh
+#ifndef Utils_comm_MPI_Traits_hh
+#define Utils_comm_MPI_Traits_hh
 
 #include <mpi.h>
 
@@ -108,7 +108,7 @@ struct MPI_Traits<long double>
 
 } // end namespace profugus
 
-#endif // comm_MPI_Traits_hh
+#endif // Utils_comm_MPI_Traits_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/MPI_Traits.hh

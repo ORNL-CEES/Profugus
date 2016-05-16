@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/P_Stream.i.hh
+ * \file   Utils/comm/P_Stream.i.hh
  * \author Thomas M. Evans
  * \date   Mon Oct 08 10:31:04 2012
  * \brief  Member definitions of class P_Stream.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_P_Stream_i_hh
-#define comm_P_Stream_i_hh
+#ifndef Utils_comm_P_Stream_i_hh
+#define Utils_comm_P_Stream_i_hh
 
 namespace profugus
 {
@@ -54,7 +54,7 @@ P_Out& P_Out::operator<<(const P_Manip<T> &p)
 
 } // end namespace profugus
 
-#endif // comm_P_Stream_i_hh
+#endif // Utils_comm_P_Stream_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/P_Stream.i.hh

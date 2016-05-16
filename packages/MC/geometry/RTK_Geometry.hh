@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Geometry.hh
+ * \file   MC/geometry/RTK_Geometry.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:43:25 2014
  * \brief  RTK_Geometry class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_Geometry_hh
-#define geometry_RTK_Geometry_hh
+#ifndef MC_geometry_RTK_Geometry_hh
+#define MC_geometry_RTK_Geometry_hh
 
 #include <cmath>
 #include <memory>
@@ -304,7 +304,7 @@ typedef RTK_Geometry< RTK_Array< RTK_Array<RTK_Cell> > > Core;
 
 } // end namespace profugus
 
-#endif // geometry_RTK_Geometry_hh
+#endif // MC_geometry_RTK_Geometry_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_Geometry.hh

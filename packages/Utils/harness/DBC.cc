@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/DBC.cc
+ * \file   Utils/harness/DBC.cc
  * \author Thomas M. Evans
  * \date   Wed Jan  2 11:31:52 2008
  * \brief  DBC member definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstHardware.cc
+ * \file   CudaUtils/test/tstHardware.cc
  * \author Seth R Johnson
  * \date   Wed Jul 10 09:04:11 2013
  * \brief

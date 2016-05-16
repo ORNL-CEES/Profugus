@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn_driver/Manager.hh
+ * \file   SPn/spn_driver/Manager.hh
  * \author Thomas M. Evans
  * \date   Fri Mar 14 11:32:36 2014
  * \brief  Manager class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_driver_Manager_hh
-#define spn_driver_Manager_hh
+#ifndef SPn_spn_driver_Manager_hh
+#define SPn_spn_driver_Manager_hh
 
 #include <sstream>
 #include <string>
@@ -110,7 +110,7 @@ class Manager
 
 } // end namespace spn
 
-#endif // spn_driver_Manager_hh
+#endif // SPn_spn_driver_Manager_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Manager.hh

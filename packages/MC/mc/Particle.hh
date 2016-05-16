@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Particle.hh
+ * \file   MC/mc/Particle.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 11:26:16 2014
  * \brief  Particle class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Particle_hh
-#define mc_Particle_hh
+#ifndef MC_mc_Particle_hh
+#define MC_mc_Particle_hh
 
 #include "utils/Definitions.hh"
 #include "utils/Metaclass.hh"
@@ -127,7 +127,7 @@ class Particle
 
 } // end namespace profugus
 
-#endif // mc_Particle_hh
+#endif // MC_mc_Particle_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Particle.hh

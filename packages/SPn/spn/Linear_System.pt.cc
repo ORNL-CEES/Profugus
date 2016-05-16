@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Linear_System.pt.cc
+ * \file   SPn/spn/Linear_System.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  Linear_System explicit instantiation.

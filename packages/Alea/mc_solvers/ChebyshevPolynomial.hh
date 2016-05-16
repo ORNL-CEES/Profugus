@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   ChebyshevPolynomial.hh
+ * \file   Alea/mc_solvers/ChebyshevPolynomial.hh
  * \author Steven Hamilton
  * \brief  ChebyshevPolynomial class declaration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_ChebyshevPolynomial_hh
-#define mc_solvers_ChebyshevPolynomial_hh
+#ifndef Alea_mc_solvers_ChebyshevPolynomial_hh
+#define Alea_mc_solvers_ChebyshevPolynomial_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -62,5 +62,5 @@ class ChebyshevPolynomial : public Polynomial
 
 }
 
-#endif // mc_solvers_ChebyshevPolynomial_hh
+#endif // Alea_mc_solvers_ChebyshevPolynomial_hh
 

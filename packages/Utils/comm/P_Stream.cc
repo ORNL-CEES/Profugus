@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/P_Stream.cc
+ * \file   Utils/comm/P_Stream.cc
  * \author Thomas M. Evans
  * \date   Mon Oct 08 10:31:04 2012
  * \brief  P_Stream member definitions.

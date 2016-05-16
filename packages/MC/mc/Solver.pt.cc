@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Solver.pt.cc
+ * \file   MC/mc/Solver.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Solver template instantiations

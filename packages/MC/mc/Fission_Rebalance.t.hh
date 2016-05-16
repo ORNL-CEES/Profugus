@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Rebalance.t.hh
+ * \file   MC/mc/Fission_Rebalance.t.hh
  * \author Thomas M. Evans
  * \date   Monday May 5 11:37:31 2014
  * \brief  Fission_Rebalance template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Rebalance_t_hh
-#define mc_Fission_Rebalance_t_hh
+#ifndef MC_mc_Fission_Rebalance_t_hh
+#define MC_mc_Fission_Rebalance_t_hh
 
 #include "Fission_Rebalance.hh"
 

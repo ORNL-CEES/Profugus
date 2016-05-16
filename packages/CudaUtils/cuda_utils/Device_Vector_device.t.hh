@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Device_Vector_device.t.hh
+ * \file   CudaUtils/cuda_utils/Device_Vector_device.t.hh
  * \author Seth R Johnson
  * \date   Thu Aug 01 11:33:12 2013
  * \brief  Device_Vector template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Device_Vector_device_t_hh
-#define cuda_utils_Device_Vector_device_t_hh
+#ifndef CudaUtils_cuda_utils_Device_Vector_device_t_hh
+#define CudaUtils_cuda_utils_Device_Vector_device_t_hh
 
 #include "Device_Vector.hh"
 
@@ -374,7 +374,7 @@ void Device_Vector<arch::Device,T>::to_host_async(
 
 } // end namespace cuda
 
-#endif // cuda_utils_Device_Vector_device_t_hh
+#endif // CudaUtils_cuda_utils_Device_Vector_device_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of cuda_utils/Device_Vector_device.t.hh

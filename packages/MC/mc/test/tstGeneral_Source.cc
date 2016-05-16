@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstGeneral_Source.cc
+ * \file   MC/mc/test/tstGeneral_Source.cc
  * \author Thomas M. Evans
  * \date   Wed May 07 15:24:31 2014
  * \brief  General_Source test.

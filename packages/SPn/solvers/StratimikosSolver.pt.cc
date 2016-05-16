@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/StratimikosSolver.pt.cc
+ * \file   SPn/solvers/StratimikosSolver.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  StratimikosSolver explicit instantiation.

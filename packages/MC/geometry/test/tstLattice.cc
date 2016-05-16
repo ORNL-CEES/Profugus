@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/test/tstRTK_Lattice.cc
+ * \file   MC/geometry/test/tstLattice.cc
  * \author Thomas M. Evans
  * \date   Wed Dec 22 13:32:47 2010
  * \brief  RTK_Lattice unit test.
@@ -692,5 +692,5 @@ TEST(Multisegment, Pin)
 
 
 //---------------------------------------------------------------------------//
-//                        end of tstRTK_Lattice.cc
+// end of tstLattice.cc
 //---------------------------------------------------------------------------//

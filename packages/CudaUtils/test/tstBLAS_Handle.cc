@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstBLAS_Handle.cc
+ * \file   CudaUtils/test/tstBLAS_Handle.cc
  * \author Seth R Johnson
  * \date   Wed Dec 11 21:01:29 2013
  * \brief

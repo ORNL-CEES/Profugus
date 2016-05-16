@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Stream_Test_Kernel_Data.hh
+ * \file   CudaUtils/test/Stream_Test_Kernel_Data.hh
  * \author Seth R Johnson
  * \date   Wed Oct 02 15:12:07 2013
  * \brief  Stream_Test_Kernel_Data kernel declarations.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_test_Stream_Test_Kernel_Data_hh
-#define cuda_utils_test_Stream_Test_Kernel_Data_hh
+#ifndef CudaUtils_test_Stream_Test_Kernel_Data_hh
+#define CudaUtils_test_Stream_Test_Kernel_Data_hh
 
 #include "../cuda_utils/Device_Vector.hh"
 #include "../cuda_utils/Launch_Args.hh"
@@ -63,7 +63,7 @@ struct Stream_Test_Kernel_Data
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda
-#endif // cuda_utils_test_Stream_Test_Kernel_Data_hh
+#endif // CudaUtils_test_Stream_Test_Kernel_Data_hh
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Stream_Test_Kernel_Data.hh

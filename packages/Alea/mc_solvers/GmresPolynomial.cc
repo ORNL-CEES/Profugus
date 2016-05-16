@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   GmresPolynomial.cc
+ * \file   Alea/mc_solvers/GmresPolynomial.cc
  * \author Steven Hamilton
  * \brief  GmresPolynomial class definitions.
  */

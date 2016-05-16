@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Texture_Vector_host.t.hh
+ * \file   CudaUtils/cuda_utils/Texture_Vector_host.t.hh
  * \author Seth R Johnson
  * \date   Fri Sep 20 10:08:43 2013
  * \brief  Texture_Vector template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Texture_Vector_host_t_hh
-#define cuda_utils_Texture_Vector_host_t_hh
+#ifndef CudaUtils_cuda_utils_Texture_Vector_host_t_hh
+#define CudaUtils_cuda_utils_Texture_Vector_host_t_hh
 
 #include "Texture_Vector.hh"
 
@@ -123,7 +123,7 @@ void Texture_Vector<arch::Host,T>::assign(const Device_Vector_t& devicevec)
 //---------------------------------------------------------------------------//
 } // end namespace cuda
 
-#endif // cuda_utils_Texture_Vector_host_t_hh
+#endif // CudaUtils_cuda_utils_Texture_Vector_host_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Texture_Vector_host.t.hh

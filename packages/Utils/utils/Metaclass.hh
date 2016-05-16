@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Metaclass.hh
+ * \file   Utils/utils/Metaclass.hh
  * \author Seth R Johnson
  * \date   Fri Aug 30 20:59:34 2013
  * \brief  Metaclass class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Metaclass_hh
-#define utils_Metaclass_hh
+#ifndef Utils_utils_Metaclass_hh
+#define Utils_utils_Metaclass_hh
 
 #include <vector>
 #include <cstring>
@@ -200,7 +200,7 @@ class Metaclass
 
 //---------------------------------------------------------------------------//
 
-#endif // utils_Metaclass_hh
+#endif // Utils_utils_Metaclass_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Metaclass.hh

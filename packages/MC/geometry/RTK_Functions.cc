@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Functions.cc
+ * \file   MC/geometry/RTK_Functions.cc
  * \author Seth R Johnson
  * \date   Fri Jan 18 19:18:14 2013
  * \brief  RTK_Functions implementation

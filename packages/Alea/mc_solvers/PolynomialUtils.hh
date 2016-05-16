@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PolynomialUtils.hh
+ * \file   Alea/mc_solvers/PolynomialUtils.hh
  * \author Steven Hamilton
  * \brief  Pure static class for various polynomial-related utilities.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_PolynomialUtils_hh
-#define mc_solvers_PolynomialUtils_hh
+#ifndef Alea_mc_solvers_PolynomialUtils_hh
+#define Alea_mc_solvers_PolynomialUtils_hh
 
 #include <cmath>
 
@@ -37,5 +37,5 @@ class PolynomialUtils
 
 }
 
-#endif // mc_solvers_PolynomialUtils_hh
+#endif // Alea_mc_solvers_PolynomialUtils_hh
 

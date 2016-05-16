@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdjointMcParallelFor.cc
+ * \file   Alea/mc_solvers/AdjointMcParallelFor.i.hh
  * \author Steven Hamilton
  * \brief  Perform single history of adjoint MC
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_AdjointMcParallelFor_i_hh
-#define mc_solver_AdjointMcParallelFor_i_hh
+#ifndef Alea_mc_solvers_AdjointMcParallelFor_i_hh
+#define Alea_mc_solvers_AdjointMcParallelFor_i_hh
 
 #include <iterator>
 #include <random>
@@ -60,7 +60,7 @@ AdjointMcParallelFor::AdjointMcParallelFor(
     d_start_wt_factor = pl->get<SCALAR>("start_weight_factor",1.0);
 
     // Should we print anything to screen
-    std::string verb = profugus::to_lower(pl->get("verbosity","low"));
+    std::string verb = profugus::lower(pl->get("verbosity","low"));
     d_print = (verb == "high");
 }
 
@@ -314,4 +314,4 @@ void AdjointMcParallelFor::build_initial_distribution(const MV &x)
 
 } // namespace alea
 
-#endif // mc_solver_AdjointMcParallelFor_i_hh
+#endif // Alea_mc_solvers_AdjointMcParallelFor_i_hh

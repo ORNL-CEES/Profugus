@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Davidson_Eigensolver.t.hh
+ * \file   SPn/solvers/Davidson_Eigensolver.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:41 2014
  * \brief  Davidson_Eigensolver template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_Davidson_Eigensolver_t_hh
-#define solvers_Davidson_Eigensolver_t_hh
+#ifndef SPn_solvers_Davidson_Eigensolver_t_hh
+#define SPn_solvers_Davidson_Eigensolver_t_hh
 
 #include "AnasaziBasicEigenproblem.hpp"
 
@@ -147,7 +147,7 @@ void Davidson_Eigensolver<T>::solve( double &keff, Teuchos::RCP<MV> x)
 
 } // end namespace profugus
 
-#endif // solvers_Davidson_Eigensolver_t_hh
+#endif // SPn_solvers_Davidson_Eigensolver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Davidson_Eigensolver.t.hh

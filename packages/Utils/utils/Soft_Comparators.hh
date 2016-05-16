@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Soft_Comparators.hh
+ * \file   Utils/utils/Soft_Comparators.hh
  * \author Gregory G. Davidson
  * \date   Wed Sep 11 21:27:43 2013
  * \brief  Defines a series of "soft" comparator functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Soft_Comparators_hh
-#define utils_Soft_Comparators_hh
+#ifndef Utils_utils_Soft_Comparators_hh
+#define Utils_utils_Soft_Comparators_hh
 
 #include <cmath>
 #include <functional>
@@ -366,7 +366,7 @@ inline bool soft_is_within(const std::pair<ValType, ValType> &pair1,
 
 } // end namespace profugus
 
-#endif // utils_Soft_Comparators_hh
+#endif // Utils_utils_Soft_Comparators_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Soft_Comparators.hh

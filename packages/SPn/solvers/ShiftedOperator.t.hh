@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ShiftedOperator.t.hh
+ * \file   SPn/solvers/ShiftedOperator.t.hh
  * \author Thomas M. Evans, Steven P. Hamilton
  * \date   Fri Feb 21 13:41:13 2014
  * \brief  ShiftedOperator template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_ShiftedOperator_t_hh
-#define solvers_ShiftedOperator_t_hh
+#ifndef SPn_solvers_ShiftedOperator_t_hh
+#define SPn_solvers_ShiftedOperator_t_hh
 
 #include "ShiftedOperator.hh"
 
@@ -87,7 +87,7 @@ void ShiftedOperatorBase<T>::ApplyImpl(const MV &x,
 
 } // end namespace profugus
 
-#endif // solvers_ShiftedOperator_t_hh
+#endif // SPn_solvers_ShiftedOperator_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of ShiftedOperator.t.hh

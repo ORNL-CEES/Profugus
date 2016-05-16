@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   SyntheticAcceleration.hh
+ * \file   Alea/mc_solvers/SyntheticAcceleration.hh
  * \author Steven Hamilton
  * \brief  Perform Richardson iteration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_SyntheticAcceleration_hh
-#define mc_solvers_SyntheticAcceleration_hh
+#ifndef Alea_mc_solvers_SyntheticAcceleration_hh
+#define Alea_mc_solvers_SyntheticAcceleration_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -66,5 +66,5 @@ class SyntheticAcceleration : public AleaSolver
 
 }
 
-#endif // mc_solvers_SyntheticAcceleration_hh
+#endif // Alea_mc_solvers_SyntheticAcceleration_hh
 

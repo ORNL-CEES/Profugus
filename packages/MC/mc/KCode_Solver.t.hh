@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/KCode_Solver.t.hh
+ * \file   MC/mc/KCode_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 19 10:30:32 2014
  * \brief  KCode_Solver member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_KCode_Solver_t_hh
-#define mc_KCode_Solver_t_hh
+#ifndef MC_mc_KCode_Solver_t_hh
+#define MC_mc_KCode_Solver_t_hh
 
 #include "KCode_Solver.hh"
 
@@ -494,7 +494,7 @@ void KCode_Solver<Geometry>::finalize()
 
 } // end namespace profugus
 
-#endif // mc_KCode_Solver_t_hh
+#endif // MC_mc_KCode_Solver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of KCode_Solver.t.hh

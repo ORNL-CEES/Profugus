@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   ChebyshevIteration.hh
+ * \file   Alea/mc_solvers/ChebyshevIteration.hh
  * \author Steven Hamilton
  * \brief  Perform Chebyshev iteration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_ChebyshevIteration_hh
-#define mc_solvers_ChebyshevIteration_hh
+#ifndef Alea_mc_solvers_ChebyshevIteration_hh
+#define Alea_mc_solvers_ChebyshevIteration_hh
 
 #include "AleaSolver.hh"
 
@@ -49,5 +49,5 @@ class ChebyshevIteration : public AleaSolver
 
 }
 
-#endif // mc_solvers_ChebyshevIteration_hh
+#endif // Alea_mc_solvers_ChebyshevIteration_hh
 

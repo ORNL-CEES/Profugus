@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinearSolver.hh
+ * \file   SPn/solvers/LinearSolver.hh
  * \author Steven Hamilton
  * \date   Mon Jul 01 11:48:09 2013
  * \brief  LinearSolver class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_LinearSolver_hh
-#define solvers_LinearSolver_hh
+#ifndef SPn_solvers_LinearSolver_hh
+#define SPn_solvers_LinearSolver_hh
 
 #include <string>
 
@@ -63,7 +63,7 @@ class LinearSolver
         b_max_iters = db->get<int>("max_itr", 100);
 
         // Get verbosity or set default
-        std::string verb = profugus::to_lower(
+        std::string verb = profugus::lower(
             db->get("verbosity", std::string("low")));
         if( verb=="none" )
         {
@@ -155,7 +155,7 @@ class LinearSolver
 
 } // end namespace profugus
 
-#endif // solvers_LinearSolver_hh
+#endif // SPn_solvers_LinearSolver_hh
 
 //---------------------------------------------------------------------------//
 //              end of solvers/LinearSolver.hh

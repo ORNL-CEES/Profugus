@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Hash_Functions.hh
+ * \file   Utils/utils/Hash_Functions.hh
  * \author Thomas M. Evans
  * \date   Sat Sep 03 18:52:06 2011
  * \brief  Hash_Functions class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Hash_Functions_hh
-#define utils_Hash_Functions_hh
+#ifndef Utils_utils_Hash_Functions_hh
+#define Utils_utils_Hash_Functions_hh
 
 #include <algorithm>
 
@@ -70,7 +70,7 @@ class Int_Mod_Hash_Function
 
 } // end namespace profugus
 
-#endif // utils_Hash_Functions_hh
+#endif // Utils_utils_Hash_Functions_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Hash_Functions.hh

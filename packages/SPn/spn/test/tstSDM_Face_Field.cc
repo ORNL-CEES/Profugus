@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstSDM_Face_Field.cc
+ * \file   SPn/spn/test/tstSDM_Face_Field.cc
  * \author Thomas M. Evans
  * \date   Tue Oct 30 23:04:27 2012
  * \brief  Unit-Test for SDM_Face_Field

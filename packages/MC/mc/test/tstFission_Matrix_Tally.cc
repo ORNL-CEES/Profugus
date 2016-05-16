@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstFission_Matrix_Tally.cc
+ * \file   MC/mc/test/tstFission_Matrix_Tally.cc
  * \author Thomas M. Evans
  * \date   Thu Sep 11 16:27:58 2014
  * \brief  Fission_Matrix_Tally unit-test.

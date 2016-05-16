@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/SourceTestBase.cc
+ * \file   MC/mc/test/SourceTestBase.cc
  * \author Seth R Johnson
  * \date   Tuesday May 6 12:0:22 2014
  * \brief  Source test infrastructure class definition.

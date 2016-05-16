@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/BLAS_Handle.cc
+ * \file   CudaUtils/cuda_utils/BLAS_Handle.cc
  * \author Seth R Johnson
  * \date   Wed Dec 11 20:35:41 2013
  * \brief  BLAS_Handle member definitions.

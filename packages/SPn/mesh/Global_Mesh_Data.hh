@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/Global_Mesh_Data.hh
+ * \file   SPn/mesh/Global_Mesh_Data.hh
  * \author Thomas M. Evans
  * \date   Tue Feb 12 09:00:23 2014
  * \brief  Global_Mesh_Data class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mesh_Global_Mesh_Data_hh
-#define mesh_Global_Mesh_Data_hh
+#ifndef SPn_mesh_Global_Mesh_Data_hh
+#define SPn_mesh_Global_Mesh_Data_hh
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
@@ -116,7 +116,7 @@ class Global_Mesh_Data
 
 #include "Global_Mesh_Data.i.hh"
 
-#endif // mesh_Global_Mesh_Data_hh
+#endif // SPn_mesh_Global_Mesh_Data_hh
 
 //---------------------------------------------------------------------------//
 //              end of mesh/Global_Mesh_Data.hh

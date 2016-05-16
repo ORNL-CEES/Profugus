@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Time_Dependent_Solver.pt.cc
+ * \file   SPn/spn/Time_Dependent_Solver.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  Time_Dependent_Solver explicit instantiation.

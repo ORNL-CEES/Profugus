@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Problem_Builder.t.hh
+ * \file   MC/mc_driver/Problem_Builder.t.hh
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_driver_Problem_Builder_t_hh
-#define mc_driver_Problem_Builder_t_hh
+#ifndef MC_mc_driver_Problem_Builder_t_hh
+#define MC_mc_driver_Problem_Builder_t_hh
 
 #include <utility>
 #include <algorithm>
@@ -187,21 +187,21 @@ void Problem_Builder<Geometry>::build_physics()
 template <class Geometry>
 void Problem_Builder<Geometry>::build_var_reduction()
 {
-    using profugus::to_lower;
+    using profugus::lower;
 
     REQUIRE(!d_db.is_null());
 
     // the default is to do roulette
-    const auto &var = to_lower(
+    const auto &var = lower(
         d_db->get<std::string>("variance reduction", std::string("roulette")));
 
     // build the appropriate variance reduction
-    if (to_lower(var) == "roulette")
+    if (lower(var) == "roulette")
     {
         d_var_reduction =
             std::make_shared<profugus::VR_Roulette<Geom_t> >(d_db);
     }
-    else if (to_lower(var) == "analog")
+    else if (lower(var) == "analog")
     {
         d_var_reduction =
             std::make_shared<profugus::VR_Analog<Geom_t> >();
@@ -550,7 +550,7 @@ void Problem_Builder<Geometry>::build_spn_problem()
 
 } // end namespace mc
 
-#endif // mc_driver_Problem_Builder_t_hh
+#endif // MC_mc_driver_Problem_Builder_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Problem_Builder.t.hh

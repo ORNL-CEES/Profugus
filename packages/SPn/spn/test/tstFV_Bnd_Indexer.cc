@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstFV_Bnd_Indexer.cc
+ * \file   SPn/spn/test/tstFV_Bnd_Indexer.cc
  * \author Thomas M. Evans
  * \date   Sat Nov 24 14:30:59 2012
  * \brief  FV_Bnd_Indexer unit test.

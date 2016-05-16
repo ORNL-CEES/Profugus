@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdditiveSchwarzWrapper.hh
+ * \file   Alea/mc_solvers/AdditiveSchwarzWrapper.hh
  * \author Steven Hamilton
  * \brief  Wrap a Belos solver into an operator.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_AdditiveSchwarzWrapper_hh
-#define mc_solvers_AdditiveSchwarzWrapper_hh
+#ifndef Alea_mc_solvers_AdditiveSchwarzWrapper_hh
+#define Alea_mc_solvers_AdditiveSchwarzWrapper_hh
 
 #include "AleaSolver.hh"
 
@@ -46,5 +46,5 @@ class AdditiveSchwarzWrapper : public AleaSolver
 
 }
 
-#endif // mc_solvers_AdditiveSchwarzWrapper_hh
+#endif // Alea_mc_solvers_AdditiveSchwarzWrapper_hh
 

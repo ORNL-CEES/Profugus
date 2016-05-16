@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/HDF5_Reader.hh
+ * \file   Utils/utils/HDF5_Reader.hh
  * \author Thomas M. Evans
  * \date   Fri Jan 24 09:48:55 2014
  * \brief  HDF5_Reader class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_HDF5_Reader_hh
-#define utils_HDF5_Reader_hh
+#ifndef Utils_utils_HDF5_Reader_hh
+#define Utils_utils_HDF5_Reader_hh
 
 #include "HDF5_IO.hh"
 
@@ -86,7 +86,7 @@ class HDF5_Reader : public HDF5_IO_Node
 } // end namespace profugus
 
 #endif // USE_HDF5
-#endif // utils_HDF5_Reader_hh
+#endif // Utils_utils_HDF5_Reader_hh
 
 //---------------------------------------------------------------------------//
 //                 end of HDF5_Reader.hh

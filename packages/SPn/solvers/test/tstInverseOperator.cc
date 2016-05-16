@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstInverseOperator.cc
+ * \file   SPn/solvers/test/tstInverseOperator.cc
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Jan 27 11:56:51 2009
  * \brief  InverseOperator class test.

@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   LinearSolverFactory.hh
+ * \file   Alea/mc_solvers/LinearSolverFactory.hh
  * \author Steven Hamilton
  * \brief  Construct Tpetra_CrsMatrix from ParameterList.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_LinearSolverFactory_hh
-#define mc_solvers_LinearSolverFactory_hh
+#ifndef Alea_mc_solvers_LinearSolverFactory_hh
+#define Alea_mc_solvers_LinearSolverFactory_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -42,5 +42,5 @@ class LinearSolverFactory
 
 }
 
-#endif // mc_solvers_LinearSolverFactory_hh
+#endif // Alea_mc_solvers_LinearSolverFactory_hh
 

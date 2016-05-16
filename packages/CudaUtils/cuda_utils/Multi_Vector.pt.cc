@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Multi_Vector.pt.cc
+ * \file   CudaUtils/cuda_utils/Multi_Vector.pt.cc
  * \author Seth R Johnson
  * \date   Fri Aug 02 10:24:45 2013
  * \brief  Multi_Vector member definitions.

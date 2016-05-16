@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstDomain_Transporter.cc
+ * \file   MC/mc/test/tstDomain_Transporter.cc
  * \author Thomas M. Evans
  * \date   Mon May 12 14:14:23 2014
  * \brief  Domain_Transporter unit-test.

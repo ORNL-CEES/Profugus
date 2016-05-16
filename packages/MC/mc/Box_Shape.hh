@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Box_Shape.hh
+ * \file   MC/mc/Box_Shape.hh
  * \author Thomas M. Evans
  * \date   Tuesday May 6 16:40:41 2014
  * \brief  Box_Shape class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Box_Shape_hh
-#define mc_Box_Shape_hh
+#ifndef MC_mc_Box_Shape_hh
+#define MC_mc_Box_Shape_hh
 
 #include "Shape.hh"
 
@@ -103,7 +103,7 @@ class Box_Shape : public Shape
 
 } // end namespace profugus
 
-#endif // mc_Box_Shape_hh
+#endif // MC_mc_Box_Shape_hh
 
 //---------------------------------------------------------------------------//
 //                        end of shapes/Box_Shape.hh

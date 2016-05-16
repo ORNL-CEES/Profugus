@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinearSolverBuilder.pt.cc
+ * \file   SPn/solvers/LinearSolverBuilder.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  LinearSolverBuilder explicit instantiation.

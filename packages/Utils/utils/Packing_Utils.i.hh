@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Packing_Utils.i.hh
+ * \file   Utils/utils/Packing_Utils.i.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 25 15:19:02 2014
  * \brief  Member definitions of class Packing_Utils.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Packing_Utils_i_hh
-#define utils_Packing_Utils_i_hh
+#ifndef Utils_utils_Packing_Utils_i_hh
+#define Utils_utils_Packing_Utils_i_hh
 
 namespace profugus
 {
@@ -202,7 +202,7 @@ void Unpacker::unpack(T &value)
 
 } // end namespace profugus
 
-#endif // utils_Packing_Utils_i_hh
+#endif // Utils_utils_Packing_Utils_i_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Packing_Utils.i.hh

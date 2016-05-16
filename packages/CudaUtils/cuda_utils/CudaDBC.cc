@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/CudaDBC.cc
+ * \file   CudaUtils/cuda_utils/CudaDBC.cc
  * \author Seth R Johnson
  * \date   Thu Jun 27 15:21:33 2013
  * \brief  DBC member definitions.
@@ -30,7 +30,7 @@ void toss_cuda_cookies(
     std::ostringstream out;
     out << "CUDA runtime failure: " << message
         << " {" << detail << "}";
-#if NEMESIS_DBC > 0
+#if PROFUGUS_DBC > 0
     out << "\n ^^^ at " << file << ":" << line << "\n";
 #else
     // Debug mode is off, so don't trouble the user with the particulars

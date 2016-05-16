@@ -88,7 +88,7 @@ class Anderson_Solver : public Keff_Solver<Geometry>
     void reset() override;
 
     //! Get acceleration.
-    SP_FM_Acceleration acceleration() const
+    SP_FM_Acceleration acceleration() const override
     {
         return typename Base::SP_FM_Acceleration();
     }

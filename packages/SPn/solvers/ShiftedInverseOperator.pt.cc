@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ShiftedInverseOperator.pt.cc
+ * \file   SPn/solvers/ShiftedInverseOperator.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  ShiftedInverseOperator explicit instantiation.

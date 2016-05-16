@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Manager_Base.hh
+ * \file   MC/mc_driver/Manager_Base.hh
  * \author Steven Hamilton
  * \date   Wed Nov 25 11:20:35 2015
  * \brief  Manager_Base class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_driver_Manager_Base_hh
-#define mc_driver_Manager_Base_hh
+#ifndef MC_mc_driver_Manager_Base_hh
+#define MC_mc_driver_Manager_Base_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -48,7 +48,7 @@ class Manager_Base
 
 } // end namespace mc
 
-#endif // mc_driver_Manager_Base_hh
+#endif // MC_mc_driver_Manager_Base_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Manager_Base.hh

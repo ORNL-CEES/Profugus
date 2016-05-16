@@ -1,22 +1,110 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/Soft_Equivalence.hh
- * \author Thomas M. Evans
+ * \file   Utils/harness/Soft_Equivalence.hh
+ * \author Thomas M. Evans and Seth R Johnson
  * \date   Wed Jan  2 11:56:34 2008
  * \brief  Soft_Equivalence functions for floating point comparisons.
- * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef harness_Soft_Equivalence_hh
-#define harness_Soft_Equivalence_hh
+#ifndef Utils_harness_Soft_Equivalence_hh
+#define Utils_harness_Soft_Equivalence_hh
 
 #include <cmath>
-#include <iterator>
 #include "DBC.hh"
 
 namespace profugus
 {
+namespace detail
+{
+
+//---------------------------------------------------------------------------//
+/*!
+ * \struct softeq_traits
+ * \brief Provide relative errors for soft_equiv based on type.
+ *
+ * This also gives compile-time checking for bad values.
+ */
+template<typename T>
+struct softeq_traits
+{
+    typedef T value_type;
+    //! Default relative error
+    static constexpr value_type rel_prec()
+    {
+        static_assert(sizeof(T) == 0, "Invalid type for softeq!");
+        return T();
+    }
+
+    //! Default absolute error
+    static constexpr value_type abs_thresh()
+    {
+        static_assert(sizeof(T) == 0, "Invalid type for softeq!");
+        return T();
+    }
+};
+
+template<>
+struct softeq_traits<double>
+{
+    typedef double value_type;
+    static constexpr value_type rel_prec() { return 1.0e-12; }
+    static constexpr value_type abs_thresh() { return 1.0e-14; }
+};
+
+template<>
+struct softeq_traits<float>
+{
+    typedef float value_type;
+    static constexpr value_type rel_prec() { return 1.0e-6f; }
+    static constexpr value_type abs_thresh() { return 1.0e-8f; }
+};
+
+//---------------------------------------------------------------------------//
+/*!
+ * \struct precision_type
+ * \brief Get a "least common denominator" for soft comparisons.
+ */
+template<typename Expected_T, typename Actual_T>
+struct precision_type
+{
+    // Not available
+    typedef int type;
+};
+
+template<>
+struct precision_type<double,float>
+{
+    typedef float type;
+};
+
+template<>
+struct precision_type<float,float>
+{
+    typedef float type;
+};
+
+template<>
+struct precision_type<float,double>
+{
+    typedef float type;
+};
+
+template<>
+struct precision_type<double,double>
+{
+    typedef double type;
+};
+
+// In the case where user gives literal 0 as the reference value
+template<>
+struct precision_type<int,double>
+{
+    typedef double type;
+};
+
+}
 
 //===========================================================================//
 // SCALAR SOFT EQUIVALENCE FUNCTIONS
@@ -30,110 +118,80 @@ namespace profugus
  * \param reference scalar floating point reference to which value is
  * compared
  *
- * \param precision tolerance of relative error (default 1.0e-12)
+ * \param rel_precision tolerance of relative error (default 1.0e-12)
+ *
+ * \param abs_threshold threshold for absolute error when comparing to zero
+ *                      (default 1.0e-14)
  *
  * \return true if values are the same within relative error specified by
  * precision, false if otherwise
- *
- * \todo Should we be using numeric_limits instead of hard coded vales for
- *       e-12 and e-14?
  */
-template<class FPT>
-inline bool soft_equiv(const FPT &value,
-                       const FPT &reference,
-                       const FPT  precision = 1.0e-12)
+template<typename Expected_T, typename Actual_T>
+inline bool soft_equiv(
+    const Actual_T   value,
+    const Expected_T reference,
+    const typename detail::precision_type<
+                                Expected_T,Actual_T>::type rel_precision,
+    const typename detail::precision_type<
+                                Expected_T,Actual_T>::type abs_threshold)
 {
     using std::fabs;
-    bool passed = false;
 
-    if (fabs(value - reference) < precision * fabs(reference))
-            passed = true;
-    else
-            passed = false;
+    typedef typename detail::precision_type<Expected_T,Actual_T>::type
+        result_type;
 
-    // second chance for passing if reference is within machine error of zero
-    if (!passed && (fabs(reference) < 1.0e-14))
-            if (fabs(value) < precision)
-            passed = true;
+    // Promote/demote value type
+    result_type val = static_cast<result_type>(value);
+    result_type ref = static_cast<result_type>(reference);
 
-    // third chance for passing if value is within machine error of zero
-    if (!passed && (fabs(value) < 1.0e-14))
-        if (fabs(reference) < precision)
-            passed = true;
+    // Typical case: relative error comparison to reference
+    if (fabs(val - ref) < rel_precision * fabs(ref))
+    {
+        return true;
+    }
 
-    return passed;
-}
+    // If one is within the absolute threshold of zero, and the other within
+    // relative of zero, they're equal
+    if ((fabs(ref) < abs_threshold) && (fabs(val) < rel_precision))
+    {
+        return true;
+    }
+    if ((fabs(val) < abs_threshold) && (fabs(ref) < rel_precision))
+    {
+        return true;
+    }
 
-//---------------------------------------------------------------------------//
-
-template<>
-inline bool soft_equiv(const int &value,
-                       const int &reference,
-                       const int  precision)
-{
-    INSIST(0, "Can't do a soft compare with integers!");
     return false;
 }
 
-//===========================================================================//
-// FIELD SOFT EQUIVALENCE FUNCTIONS
-//===========================================================================//
-/*!
- * \brief Compare two floating point fields for equivalence to a specified
- * tolerance.
- *
- * \param value  floating point field of values
- * \param value_end End of floating point field
- * \param ref floating point field to which values are compared
- * \param ref_end End of floating point reference field
- *
- * \param precision tolerance of relative error (default 1.0e-12)
- *
- * \return true if values are the same within relative error specified by
- * precision and the fields are the same size, false if otherwise
- *
- * The field soft_equiv check is an element-by-element check of two
- * single-dimension fields.  The precision is the same type as the value
- * field.  The value and reference fields must have STL-type iterators.  The
- * value-types of both fields must be the same or a compile-time error will
- * result.
- */
-template<class Value_Iterator, class Ref_Iterator>
+//! Soft equiv with default absolute precision
+template<typename Expected_T, typename Actual_T>
 inline bool soft_equiv(
-    Value_Iterator value,
-    Value_Iterator value_end,
-    Ref_Iterator   ref,
-    Ref_Iterator   ref_end,
-    const typename std::iterator_traits<Value_Iterator>::value_type precision
-    = 1.0e-12)
+        const Actual_T   value,
+        const Expected_T reference,
+        const typename detail::precision_type<Expected_T,Actual_T>::type rel)
 {
-    using std::distance;
+    typedef typename detail::precision_type<Expected_T,Actual_T>::type prec_t;
+    return soft_equiv(value, reference,
+                      rel,
+                      detail::softeq_traits<prec_t>::abs_thresh());
+}
 
-    bool passed = true;
-
-    // first check that the sizes are equivalent
-    if (distance(value, value_end) != distance(ref, ref_end))
-    {
-        passed = false;
-    }
-
-    // if the sizes are the same, loop through and check each element
-    else
-    {
-        while (value != value_end && passed == true)
-        {
-            passed = soft_equiv(*value, *ref, precision);
-            value++;
-            ref++;
-        }
-    }
-
-    return passed;
+//! Soft equiv with default absolute and relative precision
+template<typename Expected_T, typename Actual_T>
+inline bool soft_equiv(
+        const Actual_T   value,
+        const Expected_T reference)
+{
+    typedef typename detail::precision_type<Expected_T,Actual_T>::type prec_t;
+    return soft_equiv(value, reference,
+                      detail::softeq_traits<prec_t>::rel_prec(),
+                      detail::softeq_traits<prec_t>::abs_thresh());
 }
 
 } // end namespace profugus
 
-#endif // harness_Soft_Equivalence_hh
+#endif // Utils_harness_Soft_Equivalence_hh
 
 //---------------------------------------------------------------------------//
 //              end of harness/Soft_Equivalence.hh

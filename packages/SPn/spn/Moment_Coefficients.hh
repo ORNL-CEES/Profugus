@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Moment_Coefficients.hh
+ * \file   SPn/spn/Moment_Coefficients.hh
  * \author Thomas M. Evans
  * \date   Mon Feb 10 13:07:08 2014
  * \brief  Moment_Coefficients class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Moment_Coefficients_hh
-#define spn_Moment_Coefficients_hh
+#ifndef SPn_spn_Moment_Coefficients_hh
+#define SPn_spn_Moment_Coefficients_hh
 
 #include <vector>
 
@@ -168,7 +168,7 @@ class Moment_Coefficients
 
 } // end namespace profugus
 
-#endif // spn_Moment_Coefficients_hh
+#endif // SPn_spn_Moment_Coefficients_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Moment_Coefficients.hh

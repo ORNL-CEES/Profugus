@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/SpnSolverBuilder.cc
+ * \file   SPn/spn/SpnSolverBuilder.cc
  * \author Thomas M. Evans
  * \date   Tue Oct 23 21:17:05 2012
  * \brief  SpnSolverBuilder member definitions.

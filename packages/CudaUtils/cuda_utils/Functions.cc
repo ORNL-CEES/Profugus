@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Functions.cc
+ * \file   CudaUtils/cuda_utils/Functions.cc
  * \author Seth R Johnson
  * \date   Sun Sep 22 11:08:49 2013
  * \brief  Useful function definitions

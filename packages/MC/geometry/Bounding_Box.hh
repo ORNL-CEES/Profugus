@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   geometry/Bounding_Box.hh
+ * \file   MC/geometry/Bounding_Box.hh
  * \author Seth R Johnson
  * \date   Wed Jul 01 14:55:00 2015
  * \brief  Bounding_Box class declaration.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Bounding_Box_hh
-#define geometry_Bounding_Box_hh
+#ifndef MC_geometry_Bounding_Box_hh
+#define MC_geometry_Bounding_Box_hh
 
 #include <iosfwd>
 
@@ -88,7 +88,7 @@ std::ostream& operator<<(std::ostream&, const Bounding_Box&);
 //---------------------------------------------------------------------------//
 #include "Bounding_Box.i.hh"
 //---------------------------------------------------------------------------//
-#endif // geometry_Bounding_Box_hh
+#endif // MC_geometry_Bounding_Box_hh
 
 //---------------------------------------------------------------------------//
 // end of geometry/Bounding_Box.hh

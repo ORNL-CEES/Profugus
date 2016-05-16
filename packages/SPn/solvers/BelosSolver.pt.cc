@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/BelosSolver.pt.cc
+ * \file   SPn/solvers/BelosSolver.pt.cc
  * \author Steven Hamilton
  * \brief  BelosSolver explicit instantiation.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

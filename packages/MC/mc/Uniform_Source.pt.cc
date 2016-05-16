@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Uniform_Source.pt.cc
+ * \file   MC/mc/Uniform_Source.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Uniform_Source template instantiations

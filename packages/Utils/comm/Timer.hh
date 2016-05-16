@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Timer.hh
+ * \file   Utils/comm/Timer.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 16:27:02 2008
  * \brief  Timer class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Timer_hh
-#define comm_Timer_hh
+#ifndef Utils_comm_Timer_hh
+#define Utils_comm_Timer_hh
 
 #include <Utils/config.h>
 
@@ -324,9 +324,9 @@ class Timer
 
 } // end namespace profugus
 
-#endif // HAVE_SYS_TIMES_H
+#endif // Utils_comm_Timer_hh
 
-#endif // comm_Timer_hh
+#endif // Utils_comm_Timer_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Timer.hh

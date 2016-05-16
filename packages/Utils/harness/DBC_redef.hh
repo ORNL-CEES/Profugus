@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/DBC_redef.hh
+ * \file   Utils/harness/DBC_redef.hh
  * \author Seth R Johnson
  * \date   Tue Mar 05 09:32:46 2013
  * \brief  DBC Macro definitions

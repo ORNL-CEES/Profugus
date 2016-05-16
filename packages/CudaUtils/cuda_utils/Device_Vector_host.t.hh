@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Device_Vector_host.t.hh
+ * \file   CudaUtils/cuda_utils/Device_Vector_host.t.hh
  * \author Seth R Johnson
  * \date   Thu Aug 01 11:33:12 2013
  * \brief  Device_Vector template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Device_Vector_host_t_hh
-#define cuda_utils_Device_Vector_host_t_hh
+#ifndef CudaUtils_cuda_utils_Device_Vector_host_t_hh
+#define CudaUtils_cuda_utils_Device_Vector_host_t_hh
 
 #include "Device_Vector.hh"
 
@@ -160,7 +160,7 @@ void Device_Vector<arch::Host,T>::to_host(Host_Vector<T>& out) const
 
 } // end namespace cuda
 
-#endif // cuda_utils_Device_Vector_host_t_hh
+#endif // CudaUtils_cuda_utils_Device_Vector_host_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of cuda_utils/Device_Vector_host.t.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstUniform_Source.cc
+ * \file   MC/mc/test/tstUniform_Source.cc
  * \author Thomas M. Evans
  * \date   Wed May 07 15:24:31 2014
  * \brief  Uniform_Source test.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Multigrid.t.hh
+ * \file   SPn/spn/Energy_Multigrid.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 13:04:00 2014
  * \brief  Energy_Multigrid template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Energy_Multigrid_t_hh
-#define spn_Energy_Multigrid_t_hh
+#ifndef SPn_spn_Energy_Multigrid_t_hh
+#define SPn_spn_Energy_Multigrid_t_hh
 
 #include "solvers/PreconditionerBuilder.hh"
 #include "solvers/LinAlgTypedefs.hh"
@@ -238,7 +238,7 @@ void Energy_Multigrid<T>::ApplyImpl(const MV &x,
 
 } // end namespace profugus
 
-#endif // spn_Energy_Multigrid_t_hh
+#endif // SPn_spn_Energy_Multigrid_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Energy_Multigrid.t.hh

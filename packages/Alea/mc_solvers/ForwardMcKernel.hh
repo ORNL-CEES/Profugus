@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   ForwardMcKernel.hh
+ * \file   Alea/mc_solvers/ForwardMcKernel.hh
  * \author Steven Hamilton
  * \brief  Perform adjoint MC histories to solve linear system.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_ForwardMcKernel_hh
-#define mc_solver_ForwardMcKernel_hh
+#ifndef Alea_mc_solvers_ForwardMcKernel_hh
+#define Alea_mc_solvers_ForwardMcKernel_hh
 
 #include "MC_Data.hh"
 #include "AleaSolver.hh"
@@ -92,5 +92,5 @@ class ForwardMcKernel
 
 #include "ForwardMcKernel.i.hh"
 
-#endif // mc_solver_MonteCarloSolver_hh
+#endif // Alea_mc_solvers_ForwardMcKernel_hh
 

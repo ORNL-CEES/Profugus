@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/PowerIteration.t.hh
+ * \file   SPn/solvers/PowerIteration.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  PowerIteration template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_PowerIteration_t_hh
-#define solvers_PowerIteration_t_hh
+#ifndef SPn_solvers_PowerIteration_t_hh
+#define SPn_solvers_PowerIteration_t_hh
 
 #include <vector>
 
@@ -116,7 +116,7 @@ void PowerIteration<T>::solve( double           &lambda,
 
 } // end namespace profugus
 
-#endif // solvers_PowerIteration_t_hh
+#endif // SPn_solvers_PowerIteration_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of PowerIteration.t.hh

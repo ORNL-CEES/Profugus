@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdditiveSchwarzWrapper.cc
+ * \file   Alea/mc_solvers/AdditiveSchwarzWrapper.cc
  * \author Steven Hamilton
  * \brief  Wrap local solver into an AdditiveSchwarz solver.
  */

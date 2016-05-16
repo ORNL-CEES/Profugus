@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Domain_Transporter.t.hh
+ * \file   MC/mc/Domain_Transporter.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 12 12:02:13 2014
  * \brief  Domain_Transporter template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Domain_Transporter_t_hh
-#define mc_Domain_Transporter_t_hh
+#ifndef MC_mc_Domain_Transporter_t_hh
+#define MC_mc_Domain_Transporter_t_hh
 
 #include <cmath>
 
@@ -318,7 +318,7 @@ void Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
 
 } // end namespace profugus
 
-#endif // mc_Domain_Transporter_t_hh
+#endif // MC_mc_Domain_Transporter_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Domain_Transporter.t.hh

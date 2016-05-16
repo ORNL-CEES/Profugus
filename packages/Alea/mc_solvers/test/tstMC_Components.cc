@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   tstMC_Components.cc
+ * \file   Alea/mc_solvers/test/tstMC_Components.cc
  * \author Steven Hamilton
  * \brief  Test of MonteCarloSolver class.
  */

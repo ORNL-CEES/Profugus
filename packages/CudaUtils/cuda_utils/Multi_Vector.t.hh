@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Multi_Vector.t.hh
+ * \file   CudaUtils/cuda_utils/Multi_Vector.t.hh
  * \author Seth R Johnson
  * \date   Fri Aug 02 10:24:45 2013
  * \brief  Multi_Vector inline member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Multi_Vector_t_hh
-#define cuda_utils_Multi_Vector_t_hh
+#ifndef CudaUtils_cuda_utils_Multi_Vector_t_hh
+#define CudaUtils_cuda_utils_Multi_Vector_t_hh
 
 #include "Multi_Vector.hh"
 #include "utils/View_Field.hh"
@@ -63,7 +63,7 @@ void Multi_Vector<Arch_Switch,T>::initialize(
 //---------------------------------------------------------------------------//
 } // end namespace cuda
 
-#endif // cuda_utils_Multi_Vector_t_hh
+#endif // CudaUtils_cuda_utils_Multi_Vector_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of cuda_utils/Multi_Vector.t.hh

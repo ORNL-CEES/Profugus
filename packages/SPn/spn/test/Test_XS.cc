@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/Test_XS.cc
+ * \file   SPn/spn/test/Test_XS.cc
  * \author Thomas M. Evans
  * \date   Fri Oct 19 12:41:28 2012
  * \brief  Cross-sections for testing.

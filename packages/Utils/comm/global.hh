@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/global.hh
+ * \file   Utils/comm/global.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 15:39:55 2008
  * \brief  Include file for comm package.
@@ -12,8 +12,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_global_hh
-#define comm_global_hh
+#ifndef Utils_comm_global_hh
+#define Utils_comm_global_hh
 
 // comm package configure
 #include <Utils/config.h>
@@ -42,7 +42,7 @@
 #include "MPI.hh"
 #endif
 
-#endif // comm_global_hh
+#endif // Utils_comm_global_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/global.hh

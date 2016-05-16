@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstVector_Functions.cc
+ * \file   Utils/utils/test/tstVector_Functions.cc
  * \author Thomas M. Evans
  * \date   Mon Aug 22 12:33:36 2011
  * \brief  Test for general geometry functions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Moment_Coefficients.cc
+ * \file   SPn/spn/Moment_Coefficients.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 10 13:07:08 2014
  * \brief  Moment_Coefficients member definitions.

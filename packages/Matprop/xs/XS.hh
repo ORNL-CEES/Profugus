@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/XS.hh
+ * \file   Matprop/xs/XS.hh
  * \author Thomas M. Evans
  * \date   Wed Jan 29 15:27:36 2014
  * \brief  XS class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef xs_XS_hh
-#define xs_XS_hh
+#ifndef Matprop_xs_XS_hh
+#define Matprop_xs_XS_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_SerialDenseVector.hpp"
@@ -157,7 +157,7 @@ class XS
 
 #include "XS.i.hh"
 
-#endif // xs_XS_hh
+#endif // Matprop_xs_XS_hh
 
 //---------------------------------------------------------------------------//
 //                 end of XS.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/Warnings.cc
+ * \file   Utils/harness/Warnings.cc
  * \author Thomas M. Evans
  * \date   Sun Feb 26 20:54:46 2012
  * \brief  Warnings member definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Arnoldi.hh
+ * \file   SPn/solvers/Arnoldi.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:30 2014
  * \brief  Arnoldi class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_Arnoldi_hh
-#define solvers_Arnoldi_hh
+#ifndef SPn_solvers_Arnoldi_hh
+#define SPn_solvers_Arnoldi_hh
 
 #include "AnasaziTypes.hpp"
 #include "AnasaziBlockKrylovSchurSolMgr.hpp"
@@ -102,7 +102,7 @@ class Arnoldi : public EigenvalueSolver<T>
 
 } // end namespace profugus
 
-#endif // solvers_Arnoldi_hh
+#endif // SPn_solvers_Arnoldi_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Arnoldi.hh

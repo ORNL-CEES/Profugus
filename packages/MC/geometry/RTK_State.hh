@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_State.hh
+ * \file   MC/geometry/RTK_State.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:9:53 2014
  * \brief  RTK_State struct definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_State_hh
-#define geometry_RTK_State_hh
+#ifndef MC_geometry_RTK_State_hh
+#define MC_geometry_RTK_State_hh
 
 #include <Utils/config.h>
 #include "utils/Vector_Lite.hh"
@@ -95,7 +95,7 @@ struct RTK_State
 
 } // end namespace profugus
 
-#endif // geometry_RTK_State_hh
+#endif // MC_geometry_RTK_State_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_State.hh

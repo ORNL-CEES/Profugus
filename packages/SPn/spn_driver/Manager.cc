@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn_driver/Manager.cc
+ * \file   SPn/spn_driver/Manager.cc
  * \author Thomas M. Evans
  * \date   Fri Mar 14 11:32:36 2014
  * \brief  Manager member definitions.

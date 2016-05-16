@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstDecomposition.cc
+ * \file   SPn/solvers/test/tstDecomposition.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 17 21:12:11 2014
  * \brief  Decomposition unit-test.

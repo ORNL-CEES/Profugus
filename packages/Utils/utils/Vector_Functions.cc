@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Vector_Functions.cc
+ * \file   Utils/utils/Vector_Functions.cc
  * \author Thomas M. Evans
  * \date   Mon Aug 22 11:21:49 2011
  * \brief  Vector function definitions.

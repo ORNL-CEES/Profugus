@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Energy_Restriction.pt.cc
+ * \file   SPn/spn/Energy_Restriction.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  Energy_Restriction explicit instantiation.

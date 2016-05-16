@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Atomic_Add_Kernel_Data.hh
+ * \file   CudaUtils/test/Atomic_Add_Kernel_Data.hh
  * \author Seth R Johnson
  * \date   Thu Aug 15 11:11:28 2013
  * \brief  Atomic_Add_Kernel_Data kernel declarations.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_test_Atomic_Add_Kernel_Data_hh
-#define cuda_utils_test_Atomic_Add_Kernel_Data_hh
+#ifndef CudaUtils_test_Atomic_Add_Kernel_Data_hh
+#define CudaUtils_test_Atomic_Add_Kernel_Data_hh
 
 #include "../cuda_utils/Vector_Traits.hh"
 #include "../cuda_utils/Device_Vector.hh"
@@ -46,7 +46,7 @@ struct Atomic_Add_Kernel_Data
 //---------------------------------------------------------------------------//
 } // end namespace cuda
 
-#endif // cuda_utils_test_Atomic_Add_Kernel_Data_hh
+#endif // CudaUtils_test_Atomic_Add_Kernel_Data_hh
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Atomic_Add_Kernel_Data.hh

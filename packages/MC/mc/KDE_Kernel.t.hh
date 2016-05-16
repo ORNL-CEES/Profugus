@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/kde/KDE_Kernel.t.hh
+ * \file   MC/mc/KDE_Kernel.t.hh
  * \author Gregory Davidson
  * \date   Mon Feb 16 14:21:15 2015
  * \brief  KDE_Kernel class definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstParallel_HDF5_Writer.cc
+ * \file   Utils/utils/test/tstParallel_HDF5_Writer.cc
  * \author Thomas M. Evans
  * \date   Fri Jan 24 09:51:23 2014
  * \brief  Parallel_HDF5_Writer unit-test.

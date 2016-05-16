@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Texture_Vector_host.pt.cc
+ * \file   CudaUtils/cuda_utils/Texture_Vector_host.pt.cc
  * \author Seth R Johnson
  * \date   Fri Sep 20 10:08:43 2013
  * \brief  Texture_Vector member definitions.

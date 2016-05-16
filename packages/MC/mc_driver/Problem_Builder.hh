@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Problem_Builder.hh
+ * \file   MC/mc_driver/Problem_Builder.hh
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_driver_Problem_Builder_hh
-#define mc_driver_Problem_Builder_hh
+#ifndef MC_mc_driver_Problem_Builder_hh
+#define MC_mc_driver_Problem_Builder_hh
 
 #include <string>
 #include <vector>
@@ -144,7 +144,7 @@ class Problem_Builder
 
 } // end namespace mc
 
-#endif // mc_driver_Problem_Builder_hh
+#endif // MC_mc_driver_Problem_Builder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Problem_Builder.hh

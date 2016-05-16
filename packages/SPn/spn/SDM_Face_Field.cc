@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/SDM_Face_Field.cc
+ * \file   SPn/spn/SDM_Face_Field.cc
  * \author Thomas M. Evans
  * \date   Tue Oct 30 17:05:49 2012
  * \brief  SDM_Face_Field member definitions.

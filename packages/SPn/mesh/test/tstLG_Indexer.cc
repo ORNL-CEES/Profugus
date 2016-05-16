@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/test/tstLG_Indexer.cc
+ * \file   SPn/mesh/test/tstLG_Indexer.cc
  * \author Thomas M. Evans
  * \date   Wed Feb 12 10:07:37 2014
  * \brief  LG_Indexer unit-test.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/InverseOperator.hh
+ * \file   SPn/solvers/InverseOperator.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 13:41:13 2014
  * \brief  InverseOperator class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_InverseOperator_hh
-#define solvers_InverseOperator_hh
+#ifndef SPn_solvers_InverseOperator_hh
+#define SPn_solvers_InverseOperator_hh
 
 #include <string>
 
@@ -260,7 +260,7 @@ class InverseOperator<TpetraTypes>
 
 } // end namespace profugus
 
-#endif // solvers_InverseOperator_hh
+#endif // SPn_solvers_InverseOperator_hh
 
 #include "InverseOperator.t.hh"
 

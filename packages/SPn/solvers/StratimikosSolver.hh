@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/StratimikosSolver.hh
+ * \file   SPn/solvers/StratimikosSolver.hh
  * \author Chris Baker
  * \date   Mon Sep 17 15:21:00 2012
  * \brief  StratimikosSolver class definition
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_StratimikosSolver_hh
-#define solvers_StratimikosSolver_hh
+#ifndef SPn_solvers_StratimikosSolver_hh
+#define SPn_solvers_StratimikosSolver_hh
 
 #include <string>
 
@@ -105,7 +105,7 @@ class StratimikosSolver : public LinearSolver<T>
 
 } // end namespace profugus
 
-#endif // solvers_StratimikosSolver_hh
+#endif // SPn_solvers_StratimikosSolver_hh
 
 //---------------------------------------------------------------------------//
 //              end of solvers/StratimikosSolver.hh

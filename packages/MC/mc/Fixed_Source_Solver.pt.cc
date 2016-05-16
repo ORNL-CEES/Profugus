@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fixed_Source_Solver.pt.cc
+ * \file   MC/mc/Fixed_Source_Solver.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Fixed_Source_Solver template instantiations

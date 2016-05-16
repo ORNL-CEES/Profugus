@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/KCode_Solver.pt.cc
+ * \file   MC/mc/KCode_Solver.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  KCode_Solver template instantiations

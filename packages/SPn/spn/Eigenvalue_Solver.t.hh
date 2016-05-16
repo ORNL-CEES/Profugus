@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Eigenvalue_Solver.t.hh
+ * \file   SPn/spn/Eigenvalue_Solver.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Mar 10 14:20:33 2014
  * \brief  Eigenvalue_Solver template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Eigenvalue_Solver_t_hh
-#define spn_Eigenvalue_Solver_t_hh
+#ifndef SPn_spn_Eigenvalue_Solver_t_hh
+#define SPn_spn_Eigenvalue_Solver_t_hh
 
 #include <cmath>
 #include <string>
@@ -75,7 +75,7 @@ void Eigenvalue_Solver<T>::setup(RCP_Dimensions  dim,
     std::string &eqn_type =
         b_db->template get<std::string>("eqn_type", std::string("fv"));
 
-    if (profugus::to_lower(eqn_type) == "fv")
+    if (profugus::lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
             new Linear_System_FV<T>(
@@ -305,7 +305,7 @@ void Eigenvalue_Solver<EpetraTypes>::set_default_parameters()
 
     // The default energy multigrid preconditioner fails on one group.
     // Switch to something else.
-    std::string prec_type = profugus::to_lower(
+    std::string prec_type = profugus::lower(
         eig_db->get("Preconditioner",std::string("Multigrid")));
     if ( d_mat->xs().num_groups() == 1 &&
          (prec_type=="multigrid" || prec_type=="multilevel") )
@@ -402,7 +402,7 @@ void Eigenvalue_Solver<TpetraTypes>::set_default_parameters()
 
     // The default energy multigrid preconditioner fails on one group.
     // Switch to something else.
-    std::string prec_type = profugus::to_lower(
+    std::string prec_type = profugus::lower(
         eig_db->get("Preconditioner",std::string("Ifpack2")));
     if ( d_mat->xs().num_groups() == 1 &&
          (prec_type=="multigrid" || prec_type=="multilevel") )
@@ -532,7 +532,7 @@ Eigenvalue_Solver<T>::build_preconditioner(RCP_Dimensions  dim,
     RCP_ParameterList edb = Teuchos::sublist(b_db, "eigenvalue_db");
 
     // get the preconditioner type
-    std::string prec_type = profugus::to_lower(
+    std::string prec_type = profugus::lower(
         edb->template get<std::string>("Preconditioner",
                                        std::string("Multigrid")));
 
@@ -591,8 +591,8 @@ void Eigenvalue_Solver<T>::write_problem_to_file() const
 
 } // end namespace profugus
 
-#endif // spn_Eigenvalue_Solver_t_hh
+#endif // SPn_spn_Eigenvalue_Solver_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Eigenvalue_Solver.cc
+// end of Eigenvalue_Solver.t.hh
 //---------------------------------------------------------------------------//

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testPolynomialUtils
+ * \file   Alea/mc_solvers/test/tstPolynomialUtils.cc
  * \author Steven Hamilton
  * \brief  Test of PolynomialUtils class.
  */

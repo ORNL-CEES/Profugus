@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ShiftedOperator.hh
+ * \file   SPn/solvers/ShiftedOperator.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 13:41:13 2014
  * \brief  ShiftedOperator class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_ShiftedOperator_hh
-#define solvers_ShiftedOperator_hh
+#ifndef SPn_solvers_ShiftedOperator_hh
+#define SPn_solvers_ShiftedOperator_hh
 
 #include <string>
 
@@ -241,7 +241,7 @@ class ShiftedOperator<TpetraTypes>
 
 } // end namespace profugus
 
-#endif // solvers_ShiftedOperator_hh
+#endif // SPn_solvers_ShiftedOperator_hh
 
 #include "ShiftedOperator.t.hh"
 

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/MPI.hh
+ * \file   Utils/comm/MPI.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 13:42:57 2008
  * \brief  MPI function declarations (defined in Functions.hh).
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_MPI_hh
-#define comm_MPI_hh
+#ifndef Utils_comm_MPI_hh
+#define Utils_comm_MPI_hh
 
 #include <Utils/config.h>
 #ifdef COMM_MPI
@@ -81,7 +81,7 @@ void broadcast(ForwardIterator first,
 
 #endif // COMM_MPI
 
-#endif // comm_MPI_hh
+#endif // Utils_comm_MPI_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/MPI.hh

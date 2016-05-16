@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstStatic_Map.cc
+ * \file   Utils/utils/test/tstStatic_Map.cc
  * \author Seth R Johnson
  * \date   Tue Dec 17 21:04:10 2013
  * \brief  Static_Map test.

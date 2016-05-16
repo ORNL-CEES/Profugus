@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Solver.t.hh
+ * \file   MC/mc/Solver.t.hh
  * \author Thomas M. Evans
  * \date   Tue May 13 14:56:00 2014
  * \brief  Solver member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Solver_t_hh
-#define mc_Solver_t_hh
+#ifndef MC_mc_Solver_t_hh
+#define MC_mc_Solver_t_hh
 
 #include "Solver.hh"
 
@@ -29,7 +29,7 @@ Solver<Geometry>::~Solver()
 
 } // end namespace profugus
 
-#endif // mc_Solver_t_hh
+#endif // MC_mc_Solver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Solver.t.hh

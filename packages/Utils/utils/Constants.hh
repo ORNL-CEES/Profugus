@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Constants.hh
+ * \file   Utils/utils/Constants.hh
  * \author Thomas M. Evans
  * \date   Wed Jul 11 14:17:38 2007
  * \brief  Global constants.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Constants_hh
-#define utils_Constants_hh
+#ifndef Utils_utils_Constants_hh
+#define Utils_utils_Constants_hh
 
 #include <cmath>
 #include <limits>
@@ -80,7 +80,7 @@ const double mev2mj = 1.6021766E-19;
 
 } // end namespace profugus
 
-#endif // utils_Constants_hh
+#endif // Utils_utils_Constants_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Constants.hh

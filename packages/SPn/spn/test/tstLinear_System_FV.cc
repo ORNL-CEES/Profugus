@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstLinear_System_FV.cc
+ * \file   SPn/spn/test/tstLinear_System_FV.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 17 10:20:25 2014
  * \brief  Linear_System_FV unit test.

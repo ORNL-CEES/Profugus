@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Processor.cc
+ * \file   MC/mc/Fission_Matrix_Processor.cc
  * \author Thomas M. Evans
  * \date   Fri Sep 12 11:08:38 2014
  * \brief  Fission_Matrix_Processor member definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/test/tstRTK_Vessel.cc
+ * \file   MC/geometry/test/tstVessel.cc
  * \author Thomas M. Evans
  * \date   Wednesday April 30 10:26:51 2014
  * \brief  RTK_Array tests with a vessel.
@@ -1480,5 +1480,5 @@ TEST_F(Core_Baffle_Test, check_volumes)
 }
 
 //---------------------------------------------------------------------------//
-//                 end of tstRTK_Vessel.cc
+// end of tstVessel.cc
 //---------------------------------------------------------------------------//

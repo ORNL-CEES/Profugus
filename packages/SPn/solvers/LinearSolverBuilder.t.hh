@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinearSolverBuilder.t.hh
+ * \file   SPn/solvers/LinearSolverBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 12:20:24 2014
  * \brief  LinearSolverBuilder template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_LinearSolverBuilder_t_hh
-#define solvers_LinearSolverBuilder_t_hh
+#ifndef SPn_solvers_LinearSolverBuilder_t_hh
+#define SPn_solvers_LinearSolverBuilder_t_hh
 
 #include <string>
 
@@ -25,7 +25,7 @@ namespace profugus
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build a denovo LinearSolver.
+ * \brief Build a profugus LinearSolver.
  *
  * This function creates a LinearSolver object from a given database.  The
  * logic of selecting a particular solver is designed to maintain backwards
@@ -48,14 +48,14 @@ LinearSolverBuilder<T>::build_solver( RCP_ParameterList db )
     RCP_LinearSolver solver;
 
     // Determine type of solver to be constructed (defaults to profugus)
-    string solver_type = to_lower(
+    string solver_type = lower(
         db->get<string>("solver_type", string("profugus")));
 
     // Check for native solvers
     if (solver_type == "profugus")
     {
         // get profugus solver type
-        string type = to_lower(
+        string type = lower(
             db->get<string>("profugus_solver", string("richardson")));
 
         if (type == "richardson")
@@ -92,7 +92,7 @@ LinearSolverBuilder<T>::build_solver( RCP_ParameterList db )
 
 } // end namespace profugus
 
-#endif // solvers_LinearSolverBuilder_t_hh
+#endif // SPn_solvers_LinearSolverBuilder_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of LinearSolverBuilder.t.hh

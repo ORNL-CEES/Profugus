@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Parallel_HDF5_Writer.cc
+ * \file   Utils/utils/Parallel_HDF5_Writer.cc
  * \author Thomas M. Evans
  * \date   Fri Jan 24 09:48:40 2014
  * \brief  Parallel_HDF5_Writer member definitions.

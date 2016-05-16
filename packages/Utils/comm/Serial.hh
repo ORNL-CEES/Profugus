@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Serial.hh
+ * \file   Utils/comm/Serial.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 14:32:30 2008
  * \brief  Serial comm declarations.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Serial_hh
-#define comm_Serial_hh
+#ifndef Utils_comm_Serial_hh
+#define Utils_comm_Serial_hh
 
 #include <map>
 #include <cstring>
@@ -492,7 +492,7 @@ void gather(const T* sendbuf, T* recvbuf, int num_els, int root)
 
 #endif // COMM_SCALAR
 
-#endif // comm_Serial_hh
+#endif // Utils_comm_Serial_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Serial.hh

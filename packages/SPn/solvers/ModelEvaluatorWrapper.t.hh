@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ModelEvaluatorWrapper.t.hh
+ * \file   SPn/solvers/ModelEvaluatorWrapper.t.hh
  * \author hu4
  * \date   Wed Apr 01 12:39:40 2015
  * \brief  ModelEvaluatorWrapper template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_ModelEvaluatorWrapper_t_hh
-#define solvers_ModelEvaluatorWrapper_t_hh
+#ifndef SPn_solvers_ModelEvaluatorWrapper_t_hh
+#define SPn_solvers_ModelEvaluatorWrapper_t_hh
 
 #include "ModelEvaluatorWrapper.hh"
 
@@ -103,7 +103,7 @@ void ModelEvaluatorWrapper<T>::evalModelImpl(const InputArgs  &inputs,
 
 } // end namespace profugus
 
-#endif // solvers_ModelEvaluatorWrapper_t_hh
+#endif // SPn_solvers_ModelEvaluatorWrapper_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of ModelEvaluatorWrapper.t.hh

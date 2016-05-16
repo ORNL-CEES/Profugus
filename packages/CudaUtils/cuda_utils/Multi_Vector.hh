@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Multi_Vector.hh
+ * \file   CudaUtils/cuda_utils/Multi_Vector.hh
  * \author Seth R Johnson
  * \date   Fri Aug 02 10:24:45 2013
  * \brief  Multi_Vector class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Multi_Vector_hh
-#define cuda_utils_Multi_Vector_hh
+#ifndef CudaUtils_cuda_utils_Multi_Vector_hh
+#define CudaUtils_cuda_utils_Multi_Vector_hh
 
 #include <vector>
 #include "harness/DBC.hh"
@@ -108,7 +108,7 @@ class Multi_Vector
 } // end namespace cuda
 
 //---------------------------------------------------------------------------//
-#endif // cuda_utils_Multi_Vector_hh
+#endif // CudaUtils_cuda_utils_Multi_Vector_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Multi_Vector.hh

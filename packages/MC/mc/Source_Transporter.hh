@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Transporter.hh
+ * \file   MC/mc/Source_Transporter.hh
  * \author Thomas M. Evans
  * \date   Tue May 13 09:20:07 2014
  * \brief  Source_Transporter class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Source_Transporter_hh
-#define mc_Source_Transporter_hh
+#ifndef MC_mc_Source_Transporter_hh
+#define MC_mc_Source_Transporter_hh
 
 #include <memory>
 
@@ -126,7 +126,7 @@ class Source_Transporter
 
 } // end namespace profugus
 
-#endif // mc_Source_Transporter_hh
+#endif // MC_mc_Source_Transporter_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Source_Transporter.hh

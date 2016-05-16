@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Time_Dependent_Solver.t.hh
+ * \file   SPn/spn/Time_Dependent_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 04 00:09:50 2014
  * \brief  Time_Dependent_Solver template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Time_Dependent_Solver_t_hh
-#define spn_Time_Dependent_Solver_t_hh
+#ifndef SPn_spn_Time_Dependent_Solver_t_hh
+#define SPn_spn_Time_Dependent_Solver_t_hh
 
 #include <string>
 
@@ -86,7 +86,7 @@ void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
     std::string &eqn_type =
         b_db->template get<std::string>("eqn_type", std::string("fv"));
 
-    if (profugus::to_lower(eqn_type) == "fv")
+    if (profugus::lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
             new Linear_System_FV<T>(
@@ -162,8 +162,8 @@ void Time_Dependent_Solver<T>::write_problem_to_file() const
 
 } // end namespace profugus
 
-#endif // spn_Time_Dependent_Solver_t_hh
+#endif // SPn_spn_Time_Dependent_Solver_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Time_Dependent_Solver.cc
+// end of Time_Dependent_Solver.t.hh
 //---------------------------------------------------------------------------//

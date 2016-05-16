@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstMetaclass.cc
+ * \file   Utils/utils/test/tstMetaclass.cc
  * \author Seth R Johnson
  * \date   Tue Oct 15 13:43:00 2013
  * \brief  Test Metaclass

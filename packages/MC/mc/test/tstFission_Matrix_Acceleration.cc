@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstFission_Matrix_Acceleration.cc
+ * \file   MC/mc/test/tstFission_Matrix_Acceleration.cc
  * \author Thomas M. Evans
  * \date   Wed Nov 12 14:59:19 2014
  * \brief  Test for Fission_Matrix_Acceleration

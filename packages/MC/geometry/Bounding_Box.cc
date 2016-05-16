@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   geometry/Bounding_Box.cc
+ * \file   MC/geometry/Bounding_Box.cc
  * \author Seth R Johnson
  * \date   Wed Jul 01 14:55:00 2015
  * \brief  Bounding_Box class definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Polyglot_Kernel_Data.hh
+ * \file   CudaUtils/test/Polyglot_Kernel_Data.hh
  * \author Seth R Johnson
  * \date   Wed Aug 14 13:03:02 2013
  * \brief
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_test_Polyglot_Kernel_Data_hh
-#define cuda_utils_test_Polyglot_Kernel_Data_hh
+#ifndef CudaUtils_test_Polyglot_Kernel_Data_hh
+#define CudaUtils_test_Polyglot_Kernel_Data_hh
 
 #include "../cuda_utils/Vector_Traits.hh"
 #include "../cuda_utils/Device_Vector.hh"
@@ -46,7 +46,7 @@ struct Polyglot_Kernel_Data
 //---------------------------------------------------------------------------//
 } // end namespace cuda
 
-#endif // cuda_utils_test_Polyglot_Kernel_Data_hh
+#endif // CudaUtils_test_Polyglot_Kernel_Data_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Polyglot_Kernel_Data.hh

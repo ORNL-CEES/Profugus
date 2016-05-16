@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Host_Vector.hh
+ * \file   CudaUtils/cuda_utils/Host_Vector.hh
  * \author Seth R Johnson
  * \date   Mon Aug 12 08:48:53 2013
  * \brief  Host_Vector class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Host_Vector_hh
-#define cuda_utils_Host_Vector_hh
+#ifndef CudaUtils_cuda_utils_Host_Vector_hh
+#define CudaUtils_cuda_utils_Host_Vector_hh
 
 #include "harness/DBC.hh"
 #include "Definitions.hh"
@@ -214,7 +214,7 @@ class Host_Vector
 
 } // end namespace cuda
 
-#endif // cuda_utils_Host_Vector_hh
+#endif // CudaUtils_cuda_utils_Host_Vector_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Host_Vector.hh

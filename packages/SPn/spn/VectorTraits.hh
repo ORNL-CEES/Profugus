@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/VectorTraits.hh
+ * \file   SPn/spn/VectorTraits.hh
  * \author Steven Hamilton
  * \date   Mon Feb 17 13:10:27 2014
  * \brief  VectorTraits class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_VectorTraits_hh
-#define spn_VectorTraits_hh
+#ifndef SPn_spn_VectorTraits_hh
+#define SPn_spn_VectorTraits_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ArrayRCP.hpp"
@@ -219,7 +219,7 @@ class VectorTraits<TpetraTypes>
 
 } // end namespace profugus
 
-#endif // spn_VectorTraits_hh
+#endif // SPn_spn_VectorTraits_hh
 
 //---------------------------------------------------------------------------//
 //                 end of VectorTraits.hh

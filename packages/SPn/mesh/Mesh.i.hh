@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Mesh.i.hh
+ * \file   SPn/mesh/Mesh.i.hh
  * \author Thomas M. Evans
  * \date   Wednesday February 12 0:21:50 2014
  * \brief  Member definitions of class Mesh.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Mesh_i_hh
-#define spn_Mesh_i_hh
+#ifndef SPn_mesh_Mesh_i_hh
+#define SPn_mesh_Mesh_i_hh
 
 #include "harness/Soft_Equivalence.hh"
 
@@ -165,7 +165,7 @@ double Mesh::center(size_type ijk,
 
 } // end namespace profugus
 
-#endif // spn_Mesh_i_hh
+#endif // SPn_mesh_Mesh_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/Mesh.i.hh

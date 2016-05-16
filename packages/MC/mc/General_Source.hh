@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/General_Source.hh
+ * \file   MC/mc/General_Source.hh
  * \author Steven Hamilton
  * \date   Mon Apr 04 20:38:12 2016
  * \brief  General_Source class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_General_Source_hh
-#define mc_General_Source_hh
+#ifndef MC_mc_General_Source_hh
+#define MC_mc_General_Source_hh
 
 #include <memory>
 
@@ -76,13 +76,13 @@ class General_Source : public Source<Geometry>
       }
 
       //! Number of particles to transport on this domain.
-      def::size_type num_to_transport() const
+      def::size_type num_to_transport() const override
       {
           return d_np_domain;
       }
 
       //! Total number of particles to transport on all domains.
-      def::size_type total_num_to_transport() const
+      def::size_type total_num_to_transport() const override
       {
           return d_np_total;
       }
@@ -117,7 +117,7 @@ class General_Source : public Source<Geometry>
 
 } // end namespace profugus
 
-#endif // mc_General_Source_hh
+#endif // MC_mc_General_Source_hh
 
 //---------------------------------------------------------------------------//
 //                 end of General_Source.hh

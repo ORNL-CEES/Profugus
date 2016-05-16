@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/VR_Roulette.hh
+ * \file   MC/mc/VR_Roulette.hh
  * \author Thomas M. Evans
  * \date   Fri May 09 13:09:37 2014
  * \brief  VR_Roulette class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_VR_Roulette_hh
-#define mc_VR_Roulette_hh
+#ifndef MC_mc_VR_Roulette_hh
+#define MC_mc_VR_Roulette_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -103,7 +103,7 @@ class VR_Roulette : public Variance_Reduction<Geometry>
 
 } // end namespace profugus
 
-#endif // mc_VR_Roulette_hh
+#endif // MC_mc_VR_Roulette_hh
 
 //---------------------------------------------------------------------------//
 //                 end of VR_Roulette.hh

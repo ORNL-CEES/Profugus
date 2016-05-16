@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstEnergy_Multigrid.cc
+ * \file   SPn/spn/test/tstEnergy_Multigrid.cc
  * \author Thomas Evans, Steven Hamilton
  * \date   Monday March 10 12:38:40 2014
  * \brief  Energy Grid Transfer test.

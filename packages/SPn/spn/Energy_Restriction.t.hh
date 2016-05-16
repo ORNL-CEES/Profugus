@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Restriction.t.hh
+ * \file   SPn/spn/Energy_Restriction.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 12:35:37 2014
  * \brief  Energy_Restriction template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Energy_Restriction_t_hh
-#define spn_Energy_Restriction_t_hh
+#ifndef SPn_spn_Energy_Restriction_t_hh
+#define SPn_spn_Energy_Restriction_t_hh
 
 #include <algorithm>
 
@@ -98,7 +98,7 @@ void Energy_Restriction<T>::ApplyImpl( const MV &fine_vectors,
 
 } // end namespace profugus
 
-#endif // spn_Energy_Restriction_t_hh
+#endif // SPn_spn_Energy_Restriction_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Energy_Restriction.t.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/MueLuPreconditioner.t.hh
+ * \file   SPn/solvers/MueLuPreconditioner.cc
  * \author Thomas M. Evans, Steven P. Hamilton
  * \date   Fri Feb 21 13:41:13 2014
  * \brief  MueLuPreconditioner template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_MueLuPreconditioner_t_hh
-#define solvers_MueLuPreconditioner_t_hh
+#ifndef SPn_solvers_MueLuPreconditioner_cc
+#define SPn_solvers_MueLuPreconditioner_cc
 
 #include "MueLuPreconditioner.hh"
 
@@ -74,8 +74,8 @@ void MueLuPreconditionerBase::setup( Teuchos::RCP<Teuchos::ParameterList> pl )
 
 } // end namespace profugus
 
-#endif // solvers_MueLuPreconditioner_t_hh
+#endif // SPn_solvers_MueLuPreconditioner_cc
 
 //---------------------------------------------------------------------------//
-//                 end of MueLuPreconditioner.t.hh
+// end of MueLuPreconditioner.cc
 //---------------------------------------------------------------------------//

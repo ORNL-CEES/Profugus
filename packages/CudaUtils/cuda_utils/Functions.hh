@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Functions.hh
+ * \file   CudaUtils/cuda_utils/Functions.hh
  * \author Seth R Johnson
  * \date   Sat Sep 21 19:44:58 2013
  * \brief  Useful function declarations
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Functions_hh
-#define cuda_utils_Functions_hh
+#ifndef CudaUtils_cuda_utils_Functions_hh
+#define CudaUtils_cuda_utils_Functions_hh
 
 namespace cuda
 {
@@ -19,7 +19,7 @@ unsigned int ceil_quotient(unsigned int dividend, unsigned int divisor);
 
 } // end namespace cuda
 
-#endif // cuda_utils_Functions_hh
+#endif // CudaUtils_cuda_utils_Functions_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Functions.hh

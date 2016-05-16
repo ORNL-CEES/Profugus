@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdjointMcParallelFor.hh
+ * \file   Alea/mc_solvers/AdjointMcParallelFor.hh
  * \author Steven Hamilton
  * \brief  Perform adjoint MC histories to solve linear system.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_AdjointMcParallelFor_hh
-#define mc_solver_AdjointMcParallelFor_hh
+#ifndef Alea_mc_solvers_AdjointMcParallelFor_hh
+#define Alea_mc_solvers_AdjointMcParallelFor_hh
 
 #include "MC_Data.hh"
 
@@ -110,5 +110,5 @@ class AdjointMcParallelFor
 
 #include "AdjointMcParallelFor.i.hh"
 
-#endif // mc_solver_AdjointMcParallelFor_hh
+#endif // Alea_mc_solvers_AdjointMcParallelFor_hh
 

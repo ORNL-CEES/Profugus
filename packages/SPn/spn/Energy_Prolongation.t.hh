@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Prolongation.t.hh
+ * \file   SPn/spn/Energy_Prolongation.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 12:35:44 2014
  * \brief  Energy_Prolongation template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Energy_Prolongation_t_hh
-#define spn_Energy_Prolongation_t_hh
+#ifndef SPn_spn_Energy_Prolongation_t_hh
+#define SPn_spn_Energy_Prolongation_t_hh
 
 #include <algorithm>
 
@@ -96,7 +96,7 @@ void Energy_Prolongation<T>::ApplyImpl( const MV &coarse_vectors,
 
 } // end namespace profugus
 
-#endif // spn_Energy_Prolongation_t_hh
+#endif // SPn_spn_Energy_Prolongation_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Energy_Prolongation.t.hh

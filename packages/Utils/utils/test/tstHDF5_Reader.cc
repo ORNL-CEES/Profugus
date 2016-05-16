@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstHDF5_Reader.cc
+ * \file   Utils/utils/test/tstHDF5_Reader.cc
  * \author Thomas M. Evans
  * \date   Fri Jan 24 09:51:32 2014
  * \brief  HDF5_Reader unit-test.

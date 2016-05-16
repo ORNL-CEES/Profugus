@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Global_RNG.cc
+ * \file   MC/mc/Global_RNG.cc
  * \author Thomas M. Evans
  * \date   Wed May 18 17:45:33 2011
  * \brief  Global_RNG member definitions.

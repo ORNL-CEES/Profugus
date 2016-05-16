@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   geometry/Bounding_Box.i.hh
+ * \file   MC/geometry/Bounding_Box.i.hh
  * \author Seth R Johnson
  * \date   Wed Jul 01 14:55:00 2015
  * \brief  Bounding_Box inline method definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Bounding_Box_i_hh
-#define geometry_Bounding_Box_i_hh
+#ifndef MC_geometry_Bounding_Box_i_hh
+#define MC_geometry_Bounding_Box_i_hh
 
 namespace profugus
 {
@@ -64,7 +64,7 @@ bool Bounding_Box::encloses(const Bounding_Box& b) const
 //---------------------------------------------------------------------------//
 } // end namespace profugus
 
-#endif // geometry_Bounding_Box_i_hh
+#endif // MC_geometry_Bounding_Box_i_hh
 
 //---------------------------------------------------------------------------//
 // end of geometry/Bounding_Box.i.hh

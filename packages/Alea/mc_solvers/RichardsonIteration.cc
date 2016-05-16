@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   RichardsonIteration.cc
+ * \file   Alea/mc_solvers/RichardsonIteration.cc
  * \author Steven Hamilton
  * \brief  Perform Adjoint Monte Carlo on linear system
  */

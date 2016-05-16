@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/test/tstRTK_Array.cc
+ * \file   MC/geometry/test/tstRTK_Array.cc
  * \author Thomas M. Evans
  * \date   Tue Dec 21 13:16:21 2010
  * \brief  Unit-Test of RTK_Array class.

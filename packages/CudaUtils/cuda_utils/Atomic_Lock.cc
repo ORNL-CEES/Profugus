@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Atomic_Lock.cc
+ * \file   CudaUtils/cuda_utils/Atomic_Lock.cc
  * \author Seth R Johnson
  * \date   Thu Aug 15 09:32:04 2013
  * \brief  Atomic_Lock member definitions.

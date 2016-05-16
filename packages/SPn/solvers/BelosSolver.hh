@@ -6,8 +6,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_BelosSolver_hh
-#define solvers_BelosSolver_hh
+#ifndef SPn_solvers_BelosSolver_hh
+#define SPn_solvers_BelosSolver_hh
 
 #include <SPn/config.h>
 #include "LinearSolver.hh"
@@ -102,5 +102,5 @@ class BelosSolver : public LinearSolver<T>
 
 } // namespace profugus
 
-#endif // MCREX_BelosSolver_hh
+#endif // SPn_solvers_BelosSolver_hh
 

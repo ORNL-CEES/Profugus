@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Parallel_Utils.cc
+ * \file   Utils/comm/Parallel_Utils.cc
  * \author Thomas M. Evans
  * \date   Fri Jul 13 15:19:06 2007
  * \brief  Parallel utility function definition.

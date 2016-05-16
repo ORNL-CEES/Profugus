@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/Global_Mesh_Data.i.hh
+ * \file   SPn/mesh/Global_Mesh_Data.i.hh
  * \author Thomas M. Evans
  * \date   Tue Feb 12 09:00:23 2008
  * \brief  Global_Mesh_Data class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mesh_Global_Mesh_Data_i_hh
-#define mesh_Global_Mesh_Data_i_hh
+#ifndef SPn_mesh_Global_Mesh_Data_i_hh
+#define SPn_mesh_Global_Mesh_Data_i_hh
 
 namespace profugus
 {
@@ -53,7 +53,7 @@ Global_Mesh_Data::Global_Mesh_Data(const def::Vec_Dbl &x_edges,
 
 } // end namespace profugus
 
-#endif  // mesh_Global_Mesh_Data_i_hh
+#endif // SPn_mesh_Global_Mesh_Data_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of mesh/Global_Mesh_Data.i.hh

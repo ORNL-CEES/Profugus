@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/Warnings.hh
+ * \file   Utils/harness/Warnings.hh
  * \author Thomas M. Evans
  * \date   Sun Feb 26 20:54:46 2012
  * \brief  Warnings class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef harness_Warnings_hh
-#define harness_Warnings_hh
+#ifndef Utils_harness_Warnings_hh
+#define Utils_harness_Warnings_hh
 
 #include <deque>
 #include <string>
@@ -152,7 +152,7 @@ extern Warnings warnings;
 #define ADD_WARNING(b) do { } while (0)
 #endif
 
-#endif // harness_Warnings_hh
+#endif // Utils_harness_Warnings_hh
 
 //---------------------------------------------------------------------------//
 //              end of harness/Warnings.hh

@@ -16,16 +16,16 @@
 #include <iterator>
 #include <vector>
 
-#include "harness/DBC.hh"
+#include "Utils/harness/DBC.hh"
 #include "View_Field_Iterator.hh"
+#include "View_Field_Fast.hh"
 
 namespace profugus
 {
-
 //===========================================================================//
 /*!
  * \class View_Field
- * \brief Provides views into field data.
+ * \brief Provides views into contiguous data.
  *
  * This class provides a common wrapper around random access containers,
  * and is able to return slices.
@@ -115,6 +115,7 @@ class View_Field
     //! Returns true if the size of the field is zero.
     bool empty() const { return d_begin_iterator == d_end_iterator; }
 
+  public:
 
     // >>> RAW DATA ACCESS (like C++11)
     //@{
@@ -162,6 +163,24 @@ class View_Field
     inline const_reverse_iterator rend() const;
     const_reverse_iterator crend() const { return rend(); }
     //@}
+
+    // >>> POINTER ITERATORS
+    // These can be used for efficiency (better compiler optimization partly
+    // due to STL specializations on pointer types)
+
+    //@{
+    //! Pointer iterators
+    pointer pbegin();
+    const_pointer pbegin() const;
+    const_pointer cpbegin() const;
+    pointer pend();
+    const_pointer pend() const;
+    const_pointer cpend() const;
+    //@}
+
+    // Fast range operators
+    inline View_Field_Fast<T> fast_range();
+    inline const_View_Field_Fast<T> fast_range() const;
 
   public:
     // Divide the field into slices of size slice_size, and return the
@@ -263,6 +282,7 @@ class const_View_Field
     //! Returns true if the size of the field is zero.
     bool empty() const { return d_begin_iterator == d_end_iterator; }
 
+  public:
     // >>> RAW DATA ACCESS (like C++11)
     //! Raw data access
     inline const_pointer data() const;
@@ -293,6 +313,21 @@ class const_View_Field
     inline const_reverse_iterator rend() const;
     const_reverse_iterator crend() const { return rend(); }
     //@}
+
+    // >>> POINTER ITERATORS
+    // These can be used for efficiency (better compiler optimization partly
+    // due to STL specializations on pointer types)
+
+    //@{
+    //! Pointer iterators
+    const_pointer pbegin() const;
+    const_pointer cpbegin() const;
+    const_pointer pend() const;
+    const_pointer cpend() const;
+    //@}
+
+    // Fast range operators
+    inline const_View_Field_Fast<T> fast_range() const;
 
   public:
     // Divide the view into slices of size slice_size and return the

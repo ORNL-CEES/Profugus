@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Device_Vector_device.pt.cc
+ * \file   CudaUtils/cuda_utils/Device_Vector_device.pt.cc
  * \author Seth R Johnson
  * \date   Thu Aug 01 11:33:12 2013
  * \brief  Device_Vector explicit instantiation.

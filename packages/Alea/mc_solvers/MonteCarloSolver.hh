@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   MonteCarloSolver.hh
+ * \file   Alea/mc_solvers/MonteCarloSolver.hh
  * \author Steven Hamilton
  * \brief  Perform adjoint MC histories to solve linear system.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_MonteCarloSolver_hh
-#define mc_solver_MonteCarloSolver_hh
+#ifndef Alea_mc_solvers_MonteCarloSolver_hh
+#define Alea_mc_solvers_MonteCarloSolver_hh
 
 #include "Kokkos_View.hpp"
 #include "Kokkos_Random.hpp"
@@ -146,5 +146,5 @@ class MonteCarloSolver : public AleaSolver,
 
 } // namespace alea
 
-#endif // mc_solver_MonteCarloSolver_hh
+#endif // Alea_mc_solvers_MonteCarloSolver_hh
 

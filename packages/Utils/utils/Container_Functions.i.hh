@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Container_Functions.i.hh
+ * \file   Utils/utils/Container_Functions.i.hh
  * \author Gregory G. Davidson
  * \date   Thu Jan 09 11:56:28 2014
  * \brief  Inline function definitions of of container functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Container_Functions_i_hh
-#define utils_Container_Functions_i_hh
+#ifndef Utils_utils_Container_Functions_i_hh
+#define Utils_utils_Container_Functions_i_hh
 
 #include <numeric>
 
@@ -511,7 +511,7 @@ truncate_and_norm(typename Container::iterator  first,
 
 } // end namespace profugus
 
-#endif // utils_Container_Functions_i_hh
+#endif // Utils_utils_Container_Functions_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Container_Functions.i.hh

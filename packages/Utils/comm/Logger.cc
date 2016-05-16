@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   comm/Logger.cc
+ * \file   Utils/comm/Logger.cc
  * \author Seth R Johnson
  * \date   Tue Feb 03 08:39:27 2015
  * \brief  Logger class definitions.

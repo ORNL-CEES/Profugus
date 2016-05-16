@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Scoped_Timer.hh
+ * \file   Utils/comm/Scoped_Timer.hh
  * \author Seth R Johnson
  * \date   Fri Oct 11 07:50:08 2013
  * \brief  Scoped_Timer class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Scoped_Timer_hh
-#define comm_Scoped_Timer_hh
+#ifndef Utils_comm_Scoped_Timer_hh
+#define Utils_comm_Scoped_Timer_hh
 
 #include <string>
 
@@ -69,7 +69,7 @@ class Scoped_Timer
 
 } // end namespace profugus
 
-#endif // comm_Scoped_Timer_hh
+#endif // Utils_comm_Scoped_Timer_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Scoped_Timer.hh
