@@ -19,6 +19,9 @@ SET(LIB_OPTIONAL_DEP_TPLS)
 SET(TEST_REQUIRED_DEP_TPLS)
 SET(TEST_OPTIONAL_DEP_TPLS)
 
+TRIBITS_ALLOW_MISSING_EXTERNAL_PACKAGES(
+  Temere MCLS)
+
 ##---------------------------------------------------------------------------##
 ##                  end of Alea/cmake/Dependencies.cmake
 ##---------------------------------------------------------------------------##
