@@ -63,7 +63,7 @@ class LinearSolver
         b_max_iters = db->get<int>("max_itr", 100);
 
         // Get verbosity or set default
-        std::string verb = profugus::to_lower(
+        std::string verb = profugus::lower(
             db->get("verbosity", std::string("low")));
         if( verb=="none" )
         {

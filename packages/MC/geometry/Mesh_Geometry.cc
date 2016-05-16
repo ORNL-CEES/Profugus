@@ -449,12 +449,12 @@ Bounding_Box Mesh_Geometry::get_cell_extents(geometry::cell_type cell) const
 
     const auto &edges = d_mesh.edges();
 
-    return Bounding_Box( edges(I)[ijk[I]],
-                         edges(I)[ijk[I]+1],
-                         edges(J)[ijk[J]],
-                         edges(J)[ijk[J]+1],
-                         edges(K)[ijk[K]],
-                         edges(K)[ijk[K]+1]);
+    return Bounding_Box( edges[I][ijk[I]],
+                         edges[I][ijk[I]+1],
+                         edges[J][ijk[J]],
+                         edges[J][ijk[J]+1],
+                         edges[K][ijk[K]],
+                         edges[K][ijk[K]+1]);
 }
 
 //---------------------------------------------------------------------------//

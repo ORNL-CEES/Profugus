@@ -93,9 +93,7 @@ TEST_F(DiagnosticsTest, vectors)
 
     std::vector<double> ref(2, 1.1);
     ref[1] = 2.4;
-    EXPECT_TRUE(soft_equiv(Diagnostics::vec_doubles["B"].begin(),
-                           Diagnostics::vec_doubles["B"].end(),
-                           ref.begin(), ref.end()));
+    EXPECT_VEC_SOFT_EQ(ref, Diagnostics::vec_doubles["B"]);
 
     Diagnostics::vec_doubles["B"].clear();
     EXPECT_TRUE(Diagnostics::vec_integers["B"].empty());

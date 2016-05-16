@@ -48,14 +48,14 @@ LinearSolverBuilder<T>::build_solver( RCP_ParameterList db )
     RCP_LinearSolver solver;
 
     // Determine type of solver to be constructed (defaults to profugus)
-    string solver_type = to_lower(
+    string solver_type = lower(
         db->get<string>("solver_type", string("profugus")));
 
     // Check for native solvers
     if (solver_type == "profugus")
     {
         // get profugus solver type
-        string type = to_lower(
+        string type = lower(
             db->get<string>("profugus_solver", string("richardson")));
 
         if (type == "richardson")

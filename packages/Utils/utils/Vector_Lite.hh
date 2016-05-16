@@ -4,7 +4,7 @@
  * \author Derived from Rob Lowrie's Vector_Lite (LANL)
  * \date   Thu Jan  3 11:39:29 2008
  * \brief  Vector_Lite class definition.
- * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
@@ -14,8 +14,11 @@
 #include <iostream>
 #include <numeric>
 #include <cstddef>
+#include <iterator>
+#include <algorithm>
+#include <initializer_list>
 
-#include "harness/DBC.hh"
+#include "Utils/harness/DBC.hh"
 
 namespace profugus
 {
@@ -26,7 +29,7 @@ namespace profugus
  * \brief Array container that is a wrapper around a standard C array.
  *
  * It adds iterator and arithemtic support, along with bounds checking (via
- * Profugus' DBC).
+ * Utils' DBC).
  *
  * An alternative to this class is boost::array (www.boost.org).  However,
  * boost::array is an aggregate type, which has advantages (can use
@@ -59,6 +62,9 @@ class Vector_Lite
     typedef size_t            size_type;
     typedef pointer           iterator;
     typedef const_pointer     const_iterator;
+
+    typedef std::reverse_iterator<iterator>       reverse_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
     //@}
 
   private:
@@ -67,8 +73,11 @@ class Vector_Lite
     T d_U[N];
 
   public:
+    // Empty constructor
+    inline explicit Vector_Lite();
+
     // Constructor based on a scalar value.
-    inline explicit Vector_Lite(const T &u = T());
+    inline explicit Vector_Lite(const T &u);
 
     // Constructor for N = 2.
     inline Vector_Lite(const T &u0, const T &u1);
@@ -83,23 +92,29 @@ class Vector_Lite
     inline Vector_Lite(const T &u0, const T &u1, const T &u2,
                        const T &u3, const T &u4);
 
-    // Fill in from C array.
-    inline void fill(const T u[N]);
+    // Initializer list construction.
+    inline Vector_Lite(std::initializer_list<T> list);
 
-    //! Destructor.
-    ~Vector_Lite(void) { }
+    // Copy and move constructor
+    Vector_Lite(const Vector_Lite& rhs) = default;
+    Vector_Lite(Vector_Lite&& rhs) = default;
 
     // >>> MANIPULATORS
 
-    // Assignment to a another Vector_Lite.
-    inline Vector_Lite &operator=(const Vector_Lite &rhs);
+    // Assignment from a another Vector_Lite.
+    Vector_Lite &operator=(const Vector_Lite &rhs) = default;
+    Vector_Lite &operator=(Vector_Lite &&rhs) = default;
 
-    // Assignment to a scalar.
+    // Assignment from a scalar.
     inline Vector_Lite &operator=(const T &rhs);
 
     // Comparisons to another Vector_Lite.
     inline bool operator==(const Vector_Lite &a) const;
     inline bool operator<(const Vector_Lite &a) const;
+    inline bool all_gt(const Vector_Lite &a) const;
+    inline bool all_lt(const Vector_Lite &a) const;
+    inline bool all_ge(const Vector_Lite &a) const;
+    inline bool all_le(const Vector_Lite &a) const;
 
     // Basic arithmetic operations, vector right-hand side.
     inline Vector_Lite &operator+=(const Vector_Lite &a);
@@ -108,42 +123,43 @@ class Vector_Lite
     inline Vector_Lite &operator/=(const Vector_Lite &a);
 
     // Basic arithmetic operations, scalar right-hand side.
-    inline Vector_Lite &operator+=(const T &a);
-    inline Vector_Lite &operator-=(const T &a);
-    inline Vector_Lite &operator*=(const T &a);
-    inline Vector_Lite &operator/=(const T &a);
-
-    //! Returns true if \a i is a valid array index.
-    bool valid_index(const size_type i) const
-    {
-        return i < N;
-    }
+    template<class T2>
+    inline Vector_Lite &operator+=(const T2 &a);
+    template<class T2>
+    inline Vector_Lite &operator-=(const T2 &a);
+    template<class T2>
+    inline Vector_Lite &operator*=(const T2 &a);
+    template<class T2>
+    inline Vector_Lite &operator/=(const T2 &a);
 
     // >>> ACCESSORS
-
-    //! Indexing using ().
-    reference operator()(const size_type i)
-    {
-        REQUIRE(valid_index(i)); return d_U[i];
-    }
-
-    //! Const indexing using ().
-    const_reference operator()(const size_type i) const
-    {
-        REQUIRE(valid_index(i)); return d_U[i];
-    }
 
     //! Indexing using [].
     reference operator[](const size_type i)
     {
-        REQUIRE(valid_index(i)); return d_U[i];
+        REQUIRE(i < N);
+        return d_U[i];
     }
 
     //! const indexing using [].
     const_reference operator[](const size_type i) const
     {
-        REQUIRE(valid_index(i)); return d_U[i];
+        REQUIRE(i < N);
+        return d_U[i];
     }
+
+    //@{
+    //! C++11-like data access
+    pointer data() { return d_U; }
+    const_pointer data() const { return d_U; }
+    //@}
+
+    //! Front and back elements (unchecked)
+    const_reference front() const { return d_U[0]; }
+    reference front() { return d_U[0]; }
+    const_reference back() const { return d_U[N-1]; }
+    reference back() { return d_U[N-1]; }
+    //@}
 
     // >>> ITERATOR SUPPORT
 
@@ -153,8 +169,24 @@ class Vector_Lite
     //! Const iterator begin.
     const_iterator begin() const { return d_U; }
 
+    //! Begin reverse iterator.
+    reverse_iterator rbegin() { return reverse_iterator(end()); }
+
+    //! Begin reverse const_iterator.
+    const_reverse_iterator rbegin() const
+        { return const_reverse_iterator(end()); }
+    const_reverse_iterator crbegin() const { return rbegin(); }
+
     //! Iterator end.
     iterator end() { return d_U + N; }
+
+    //! End reverse iterator.
+    reverse_iterator rend() { return reverse_iterator(begin()); }
+
+    //! End reverse const_iterator.
+    const_reverse_iterator rend() const
+        { return const_reverse_iterator(begin()); }
+    const_reverse_iterator crend() const { return rend(); }
 
     //! Const iterator end.
     const_iterator end() const { return d_U + N; }
@@ -170,7 +202,6 @@ class Vector_Lite
 };
 
 } // end namespace profugus
-
 //---------------------------------------------------------------------------//
 // INLINE AND FREE FUNCTIONS
 //---------------------------------------------------------------------------//

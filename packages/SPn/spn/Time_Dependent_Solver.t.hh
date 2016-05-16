@@ -86,7 +86,7 @@ void Time_Dependent_Solver<T>::setup(RCP_Dimensions  dim,
     std::string &eqn_type =
         b_db->template get<std::string>("eqn_type", std::string("fv"));
 
-    if (profugus::to_lower(eqn_type) == "fv")
+    if (profugus::lower(eqn_type) == "fv")
     {
         b_system = Teuchos::rcp(
             new Linear_System_FV<T>(

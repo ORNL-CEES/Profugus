@@ -1143,9 +1143,9 @@ TEST_F(Partitioner_Test, 4PE_Mixed)
         ry[1] = 0.5; ry[2] = 1.5; ry[3] = 3.0;
         rz[1] = 0.2; rz[2] = 0.4;
     }
-    EXPECT_TRUE(soft_equiv(x.begin(), x.end(), rx.begin(), rx.end()));
-    EXPECT_TRUE(soft_equiv(y.begin(), y.end(), ry.begin(), ry.end()));
-    EXPECT_TRUE(soft_equiv(z.begin(), z.end(), rz.begin(), rz.end()));
+    EXPECT_VEC_SOFT_EQ(rx, x);
+    EXPECT_VEC_SOFT_EQ(ry, y);
+    EXPECT_VEC_SOFT_EQ(rz, z);
 }
 
 //---------------------------------------------------------------------------//

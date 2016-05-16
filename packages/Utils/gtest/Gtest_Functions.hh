@@ -4,14 +4,14 @@
  * \author Seth R Johnson
  * \date   Tue Apr 02 11:41:41 2013
  * \brief  Gtest_Functions class definition.
- * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2013 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
 #ifndef Utils_gtest_Gtest_Functions_hh
 #define Utils_gtest_Gtest_Functions_hh
 
-#include "gtest.h"
+#include <cstddef>
 
 namespace profugus
 {
@@ -23,196 +23,17 @@ int gtest_main(int argc, char *argv[]);
 // Print the "skip" message from the skip macro
 void print_skip_message();
 
-//---------------------------------------------------------------------------//
-// Custom error mesages for relative error soft equiavelence
-::testing::AssertionResult IsSoftEquiv(
-        const char* expected_expr,
-        const char* actual_expr,
-        const char* eps_expr,
-        double expected,
-        double actual,
-        double eps);
-
-//! Soft equivalence assertion with default argument
-inline ::testing::AssertionResult IsSoftEquiv(
-        const char* expected_expr,
-        const char* actual_expr,
-        double expected,
-        double actual)
-{
-    return IsSoftEquiv(
-            expected_expr, actual_expr, "1e-12",
-            expected     , actual     , 1.e-12);
-}
-
-//---------------------------------------------------------------------------//
-// Helper function: analyze using raw pointers for compilable flexibility
-::testing::AssertionResult IsIterSoftEquiv(
-        const char* expected_expr,
-        const char* actual_expr,
-        const char* eps_expr,
-        const double* expected_begin, const double* expected_end,
-        const double* actual_begin,   const double* actual_end,
-        double eps);
-
-//---------------------------------------------------------------------------//
-// Custom vector soft equivalence comparison
-template<class Container_E, class Container_A>
-::testing::AssertionResult IsVecSoftEquiv(
-        const char* expected_expr,
-        const char* actual_expr,
-        const char* eps_expr,
-        const Container_E& expected,
-        const Container_A& actual,
-        double eps)
-{
-    // Get pointers using bracket operator
-    const double* expected_begin = &expected[0];
-    const double* expected_end   = &expected[expected.size() - 1] + 1;
-    const double* actual_begin   = &actual[0];
-    const double* actual_end     = &actual[actual.size() - 1] + 1;
-
-    // Ensure continuity of underlying data
-    if (expected_end - expected_begin != static_cast<int>(expected.size()))
-    {
-        ::testing::AssertionResult failure = ::testing::AssertionFailure();
-
-        failure << "Noncontiguous container: " << expected_expr;
-        return failure;
-    }
-    if (actual_end - actual_begin != static_cast<int>(actual.size()))
-    {
-        ::testing::AssertionResult failure = ::testing::AssertionFailure();
-
-        failure << "Noncontiguous container: " << actual_expr;
-        return failure;
-    }
-
-    return IsIterSoftEquiv(
-            expected_expr, actual_expr, eps_expr,
-            expected_begin, expected_end,
-            actual_begin, actual_end,
-            eps);
-}
-
-//---------------------------------------------------------------------------//
-// Custom vector equality comparison against a statically sized C array
-template<std::size_t N, class Container_A>
-inline ::testing::AssertionResult IsVecSoftEquiv(
-        const char* expected_expr,
-        const char* actual_expr,
-        const char* eps_expr,
-        const double (&expected)[N],
-        const Container_A& actual,
-        double eps)
-{
-    // Get pointers using bracket operator
-    const double* expected_begin = expected;
-    const double* expected_end   = expected + N;
-    const double* actual_begin   = &actual[0];
-    const double* actual_end     = &actual[actual.size() - 1] + 1;
-
-    // Ensure continuity of underlying data
-    if (actual_end - actual_begin != static_cast<int>(actual.size()))
-    {
-        ::testing::AssertionResult failure = ::testing::AssertionFailure();
-
-        failure << "Noncontiguous container: " << actual_expr;
-        return failure;
-    }
-
-    return IsIterSoftEquiv(
-            expected_expr, actual_expr, eps_expr,
-            expected_begin, expected_end,
-            actual_begin, actual_end,
-            eps);
-}
-
-//---------------------------------------------------------------------------//
-// Helper function: analyze using raw pointers for compilable flexibility
-template<class T>
-::testing::AssertionResult IsIterEq(
-        const char* expected_expr,
-        const char* actual_expr,
-        const T* expected, const T* expected_end,
-        const T* actual,   const T* actual_end);
-
-//---------------------------------------------------------------------------//
-// Custom vector equality comparison
-template<class Container_E, class Container_A>
-inline ::testing::AssertionResult IsVecEq(
-        const char* expected_expr,
-        const char* actual_expr,
-        const Container_E& expected,
-        const Container_A& actual)
-{
-    typedef const typename Container_E::value_type* const_ptr_E;
-    typedef const typename Container_A::value_type* const_ptr_A;
-
-    // Get pointers using bracket operator
-    const_ptr_E expected_begin = &expected[0];
-    const_ptr_E expected_end   = &expected[expected.size() - 1] + 1;
-    const_ptr_A actual_begin   = &actual[0];
-    const_ptr_A actual_end     = &actual[actual.size() - 1] + 1;
-
-    // Ensure continuity of underlying data
-    if (expected_end - expected_begin != static_cast<int>(expected.size()))
-    {
-        ::testing::AssertionResult failure = ::testing::AssertionFailure();
-
-        failure << "Noncontiguous container: " << expected_expr;
-        return failure;
-    }
-    if (actual_end - actual_begin != static_cast<int>(actual.size()))
-    {
-        ::testing::AssertionResult failure = ::testing::AssertionFailure();
-
-        failure << "Noncontiguous container: " << actual_expr;
-        return failure;
-    }
-
-    return IsIterEq(
-            expected_expr, actual_expr,
-            expected_begin, expected_end,
-            actual_begin, actual_end);
-}
-
-//---------------------------------------------------------------------------//
-// Custom vector equality comparison against a statically sized C array
-template<typename T, std::size_t N, class Container_A>
-inline ::testing::AssertionResult IsVecEq(
-        const char* expected_expr,
-        const char* actual_expr,
-        const T (&expected)[N],
-        const Container_A& actual)
-{
-    typedef const T* const_ptr_E;
-    typedef const typename Container_A::value_type* const_ptr_A;
-
-    // Get pointers using bracket operator
-    const_ptr_E expected_begin = expected;
-    const_ptr_E expected_end   = expected + N;
-    const_ptr_A actual_begin   = &actual[0];
-    const_ptr_A actual_end     = &actual[actual.size() - 1] + 1;
-
-    // Ensure continuity of underlying data
-    if (actual_end - actual_begin != static_cast<int>(actual.size()))
-    {
-        ::testing::AssertionResult failure = ::testing::AssertionFailure();
-
-        failure << "Noncontiguous container: " << actual_expr;
-        return failure;
-    }
-
-    return IsIterEq(
-            expected_expr, actual_expr,
-            expected_begin, expected_end,
-            actual_begin, actual_end);
-}
+// Calculate the number of digits in a large number
+unsigned int calc_num_digits(std::size_t number);
 
 //===========================================================================//
 } // end namespace profugus
 
+//---------------------------------------------------------------------------//
+// INLINE TEMPLATE DEFINITIONS
+//---------------------------------------------------------------------------//
+#include "Gtest_Functions.i.hh"
+//---------------------------------------------------------------------------//
 #endif // Utils_gtest_Gtest_Functions_hh
 
 //---------------------------------------------------------------------------//

@@ -387,8 +387,7 @@ TEST_F(PackingUtilsTest, packing_functions)
         unpack_data(y_new, packed_string);
     }
 
-    if (!soft_equiv(x_new.begin(), x_new.end(), x_ref.begin(), x_ref.end()))
-        ADD_FAILURE();
+    EXPECT_VEC_SOFT_EQ(x_ref, x_new);
 
     if (y_new == y_ref)
     {

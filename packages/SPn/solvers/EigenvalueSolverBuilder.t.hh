@@ -41,7 +41,7 @@ EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
     RCP_EigenvalueSolver solver;
 
     // Determine type of solver to be constructed.
-    std::string eigensolver = to_lower(
+    std::string eigensolver = lower(
         db->get("eigensolver", std::string("Arnoldi")));
 
     if( eigensolver=="arnoldi" )
@@ -103,7 +103,7 @@ EigenvalueSolverBuilder<T>::build_solver( RCP_ParameterList db,
     RCP_EigenvalueSolver solver;
 
     // Determine type of solver to be constructed.
-    std::string eigensolver = to_lower(
+    std::string eigensolver = lower(
         db->get("eigensolver", string("Arnoldi")));
 
     if( eigensolver=="arnoldi" )

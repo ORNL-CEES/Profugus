@@ -187,21 +187,21 @@ void Problem_Builder<Geometry>::build_physics()
 template <class Geometry>
 void Problem_Builder<Geometry>::build_var_reduction()
 {
-    using profugus::to_lower;
+    using profugus::lower;
 
     REQUIRE(!d_db.is_null());
 
     // the default is to do roulette
-    const auto &var = to_lower(
+    const auto &var = lower(
         d_db->get<std::string>("variance reduction", std::string("roulette")));
 
     // build the appropriate variance reduction
-    if (to_lower(var) == "roulette")
+    if (lower(var) == "roulette")
     {
         d_var_reduction =
             std::make_shared<profugus::VR_Roulette<Geom_t> >(d_db);
     }
-    else if (to_lower(var) == "analog")
+    else if (lower(var) == "analog")
     {
         d_var_reduction =
             std::make_shared<profugus::VR_Analog<Geom_t> >();

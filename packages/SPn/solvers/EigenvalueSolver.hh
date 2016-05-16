@@ -65,7 +65,7 @@ class EigenvalueSolver
         if( db->isParameter("verbosity") )
         {
             std::string verb =
-                profugus::to_lower(db->get<std::string>("verbosity"));
+                profugus::lower(db->get<std::string>("verbosity"));
             if( verb=="none" )
             {
                 b_verbosity = NONE;

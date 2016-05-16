@@ -61,7 +61,7 @@ PreconditionerBuilder<EpetraTypes>::build_preconditioner(
     using std::string;
 
     // Default to Ifpack
-    string prec_type = to_lower(db->get("Preconditioner", string("ifpack")));
+    string prec_type = lower(db->get("Preconditioner", string("ifpack")));
     VALIDATE(prec_type == "ifpack" || prec_type=="ml" ||
              prec_type=="none",
              "Preconditioner must be 'Ifpack', 'ML', or 'None'.");
@@ -161,7 +161,7 @@ PreconditionerBuilder<TpetraTypes>::build_preconditioner(
     typedef typename TpetraTypes::NODE   NODE;
 
     std::string prec_type =
-        to_lower(db->get("Preconditioner", std::string("Ifpack2")));
+        lower(db->get("Preconditioner", std::string("Ifpack2")));
     Teuchos::RCP<OP> prec;
     if( prec_type == "ifpack2" )
     {

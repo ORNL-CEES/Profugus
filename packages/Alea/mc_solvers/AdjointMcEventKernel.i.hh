@@ -80,11 +80,11 @@ AdjointMcEventKernel::AdjointMcEventKernel(
     d_start_wt_factor = pl->get<SCALAR>("start_weight_factor",1.0);
 
     // Should we print anything to screen
-    std::string verb = profugus::to_lower(pl->get("verbosity","low"));
+    std::string verb = profugus::lower(pl->get("verbosity","low"));
     d_print = (verb == "high");
 
     std::string transition =
-        profugus::to_lower(pl->get("transition_type","standard"));
+        profugus::lower(pl->get("transition_type","standard"));
     if( transition == "standard" )
         d_transition_type = STANDARD;
     else if( transition == "binned" )

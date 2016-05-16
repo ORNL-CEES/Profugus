@@ -435,11 +435,7 @@ TEST(MakeUnique, all)
 
     // Run test
     profugus::make_unique(int_test2_v);
-    EXPECT_EQ(int_test2_v.size(), int_test2_ref_v.size());
-    for(unsigned int i = 0; i < int_test2_ref_v.size(); ++i)
-    {
-        EXPECT_SOFTEQ(int_test2_ref_v[i], int_test2_v[i], 1.0e-6);
-    }
+    EXPECT_VEC_EQ(int_test2_ref_v, int_test2_v);
 
     // >>> Vec_Str TEST
     // Make a vector of strings with repeats

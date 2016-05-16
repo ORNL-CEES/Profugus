@@ -299,6 +299,7 @@ INSTALL(FILES ${RNG_HEADERS} DESTINATION include/Utils/rng)
 FILE(GLOB GTEST_HEADERS gtest/*.hh)
 SET(GTEST_SOURCES
   gtest/Gtest_Functions.cc
+  gtest/Test.cc
   gtest/gtest-all.cc)
 
 LIST(APPEND SOURCES ${GTEST_SOURCES})

@@ -13,7 +13,7 @@
 
 #include <iterator>
 
-#include "harness/DBC.hh"
+#include "Utils/harness/DBC.hh"
 
 namespace profugus
 {
@@ -60,7 +60,7 @@ class VF_Iterator : public std::iterator_traits<T*>
     //! Return the stride
     stride_type stride() const { return d_stride; }
     //! Return the underlying pointer
-    pointer get_pointer() const { return d_ptr; }
+    pointer ptr() const { return d_ptr; }
     //! Return whether the pointer points to valid memory
     bool is_valid() const { return d_ptr != 0; }
 
@@ -178,7 +178,7 @@ class const_VF_Iterator : public std::iterator_traits<const T*>
     //! Return the stride.
     stride_type stride() const { return d_stride; }
     //! Return the underlying pointer.
-    pointer get_pointer() const { return d_ptr; }
+    pointer ptr() const { return d_ptr; }
     //! Return whether the pointer points to valid memory.
     bool is_valid() const { return d_ptr != 0; }
 

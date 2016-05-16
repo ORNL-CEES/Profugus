@@ -8,14 +8,18 @@
  */
 //---------------------------------------------------------------------------//
 
+
+#include "String_Functions.hh"
+
 #include <algorithm>
 #include <string>
-#include "String_Functions.hh"
+#include <cctype>
+
 
 namespace profugus
 {
-
-std::string to_lower(const std::string& orig_string)
+//---------------------------------------------------------------------------//
+std::string lower(const std::string& orig_string)
 {
     std::string outString(orig_string);
     std::transform(outString.begin(), outString.end(),
@@ -23,6 +27,41 @@ std::string to_lower(const std::string& orig_string)
 
     return outString;
 }
+
+//---------------------------------------------------------------------------//
+std::string rstrip(const std::string &s)
+{
+    // Copy the string to get a working function
+    std::string ws = s;
+
+    // Erase the trailing whitespace
+    ws.erase(std::find_if(ws.rbegin(), ws.rend(),
+                          [](char c) { return !std::isspace(c); }).base(),
+             ws.end());
+    return ws;
+}
+
+//---------------------------------------------------------------------------//
+bool startswith(const std::string& main_string, const std::string& prefix)
+{
+    if (main_string.size() < prefix.size())
+        return false;
+
+    return std::equal(main_string.begin(),
+                      main_string.begin() + prefix.size(),
+                      prefix.begin());
+}
+
+//---------------------------------------------------------------------------//
+bool endswith(const std::string& main_string, const std::string& suffix)
+{
+    if (main_string.size() < suffix.size())
+        return false;
+
+    return std::equal(main_string.end() - suffix.size(), main_string.end(),
+                      suffix.begin());
+}
+
 
 } // end namespace profugus
 

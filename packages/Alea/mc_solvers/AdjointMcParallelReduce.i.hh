@@ -62,7 +62,7 @@ AdjointMcParallelReduce::AdjointMcParallelReduce(
     d_wt_cutoff = pl->get<SCALAR>("weight_cutoff",0.0);
 
     // Should we print anything to screen
-    std::string verb = profugus::to_lower(pl->get("verbosity","low"));
+    std::string verb = profugus::lower(pl->get("verbosity","low"));
     d_print = (verb == "high");
 }
 

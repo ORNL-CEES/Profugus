@@ -21,7 +21,7 @@ namespace profugus
 
 //===========================================================================//
 /*!
- * \fn to_lower
+ * \fn lower
  * \brief Returns a lowercased std::string given an ASCII std::string input
  *
  */
@@ -32,7 +32,25 @@ namespace profugus
  */
 //===========================================================================//
 
-std::string to_lower(const std::string& orig_string);
+std::string lower(const std::string& orig_string);
+
+//===========================================================================//
+/*!
+ * \fn startswith
+ * \brief Whether the string starts with another string.
+ */
+//===========================================================================//
+
+bool startswith(const std::string& main_string, const std::string& suffix);
+
+//===========================================================================//
+/*!
+ * \fn endswith
+ * \brief Whether the string ends with another string.
+ */
+//===========================================================================//
+
+bool endswith(const std::string& main_string, const std::string& suffix);
 
 //===========================================================================//
 /*!
@@ -42,7 +60,6 @@ std::string to_lower(const std::string& orig_string);
  * This joins all given elements, inserting conjunction betwen them.
  */
 //===========================================================================//
-
 template<class InputIterator>
 std::string join(
         InputIterator first,
@@ -53,12 +70,47 @@ std::string join(
     InputIterator it = first;
 
     // First element is not preceded by a conjunction
-    result << *it++;
+    if (it != last)
+        result << *it++;
+
     // Join the rest
     while (it != last)
         result << conjunction << *it++;
 
     return result.str();
+}
+
+//===========================================================================//
+/*!
+ * \fn rstrip
+ * \brief Removes trailing whitespace from a string.
+ */
+//===========================================================================//
+
+std::string rstrip(const std::string &s);
+
+//===========================================================================//
+/*!
+ * \fn max_length
+ * \brief Find the maximum length of a series of strings.
+ *
+ * This is useful for creating tables.
+ */
+//===========================================================================//
+template<class InputIterator>
+std::size_t max_length(
+        InputIterator first,
+        InputIterator last)
+{
+    size_t result = 0;
+    while (first != last)
+    {
+        auto current = first->size();
+        if (current > result)
+            result = current;
+        ++first;
+    }
+    return result;
 }
 
 } // end namespace profugus

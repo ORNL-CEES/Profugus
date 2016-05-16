@@ -4,7 +4,7 @@
  * \author Thomas M. Evans
  * \date   Thu Jan  3 11:39:29 2008
  * \brief  Member definitions of class Vector_Lite.
- * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
+ * \note   Copyright (C) 2008 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
@@ -18,17 +18,35 @@ namespace profugus
 // MEMBER FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Default constructor
+ *
+ * Initializes all values to T().
+ *
+ * This separate constructor is necessary for building types that have no (or
+ * a 'deleted') copy constructor.
+ *
+ * \param u  Scalar value.
+ */
+template <class T, size_t N>
+Vector_Lite<T, N>::Vector_Lite()
+{
+    for (size_type i = 0; i < N; ++i)
+    {
+        d_U[i] = T();
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Constructor based on a scalar value.
  *
- * Initializes all values to \a u.  Note that this ctor also acts as the
- * default ctor.
- *
+ * Initializes all values to \a u. *
  * \param u  Scalar value.
  */
 template <class T, size_t N>
 Vector_Lite<T, N>::Vector_Lite(const T &u)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] = u;
     }
@@ -45,7 +63,7 @@ template <class T, size_t N>
 Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u1)
 {
-    REQUIRE(N == 2);
+    static_assert(N == 2, "Invalid constructor");
     d_U[0] = u0;
     d_U[1] = u1;
 }
@@ -63,7 +81,7 @@ Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u1,
                                const T &u2)
 {
-    REQUIRE(N == 3);
+    static_assert(N == 3, "Invalid constructor");
     d_U[0] = u0;
     d_U[1] = u1;
     d_U[2] = u2;
@@ -84,7 +102,7 @@ Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u2,
                                const T &u3)
 {
-    REQUIRE(N == 4);
+    static_assert(N == 4, "Invalid constructor");
     d_U[0] = u0;
     d_U[1] = u1;
     d_U[2] = u2;
@@ -108,7 +126,7 @@ Vector_Lite<T, N>::Vector_Lite(const T &u0,
                                const T &u3,
                                const T &u4)
 {
-    REQUIRE(N == 5);
+    static_assert(N == 5, "Invalid constructor");
     d_U[0] = u0;
     d_U[1] = u1;
     d_U[2] = u2;
@@ -118,38 +136,26 @@ Vector_Lite<T, N>::Vector_Lite(const T &u0,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Fill in from C array.
+ * \brief Initializer list construction.
  *
- * \param u c-style pointer to array of size N.
- *
+ * This constructor allows initialization using C++-11 initializer lists:
+ * \code
+   Vector_Lite<int, 6> x = {1,2,3,4,5,6};
+   \endcode
+ * The following construction will work as well:
+ * \code
+   Vector_Lite<int, 3> x = {1,2};
+   x[0] == 1;  // true
+   x[1] == 2;  // true
+   x[2] == 0;  // true
+ * \endcode
  */
 template <class T, size_t N>
-void Vector_Lite<T, N>::fill(const T u[N])
+Vector_Lite<T, N>::Vector_Lite(std::initializer_list<T> list)
 {
-    for (size_t i=0; i<N; ++i)
-    {
-        d_U[i] = u[i];
-    }
-}
-
-//---------------------------------------------------------------------------//
-/*!
- * \brief Assignment to another Vector_Lite.
- */
-template <class T, size_t N>
-Vector_Lite<T, N>& Vector_Lite<T, N>::operator=(const Vector_Lite &rhs)
-{
-    // return if objects are the same
-    if (&rhs == this)
-        return *this;
-
-    // otherwise do member assignment
-    for ( size_type i = 0; i < N; ++i )
-    {
-        d_U[i] = rhs.d_U[i];
-    }
-
-    return *this;
+    REQUIRE(list.size() <= N);
+    std::fill(d_U, d_U + N, T());
+    std::copy(list.begin(), list.end(), d_U);
 }
 
 //---------------------------------------------------------------------------//
@@ -159,7 +165,7 @@ Vector_Lite<T, N>& Vector_Lite<T, N>::operator=(const Vector_Lite &rhs)
 template <class T, size_t N>
 Vector_Lite<T, N>& Vector_Lite<T, N>::operator=(const T &rhs)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] = rhs;
     }
@@ -174,9 +180,10 @@ Vector_Lite<T, N>& Vector_Lite<T, N>::operator=(const T &rhs)
 template <class T, size_t N>
 bool Vector_Lite<T, N>::operator==(const Vector_Lite<T, N> &a) const
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
-        if ( d_U[i] != a.d_U[i] ) return false;
+        if (d_U[i] != a.d_U[i])
+            return false;
     }
 
     return true;
@@ -184,17 +191,21 @@ bool Vector_Lite<T, N>::operator==(const Vector_Lite<T, N> &a) const
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Comparison to another Vector_Lite.
+ * \brief Lexicographic comparison.
  */
 template <class T, size_t N>
 bool Vector_Lite<T, N>::operator<(const Vector_Lite<T, N> &a) const
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i != N; ++i)
     {
-        if ( ! ( d_U[i] <  a.d_U[i] ) ) return false;
+        if (d_U[i] < a.d_U[i])
+            return true;
+        if (d_U[i] > a.d_U[i])
+            return false;
     }
 
-    return true;
+    // exactly equal
+    return false;
 }
 
 //---------------------------------------------------------------------------//
@@ -210,7 +221,7 @@ inline bool operator!=(Vector_Lite<T,N> const & lhs,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Element-wise greater than.
+ * \brief Lexicographic greater than.
  */
 template<class T, size_t N>
 inline bool operator>(Vector_Lite<T,N> const & lhs,
@@ -221,7 +232,7 @@ inline bool operator>(Vector_Lite<T,N> const & lhs,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Element-wise less-than-or-equal.
+ * \brief Lexicographic less-than-or-equal.
  */
 template<class T, size_t N>
 inline bool operator<=(Vector_Lite<T,N> const & lhs,
@@ -232,13 +243,71 @@ inline bool operator<=(Vector_Lite<T,N> const & lhs,
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief  Element-wise greater-than-or-equal.
+ * \brief  Lexicographic greater-than-or-equal.
  */
 template<class T, size_t N>
 inline bool operator>=(Vector_Lite<T,N> const & lhs,
                        Vector_Lite<T,N> const & rhs)
 {
     return !(rhs > lhs);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Element-wise less-than.
+ *
+ * Use this function for bounds checking.
+ */
+template <class T, size_t N>
+bool Vector_Lite<T, N>::all_lt(const Vector_Lite<T, N> &a) const
+{
+    for (size_type i = 0; i != N; ++i)
+    {
+        if (!(d_U[i] < a.d_U[i]))
+            return false;
+    }
+    return true;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Element-wise greater-than.
+ *
+ * Use this function for bounds checking.
+ */
+template <class T, size_t N>
+bool Vector_Lite<T, N>::all_gt(const Vector_Lite<T, N> &a) const
+{
+    return a.all_lt(*this);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Element-wise less-than-or-equal.
+ *
+ * Use this function for bounds checking.
+ */
+template <class T, size_t N>
+bool Vector_Lite<T, N>::all_le(const Vector_Lite<T, N> &a) const
+{
+    for (size_type i = 0; i != N; ++i)
+    {
+        if (!(d_U[i] <= a.d_U[i]))
+            return false;
+    }
+    return true;
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Element-wise greater-than-or-equal.
+ *
+ * Use this function for bounds checking.
+ */
+template <class T, size_t N>
+bool Vector_Lite<T, N>::all_ge(const Vector_Lite<T, N> &a) const
+{
+    return a.all_le(*this);
 }
 
 //---------------------------------------------------------------------------//
@@ -250,7 +319,7 @@ inline bool operator>=(Vector_Lite<T,N> const & lhs,
 template <class T, size_t N>
 Vector_Lite<T,N>& Vector_Lite<T, N>::operator+=(const Vector_Lite<T, N> &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] += a.d_U[i];
     }
@@ -265,7 +334,7 @@ Vector_Lite<T,N>& Vector_Lite<T, N>::operator+=(const Vector_Lite<T, N> &a)
 template <class T, size_t N>
 Vector_Lite<T,N>& Vector_Lite<T, N>::operator-=(const Vector_Lite<T, N> &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] -= a.d_U[i];
     }
@@ -280,7 +349,7 @@ Vector_Lite<T,N>& Vector_Lite<T, N>::operator-=(const Vector_Lite<T, N> &a)
 template <class T, size_t N>
 Vector_Lite<T,N>& Vector_Lite<T, N>::operator*=(const Vector_Lite<T, N> &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] *= a.d_U[i];
     }
@@ -295,7 +364,7 @@ Vector_Lite<T,N>& Vector_Lite<T, N>::operator*=(const Vector_Lite<T, N> &a)
 template <class T, size_t N>
 Vector_Lite<T,N>& Vector_Lite<T, N>::operator/=(const Vector_Lite<T, N> &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] /= a.d_U[i];
     }
@@ -310,9 +379,10 @@ Vector_Lite<T,N>& Vector_Lite<T, N>::operator/=(const Vector_Lite<T, N> &a)
  * \brief Support for +=, scalar right-hand side.
  */
 template <class T, size_t N>
-Vector_Lite<T,N>& Vector_Lite<T, N>::operator+=(const T &a)
+template <class T2>
+Vector_Lite<T,N>& Vector_Lite<T, N>::operator+=(const T2 &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] += a;
     }
@@ -325,9 +395,10 @@ Vector_Lite<T,N>& Vector_Lite<T, N>::operator+=(const T &a)
  * \brief Support for -=, scalar right-hand side.
  */
 template <class T, size_t N>
-Vector_Lite<T,N>& Vector_Lite<T, N>::operator-=(const T &a)
+template <class T2>
+Vector_Lite<T,N>& Vector_Lite<T, N>::operator-=(const T2 &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] -= a;
     }
@@ -340,9 +411,10 @@ Vector_Lite<T,N>& Vector_Lite<T, N>::operator-=(const T &a)
  * \brief Support for *=, scalar right-hand side.
  */
 template <class T, size_t N>
-Vector_Lite<T,N>& Vector_Lite<T, N>::operator*=(const T &a)
+template <class T2>
+Vector_Lite<T,N>& Vector_Lite<T, N>::operator*=(const T2 &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] *= a;
     }
@@ -355,9 +427,10 @@ Vector_Lite<T,N>& Vector_Lite<T, N>::operator*=(const T &a)
  * \brief Support for /=, scalar right-hand side.
  */
 template <class T, size_t N>
-Vector_Lite<T,N>& Vector_Lite<T, N>::operator/=(const T &a)
+template <class T2>
+Vector_Lite<T,N>& Vector_Lite<T, N>::operator/=(const T2 &a)
 {
-    for ( size_type i = 0; i < N; ++i )
+    for (size_type i = 0; i < N; ++i)
     {
         d_U[i] /= a;
     }
@@ -431,9 +504,9 @@ inline const Vector_Lite<T, N> operator/(const Vector_Lite<T, N> &a,
 /*!
  * \brief \a b added to all elements of \a a.
  */
-template <class T, size_t N>
+template <class T, class T2, size_t N>
 inline const Vector_Lite<T, N> operator+(const Vector_Lite<T, N> &a,
-                                         const T                  b)
+                                         const T2                 b)
 {
     return Vector_Lite<T, N>(a) += b;
 }
@@ -442,8 +515,8 @@ inline const Vector_Lite<T, N> operator+(const Vector_Lite<T, N> &a,
 /*!
  * \brief \a a added to all elements of \a b.
  */
-template <class T, size_t N>
-inline const Vector_Lite<T, N> operator+(const T                  a,
+template <class T, class T2, size_t N>
+inline const Vector_Lite<T, N> operator+(const T2                 a,
                                          const Vector_Lite<T, N> &b)
 {
     return Vector_Lite<T, N>(b) += a;
@@ -453,9 +526,9 @@ inline const Vector_Lite<T, N> operator+(const T                  a,
 /*!
  * \brief \a b subracted from all elements of \a a.
  */
-template <class T, size_t N>
+template <class T, class T2, size_t N>
 inline const Vector_Lite<T, N> operator-(const Vector_Lite<T, N> &a,
-                                         const T                  b)
+                                         const T2                 b)
 {
     return Vector_Lite<T, N>(a) -= b;
 }
@@ -464,8 +537,8 @@ inline const Vector_Lite<T, N> operator-(const Vector_Lite<T, N> &a,
 /*!
  * \brief \a a subtracted from all elements of \a b.
  */
-template <class T, size_t N>
-inline const Vector_Lite<T, N> operator-(const T                  a,
+template <class T, class T2, size_t N>
+inline const Vector_Lite<T, N> operator-(const T2                 a,
                                          const Vector_Lite<T, N> &b)
 {
     return Vector_Lite<T, N>(b) -= a;
@@ -475,9 +548,9 @@ inline const Vector_Lite<T, N> operator-(const T                  a,
 /*!
  * \brief \a b multiplied with all elements of \a a.
  */
-template <class T, size_t N>
+template <class T, class T2, size_t N>
 inline const Vector_Lite<T, N> operator*(const Vector_Lite<T, N> &a,
-                                         const T                  b)
+                                         const T2                 b)
 {
     return Vector_Lite<T, N>(a) *= b;
 }
@@ -486,8 +559,8 @@ inline const Vector_Lite<T, N> operator*(const Vector_Lite<T, N> &a,
 /*!
  * \brief \a a multiplied with all elements of \a b.
  */
-template <class T, size_t N>
-inline const Vector_Lite<T, N> operator*(const T                  a,
+template <class T, class T2, size_t N>
+inline const Vector_Lite<T, N> operator*(const T2                 a,
                                          const Vector_Lite<T, N> &b)
 {
     return Vector_Lite<T, N>(b) *= a;
@@ -497,10 +570,12 @@ inline const Vector_Lite<T, N> operator*(const T                  a,
 /*!
  * \brief \a b divided into all elements of \a a.
  */
-template <class T, size_t N>
+template <class T, class T2, size_t N>
 inline const Vector_Lite<T, N> operator/(const Vector_Lite<T, N> &a,
-                                         const T                  b)
+                                         const T2                 b)
 {
+    REQUIRE(b != T2(0));
+
     return Vector_Lite<T, N>(a) /= b;
 }
 
@@ -513,8 +588,8 @@ inline const Vector_Lite<T, N> operator-(const Vector_Lite<T, N> &a)
 {
     Vector_Lite<T, N> neg(a);
 
-    for (size_t i = 0; i < N; ++i )
-        neg(i) = -a(i);
+    for (size_t i = 0; i < N; ++i)
+        neg[i] = -a[i];
 
     return neg;
 }
@@ -529,11 +604,11 @@ template <class T, size_t N>
 std::ostream &operator<<(std::ostream            &os,
                          const Vector_Lite<T, N> &a)
 {
-    os << a(0);
+    os << a[0];
 
     for (size_t i = 1; i < N; ++i)
     {
-        os << " " << a(i);
+        os << " " << a[i];
     }
 
     return os;
@@ -549,7 +624,7 @@ std::istream &operator>>(std::istream      &is,
 {
     for (size_t i = 0; i < N; ++i)
     {
-        is >> a(i);
+        is >> a[i];
     }
 
     return is;
