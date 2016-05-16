@@ -1,6 +1,6 @@
 
-#ifndef mc_solver_MC_Data_hh
-#define mc_solver_MC_Data_hh
+#ifndef Alea_mc_solvers_MC_Data_hh
+#define Alea_mc_solvers_MC_Data_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -145,5 +145,5 @@ class MC_Data
 
 }
 
-#endif // mc_solver_MC_Data_hh
+#endif // Alea_mc_solvers_MC_Data_hh
 

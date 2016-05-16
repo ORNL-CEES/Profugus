@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstSampler.cc
+ * \file   MC/mc/test/tstSampler.cc
  * \author Thomas M. Evans
  * \date   Friday May 2 10:33:33 2014
  * \brief  Sampler functions test.

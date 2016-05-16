@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PolynomialFactory.cc
+ * \file   Alea/mc_solvers/PolynomialFactory.cc
  * \author Steven Hamilton
  * \brief  Construct polynomial coefficients.
  */

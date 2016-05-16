@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/SourceTestBase.hh
+ * \file   MC/mc/test/SourceTestBase.hh
  * \author Seth R Johnson and Tom Evans
  * \date   Tuesday May 6 12:0:29 2014
  * \brief  Source test infrastructure base class.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_test_SourceTestBase_hh
-#define mc_test_SourceTestBase_hh
+#ifndef MC_mc_test_SourceTestBase_hh
+#define MC_mc_test_SourceTestBase_hh
 
 #include <Utils/config.h>
 #include "gtest/gtest.h"
@@ -90,7 +90,7 @@ class SourceTestBase : public testing::Test
     SP_Group_Bounds b_group_bounds;
 };
 
-#endif // mc_test_SourceTestBase_hh
+#endif // MC_mc_test_SourceTestBase_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc_sources/test/SourceTestBase.hh

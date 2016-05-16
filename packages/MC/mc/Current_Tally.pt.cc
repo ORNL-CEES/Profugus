@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Current_Tally.pt.cc
+ * \file   MC/mc/Current_Tally.pt.cc
  * \author Steven Hamilton
  * \date   Thu Apr 28 20:19:42 2016
  * \brief  Current_Tally member definitions.

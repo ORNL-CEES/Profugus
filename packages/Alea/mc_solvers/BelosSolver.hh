@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   BelosSolver.hh
+ * \file   Alea/mc_solvers/BelosSolver.hh
  * \author Steven Hamilton
  * \brief  Wrap a Belos solver into an operator.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_BelosSolver_hh
-#define mc_solvers_BelosSolver_hh
+#ifndef Alea_mc_solvers_BelosSolver_hh
+#define Alea_mc_solvers_BelosSolver_hh
 
 #include "AleaSolver.hh"
 
@@ -55,5 +55,5 @@ class BelosSolver : public AleaSolver
 
 }
 
-#endif // mc_solvers_BelosSolver_hh
+#endif // Alea_mc_solvers_BelosSolver_hh
 

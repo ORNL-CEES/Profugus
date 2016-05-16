@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Pseudo_Cuda.hh
+ * \file   CudaUtils/cuda_utils/Pseudo_Cuda.hh
  * \author Seth R Johnson
  * \date   Tue Aug 13 13:13:37 2013
  * \brief  Plug-in replacement for CUDA to allow GPU code to run on CPU
@@ -10,8 +10,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Pseudo_Cuda_hh
-#define cuda_utils_Pseudo_Cuda_hh
+#ifndef CudaUtils_cuda_utils_Pseudo_Cuda_hh
+#define CudaUtils_cuda_utils_Pseudo_Cuda_hh
 
 #ifdef __NVCC__
 #error "This file should never be compiled with the CUDA compiler!"
@@ -130,7 +130,7 @@ inline T atomicCAS(T* address, T compare, T val)
 }
 
 //---------------------------------------------------------------------------//
-#endif // cuda_utils_Pseudo_Cuda_hh
+#endif // CudaUtils_cuda_utils_Pseudo_Cuda_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Pseudo_Cuda.hh

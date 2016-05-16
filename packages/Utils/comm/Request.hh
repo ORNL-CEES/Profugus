@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Request.hh
+ * \file   Utils/comm/Request.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 13:53:24 2008
  * \brief  Request class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Request_hh
-#define comm_Request_hh
+#ifndef Utils_comm_Request_hh
+#define Utils_comm_Request_hh
 
 #include <Utils/config.h>
 
@@ -155,7 +155,7 @@ class Request
 
 } // end namespace profugus
 
-#endif // comm_Request_hh
+#endif // Utils_comm_Request_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Request.hh

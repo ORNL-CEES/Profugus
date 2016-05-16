@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/Definitions.hh
+ * \file   MC/geometry/Definitions.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 14:52:17 2014
  * \brief  General geometry functions and types.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_Definitions_hh
-#define geometry_Definitions_hh
+#ifndef MC_geometry_Definitions_hh
+#define MC_geometry_Definitions_hh
 
 #include "utils/Definitions.hh"
 
@@ -40,7 +40,7 @@ enum Boundary_State {
 
 } // end namespace profugus
 
-#endif // geometry_Definitions_hh
+#endif // MC_geometry_Definitions_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/Definitions.hh

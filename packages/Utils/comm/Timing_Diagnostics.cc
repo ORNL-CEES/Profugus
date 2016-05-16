@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Timing_Diagnostics.cc
+ * \file   Utils/comm/Timing_Diagnostics.cc
  * \author Thomas M. Evans
  * \date   Fri Nov  9 09:41:55 2007
  * \brief  Timing_Diagnostics member definitions.

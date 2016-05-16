@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstRichardson.cc
+ * \file   SPn/solvers/test/tstRichardson.cc
  * \author Steven Hamilton
  * \brief  Richardson unit-test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

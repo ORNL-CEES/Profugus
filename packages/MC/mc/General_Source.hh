@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/General_Source.hh
+ * \file   MC/mc/General_Source.hh
  * \author Steven Hamilton
  * \date   Mon Apr 04 20:38:12 2016
  * \brief  General_Source class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_General_Source_hh
-#define mc_General_Source_hh
+#ifndef MC_mc_General_Source_hh
+#define MC_mc_General_Source_hh
 
 #include <memory>
 
@@ -117,7 +117,7 @@ class General_Source : public Source<Geometry>
 
 } // end namespace profugus
 
-#endif // mc_General_Source_hh
+#endif // MC_mc_General_Source_hh
 
 //---------------------------------------------------------------------------//
 //                 end of General_Source.hh

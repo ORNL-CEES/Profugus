@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstDavidsonEigensolver.cc
+ * \file   SPn/solvers/test/tstDavidsonEigensolver.cc
  * \author Steven Hamilton
  * \brief  Davidson_Eigensolver unit-test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

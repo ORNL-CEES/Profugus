@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Host_Vector.t.hh
+ * \file   CudaUtils/cuda_utils/Host_Vector.t.hh
  * \author Seth R Johnson
  * \date   Mon Aug 12 08:48:53 2013
  * \brief  Host_Vector template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Host_Vector_t_hh
-#define cuda_utils_Host_Vector_t_hh
+#ifndef CudaUtils_cuda_utils_Host_Vector_t_hh
+#define CudaUtils_cuda_utils_Host_Vector_t_hh
 
 #include "Host_Vector.hh"
 
@@ -148,7 +148,7 @@ void Host_Vector<T>::assign(const This& rhs)
 //---------------------------------------------------------------------------//
 } // end namespace cuda
 
-#endif // cuda_utils_Host_Vector_t_hh
+#endif // CudaUtils_cuda_utils_Host_Vector_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of cuda_utils/Host_Vector.t.hh

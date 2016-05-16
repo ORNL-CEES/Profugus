@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstHost_Vector.cc
+ * \file   CudaUtils/test/tstHost_Vector.cc
  * \author Seth R Johnson
  * \date   Mon Aug 12 10:29:26 2013
  * \brief

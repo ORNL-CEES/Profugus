@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinAlgTypedefs.hh
+ * \file   SPn/solvers/LinAlgTypedefs.hh
  * \author Steven Hamilton
  * \date   Mon Jul 01 11:48:09 2013
  * \brief  Collection of typedefs for Tpetra classes.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_LinAlgTypedefs_hh
-#define solvers_LinAlgTypedefs_hh
+#ifndef SPn_solvers_LinAlgTypedefs_hh
+#define SPn_solvers_LinAlgTypedefs_hh
 
 #include <SPn/config.h>
 
@@ -80,7 +80,7 @@ struct XpetraTypes
 
 } // end namespace profugus
 
-#endif // solvers_LinAlgTypedefs_hh
+#endif // SPn_solvers_LinAlgTypedefs_hh
 
 //---------------------------------------------------------------------------//
 //              end of solvers/LinAlgTypedefs.hh

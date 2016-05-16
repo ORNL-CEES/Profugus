@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstDevice_Vector.cc
+ * \file   CudaUtils/test/tstDevice_Vector.cc
  * \author Seth R Johnson
  * \date   Thu Aug 01 13:12:15 2013
  * \brief

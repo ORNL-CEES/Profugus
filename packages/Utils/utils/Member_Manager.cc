@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Member_Manager.cc
+ * \file   Utils/utils/Member_Manager.cc
  * \author Seth R Johnson
  * \date   Wed Oct 16 07:36:23 2013
  * \brief  Member_Manager member definitions.

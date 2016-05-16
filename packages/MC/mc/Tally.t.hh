@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Tally.t.hh
+ * \file   MC/mc/Tally.t.hh
  * \author Thaoms M. Evans
  * \date   Thu May 15 13:27:04 2014
  * \brief  Tally template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Tally_t_hh
-#define mc_Tally_t_hh
+#ifndef MC_mc_Tally_t_hh
+#define MC_mc_Tally_t_hh
 
 #include "Tally.hh"
 
@@ -67,7 +67,7 @@ Surface_Tally<Geometry>::~Surface_Tally()
 
 } // end namespace profugus
 
-#endif // mc_Tally_t_hh
+#endif // MC_mc_Tally_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Tally.t.hh

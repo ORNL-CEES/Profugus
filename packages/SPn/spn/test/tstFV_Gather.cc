@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstFV_Gather.cc
+ * \file   SPn/spn/test/tstFV_Gather.cc
  * \author Thomas M. Evans
  * \date   Tue Oct 30 11:05:03 2012
  * \brief  FV_Gather test.

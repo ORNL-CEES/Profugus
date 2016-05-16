@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   Polynomial.hh
+ * \file   Alea/mc_solvers/Polynomial.hh
  * \author Steven Hamilton
  * \brief  Polynomial class declaration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_Polynomial_hh
-#define mc_solvers_Polynomial_hh
+#ifndef Alea_mc_solvers_Polynomial_hh
+#define Alea_mc_solvers_Polynomial_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -74,5 +74,5 @@ class Polynomial
 
 }
 
-#endif // mc_solvers_Polynomial_hh
+#endif // Alea_mc_solvers_Polynomial_hh
 

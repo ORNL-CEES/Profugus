@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Linear_System.t.hh
+ * \file   SPn/spn/Linear_System.t.hh
  * \author Thomas M. Evans
  * \date   Sun Oct 28 18:37:01 2012
  * \brief  Linear_System template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_LinearSystem_t_hh
-#define spn_LinearSystem_t_hh
+#ifndef SPn_spn_Linear_System_t_hh
+#define SPn_spn_Linear_System_t_hh
 
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_Ptr.hpp"
@@ -176,7 +176,7 @@ void Linear_System<EpetraTypes>::set_adjoint(bool adjoint)
 
 } // end namespace profugus
 
-#endif // spn_LinearSystem_t_hh
+#endif // SPn_spn_Linear_System_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Linear_System.t.hh

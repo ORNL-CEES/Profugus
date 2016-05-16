@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Launch_Args_Kernel.pt.cc
+ * \file   CudaUtils/test/Run_Launch_Args.pt.cc
  * \author Stuart Slattery
  * \date   Tue Nov 24 14:09:29 2015
  * \brief
@@ -17,5 +17,5 @@ typedef cuda::arch::Host Host;
 template void run_launch_args<Host>(std::vector<double> &);
 
 //---------------------------------------------------------------------------//
-//                        end of Launch_Args_Kernel.pt.cc
+// end of Run_Launch_Args.pt.cc
 //---------------------------------------------------------------------------//

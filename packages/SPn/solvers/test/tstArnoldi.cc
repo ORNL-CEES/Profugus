@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstArnoldi.cc
+ * \file   SPn/solvers/test/tstArnoldi.cc
  * \author Steven Hamilton
  * \date   Mon Aug 22 12:22:41 2011
  * \brief  Test Arnoldi class.

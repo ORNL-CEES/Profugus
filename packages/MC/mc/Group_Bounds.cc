@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Group_Bounds.cc
+ * \file   MC/mc/Group_Bounds.cc
  * \author Thomas M. Evans
  * \date   Wed Apr 30 14:05:49 2014
  * \brief  Group_Bounds member definitions.

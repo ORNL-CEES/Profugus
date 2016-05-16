@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/test/tstRTK_Core.cc
+ * \file   MC/geometry/test/tstCore.cc
  * \author Thomas M. Evans
  * \date   Mon Jan 24 09:48:47 2011
  * \brief  RTK_Core unit test.
@@ -742,5 +742,5 @@ TEST(Bwr, Symmetry)
 }
 
 //---------------------------------------------------------------------------//
-//                        end of tstRTK_Core.cc
+// end of tstCore.cc
 //---------------------------------------------------------------------------//

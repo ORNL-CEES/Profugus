@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Richardson.t.hh
+ * \file   SPn/solvers/Richardson.t.hh
  * \author Thomas M. Evans
  * \date   Fri Feb 21 12:07:58 2014
  * \brief  Richardson template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_Richardson_t_hh
-#define solvers_Richardson_t_hh
+#ifndef SPn_solvers_Richardson_t_hh
+#define SPn_solvers_Richardson_t_hh
 
 #include <vector>
 
@@ -138,7 +138,7 @@ void Richardson<T>::solve( Teuchos::RCP<MV>       x,
 
 } // end namespace profugus
 
-#endif // solvers_Richardson_t_hh
+#endif // SPn_solvers_Richardson_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Richardson.t.hh

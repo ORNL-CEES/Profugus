@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Dimensions.hh
+ * \file   SPn/spn/Dimensions.hh
  * \author Thomas M. Evans
  * \date   Tue Oct 23 21:17:05 2012
  * \brief  Dimensions class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Dimensions_hh
-#define spn_Dimensions_hh
+#ifndef SPn_spn_Dimensions_hh
+#define SPn_spn_Dimensions_hh
 
 namespace profugus
 {
@@ -53,7 +53,7 @@ class Dimensions
 
 } // end namespace profugus
 
-#endif // spn_Dimensions_hh
+#endif // SPn_spn_Dimensions_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/Dimensions.hh

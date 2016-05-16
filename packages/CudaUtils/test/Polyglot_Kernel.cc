@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Polyglot_Kernel.cc
+ * \file   CudaUtils/test/Polyglot_Kernel.cc
  * \author Seth R Johnson
  * \date   Tue Aug 13 15:32:33 2013
  * \brief  Polyglot_Kernel kernel definitions.

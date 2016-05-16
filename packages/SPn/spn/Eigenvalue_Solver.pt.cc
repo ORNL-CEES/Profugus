@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Eigenvalue_Solver.pt.cc
+ * \file   SPn/spn/Eigenvalue_Solver.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  Eigenvalue_Solver explicit instantiation.

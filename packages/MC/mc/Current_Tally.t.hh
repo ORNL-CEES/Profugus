@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Current_Tally.t.hh
+ * \file   MC/mc/Current_Tally.t.hh
  * \author Steven Hamilton
  * \date   Thu Apr 28 20:19:42 2016
  * \brief  Current_Tally template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Current_Tally_t_hh
-#define mc_Current_Tally_t_hh
+#ifndef MC_mc_Current_Tally_t_hh
+#define MC_mc_Current_Tally_t_hh
 
 #include <algorithm>
 
@@ -389,7 +389,7 @@ void Current_Tally<Geometry>::reset()
 
 } // end namespace profugus
 
-#endif // mc_Current_Tally_t_hh
+#endif // MC_mc_Current_Tally_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Current_Tally.t.hh

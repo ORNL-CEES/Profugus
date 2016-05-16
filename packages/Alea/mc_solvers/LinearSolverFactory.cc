@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   LinearSolverFactory.cc
+ * \file   Alea/mc_solvers/LinearSolverFactory.cc
  * \author Steven Hamilton
  * \brief  Construct AleaSolver from ParameterList.
  */

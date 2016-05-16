@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Array.i.hh
+ * \file   MC/geometry/RTK_Array.i.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 21 12:46:26 2010
  * \brief  Member definitions of class RTK_Array.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_Array_i_hh
-#define geometry_RTK_Array_i_hh
+#ifndef MC_geometry_RTK_Array_i_hh
+#define MC_geometry_RTK_Array_i_hh
 
 namespace profugus
 {
@@ -380,7 +380,7 @@ void RTK_Array<RTK_Cell>::output(std::ostream &out, int level,
 
 } // end namespace profugus
 
-#endif // geometry_RTK_Array_i_hh
+#endif // MC_geometry_RTK_Array_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of geometry/RTK_Array.i.hh

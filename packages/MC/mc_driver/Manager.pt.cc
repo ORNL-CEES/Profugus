@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Manager.pt.cc
+ * \file   MC/mc_driver/Manager.pt.cc
  * \author Steven Hamilton
  * \date   Wed Nov 25 11:42:29 2015
  * \brief  Manager template instantiations

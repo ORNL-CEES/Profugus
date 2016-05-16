@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   geometry/RTK_Geometry.t.hh
+ * \file   MC/geometry/RTK_Geometry.t.hh
  * \author Thomas M. Evans
  * \date   Tuesday April 29 16:43:42 2014
  * \brief  RTK_Geometry template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef geometry_RTK_Geometry_t_hh
-#define geometry_RTK_Geometry_t_hh
+#ifndef MC_geometry_RTK_Geometry_t_hh
+#define MC_geometry_RTK_Geometry_t_hh
 
 #include "RTK_Geometry.hh"
 #include "RTK_Functions.hh"
@@ -206,7 +206,7 @@ RTK_Geometry<Array>::get_cell_extents(geometry::cell_type cell) const
 
 } // end namespace profugus
 
-#endif // geometry_RTK_Geometry_t_hh
+#endif // MC_geometry_RTK_Geometry_t_hh
 
 //---------------------------------------------------------------------------//
 //                   end of geometry/RTK_Geometry.t.hh

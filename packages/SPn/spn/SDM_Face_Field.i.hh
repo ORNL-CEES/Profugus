@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/SDM_Face_Field.i.hh
+ * \file   SPn/spn/SDM_Face_Field.i.hh
  * \author Thomas M. Evans
  * \date   Tue Oct 30 22:38:08 2012
  * \brief  Member definitions of class SDM_Face_Field.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_SDM_Face_Field_i_hh
-#define spn_SDM_Face_Field_i_hh
+#ifndef SPn_spn_SDM_Face_Field_i_hh
+#define SPn_spn_SDM_Face_Field_i_hh
 
 namespace profugus
 {
@@ -187,7 +187,7 @@ SDM_Face_Field::pointer SDM_Face_Field::convert(int abscissa,
 
 } // end namespace profugus
 
-#endif // spn_SDM_Face_Field_i_hh
+#endif // SPn_spn_SDM_Face_Field_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/SDM_Face_Field.i.hh

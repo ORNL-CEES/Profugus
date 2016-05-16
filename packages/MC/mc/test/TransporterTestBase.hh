@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/TransporterTestBase.hh
+ * \file   MC/mc/test/TransporterTestBase.hh
  * \author Seth R Johnson and Tom Evans
  * \date   Monday May 12 14:20:38 2014
  * \brief  TransporterTestBase class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_test_TransporterTestBase_hh
-#define mc_test_TransporterTestBase_hh
+#ifndef MC_mc_test_TransporterTestBase_hh
+#define MC_mc_test_TransporterTestBase_hh
 
 #include <Utils/config.h>
 #include "gtest/gtest.h"
@@ -118,7 +118,7 @@ class TransporterTestBase : public testing::Test
     SP_Tallier       tallier;
 };
 
-#endif // mc_test_TransporterTestBase_hh
+#endif // MC_mc_test_TransporterTestBase_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc_transport/TransporterTestBase.hh

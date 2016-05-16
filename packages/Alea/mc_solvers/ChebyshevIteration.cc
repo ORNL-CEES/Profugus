@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   ChebyshevIteration.cc
+ * \file   Alea/mc_solvers/ChebyshevIteration.cc
  * \author Steven Hamilton
  * \brief  Perform Adjoint Monte Carlo on linear system
  */

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Timer.cc
+ * \file   Utils/comm/Timer.cc
  * \author Thomas M. Evans
  * \date   Wed Jan  2 16:27:02 2008
  * \brief  Timer member definitions.
@@ -88,7 +88,7 @@ bool Timer::setIsMPIWtimeAvailable() const
 #endif
 }
 
-#endif // HAVE_SYS_TIMES_H
+#endif // Utils_comm_Timer_cc
 
 } // end namespace profugus
 

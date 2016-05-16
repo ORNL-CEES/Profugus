@@ -1,6 +1,6 @@
  //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/TransporterTestBase.cc
+ * \file   MC/mc/test/TransporterTestBase.cc
  * \author Seth R Johnson and Thomas M. Evans
  * \date   Fri Mar 29 17:45:16 2013
  * \brief  TransporterTestBase member definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstPowerIteration.cc
+ * \file   SPn/solvers/test/tstPowerIteration.cc
  * \author Steven Hamilton
  * \brief  PowerIteration unit test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Isotropic_Source.hh
+ * \file   SPn/spn/Isotropic_Source.hh
  * \author Thomas M. Evans
  * \date   Fri Feb 14 18:14:05 2014
  * \brief  Isotropic_Source class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Isotropic_Source_hh
-#define spn_Isotropic_Source_hh
+#ifndef SPn_spn_Isotropic_Source_hh
+#define SPn_spn_Isotropic_Source_hh
 
 #include <string>
 #include <vector>
@@ -99,7 +99,7 @@ class Isotropic_Source
 
 } // end namespace profugus
 
-#endif // spn_Isotropic_Source_hh
+#endif // SPn_spn_Isotropic_Source_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Isotropic_Source.hh

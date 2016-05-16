@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstFission_Matrix_Processor.cc
+ * \file   MC/mc/test/tstFission_Matrix_Processor.cc
  * \author Thomas M. Evans
  * \date   Fri Sep 12 11:09:04 2014
  * \brief  Fission_Matrix_Processor test.

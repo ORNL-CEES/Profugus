@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Keff_Tally.t.hh
+ * \file   MC/mc/Keff_Tally.t.hh
  * \author Thomas M. Evans
  * \date   Wed May 14 13:29:40 2014
  * \brief  Keff_Tally member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Keff_Tally_t_hh
-#define mc_Keff_Tally_t_hh
+#ifndef MC_mc_Keff_Tally_t_hh
+#define MC_mc_Keff_Tally_t_hh
 
 #include "Keff_Tally.hh"
 
@@ -182,7 +182,7 @@ void Keff_Tally<Geometry>::reset()
 
 } // end namespace profugus
 
-#endif // mc_Keff_Tally_t_hh
+#endif // MC_mc_Keff_Tally_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Keff_Tally.t.hh

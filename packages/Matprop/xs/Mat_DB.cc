@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/Mat_DB.cc
+ * \file   Matprop/xs/Mat_DB.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 10 19:50:43 2014
  * \brief  Mat_DB member definitions.

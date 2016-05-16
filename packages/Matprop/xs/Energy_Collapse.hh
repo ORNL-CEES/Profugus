@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/Energy_Collapse.hh
+ * \file   Matprop/xs/Energy_Collapse.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 13:39:38 2014
  * \brief  Energy_Collapse class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef xs_Energy_Collapse_hh
-#define xs_Energy_Collapse_hh
+#ifndef Matprop_xs_Energy_Collapse_hh
+#define Matprop_xs_Energy_Collapse_hh
 
 #include "Teuchos_RCP.hpp"
 
@@ -59,7 +59,7 @@ class Energy_Collapse
 
 } // end namespace profugus
 
-#endif // xs_Energy_Collapse_hh
+#endif // Matprop_xs_Energy_Collapse_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Energy_Collapse.hh

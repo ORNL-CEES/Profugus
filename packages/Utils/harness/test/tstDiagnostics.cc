@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/test/tstDiagnostics.cc
+ * \file   Utils/harness/test/tstDiagnostics.cc
  * \author Thomas M. Evans
  * \date   Tue Dec 03 21:47:18 2013
  * \brief  Diagnostics unit-test.

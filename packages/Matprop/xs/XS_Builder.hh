@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/XS_Builder.hh
+ * \file   Matprop/xs/XS_Builder.hh
  * \author Thomas M. Evans
  * \date   Wed Feb 05 19:44:36 2014
  * \brief  XS_Builder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef xs_XS_Builder_hh
-#define xs_XS_Builder_hh
+#ifndef Matprop_xs_XS_Builder_hh
+#define Matprop_xs_XS_Builder_hh
 
 #include <vector>
 #include <string>
@@ -113,7 +113,7 @@ class XS_Builder
 
 } // end namespace profugus
 
-#endif // xs_XS_Builder_hh
+#endif // Matprop_xs_XS_Builder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of XS_Builder.hh

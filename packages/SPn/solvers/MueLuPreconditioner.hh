@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/MueLuPreconditioner.hh
+ * \file   SPn/solvers/MueLuPreconditioner.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 13:41:13 2014
  * \brief  MueLuPreconditioner class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_MueLuPreconditioner_hh
-#define solvers_MueLuPreconditioner_hh
+#ifndef SPn_solvers_MueLuPreconditioner_hh
+#define SPn_solvers_MueLuPreconditioner_hh
 
 #include <string>
 
@@ -263,7 +263,7 @@ class MueLuPreconditioner<TpetraTypes>
 
 } // end namespace profugus
 
-#endif // solvers_MueLuPreconditioner_hh
+#endif // SPn_solvers_MueLuPreconditioner_hh
 
 //---------------------------------------------------------------------------//
 //                 end of MueLuPreconditioner.hh

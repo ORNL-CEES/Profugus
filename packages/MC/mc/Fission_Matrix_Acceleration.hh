@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Acceleration.hh
+ * \file   MC/mc/Fission_Matrix_Acceleration.hh
  * \author Thomas M. Evans
  * \date   Wed Nov 12 14:54:34 2014
  * \brief  Fission_Matrix_Acceleration class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Matrix_Acceleration_hh
-#define mc_Fission_Matrix_Acceleration_hh
+#ifndef MC_mc_Fission_Matrix_Acceleration_hh
+#define MC_mc_Fission_Matrix_Acceleration_hh
 
 #include <memory>
 #include <vector>
@@ -294,7 +294,7 @@ class Fission_Matrix_Acceleration_Impl :
 
 } // end namespace profugus
 
-#endif // mc_Fission_Matrix_Acceleration_hh
+#endif // MC_mc_Fission_Matrix_Acceleration_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fission_Matrix_Acceleration.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   ChebyshevPolynomial.cc
+ * \file   Alea/mc_solvers/ChebyshevPolynomial.cc
  * \author Steven Hamilton
  * \brief  ChebyshevPolynomial class definitions.
  */

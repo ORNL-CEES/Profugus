@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------// /*!
 /*!
- * \file   spn/Fixed_Source_Solver.hh
+ * \file   SPn/spn/Fixed_Source_Solver.hh
  * \author Thomas M. Evans
  * \date   Mon Feb 17 21:00:33 2014
  * \brief  Fixed_Source_Solver class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Fixed_Source_Solver_hh
-#define spn_Fixed_Source_Solver_hh
+#ifndef SPn_spn_Fixed_Source_Solver_hh
+#define SPn_spn_Fixed_Source_Solver_hh
 
 #include "comm/Timer.hh"
 #include "solvers/StratimikosSolver.hh"
@@ -107,7 +107,7 @@ class Fixed_Source_Solver : public Solver_Base_Tmpl<T>
 
 } // end namespace profugus
 
-#endif // spn_Fixed_Source_Solver_hh
+#endif // SPn_spn_Fixed_Source_Solver_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fixed_Source_Solver.hh

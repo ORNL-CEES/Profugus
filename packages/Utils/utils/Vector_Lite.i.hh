@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Vector_Lite.i.hh
+ * \file   Utils/utils/Vector_Lite.i.hh
  * \author Thomas M. Evans
  * \date   Thu Jan  3 11:39:29 2008
  * \brief  Member definitions of class Vector_Lite.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Vector_Lite_i_hh
-#define utils_Vector_Lite_i_hh
+#ifndef Utils_utils_Vector_Lite_i_hh
+#define Utils_utils_Vector_Lite_i_hh
 
 namespace profugus
 {
@@ -557,7 +557,7 @@ std::istream &operator>>(std::istream      &is,
 
 } // end namespace profugus
 
-#endif // utils_Vector_Lite_i_hh
+#endif // Utils_utils_Vector_Lite_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Vector_Lite.i.hh

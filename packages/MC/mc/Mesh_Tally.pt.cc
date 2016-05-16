@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Mesh_Tally.pt.cc
+ * \file   MC/mc/Mesh_Tally.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Mesh_Tally template instantiations

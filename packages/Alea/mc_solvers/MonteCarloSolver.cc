@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   MonteCarloSolver.cc
+ * \file   Alea/mc_solvers/MonteCarloSolver.cc
  * \author Steven Hamilton
  * \brief  Perform Adjoint Monte Carlo on linear system
  */

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/RayleighQuotient.hh
+ * \file   SPn/solvers/RayleighQuotient.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Feb 24 13:29:04 2014
  * \brief  RayleighQuotient class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_RayleighQuotient_hh
-#define solvers_RayleighQuotient_hh
+#ifndef SPn_solvers_RayleighQuotient_hh
+#define SPn_solvers_RayleighQuotient_hh
 
 #include "EigenvalueSolver.hh"
 #include "ShiftedInverseOperator.hh"
@@ -102,7 +102,7 @@ class RayleighQuotient : public EigenvalueSolver<T>
 
 } // end namespace profugus
 
-#endif // solvers_RayleighQuotient_hh
+#endif // SPn_solvers_RayleighQuotient_hh
 
 //---------------------------------------------------------------------------//
 //                 end of RayleighQuotient.hh

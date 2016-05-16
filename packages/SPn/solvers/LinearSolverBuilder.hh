@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinearSolverBuilder.hh
+ * \file   SPn/solvers/LinearSolverBuilder.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 12:20:24 2014
  * \brief  LinearSolverBuilder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_LinearSolverBuilder_hh
-#define solvers_LinearSolverBuilder_hh
+#ifndef SPn_solvers_LinearSolverBuilder_hh
+#define SPn_solvers_LinearSolverBuilder_hh
 
 #include "LinearSolver.hh"
 
@@ -49,7 +49,7 @@ class LinearSolverBuilder
 
 } // end namespace profugus
 
-#endif // solvers_LinearSolverBuilder_hh
+#endif // SPn_solvers_LinearSolverBuilder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of LinearSolverBuilder.hh

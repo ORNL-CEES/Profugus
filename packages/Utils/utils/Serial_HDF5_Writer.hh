@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Serial_HDF5_Writer.hh
+ * \file   Utils/utils/Serial_HDF5_Writer.hh
  * \author Thomas M. Evans
  * \date   Fri Jan 24 09:48:48 2014
  * \brief  Serial_HDF5_Writer class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Serial_HDF5_Writer_hh
-#define utils_Serial_HDF5_Writer_hh
+#ifndef Utils_utils_Serial_HDF5_Writer_hh
+#define Utils_utils_Serial_HDF5_Writer_hh
 
 #include <algorithm>
 
@@ -200,7 +200,7 @@ void Serial_HDF5_Writer::write_incremental_data(
 } // end namespace profugus
 
 #endif // USE_HDF5
-#endif // utils_Serial_HDF5_Writer_hh
+#endif // Utils_utils_Serial_HDF5_Writer_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Serial_HDF5_Writer.hh

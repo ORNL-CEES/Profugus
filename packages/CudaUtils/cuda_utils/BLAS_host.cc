@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/BLAS_host.cc
+ * \file   CudaUtils/cuda_utils/BLAS_host.cc
  * \author Seth R Johnson
  * \date   Wed Dec 11 20:33:47 2013
  * \brief  BLAS member definitions.

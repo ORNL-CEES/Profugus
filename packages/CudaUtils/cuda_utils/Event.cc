@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Event.cc
+ * \file   CudaUtils/cuda_utils/Event.cc
  * \author Seth R Johnson
  * \date   Tue Jul 09 11:21:31 2013
  * \brief  Event member definitions.

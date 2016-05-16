@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/RayleighQuotient.pt.cc
+ * \file   SPn/solvers/RayleighQuotient.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  RayleighQuotient explicit instantiation.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ThyraTraits.hh
+ * \file   SPn/solvers/ThyraTraits.hh
  * \author Steven Hamilton
  * \date   Thu Apr 02 10:24:48 2015
  * \brief  ThyraTraits class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_ThyraTraits_hh
-#define solvers_ThyraTraits_hh
+#ifndef SPn_solvers_ThyraTraits_hh
+#define SPn_solvers_ThyraTraits_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Thyra_VectorSpaceBase.hpp"
@@ -166,7 +166,7 @@ class ThyraTraits<TpetraTypes>
 
 } // end namespace profugus
 
-#endif // solvers_ThyraTraits_hh
+#endif // SPn_solvers_ThyraTraits_hh
 
 //---------------------------------------------------------------------------//
 //                 end of ThyraTraits.hh

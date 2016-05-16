@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/MPI.cc
+ * \file   Utils/comm/MPI.cc
  * \author Thomas M. Evans
  * \date   Wed Jan  2 13:33:33 2008
  * \brief  Comm MPI Implementation.

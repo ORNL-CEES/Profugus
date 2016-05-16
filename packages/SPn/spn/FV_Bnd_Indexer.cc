@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/FV_Bnd_Indexer.cc
+ * \file   SPn/spn/FV_Bnd_Indexer.cc
  * \author Thomas M. Evans
  * \date   Sat Nov 24 13:46:00 2012
  * \brief  FV_Bnd_Indexer member definitions.

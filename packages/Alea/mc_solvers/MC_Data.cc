@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   MC_Data.cc
+ * \file   Alea/mc_solvers/MC_Data.cc
  * \author Steven Hamilton
  * \brief  Construct data necessary for Monte Carlo solvers.
  */

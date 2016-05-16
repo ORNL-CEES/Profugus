@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/Mat_DB.hh
+ * \file   Matprop/xs/Mat_DB.hh
  * \author Thomas M. Evans
  * \date   Mon Feb 10 19:50:43 2014
  * \brief  Mat_DB class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef xs_Mat_DB_hh
-#define xs_Mat_DB_hh
+#ifndef Matprop_xs_Mat_DB_hh
+#define Matprop_xs_Mat_DB_hh
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
@@ -93,7 +93,7 @@ class Mat_DB
 
 } // end namespace profugus
 
-#endif // xs_Mat_DB_hh
+#endif // Matprop_xs_Mat_DB_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Mat_DB.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Solver.t.hh
+ * \file   MC/mc/Fission_Matrix_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Mon Dec 08 17:18:34 2014
  * \brief  Fission_Matrix_Solver template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Matrix_Solver_t_hh
-#define mc_Fission_Matrix_Solver_t_hh
+#ifndef MC_mc_Fission_Matrix_Solver_t_hh
+#define MC_mc_Fission_Matrix_Solver_t_hh
 
 #include <algorithm>
 #include <string>
@@ -351,7 +351,7 @@ auto Fission_Matrix_Solver<Geometry,T>::build_Bphi(
 
 } // end namespace profugus
 
-#endif // mc_Fission_Matrix_Solver_t_hh
+#endif // MC_mc_Fission_Matrix_Solver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fission_Matrix_Solver.t.hh

@@ -9586,7 +9586,7 @@ const char* TypedTestCasePState::VerifyRegisteredTestNames(
   return registered_tests;
 }
 
-#endif  // GTEST_HAS_TYPED_TEST_P
+#endif // Utils_gtest_gtest_all_cc
 
 }  // namespace internal
 }  // namespace testing

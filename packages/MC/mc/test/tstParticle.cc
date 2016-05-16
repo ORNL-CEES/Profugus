@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstParticle.cc
+ * \file   MC/mc/test/tstParticle.cc
  * \author Thomas M. Evans
  * \date   Fri Apr 25 11:32:36 2014
  * \brief  Particle class test.

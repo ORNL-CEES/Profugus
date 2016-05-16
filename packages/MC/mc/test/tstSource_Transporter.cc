@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstSource_Transporter.cc
+ * \file   MC/mc/test/tstSource_Transporter.cc
  * \author Thomas M. Evans
  * \date   Tue May 13 13:54:23 2014
  * \brief  Source_Transporter unit-test.

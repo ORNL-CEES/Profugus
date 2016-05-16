@@ -1,14 +1,14 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/LinAlgTraits.hh
+ * \file   SPn/solvers/test/LinAlgTraits.hh
  * \author Steven Hamilton
  * \brief  Matrices for solver testing.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_test_LinAlgTraits_hh
-#define solvers_test_LinAlgTraits_hh
+#ifndef SPn_solvers_test_LinAlgTraits_hh
+#define SPn_solvers_test_LinAlgTraits_hh
 
 #include <vector>
 #include "gtest/utils_gtest.hh"
@@ -753,7 +753,7 @@ Teuchos::RCP<typename T::MATRIX> build_matrix(std::string mat_name, int N)
 
 } // namespace linalg_traits
 
-#endif // spn_test_LinAlgTraits_hh
+#endif // SPn_solvers_test_LinAlgTraits_hh
 
 //---------------------------------------------------------------------------//
 

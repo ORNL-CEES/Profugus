@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/RayleighQuotient.t.hh
+ * \file   SPn/solvers/RayleighQuotient.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Feb 24 13:29:04 2014
  * \brief  RayleighQuotient member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_RayleighQuotient_t_hh
-#define solvers_RayleighQuotient_t_hh
+#ifndef SPn_solvers_RayleighQuotient_t_hh
+#define SPn_solvers_RayleighQuotient_t_hh
 
 #include "harness/Warnings.hh"
 #include "comm/P_Stream.hh"
@@ -166,8 +166,8 @@ void RayleighQuotient<T>::solve( double           &keff,
 
 } // end namespace profugus
 
-#endif // solvers_RayleighQuotient_t_hh
+#endif // SPn_solvers_RayleighQuotient_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of RayleighQuotient.cc
+// end of RayleighQuotient.t.hh
 //---------------------------------------------------------------------------//

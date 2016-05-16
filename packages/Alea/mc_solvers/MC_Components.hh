@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_solvers/MC_Components.hh
+ * \file   Alea/mc_solvers/MC_Components.hh
  * \author Steven Hamilton
  * \date   Mon Mar 02 08:35:43 2015
  * \brief  Kernels and utilities for Kokkos Monte Carlo solvers.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_MC_Components_hh
-#define mc_solvers_MC_Components_hh
+#ifndef Alea_mc_solvers_MC_Components_hh
+#define Alea_mc_solvers_MC_Components_hh
 
 #include "Kokkos_Core.hpp"
 #include "Kokkos_Random.hpp"
@@ -673,7 +673,7 @@ class SharedMemTransition
 
 } // end namespace alea
 
-#endif // mc_solvers_MC_Components_hh
+#endif // Alea_mc_solvers_MC_Components_hh
 
 //---------------------------------------------------------------------------//
 //                 end of MC_Components.hh

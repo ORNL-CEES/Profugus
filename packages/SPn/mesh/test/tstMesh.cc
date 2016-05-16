@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstMesh.cc
+ * \file   SPn/mesh/test/tstMesh.cc
  * \author Thomas M. Evans
  * \date   Wed Feb 12 00:11:40 2014
  * \brief  Mesh unit test.

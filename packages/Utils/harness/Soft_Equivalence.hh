@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/Soft_Equivalence.hh
+ * \file   Utils/harness/Soft_Equivalence.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 11:56:34 2008
  * \brief  Soft_Equivalence functions for floating point comparisons.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef harness_Soft_Equivalence_hh
-#define harness_Soft_Equivalence_hh
+#ifndef Utils_harness_Soft_Equivalence_hh
+#define Utils_harness_Soft_Equivalence_hh
 
 #include <cmath>
 #include <iterator>
@@ -133,7 +133,7 @@ inline bool soft_equiv(
 
 } // end namespace profugus
 
-#endif // harness_Soft_Equivalence_hh
+#endif // Utils_harness_Soft_Equivalence_hh
 
 //---------------------------------------------------------------------------//
 //              end of harness/Soft_Equivalence.hh

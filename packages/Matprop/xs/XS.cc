@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/XS.cc
+ * \file   Matprop/xs/XS.cc
  * \author Thomas M. Evans
  * \date   Wed Jan 29 15:27:36 2014
  * \brief  XS member definitions.

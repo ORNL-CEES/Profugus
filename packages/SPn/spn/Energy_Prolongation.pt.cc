@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Energy_Prolongation.pt.cc
+ * \file   SPn/spn/Energy_Prolongation.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  Energy_Prolongation explicit instantiation.

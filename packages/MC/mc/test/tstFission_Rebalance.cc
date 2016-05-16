@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstFission_Rebalance.cc
+ * \file   MC/mc/test/tstFission_Rebalance.cc
  * \author Thomas M. Evans
  * \date   Mon May 05 12:19:09 2014
  * \brief  Fission_Rebalance unit-tests.

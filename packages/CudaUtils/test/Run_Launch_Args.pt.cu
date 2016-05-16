@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Launch_Args_Kernel.pt.cu
+ * \file   CudaUtils/test/Run_Launch_Args.pt.cu
  * \author Stuart Slattery
  * \date   Tue Nov 24 14:09:29 2015
  * \brief
@@ -16,5 +16,5 @@ typedef cuda::arch::Device Device;
 template void run_launch_args<Device>(std::vector<double> &);
 
 //---------------------------------------------------------------------------//
-//                        end of Launch_Args_Kernel.pt.cu
+// end of Run_Launch_Args.pt.cu
 //---------------------------------------------------------------------------//

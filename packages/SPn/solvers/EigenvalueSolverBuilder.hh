@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/EigenvalueSolverBuilder.hh
+ * \file   SPn/solvers/EigenvalueSolverBuilder.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Feb 24 13:49:22 2014
  * \brief  EigenvalueSolverBuilder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_EigenvalueSolverBuilder_hh
-#define solvers_EigenvalueSolverBuilder_hh
+#ifndef SPn_solvers_EigenvalueSolverBuilder_hh
+#define SPn_solvers_EigenvalueSolverBuilder_hh
 
 #include "EigenvalueSolver.hh"
 
@@ -60,7 +60,7 @@ class EigenvalueSolverBuilder
 
 } // end namespace profugus
 
-#endif // solvers_EigenvalueSolverBuilder_hh
+#endif // SPn_solvers_EigenvalueSolverBuilder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of EigenvalueSolverBuilder.hh

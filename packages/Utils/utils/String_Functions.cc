@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/String_Functions.cc
+ * \file   Utils/utils/String_Functions.cc
  * \author Seth R. Johnson
  * \date   Sat Sep 03 18:55:17 2011
  * \brief  Member definitions of String_Functions classes.

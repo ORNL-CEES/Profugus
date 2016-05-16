@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source.t.hh
+ * \file   MC/mc/Source.t.hh
  * \author Thomas M. Evans
  * \date   Mon May 05 14:28:41 2014
  * \brief  Source member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Source_t_hh
-#define mc_Source_t_hh
+#ifndef MC_mc_Source_t_hh
+#define MC_mc_Source_t_hh
 
 #include "Source.hh"
 #include "harness/DBC.hh"
@@ -76,7 +76,7 @@ void Source<Geometry>::make_RNG()
 
 } // end namespace profugus
 
-#endif // mc_Source_t_hh
+#endif // MC_mc_Source_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Source.t.hh

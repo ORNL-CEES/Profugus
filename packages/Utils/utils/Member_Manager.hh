@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Member_Manager.hh
+ * \file   Utils/utils/Member_Manager.hh
  * \author Seth R Johnson
  * \date   Wed Oct 16 07:36:23 2013
  * \brief  Member_Manager and subclass class definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Member_Manager_hh
-#define utils_Member_Manager_hh
+#ifndef Utils_utils_Member_Manager_hh
+#define Utils_utils_Member_Manager_hh
 
 #include <cstring>
 #include <cstdlib>
@@ -256,7 +256,7 @@ class Member_Manager_Vector : public Member_Manager
 
 } // end namespace profugus
 
-#endif // utils_Member_Manager_hh
+#endif // Utils_utils_Member_Manager_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Member_Manager.hh

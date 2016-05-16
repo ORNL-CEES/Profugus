@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstShiftedOperator.cc
+ * \file   SPn/solvers/test/tstShiftedOperator.cc
  * \author Steven Hamilton
  * \brief  ShiftedOperator unit test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

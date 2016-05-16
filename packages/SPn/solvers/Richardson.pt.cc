@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Richardson.pt.cc
+ * \file   SPn/solvers/Richardson.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 12:06:57 2014
  * \brief  Explicit instantiation of Richardson solver.

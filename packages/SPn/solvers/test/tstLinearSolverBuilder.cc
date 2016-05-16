@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstLinearSolverBuilder.cc
+ * \file   SPn/solvers/test/tstLinearSolverBuilder.cc
  * \author Steven Hamilton
  * \brief  LinearSolverBuilder unit test.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.

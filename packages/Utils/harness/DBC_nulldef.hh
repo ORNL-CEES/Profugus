@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/DBC_nulldef.hh
+ * \file   Utils/harness/DBC_nulldef.hh
  * \author Seth R Johnson
  * \date   Thu Oct  3 10:51:42 2013
  * \brief  Null-op DBC Macro definitions

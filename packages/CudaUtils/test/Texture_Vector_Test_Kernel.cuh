@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Texture_Vector_Test_Kernel.cuh
+ * \file   CudaUtils/test/Texture_Vector_Test_Kernel.cuh
  * \author Seth R Johnson
  * \date   Sat Sep 21 11:59:41 2013
  * \brief  Texture_Vector_Test_Kernel kernel declarations.

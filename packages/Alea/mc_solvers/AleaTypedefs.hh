@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AleaTypedefs.hh
+ * \file   Alea/mc_solvers/AleaTypedefs.hh
  * \author Steven Hamilton
  * \brief  Common location for frequent typedefs and constants
  */
 //---------------------------------------------------------------------------//
 
-#ifndef AleaTypedefs_hh
-#define AleaTypedefs_hh
+#ifndef Alea_mc_solvers_AleaTypedefs_hh
+#define Alea_mc_solvers_AleaTypedefs_hh
 
 #include "Tpetra_Map.hpp"
 #include "Tpetra_MultiVector.hpp"
@@ -81,5 +81,5 @@ typedef View<SCALAR *,DEVICE>::HostMirror                 scalar_host_mirror;
 typedef View<LO     *,DEVICE>::HostMirror                 ord_host_mirror;
 }
 
-#endif // AleaTypedefs_hh
+#endif // Alea_mc_solvers_AleaTypedefs_hh
 

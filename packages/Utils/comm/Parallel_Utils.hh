@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Parallel_Utils.hh
+ * \file   Utils/comm/Parallel_Utils.hh
  * \author Thomas M. Evans
  * \date   Fri Jul 13 15:19:06 2007
  * \brief  Parallel utility functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Parallel_Utils_hh
-#define comm_Parallel_Utils_hh
+#ifndef Utils_comm_Parallel_Utils_hh
+#define Utils_comm_Parallel_Utils_hh
 
 namespace profugus
 {
@@ -36,7 +36,7 @@ bool check_global_equiv(double local_value, double eps = 1.0e-8);
 
 } // end namespace profugus
 
-#endif // comm_Parallel_Utils_hh
+#endif // Utils_comm_Parallel_Utils_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Parallel_Utils.hh

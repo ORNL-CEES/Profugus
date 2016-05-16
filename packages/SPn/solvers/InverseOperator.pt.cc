@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/InverseOperator.pt.cc
+ * \file   SPn/solvers/InverseOperator.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  InverseOperator explicit instantiation.

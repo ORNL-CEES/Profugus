@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Time_Dependent_Solver.hh
+ * \file   SPn/spn/Time_Dependent_Solver.hh
  * \author Thomas M. Evans
  * \date   Fri Apr 04 00:09:50 2014
  * \brief  Time_Dependent_Solver class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Time_Dependent_Solver_hh
-#define spn_Time_Dependent_Solver_hh
+#ifndef SPn_spn_Time_Dependent_Solver_hh
+#define SPn_spn_Time_Dependent_Solver_hh
 
 #include "comm/Timer.hh"
 #include "solvers/StratimikosSolver.hh"
@@ -102,7 +102,7 @@ class Time_Dependent_Solver : public Solver_Base_Tmpl<T>
 
 } // end namespace profugus
 
-#endif // spn_Time_Dependent_Solver_hh
+#endif // SPn_spn_Time_Dependent_Solver_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Time_Dependent_Solver.hh

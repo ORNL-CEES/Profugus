@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Fixed_Source_Solver.t.hh
+ * \file   SPn/spn/Fixed_Source_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Mon Feb 17 21:00:33 2014
  * \brief  Fixed_Source_Solver template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Fixed_Source_Solver_t_hh
-#define spn_Fixed_Source_Solver_t_hh
+#ifndef SPn_spn_Fixed_Source_Solver_t_hh
+#define SPn_spn_Fixed_Source_Solver_t_hh
 
 #include <string>
 
@@ -140,8 +140,8 @@ void Fixed_Source_Solver<T>::write_problem_to_file() const
 
 } // end namespace profugus
 
-#endif // spn_Fixed_Source_Solver_t_hh
+#endif // SPn_spn_Fixed_Source_Solver_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Fixed_Source_Solver.cc
+// end of Fixed_Source_Solver.t.hh
 //---------------------------------------------------------------------------//

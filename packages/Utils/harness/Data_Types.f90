@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------------!
-! \file   harness/Data_Types.f90
+! \file   Utils/harness/Data_Types.f90
 ! \author Thomas M. Evans
 ! \date   Thu Sep  3 16:34:02 2009
 ! \brief  HARNESS_DATA_TYPES module definition.
@@ -37,6 +37,6 @@ module harness_data_types
 end module harness_data_types
 
 !-----------------------------------------------------------------------------!
-!                               end of Data_Types.f90
+! end of Utils/harness/Data_Types.f90
 !-----------------------------------------------------------------------------!
 

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/PreconditionerBuilder.t.hh
+ * \file   SPn/solvers/PreconditionerBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 09:28:52 2014
  * \brief  PreconditionerBuilder template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_PreconditionerBuilder_t_hh
-#define solvers_PreconditionerBuilder_t_hh
+#ifndef SPn_solvers_PreconditionerBuilder_t_hh
+#define SPn_solvers_PreconditionerBuilder_t_hh
 
 #include <string>
 
@@ -213,7 +213,7 @@ PreconditionerBuilder<TpetraTypes>::build_preconditioner(
 
 } // end namespace profugus
 
-#endif // solvers_PreconditionerBuilder_t_hh
+#endif // SPn_solvers_PreconditionerBuilder_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of PreconditionerBuilder.t.hh

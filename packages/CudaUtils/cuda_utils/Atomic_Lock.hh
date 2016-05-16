@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Atomic_Lock.hh
+ * \file   CudaUtils/cuda_utils/Atomic_Lock.hh
  * \author Seth R Johnson
  * \date   Thu Aug 15 09:32:04 2013
  * \brief  Atomic_Lock class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef Profugus_cuda_utils_Atomic_Lock_hh
-#define Profugus_cuda_utils_Atomic_Lock_hh
+#ifndef CudaUtils_cuda_utils_Atomic_Lock_hh
+#define CudaUtils_cuda_utils_Atomic_Lock_hh
 
 #include "Atomic_Lock_Kernel.cuh"
 
@@ -64,7 +64,7 @@ class Atomic_Lock
 
 } // end namespace cuda
 
-#endif // Profugus_cuda_utils_Atomic_Lock_hh
+#endif // CudaUtils_cuda_utils_Atomic_Lock_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Atomic_Lock.hh

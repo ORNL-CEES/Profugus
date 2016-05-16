@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Metaclass.t.hh
+ * \file   Utils/utils/Metaclass.t.hh
  * \author Seth R Johnson
  * \date   Fri Aug 30 20:59:34 2013
  * \brief  Metaclass template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Metaclass_t_hh
-#define utils_Metaclass_t_hh
+#ifndef Utils_utils_Metaclass_t_hh
+#define Utils_utils_Metaclass_t_hh
 
 #include "Metaclass.hh"
 
@@ -298,7 +298,7 @@ void Metaclass<I>::alloc()
 
 } // end namespace profugus
 
-#endif // utils_Metaclass_t_hh
+#endif // Utils_utils_Metaclass_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Metaclass.t.hh

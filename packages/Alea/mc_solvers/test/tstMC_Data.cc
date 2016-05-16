@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testMC_Data
+ * \file   Alea/mc_solvers/test/tstMC_Data.cc
  * \author Steven Hamilton
  * \brief  Test of MC_Data class.
  */

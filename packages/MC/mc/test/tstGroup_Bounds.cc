@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstGroup_Bounds.cc
+ * \file   MC/mc/test/tstGroup_Bounds.cc
  * \author Thomas M. Evans
  * \date   Thu May 01 11:03:24 2014
  * \brief  Group_Bounds unit test.

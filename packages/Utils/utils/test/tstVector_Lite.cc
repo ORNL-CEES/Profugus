@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstVector_Lite.cc
+ * \file   Utils/utils/test/tstVector_Lite.cc
  * \author Thomas M. Evans
  * \date   Thu Jan  3 11:52:10 2008
  * \brief  Vector_Lite test.

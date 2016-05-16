@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PolynomialBasis.cc
+ * \file   Alea/mc_solvers/PolynomialBasis.cc
  * \author Steven Hamilton
  * \brief  Construct data necessary for Monte Carlo solvers.
  */

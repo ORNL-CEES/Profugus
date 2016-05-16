@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Host_Vector.pt.cc
+ * \file   CudaUtils/cuda_utils/Host_Vector.pt.cc
  * \author Seth R Johnson
  * \date   Mon Aug 12 08:48:53 2013
  * \brief  Host_Vector template instantiations

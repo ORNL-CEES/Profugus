@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Rebalance.hh
+ * \file   MC/mc/Fission_Rebalance.hh
  * \author Thomas M. Evans
  * \date   Monday May 5 11:13:55 2014
  * \brief  Fission_Rebalance class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Rebalance_hh
-#define mc_Fission_Rebalance_hh
+#ifndef MC_mc_Fission_Rebalance_hh
+#define MC_mc_Fission_Rebalance_hh
 
 #include <utility>
 
@@ -232,7 +232,7 @@ class Fission_Rebalance
 
 } // end namespace profugus
 
-#endif // mc_Fission_Rebalance_hh
+#endif // MC_mc_Fission_Rebalance_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Fission_Rebalance.hh

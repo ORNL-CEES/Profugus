@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Mesh.cc
+ * \file   SPn/mesh/Mesh.cc
  * \author Thomas M. Evans
  * \date   Wednesday February 12 0:20:19 2014
  * \brief  Mesh member definitions.

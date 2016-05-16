@@ -1,14 +1,14 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   BelosSolver.cc
+ * \file   SPn/solvers/BelosSolver.t.hh
  * \author Steven Hamilton
  * \brief  BelosSolver template member definitions.
  * \note   Copyright (C) 2014 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_BelosSolver_t_hh
-#define solvers_BelosSolver_t_hh
+#ifndef SPn_solvers_BelosSolver_t_hh
+#define SPn_solvers_BelosSolver_t_hh
 
 #include <iterator>
 #include <string>
@@ -125,5 +125,5 @@ void BelosSolver<T>::solve(Teuchos::RCP<MV> x, Teuchos::RCP<const MV> b)
 
 } // namespace profugus
 
-#endif // solvers_BelosSolver_t_hh
+#endif // SPn_solvers_BelosSolver_t_hh
 

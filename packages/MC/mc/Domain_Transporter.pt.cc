@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Domain_Transporter.pt.cc
+ * \file   MC/mc/Domain_Transporter.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Domain_Transporter template instantiations

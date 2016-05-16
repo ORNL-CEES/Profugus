@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstFixed_Source_Solver.cc
+ * \file   MC/mc/test/tstFixed_Source_Solver.cc
  * \author Thomas M. Evans
  * \date   Tue May 13 17:11:19 2014
  * \brief  Fixed_Source_Solver test.

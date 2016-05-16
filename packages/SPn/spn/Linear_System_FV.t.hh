@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Linear_System_FV.t.hh
+ * \file   SPn/spn/Linear_System_FV.t.hh
  * \author Thomas M. Evans
  * \date   Fri Feb 14 19:58:19 2014
  * \brief  Linear_System_FV template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Linear_System_FV_t_hh
-#define spn_Linear_System_FV_t_hh
+#ifndef SPn_spn_Linear_System_FV_t_hh
+#define SPn_spn_Linear_System_FV_t_hh
 
 #include "comm/global.hh"
 #include "comm/P_Stream.hh"
@@ -1241,7 +1241,7 @@ void Linear_System_FV<T>::insert_block_matrix(int                  row_n,
 
 } // end namespace profugus
 
-#endif // spn_Linear_System_FV_t_hh
+#endif // SPn_spn_Linear_System_FV_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Linear_System_FV.t.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/SpinLock.hh
+ * \file   Utils/comm/SpinLock.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 16:14:33 2008
  * \brief  SpinLock class definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_SpinLock_hh
-#define comm_SpinLock_hh
+#ifndef Utils_comm_SpinLock_hh
+#define Utils_comm_SpinLock_hh
 
 #include <iostream>
 #include <cstdio>
@@ -128,7 +128,7 @@ class HTSyncSpinLock : public HSync, public TSync, public SpinLock
     std::cout << std::flush;   \
 }
 
-#endif // comm_SpinLock_hh
+#endif // Utils_comm_SpinLock_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/SpinLock.hh

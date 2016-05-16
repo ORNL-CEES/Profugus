@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/SpinLock.cc
+ * \file   Utils/comm/SpinLock.cc
  * \author Thomas M. Evans
  * \date   Wed Jan  2 16:14:33 2008
  * \brief  SpinLock class member definitions.

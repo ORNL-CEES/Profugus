@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   LinearSystem.hh
+ * \file   Alea/mc_solvers/LinearSystem.hh
  * \author Steven Hamilton
  * \brief  LinearSystem class declarations.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_LinearSystem_hh
-#define mc_solvers_LinearSystem_hh
+#ifndef Alea_mc_solvers_LinearSystem_hh
+#define Alea_mc_solvers_LinearSystem_hh
 
 #include "AleaTypedefs.hh"
 #include "harness/DBC.hh"
@@ -54,5 +54,5 @@ class LinearSystem
 
 }
 
-#endif // mc_solvers_LinearSystem_hh
+#endif // Alea_mc_solvers_LinearSystem_hh
 

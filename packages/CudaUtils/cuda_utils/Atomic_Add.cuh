@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/Atomic_Add.cuh
+ * \file   CudaUtils/cuda_utils/Atomic_Add.cuh
  * \author Seth R Johnson
  * \date   Thu Aug 08 08:24:17 2013
  * \brief  Atomic_Add kernel declarations.

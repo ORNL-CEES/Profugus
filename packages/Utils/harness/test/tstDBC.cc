@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/test/tstDBC.cc
+ * \file   Utils/harness/test/tstDBC.cc
  * \author Thomas M. Evans
  * \date   Tue Dec 03 20:30:12 2013
  * \brief  DBC unit teset.

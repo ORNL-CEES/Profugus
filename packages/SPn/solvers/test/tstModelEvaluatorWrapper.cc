@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstModelEvaluatorWrapper.cc
+ * \file   SPn/solvers/test/tstModelEvaluatorWrapper.cc
  * \author Steven Hamilton
  * \date   Thu Apr 02 09:51:48 2015
  * \brief  Test of ModelEvaluatorWrapper interface.

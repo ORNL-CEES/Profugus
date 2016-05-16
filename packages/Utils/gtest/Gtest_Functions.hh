@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   gtest/Gtest_Functions.hh
+ * \file   Utils/gtest/Gtest_Functions.hh
  * \author Seth R Johnson
  * \date   Tue Apr 02 11:41:41 2013
  * \brief  Gtest_Functions class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef gtest_Gtest_Functions_hh
-#define gtest_Gtest_Functions_hh
+#ifndef Utils_gtest_Gtest_Functions_hh
+#define Utils_gtest_Gtest_Functions_hh
 
 #include "gtest.h"
 
@@ -213,7 +213,7 @@ inline ::testing::AssertionResult IsVecEq(
 //===========================================================================//
 } // end namespace profugus
 
-#endif // gtest_Gtest_Functions_hh
+#endif // Utils_gtest_Gtest_Functions_hh
 
 //---------------------------------------------------------------------------//
 //              end of gtest/Gtest_Functions.hh

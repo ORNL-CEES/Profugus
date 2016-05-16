@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/PreconditionerBuilder.hh
+ * \file   SPn/solvers/PreconditionerBuilder.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 09:28:52 2014
  * \brief  PreconditionerBuilder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_PreconditionerBuilder_hh
-#define solvers_PreconditionerBuilder_hh
+#ifndef SPn_solvers_PreconditionerBuilder_hh
+#define SPn_solvers_PreconditionerBuilder_hh
 
 #include "harness/DBC.hh"
 
@@ -47,7 +47,7 @@ class PreconditionerBuilder
 
 } // end namespace profugus
 
-#endif // solvers_PreconditionerBuilder_hh
+#endif // SPn_solvers_PreconditionerBuilder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of PreconditionerBuilder.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/Diagnostics.cc
+ * \file   Utils/harness/Diagnostics.cc
  * \author Thomas M. Evans
  * \date   Mon Feb  2 20:06:38 2009
  * \brief  Diagnostics namespace members.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Uniform_Source.t.hh
+ * \file   MC/mc/Uniform_Source.t.hh
  * \author Thomas M. Evans
  * \date   Tue May 06 16:43:26 2014
  * \brief  Uniform_Source member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Uniform_Source_t_hh
-#define mc_Uniform_Source_t_hh
+#ifndef MC_mc_Uniform_Source_t_hh
+#define MC_mc_Uniform_Source_t_hh
 
 #include <numeric>
 
@@ -214,7 +214,7 @@ void Uniform_Source<Geometry>::build_DR()
 
 } // end namespace profugus
 
-#endif // mc_Uniform_Source_hh
+#endif // MC_mc_Uniform_Source_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Uniform_Source.t.hh

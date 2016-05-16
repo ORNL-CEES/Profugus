@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstLaunch_Args.cc
+ * \file   CudaUtils/test/tstLaunch_Args.cc
  * \author Stuart Slattery
  * \date   Tue Nov 24 14:09:29 2015
  * \brief

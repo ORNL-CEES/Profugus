@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Container_Functions.hh
+ * \file   Utils/utils/Container_Functions.hh
  * \author Gregory G. Davidson
  * \date   Thu Jan 09 11:56:28 2014
  * \brief  Various container-related functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Container_Functions_hh
-#define utils_Container_Functions_hh
+#ifndef Utils_utils_Container_Functions_hh
+#define Utils_utils_Container_Functions_hh
 
 #include "Soft_Comparators.hh"
 
@@ -181,7 +181,7 @@ truncate_and_norm(typename Container::iterator  begin,
 
 #include "Container_Functions.i.hh"
 
-#endif // utils_Container_Functions_hh
+#endif // Utils_utils_Container_Functions_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Container_Functions.hh

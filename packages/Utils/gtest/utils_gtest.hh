@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   gtest/utils_gtest.hh
+ * \file   Utils/gtest/utils_gtest.hh
  * \author Seth R Johnson
  * \date   Thu Aug 09 10:14:06 2012
  * \brief  Load google test macros
@@ -11,8 +11,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef gtest_utils_gtest_hh
-#define gtest_utils_gtest_hh
+#ifndef Utils_gtest_utils_gtest_hh
+#define Utils_gtest_utils_gtest_hh
 
 #include <Utils/config.h>
 #include "gtest.h"
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 }
 
 //---------------------------------------------------------------------------//
-#endif // gtest_utils_gtest_hh
+#endif // Utils_gtest_utils_gtest_hh
 
 //---------------------------------------------------------------------------//
 //              end of gtest/utils_gtest.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn_driver/Problem_Builder.cc
+ * \file   SPn/spn_driver/Problem_Builder.cc
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder member definitions.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Diagnostic_Tally.hh
+ * \file   MC/mc/Source_Diagnostic_Tally.hh
  * \author Thomas M. Evans
  * \date   Tue Dec 09 16:32:04 2014
  * \brief  Source_Diagnostic_Tally class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Source_Diagnostic_Tally_hh
-#define mc_Source_Diagnostic_Tally_hh
+#ifndef MC_mc_Source_Diagnostic_Tally_hh
+#define MC_mc_Source_Diagnostic_Tally_hh
 
 #include <memory>
 #include <vector>
@@ -112,7 +112,7 @@ class Source_Diagnostic_Tally : public Source_Tally<Geometry>
 
 } // end namespace profugus
 
-#endif // mc_Source_Diagnostic_Tally_hh
+#endif // MC_mc_Source_Diagnostic_Tally_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Source_Diagnostic_Tally.hh

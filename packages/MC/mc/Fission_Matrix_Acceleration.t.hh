@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Acceleration.t.hh
+ * \file   MC/mc/Fission_Matrix_Acceleration.t.hh
  * \author Thomas M. Evans
  * \date   Thu Nov 13 19:53:21 2014
  * \brief  Fission_Matrix_Acceleration template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fission_Matrix_Acceleration_t_hh
-#define mc_Fission_Matrix_Acceleration_t_hh
+#ifndef MC_mc_Fission_Matrix_Acceleration_t_hh
+#define MC_mc_Fission_Matrix_Acceleration_t_hh
 
 #include <cmath>
 #include <algorithm>
@@ -647,7 +647,7 @@ void Fission_Matrix_Acceleration_Impl<Geometry,T>::convert_eigenvector(
 
 } // end namespace profugus
 
-#endif // mc_Fission_Matrix_Acceleration_t_hh
+#endif // MC_mc_Fission_Matrix_Acceleration_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fission_Matrix_Acceleration.t.hh

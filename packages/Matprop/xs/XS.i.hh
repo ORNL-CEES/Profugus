@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/XS.i.hh
+ * \file   Matprop/xs/XS.i.hh
  * \author 9te
  * \date   Wed Jan 29 15:27:36 2014
  * \brief  Member definitions of class XS.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef xs_XS_i_hh
-#define xs_XS_i_hh
+#ifndef Matprop_xs_XS_i_hh
+#define Matprop_xs_XS_i_hh
 
 namespace profugus
 {
@@ -50,7 +50,7 @@ const XS::Matrix& XS::matrix(int matid,
 
 } // end namespace profugus
 
-#endif // xs_XS_i_hh
+#endif // Matprop_xs_XS_i_hh
 
 //---------------------------------------------------------------------------//
 //                 end of XS.i.hh

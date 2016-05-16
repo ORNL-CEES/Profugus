@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/OperatorAdapters.hh
+ * \file   SPn/spn/OperatorAdapter.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 12:35:37 2014
  * \brief  OperatorAdapters class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_OperatorAdapters_hh
-#define spn_OperatorAdapters_hh
+#ifndef SPn_spn_OperatorAdapter_hh
+#define SPn_spn_OperatorAdapter_hh
 
 #include <vector>
 
@@ -191,8 +191,8 @@ class OperatorAdapter<TpetraTypes> : public TpetraTypes::OP
 
 } // end namespace profugus
 
-#endif // spn_OperatorAdapters_hh
+#endif // SPn_spn_OperatorAdapter_hh
 
 //---------------------------------------------------------------------------//
-//                 end of OperatorAdapters.hh
+// end of OperatorAdapter.hh
 //---------------------------------------------------------------------------//

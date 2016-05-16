@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Eigenvalue_Solver.t.hh
+ * \file   SPn/spn/Eigenvalue_Solver.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Mar 10 14:20:33 2014
  * \brief  Eigenvalue_Solver template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Eigenvalue_Solver_t_hh
-#define spn_Eigenvalue_Solver_t_hh
+#ifndef SPn_spn_Eigenvalue_Solver_t_hh
+#define SPn_spn_Eigenvalue_Solver_t_hh
 
 #include <cmath>
 #include <string>
@@ -591,8 +591,8 @@ void Eigenvalue_Solver<T>::write_problem_to_file() const
 
 } // end namespace profugus
 
-#endif // spn_Eigenvalue_Solver_t_hh
+#endif // SPn_spn_Eigenvalue_Solver_t_hh
 
 //---------------------------------------------------------------------------//
-//                 end of Eigenvalue_Solver.cc
+// end of Eigenvalue_Solver.t.hh
 //---------------------------------------------------------------------------//

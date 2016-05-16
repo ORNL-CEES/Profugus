@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testLinearSolverFactory.cc
+ * \file   Alea/mc_solvers/test/tstLinearSolverFactory.cc
  * \author Steven Hamilton
  * \brief  Test of LinearSolverFactory class.
  */

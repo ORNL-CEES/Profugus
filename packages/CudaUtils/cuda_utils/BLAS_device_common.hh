@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/BLAS_device_common.hh
+ * \file   CudaUtils/cuda_utils/BLAS_device_common.hh
  * \author Seth R Johnson
  * \date   Wed Dec 11 20:38:47 2013
  * \brief  BLAS_device_common kernel declarations.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_BLAS_device_common_hh
-#define cuda_utils_BLAS_device_common_hh
+#ifndef CudaUtils_cuda_utils_BLAS_device_common_hh
+#define CudaUtils_cuda_utils_BLAS_device_common_hh
 
 #include <sstream>
 #include "harness/DBC.hh"
@@ -36,7 +36,7 @@ namespace cuda
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda
-#endif // cuda_utils_BLAS_device_common_hh
+#endif // CudaUtils_cuda_utils_BLAS_device_common_hh
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/BLAS_device_common.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Launch_Args.t.cuh
+ * \file   CudaUtils/cuda_utils/Launch_Args.t.cuh
  * \author Seth R Johnson
  * \date   Wed Oct 02 13:16:37 2013
  * \brief  Launch class definition.

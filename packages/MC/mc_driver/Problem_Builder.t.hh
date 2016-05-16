@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Problem_Builder.t.hh
+ * \file   MC/mc_driver/Problem_Builder.t.hh
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_driver_Problem_Builder_t_hh
-#define mc_driver_Problem_Builder_t_hh
+#ifndef MC_mc_driver_Problem_Builder_t_hh
+#define MC_mc_driver_Problem_Builder_t_hh
 
 #include <utility>
 #include <algorithm>
@@ -550,7 +550,7 @@ void Problem_Builder<Geometry>::build_spn_problem()
 
 } // end namespace mc
 
-#endif // mc_driver_Problem_Builder_t_hh
+#endif // MC_mc_driver_Problem_Builder_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Problem_Builder.t.hh

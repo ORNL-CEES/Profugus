@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   source/test/tstIsotropic_Source.cc
+ * \file   SPn/spn/test/tstIsotropic_Source.cc
  * \author Thomas M. Evans
  * \date   Thu Oct 22 14:07:39 2009
  * \brief  Isotropic_Source test.

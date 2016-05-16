@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/SpnSolverBuilder.hh
+ * \file   SPn/spn/SpnSolverBuilder.hh
  * \author Steven Hamilton
  * \date   Mon Feb 17 13:10:27 2014
  * \brief  SpnSolverBuilder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_SpnSolverBuilder_hh
-#define spn_SpnSolverBuilder_hh
+#ifndef SPn_spn_SpnSolverBuilder_hh
+#define SPn_spn_SpnSolverBuilder_hh
 
 #include "Teuchos_RCP.hpp"
 #include "harness/DBC.hh"
@@ -39,7 +39,7 @@ class SpnSolverBuilder
 
 } // end namespace profugus
 
-#endif // spn_SpnSolverBuilder_hh
+#endif // SPn_spn_SpnSolverBuilder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of SpnSolverBuilder.hh

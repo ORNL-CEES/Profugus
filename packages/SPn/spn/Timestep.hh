@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Timestep.hh
+ * \file   SPn/spn/Timestep.hh
  * \author Thomas M. Evans
  * \date   Thu Apr 03 11:23:03 2014
  * \brief  Timestep class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Timestep_hh
-#define spn_Timestep_hh
+#ifndef SPn_spn_Timestep_hh
+#define SPn_spn_Timestep_hh
 
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
@@ -77,7 +77,7 @@ class Timestep
 
 } // end namespace profugus
 
-#endif // spn_Timestep_hh
+#endif // SPn_spn_Timestep_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Timestep.hh

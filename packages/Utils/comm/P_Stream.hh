@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/P_Stream.hh
+ * \file   Utils/comm/P_Stream.hh
  * \author Thomas M. Evans
  * \date   Mon Oct 08 10:31:04 2012
  * \brief  P_Stream class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_P_Stream_hh
-#define comm_P_Stream_hh
+#ifndef Utils_comm_P_Stream_hh
+#define Utils_comm_P_Stream_hh
 
 #include <iostream>
 #include "global.hh"
@@ -205,7 +205,7 @@ extern P_Out pncout; // always on
 
 #include "P_Stream.i.hh"
 
-#endif // comm_P_Stream_hh
+#endif // Utils_comm_P_Stream_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/P_Stream.hh

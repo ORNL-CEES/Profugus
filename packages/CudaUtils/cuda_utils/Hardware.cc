@@ -1,6 +1,6 @@
 // vim: set ft=cuda: ---------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Hardware.cc
+ * \file   CudaUtils/cuda_utils/Hardware.cc
  * \author Seth R Johnson
  * \date   Tue Jul 09 15:43:18 2013
  * \brief  Device member definitions.

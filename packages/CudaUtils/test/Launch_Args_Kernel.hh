@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Launch_Args_Kernel.hh
+ * \file   CudaUtils/test/Launch_Args_Kernel.hh
  * \author Stuart Slattery
  * \date   Tue Nov 24 14:09:29 2015
  * \brief
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_test_Launch_Args_Kernel_hh
-#define cuda_utils_test_Launch_Args_Kernel_hh
+#ifndef CudaUtils_test_Launch_Args_Kernel_hh
+#define CudaUtils_test_Launch_Args_Kernel_hh
 
 #include "../cuda_utils/Device_Vector.hh"
 #include "../cuda_utils/Host_Vector.hh"
@@ -46,7 +46,7 @@ class Functor
     double* d_device_data;
 };
 
-#endif // cuda_utils_test_Launch_Args_Kernel_hh
+#endif // CudaUtils_test_Launch_Args_Kernel_hh
 
 //---------------------------------------------------------------------------//
 //                        end of Launch_Args_Kernel.hh

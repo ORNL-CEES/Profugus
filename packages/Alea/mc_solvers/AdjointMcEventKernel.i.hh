@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdjointMcEventKernel.cc
+ * \file   Alea/mc_solvers/AdjointMcEventKernel.i.hh
  * \author Steven Hamilton
  * \brief  Perform single history of adjoint MC
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_AdjointMcEventKernel_i_hh
-#define mc_solver_AdjointMcEventKernel_i_hh
+#ifndef Alea_mc_solvers_AdjointMcEventKernel_i_hh
+#define Alea_mc_solvers_AdjointMcEventKernel_i_hh
 
 #include <iterator>
 #include <random>
@@ -320,4 +320,4 @@ void AdjointMcEventKernel::build_initial_distribution(const MV &x)
 
 } // namespace alea
 
-#endif // mc_solver_AdjointMcEventKernel_i_hh
+#endif // Alea_mc_solvers_AdjointMcEventKernel_i_hh

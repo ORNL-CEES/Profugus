@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   Polynomial.cc
+ * \file   Alea/mc_solvers/Polynomial.cc
  * \author Steven Hamilton
  * \brief  Polynomial class definitions.
  */

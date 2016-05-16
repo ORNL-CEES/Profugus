@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/KDE_Fission_Source.cc
+ * \file   MC/mc/KDE_Fission_Source.t.hh
  * \author Gregory G. Davidson
  * \date   Mon Nov 23 15:47:23 2015
  * \brief  KDE_Fission_Source class definitions.

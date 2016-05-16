@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstAndersonSolver.cc
+ * \file   SPn/solvers/test/tstAndersonSolver.cc
  * \author Steven Hamilton
  * \date   Mon Apr 06 08:50:55 2015
  * \brief  Test interface to NOX Anderson acceleration solver

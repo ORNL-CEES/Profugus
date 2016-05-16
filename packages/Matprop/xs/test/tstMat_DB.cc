@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   xs/test/tstMat_DB.cc
+ * \file   Matprop/xs/test/tstMat_DB.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 10 20:20:03 2014
  * \brief  Mat_DB unit-test.

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/PowerIteration.hh
+ * \file   SPn/solvers/PowerIteration.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  PowerIteration class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_PowerIteration_hh
-#define solvers_PowerIteration_hh
+#ifndef SPn_solvers_PowerIteration_hh
+#define SPn_solvers_PowerIteration_hh
 
 #include "EigenvalueSolver.hh"
 
@@ -76,7 +76,7 @@ class PowerIteration : public EigenvalueSolver<T>
 
 } // end namespace profugus
 
-#endif // solvers_PowerIteration_hh
+#endif // SPn_solvers_PowerIteration_hh
 
 //---------------------------------------------------------------------------//
 //                 end of PowerIteration.hh

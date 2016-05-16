@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstTallier.cc
+ * \file   MC/mc/test/tstTallier.cc
  * \author Thomas M. Evans
  * \date   Fri May 16 13:50:28 2014
  * \brief  Tallier test.

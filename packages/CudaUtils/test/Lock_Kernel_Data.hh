@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   cuda_utils/test/Lock_Kernel_Data.hh
+ * \file   CudaUtils/test/Lock_Kernel_Data.hh
  * \author Seth R Johnson
  * \date   Thu Aug 15 08:21:19 2013
  * \brief  Lock_Kernel_Data declarations.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_test_Lock_Kernel_Data_hh
-#define cuda_utils_test_Lock_Kernel_Data_hh
+#ifndef CudaUtils_test_Lock_Kernel_Data_hh
+#define CudaUtils_test_Lock_Kernel_Data_hh
 
 #include "../cuda_utils/Vector_Traits.hh"
 #include "../cuda_utils/Device_Vector.hh"
@@ -48,7 +48,7 @@ struct Lock_Kernel_Data
 
 } // end namespace cuda
 
-#endif // cuda_utils_test_Lock_Kernel_Data_hh
+#endif // CudaUtils_test_Lock_Kernel_Data_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Lock_Kernel_Data.hh

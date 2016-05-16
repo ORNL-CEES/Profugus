@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/VR_Roulette.pt.cc
+ * \file   MC/mc/VR_Roulette.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  VR_Roulette template instantiations

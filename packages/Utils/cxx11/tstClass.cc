@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cxx11/tstClass.cc
+ * \file   Utils/cxx11/tstClass.cc
  * \author Thomas M. Evans
  * \date   Wed May 14 09:36:01 2014
  * \brief  C++-11 Class-features.

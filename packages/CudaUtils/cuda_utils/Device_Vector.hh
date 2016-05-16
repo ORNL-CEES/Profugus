@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Device_Vector.hh
+ * \file   CudaUtils/cuda_utils/Device_Vector.hh
  * \author Seth R Johnson
  * \date   Thu Aug 01 11:33:12 2013
  * \brief  Device_Vector class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Device_Vector_hh
-#define cuda_utils_Device_Vector_hh
+#ifndef CudaUtils_cuda_utils_Device_Vector_hh
+#define CudaUtils_cuda_utils_Device_Vector_hh
 
 #include "config.h"
 
@@ -346,7 +346,7 @@ inline void swap(
 
 } // end namespace cuda
 
-#endif // cuda_utils_Device_Vector_hh
+#endif // CudaUtils_cuda_utils_Device_Vector_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Device_Vector.hh

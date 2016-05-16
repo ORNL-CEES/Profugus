@@ -1,5 +1,5 @@
-#ifndef _fwrap_h
-#define _fwrap_h
+#ifndef Utils_rng_sprng_fwrap_h
+#define Utils_rng_sprng_fwrap_h
 
 #include <mc/config.h>
 

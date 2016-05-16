@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   BelosSolver.cc
+ * \file   Alea/mc_solvers/BelosSolver.cc
  * \author Steven Hamilton
  * \brief  Perform Adjoint Monte Carlo on linear system
  */

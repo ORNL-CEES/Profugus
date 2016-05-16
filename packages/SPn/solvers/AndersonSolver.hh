@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/AndersonSolver.hh
+ * \file   SPn/solvers/AndersonSolver.hh
  * \author Steven Hamilton
  * \date   Wed Apr 01 11:01:28 2015
  * \brief  AndersonSolver class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_AndersonSolver_hh
-#define solvers_AndersonSolver_hh
+#ifndef SPn_solvers_AndersonSolver_hh
+#define SPn_solvers_AndersonSolver_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -71,7 +71,7 @@ class AndersonSolver
 
 } // end namespace profugus
 
-#endif // solvers_AndersonSolver_hh
+#endif // SPn_solvers_AndersonSolver_hh
 
 //---------------------------------------------------------------------------//
 //                 end of AndersonSolver.hh

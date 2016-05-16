@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/test/tstStratimikosSolver.cc
+ * \file   SPn/solvers/test/tstStratimikosSolver.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 17 21:12:05 2014
  * \brief  StratimikosSolver Unit test.

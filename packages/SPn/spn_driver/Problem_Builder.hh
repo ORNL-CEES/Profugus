@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn_driver/Problem_Builder.hh
+ * \file   SPn/spn_driver/Problem_Builder.hh
  * \author Thomas M. Evans
  * \date   Wed Mar 12 22:25:22 2014
  * \brief  Problem_Builder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_driver_Problem_Builder_hh
-#define spn_driver_Problem_Builder_hh
+#ifndef SPn_spn_driver_Problem_Builder_hh
+#define SPn_spn_driver_Problem_Builder_hh
 
 #include <string>
 #include <vector>
@@ -126,7 +126,7 @@ class Problem_Builder
 
 } // end namespace spn
 
-#endif // spn_driver_Problem_Builder_hh
+#endif // SPn_spn_driver_Problem_Builder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Problem_Builder.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Metaclass.i.hh
+ * \file   Utils/utils/Metaclass.i.hh
  * \author Seth R Johnson
  * \date   Fri Aug 30 20:59:34 2013
  * \brief  Member definitions of class Metaclass.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Metaclass_i_hh
-#define utils_Metaclass_i_hh
+#ifndef Utils_utils_Metaclass_i_hh
+#define Utils_utils_Metaclass_i_hh
 
 namespace profugus
 {
@@ -141,7 +141,7 @@ inline bool Metaclass<I>::is_valid_access(unsigned int member_id) const
 
 } // end namespace profugus
 
-#endif // utils_Metaclass_i_hh
+#endif // Utils_utils_Metaclass_i_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Metaclass.i.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Domain_Transporter.hh
+ * \file   MC/mc/Domain_Transporter.hh
  * \author Thomas M. Evans
  * \date   Mon May 12 12:02:13 2014
  * \brief  Domain_Transporter class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Domain_Transporter_hh
-#define mc_Domain_Transporter_hh
+#ifndef MC_mc_Domain_Transporter_hh
+#define MC_mc_Domain_Transporter_hh
 
 #include <memory>
 
@@ -131,7 +131,7 @@ class Domain_Transporter
 
 } // end namespace profugus
 
-#endif // mc_Domain_Transporter_hh
+#endif // MC_mc_Domain_Transporter_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Domain_Transporter.hh

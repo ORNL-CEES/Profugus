@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Hardware.hh
+ * \file   CudaUtils/cuda_utils/Hardware.hh
  * \author Seth R Johnson
  * \date   Tue Jul 09 15:43:18 2013
  * \brief  Device class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Hardware_hh
-#define cuda_utils_Hardware_hh
+#ifndef CudaUtils_cuda_utils_Hardware_hh
+#define CudaUtils_cuda_utils_Hardware_hh
 
 #include <string>
 #include "harness/DBC.hh"
@@ -233,7 +233,7 @@ class Hardware<cuda::arch::Device>
 
 } // end namespace cuda
 
-#endif // cuda_utils_Hardware_hh
+#endif // CudaUtils_cuda_utils_Hardware_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Hardware.hh

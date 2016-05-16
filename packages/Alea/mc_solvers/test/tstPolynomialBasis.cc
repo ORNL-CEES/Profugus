@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testPolynomialBasis
+ * \file   Alea/mc_solvers/test/tstPolynomialBasis.cc
  * \author Steven Hamilton
  * \brief  Test of PolynomialBasis class.
  */

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Run_Launch_Args.hh
+ * \file   CudaUtils/test/Run_Launch_Args.hh
  * \author Steven Hamilton
  * \date   Tue Nov 24 14:09:29 2015
  * \brief
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_test_Run_Launch_Args_hh
-#define cuda_utils_test_Run_Launch_Args_hh
+#ifndef CudaUtils_test_Run_Launch_Args_hh
+#define CudaUtils_test_Run_Launch_Args_hh
 
 #include <vector>
 #include "../cuda_utils/Host_Vector.hh"
@@ -19,7 +19,7 @@
 template<typename Arch_T>
 void run_launch_args(std::vector<double> &data);
 
-#endif // cuda_utils_test_Run_Launch_Args_hh
+#endif // CudaUtils_test_Run_Launch_Args_hh
 
 //---------------------------------------------------------------------------//
 //                        end of Run_Launch_Args.hh

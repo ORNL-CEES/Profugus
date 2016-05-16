@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   AdjointMcParallelFor.cc
+ * \file   Alea/mc_solvers/AdjointMcParallelFor.i.hh
  * \author Steven Hamilton
  * \brief  Perform single history of adjoint MC
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solver_AdjointMcParallelFor_i_hh
-#define mc_solver_AdjointMcParallelFor_i_hh
+#ifndef Alea_mc_solvers_AdjointMcParallelFor_i_hh
+#define Alea_mc_solvers_AdjointMcParallelFor_i_hh
 
 #include <iterator>
 #include <random>
@@ -314,4 +314,4 @@ void AdjointMcParallelFor::build_initial_distribution(const MV &x)
 
 } // namespace alea
 
-#endif // mc_solver_AdjointMcParallelFor_i_hh
+#endif // Alea_mc_solvers_AdjointMcParallelFor_i_hh

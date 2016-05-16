@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/String_Functions.hh
+ * \file   Utils/utils/String_Functions.hh
  * \author Seth R Johnson
  * \date   2012/01/31
  * \brief  String-related functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_String_Functions_hh
-#define utils_String_Functions_hh
+#ifndef Utils_utils_String_Functions_hh
+#define Utils_utils_String_Functions_hh
 
 #include <string>
 #include <sstream>
@@ -63,7 +63,7 @@ std::string join(
 
 } // end namespace profugus
 
-#endif // utils_String_Functions_hh
+#endif // Utils_utils_String_Functions_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/String_Functions.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Stream.hh
+ * \file   CudaUtils/cuda_utils/Stream.hh
  * \author Seth R Johnson
  * \date   Tue Oct 01 14:37:01 2013
  * \brief  Stream class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Stream_hh
-#define cuda_utils_Stream_hh
+#ifndef CudaUtils_cuda_utils_Stream_hh
+#define CudaUtils_cuda_utils_Stream_hh
 
 #include "config.h"
 #if defined(USE_CUDA) && !defined(PSEUDO_CUDA)
@@ -120,7 +120,7 @@ inline void swap(Stream<Arch_T>& left, Stream<Arch_T>& right)
 //---------------------------------------------------------------------------//
 } // end namespace cuda
 
-#endif // cuda_utils_Stream_hh
+#endif // CudaUtils_cuda_utils_Stream_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Stream.hh

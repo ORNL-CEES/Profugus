@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ModelEvaluatorWrapper.hh
+ * \file   SPn/solvers/ModelEvaluatorWrapper.hh
  * \author Steven Hamilton
  * \date   Wed Apr 01 12:39:40 2015
  * \brief  ModelEvaluatorWrapper class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_ModelEvaluatorWrapper_hh
-#define solvers_ModelEvaluatorWrapper_hh
+#ifndef SPn_solvers_ModelEvaluatorWrapper_hh
+#define SPn_solvers_ModelEvaluatorWrapper_hh
 
 #include "Thyra_StateFuncModelEvaluatorBase.hpp"
 #include "Thyra_LinearOpBase.hpp"
@@ -60,7 +60,7 @@ class ModelEvaluatorWrapper :
 
 } // end namespace profugus
 
-#endif // solvers_ModelEvaluatorWrapper_hh
+#endif // SPn_solvers_ModelEvaluatorWrapper_hh
 
 //---------------------------------------------------------------------------//
 //                 end of ModelEvaluatorWrapper.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/HDF5_IO.hh
+ * \file   Utils/utils/HDF5_IO.hh
  * \author Thomas M. Evans
  * \date   Thu Nov 07 21:53:44 2013
  * \brief  HDF5_IO class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_HDF5_IO_hh
-#define utils_HDF5_IO_hh
+#ifndef Utils_utils_HDF5_IO_hh
+#define Utils_utils_HDF5_IO_hh
 
 #include <Utils/config.h>
 #ifdef USE_HDF5
@@ -335,7 +335,7 @@ struct HDF5_IO::HDF5_Traits<double>
 } // end namespace profugus
 
 #endif // USE_HDF5
-#endif // utils_HDF5_IO_hh
+#endif // Utils_utils_HDF5_IO_hh
 
 //---------------------------------------------------------------------------//
 //                 end of HDF5_IO.hh

@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   PolynomialBasis.hh
+ * \file   Alea/mc_solvers/PolynomialBasis.hh
  * \author Steven Hamilton
  * \brief  Class for evaluating and converting between polynomial bases.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_PolynomialBasis_hh
-#define mc_solvers_PolynomialBasis_hh
+#ifndef Alea_mc_solvers_PolynomialBasis_hh
+#define Alea_mc_solvers_PolynomialBasis_hh
 
 #include <string>
 
@@ -78,5 +78,5 @@ class PolynomialBasis
 
 }
 
-#endif // mc_solvers_PolynomialBasis_hh
+#endif // Alea_mc_solvers_PolynomialBasis_hh
 

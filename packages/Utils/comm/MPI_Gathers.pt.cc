@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/MPI_Gathers.pt.cc
+ * \file   Utils/comm/MPI_Gathers.pt.cc
  * \author Thomas M. Evans
  * \date   Wed Jan  2 13:30:20 2008
  * \brief  MPI Explicit template instatiations.

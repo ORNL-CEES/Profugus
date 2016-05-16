@@ -221,4 +221,4 @@ INSTANTIATE_TYPED_TEST_CASE_P(OnTheFlyAndPreCalculated,    // Instance name
                               PrimeTableTest2,             // Test case name
                               PrimeTableImplementations);  // Type list
 
-#endif  // GTEST_HAS_TYPED_TEST_P
+#endif // Utils_gtest_samples_sample6_unittest_cc

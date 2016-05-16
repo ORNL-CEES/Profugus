@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Transporter.t.hh
+ * \file   MC/mc/Source_Transporter.t.hh
  * \author Thomas M. Evans
  * \date   Tue May 13 09:20:07 2014
  * \brief  Source_Transporter template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Source_Transporter_t_hh
-#define mc_Source_Transporter_t_hh
+#ifndef MC_mc_Source_Transporter_t_hh
+#define MC_mc_Source_Transporter_t_hh
 
 #include <iomanip>
 #include <iostream>
@@ -214,7 +214,7 @@ void Source_Transporter<Geometry>::set(SP_Tallier tallier)
 
 } // end namespace profugus
 
-#endif // mc_Source_Transporter_t_hh
+#endif // MC_mc_Source_Transporter_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Source_Transporter.t.hh

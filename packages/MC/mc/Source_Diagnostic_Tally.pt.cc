@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Source_Diagnostic_Tally.pt.cc
+ * \file   MC/mc/Source_Diagnostic_Tally.pt.cc
  * \author Steven Hamilton
  * \date   Thu Nov 05 11:14:30 2015
  * \brief  Source_Diagnostic_Tally template instantiations

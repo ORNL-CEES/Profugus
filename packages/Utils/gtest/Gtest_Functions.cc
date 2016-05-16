@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   gtest/Gtest_Functions.cc
+ * \file   Utils/gtest/Gtest_Functions.cc
  * \author Seth R Johnson
  * \date   Tue Apr 02 11:41:41 2013
  * \brief  Gtest_Functions member definitions.

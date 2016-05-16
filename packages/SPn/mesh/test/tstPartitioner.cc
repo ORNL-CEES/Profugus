@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/test/tstPartitioner.cc
+ * \file   SPn/mesh/test/tstPartitioner.cc
  * \author Thomas M. Evans
  * \date   Wed Feb 12 09:55:23 2014
  * \brief  Partitioner unit-test.

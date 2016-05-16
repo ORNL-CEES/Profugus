@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/MatrixTraits.hh
+ * \file   SPn/spn/MatrixTraits.hh
  * \author Steven Hamilton
  * \date   Mon Feb 17 13:10:27 2014
  * \brief  MatrixTraits class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_MatrixTraits_hh
-#define spn_MatrixTraits_hh
+#ifndef SPn_spn_MatrixTraits_hh
+#define SPn_spn_MatrixTraits_hh
 
 #include <SPn/config.h>
 
@@ -358,7 +358,7 @@ class MatrixTraits<TpetraTypes>
 
 } // end namespace profugus
 
-#endif // spn_MatrixTraits_hh
+#endif // SPn_spn_MatrixTraits_hh
 
 //---------------------------------------------------------------------------//
 //                 end of MatrixTraits.hh

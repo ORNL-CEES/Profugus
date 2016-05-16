@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstMulti_Vector.cc
+ * \file   CudaUtils/test/tstMulti_Vector.cc
  * \author Seth R Johnson
  * \date   Fri Aug 02 12:18:30 2013
  * \brief

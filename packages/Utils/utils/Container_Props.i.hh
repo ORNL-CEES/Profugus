@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Container_Props.i.hh
+ * \file   Utils/utils/Container_Props.i.hh
  * \author Gregory G. Davidson
  * \date   Thu Jan 09 11:13:13 2014
  * \brief  Inline function definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Container_Props_i_hh
-#define utils_Container_Props_i_hh
+#ifndef Utils_utils_Container_Props_i_hh
+#define Utils_utils_Container_Props_i_hh
 
 #include <vector>
 
@@ -298,7 +298,7 @@ bool is_non_negative(InputIterator begin,
 
 } // end namespace profugus
 
-#endif // utils_Container_Props_i_hh
+#endif // Utils_utils_Container_Props_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Container_Props.i.hh

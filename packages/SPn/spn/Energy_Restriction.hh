@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Restriction.hh
+ * \file   SPn/spn/Energy_Restriction.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 12:35:37 2014
  * \brief  Energy_Restriction class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Energy_Restriction_hh
-#define spn_Energy_Restriction_hh
+#ifndef SPn_spn_Energy_Restriction_hh
+#define SPn_spn_Energy_Restriction_hh
 
 #include <vector>
 
@@ -70,7 +70,7 @@ class Energy_Restriction : public OperatorAdapter<T>
 
 } // end namespace profugus
 
-#endif // spn_Energy_Restriction_hh
+#endif // SPn_spn_Energy_Restriction_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Energy_Restriction.hh

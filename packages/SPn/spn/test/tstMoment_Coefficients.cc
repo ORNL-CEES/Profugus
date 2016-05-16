@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstMoment_Coefficients.cc
+ * \file   SPn/spn/test/tstMoment_Coefficients.cc
  * \author Thomas M. Evans
  * \date   Mon Feb 10 14:45:24 2014
  * \brief  Test of Moment_Coefficients class.

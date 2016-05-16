@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/AndersonSolver.pt.cc
+ * \file   SPn/solvers/AndersonSolver.pt.cc
  * \author Steven Hamilton
  * \date   Wed Apr 01 11:01:28 2015
  * \brief  AndersonSolver explicit instantiations.

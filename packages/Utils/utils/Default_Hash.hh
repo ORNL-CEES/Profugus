@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Default_Hash.hh
+ * \file   Utils/utils/Default_Hash.hh
  * \author Seth R Johnson
  * \date   Fri Dec 06 10:06:08 2013
  * \brief  Default_Hash class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Default_Hash_hh
-#define utils_Default_Hash_hh
+#ifndef Utils_utils_Default_Hash_hh
+#define Utils_utils_Default_Hash_hh
 
 #include "Definitions.hh"
 #include "Hash_Functions.hh"
@@ -60,7 +60,7 @@ struct Default_Hash<unsigned int> : public Int_Mod_Hash_Function
 
 } // end namespace profugus
 
-#endif // utils_Default_Hash_hh
+#endif // Utils_utils_Default_Hash_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Default_Hash.hh

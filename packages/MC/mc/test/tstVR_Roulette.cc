@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstVR_Roulette.cc
+ * \file   MC/mc/test/tstVR_Roulette.cc
  * \author Thomas M. Evans
  * \date   Fri May 09 13:29:04 2014
  * \brief  VR_Roulette unit-test.

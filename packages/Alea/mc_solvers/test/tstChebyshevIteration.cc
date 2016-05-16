@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   testChebyshevIteration.cc
+ * \file   Alea/mc_solvers/test/tstChebyshevIteration.cc
  * \author Steven Hamilton
  * \brief  Test of ChebyshevIteration class.
  */

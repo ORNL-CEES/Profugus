@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/test/tstEigenvalue_Solver.cc
+ * \file   SPn/spn/test/tstEigenvalue_Solver.cc
  * \author Thomas M. Evans
  * \date   Mon Mar 10 23:18:53 2014
  * \brief  Unit-test for Eigenvalue_Solver.

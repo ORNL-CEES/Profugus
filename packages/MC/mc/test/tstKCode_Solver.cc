@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/test/tstKCode_Solver.cc
+ * \file   MC/mc/test/tstKCode_Solver.cc
  * \author Thomas M. Evans
  * \date   Mon May 19 13:30:39 2014
  * \brief  KCode_Solver unit test.

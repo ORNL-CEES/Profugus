@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/CudaDBC.cc
+ * \file   CudaUtils/cuda_utils/CudaDBC.cc
  * \author Seth R Johnson
  * \date   Thu Jun 27 15:21:33 2013
  * \brief  DBC member definitions.

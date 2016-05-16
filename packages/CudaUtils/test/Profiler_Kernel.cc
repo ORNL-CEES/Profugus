@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   cuda_utils/test/Profiler_Kernel.cc
+ * \file   CudaUtils/test/Profiler_Kernel.cc
  * \author Seth R Johnson
  * \date   Sun Aug 18 07:13:45 2013
  * \brief  Profiler_Kernel kernel definitions.

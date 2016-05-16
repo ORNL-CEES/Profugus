@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Parallel_HDF5_Writer.hh
+ * \file   Utils/utils/Parallel_HDF5_Writer.hh
  * \author Thomas M. Evans
  * \date   Fri Jan 24 09:48:40 2014
  * \brief  Parallel_HDF5_Writer class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Parallel_HDF5_Writer_hh
-#define utils_Parallel_HDF5_Writer_hh
+#ifndef Utils_utils_Parallel_HDF5_Writer_hh
+#define Utils_utils_Parallel_HDF5_Writer_hh
 
 #include "HDF5_IO.hh"
 
@@ -60,7 +60,7 @@ class Parallel_HDF5_Writer : public HDF5_IO
 } // end namespace profugus
 
 #endif // H5_HAVE_PARALLEL
-#endif // utils_Parallel_HDF5_Writer_hh
+#endif // Utils_utils_Parallel_HDF5_Writer_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Parallel_HDF5_Writer.hh

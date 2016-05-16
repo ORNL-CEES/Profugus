@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Particle_Metaclass.pt.cc
+ * \file   MC/mc/Particle_Metaclass.pt.cc
  * \author Thomas M. Evans
  * \date   Wed Jul 23 23:46:36 2014
  * \brief  Instantiate metaclass on Particle.

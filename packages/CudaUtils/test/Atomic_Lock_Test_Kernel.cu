@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/test/Atomic_Lock_Test_Kernel.cu
+ * \file   CudaUtils/test/Atomic_Lock_Test_Kernel.cu
  * \author Seth R Johnson
  * \date   Thu Aug 15 08:16:56 2013
  * \brief  Atomic_Lock_Test_Kernel kernel definitions.

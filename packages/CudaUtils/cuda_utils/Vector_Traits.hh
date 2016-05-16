@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Vector_Traits.hh
+ * \file   CudaUtils/cuda_utils/Vector_Traits.hh
  * \author Seth R Johnson
  * \date   Wed Aug 14 11:55:46 2013
  * \brief
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Vector_Traits_hh
-#define cuda_utils_Vector_Traits_hh
+#ifndef CudaUtils_cuda_utils_Vector_Traits_hh
+#define CudaUtils_cuda_utils_Vector_Traits_hh
 
 #include "Definitions.hh"
 
@@ -79,7 +79,7 @@ struct Vector_Traits
 
 } // end namespace cuda
 
-#endif // cuda_utils_Vector_Traits_hh
+#endif // CudaUtils_cuda_utils_Vector_Traits_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Vector_Traits.hh

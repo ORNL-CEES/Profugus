@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Serial_HDF5_Writer.cc
+ * \file   Utils/utils/Serial_HDF5_Writer.cc
  * \author Thomas M. Evans
  * \date   Fri Jan 24 09:48:48 2014
  * \brief  Serial_HDF5_Writer member definitions.

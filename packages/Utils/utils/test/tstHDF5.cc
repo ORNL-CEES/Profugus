@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstHDF5.cc
+ * \file   Utils/utils/test/tstHDF5.cc
  * \author Thomas M. Evans
  * \date   Thu Dec 12 16:37:32 2013
  * \brief  HDF5 Functionality test.

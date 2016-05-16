@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Geometry_Builder.hh
+ * \file   MC/mc_driver/Geometry_Builder.hh
  * \author Steven Hamilton
  * \date   Wed Nov 25 12:58:58 2015
  * \brief  Geometry_Builder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_driver_Geometry_Builder_hh
-#define mc_driver_Geometry_Builder_hh
+#ifndef MC_mc_driver_Geometry_Builder_hh
+#define MC_mc_driver_Geometry_Builder_hh
 
 #include <memory>
 #include <unordered_map>
@@ -109,7 +109,7 @@ class Geometry_Builder<profugus::Mesh_Geometry>
 
 } // end namespace mc
 
-#endif // mc_driver_Geometry_Builder_hh
+#endif // MC_mc_driver_Geometry_Builder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Geometry_Builder.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/EigenvalueSolverBuilder.t.hh
+ * \file   SPn/solvers/EigenvalueSolverBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Mon Feb 24 13:49:22 2014
  * \brief  EigenvalueSolverBuilder template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solver_EigenvalueSolverBuilder_t_hh
-#define solver_EigenvalueSolverBuilder_t_hh
+#ifndef SPn_solvers_EigenvalueSolverBuilder_t_hh
+#define SPn_solvers_EigenvalueSolverBuilder_t_hh
 
 #include <iostream>
 

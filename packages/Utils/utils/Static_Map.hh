@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Static_Map.hh
+ * \file   Utils/utils/Static_Map.hh
  * \author Seth R Johnson
  * \date   Tue Dec 17 21:11:12 2013
  * \brief  Static_Map class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Static_Map_hh
-#define utils_Static_Map_hh
+#ifndef Utils_utils_Static_Map_hh
+#define Utils_utils_Static_Map_hh
 
 #include <algorithm>
 #include <vector>
@@ -303,7 +303,7 @@ inline void swap(Static_Map<K,T,H>& a, Static_Map<K,T,H>& b)
 
 #include "Static_Map.i.hh"
 
-#endif // utils_Static_Map_hh
+#endif // Utils_utils_Static_Map_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Static_Map.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Vector_Lite.hh
+ * \file   Utils/utils/Vector_Lite.hh
  * \author Derived from Rob Lowrie's Vector_Lite (LANL)
  * \date   Thu Jan  3 11:39:29 2008
  * \brief  Vector_Lite class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Vector_Lite_hh
-#define utils_Vector_Lite_hh
+#ifndef Utils_utils_Vector_Lite_hh
+#define Utils_utils_Vector_Lite_hh
 
 #include <iostream>
 #include <numeric>
@@ -177,7 +177,7 @@ class Vector_Lite
 
 #include "Vector_Lite.i.hh"
 
-#endif // utils_Vector_Lite_hh
+#endif // Utils_utils_Vector_Lite_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Vector_Lite.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Container_Props.hh
+ * \file   Utils/utils/Container_Props.hh
  * \author Gregory G. Davidson
  * \date   Thu Jan 09 11:13:13 2014
  * \brief  Container_Props class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Container_Props_hh
-#define utils_Container_Props_hh
+#ifndef Utils_utils_Container_Props_hh
+#define Utils_utils_Container_Props_hh
 
 #include "Soft_Comparators.hh"
 
@@ -97,7 +97,7 @@ bool is_non_negative(InputIterator begin,
 
 #include "Container_Props.i.hh"
 
-#endif // utils_Container_Props_hh
+#endif // Utils_utils_Container_Props_hh
 
 //---------------------------------------------------------------------------//
 //                      end of utils/Container_Props.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/SPN_Constants.hh
+ * \file   SPn/spn/SPN_Constants.hh
  * \author Thomas M. Evans
  * \date   Thu Nov 22 11:43:24 2012
  * \brief  Rational coefficients used in SPN equations.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_SPN_Constants_hh
-#define spn_SPN_Constants_hh
+#ifndef SPn_spn_SPN_Constants_hh
+#define SPn_spn_SPN_Constants_hh
 
 namespace profugus
 {
@@ -59,7 +59,7 @@ const double rat_3023_17920 = 3023.0 / 17920.0;
 } // end namespace fractions
 } // end namespace profugus
 
-#endif // spn_SPN_Constants_hh
+#endif // SPn_spn_SPN_Constants_hh
 
 //---------------------------------------------------------------------------//
 //              end of spn/SPN_Constants.hh

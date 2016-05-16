@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Comm_Traits.hh
+ * \file   Utils/comm/Comm_Traits.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 15:01:59 2008
  * \brief  Comm_Traits class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Comm_Traits_hh
-#define comm_Comm_Traits_hh
+#ifndef Utils_comm_Comm_Traits_hh
+#define Utils_comm_Comm_Traits_hh
 
 namespace profugus
 {
@@ -171,7 +171,7 @@ struct Comm_Traits<long double *>
 
 } // end namespace profugus
 
-#endif // comm_Comm_Traits_hh
+#endif // Utils_comm_Comm_Traits_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Comm_Traits.hh

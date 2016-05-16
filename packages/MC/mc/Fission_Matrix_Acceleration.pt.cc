@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fission_Matrix_Acceleration.pt.cc
+ * \file   MC/mc/Fission_Matrix_Acceleration.pt.cc
  * \author Thomas M. Evans
  * \date   Wed Nov 12 14:54:34 2014
  * \brief  Fission_Matrix_Acceleration member definitions.

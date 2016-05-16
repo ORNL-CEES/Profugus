@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   rng/test/tstRNG_Control.cc
+ * \file   Utils/rng/test/tstRNG_Control.cc
  * \author Thomas M. Evans
  * \date   Fri Apr 25 15:06:03 2014
  * \brief  RNG_Control test.

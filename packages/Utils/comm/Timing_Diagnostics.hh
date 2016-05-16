@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Timing_Diagnostics.hh
+ * \file   Utils/comm/Timing_Diagnostics.hh
  * \author Thomas M. Evans
  * \date   Fri Nov  9 09:41:55 2007
  * \brief  Timing_Diagnostics class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Timing_Diagnostics_hh
-#define comm_Timing_Diagnostics_hh
+#ifndef Utils_comm_Timing_Diagnostics_hh
+#define Utils_comm_Timing_Diagnostics_hh
 
 #include <string>
 #include <map>
@@ -106,7 +106,7 @@ class Timing_Diagnostics
 
 } // end namespace profugus
 
-#endif // comm_Timing_Diagnostics_hh
+#endif // Utils_comm_Timing_Diagnostics_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Timing_Diagnostics.hh

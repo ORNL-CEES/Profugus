@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/kde/Axial_KDE_Kernel.t.hh
+ * \file   MC/mc/Axial_KDE_Kernel.t.hh
  * \author Gregory Davidson
  * \date   Mon Feb 16 14:21:15 2015
  * \brief  Axial_KDE_Kernel class definitions.

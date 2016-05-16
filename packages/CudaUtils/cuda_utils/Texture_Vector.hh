@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Texture_Vector.hh
+ * \file   CudaUtils/cuda_utils/Texture_Vector.hh
  * \author Seth R Johnson
  * \date   Fri Sep 20 10:08:43 2013
  * \brief  Texture_Vector class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Texture_Vector_hh
-#define cuda_utils_Texture_Vector_hh
+#ifndef CudaUtils_cuda_utils_Texture_Vector_hh
+#define CudaUtils_cuda_utils_Texture_Vector_hh
 
 #include <config.h>
 #include <vector>
@@ -261,7 +261,7 @@ inline void swap(
 //===========================================================================//
 } // end namespace cuda
 
-#endif // cuda_utils_Texture_Vector_hh
+#endif // CudaUtils_cuda_utils_Texture_Vector_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Texture_Vector.hh

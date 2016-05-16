@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/LinearSolverBuilder.t.hh
+ * \file   SPn/solvers/LinearSolverBuilder.t.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 12:20:24 2014
  * \brief  LinearSolverBuilder template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_LinearSolverBuilder_t_hh
-#define solvers_LinearSolverBuilder_t_hh
+#ifndef SPn_solvers_LinearSolverBuilder_t_hh
+#define SPn_solvers_LinearSolverBuilder_t_hh
 
 #include <string>
 
@@ -92,7 +92,7 @@ LinearSolverBuilder<T>::build_solver( RCP_ParameterList db )
 
 } // end namespace profugus
 
-#endif // solvers_LinearSolverBuilder_t_hh
+#endif // SPn_solvers_LinearSolverBuilder_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of LinearSolverBuilder.t.hh

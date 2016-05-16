@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   LinearSystemFactory.hh
+ * \file   Alea/mc_solvers/LinearSystemFactory.hh
  * \author Steven Hamilton
  * \brief  Construct EpetraCrsMatrix from ParameterList.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_LinearSystemFactory_hh
-#define mc_solvers_LinearSystemFactory_hh
+#ifndef Alea_mc_solvers_LinearSystemFactory_hh
+#define Alea_mc_solvers_LinearSystemFactory_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -84,5 +84,5 @@ class LinearSystemFactory
 
 }
 
-#endif // mc_solvers_LinearSystemFactory_hh
+#endif // Alea_mc_solvers_LinearSystemFactory_hh
 

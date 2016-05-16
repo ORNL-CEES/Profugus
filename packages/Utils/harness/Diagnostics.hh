@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   harness/Diagnostics.hh
+ * \file   Utils/harness/Diagnostics.hh
  * \author Thomas M. Evans
  * \date   Mon Feb  2 20:06:38 2009
  * \brief  Diagnostics for runtime info.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef harness_Diagnostics_hh
-#define harness_Diagnostics_hh
+#ifndef Utils_harness_Diagnostics_hh
+#define Utils_harness_Diagnostics_hh
 
 #include <map>
 #include <vector>
@@ -163,7 +163,7 @@ extern Diag_Vec_Double_t vec_doubles;
 #define DIAGNOSTICS_THREE(member)
 #endif
 
-#endif // harness_Diagnostics_hh
+#endif // Utils_harness_Diagnostics_hh
 
 //---------------------------------------------------------------------------//
 //              end of harness/Diagnostics.hh

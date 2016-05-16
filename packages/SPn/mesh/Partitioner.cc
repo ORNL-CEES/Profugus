@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/Partitioner.cc
+ * \file   SPn/mesh/Partitioner.cc
  * \author Thomas M. Evans
  * \date   Wed Feb 12 09:54:53 2014
  * \brief  Partitioner member definitions.

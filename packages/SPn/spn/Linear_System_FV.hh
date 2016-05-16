@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Linear_System_FV.hh
+ * \file   SPn/spn/Linear_System_FV.hh
  * \author Thomas M. Evans
  * \date   Fri Feb 14 19:58:19 2014
  * \brief  Linear_System_FV class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Linear_System_FV_hh
-#define spn_Linear_System_FV_hh
+#ifndef SPn_spn_Linear_System_FV_hh
+#define SPn_spn_Linear_System_FV_hh
 
 #include <vector>
 
@@ -280,7 +280,7 @@ Linear_System_FV<T>::bnd_indexer(int face) const
 
 } // end namespace profugus
 
-#endif // spn_Linear_System_FV_hh
+#endif // SPn_spn_Linear_System_FV_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Linear_System_FV.hh

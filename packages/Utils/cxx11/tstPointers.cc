@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cxx11/tstPointers.cc
+ * \file   Utils/cxx11/tstPointers.cc
  * \author Thomas M. Evans
  * \date   Wed Mar 26 13:03:29 2014
  * \brief  CXX-11 test of pointers (including smart pointers).

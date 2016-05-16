@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Prolongation.hh
+ * \file   SPn/spn/Energy_Prolongation.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 12:35:44 2014
  * \brief  Energy_Prolongation class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Energy_Prolongation_hh
-#define spn_Energy_Prolongation_hh
+#ifndef SPn_spn_Energy_Prolongation_hh
+#define SPn_spn_Energy_Prolongation_hh
 
 #include <vector>
 
@@ -71,7 +71,7 @@ class Energy_Prolongation : public OperatorAdapter<T>
 
 } // end namespace profugus
 
-#endif // spn_Energy_Prolongation_hh
+#endif // SPn_spn_Energy_Prolongation_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Energy_Prolongation.hh

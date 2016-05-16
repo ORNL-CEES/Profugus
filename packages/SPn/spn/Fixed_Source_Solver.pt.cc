@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/Fixed_Source_Solver.pt.cc
+ * \file   SPn/spn/Fixed_Source_Solver.pt.cc
  * \author Thomas M. Evans
  * \date   Fri Feb 21 14:41:20 2014
  * \brief  Fixed_Source_Solver explicit instantiation.

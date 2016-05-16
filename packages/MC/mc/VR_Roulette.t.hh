@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/VR_Roulette.t.hh
+ * \file   MC/mc/VR_Roulette.t.hh
  * \author Thomas M. Evans
  * \date   Fri May 09 13:09:37 2014
  * \brief  VR_Roulette member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_VR_Roulette_t_hh
-#define mc_VR_Roulette_t_hh
+#ifndef MC_mc_VR_Roulette_t_hh
+#define MC_mc_VR_Roulette_t_hh
 
 #include "VR_Roulette.hh"
 #include "harness/Diagnostics.hh"
@@ -105,7 +105,7 @@ void VR_Roulette<Geometry>::post_collision(Particle_t& particle,
 
 } // end namespace profugus
 
-#endif // mc_VR_Roulette_t_hh
+#endif // MC_mc_VR_Roulette_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of VR_Roulette.t.hh

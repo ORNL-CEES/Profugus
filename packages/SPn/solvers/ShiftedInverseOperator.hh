@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/ShiftedInverseOperator.hh
+ * \file   SPn/solvers/ShiftedInverseOperator.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Fri Feb 21 13:38:42 2014
  * \brief  ShiftedInverseOperator class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_ShiftedInverseOperator_hh
-#define solvers_ShiftedInverseOperator_hh
+#ifndef SPn_solvers_ShiftedInverseOperator_hh
+#define SPn_solvers_ShiftedInverseOperator_hh
 
 #include <Teuchos_RCP.hpp>
 
@@ -169,7 +169,7 @@ class ShiftedInverseOperator<TpetraTypes>
 
 } // end namespace profugus
 
-#endif // solvers_ShiftedInverseOperator_hh
+#endif // SPn_solvers_ShiftedInverseOperator_hh
 
 //---------------------------------------------------------------------------//
 //                 end of ShiftedInverseOperator.hh

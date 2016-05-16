@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/BLAS_Handle.hh
+ * \file   CudaUtils/cuda_utils/BLAS_Handle.hh
  * \author Seth R Johnson
  * \date   Wed Dec 11 20:35:41 2013
  * \brief  BLAS_Handle class definition.
@@ -10,8 +10,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_BLAS_Handle_hh
-#define cuda_utils_BLAS_Handle_hh
+#ifndef CudaUtils_cuda_utils_BLAS_Handle_hh
+#define CudaUtils_cuda_utils_BLAS_Handle_hh
 
 #include <cublas_v2.h>
 
@@ -64,7 +64,7 @@ class BLAS_Handle
 
 } // end namespace cuda
 
-#endif // cuda_utils_BLAS_Handle_hh
+#endif // CudaUtils_cuda_utils_BLAS_Handle_hh
 
 //---------------------------------------------------------------------------//
 //                 end of BLAS_Handle.hh

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Fixed_Source_Solver.t.hh
+ * \file   MC/mc/Fixed_Source_Solver.t.hh
  * \author Thomas M. Evans
  * \date   Tue May 13 14:40:06 2014
  * \brief  Fixed_Source_Solver member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Fixed_Source_Solver_t_hh
-#define mc_Fixed_Source_Solver_t_hh
+#ifndef MC_mc_Fixed_Source_Solver_t_hh
+#define MC_mc_Fixed_Source_Solver_t_hh
 
 #include "Fixed_Source_Solver.hh"
 
@@ -118,7 +118,7 @@ void Fixed_Source_Solver<Geometry>::solve()
 
 } // end namespace profugus
 
-#endif // mc_Fixed_Source_Solver_t_hh
+#endif // MC_mc_Fixed_Source_Solver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Fixed_Source_Solver.t.hh

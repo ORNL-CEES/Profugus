@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Sync.hh
+ * \file   Utils/comm/Sync.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 16:08:10 2008
  * \brief  Sync class definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Sync_hh
-#define comm_Sync_hh
+#ifndef Utils_comm_Sync_hh
+#define Utils_comm_Sync_hh
 
 #include "global.hh"
 #include "Sync.hh"
@@ -60,7 +60,7 @@ class TSync
 
 } // end namespace profugus
 
-#endif // comm_Sync_hh
+#endif // Utils_comm_Sync_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Sync.hh

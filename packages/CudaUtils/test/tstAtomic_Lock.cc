@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstAtomic_Lock.cc
+ * \file   CudaUtils/test/tstAtomic_Lock.cc
  * \author Seth R Johnson
  * \date   Thu Aug 15 08:19:34 2013
  * \brief

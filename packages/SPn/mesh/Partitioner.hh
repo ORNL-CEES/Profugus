@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mesh/Partitioner.hh
+ * \file   SPn/mesh/Partitioner.hh
  * \author Thomas M. Evans
  * \date   Wed Feb 12 09:54:53 2014
  * \brief  Partitioner class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mesh_Partitioner_hh
-#define mesh_Partitioner_hh
+#ifndef SPn_mesh_Partitioner_hh
+#define SPn_mesh_Partitioner_hh
 
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
@@ -174,7 +174,7 @@ class Partitioner
 
 } // end namespace profugus
 
-#endif // mesh_Partitioner_hh
+#endif // SPn_mesh_Partitioner_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Partitioner.hh

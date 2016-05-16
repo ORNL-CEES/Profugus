@@ -1,13 +1,13 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   GmresPolynomial.hh
+ * \file   Alea/mc_solvers/GmresPolynomial.hh
  * \author Steven Hamilton
  * \brief  GmresPolynomial class declaration.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_solvers_GmresPolynomial_hh
-#define mc_solvers_GmresPolynomial_hh
+#ifndef Alea_mc_solvers_GmresPolynomial_hh
+#define Alea_mc_solvers_GmresPolynomial_hh
 
 #include "Teuchos_RCP.hpp"
 #include "Teuchos_ParameterList.hpp"
@@ -66,5 +66,5 @@ class GmresPolynomial : public Polynomial
 
 }
 
-#endif // mc_solvers_GmresPolynomial_hh
+#endif // Alea_mc_solvers_GmresPolynomial_hh
 

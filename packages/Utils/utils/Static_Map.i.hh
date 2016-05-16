@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Static_Map.i.hh
+ * \file   Utils/utils/Static_Map.i.hh
  * \author Seth R Johnson
  * \date   Tue Dec 17 21:11:08 2013
  * \brief  Member definitions of class Static_Map.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Static_Map_i_hh
-#define utils_Static_Map_i_hh
+#ifndef Utils_utils_Static_Map_i_hh
+#define Utils_utils_Static_Map_i_hh
 
 namespace profugus
 {
@@ -242,7 +242,7 @@ Static_Map<Key,T,Hash>::max_items_per_bucket() const
 
 } // end namespace profugus
 
-#endif // utils_Static_Map_i_hh
+#endif // Utils_utils_Static_Map_i_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Static_Map.i.hh

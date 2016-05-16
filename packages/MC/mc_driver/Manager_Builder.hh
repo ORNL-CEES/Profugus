@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc_driver/Manager_Builder.hh
+ * \file   MC/mc_driver/Manager_Builder.hh
  * \author Steven Hamilton
  * \date   Wed Nov 25 11:25:01 2015
  * \brief  Manager_Builder class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_driver_Manager_Builder_hh
-#define mc_driver_Manager_Builder_hh
+#ifndef MC_mc_driver_Manager_Builder_hh
+#define MC_mc_driver_Manager_Builder_hh
 
 #include <memory>
 
@@ -44,7 +44,7 @@ class Manager_Builder
 
 } // end namespace mc
 
-#endif // mc_driver_Manager_Builder_hh
+#endif // MC_mc_driver_Manager_Builder_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Manager_Builder.hh

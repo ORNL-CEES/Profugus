@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   cuda_utils/Kernel_Header.cuh
+ * \file   CudaUtils/cuda_utils/Kernel_Header.cuh
  * \author Seth R Johnson
  * \date   Wed Nov 27 09:22:28 2013
  * \brief  Kernel_Header kernel declarations.

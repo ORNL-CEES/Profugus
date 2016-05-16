@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/test/tstPacking_Utils.cc
+ * \file   Utils/utils/test/tstPacking_Utils.cc
  * \author Thomas M. Evans
  * \date   Fri Apr 25 15:19:23 2014
  * \brief  Packing_Utils test.

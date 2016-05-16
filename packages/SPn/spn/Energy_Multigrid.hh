@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Energy_Multigrid.hh
+ * \file   SPn/spn/Energy_Multigrid.hh
  * \author Thomas M. Evans, Steven Hamilton
  * \date   Tue Feb 25 13:04:00 2014
  * \brief  Energy_Multigrid class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Energy_Multigrid_hh
-#define spn_Energy_Multigrid_hh
+#ifndef SPn_spn_Energy_Multigrid_hh
+#define SPn_spn_Energy_Multigrid_hh
 
 #include <vector>
 
@@ -92,7 +92,7 @@ class Energy_Multigrid : public OperatorAdapter<T>
 
 } // end namespace profugus
 
-#endif // spn_Energy_Multigrid_hh
+#endif // SPn_spn_Energy_Multigrid_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Energy_Multigrid.hh

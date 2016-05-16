@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/test/tstEvent.cc
+ * \file   CudaUtils/test/tstEvent.cc
  * \author Seth R Johnson
  * \date   Thu Jul 11 09:47:38 2013
  * \brief

@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   comm/Functions.hh
+ * \file   Utils/comm/Functions.hh
  * \author Thomas M. Evans
  * \date   Wed Jan  2 13:25:15 2008
  * \brief  Communication functions.
@@ -11,8 +11,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef comm_Functions_hh
-#define comm_Functions_hh
+#ifndef Utils_comm_Functions_hh
+#define Utils_comm_Functions_hh
 
 #include <string>
 
@@ -641,7 +641,7 @@ bool isScalar();
 
 } // end namespace profugus
 
-#endif // comm_Functions_hh
+#endif // Utils_comm_Functions_hh
 
 //---------------------------------------------------------------------------//
 //              end of comm/Functions.hh

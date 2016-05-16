@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   rng/RNG.cc
+ * \file   Utils/rng/RNG.cc
  * \author Thomas M. Evans
  * \date   Fri Apr 25 14:57:29 2014
  * \brief  RNG member definitions.

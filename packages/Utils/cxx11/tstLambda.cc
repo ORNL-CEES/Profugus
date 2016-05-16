@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   /tstLambda.cc
+ * \file   Utils/cxx11/tstLambda.cc
  * \author Thomas M. Evans
  * \date   Wed May 14 10:58:36 2014
  * \brief  Lambda testing.

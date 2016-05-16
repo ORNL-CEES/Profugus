@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   utils/Definitions.hh
+ * \file   Utils/utils/Definitions.hh
  * \author Thomas M. Evans
  * \date   Tue Sep  4 16:23:33 2007
  * \brief  Definitions that are used by classes in profugus.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef utils_Definitions_hh
-#define utils_Definitions_hh
+#ifndef Utils_utils_Definitions_hh
+#define Utils_utils_Definitions_hh
 
 #include <cstddef>
 
@@ -72,7 +72,7 @@ typedef std::size_t         size_type;
 
 } // end namespace profugus::def
 
-#endif // utils_Definitions_hh
+#endif // Utils_utils_Definitions_hh
 
 //---------------------------------------------------------------------------//
 //              end of utils/Definitions.hh

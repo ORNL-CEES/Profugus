@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Physics.hh
+ * \file   MC/mc/Physics.hh
  * \author Thomas M. Evans
  * \date   Thursday May 1 11:15:7 2014
  * \brief  MG_Physics class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Physics_hh
-#define mc_Physics_hh
+#ifndef MC_mc_Physics_hh
+#define MC_mc_Physics_hh
 
 #include <vector>
 #include <memory>
@@ -203,7 +203,7 @@ class Physics
 
 } // end namespace profugus
 
-#endif // mc_Physics_hh
+#endif // MC_mc_Physics_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Physics.hh

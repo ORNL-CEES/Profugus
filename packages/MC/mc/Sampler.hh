@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   mc/Sampler.hh
+ * \file   MC/mc/Sampler.hh
  * \author Thomas M. Evans
  * \date   Friday May 2 10:26:10 2014
  * \brief  Sampling functions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef mc_Sampler_hh
-#define mc_Sampler_hh
+#ifndef MC_mc_Sampler_hh
+#define MC_mc_Sampler_hh
 
 namespace profugus
 {
@@ -83,7 +83,7 @@ double sample_epan(RNG &rng);
 #include "Sampler.i.hh"
 
 //---------------------------------------------------------------------------//
-#endif // mc_Sampler_hh
+#endif // MC_mc_Sampler_hh
 
 //---------------------------------------------------------------------------//
 //              end of mc/Sampler.hh

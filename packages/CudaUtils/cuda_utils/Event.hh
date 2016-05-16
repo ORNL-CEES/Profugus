@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   cuda_utils/Event.hh
+ * \file   CudaUtils/cuda_utils/Event.hh
  * \author Seth R Johnson
  * \date   Tue Jul 09 11:21:31 2013
  * \brief  Event class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef cuda_utils_Event_hh
-#define cuda_utils_Event_hh
+#ifndef CudaUtils_cuda_utils_Event_hh
+#define CudaUtils_cuda_utils_Event_hh
 
 #include <config.h>
 #if defined(USE_CUDA) && !defined(PSEUDO_CUDA)
@@ -135,7 +135,7 @@ class Event<cuda::arch::Device>
 
 } // end namespace cuda
 
-#endif // cuda_utils_Event_hh
+#endif // CudaUtils_cuda_utils_Event_hh
 
 //---------------------------------------------------------------------------//
 //              end of cuda_utils/Event.hh

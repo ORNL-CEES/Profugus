@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   solvers/AndersonSolver.t.hh
+ * \file   SPn/solvers/AndersonSolver.t.hh
  * \author Steven Hamilton
  * \date   Wed Apr 01 11:01:28 2015
  * \brief  AndersonSolver template member definitions.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef solvers_AndersonSolver_t_hh
-#define solvers_AndersonSolver_t_hh
+#ifndef SPn_solvers_AndersonSolver_t_hh
+#define SPn_solvers_AndersonSolver_t_hh
 
 #include "comm/P_Stream.hh"
 #include "AndersonSolver.hh"
@@ -117,7 +117,7 @@ void AndersonSolver<T>::solve( Teuchos::RCP<MV> x )
 
 } // end namespace profugus
 
-#endif // solvers_AndersonSolver_t_hh
+#endif // SPn_solvers_AndersonSolver_t_hh
 
 //---------------------------------------------------------------------------//
 //                 end of AndersonSolver.t.hh

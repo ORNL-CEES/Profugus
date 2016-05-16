@@ -1,6 +1,6 @@
 //----------------------------------*-C++-*----------------------------------//
 /*!
- * \file   spn/Solver_Base.hh
+ * \file   SPn/spn/Solver_Base.hh
  * \author Thomas M. Evans
  * \date   Mon Feb 17 20:36:54 2014
  * \brief  Solver_Base class definition.
@@ -8,8 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
-#ifndef spn_Solver_Base_hh
-#define spn_Solver_Base_hh
+#ifndef SPn_spn_Solver_Base_hh
+#define SPn_spn_Solver_Base_hh
 
 #include "Teuchos_RCP.hpp"
 
@@ -179,7 +179,7 @@ void Solver_Base_Tmpl<T>::write_u_into_state(
 
 } // end namespace profugus
 
-#endif // spn_Solver_Base_hh
+#endif // SPn_spn_Solver_Base_hh
 
 //---------------------------------------------------------------------------//
 //                 end of Solver_Base.hh
