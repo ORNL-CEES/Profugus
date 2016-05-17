@@ -14,18 +14,6 @@
 #include "config.h"
 #include "Utils/config.h"
 
-//---------------------------------------------------------------------------//
-// If compiling device code, disable DBC
-//---------------------------------------------------------------------------//
-#ifdef __CUDA_ARCH__
-#ifdef REQUIRE
-// Undefine DBC macros since we've included DBC.hh
-#include "harness/DBC_undef.hh"
-#else // Require
-// Prevent DBC from being loaded
-#define harness_DBC_hh
-#endif // Require
-
 //
 // On-Device DBC using "assert"
 //
@@ -41,7 +29,7 @@
 // If condition fails, print message then assert
 // Don't expect fancy stream machinery to work
 //  (e.g. INSIST(n>0,"Value is " << n); ) like it would in normal DBC
-#define INSIST(COND,MSG) \
+#define DEVICE_INSIST(COND,MSG) \
     do \
     { \
         if (!(COND)) \
@@ -52,34 +40,33 @@
     } while (0)
 
 #if UTILS_DBC & 1
-#define REQUIRE(COND) \
+#define DEVICE_REQUIRE(COND) \
     do { assert(COND); } while (0)
 #else
-#define REQUIRE(COND) NOASSERT_(COND)
+#define DEVICE_REQUIRE(COND) UTILS_NOASSERT_(COND)
 #endif
 
 #if UTILS_DBC & 2
-#define CHECK(COND) \
+#define DEVICE_CHECK(COND) \
     do { assert(COND); } while (0)
 #else
-#define CHECK(COND) NOASSERT_(COND)
+#define DEVICE_CHECK(COND) UTILS_NOASSERT_(COND)
 #endif
 
 #if UTILS_DBC & 4
-#define ENSURE(COND) \
+#define DEVICE_ENSURE(COND) \
     do { assert(COND); } while (0)
 #else
-#define ENSURE(COND) NOASSERT_(COND)
+#define DEVICE_ENSURE(COND) NOASSERT_(COND)
 #endif
 
 #else   // __APPLE__
 // No device-side asserts on Mac, good luck
-#include "harness/DBC_nulldef.hh"
+#define DEVICE_INSIST(COND,MSG)  UTILS_NOASSERT_(COND)
+#define DEVICE_REQUIRE(COND,MSG) UTILS_NOASSERT_(COND)
+#define DEVICE_CHECK(COND,MSG)   UTILS_NOASSERT_(COND)
+#define DEVICE_ENSURE(COND,MSG)  UTILS_NOASSERT_(COND)
 #endif  // __APPLE__
-
-#else // __CUDA_ARCH__
-#include "harness/DBC.hh"
-#endif
 
 //---------------------------------------------------------------------------//
 // Compile assertions on host code when CUDA is enabled

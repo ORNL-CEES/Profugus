@@ -66,7 +66,7 @@ class Mesh_Geometry
     //! Set materials
     void set_matids(const Vec_Int & matids)
     {
-        REQUIRE( matids.size() == num_cells() );
+        DEVICE_REQUIRE( matids.size() == num_cells() );
         d_matid_vec = matids;
         d_matids = d_matid_vec.data().get();
     }
@@ -74,7 +74,7 @@ class Mesh_Geometry
     //! Set reflecting boundaries
     void set_reflecting(const Vec_Int &reflecting_faces)
     {
-        REQUIRE( reflecting_faces.size() == 6 );
+        DEVICE_REQUIRE( reflecting_faces.size() == 6 );
         d_reflect_vec = reflecting_faces;
         d_reflect = d_reflect_vec.data().get();
     }
@@ -180,20 +180,20 @@ class Mesh_Geometry
     //! Return the current cell ID, valid only when inside the mesh
     __device__ cell_type cell(const Geo_State_t& state) const
     {
-        REQUIRE(boundary_state(state) != profugus::geometry::OUTSIDE);
+        DEVICE_REQUIRE(boundary_state(state) != profugus::geometry::OUTSIDE);
 
         using def::I; using def::J; using def::K;
         cell_type c = num_cells();
         bool found = d_mesh.index(state.ijk[I], state.ijk[J], state.ijk[K], c);
 
-        ENSURE(found);
+        DEVICE_ENSURE(found);
         return c;
     }
 
     //! Return the current material ID
     __device__ int matid(const Geo_State_t& state) const
     {
-        REQUIRE(cell(state) < num_cells());
+        DEVICE_REQUIRE(cell(state) < num_cells());
 
         return d_matids[cell(state)];
     }
@@ -281,10 +281,10 @@ class Mesh_Geometry
     __device__ void move(double dist, Geo_State_t &state) const
     {
         using def::I; using def::J; using def::K;
-        REQUIRE(dist >= 0.0);
-        REQUIRE(cuda::utility::soft_equiv(
-                cuda::utility::vector_magnitude(state.d_dir),
-                1.0, 1.0e-6));
+        DEVICE_REQUIRE(dist >= 0.0);
+        DEVICE_REQUIRE(cuda::utility::soft_equiv(
+                    cuda::utility::vector_magnitude(state.d_dir),
+                        1.0, 1.0e-6));
 
         // advance the particle
         // su

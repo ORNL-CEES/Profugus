@@ -44,9 +44,9 @@ __device__ void Mesh_Geometry::initialize(
 
     update_state(state);
 
-    ENSURE(state.ijk[I] >= -1 && state.ijk[I] <= d_mesh.num_cells_along(I));
-    ENSURE(state.ijk[J] >= -1 && state.ijk[J] <= d_mesh.num_cells_along(J));
-    ENSURE(state.ijk[K] >= -1 && state.ijk[K] <= d_mesh.num_cells_along(K));
+    DEVICE_ENSURE(state.ijk[I] >= -1 && state.ijk[I] <= d_mesh.num_cells_along(I));
+    DEVICE_ENSURE(state.ijk[J] >= -1 && state.ijk[J] <= d_mesh.num_cells_along(J));
+    DEVICE_ENSURE(state.ijk[K] >= -1 && state.ijk[K] <= d_mesh.num_cells_along(K));
 
 }
 
@@ -61,7 +61,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     using cuda::utility::soft_equiv;
     using cuda::utility::vector_magnitude;
 
-    REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.e-5));
+    DEVICE_REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.e-5));
 
     const double * edges_x(d_mesh.edges(I));
     const double * edges_y(d_mesh.edges(J));
@@ -143,7 +143,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
         state.next_ijk[K] = test_next;
     }
 
-    ENSURE(state.next_dist >= 0.);
+    DEVICE_ENSURE(state.next_dist >= 0.);
     return state.next_dist;
 }
 
@@ -157,7 +157,7 @@ bool Mesh_Geometry::reflect(Geo_State_t& state) const
     using def::I; using def::J; using def::K;
     using cuda::utility::soft_equiv;
     using cuda::utility::vector_magnitude;
-    REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+    DEVICE_REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
     // If we're not in a reflecting state, return
     if( state.reflecting_face == Geo_State_t::NONE )
@@ -171,13 +171,13 @@ bool Mesh_Geometry::reflect(Geo_State_t& state) const
                  state.d_dir[J]*n[J] +
                  state.d_dir[K]*n[K];
 
-    CHECK( dot != 0.0 );
+    DEVICE_CHECK( dot != 0.0 );
 
     state.d_dir[I] -= 2.0 * n[I] * dot;
     state.d_dir[J] -= 2.0 * n[J] * dot;
     state.d_dir[K] -= 2.0 * n[K] * dot;
 
-    ENSURE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+    DEVICE_ENSURE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
     return true;
 }

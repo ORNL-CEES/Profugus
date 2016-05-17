@@ -12,6 +12,7 @@
 #define utils_Container_Props_i_hh
 
 #include <vector>
+#include "harness/DBC.hh"
 
 namespace profugus
 {

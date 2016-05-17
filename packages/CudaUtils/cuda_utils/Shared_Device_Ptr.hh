@@ -113,7 +113,7 @@ class Shared_Device_Ptr
 	d_device_ptr =
 	    std::shared_ptr<T>( device_ptr, [](T* t){ cudaFree(t); } );
 #else
-	INSIST( false, "Shared_Device_Ptr can only be constructed with NVCC!" );
+	DEVICE_INSIST(false,"Shared_Device_Ptr can only be constructed with NVCC!");
 #endif // end __NVCC__
     }
 };

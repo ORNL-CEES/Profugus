@@ -146,7 +146,7 @@ __device__ inline void vector_normalize(cuda_profugus::Space_Vector &vector)
     vector[J] *= norm;
     vector[K] *= norm;
 
-    ENSURE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
+    DEVICE_ENSURE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 }
 
 /*!
@@ -187,7 +187,7 @@ __device__ inline void cartesian_vector_transform(
     double costheta, double phi, cuda_profugus::Space_Vector &vector)
 {
     using def::I; using def::J; using def::K;
-    REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
+    DEVICE_REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 
     // cos/sin factors
     const double cosphi   = cos(phi);
@@ -230,9 +230,6 @@ __device__ inline void cartesian_vector_transform(
     vector_normalize(vector);
 
 }
-
-
-
 
 } // end namespace utility
 

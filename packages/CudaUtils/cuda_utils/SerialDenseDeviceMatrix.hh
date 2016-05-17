@@ -28,16 +28,16 @@ namespace cuda
 class SerialDenseDeviceMatrix
 {
   public:
-    
+
     // Device data constructor. Device-only.
     PROFUGUS_DEVICE_FUNCTION
-    SerialDenseDeviceMatrix( const int num_rows, 
+    SerialDenseDeviceMatrix( const int num_rows,
 			     const int num_cols,
 			     double* device_data )
 	: d_num_rows( num_rows )
 	, d_num_cols( num_cols )
 	, d_data( device_data )
-    { 
+    {
 	PROFUGUS_INSIST_ON_DEVICE;
     }
 
@@ -47,18 +47,18 @@ class SerialDenseDeviceMatrix
 
     // Get the number of rows. Host-accesible.
     PROFUGUS_DEVICE_FUNCTION
-    int num_rows() const 
-    { 
+    int num_rows() const
+    {
 	PROFUGUS_INSIST_ON_DEVICE;
-	return d_num_rows; 
+	return d_num_rows;
     }
 
     // Get the number of columns. Host-accessible.
     PROFUGUS_DEVICE_FUNCTION
-    int num_cols() const 
-    { 
+    int num_cols() const
+    {
 	PROFUGUS_INSIST_ON_DEVICE;
-	return d_num_cols; 
+	return d_num_cols;
     }
 
     // Const value accessor. Device-only.
@@ -66,8 +66,8 @@ class SerialDenseDeviceMatrix
     const double& operator()( const int row, const int col ) const
     {
 	PROFUGUS_INSIST_ON_DEVICE;
-	REQUIRE( row < d_num_rows );
-	REQUIRE( col < d_num_cols );
+	DEVICE_REQUIRE( row < d_num_rows );
+	DEVICE_REQUIRE( col < d_num_cols );
 	return d_data[col*d_num_rows + row];
     }
 
@@ -76,16 +76,16 @@ class SerialDenseDeviceMatrix
     double& operator()( const int row, const int col )
     {
 	PROFUGUS_INSIST_ON_DEVICE;
-	REQUIRE( row < d_num_rows );
-	REQUIRE( col < d_num_cols );
+	DEVICE_REQUIRE( row < d_num_rows );
+	DEVICE_REQUIRE( col < d_num_cols );
 	return d_data[col*d_num_rows + row];
     }
-    
+
   private:
 
     // Number of rows.
     int d_num_rows;
-    
+
     // Number of columns.
     int d_num_cols;
 

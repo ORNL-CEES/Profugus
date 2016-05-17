@@ -21,7 +21,7 @@ typedef cuda_profugus::Device_Vector_Lite<int,3> Vec_Lite;
 
 __global__ void from_device(Vec_Lite *vals, int num_vals)
 {
-    CHECK(num_vals == 2);
+    DEVICE_CHECK(num_vals == 2);
 
     int tid = threadIdx.x + blockIdx.x*blockDim.x;
 
@@ -35,7 +35,7 @@ __global__ void copy_back(const Vec_Lite *vals_in,
                                 Vec_Lite *vals_out,
                                 int       num_vals)
 {
-    CHECK(num_vals == 2);
+    DEVICE_CHECK(num_vals == 2);
 
     int tid = threadIdx.x + blockIdx.x*blockDim.x;
     if (tid < num_vals)
