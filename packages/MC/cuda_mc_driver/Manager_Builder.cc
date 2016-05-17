@@ -41,7 +41,7 @@ auto Manager_Builder::build(const std::string &xml_file) -> SP_Manager_Base
     // No other options currently
     else
     {
-        VALIDATE(false,"Either CORE or MESH db must be present.");
+        VALIDATE(false,"MESH db must be present.");
     }
 
     ENSURE( manager );
