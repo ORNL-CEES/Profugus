@@ -38,7 +38,7 @@ class Device_Vector_Lite
 #endif
     T & operator[](int i)
     {
-        REQUIRE( i < N );
+        DEVICE_REQUIRE( i < N );
         return d_data[i];
     }
 
@@ -47,7 +47,7 @@ class Device_Vector_Lite
 #endif
     const T & operator[](int i) const
     {
-        REQUIRE( i < N );
+        DEVICE_REQUIRE( i < N );
         return d_data[i];
     }
 

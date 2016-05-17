@@ -50,8 +50,8 @@ class Shared_Device_Ptr
     //! Host pointer constructor.
     Shared_Device_Ptr( const std::shared_ptr<T>& host_ptr )
 	: d_host_ptr( host_ptr )
-    { 
-	shallow_copy_host_object_to_device(); 
+    {
+	shallow_copy_host_object_to_device();
     }
 
     //! Get the shared pointer to host data managed by this object.
@@ -81,10 +81,10 @@ class Shared_Device_Ptr
 	cudaMalloc( (void**) &device_ptr, sizeof(T) );
 	cudaMemcpy( device_ptr, d_host_ptr.get(), sizeof(T),
 		    cudaMemcpyHostToDevice );
-	d_device_ptr = 
+	d_device_ptr =
 	    std::shared_ptr<T>( device_ptr, [](T* t){ cudaFree(t); } );
 #else
-	INSIST( false, "Shared_Device_Ptr can only be constructed with NVCC!" );
+	DEVICE_INSIST(false,"Shared_Device_Ptr can only be constructed with NVCC!");
 #endif // end __NVCC__
     }
 };
@@ -95,7 +95,7 @@ class Shared_Device_Ptr
 template<class T,class ...Args>
 Shared_Device_Ptr<T> shared_device_ptr( Args&&... args )
 {
-    return Shared_Device_Ptr<T>( 
+    return Shared_Device_Ptr<T>(
 	std::make_shared<T>(std::forward<Args>(args)...) );
 }
 

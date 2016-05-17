@@ -96,7 +96,7 @@ class Cartesian_Mesh
     //! Number of cells along an axis
     __host__ __device__ dim_type num_cells_along(dim_type d) const
     {
-        REQUIRE( d>=0 && d<=3 );
+        DEVICE_REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
             return d_cells_x;
         else if( d == def::J )
@@ -112,7 +112,7 @@ class Cartesian_Mesh
     //! Return cell edges along a given direction.
     __device__ double * edges(dim_type d) const
     {
-        REQUIRE( d>=0 && d<=3 );
+        DEVICE_REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
             return dd_x_edges;
         else if( d == def::J )
@@ -128,14 +128,14 @@ class Cartesian_Mesh
     __host__ __device__ void cardinal(
         cell_type cell, dim_type& i, dim_type& j, dim_type& k) const
     {
-        REQUIRE( cell < d_num_cells );
+        DEVICE_REQUIRE( cell < d_num_cells );
         k = cell / (d_cells_x * d_cells_y);
-        ENSURE( k < d_cells_z );
+        DEVICE_ENSURE( k < d_cells_z );
         cell = cell % (d_cells_x * d_cells_y);
         j = cell / d_cells_x;
-        ENSURE( j < d_cells_y );
+        DEVICE_ENSURE( j < d_cells_y );
         i = cell % d_cells_x;
-        ENSURE( i < d_cells_x );
+        DEVICE_ENSURE( i < d_cells_x );
     }
 
     // Convert (i,j,k) to cell index
@@ -144,13 +144,13 @@ class Cartesian_Mesh
                                           dim_type   k,
                                           cell_type &cell) const
     {
-        REQUIRE( i < d_cells_x );
-        REQUIRE( j < d_cells_y );
-        REQUIRE( k < d_cells_z );
+        DEVICE_REQUIRE( i < d_cells_x );
+        DEVICE_REQUIRE( j < d_cells_y );
+        DEVICE_REQUIRE( k < d_cells_z );
         if( i < d_cells_x && j < d_cells_y && k < d_cells_z )
         {
             cell = i + d_cells_x * (j + d_cells_y * k);
-            ENSURE( cell < d_num_cells );
+            DEVICE_ENSURE( cell < d_num_cells );
             return true;
         }
         cell = static_cast<cell_type>(-1);
@@ -162,7 +162,7 @@ class Cartesian_Mesh
     //! Calculate volume from the global cell id
     __device__ inline double volume(cell_type global_cell) const
     {
-        REQUIRE( global_cell < d_num_cells );
+        DEVICE_REQUIRE( global_cell < d_num_cells );
         return dd_volumes[global_cell];
     }
 
@@ -180,7 +180,7 @@ class Cartesian_Mesh
     __device__ dim_type find_upper(
         double r, dim_type axis) const
     {
-        REQUIRE( 0 <= axis && axis < d_dimension );
+        DEVICE_REQUIRE( 0 <= axis && axis < d_dimension );
         const double *edges_start;
         const double *edges_end;
         if( axis == def::I )
@@ -232,7 +232,7 @@ class Cartesian_Mesh
     //! Low corner of mesh in \e (i,j,k) direction.
     __device__ double low_corner(dim_type d) const
     {
-        REQUIRE( d>=0 && d<=3 );
+        DEVICE_REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
             return dd_x_edges[0];
         else if( d == def::J )
@@ -245,7 +245,7 @@ class Cartesian_Mesh
     //! High corner of mesh in \e (i,j,k) direction.
     __device__ double high_corner(dim_type d) const
     {
-        REQUIRE( d>=0 && d<=3 );
+        DEVICE_REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
             return dd_x_edges[d_cells_x];
         else if( d == def::J )
