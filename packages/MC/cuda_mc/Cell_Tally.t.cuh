@@ -16,6 +16,7 @@
 
 #include "Utils/comm/global.hh"
 #include "Utils/utils/View_Field.hh"
+#include "Utils/utils/Serial_HDF5_Writer.hh"
 
 #include "cuda_utils/Launch_Args.t.cuh"
 #include "cuda_utils/Host_Vector.hh"
@@ -113,6 +114,25 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
             std::cout << t << " ";
         std::cout << std::endl;
     }
+
+#ifdef USE_HDF5
+    // Open file for writing
+    std::string filename = "cell_tally.h5";
+    profugus::Serial_HDF5_Writer writer;
+    writer.open(filename);
+
+    // Write cell list
+    writer.begin_group("cells");
+    writer.write("cells",d_host_cells);
+    writer.end_group();
+
+    // Write tally result
+    writer.begin_group("flux");
+    writer.write("flux",d_host_tally);
+    writer.end_group();
+
+    writer.close();
+#endif
 }
 
 //---------------------------------------------------------------------------//
