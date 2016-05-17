@@ -44,7 +44,7 @@ Domain_Transporter<Geometry>::Domain_Transporter(RCP_Std_DB     db,
     d_geometry = geometry.get_device_ptr();
     d_physics  = physics.get_device_ptr();
 
-    d_max_steps = db->get("max_steps",std::numeric_limits<int>::max());
+    d_max_steps = db->get("sort_frequency",std::numeric_limits<int>::max());
 
     // Initialize tallier to null
     d_tallier = nullptr;
