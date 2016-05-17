@@ -18,6 +18,9 @@
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
 #include <thrust/count.h>
+#include <thrust/iterator/zip_iterator.h>
+#include <thrust/tuple.h>
+#include <thrust/device_vector.h>
 
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Launch_Args.t.cuh"
@@ -50,9 +53,11 @@ class Transport_Functor
 
     // Constructor
     Transport_Functor( const Transporter_t *trans,
-                             Particle_t    *particles )
+                             Particle_t    *particles,
+                       const int           *inds )
         : d_transporter( trans )
         , d_particles( particles )
+        , d_inds( inds )
     {
     }
 
@@ -60,7 +65,7 @@ class Transport_Functor
     __device__ void operator()( std::size_t tid ) const
     {
         // Get particle from source
-        auto &p = d_particles[tid];
+        auto &p = d_particles[d_inds[tid]];
         CHECK( p.alive() );
 
         // transport the particle through this (replicated) domain
@@ -72,6 +77,7 @@ class Transport_Functor
     // On-device pointers
     const Transporter_t *d_transporter;
     Particle_t          *d_particles;
+    const int           *d_inds;
 };
 
 template <class Particle>
@@ -130,6 +136,124 @@ struct IsAlive
     }
 };
 
+template <class Particle>
+struct GetAlive
+{
+    GetAlive(const Particle *particles,
+             const int      *indirection,
+                   int      *alive)
+        : d_particles(particles)
+        , d_indirection(indirection)
+        , d_alive(alive)
+    {
+    }
+
+    __device__ void operator()(std::size_t tid)
+    {
+        const auto &p = d_particles[d_indirection[tid]];
+        if (p.alive())
+            d_alive[tid] = 1;
+        else
+            d_alive[tid] = INT_MAX;
+    }
+
+  private:
+
+    const Particle *d_particles;
+    const int      *d_indirection;
+    int            *d_alive;
+
+};
+
+template <class Particle>
+struct GetMatid
+{
+    GetMatid(const Particle *particles,
+             const int      *indirection,
+                   int      *matids)
+        : d_particles(particles)
+        , d_indirection(indirection)
+        , d_matids(matids)
+    {
+    }
+
+    __device__ void operator()(std::size_t tid)
+    {
+        const auto &p = d_particles[d_indirection[tid]];
+        if (p.alive())
+            d_matids[tid] = p.matid();
+        else
+            d_matids[tid] = INT_MAX;
+    }
+
+  private:
+
+    const Particle *d_particles;
+    const int      *d_indirection;
+    int            *d_matids;
+
+};
+
+template <class Particle>
+struct GetGroup
+{
+    GetGroup(const Particle *particles,
+             const int      *indirection,
+                   int      *groups)
+        : d_particles(particles)
+        , d_indirection(indirection)
+        , d_groups(groups)
+    {
+    }
+
+    __device__ void operator()(std::size_t tid)
+    {
+        const auto &p = d_particles[d_indirection[tid]];
+        if (p.alive())
+            d_groups[tid] = p.group();
+        else
+            d_groups[tid] = INT_MAX;
+    }
+
+  private:
+
+    const Particle *d_particles;
+    const int      *d_indirection;
+    int            *d_groups;
+
+};
+
+template <class Geometry>
+struct GetCell
+{
+    GetCell(const Particle<Geometry> *particles,
+            const Geometry           *geometry,
+            const int                *indirection,
+                  int                *cells)
+        : d_particles(particles)
+        , d_geometry(geometry)
+        , d_indirection(indirection)
+        , d_cells(cells)
+    {
+    }
+
+    __device__ void operator()(std::size_t tid)
+    {
+        const auto &p = d_particles[d_indirection[tid]];
+        if (p.alive())
+            d_cells[tid] = d_geometry->cell(p.geo_state());
+        else
+            d_cells[tid] = INT_MAX;
+    }
+
+  private:
+
+    const Particle<Geometry> *d_particles;
+    const Geometry           *d_geometry;
+    const int                *d_indirection;
+    int                      *d_cells;
+
+};
 
 
 //---------------------------------------------------------------------------//
@@ -235,6 +359,11 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     // Get number of particles in source
     int num_particles = particles.size();
 
+    thrust::device_vector<int> event(num_particles);
+    thrust::device_vector<int> indirection(num_particles);
+    thrust::counting_iterator<int> cnt(0);
+    thrust::copy(cnt,cnt+num_particles,indirection.begin());
+
     std::cout << "Starting with " << num_particles << " particles" << std::endl;
     while (num_particles>0)
     {
@@ -246,7 +375,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         cudaDeviceSynchronize();
         start = std::chrono::high_resolution_clock::now();
         Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
-                                       particles.data().get() );
+                                       particles.data().get(),
+                                       indirection.data().get() );
         cuda::parallel_launch( f, launch_args );
         cudaDeviceSynchronize();
         end = std::chrono::high_resolution_clock::now();
@@ -259,32 +389,46 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         switch (d_sort_type)
         {
             case ALIVE:
-                thrust::sort( particles.begin(),
-                              particles.begin() + num_particles,
-                              AliveComp<Particle_t>() );
+            {
+                GetAlive<Particle_t> alive_func(particles.data().get(),
+                                                indirection.data().get(),
+                                                event.data().get());
+                cuda::parallel_launch( alive_func, launch_args );
                 break;
+            }
             case MATID:
-                thrust::sort( particles.begin(),
-                              particles.begin() + num_particles,
-                              MatidComp<Particle_t>() );
+            {
+                GetMatid<Particle_t> matid_func(particles.data().get(),
+                                                indirection.data().get(),
+                                                event.data().get());
+                cuda::parallel_launch( matid_func, launch_args );
                 break;
+            }
             case GROUP:
-                thrust::sort( particles.begin(),
-                              particles.begin() + num_particles,
-                              GroupComp<Particle_t>() );
+            {
+                GetGroup<Particle_t> group_func(particles.data().get(),
+                                                indirection.data().get(),
+                                                event.data().get());
+                cuda::parallel_launch( group_func, launch_args );
                 break;
+            }
             case CELL:
-                CellComp<Geometry> comp;
-                comp.geom = d_geometry.get_device_ptr();
-                thrust::sort(particles.begin(),
-                             particles.begin() + num_particles,
-                             comp);
+            {
+                GetCell<Geometry> cell_func(particles.data().get(),
+                                            d_geometry.get_device_ptr(),
+                                            indirection.data().get(),
+                                            event.data().get());
+                cuda::parallel_launch( cell_func, launch_args );
                 break;
+            }
         }
 
-        // Count particles still alive
-        num_particles = thrust::count_if( particles.begin(),
-                particles.begin() + num_particles, IsAlive<Particle_t>() );
+        thrust::stable_sort_by_key(event.begin(),event.begin()+num_particles,
+                                   indirection.begin());
+        auto itr = thrust::find( event.begin(),
+            event.begin() + num_particles, INT_MAX);
+        num_particles = itr - event.begin();
+
         cudaDeviceSynchronize();
         end = std::chrono::high_resolution_clock::now();
         diff = end - start;
