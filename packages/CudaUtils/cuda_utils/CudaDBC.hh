@@ -34,6 +34,16 @@
 
 #include <assert.h>
 
+/* The following definitions of assertions help ensure that they're always
+ * followed by a semicolon, and that if assertions are disabled we don't get
+ * "unused variable" warnings.
+ *
+ * See:
+ * http://cnicholson.net/2009/02/stupid-c-tricks-adventures-in-assert/
+ */
+#define UTILS_NOASSERT_(COND) \
+    do { (void)sizeof(COND); } while (0)
+
 // Insist is always on
 // If condition fails, print message then assert
 // Don't expect fancy stream machinery to work

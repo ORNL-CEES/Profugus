@@ -42,10 +42,12 @@ void Mesh_Geometry::initialize( const Space_Vector& r,
 
     update_state(state);
 
-    ENSURE(state.ijk.i >= -1 && state.ijk.i <= d_mesh.num_cells_along(I));
-    ENSURE(state.ijk.j >= -1 && state.ijk.j <= d_mesh.num_cells_along(J));
-    ENSURE(state.ijk.k >= -1 && state.ijk.i <= d_mesh.num_cells_along(K));
-
+    ENSURE(state.ijk.i >= -1 );
+    ENSURE(state.ijk.i <= d_mesh.num_cells_along(I));
+    ENSURE(state.ijk.j >= -1);
+    ENSURE(state.ijk.j <= d_mesh.num_cells_along(J));
+    ENSURE(state.ijk.k >= -1);
+    ENSURE(state.ijk.k <= d_mesh.num_cells_along(K));
 }
 
 //---------------------------------------------------------------------------//

@@ -130,7 +130,7 @@ void Source_Transporter<Geometry>::solve()
         if (counter % d_print_count == 0)
         {
             double percent_complete
-                = (100. * counter) / (d_source->num_to_transport() + dead_start);
+                = (100. * (d_source->num_run()-dead_start)) / (d_source->num_to_transport());
             cout << ">>> Finished " << counter << " events and ("
                  << std::setw(6) << std::fixed << std::setprecision(2)
                  << percent_complete << "%) particles on domain "

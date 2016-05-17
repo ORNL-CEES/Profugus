@@ -25,6 +25,10 @@
 #include "cuda_mc/Fission_Source.hh"
 #include "cuda_mc/Uniform_Source.hh"
 #include "cuda_mc/KCode_Solver.hh"
+#include "cuda_utils/Hardware.hh"
+#include "rng/RNG_Control.hh"
+#include "mc/Global_RNG.hh"
+
 #include "Manager.hh"
 
 namespace cuda_mc
@@ -41,6 +45,13 @@ Manager<Geometry>::Manager()
     : d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
+    // Acquire hardware.   
+    if ( !cuda::Hardware<cuda::arch::Device>::have_acquired() )
+        cuda::Hardware<cuda::arch::Device>::acquire();
+
+    // Set global rng.
+    profugus::RNG_Control control( 3420239343 );
+    profugus::Global_RNG::d_rng = control.rng();
 }
 
 //---------------------------------------------------------------------------//

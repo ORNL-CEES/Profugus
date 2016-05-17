@@ -400,7 +400,6 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
     // set counters
     d_np_left = d_np_domain;
     d_np_run  = 0;
-
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
            static_cast<double>(d_np_total);

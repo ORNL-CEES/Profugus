@@ -266,7 +266,7 @@ void Domain_Transporter<Geometry>::set(const SP_Fission_Sites& fission_sites,
     d_fission_sites = fission_sites;
 
     // initialize the sampling flag
-    d_sample_fission_sites = (nullptr == d_fission_sites);
+    d_sample_fission_sites = (nullptr != d_fission_sites);
 
     // assign current iterate of keff
     d_keff = keff;
