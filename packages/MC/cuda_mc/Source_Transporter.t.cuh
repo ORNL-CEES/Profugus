@@ -303,6 +303,17 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     else
         INSIST(false,"Invalid sort type.");
 
+    std::string verb = profugus::to_lower(db->get<std::string>("verbosity",
+        std::string("none")));
+    if (verb == "none")
+        d_verbosity = NONE;
+    else if (verb == "low")
+        d_verbosity = LOW;
+    else if (verb == "high")
+        d_verbosity = HIGH;
+    else
+        INSIST(false,"Invalid verbosity.");
+
     d_rng_control = std::make_shared<RNG_Control>(seed);
 
     // Build domain transporter
@@ -364,7 +375,12 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     thrust::counting_iterator<int> cnt(0);
     thrust::copy(cnt,cnt+num_particles,indirection.begin());
 
-    std::cout << "Starting with " << num_particles << " particles" << std::endl;
+    if (d_verbosity >= LOW)
+    {
+        std::cout << "Starting with " << num_particles
+            << " particles" << std::endl;
+    }
+
     while (num_particles>0)
     {
         // Build launch args
@@ -434,7 +450,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         diff = end - start;
         d_sort_time += diff.count();
 
-        std::cout << num_particles << " still alive" << std::endl;
+        if (d_verbosity >= HIGH)
+            std::cout << num_particles << " still alive" << std::endl;
 
     }
 

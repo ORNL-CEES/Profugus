@@ -113,10 +113,13 @@ class Source_Transporter
 
     ~Source_Transporter()
     {
-        std::cout << "ST spent " << d_source_time
-            << " generating source particles, " << d_transport_time
-            << " transporting particles and " << d_sort_time
-            << " sorting particles" << std::endl;
+        if (d_verbosity >= LOW)
+        {
+            std::cout << "ST spent " << d_source_time
+                << " generating source particles, " << d_transport_time
+                << " transporting particles and " << d_sort_time
+                << " sorting particles" << std::endl;
+        }
     }
 
     // Set tallier
@@ -149,11 +152,13 @@ class Source_Transporter
     // >>> IMPLEMENTATION
 
     enum Sort_Type {ALIVE, MATID, GROUP, CELL};
+    enum Verbosity {NONE, LOW, HIGH};
 
     // Nodes and node id.
     int d_node, d_nodes;
 
     Sort_Type d_sort_type;
+    Verbosity d_verbosity;
 
     mutable double d_source_time, d_sort_time, d_transport_time;
 };
