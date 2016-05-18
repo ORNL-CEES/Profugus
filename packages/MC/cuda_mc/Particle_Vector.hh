@@ -85,8 +85,11 @@ class Particle_Vector
     // Distance to next collision in mean-free-paths.
     double* d_dist_mfp;
 
-    // Event start offsets. Updated at every sort.
-    int* d_event_offsets;
+    // Event lower bounds. Updated at every sort.
+    int* d_event_lower_bound;
+
+    // Event upper bounds. Updated at every sort.
+    int* d_event_upper_bound;
 
   public:
 
@@ -112,17 +115,14 @@ class Particle_Vector
     int event_lower_bound( const events::Event event )
     {
         REQUIRE( event < events::END_EVENT );
-        return d_event_offsets[ event ];
+        return d_event_lower_bound[ event ];
     }
 
     //! Get the number of particles having an event.
     PROFUGUS_DEVICE_FUNCTION
     int event_num_particles( const events::Event event )
     {
-        REQUIRE( event < events::END_EVENT );
-        return (event == events::END_EVENT-1)
-            ? d_size - d_event_offsets[ event ]
-            : d_event_offsets[ event+1 ] - d_event_offsets[ event ];
+        return event_upper_bound[ event ] - event_lower_bound[ event ];
     }
 
     //! Get a uniform random number on [0,1] from a particle's RNG.

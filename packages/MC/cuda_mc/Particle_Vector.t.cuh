@@ -57,20 +57,44 @@ __global__ void init_event_kernel( const std::size_t size,
 
 //---------------------------------------------------------------------------//
 // Get event lower bounds.
-__global__ void event_lower_bound_kernel( const std::size_t size,
-                                          const events::Event* events,
-                                          int* d_event_offsets )
+__global__ void event_lower_bounds( const std::size_t size,
+                                    const events::Event* events,
+                                    int* event_lower_bound,
+                                    int* event_upper_bound )
 {
+    // Get the thread index.
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    // Initialize bounds.
+    if ( idx < events::END_EVENT )
+    {
+        event_lower_bound[ idx ] = 0;
+        event_upper_bound[ idx ] = 0;
+    }
+
+    // Get the lower bound.
     if ( 0 == idx )
     {
-        d_event_offsets[ events[idx] ] = idx;
+        event_lower_bound[ events[idx] ] = idx;
     }
     else if ( idx < size )
     {
         if ( events[idx-1] < events[idx] )
         {
-            d_event_offsets[ events[idx] ] = idx;
+            event_lower_bound[ events[idx] ] = idx;
+        }
+    }
+    
+    // Get the upper bound.
+    if ( idx == size - 1 )
+    {
+        event_upper_bound[ events[idx] ] = idx + 1;
+    }
+    else if ( idx < size-1 )
+    {
+        if ( events[idx+1] > events[idx] )
+        {
+            event_upper_bound[ events[idx] ] = idx + 1;
         }
     }
 }
@@ -98,7 +122,8 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
     cuda::memory::Malloc( d_dist_mfp, d_size );
-    cuda::memory::Malloc( d_event_offsets, events::END_EVENT );
+    cuda::memory::Malloc( d_event_lower_bound, events::END_EVENT );
+    cuda::memory::Malloc( d_event_upper_bound, events::END_EVENT );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -149,7 +174,8 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
     cuda::memory::Free( d_dist_mfp );
-    cuda::memory::Free( d_event_offsets );
+    cuda::memory::Free( d_event_lower_bound );
+    cuda::memory::Free( d_event_upper_bound );
 }
 
 //---------------------------------------------------------------------------//
@@ -172,21 +198,7 @@ void Particle_Vector<Geometry>::sort_by_event()
 
     // Bin them.
     event_lower_bound_kernel<<<num_blocks,threads_per_block>>>(
-        d_size, d_event, d_event_offsets );
-}
-
-//---------------------------------------------------------------------------//
-// Given an event, get the index at which it starts and the number of
-// particles with that event.
-template <class Geometry>
-void Particle_Vector<Geometry>::get_event_particles( 
-    const Event_t event, 
-    std::size_t& start_index, 
-    std::size_t& num_particle ) const
-{
-    int lid = static_cast<int>(event);
-    start_index = d_event_offsets[ lid ];
-    num_particle = d_event_sizes[ lid ];
+        d_size, d_event, d_event_lower_bound, d_event_upper_bound );
 }
 
 //---------------------------------------------------------------------------//
