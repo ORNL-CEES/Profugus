@@ -56,6 +56,26 @@ __global__ void init_event_kernel( const std::size_t size,
 }
 
 //---------------------------------------------------------------------------//
+// Get event lower bounds.
+__global__ void event_lower_bound_kernel( const std::size_t size,
+                                          const events::Event* events,
+                                          int* d_event_offsets )
+{
+    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( 0 == idx )
+    {
+        d_event_offsets[ events[idx] ] = idx;
+    }
+    else if ( idx < size )
+    {
+        if ( events[idx-1] < events[idx] )
+        {
+            d_event_offsets[ events[idx] ] = idx;
+        }
+    }
+}
+
+//---------------------------------------------------------------------------//
 // HOST API
 //---------------------------------------------------------------------------//
 /*
@@ -65,8 +85,6 @@ template <class Geometry>
 Particle_Vector<Geometry>::Particle_Vector( const int num_particle, 
 					    const profugus::RNG& rng )
     : d_size( num_particle )
-    , d_event_offsets( static_cast<int>(events::END_EVENT), -1 )
-    , d_event_sizes( static_cast<int>(events::END_EVENT), -1 )
 {
     // Allocate data arrays.
     cuda::memory::Malloc( d_matid, d_size );
@@ -80,6 +98,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
     cuda::memory::Malloc( d_dist_mfp, d_size );
+    cuda::memory::Malloc( d_event_offsets, events::END_EVENT );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -130,6 +149,7 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
     cuda::memory::Free( d_dist_mfp );
+    cuda::memory::Free( d_event_offsets );
 }
 
 //---------------------------------------------------------------------------//
@@ -143,26 +163,16 @@ void Particle_Vector<Geometry>::sort_by_event()
     thrust::device_ptr<std::size_t> lid_begin( d_lid );
     thrust::sort_by_key( event_begin, event_end, lid_begin );
 
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
     // Bin them.
-    std::vector<events::Event> transport_events = 
-      { events::COLLISION, events::BOUNDARY, events::TAKE_STEP, events::DEAD };
-    int num_events = transport_events.size();
-    d_event_offsets[events::COLLISION] = 0;
-    for ( int i = 1; i < num_events; ++i )
-    {
-        auto event_start = 
-          thrust::lower_bound( event_begin, event_end, 
-                               static_cast<events::Event>(transport_events[i]) );
-        d_event_offsets[transport_events[i]] = event_start - event_begin;
-    }
-    for ( int i = 0; i < num_events-1; ++i )
-    {
-      d_event_sizes[transport_events[i]] = 
-        d_event_offsets[transport_events[i+1]] - 
-        d_event_offsets[transport_events[i]];
-    }
-    d_event_sizes[transport_events[num_events-1]] = 
-      d_size - d_event_offsets[transport_events[num_events-1]];
+    event_lower_bound_kernel<<<num_blocks,threads_per_block>>>(
+        d_size, d_event, d_event_offsets );
 }
 
 //---------------------------------------------------------------------------//

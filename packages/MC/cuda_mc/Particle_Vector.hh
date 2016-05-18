@@ -85,11 +85,8 @@ class Particle_Vector
     // Distance to next collision in mean-free-paths.
     double* d_dist_mfp;
 
-    // Event start offsets. Host only. Updated at every sort.
-    Teuchos::Array<std::size_t> d_event_offsets;
-
-    // Number of particles with a given event.. Host only. Updated at every sort.
-    Teuchos::Array<std::size_t> d_event_sizes;
+    // Event start offsets. Updated at every sort.
+    int* d_event_offsets;
 
   public:
 
@@ -104,18 +101,29 @@ class Particle_Vector
     // Sort the local indices by event key, effectively sorting the vector.
     void sort_by_event();
 
-    // Given an event, get the index at which it starts and the number of
-    // particles with that event. This is only updated every sort and does not
-    // reflect the intermediate state of the vector.
-    void get_event_particles( const Event_t event, 
-			      std::size_t& start_index,
-			      std::size_t& num_particle ) const;
-
     // >>> DEVICE API
 
     //! Get the number of particles in the vector.
     PROFUGUS_HOST_DEVICE_FUNCTION
     int size() const { return d_size; }
+
+    //! Get the lower bound of an event in the vector.
+    PROFUGUS_DEVICE_FUNCTION
+    int event_lower_bound( const events::Event event )
+    {
+        REQUIRE( event < events::END_EVENT );
+        return d_event_offsets[ event ];
+    }
+
+    //! Get the number of particles having an event.
+    PROFUGUS_DEVICE_FUNCTION
+    int event_num_particles( const events::Event event )
+    {
+        REQUIRE( event < events::END_EVENT );
+        return (event == events::END_EVENT-1)
+            ? d_size - d_event_offsets[ event ]
+            : d_event_offsets[ event+1 ] - d_event_offsets[ event ];
+    }
 
     //! Get a uniform random number on [0,1] from a particle's RNG.
     PROFUGUS_DEVICE_FUNCTION
