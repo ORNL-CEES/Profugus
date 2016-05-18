@@ -21,6 +21,8 @@
 #include "mc/Global_RNG.hh"
 #include "Source_Transporter.hh"
 
+#include <cuda_profiler_api.h>
+
 namespace cuda_profugus
 {
 
@@ -99,6 +101,9 @@ void Source_Transporter<Geometry>::solve()
     auto particles = cuda::shared_device_ptr<Particle_Vector<Geometry> >(
         d_vector_size, profugus::Global_RNG::d_rng );
 
+    // START PROFILING
+    cudaProfilerStart();
+
     // run all the local histories while the source exists and there are live
     // particles in the vector. we know when all the particles are dead when
     // the starting point for dead events is at the front of the vector. there
@@ -140,6 +145,9 @@ void Source_Transporter<Geometry>::solve()
 
     // barrier at the end
     profugus::global_barrier();
+
+    // STOP PROFILING
+    cudaProfilerStop();
 }
 
 //---------------------------------------------------------------------------//

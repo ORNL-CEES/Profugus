@@ -144,15 +144,25 @@ void Particle_Vector<Geometry>::sort_by_event()
     thrust::sort_by_key( event_begin, event_end, lid_begin );
 
     // Bin them.
-    for ( int i = 0; i < static_cast<int>(events::END_EVENT); ++i )
+    std::vector<events::Event> transport_events = 
+      { events::COLLISION, events::BOUNDARY, events::TAKE_STEP, events::DEAD };
+    int num_events = transport_events.size();
+    d_event_offsets[events::COLLISION] = 0;
+    for ( int i = 1; i < num_events; ++i )
     {
-        auto event_range = thrust::equal_range( event_begin, 
-                                                event_end, 
-                                                static_cast<events::Event>(i) );
-        d_event_offsets[i] = thrust::distance( event_begin, event_range.first );
-        d_event_sizes[i] = thrust::distance( event_range.first, 
-                                             event_range.second );
+        auto event_start = 
+          thrust::lower_bound( event_begin, event_end, 
+                               static_cast<events::Event>(transport_events[i]) );
+        d_event_offsets[transport_events[i]] = event_start - event_begin;
     }
+    for ( int i = 0; i < num_events-1; ++i )
+    {
+      d_event_sizes[transport_events[i]] = 
+        d_event_offsets[transport_events[i+1]] - 
+        d_event_offsets[transport_events[i]];
+    }
+    d_event_sizes[transport_events[num_events-1]] = 
+      d_size - d_event_offsets[transport_events[num_events-1]];
 }
 
 //---------------------------------------------------------------------------//
