@@ -160,7 +160,7 @@ class Cartesian_Mesh
     //! Get all volumes on host
     std::vector<double> volumes() const
     {
-        REQUIRE( d_num_cells > 0 );
+        DEVICE_REQUIRE( d_num_cells > 0 );
         std::vector<double> host_volumes(d_num_cells);
         cudaMemcpy( &host_volumes[0], dd_volumes, d_num_cells*sizeof(double),
                     cudaMemcpyDeviceToHost );

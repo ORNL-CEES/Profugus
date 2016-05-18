@@ -34,7 +34,7 @@ __device__ auto
 Uniform_Source<Geometry>::get_particle(std::size_t  tid,
                                        RNG_State_t *rng) const -> Particle_t 
 {
-    REQUIRE(d_geo_shape);
+    DEVICE_REQUIRE(d_geo_shape);
 
     // make a particle
     Particle_t p;
@@ -64,7 +64,7 @@ Uniform_Source<Geometry>::get_particle(std::size_t  tid,
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
         d_num_groups, d_erg_cdf, p.ran());
-    CHECK(group < d_num_groups);
+    DEVICE_CHECK(group < d_num_groups);
     p.set_group(group);
 
     // set the material id in the particle
@@ -76,7 +76,7 @@ Uniform_Source<Geometry>::get_particle(std::size_t  tid,
     // make particle alive
     p.live();
 
-    ENSURE(p.matid() == matid);
+    DEVICE_ENSURE(p.matid() == matid);
     return p;
 }
 

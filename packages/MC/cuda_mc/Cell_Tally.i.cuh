@@ -25,8 +25,8 @@ template <class Geometry>
 __device__ void Cell_Tally<Geometry>::accumulate(double            step,
                                                  const Particle_t &p)
 {
-    REQUIRE( step >= 0.0 );
-    REQUIRE( p.alive() );
+    DEVICE_REQUIRE( step >= 0.0 );
+    DEVICE_REQUIRE( p.alive() );
 
     // Get the cell index
     int cell = d_geometry->cell(p.geo_state());

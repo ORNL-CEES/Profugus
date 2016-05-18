@@ -43,14 +43,14 @@
 #define DEVICE_REQUIRE(COND) \
     do { assert(COND); } while (0)
 #else
-#define DEVICE_REQUIRE(COND) UTILS_NOASSERT_(COND)
+#define DEVICE_REQUIRE(COND) NOASSERT_(COND)
 #endif
 
 #if UTILS_DBC & 2
 #define DEVICE_CHECK(COND) \
     do { assert(COND); } while (0)
 #else
-#define DEVICE_CHECK(COND) UTILS_NOASSERT_(COND)
+#define DEVICE_CHECK(COND) NOASSERT_(COND)
 #endif
 
 #if UTILS_DBC & 4
@@ -62,10 +62,10 @@
 
 #else   // __APPLE__
 // No device-side asserts on Mac, good luck
-#define DEVICE_INSIST(COND,MSG)  UTILS_NOASSERT_(COND)
-#define DEVICE_REQUIRE(COND,MSG) UTILS_NOASSERT_(COND)
-#define DEVICE_CHECK(COND,MSG)   UTILS_NOASSERT_(COND)
-#define DEVICE_ENSURE(COND,MSG)  UTILS_NOASSERT_(COND)
+#define DEVICE_INSIST(COND,MSG) NOASSERT_(COND)
+#define DEVICE_REQUIRE(COND)    NOASSERT_(COND)
+#define DEVICE_CHECK(COND)      NOASSERT_(COND)
+#define DEVICE_ENSURE(COND)     NOASSERT_(COND)
 #endif  // __APPLE__
 
 //---------------------------------------------------------------------------//

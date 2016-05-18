@@ -36,19 +36,19 @@ void VR_Roulette<Geometry>::post_collision(Particle_t& particle) const
     if (orig_weight < d_Wc)
     {
         // the particle should always be alive if it gets here
-        CHECK(particle.alive());
-        CHECK(d_Ws >= d_Wc);
+        DEVICE_CHECK(particle.alive());
+        DEVICE_CHECK(d_Ws >= d_Wc);
 
         // calculate survival probablity
         const double survival = orig_weight / d_Ws;
-        CHECK(survival < 1.0);
+        DEVICE_CHECK(survival < 1.0);
 
         // particle survives roulette
         if (particle.ran() < survival)
         {
             // set the new weight of the surviving particle
             particle.set_wt(d_Ws);
-            CHECK(particle.wt() == d_Ws);
+            DEVICE_CHECK(particle.wt() == d_Ws);
 
             // update the event
             particle.set_event(profugus::events::ROULETTE_SURVIVE);
@@ -65,7 +65,7 @@ void VR_Roulette<Geometry>::post_collision(Particle_t& particle) const
         }
     }
 
-    ENSURE(particle.wt() >= orig_weight);
+    DEVICE_ENSURE(particle.wt() >= orig_weight);
 }
 
 } // end namespace cuda_mc 

@@ -43,7 +43,7 @@ class Compute_Source
     __device__ void operator()( std::size_t tid ) const
     {
         d_particles[tid] = d_source->get_particle(tid,&d_rngs[tid]);
-        ENSURE( d_particles[tid].alive() );
+        DEVICE_ENSURE( d_particles[tid].alive() );
     }
 
   private:

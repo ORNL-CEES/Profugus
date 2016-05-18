@@ -13,6 +13,7 @@
 
 #include "VR_Roulette.cuh"
 #include "mc/Definitions.hh"
+#include "harness/DBC.hh"
 
 namespace cuda_mc
 {

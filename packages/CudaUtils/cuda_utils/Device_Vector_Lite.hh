@@ -11,6 +11,8 @@
 #ifndef CudaUtils_cuda_utils_Device_Vector_Lite_hh
 #define CudaUtils_cuda_utils_Device_Vector_Lite_hh
 
+#include <cstddef>
+
 #include "CudaDBC.hh"
 
 namespace cuda_profugus
@@ -28,7 +30,7 @@ namespace cuda_profugus
  */
 //===========================================================================//
 
-template <class T, size_t N>
+template <class T, std::size_t N>
 class Device_Vector_Lite
 {
   public:

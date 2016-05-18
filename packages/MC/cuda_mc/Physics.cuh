@@ -153,8 +153,8 @@ class Physics
     // Index for a material/group combination
     __host__ __device__ int group_mat_index(int g, int m) const
     {
-        REQUIRE( g < d_Ng );
-        REQUIRE( m < d_Nm );
+        DEVICE_REQUIRE( g < d_Ng );
+        DEVICE_REQUIRE( m < d_Nm );
         return g + d_Ng * m;
     }
 

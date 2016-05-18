@@ -46,16 +46,16 @@ __device__  int sample_discrete_CDF(int      nb,
                                     const T *c,
                                     const T  ran)
 {
-    REQUIRE(nb > 0);
-    REQUIRE(cuda::utility::soft_equiv(static_cast<double>(c[nb - 1]), 1.0,
-                                      1.0e-6));
-    REQUIRE(ran >= 0 && ran <= 1);
+    DEVICE_REQUIRE(nb > 0);
+    DEVICE_REQUIRE(cuda::utility::soft_equiv(static_cast<double>(c[nb - 1]), 1.0,
+                                             1.0e-6));
+    DEVICE_REQUIRE(ran >= 0 && ran <= 1);
 
     // do a binary search on the CDF
     const T *ptr = cuda::utility::lower_bound(c, c + nb, ran);
 
     // return the value
-    ENSURE(ptr - c >= 0 && ptr - c < nb);
+    DEVICE_ENSURE(ptr - c >= 0 && ptr - c < nb);
     return ptr - c;
 }
 
@@ -83,8 +83,8 @@ __device__  double sample_watt(RNG_State   *rng,
                                double       a,
                                double       b)
 {
-    REQUIRE(a > 0);
-    REQUIRE(b > 0);
+    DEVICE_REQUIRE(a > 0);
+    DEVICE_REQUIRE(b > 0);
 
     // the algorithm implemented here is the same as in MCNP5
 
@@ -130,8 +130,8 @@ __device__  T sample_linear(
         const T left,
         const T right)
 {
-    REQUIRE(0 <= xi_lr && xi_lr <= 1);
-    REQUIRE(0 <= xi_linear && xi_linear <= 1);
+    DEVICE_REQUIRE(0 <= xi_lr && xi_lr <= 1);
+    DEVICE_REQUIRE(0 <= xi_linear && xi_linear <= 1);
 
     // use the method that decomposes the line into basically two linear
     // discontinous basis functions
@@ -152,7 +152,7 @@ __device__  T sample_linear(
         result = sample_linear(xi_linear);
     }
 
-    ENSURE(0 <= result && result <= 1);
+    DEVICE_ENSURE(0 <= result && result <= 1);
     return result;
 }
 
@@ -172,14 +172,14 @@ __device__  inline FloatType * sample_dcdf(
         FloatType  *iter,
         FloatType  *last)
 {
-    REQUIRE(iter-last > 0);
-    REQUIRE(xi >= 0 && xi < 1);
+    DEVICE_REQUIRE(iter-last > 0);
+    DEVICE_REQUIRE(xi >= 0 && xi < 1);
 
     // Do a binary search on the CDF
     iter = cuda::utility::lower_bound(iter, last, xi);
 
     // Return the value
-    ENSURE(iter != last);
+    DEVICE_ENSURE(iter != last);
     return iter;
 }
 
@@ -197,8 +197,8 @@ __device__  inline FloatType * sample_small_dcdf(
         FloatType  *iter,
         FloatType  *last)
 {
-    REQUIRE(iter - last > 0);
-    REQUIRE(xi >= 0 && xi < 1);
+    DEVICE_REQUIRE(iter - last > 0);
+    DEVICE_REQUIRE(xi >= 0 && xi < 1);
 
     while (iter != last)
     {
@@ -226,8 +226,8 @@ __device__  inline FloatType * sample_smallrev_dcdf(
         FloatType  *first,
         FloatType  *iter)
 {
-    REQUIRE(first - iter > 0);
-    REQUIRE(xi >= 0 && xi < 1);
+    DEVICE_REQUIRE(first - iter > 0);
+    DEVICE_REQUIRE(xi >= 0 && xi < 1);
 
     while (iter != first)
     {
@@ -248,7 +248,7 @@ __device__  inline FloatType * sample_smallrev_dcdf(
 template<class T>
 __device__  inline T sample_linear(T xi)
 {
-    REQUIRE(0 <= xi && xi < 1);
+    DEVICE_REQUIRE(0 <= xi && xi < 1);
 
     return sqrt(xi);
 }

@@ -83,7 +83,7 @@ class Box_Shape
            { d_Dx * curand_uniform_double(rng) + d_lox,
              d_Dy * curand_uniform_double(rng) + d_loy,
              d_Dz * curand_uniform_double(rng) + d_loz };
-        ENSURE(is_point_inside(point));
+        DEVICE_ENSURE(is_point_inside(point));
         return point;
     }
 

@@ -32,17 +32,17 @@ template <class Geometry>
 __device__
 void Physics<Geometry>::collide(Particle_t &particle) const
 {
-    REQUIRE(d_geometry);
-    REQUIRE(particle.event() == profugus::events::COLLISION);
-    REQUIRE(d_mat);
-    REQUIRE(d_mat->num_mat() == d_Nm);
-    REQUIRE(d_mat->num_groups() == d_Ng);
-    REQUIRE(particle.group() < d_Ng);
+    DEVICE_REQUIRE(d_geometry);
+    DEVICE_REQUIRE(particle.event() == profugus::events::COLLISION);
+    DEVICE_REQUIRE(d_mat);
+    DEVICE_REQUIRE(d_mat->num_mat() == d_Nm);
+    DEVICE_REQUIRE(d_mat->num_groups() == d_Ng);
+    DEVICE_REQUIRE(particle.group() < d_Ng);
 
     // get the material id of the current region
     int matid = particle.matid();
-    CHECK(matid < d_Nm);
-    CHECK(d_geometry->matid(particle.geo_state()) == matid);
+    DEVICE_CHECK(matid < d_Nm);
+    DEVICE_CHECK(d_geometry->matid(particle.geo_state()) == matid);
 
     // get the group index
     int group = particle.group();
@@ -50,7 +50,7 @@ void Physics<Geometry>::collide(Particle_t &particle) const
     // calculate the scattering cross section ratio
     double c = d_scatter[group_mat_index(group,matid)] /
                d_mat->vector(matid, XS_t::TOTAL)(group);
-    CHECK(!d_implicit_capture ? c <= 1.0 : c >= 0.0);
+    DEVICE_CHECK(!d_implicit_capture ? c <= 1.0 : c >= 0.0);
 
     // we need to do analog transport if the particle is c = 0.0 regardless of
     // whether implicit capture is on or not
@@ -90,7 +90,7 @@ void Physics<Geometry>::collide(Particle_t &particle) const
     {
         // determine new group of particle
         group = sample_group(matid, group, particle.ran());
-        CHECK(group >= 0 && group < d_Ng);
+        DEVICE_CHECK(group >= 0 && group < d_Ng);
 
         // set the group
         particle.set_group(group);
@@ -113,13 +113,13 @@ __device__
 double Physics<Geometry>::total(Reaction_Type       type,
                                 const Particle_t   &p) const
 {
-    REQUIRE(d_mat->num_mat() == d_Nm);
-    REQUIRE(d_mat->num_groups() == d_Ng);
-    REQUIRE(p.group() < d_Ng);
+    DEVICE_REQUIRE(d_mat->num_mat() == d_Nm);
+    DEVICE_REQUIRE(d_mat->num_groups() == d_Ng);
+    DEVICE_REQUIRE(p.group() < d_Ng);
 
     // get the matid from the particle
     unsigned int matid = p.matid();
-    CHECK( matid < d_mat->num_mat() );
+    DEVICE_CHECK( matid < d_mat->num_mat() );
 
     // return the approprate reaction type
     switch (type)
@@ -158,7 +158,7 @@ __device__
 bool Physics<Geometry>::initialize_fission(unsigned int  matid,
                                            Particle_t   &p) const
 {
-    REQUIRE( matid < d_mat->num_mat() );
+    DEVICE_REQUIRE( matid < d_mat->num_mat() );
 
     // sampled flag
     bool sampled = false;
@@ -207,8 +207,8 @@ __device__
 int Physics<Geometry>::sample_fission_site(const Particle_t   &p,
                                                  double        keff) const
 {
-    REQUIRE(d_geometry);
-    REQUIRE(p.matid() < d_mat->num_mat() );
+    DEVICE_REQUIRE(d_geometry);
+    DEVICE_REQUIRE(p.matid() < d_mat->num_mat() );
 
     // material id
     unsigned int matid = p.matid();
@@ -252,12 +252,12 @@ __device__
 bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
                                            Particle_t   &p) const
 {
-    REQUIRE(fs.m < d_mat->num_mat());
-    REQUIRE(is_fissionable(fs.m));
+    DEVICE_REQUIRE(fs.m < d_mat->num_mat());
+    DEVICE_REQUIRE(is_fissionable(fs.m));
 
     // sample the fission group
     int group = sample_fission_group(fs.m, p.ran());
-    CHECK(group < d_Ng);
+    DEVICE_CHECK(group < d_Ng);
 
     // set the particle group
     p.set_group(group);
@@ -278,11 +278,11 @@ int Physics<Geometry>::sample_group(int    matid,
                                     int    g,
                                     double rnd) const
 {
-    REQUIRE(d_mat);
-    REQUIRE(d_mat->num_groups() == d_Ng);
-    REQUIRE(g >= 0 && g < d_Ng);
-    REQUIRE(rnd >= 0.0 && rnd < 1.0);
-    REQUIRE(matid < d_mat->num_mat());
+    DEVICE_REQUIRE(d_mat);
+    DEVICE_REQUIRE(d_mat->num_groups() == d_Ng);
+    DEVICE_REQUIRE(g >= 0 && g < d_Ng);
+    DEVICE_REQUIRE(rnd >= 0.0 && rnd < 1.0);
+    DEVICE_REQUIRE(matid < d_mat->num_mat());
 
     // running cdf
     double cdf = 0.0;
@@ -305,10 +305,9 @@ int Physics<Geometry>::sample_group(int    matid,
         if (rnd <= cdf)
             return gp;
     }
-    //CHECK(soft_equiv(cdf, 1.0));
 
     // we failed to sample
-    INSIST(false, "Failed to sample group.");
+    DEVICE_INSIST(false, "Failed to sample group.");
     return -1;
 }
 
@@ -324,8 +323,8 @@ __device__
 int Physics<Geometry>::sample_fission_group(unsigned int matid,
                                             double       rnd) const
 {
-    REQUIRE(matid < d_mat->num_mat());
-    REQUIRE(is_fissionable(matid));
+    DEVICE_REQUIRE(matid < d_mat->num_mat());
+    DEVICE_REQUIRE(is_fissionable(matid));
 
     // running cdf; we make the cdf on the fly because nearly all of the
     // emission is in the first couple of groups so its not worth storing for
@@ -334,7 +333,7 @@ int Physics<Geometry>::sample_fission_group(unsigned int matid,
 
     // get the fission chi
     auto chi = d_mat->vector(matid, XS_t::CHI);
-    CHECK(chi.size() == d_Ng);
+    DEVICE_CHECK(chi.size() == d_Ng);
 
     // sample cdf
     for (int g = 0; g < d_Ng; ++g)
@@ -351,7 +350,7 @@ int Physics<Geometry>::sample_fission_group(unsigned int matid,
     }
 
     // we failed to sample
-    INSIST(false, "Failed to sample fission group.");
+    DEVICE_INSIST(false, "Failed to sample fission group.");
     return -1;
 }
 

@@ -35,7 +35,7 @@ template <class Geometry>
 __device__ void Keff_Tally<Geometry>::accumulate(double            step,
                                                  const Particle_t &p)
 {
-    REQUIRE(d_physics);
+    DEVICE_REQUIRE(d_physics);
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     d_thread_keff[tid] += p.wt() * step *

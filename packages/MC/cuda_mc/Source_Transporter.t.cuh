@@ -66,7 +66,7 @@ class Transport_Functor
     {
         // Get particle from source
         auto &p = d_particles[d_inds[tid]];
-        CHECK( p.alive() );
+        DEVICE_CHECK( p.alive() );
 
         // transport the particle through this (replicated) domain
         d_transporter->transport(p);

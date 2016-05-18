@@ -37,11 +37,11 @@ __device__
 auto Fission_Source<Geometry>::get_particle(
     std::size_t tid, RNG_State_t *rng) const -> Particle_t
 {
-    REQUIRE(d_wt > 0.0);
+    DEVICE_REQUIRE(d_wt > 0.0);
 
     // particle
     Particle_t p;
-    CHECK(!p.alive());
+    DEVICE_CHECK(!p.alive());
 
     // use the global rng on this domain for the random number generator
     p.set_rng(rng);
@@ -70,7 +70,7 @@ auto Fission_Source<Geometry>::get_particle(
 
         // initialize the physics state at the fission site
         bool sampled = d_physics->initialize_fission(fs, p);
-        CHECK(sampled);
+        DEVICE_CHECK(sampled);
     }
     else
     {
@@ -87,7 +87,7 @@ auto Fission_Source<Geometry>::get_particle(
     // make particle alive
     p.live();
 
-    ENSURE(p.matid() == matid);
+    DEVICE_ENSURE(p.matid() == matid);
     return p;
 }
 

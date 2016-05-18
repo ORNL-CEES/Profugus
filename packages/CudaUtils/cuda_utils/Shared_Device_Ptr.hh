@@ -15,6 +15,7 @@
 
 #include <cuda_runtime.h>
 
+#include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
 namespace cuda

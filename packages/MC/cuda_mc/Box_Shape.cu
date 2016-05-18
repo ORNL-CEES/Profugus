@@ -39,9 +39,9 @@ Box_Shape::Box_Shape(double lox,
     , d_Dy(hiy - loy)
     , d_Dz(hiz - loz)
 {
-    REQUIRE(d_Dx >= 0.0);
-    REQUIRE(d_Dy >= 0.0);
-    REQUIRE(d_Dz >= 0.0);
+    DEVICE_REQUIRE(d_Dx >= 0.0);
+    DEVICE_REQUIRE(d_Dy >= 0.0);
+    DEVICE_REQUIRE(d_Dz >= 0.0);
 }
 
 } // end namespace cuda_mc

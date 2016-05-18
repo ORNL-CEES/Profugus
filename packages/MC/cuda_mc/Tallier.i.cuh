@@ -28,7 +28,7 @@ template <class Geometry>
 __device__ void Tallier<Geometry>::path_length(double            step,
                                                const Particle_t &p)
 {
-    REQUIRE(step >= 0.0);
+    DEVICE_REQUIRE(step >= 0.0);
 
     // accumulate results for all pathlength tallies
     if( d_cell_tally )
