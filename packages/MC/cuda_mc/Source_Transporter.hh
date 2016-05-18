@@ -156,6 +156,7 @@ class Source_Transporter
 
     // Nodes and node id.
     int d_node, d_nodes;
+    int d_block_size;
 
     Sort_Type d_sort_type;
     Verbosity d_verbosity;

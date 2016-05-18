@@ -290,6 +290,8 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
 
     int seed = db->get("seed",1234);
 
+    d_block_size = db->get("block_size",256);
+
     std::string sort_type = profugus::to_lower(db->get<std::string>("sort_type",
             std::string("alive")));
     if (sort_type == "alive" )
@@ -385,6 +387,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     {
         // Build launch args
         cuda::Launch_Args<cuda::arch::Device> launch_args;
+        launch_args.set_block_size(d_block_size);
         launch_args.set_num_elements(num_particles);
 
         // Build and execute kernel
