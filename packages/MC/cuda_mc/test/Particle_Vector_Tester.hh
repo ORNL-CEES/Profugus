@@ -77,7 +77,7 @@ class Particle_Vector_Tester
     void set_event( const Teuchos::Array<Event_t>& events );
 
     // sort the vector by event.
-    void sort_by_event() { d_vector.get_host_ptr()->sort_by_event(); }
+    void sort_by_event() { d_vector.get_host_ptr()->sort_by_event(d_vector.get_host_ptr()->size()); }
 
     // get the particles with an event.
     void get_event_particles( const Event_t event, 

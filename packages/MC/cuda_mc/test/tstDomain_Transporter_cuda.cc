@@ -219,7 +219,8 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     transporter.transport_step( physics_tester.particles(), bank );
 
     // Sort the particles.
-    physics_tester.particles().get_host_ptr()->sort_by_event();
+    physics_tester.particles().get_host_ptr()->sort_by_event(
+        physics_tester.particles().get_host_ptr()->size());
 
     // Check the we have only collisions and boundaries.
     events = physics_tester.particle_tester().event();
@@ -233,7 +234,8 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     transporter.process_step( physics_tester.particles(), bank );
 
     // Sort the particles.
-    physics_tester.particles().get_host_ptr()->sort_by_event();
+    physics_tester.particles().get_host_ptr()->sort_by_event(
+        physics_tester.particles().get_host_ptr()->size());
 
     // Check that we have only dead particles and particles that will take
     // another step.

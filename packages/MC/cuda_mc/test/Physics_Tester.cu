@@ -169,7 +169,7 @@ void Physics_Tester::geometry_initialize(
         particles().get_device_ptr(), d_geometry.get_device_ptr(),
         r, d, matid, d_size );
 
-    particles().get_host_ptr()->sort_by_event();
+    particles().get_host_ptr()->sort_by_event( particles().get_host_ptr()->size() );
 }
 
 //---------------------------------------------------------------------------//

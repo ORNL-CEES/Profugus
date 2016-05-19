@@ -108,7 +108,7 @@ template <class Geometry>
 Particle_Vector<Geometry>::Particle_Vector( const int num_particle, 
 					    const profugus::RNG& rng )
     : d_size( num_particle )
-    , d_event_sizes( events::END_EVENT )
+    , d_event_sizes( events::END_EVENT, 0 )
 {
     // Allocate data arrays.
     cuda::memory::Malloc( d_matid, d_size );
@@ -153,8 +153,11 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );
 
+    // All particles right now are dead.
+    d_event_sizes[ events::DEAD ] = d_size;
+
     // Do the first sort to initialize particle event state.
-    sort_by_event();
+    sort_by_event( d_size );
 }
     
 //---------------------------------------------------------------------------//
@@ -179,11 +182,13 @@ Particle_Vector<Geometry>::~Particle_Vector()
 //---------------------------------------------------------------------------//
 // Sort the local indices by event key.
 template <class Geometry>
-void Particle_Vector<Geometry>::sort_by_event()
+void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
 {
+    REQUIRE( sort_size <= d_size );
+
     // Sort the events.
     thrust::device_ptr<Event_t> event_begin( d_event );
-    thrust::device_ptr<Event_t> event_end( d_event + d_size );
+    thrust::device_ptr<Event_t> event_end( d_event + sort_size );
     thrust::device_ptr<std::size_t> lid_begin( d_lid );
     thrust::sort_by_key( event_begin, event_end, lid_begin );
 

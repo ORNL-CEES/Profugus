@@ -176,7 +176,7 @@ Tally_Tester::Tally_Tester(  const std::vector<double>& x_edges,
     live_kernel<<<num_block,num_threads>>>( d_particles.get_device_ptr() );
 
     // sort the particles by event.
-    d_particles.get_host_ptr()->sort_by_event();
+    d_particles.get_host_ptr()->sort_by_event( d_particles.get_host_ptr()->size() );
 }
 
 //---------------------------------------------------------------------------//

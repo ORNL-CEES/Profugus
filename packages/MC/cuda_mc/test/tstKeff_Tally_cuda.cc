@@ -156,7 +156,7 @@ TEST_F(Keff_TallyTest, test_keff)
 	}
     }
     physics_tester->particle_tester().set_event( events );
-    physics_tester->particles().get_host_ptr()->sort_by_event();
+    physics_tester->particles().get_host_ptr()->sort_by_event( num_particle );
 
     // Set reference k
     double ref_k = 0.0;
@@ -251,7 +251,8 @@ TEST_F(Keff_TallyTest, test_keff_var)
 	}
     }
     physics_tester->particle_tester().set_event( events );
-    physics_tester->particles().get_host_ptr()->sort_by_event();
+    physics_tester->particles().get_host_ptr()->sort_by_event(
+        physics_tester->particles().get_host_ptr()->size() );
 
     // Tally some particles
     physics_tester->particle_tester().set_wt( 0.65 );
