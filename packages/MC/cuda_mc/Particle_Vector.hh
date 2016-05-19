@@ -88,8 +88,11 @@ class Particle_Vector
     // Event lower bounds. Updated at every sort.
     int* d_event_lower_bound;
 
-    // Event upper bounds. Updated at every sort.
-    int* d_event_upper_bound;
+    // Number of particles with a given event. Device only.
+    int* d_event_sizes_device;
+
+    // Number of particles with a given event. Host only.
+    Teuchos::Array<int> d_event_sizes_host;
 
   public:
 
@@ -103,6 +106,9 @@ class Particle_Vector
 
     // Sort the local indices by event key, effectively sorting the vector.
     void sort_by_event();
+
+    // Get the number of particles with a given event on the host.
+    int get_event_size( const events::Event event );
 
     // >>> DEVICE API
 
@@ -122,7 +128,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     int event_num_particles( const events::Event event )
     {
-        return event_upper_bound[ event ] - event_lower_bound[ event ];
+        return d_event_sizes_device[ event ];
     }
 
     //! Get a uniform random number on [0,1] from a particle's RNG.

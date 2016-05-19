@@ -60,7 +60,7 @@ __global__ void init_event_kernel( const std::size_t size,
 __global__ void event_lower_bounds( const std::size_t size,
                                     const events::Event* events,
                                     int* event_lower_bound,
-                                    int* event_upper_bound )
+                                    int* event_sizes_device )
 {
     // Get the thread index.
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -69,7 +69,7 @@ __global__ void event_lower_bounds( const std::size_t size,
     if ( idx < events::END_EVENT )
     {
         event_lower_bound[ idx ] = 0;
-        event_upper_bound[ idx ] = 0;
+        event_sizes_device[ idx ] = 0;
     }
 
     // Get the lower bound.
@@ -88,14 +88,20 @@ __global__ void event_lower_bounds( const std::size_t size,
     // Get the upper bound.
     if ( idx == size - 1 )
     {
-        event_upper_bound[ events[idx] ] = idx + 1;
+        event_sizes_device[ events[idx] ] = idx + 1;
     }
     else if ( idx < size-1 )
     {
         if ( events[idx+1] > events[idx] )
         {
-            event_upper_bound[ events[idx] ] = idx + 1;
+            event_sizes_device[ events[idx] ] = idx + 1;
         }
+    }
+    
+    // Compute sizes.
+    if ( idx < events::END_EVENT )
+    {
+        event_sizes_device[ idx ] -= event_lower_bound[ idx ];
     }
 }
 
@@ -109,6 +115,7 @@ template <class Geometry>
 Particle_Vector<Geometry>::Particle_Vector( const int num_particle, 
 					    const profugus::RNG& rng )
     : d_size( num_particle )
+    , d_event_sizes_host( events::END_EVENT )
 {
     // Allocate data arrays.
     cuda::memory::Malloc( d_matid, d_size );
@@ -123,7 +130,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_step, d_size );
     cuda::memory::Malloc( d_dist_mfp, d_size );
     cuda::memory::Malloc( d_event_lower_bound, events::END_EVENT );
-    cuda::memory::Malloc( d_event_upper_bound, events::END_EVENT );
+    cuda::memory::Malloc( d_event_sizes_device, events::END_EVENT );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -175,7 +182,7 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_step );
     cuda::memory::Free( d_dist_mfp );
     cuda::memory::Free( d_event_lower_bound );
-    cuda::memory::Free( d_event_upper_bound );
+    cuda::memory::Free( d_event_sizes_device );
 }
 
 //---------------------------------------------------------------------------//
@@ -198,7 +205,20 @@ void Particle_Vector<Geometry>::sort_by_event()
 
     // Bin them.
     event_lower_bound_kernel<<<num_blocks,threads_per_block>>>(
-        d_size, d_event, d_event_lower_bound, d_event_upper_bound );
+        d_size, d_event, d_event_lower_bound, d_event_sizes_device );
+
+    // Copy the event sizes to the host.
+    cuda::memory::CopyToHost( d_event_sizes_host.getRawPtr(),
+                              d_event_sizes_device,
+                              events::END_EVENT );
+}
+
+//---------------------------------------------------------------------------//
+// Get the number of particles with a given event on the host.
+template<class Geometry>
+int Particle_Vector<Geometry>::get_event_size( const events::Event event )
+{
+    return d_event_sizes_host[ event ];
 }
 
 //---------------------------------------------------------------------------//
