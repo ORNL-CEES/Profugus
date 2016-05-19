@@ -161,7 +161,7 @@ void Physics_Tester::geometry_initialize(
     const Space_Vector r, const Space_Vector d, const int matid )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -183,7 +183,7 @@ void Physics_Tester::sample_group( const std::vector<double>& cdf )
 
     // Sample the cdf and set the particle groups.
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 

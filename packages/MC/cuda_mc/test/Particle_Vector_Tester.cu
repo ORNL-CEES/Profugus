@@ -207,7 +207,7 @@ Teuchos::Array<double> Particle_Vector_Tester::ran()
     cudaMalloc( (void**) &device_ran, d_size * sizeof(double) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -227,7 +227,7 @@ Teuchos::Array<double> Particle_Vector_Tester::ran()
 void Particle_Vector_Tester::set_wt( const double wt )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -244,7 +244,7 @@ void Particle_Vector_Tester::multiply_wt( const Teuchos::Array<double>& wt )
 		cudaMemcpyHostToDevice );
     
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -262,7 +262,7 @@ Teuchos::Array<double> Particle_Vector_Tester::wt()
     cudaMalloc( (void**) &device_wt, d_size * sizeof(double) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -285,7 +285,7 @@ Teuchos::Array<int> Particle_Vector_Tester::group()
     cudaMalloc( (void**) &device_group, d_size * sizeof(int) );
  
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -305,7 +305,7 @@ Teuchos::Array<int> Particle_Vector_Tester::group()
 void Particle_Vector_Tester::set_group( const int group )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -321,7 +321,7 @@ Teuchos::Array<int> Particle_Vector_Tester::matid()
     cudaMalloc( (void**) &device_matid, d_size * sizeof(int) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -341,7 +341,7 @@ Teuchos::Array<int> Particle_Vector_Tester::matid()
 void Particle_Vector_Tester::set_matid( const int matid )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -357,7 +357,7 @@ Teuchos::Array<int> Particle_Vector_Tester::alive()
     cudaMalloc( (void**) &device_alive, d_size * sizeof(int) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -377,7 +377,7 @@ Teuchos::Array<int> Particle_Vector_Tester::alive()
 void Particle_Vector_Tester::live()
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -389,7 +389,7 @@ void Particle_Vector_Tester::live()
 void Particle_Vector_Tester::kill()
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -405,7 +405,7 @@ Particle_Vector_Tester::event()
     cudaMalloc( (void**) &device_event, d_size * sizeof(Event_t) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -430,7 +430,7 @@ void Particle_Vector_Tester::set_event( const Teuchos::Array<Event_t>& events )
 		cudaMemcpyHostToDevice );
     
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -447,7 +447,7 @@ void Particle_Vector_Tester::set_event( const Teuchos::Array<Event_t>& events )
 void Particle_Vector_Tester::set_geo_state( const Geo_State_t& geo_state )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -464,7 +464,7 @@ Particle_Vector_Tester::geo_state()
     cudaMalloc( (void**) &device_geo_state, d_size * sizeof(Geo_State_t) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -487,7 +487,7 @@ Teuchos::Array<int> Particle_Vector_Tester::batch()
     cudaMalloc( (void**) &device_batch, d_size * sizeof(int) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -507,7 +507,7 @@ Teuchos::Array<int> Particle_Vector_Tester::batch()
 void Particle_Vector_Tester::set_batch( const int batch )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -523,7 +523,7 @@ Teuchos::Array<double> Particle_Vector_Tester::step()
     cudaMalloc( (void**) &device_step, d_size * sizeof(double) );
 
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -543,7 +543,7 @@ Teuchos::Array<double> Particle_Vector_Tester::step()
 void Particle_Vector_Tester::set_step( const double step )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
