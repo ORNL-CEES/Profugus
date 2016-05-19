@@ -18,6 +18,7 @@
 #include <vector>
 
 #include <thrust/device_ptr.h>
+#include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 #include <thrust/distance.h>
 #include <thrust/binary_search.h>
@@ -185,7 +186,7 @@ void Particle_Vector<Geometry>::sort_by_event()
     thrust::device_ptr<Event_t> event_begin( d_event );
     thrust::device_ptr<Event_t> event_end( d_event + d_size );
     thrust::device_ptr<std::size_t> lid_begin( d_lid );
-    thrust::sort_by_key( event_begin, event_end, lid_begin );
+    thrust::sort_by_key( thrust::device, event_begin, event_end, lid_begin );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
