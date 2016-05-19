@@ -80,7 +80,7 @@ class Collision_Tally
 	const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
 
     // Finalize the tally.
-    void finalize( const std::size_t total_num_particle );
+    void finalize( const int total_num_particle );
 
     // Copy the first and second tally moments from the device to the
     // host. The moments are lazy-evaluated in this function and indexed by

@@ -78,7 +78,7 @@ class Uniform_Source : public Source<Geometry>
     int d_num_batch;
 
     // Particle batch size.
-    std::size_t d_batch_size;
+    int d_batch_size;
 
     // Energy shape CDF. On-device.
     double* d_erg_cdf;
@@ -110,21 +110,21 @@ class Uniform_Source : public Source<Geometry>
     int num_batch() const { return d_num_batch; }
 
     //! Number of particles to transport in the source on the current domain.
-    std::size_t num_to_transport() const override { return d_np_domain; }
+    int num_to_transport() const override { return d_np_domain; }
 
     //! Total number of particles to transport in the entire problem/cycle.
-    std::size_t total_num_to_transport() const override { return d_np_total; }
+    int total_num_to_transport() const override { return d_np_total; }
 
     // >>> CLASS ACCESSORS
 
     //! Total number of requested particles.
-    std::size_t Np() const override { return d_np_requested; }
+    int Np() const override { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    std::size_t num_run() const override { return d_np_run; }
+    int num_run() const override { return d_np_run; }
 
     //! Number left to transport on this domain.
-    std::size_t num_left() const override { return d_np_left; }
+    int num_left() const override { return d_np_left; }
 
   private:
     // >>> IMPLEMENTATION
@@ -133,20 +133,20 @@ class Uniform_Source : public Source<Geometry>
     void build_DR();
 
     // Requested particles.
-    std::size_t d_np_requested;
+    int d_np_requested;
 
     // Number of particles: total, domain
-    std::size_t d_np_total;
-    std::size_t d_np_domain;
+    int d_np_total;
+    int d_np_domain;
 
     // Particle weight.
     double d_wt;
 
     // Number of source particles left in the current domain.
-    std::size_t d_np_left;
+    int d_np_left;
 
     // Number of particles run on the current domain.
-    std::size_t d_np_run;
+    int d_np_run;
 };
 
 } // end namespace cuda_profugus

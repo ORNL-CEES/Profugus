@@ -81,9 +81,8 @@ class Particle_Vector_Tester
 
     // get the particles with an event.
     void get_event_particles( const Event_t event, 
-			      std::size_t& start_index,
 			      std::size_t& num_particle ) const
-    { d_vector.get_host_ptr()->get_event_particles(event,start_index,num_particle); }
+    { num_particle = d_vector.get_host_ptr()->get_event_size( event ); }
 
     // set the geometry state for the whole vector
     void set_geo_state( const Geo_State_t& geo_state );

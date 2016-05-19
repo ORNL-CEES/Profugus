@@ -123,19 +123,19 @@ class Fission_Source : public Source<Geometry>
     bool empty() const override { return d_np_left == 0; }
 
     //! Number of particles to transport in the source on the current domain.
-    std::size_t num_to_transport() const override { return d_np_domain; }
+    int num_to_transport() const override { return d_np_domain; }
 
     //! Total number of particles to transport in the entire problem/cycle.
-    std::size_t total_num_to_transport() const override { return d_np_total; }
+    int total_num_to_transport() const override { return d_np_total; }
 
     //! Total number of requested particles per cycle.
-    std::size_t Np() const override { return d_np_requested; }
+    int Np() const override { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    std::size_t num_run() const override { return d_np_run; }
+    int num_run() const override { return d_np_run; }
 
     //! Number left to transport on this domain.
-    std::size_t num_left() const override { return d_np_left; }
+    int num_left() const override { return d_np_left; }
 
     // >>> CLASS ACCESSORS
 
@@ -154,7 +154,7 @@ class Fission_Source : public Source<Geometry>
     const Space_Vector& width() const { return d_width; }
 
     //! Set a new number per cycle.
-    void update_Np(std::size_t np) { d_np_requested = np; }
+    void update_Np(int np) { d_np_requested = np; }
 
   private:
     // >>> IMPLEMENTATION
@@ -165,24 +165,21 @@ class Fission_Source : public Source<Geometry>
     // Sample the geometry to generate particles
     void sample_geometry(
 	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
-	const std::size_t start_idx,
-	const std::size_t num_particle,
+	const int num_particle,
 	const unsigned int num_blocks,
 	const unsigned int threads_per_block );
 
     // Sample the fission mesh to generate particles
     void sample_mesh(
 	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
-	const std::size_t start_idx,
-	const std::size_t num_particle,
+	const int num_particle,
 	const unsigned int num_blocks,
 	const unsigned int threads_per_block );
 
     // Sample the fission_sites to generate particles
     void sample_fission_sites(
 	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
-	const std::size_t start_idx,
-	const std::size_t num_particle,
+	const int num_particle,
 	const unsigned int num_blocks,
 	const unsigned int threads_per_block );
 
@@ -206,19 +203,19 @@ class Fission_Source : public Source<Geometry>
     Space_Vector d_width;
 
     // Requested particles per cycle.
-    std::size_t d_np_requested;
+    int d_np_requested;
 
     // Number of particles: total, domain
-    std::size_t d_np_total, d_np_domain;
+    int d_np_total, d_np_domain;
 
     // Particle weight.
     double d_wt;
 
     // Number of source particles left in the current domain.
-    std::size_t d_np_left;
+    int d_np_left;
 
     // Number of particles run on the current domain.
-    std::size_t d_np_run;
+    int d_np_run;
 
     // Dummy fission site container.
     Fission_Site_Container d_dummy_container;

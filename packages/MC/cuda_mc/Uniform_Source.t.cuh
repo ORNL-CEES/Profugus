@@ -37,8 +37,7 @@ template<class Geometry, class Shape>
 __global__
 void sample_source_kernel( const Geometry* geometry,
 			   const Shape* shape,
-			   const std::size_t start_idx,
-			   const std::size_t num_particle,
+			   const int num_particle,
 			   const double wt,
 			   const double* erg_cdf,
 			   const int num_group,
@@ -47,12 +46,13 @@ void sample_source_kernel( const Geometry* geometry,
 			   Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	std::size_t pidx = idx + start_idx;
+	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
 	cuda::Space_Vector omega;
@@ -121,7 +121,7 @@ Uniform_Source<Geometry,Shape>::Uniform_Source(
     REQUIRE(!db.is_null());
 
     // store the total number of requested particles
-    d_np_requested = static_cast<std::size_t>(db->get("Np", 1000));
+    d_np_requested = static_cast<int>(db->get("Np", 1000));
     CHECK( d_np_requested > 0 );
 
     // initialize the total
@@ -216,14 +216,10 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     SCOPED_TIMER_2("MC::Uniform_Source.get_particle");
 
     // Get the particles that are dead.
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::DEAD,
-						   start_idx,
-						   num_particle );
+    int num_particle = particles.get_host_ptr()->get_event_size( events::DEAD );
 
     // Calculate the total number of particles we will create.
-    std::size_t num_to_create = std::min( d_np_left, num_particle );
+    int num_to_create = std::min( d_np_left, num_particle );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -236,7 +232,6 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     sample_source_kernel<<<num_blocks,threads_per_block>>>(
     	d_geometry.get_device_ptr(),
     	d_shape.get_device_ptr(),
-    	start_idx,
     	num_to_create,
     	d_wt,
     	d_erg_cdf,

@@ -27,9 +27,9 @@ namespace cuda_profugus
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
 // Initialize the tally to zero
-__global__ void init_tally_kernel( const std::size_t size, double* tally )
+__global__ void init_tally_kernel( const int size, double* tally )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) tally[idx] = 0.0;
 }
 
@@ -38,16 +38,16 @@ __global__ void init_tally_kernel( const std::size_t size, double* tally )
 template<class Geometry>
 __global__ void tally_kernel( const Geometry* geometry,
 			      const Particle_Vector<Geometry>* particles,
-			      const std::size_t collision_start,
-			      const std::size_t num_collision,
-			      const std::size_t boundary_start,
-			      const std::size_t num_boundary,
+			      const int num_collision,
+			      const int num_boundary,
 			      const int num_batch,
 			      const int num_cell,
 			      double* tally )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int collision_start = particles->event_lower_bound( events::COLLISION );
+    int boundary_start = particles->event_lower_bound( events::BOUNDARY );
 
     if ( idx < num_collision + num_boundary )
     {
@@ -58,7 +58,7 @@ __global__ void tally_kernel( const Geometry* geometry,
     
 	// Accumulate the particle in its batch and cell.
 	REQUIRE( particles->alive(pidx) );
-	std::size_t tally_idx = particles->batch( pidx ) * num_cell +
+	int tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
 	CHECK( tally_idx < num_batch * num_cell );
 	cuda::Atomic_Add<cuda::arch::Device>::fetch_add( 
@@ -73,7 +73,7 @@ __global__ void finalize_kernel( const int num_batch,
 				 const double num_particles,
 				 double* tally )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < num_batch * num_cell ) 
     {
 	tally[idx] = (tally[idx] * num_batch) / num_particles;
@@ -88,10 +88,10 @@ __global__ void moments_kernel( const int num_batch,
 				double* first_moment,
 				double* second_moment )
 {
-    std::size_t cell_idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int cell_idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( cell_idx < num_cell )
     {
-	std::size_t tally_idx = 0;
+	int tally_idx = 0;
 
 	// Calculate the first moment.
 	first_moment[cell_idx] = 0.0;
@@ -130,7 +130,7 @@ Cell_Tally<Geometry>::Cell_Tally(
     , d_num_cells( d_geometry.get_host_ptr()->num_cells() )
 {
     // Allocate the tally.
-    std::size_t size = d_num_batch * d_num_cells;
+    int size = d_num_batch * d_num_cells;
     cuda::memory::Malloc( d_tally, size );
 
     // Get CUDA launch parameters.
@@ -159,21 +159,15 @@ void Cell_Tally<Geometry>::accumulate(
     const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     // Get the particles that just had a collision.
-    std::size_t collision_start = 0;
-    std::size_t num_collision = 0;
-    particles.get_host_ptr()->get_event_particles( events::COLLISION,
-						   collision_start,
-						   num_collision );
+    int num_collision =
+        particles.get_host_ptr()->get_event_size( events::COLLISION );
 
     // Get the particles that just hit a boundary.
-    std::size_t boundary_start = 0;
-    std::size_t num_boundary = 0;
-    particles.get_host_ptr()->get_event_particles( events::BOUNDARY,
-						   boundary_start,
-						   num_boundary );
+    int num_boundary = 
+        particles.get_host_ptr()->get_event_size( events::BOUNDARY );
 
     // Calculate the launch parameters.
-    std::size_t num_particle = num_collision + num_boundary;
+    int num_particle = num_collision + num_boundary;
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
@@ -183,9 +177,7 @@ void Cell_Tally<Geometry>::accumulate(
     // Tally the particles.
     tally_kernel<<<num_blocks,threads_per_block>>>( d_geometry.get_device_ptr(),
 						    particles.get_device_ptr(),
-						    collision_start,
 						    num_collision,
-						    boundary_start,
 						    num_boundary,
 						    d_num_batch,
 						    d_num_cells,

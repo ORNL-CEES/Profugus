@@ -37,20 +37,20 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 				    const Physics<Geometry>* physics,
 				    const Cartesian_Mesh* fission_mesh,
 				    const int* fission_cells,
-				    const std::size_t start_idx,
-				    const std::size_t num_particle,
+				    const int num_particle,
 				    const double weight,
 				    Particle_Vector<Geometry>* particles )
 {
     using def::I; using def::J; using def::K;
 
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	std::size_t pidx = idx + start_idx;
+	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
 	cuda::Space_Vector omega;
@@ -119,20 +119,20 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 template<class Geometry>
 __global__ void sample_geometry_kernel( const Geometry* geometry,
 					const Physics<Geometry>* physics,
-					const std::size_t start_idx,
-					const std::size_t num_particle,
+					const int num_particle,
 					const double weight,
 					const cuda::Space_Vector width,
 					const cuda::Space_Vector lower,
 					Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	std::size_t pidx = idx + start_idx;
+	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
 	cuda::Space_Vector omega;
@@ -190,19 +190,19 @@ template<class Geometry>
 __global__ void sample_fission_sites_kernel(
     const Geometry* geometry,
     const Physics<Geometry>* physics,
-    const std::size_t start_idx,
-    const std::size_t num_particle,
+    const int num_particle,
     const typename Physics<Geometry>::Fission_Site* fission_sites,
     const double weight,
     Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	std::size_t pidx = idx + start_idx;
+	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
 	cuda::Space_Vector omega;
@@ -305,7 +305,7 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     d_width.z = upper_z - lower_z;
 
     // store the total number of requested particles per cycle
-    d_np_requested = static_cast<std::size_t>(db->get("Np", 1000));
+    d_np_requested = static_cast<int>(db->get("Np", 1000));
 
     // initialize the total for the first cycle
     d_np_total = d_np_requested;
@@ -440,14 +440,11 @@ void Fission_Source<Geometry>::get_particles(
     }
 
     // Get the particles that are dead.
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::DEAD,
-						   start_idx,
-						   num_particle );
+    int num_particle =
+        particles.get_host_ptr()->get_event_size( events::DEAD );
 
     // Calculate the total number of particles we will create.
-    std::size_t num_to_create = std::min( d_np_left, num_particle );
+    int num_to_create = std::min( d_np_left, num_particle );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -460,14 +457,14 @@ void Fission_Source<Geometry>::get_particles(
     if ( d_fission_sites )
     {
 	sample_fission_sites(
-	    particles, start_idx, num_to_create, num_blocks, threads_per_block );
+	    particles, num_to_create, num_blocks, threads_per_block );
     }
 
     // If this is an initial source and we have a fission mesh, sample that.
     else if ( d_fis_mesh )
     {
 	sample_mesh(
-	    particles, start_idx, num_to_create, num_blocks, threads_per_block );
+	    particles, num_to_create, num_blocks, threads_per_block );
     }
 
     // Otherwise this is an initial source and we have no mesh so sample the
@@ -475,7 +472,7 @@ void Fission_Source<Geometry>::get_particles(
     else
     {
 	sample_geometry(
-	    particles, start_idx, num_to_create, num_blocks, threads_per_block );
+	    particles, num_to_create, num_blocks, threads_per_block );
     }
 
     // update counters
@@ -567,8 +564,7 @@ void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
 template <class Geometry>
 void Fission_Source<Geometry>::sample_fission_sites(
     cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
-    const std::size_t start_idx,
-    const std::size_t num_particle,
+    const int num_particle,
     const unsigned int num_blocks,
     const unsigned int threads_per_block )
 {
@@ -588,7 +584,6 @@ void Fission_Source<Geometry>::sample_fission_sites(
     sample_fission_sites_kernel<<<num_blocks,threads_per_block>>>(
 	d_geometry.get_device_ptr(),
 	d_physics.get_device_ptr(),
-	start_idx,
 	num_particle,
 	fission_sites_device,
 	d_wt,
@@ -605,8 +600,7 @@ void Fission_Source<Geometry>::sample_fission_sites(
 template <class Geometry>
 void Fission_Source<Geometry>::sample_mesh(
     cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
-    const std::size_t start_idx,
-    const std::size_t num_particle,
+    const int num_particle,
     const unsigned int num_blocks,
     const unsigned int threads_per_block )
 {
@@ -643,7 +637,6 @@ void Fission_Source<Geometry>::sample_mesh(
 	d_physics.get_device_ptr(),
 	d_fis_mesh.get_device_ptr(),
 	fission_cells_device,
-	start_idx,
 	num_particle,
 	d_wt,
 	particles.get_device_ptr() );
@@ -659,8 +652,7 @@ void Fission_Source<Geometry>::sample_mesh(
 template <class Geometry>
 void Fission_Source<Geometry>::sample_geometry(
     cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
-    const std::size_t start_idx,
-    const std::size_t num_particle,
+    const int num_particle,
     const unsigned int num_blocks,
     const unsigned int threads_per_block )
 {
@@ -668,7 +660,6 @@ void Fission_Source<Geometry>::sample_geometry(
     sample_geometry_kernel<<<num_blocks,threads_per_block>>>(
     	d_geometry.get_device_ptr(),
     	d_physics.get_device_ptr(),
-    	start_idx,
     	num_particle,
     	d_wt,
     	d_width,

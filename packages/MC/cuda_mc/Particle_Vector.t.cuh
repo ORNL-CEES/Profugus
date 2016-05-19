@@ -57,10 +57,9 @@ __global__ void init_event_kernel( const std::size_t size,
 
 //---------------------------------------------------------------------------//
 // Get event lower bounds.
-__global__ void event_lower_bounds( const std::size_t size,
-                                    const events::Event* events,
-                                    int* event_lower_bound,
-                                    int* event_sizes_device )
+__global__ void event_bounds_kernel( const std::size_t size,
+                                     const events::Event* events,
+                                     int* event_bounds )
 {
     // Get the thread index.
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -68,40 +67,34 @@ __global__ void event_lower_bounds( const std::size_t size,
     // Initialize bounds.
     if ( idx < events::END_EVENT )
     {
-        event_lower_bound[ idx ] = 0;
-        event_sizes_device[ idx ] = 0;
+        event_bounds[ 2*idx ] = 0;
+        event_bounds[ 2*idx + 1 ] = 0;
     }
 
     // Get the lower bound.
     if ( 0 == idx )
     {
-        event_lower_bound[ events[idx] ] = idx;
+        event_bounds[ 2*events[idx] ] = idx;
     }
     else if ( idx < size )
     {
         if ( events[idx-1] < events[idx] )
         {
-            event_lower_bound[ events[idx] ] = idx;
+            event_bounds[ 2*events[idx] ] = idx;
         }
     }
     
     // Get the upper bound.
     if ( idx == size - 1 )
     {
-        event_sizes_device[ events[idx] ] = idx + 1;
+        event_bounds[ 2*events[idx] + 1 ] = idx + 1;
     }
     else if ( idx < size-1 )
     {
         if ( events[idx+1] > events[idx] )
         {
-            event_sizes_device[ events[idx] ] = idx + 1;
+            event_bounds[ 2*events[idx] + 1] = idx + 1;
         }
-    }
-    
-    // Compute sizes.
-    if ( idx < events::END_EVENT )
-    {
-        event_sizes_device[ idx ] -= event_lower_bound[ idx ];
     }
 }
 
@@ -115,7 +108,7 @@ template <class Geometry>
 Particle_Vector<Geometry>::Particle_Vector( const int num_particle, 
 					    const profugus::RNG& rng )
     : d_size( num_particle )
-    , d_event_sizes_host( events::END_EVENT )
+    , d_event_sizes( events::END_EVENT )
 {
     // Allocate data arrays.
     cuda::memory::Malloc( d_matid, d_size );
@@ -129,8 +122,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
     cuda::memory::Malloc( d_dist_mfp, d_size );
-    cuda::memory::Malloc( d_event_lower_bound, events::END_EVENT );
-    cuda::memory::Malloc( d_event_sizes_device, events::END_EVENT );
+    cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -181,8 +173,7 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
     cuda::memory::Free( d_dist_mfp );
-    cuda::memory::Free( d_event_lower_bound );
-    cuda::memory::Free( d_event_sizes_device );
+    cuda::memory::Free( d_event_bounds );
 }
 
 //---------------------------------------------------------------------------//
@@ -204,21 +195,27 @@ void Particle_Vector<Geometry>::sort_by_event()
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
     // Bin them.
-    event_lower_bound_kernel<<<num_blocks,threads_per_block>>>(
-        d_size, d_event, d_event_lower_bound, d_event_sizes_device );
+    event_bounds_kernel<<<num_blocks,threads_per_block>>>(
+        d_size, d_event, d_event_bounds );
 
-    // Copy the event sizes to the host.
-    cuda::memory::CopyToHost( d_event_sizes_host.getRawPtr(),
-                              d_event_sizes_device,
-                              events::END_EVENT );
+    // Calculate event sizes.
+    int work_size = 2 * events::END_EVENT;
+    Teuchos::Array<int> work( work_size );
+    cuda::memory::Copy_To_Host( work.getRawPtr(),
+                                d_event_bounds,
+                                work_size );
+    for ( int i = 0; i < events::END_EVENT; ++i )
+    {
+        d_event_sizes[ i ] = work[ 2*i + 1 ] - work[ 2*i ];
+    }
 }
 
 //---------------------------------------------------------------------------//
 // Get the number of particles with a given event on the host.
 template<class Geometry>
-int Particle_Vector<Geometry>::get_event_size( const events::Event event )
+int Particle_Vector<Geometry>::get_event_size( const events::Event event ) const
 {
-    return d_event_sizes_host[ event ];
+    return d_event_sizes[ event ];
 }
 
 //---------------------------------------------------------------------------//

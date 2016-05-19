@@ -44,19 +44,19 @@ class Source
     virtual bool empty() const = 0;
 
     //! Number of particles to transport in the source on the current domain.
-    virtual std::size_t num_to_transport() const = 0;
+    virtual int num_to_transport() const = 0;
 
     //! Total number of particles to transport in the entire problem/cycle.
-    virtual std::size_t total_num_to_transport() const = 0;
+    virtual int total_num_to_transport() const = 0;
 
     //! Total number of requested particles.
-    virtual std::size_t Np() const = 0;
+    virtual int Np() const = 0;
 
     //! Number transported so far on this domain.
-    virtual std::size_t num_run() const = 0;
+    virtual int num_run() const = 0;
 
     //! Number left to transport on this domain.
-    virtual std::size_t num_left() const = 0;
+    virtual int num_left() const = 0;
 };
 
 } // end namespace cuda_profugus

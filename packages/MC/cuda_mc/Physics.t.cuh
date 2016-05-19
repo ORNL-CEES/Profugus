@@ -100,8 +100,7 @@ __global__ void initialize_kernel( const double* energy,
  * \brief Process particles through a collision.
  */
 template<class Geometry>
-__global__ void collide_kernel( const std::size_t start_idx,
-				const std::size_t num_particle,
+__global__ void collide_kernel(	const int num_particle,
 				const Geometry* geometry,
 				const XS_Device* xs,
 				const int* matid_g2l,
@@ -111,6 +110,7 @@ __global__ void collide_kernel( const std::size_t start_idx,
 {
     // get the thread id.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::COLLISION );
 
     if ( idx < num_particle )
     {
@@ -193,8 +193,7 @@ __global__ void collide_kernel( const std::size_t start_idx,
  */
 template<class Geometry>
 __global__ void sample_fission_site_kernel(
-    const std::size_t start_idx,
-    const std::size_t num_particle,
+    const int num_particle,
     const Geometry* geometry,
     const XS_Device* xs,
     const double keff,
@@ -205,6 +204,7 @@ __global__ void sample_fission_site_kernel(
 {
     // get the thread id.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::COLLISION );
 
     if ( idx < num_particle )
     {
@@ -309,7 +309,7 @@ Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
 
     // calculate total scattering over all groups for each material and
     // determine if fission is available for a given material
-    std::size_t offset = 0;
+    int offset = 0;
     std::vector<double> matid_scatter( d_Ng, 0.0 );
     std::vector<int> host_fissionable( d_Nm, false );
     for ( int m = 0; m < d_Nm; ++m )
@@ -417,11 +417,8 @@ void Physics<Geometry>::collide(
     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
     // Get the particles that will have a collision.
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::COLLISION,
-						   start_idx,
-						   num_particle );
+    int num_particle =
+        particles.get_host_ptr()->get_event_size( events::COLLISION );
     
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -432,7 +429,6 @@ void Physics<Geometry>::collide(
 
     // Process the collisions.
     collide_kernel<<<num_blocks,threads_per_block>>>(
-	start_idx,
 	num_particle,
 	d_geometry.get_device_ptr(),
 	d_mat.get_device_ptr(),
@@ -480,11 +476,8 @@ int Physics<Geometry>::sample_fission_site(
     }
 
     // Get the particles that will have a collision.
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::COLLISION,
-						   start_idx,
-						   num_particle );
+    int num_particle =
+        particles.get_host_ptr()->get_event_size( events::COLLISION );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -495,7 +488,6 @@ int Physics<Geometry>::sample_fission_site(
 
     // Sample the fission sites.
     sample_fission_site_kernel<<<num_blocks,threads_per_block>>>(
-	start_idx,
 	num_particle,
 	d_geometry.get_device_ptr(),
 	d_mat.get_device_ptr(),

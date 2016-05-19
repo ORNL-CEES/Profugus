@@ -85,14 +85,11 @@ class Particle_Vector
     // Distance to next collision in mean-free-paths.
     double* d_dist_mfp;
 
-    // Event lower bounds. Updated at every sort.
-    int* d_event_lower_bound;
-
-    // Number of particles with a given event. Device only.
-    int* d_event_sizes_device;
+    // Event bounds. Updated at every sort.
+    int* d_event_bounds;
 
     // Number of particles with a given event. Host only.
-    Teuchos::Array<int> d_event_sizes_host;
+    Teuchos::Array<int> d_event_sizes;
 
   public:
 
@@ -108,7 +105,7 @@ class Particle_Vector
     void sort_by_event();
 
     // Get the number of particles with a given event on the host.
-    int get_event_size( const events::Event event );
+    int get_event_size( const events::Event event ) const;
 
     // >>> DEVICE API
 
@@ -118,17 +115,10 @@ class Particle_Vector
 
     //! Get the lower bound of an event in the vector.
     PROFUGUS_DEVICE_FUNCTION
-    int event_lower_bound( const events::Event event )
+    int event_lower_bound( const events::Event event ) const
     {
         REQUIRE( event < events::END_EVENT );
-        return d_event_lower_bound[ event ];
-    }
-
-    //! Get the number of particles having an event.
-    PROFUGUS_DEVICE_FUNCTION
-    int event_num_particles( const events::Event event )
-    {
-        return d_event_sizes_device[ event ];
+        return d_event_bounds[ 2*event ];
     }
 
     //! Get a uniform random number on [0,1] from a particle's RNG.

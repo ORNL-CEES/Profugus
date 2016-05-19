@@ -108,9 +108,8 @@ void Source_Transporter<Geometry>::solve()
     // particles in the vector. we know when all the particles are dead when
     // the starting point for dead events is at the front of the vector. there
     // is no need to communicate particles because the problem is replicated
-    size_type dead_start = 0;
-    size_type dead_end = 0;
-    while ( !d_source->empty() || (0 != dead_start) )
+    size_type num_alive = d_source->num_to_transport();
+    while ( !d_source->empty() || (num_alive > 0) )
     {
         // Run the events. Right now this works sequentially because there are
         // only 3 events - sampling the source, stepping to a collision or
@@ -124,9 +123,9 @@ void Source_Transporter<Geometry>::solve()
         // Sort the vector.
         particles.get_host_ptr()->sort_by_event();
 
-        // Find where the dead particles start.
-        particles.get_host_ptr()->get_event_particles( 
-            events::DEAD, dead_start, dead_end );
+        // Get the number of particles that are alive.
+        num_alive = d_vector_size -
+                    particles.get_host_ptr()->get_event_size( events::DEAD );
 
         // update the event counter
         ++counter;
@@ -134,8 +133,9 @@ void Source_Transporter<Geometry>::solve()
         // print message if needed
         if (counter % d_print_count == 0)
         {
-            double percent_complete
-                = (100. * (d_source->num_run()-dead_start)) / (d_source->num_to_transport());
+            double percent_complete = 
+                (100. * (d_source->num_run()-num_alive) ) / 
+                 (d_source->num_to_transport());
             cout << ">>> Finished " << counter << " events and ("
                  << std::setw(6) << std::fixed << std::setprecision(2)
                  << percent_complete << "%) particles on domain "

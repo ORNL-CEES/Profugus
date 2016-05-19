@@ -30,17 +30,17 @@ namespace cuda_profugus
 template<class Geometry>
 __global__ void take_step_kernel( const Geometry* geometry,
 				  const Physics<Geometry>* physics,
-				  const std::size_t start_idx,
-				  const std::size_t num_particles,
+				  const int num_particles,
 				  Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::TAKE_STEP );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	std::size_t pidx = start_idx + idx;
+	int pidx = start_idx + idx;
 
 	// Get the total cross section.
 	double xs_tot = physics->total( physics::TOTAL,
@@ -75,17 +75,17 @@ __global__ void take_step_kernel( const Geometry* geometry,
 // Process a boundary.
 template<class Geometry>
 __global__ void process_boundary_kernel( const Geometry* geometry,
-					 const std::size_t start_idx,
-					 const std::size_t num_particles,
+					 const int num_particles,
 					 Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::BOUNDARY );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	std::size_t pidx = start_idx + idx;
+	int pidx = start_idx + idx;
 
 	// move the particle to the surface.
 	geometry->move_to_surface( particles->geo_state(pidx) );
@@ -132,17 +132,17 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
 // Move particles to the collision site.
 template<class Geometry>
 __global__ void move_to_collision_kernel( const Geometry* geometry,
-					  const std::size_t start_idx,
-					  const std::size_t num_particles,
+					  const int num_particles,
 					  Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::COLLISION );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	std::size_t pidx = start_idx + idx;
+	int pidx = start_idx + idx;
 
 	// move the particle to the collision site
 	geometry->move_to_point( particles->step(pidx), 
@@ -156,17 +156,18 @@ __global__ void move_to_collision_kernel( const Geometry* geometry,
 //---------------------------------------------------------------------------//
 // Set surviving particles to take another step.
 template<class Geometry>
-__global__ void set_next_step_kernel( const std::size_t start_idx,
-                                      const std::size_t num_particles,
-                                      Particle_Vector<Geometry>* particles )
+__global__ void set_next_step_kernel(const events::Event event,
+                                     const int num_particles,
+                                     Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( event );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	std::size_t pidx = start_idx + idx;
+	int pidx = start_idx + idx;
 
         // Set survivors to take another step.
         if ( particles->alive(pidx) )
@@ -289,11 +290,8 @@ void Domain_Transporter<Geometry>::transport_step(
     REQUIRE(d_physics);
 
     // get the particles that will take a step
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::TAKE_STEP,
-						   start_idx,
-						   num_particle );
+    int num_particle =
+        particles.get_host_ptr()->get_event_size( events::TAKE_STEP );
     
     // get CUDA launch parameters
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -306,7 +304,6 @@ void Domain_Transporter<Geometry>::transport_step(
     take_step_kernel<<<num_blocks,threads_per_block>>>(
         d_geometry.get_device_ptr(),
         d_physics.get_device_ptr(),
-        start_idx,
         num_particle,
         particles.get_device_ptr() );
 }
@@ -342,11 +339,8 @@ void Domain_Transporter<Geometry>::process_boundary(
     SDP_Bank     &bank)
 {
     // get the particles that have hit a boundary
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::BOUNDARY,
-						   start_idx,
-						   num_particle );
+    int num_particle =
+        particles.get_host_ptr()->get_event_size( events::BOUNDARY );
     
     // get CUDA launch parameters
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -358,13 +352,12 @@ void Domain_Transporter<Geometry>::process_boundary(
     // process the boundary
     process_boundary_kernel<<<num_blocks,threads_per_block>>>(
 	d_geometry.get_device_ptr(),
-	start_idx,
 	num_particle,
 	particles.get_device_ptr() );
 
     // take any surviving particles and set them to take another step    
     set_next_step_kernel<<<num_blocks,threads_per_block>>>(
-	start_idx,
+        events::BOUNDARY,
 	num_particle,
 	particles.get_device_ptr() );
 }
@@ -383,11 +376,8 @@ void Domain_Transporter<Geometry>::process_collision(
     REQUIRE( d_var_reduction );
 
     // get the particles that will have a collision
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::COLLISION,
-						   start_idx,
-						   num_particle );
+    int num_particle =
+        particles.get_host_ptr()->get_event_size( events::COLLISION );
     
     // get CUDA launch parameters
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -399,7 +389,6 @@ void Domain_Transporter<Geometry>::process_collision(
     // Move particles to the collision site
     move_to_collision_kernel<<<num_blocks,threads_per_block>>>(
 	d_geometry.get_device_ptr(),
-	start_idx,
 	num_particle,
 	particles.get_device_ptr() );
 
@@ -420,7 +409,7 @@ void Domain_Transporter<Geometry>::process_collision(
 
     // take any surviving particles and set them to take another step    
     set_next_step_kernel<<<num_blocks,threads_per_block>>>(
-	start_idx,
+        events::COLLISION,
 	num_particle,
 	particles.get_device_ptr() );
 }

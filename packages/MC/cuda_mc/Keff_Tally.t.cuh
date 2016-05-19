@@ -28,14 +28,14 @@ namespace cuda_profugus
 template<class Geometry>
 __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
 				   const Particle_Vector<Geometry>* particles,
-				   const std::size_t collision_start,
 				   const std::size_t num_collision,
-				   const std::size_t boundary_start,
 				   const std::size_t num_boundary,
 				   double* keff )
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int collision_start = particles->event_lower_bound( events::COLLISION );
+    int boundary_start = particles->event_lower_bound( events::BOUNDARY );
 
     if ( idx < num_collision + num_boundary )
     {
@@ -155,18 +155,12 @@ void Keff_Tally<Geometry>::accumulate(
     }
     
     // Get the particles that just had a collision.
-    std::size_t collision_start = 0;
-    std::size_t num_collision = 0;
-    particles.get_host_ptr()->get_event_particles( events::COLLISION,
-						   collision_start,
-						   num_collision );
+    int num_collision = 
+        particles.get_host_ptr()->get_event_size( events::COLLISION );
 
-    // Get the particles that just hit a boundary.
-    std::size_t boundary_start = 0;
-    std::size_t num_boundary = 0;
-    particles.get_host_ptr()->get_event_particles( events::BOUNDARY,
-						   boundary_start,
-						   num_boundary );
+    // Get the particles that just had a boundary.
+    int num_boundary = 
+        particles.get_host_ptr()->get_event_size( events::BOUNDARY );
 
     // Calculate the launch parameters.
     std::size_t num_particle = num_collision + num_boundary;
@@ -180,9 +174,7 @@ void Keff_Tally<Geometry>::accumulate(
     accumulate_kernel<<<num_blocks,threads_per_block>>>(
 	d_physics.get_device_ptr(),
 	particles.get_device_ptr(),
-	collision_start,
 	num_collision,
-	boundary_start,
 	num_boundary,
 	d_keff_device );
 

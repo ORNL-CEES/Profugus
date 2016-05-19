@@ -69,7 +69,7 @@ class Bank
     Stack_Count d_count;
 
     // Number of total particles (sum of d_count)
-    size_type d_total;
+    int d_total;
 
   public:
 

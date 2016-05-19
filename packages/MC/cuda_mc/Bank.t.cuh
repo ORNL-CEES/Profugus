@@ -24,18 +24,18 @@ namespace cuda_profugus
 template<class Geometry>
 __global__
 void pop_kernel( const Particle<Geometry>* bank,
-		 const std::size_t start_idx,
 		 const std::size_t num_particle,
 		 Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 
 	// Get the particle index.
-	std::size_t pidx = idx + start_idx;
+	int pidx = idx + start_idx;
 
 	// Set the particle data.
 	particles->set_wt( pidx, bank[idx].wt() );
@@ -62,14 +62,10 @@ void Bank<Geometry>::pop(
     REQUIRE(!d_count.empty());
 
     // Get the empty block in the vector.
-    std::size_t start_index;
-    std::size_t num_particle;
-    particles.get_host_ptr()->get_event_particles( events::DEAD,
-						   start_index,
-						   num_particle );
+    int num_particle = particles.get_host_ptr()->get_event_size( events::DEAD );
 
     // Get the number of particles to pop from the bank.
-    std::size_t num_to_pop = std::min( num_particle, d_total );
+    int num_to_pop = std::min( num_particle, d_total );
 
     // Unroll the delayed stack and build a host vector of particles to pass
     // to the device.
@@ -114,7 +110,6 @@ void Bank<Geometry>::pop(
 
     // Copy the particles into the vector
     pop_kernel<<<num_blocks,threads_per_block>>>( device_bank,
-						  start_index,
 						  num_to_pop,
 						  particles.get_device_ptr() );
 

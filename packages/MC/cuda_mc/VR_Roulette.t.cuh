@@ -23,14 +23,14 @@ namespace cuda_profugus
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
 template<class Geometry>
-__global__ void post_collision_kernel( const std::size_t collision_start,
-				       const std::size_t num_collision,
+__global__ void post_collision_kernel( const int num_collision,
 				       const double w_c,
 				       const double w_s,
 				       Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int collision_start = particles->event_lower_bound( events::COLLISION );
 
     if ( idx < num_collision )
     {
@@ -103,11 +103,8 @@ void VR_Roulette<Geometry>::post_collision(
     cuda::Shared_Device_Ptr<Bank_t>& bank) const
 {
     // Get the particles that have had a collision.
-    std::size_t start_idx = 0;
-    std::size_t num_particle = 0;
-    particles.get_host_ptr()->get_event_particles( events::COLLISION,
-						   start_idx,
-						   num_particle );
+    int num_particle =
+        particles.get_host_ptr()->get_event_size( events::COLLISION );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -118,7 +115,6 @@ void VR_Roulette<Geometry>::post_collision(
 
     // do roulette
     post_collision_kernel<<<num_blocks,threads_per_block>>>( 
-	start_idx,
 	num_particle,
 	d_Wc,
 	d_Ws,
