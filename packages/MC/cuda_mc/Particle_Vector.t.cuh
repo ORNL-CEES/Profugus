@@ -18,6 +18,7 @@
 #include <vector>
 
 #include <thrust/device_ptr.h>
+#include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 #include <thrust/distance.h>
 #include <thrust/binary_search.h>
@@ -127,7 +128,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -190,12 +191,12 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     thrust::device_ptr<Event_t> event_begin( d_event );
     thrust::device_ptr<Event_t> event_end( d_event + sort_size );
     thrust::device_ptr<std::size_t> lid_begin( d_lid );
-    thrust::sort_by_key( event_begin, event_end, lid_begin );
+    thrust::sort_by_key( thrust::device, event_begin, event_end, lid_begin );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 

@@ -449,7 +449,7 @@ void Fission_Source<Geometry>::get_particles(
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = num_to_create / threads_per_block;
     if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
 

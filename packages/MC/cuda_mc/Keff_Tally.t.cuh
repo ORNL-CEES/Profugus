@@ -166,7 +166,7 @@ void Keff_Tally<Geometry>::accumulate(
     std::size_t num_particle = num_collision + num_boundary;
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 

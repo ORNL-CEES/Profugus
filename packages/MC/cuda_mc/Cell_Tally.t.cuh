@@ -136,7 +136,7 @@ Cell_Tally<Geometry>::Cell_Tally(
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = size / threads_per_block;
     if ( size % threads_per_block > 0 ) ++num_blocks;
 
@@ -170,7 +170,7 @@ void Cell_Tally<Geometry>::accumulate(
     int num_particle = num_collision + num_boundary;
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -193,7 +193,7 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
     int size = d_num_batch * d_num_cells;
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = size / threads_per_block;
     if ( size % threads_per_block > 0 ) ++num_blocks;
 
@@ -220,7 +220,7 @@ void Cell_Tally<Geometry>::copy_moments_to_host(
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = d_num_cells / threads_per_block;
     if ( d_num_cells % threads_per_block > 0 ) ++num_blocks;
 
