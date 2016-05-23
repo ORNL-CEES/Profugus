@@ -14,6 +14,7 @@
 
 #include "cuda_utils/Definitions.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_utils/Stream.hh"
 
 #include "Source.hh"
 #include "Definitions.hh"
@@ -131,6 +132,11 @@ class Uniform_Source : public Source<Geometry>
 
     // Build the domain replicated source.
     void build_DR();
+
+  private:
+
+    // Execution stream.
+    cuda::Stream<cuda::arch::Device> d_stream;
 
     // Requested particles.
     int d_np_requested;

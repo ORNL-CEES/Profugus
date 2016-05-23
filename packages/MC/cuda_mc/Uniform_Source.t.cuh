@@ -229,7 +229,7 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
 
     // Create the particles.
-    sample_source_kernel<<<num_blocks,threads_per_block>>>(
+    sample_source_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
     	d_geometry.get_device_ptr(),
     	d_shape.get_device_ptr(),
     	num_to_create,
