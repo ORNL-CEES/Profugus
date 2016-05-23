@@ -463,7 +463,7 @@ void Physics<Geometry>::collide(
  * \return the number of fission events added at the site
  */
 template <class Geometry>
-int Physics<Geometry>::sample_fission_site(
+void Physics<Geometry>::sample_fission_site(
     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
     Fission_Site_Container &fsc,
     double                  keff)
@@ -502,7 +502,6 @@ int Physics<Geometry>::sample_fission_site(
 	d_host_sites.data(), d_device_sites, num_particle );
 
     // Add the fission sites to the fission container.
-    int num_sites = 0;
     for ( int p = 0; p < num_particle; ++p )
     {
 	for ( int n = 0; n < d_host_sites[p].n; ++n )
@@ -512,11 +511,7 @@ int Physics<Geometry>::sample_fission_site(
 	    site.r = d_host_sites[p].r;
 	    fsc.push_back( site );
 	}
-	
-	num_sites += d_host_sites[p].n;
     }
-
-    return num_sites;
 }
 
 //---------------------------------------------------------------------------//

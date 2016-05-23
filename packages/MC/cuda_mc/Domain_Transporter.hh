@@ -107,9 +107,6 @@ class Domain_Transporter
     // Post-process a transport step.
     void process_step(SDP_Particle_Vector& particles, SDP_Bank& bank);
 
-    //! Return the number of sampled fission sites.
-    int num_sampled_fission_sites() const { return d_num_fission_sites; }
-
   private:
 
     // Process particles that have hit a boundary.
@@ -123,9 +120,6 @@ class Domain_Transporter
 
     // Flag indicating that fission sites should be sampled.
     bool d_sample_fission_sites;
-
-    // Number of fission sites sampled.
-    int d_num_fission_sites;
 
     // Current keff iterate.
     double d_keff;

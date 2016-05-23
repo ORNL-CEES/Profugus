@@ -178,9 +178,9 @@ class Physics
     }
 
     // Sample fission site.
-    int sample_fission_site( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
-			     Fission_Site_Container &fsc,
-			     double keff );
+    void sample_fission_site( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
+                              Fission_Site_Container &fsc,
+                              double keff );
 
     // Return whether a given material is fissionable
     PROFUGUS_DEVICE_FUNCTION

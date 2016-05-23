@@ -271,9 +271,6 @@ void Domain_Transporter<Geometry>::set(const SP_Fission_Sites& fission_sites,
 
     // assign current iterate of keff
     d_keff = keff;
-
-    // initialize the number of fission sites to 0
-    d_num_fission_sites = 0;
 }
 
 //---------------------------------------------------------------------------//
@@ -397,7 +394,7 @@ void Domain_Transporter<Geometry>::process_collision(
     {
         CHECK(d_fission_sites);
         CHECK(d_keff > 0.0);
-        d_num_fission_sites += d_physics.get_host_ptr()->sample_fission_site(
+        d_physics.get_host_ptr()->sample_fission_site(
             particles, *d_fission_sites, d_keff);
     }
 

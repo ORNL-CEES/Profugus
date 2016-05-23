@@ -620,9 +620,8 @@ TYPED_TEST(PhysicsTest, fission_sampling)
 
     // sample fissions.
     double keff = 1.04;
-    int num_sites = physics_tester.physics().get_host_ptr()->sample_fission_site(
+    physics_tester.physics().get_host_ptr()->sample_fission_site(
 	physics_tester.particles(), fsites, keff );
-    EXPECT_EQ( num_sites, 4 );
 
     // first site
     EXPECT_EQ(1, fsites[0].m);
@@ -709,9 +708,8 @@ TYPED_TEST(PhysicsTest, fission_sampling)
 
     // test null ops for no fission
     physics_tester.particle_tester().set_matid(0);
-    num_sites = physics_tester.physics().get_host_ptr()->sample_fission_site(
+    physics_tester.physics().get_host_ptr()->sample_fission_site(
 	physics_tester.particles(), fsites, keff );
-    EXPECT_EQ(0, num_sites);
 }
 
 //---------------------------------------------------------------------------//
