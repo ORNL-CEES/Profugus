@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
+#include <future>
 
 #include "harness/Diagnostics.hh"
 #include "comm/global.hh"
@@ -101,6 +102,11 @@ void Source_Transporter<Geometry>::solve()
     auto particles = cuda::shared_device_ptr<Particle_Vector<Geometry> >(
         d_vector_size, profugus::Global_RNG::d_rng );
 
+    // Create tasks.
+    auto sample_source = [&](){ d_source->get_particles(particles); };
+    auto transport_step = [&](){ d_transporter.transport_step(particles,bank); };
+    auto process_step = [&](){ d_transporter.process_step(particles,bank); };
+
     // START PROFILING
     cudaProfilerStart();
 
@@ -115,14 +121,15 @@ void Source_Transporter<Geometry>::solve()
         // Get the sort size.
         sort_size = (d_source->empty()) ? num_alive : d_vector_size;
 
-        // Run the events. Right now this works sequentially because there are
-        // only 3 events - sampling the source, stepping to a collision or
-        // boundary, and processing a collision or boundary. In the
-        // future, we will first have to find the vector slots each event
-        // kernel will operate on and then launch the kernels.
-        d_source->get_particles( particles );
-        d_transporter.transport_step( particles, bank );
-        d_transporter.process_step( particles, bank );
+        // Run the events.
+        std::future<void> source_future = std::async( sample_source );
+        std::future<void> transport_step_future = std::async( transport_step );
+        std::future<void> process_step_future = std::async( process_step );
+
+        // Wait on the events.
+        source_future.get();
+        transport_step_future.get();
+        process_step_future.get();
 
         // Sort the vector.
         particles.get_host_ptr()->sort_by_event( sort_size );
