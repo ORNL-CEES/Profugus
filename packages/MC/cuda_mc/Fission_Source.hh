@@ -13,6 +13,7 @@
 
 #include "Teuchos_ArrayView.hpp"
 
+#include "cuda_utils/Stream.hh"
 #include "cuda_geometry/Cartesian_Mesh.hh"
 #include "Fission_Rebalance.hh"
 #include "Source.hh"
@@ -96,6 +97,9 @@ class Fission_Source : public Source<Geometry>
     Fission_Source(const RCP_Std_DB& db, 
 		   const SDP_Geometry& geometry, 
 		   const SDP_Physics& physics );
+
+    // Destructor.
+    ~Fission_Source();
 
     // Build the initial fission source.
     void build_initial_source();
@@ -186,6 +190,9 @@ class Fission_Source : public Source<Geometry>
   private:
     // >>> DATA
 
+    // Execution stream.
+    cuda::Stream<cuda::arch::Device> d_stream;
+
     // Geometry
     SDP_Geometry d_geometry;
 
@@ -224,6 +231,15 @@ class Fission_Source : public Source<Geometry>
     int			d_current_cell;
     Vec_Int		d_fis_dist;
     SDP_Cart_Mesh	d_fis_mesh;
+
+    // Size of the particle vector.
+    int d_vector_size;
+
+    // Device fission sites.
+    Fission_Site* d_fission_sites_device;
+
+    // Device fission cells.
+    int* d_fission_cells_device;
 };
 
 } // end namespace cuda_profugus

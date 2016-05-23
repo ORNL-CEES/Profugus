@@ -309,6 +309,22 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
 
     // initialize the total for the first cycle
     d_np_total = d_np_requested;
+
+    // Allocate device data.
+    d_vector_size = db->get("particle_vector_size",10000);
+    cuda::memory::Malloc( d_fission_sites_device, d_vector_size );
+    cuda::memory::Malloc( d_fission_cells_device, d_vector_size );
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Destructor.
+ */
+template <class Geometry>
+Fission_Source<Geometry>::~Fission_Source()
+{
+    cuda::memory::Free( d_fission_sites_device );
+    cuda::memory::Free( d_fission_cells_device );
 }
 
 //---------------------------------------------------------------------------//
@@ -432,6 +448,7 @@ void Fission_Source<Geometry>::get_particles(
     cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     REQUIRE(d_wt > 0.0);
+    REQUIRE( particles.get_host_ptr()->size() == d_vector_size );
 
     // do nothing if no source
     if (!d_np_left)
@@ -569,28 +586,24 @@ void Fission_Source<Geometry>::sample_fission_sites(
     const unsigned int threads_per_block )
 {
     // Extract the fission sites.
-    Fission_Site* fission_sites_device;
-    cuda::memory::Malloc( fission_sites_device, num_particle );
     int copy_start = d_fission_sites->size() - num_particle;
-    cuda::memory::Copy_To_Device( fission_sites_device,
-				  d_fission_sites->data() + copy_start,
-				  num_particle );
+    cuda::memory::Copy_To_Device_Async( d_fission_sites_device,
+                                        d_fission_sites->data() + copy_start,
+                                        num_particle,
+                                        d_stream );
 
     // Remove the fission sites from the host that we just copied to the
     // device.
     d_fission_sites->resize( copy_start );
 
     // Launch the kernel.
-    sample_fission_sites_kernel<<<num_blocks,threads_per_block>>>(
+    sample_fission_sites_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
 	d_geometry.get_device_ptr(),
 	d_physics.get_device_ptr(),
 	num_particle,
-	fission_sites_device,
+	d_fission_sites_device,
 	d_wt,
 	particles.get_device_ptr() );
-    
-    // Free the device fission sites.
-    cuda::memory::Free( fission_sites_device );
 }
 
 //---------------------------------------------------------------------------//
@@ -625,24 +638,20 @@ void Fission_Source<Geometry>::sample_mesh(
     }
 
     // Copy the fission cells to the device.
-    int* fission_cells_device;
-    cuda::memory::Malloc( fission_cells_device, num_particle );
-    cuda::memory::Copy_To_Device( fission_cells_device,
-				  fission_cells.data(),
-				  num_particle );
+    cuda::memory::Copy_To_Device_Async( d_fission_cells_device,
+                                        fission_cells.data(),
+                                        num_particle,
+                                        d_stream );
 
     // Launch the kernel.
-    sample_mesh_kernel<<<num_blocks,threads_per_block>>>(
+    sample_mesh_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
 	d_geometry.get_device_ptr(),
 	d_physics.get_device_ptr(),
 	d_fis_mesh.get_device_ptr(),
-	fission_cells_device,
+	d_fission_cells_device,
 	num_particle,
 	d_wt,
 	particles.get_device_ptr() );
-
-    // Free the device fission cells.
-    cuda::memory::Free( fission_cells_device );
 }
 
 //---------------------------------------------------------------------------//
@@ -657,7 +666,7 @@ void Fission_Source<Geometry>::sample_geometry(
     const unsigned int threads_per_block )
 {
     // Launch the kernel.
-    sample_geometry_kernel<<<num_blocks,threads_per_block>>>(
+    sample_geometry_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
     	d_geometry.get_device_ptr(),
     	d_physics.get_device_ptr(),
     	num_particle,

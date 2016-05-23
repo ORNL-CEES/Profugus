@@ -57,12 +57,13 @@ class FissionSourceTest : public testing::Test
 	profugus::Global_RNG::d_rng = rng;
 
         // make db
+	vector_size = 100;
 	np = 800;
         db = Teuchos::rcp(new ParameterList_t("test"));
 	db->set( "Np", np );
+        db->set( "particle_vector_size", vector_size );
 
 	// build physics.
-	vector_size = 100;
 	physics_tester = std::make_shared<Physics_Tester>(
 	    edges, edges, edges, vector_size, rng, *db, *xs, 1 );
     }
