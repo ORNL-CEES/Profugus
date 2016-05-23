@@ -11,7 +11,6 @@
 #ifndef cuda_mc_Domain_Transporter_t_cuh
 #define cuda_mc_Domain_Transporter_t_cuh
 
-#include <future>
 #include <cmath>
 
 #include "utils/Constants.hh"
@@ -293,7 +292,7 @@ void Domain_Transporter<Geometry>::transport_step(
     // get CUDA launch parameters
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-        cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+        cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -320,11 +319,11 @@ void Domain_Transporter<Geometry>::process_step(
     // before moving on to boundaries and collisions.
     d_tallier->path_length( particles );
 
-    // Process boundaries
-    process_boundary( particles, bank );
-
     // Process collisions
     process_collision( particles, bank );
+
+    // Process boundaries
+    process_boundary( particles, bank );
 }
 
 //---------------------------------------------------------------------------//
@@ -343,7 +342,7 @@ void Domain_Transporter<Geometry>::process_boundary(
     // get CUDA launch parameters
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -380,7 +379,7 @@ void Domain_Transporter<Geometry>::process_collision(
     // get CUDA launch parameters
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::num_cores_per_mp();
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 

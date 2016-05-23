@@ -122,9 +122,9 @@ void Source_Transporter<Geometry>::solve()
         sort_size = (d_source->empty()) ? num_alive : d_vector_size;
 
         // Run the events.
-        std::future<void> source_future = std::async( sample_source );
-        std::future<void> transport_step_future = std::async( transport_step );
         std::future<void> process_step_future = std::async( process_step );
+        std::future<void> transport_step_future = std::async( transport_step );
+        std::future<void> source_future = std::async( sample_source );
 
         // Wait on the events.
         source_future.get();
