@@ -316,7 +316,8 @@ void Domain_Transporter<Geometry>::process_step(
 {
     REQUIRE(d_tallier);
 
-    // Do pathlength tallies.
+    // Do pathlength tallies. This call blocks on this thread so we tally
+    // before moving on to boundaries and collisions.
     d_tallier->path_length( particles );
 
     // Process boundaries

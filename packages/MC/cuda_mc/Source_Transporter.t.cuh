@@ -131,7 +131,8 @@ void Source_Transporter<Geometry>::solve()
         transport_step_future.get();
         process_step_future.get();
 
-        // Sort the vector.
+        // Sort the vector. This happens on the default stream and therefore
+        // effectively synchronizes the device after events have run.
         particles.get_host_ptr()->sort_by_event( sort_size );
 
         // Get the number of particles that are alive.

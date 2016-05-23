@@ -171,16 +171,21 @@ void Keff_Tally<Geometry>::accumulate(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Process the tallies.
-    accumulate_kernel<<<num_blocks,threads_per_block>>>(
+    accumulate_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
 	d_physics.get_device_ptr(),
 	particles.get_device_ptr(),
 	num_collision,
 	num_boundary,
 	d_keff_device );
 
-    // Pull tallies off the device and add them to cycle tally.
-    cuda::memory::Copy_To_Host( 
-	d_keff_host.data(), d_keff_device, num_particle );
+    // Pull tallies off the device.
+    cuda::memory::Copy_To_Host_Async( 
+	d_keff_host.data(), d_keff_device, num_particle, d_stream );
+
+    // Synchronize on this thread.
+    cudaStreamSynchronize( d_stream.handle() );
+
+    // Add them to cycle tally.
     for ( int n = 0; n < num_particle; ++n )
     {
 	d_keff_cycle += d_keff_host[n];

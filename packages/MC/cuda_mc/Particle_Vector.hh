@@ -101,7 +101,8 @@ class Particle_Vector
     // Destructor.
     ~Particle_Vector();
 
-    // Sort the local indices by event key, effectively sorting the vector.
+    // Sort the local indices by event key, effectively sorting the vector
+    // using the default stream.
     void sort_by_event( const int sort_size );
 
     // Get the number of particles with a given event on the host.

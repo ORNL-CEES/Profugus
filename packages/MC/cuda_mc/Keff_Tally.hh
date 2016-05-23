@@ -18,6 +18,7 @@
 #include "utils/Definitions.hh"
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_utils/Stream.hh"
 
 namespace cuda_profugus
 {
@@ -73,6 +74,9 @@ class Keff_Tally : public Pathlength_Tally<Geometry>
 
     //! keff work vector on-device.
     double* d_keff_device;
+
+    // Execution stream.
+    cuda::Stream<cuda::arch::Device> d_stream;
 
   public:
     

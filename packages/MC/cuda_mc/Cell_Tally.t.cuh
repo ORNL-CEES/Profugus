@@ -175,13 +175,14 @@ void Cell_Tally<Geometry>::accumulate(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Tally the particles.
-    tally_kernel<<<num_blocks,threads_per_block>>>( d_geometry.get_device_ptr(),
-						    particles.get_device_ptr(),
-						    num_collision,
-						    num_boundary,
-						    d_num_batch,
-						    d_num_cells,
-						    d_tally );
+    tally_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>( 
+        d_geometry.get_device_ptr(),
+        particles.get_device_ptr(),
+        num_collision,
+        num_boundary,
+        d_num_batch,
+        d_num_cells,
+        d_tally );
 }
 
 //---------------------------------------------------------------------------//

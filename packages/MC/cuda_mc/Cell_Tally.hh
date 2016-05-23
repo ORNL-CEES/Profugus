@@ -15,6 +15,7 @@
 #include "utils/Definitions.hh"
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_utils/Stream.hh"
 
 #include "Definitions.hh"
 #include "Particle_Vector.hh"
@@ -58,6 +59,9 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
 
     // Cell tallies. Indexed as d_tally[batch][cell]. On-device.
     double* d_tally;
+
+    // Execution stream.
+    cuda::Stream<cuda::arch::Device> d_stream;
 
   public:
 
