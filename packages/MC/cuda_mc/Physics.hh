@@ -21,6 +21,7 @@
 #include "utils/Static_Map.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "cuda_utils/CudaMacros.hh"
+#include "cuda_utils/Stream.hh"
 #include "xs/XS.hh"
 #include "cuda_xs/XS_Device.hh"
 #include "Definitions.hh"
@@ -215,6 +216,12 @@ class Physics
     typedef def::Vec_Dbl         Vec_Dbl;
     typedef def::Vec_Int         Vec_Int;
     typedef std::vector<Vec_Dbl> Vec_Vec_Dbl;
+
+    // Collide stream
+    cuda::Stream<cuda::arch::Device> d_collide_stream;
+
+    // Sample fission site stream
+    cuda::Stream<cuda::arch::Device> d_fission_stream;
 
     // Boolean for implicit capture.
     bool d_implicit_capture;
