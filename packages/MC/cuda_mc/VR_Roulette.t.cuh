@@ -100,7 +100,8 @@ VR_Roulette<Geometry>::VR_Roulette( ParameterList_t& db)
 template <class Geometry>
 void VR_Roulette<Geometry>::post_collision(
     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-    cuda::Shared_Device_Ptr<Bank_t>& bank) const
+    cuda::Shared_Device_Ptr<Bank_t>& bank,
+    cuda::Stream<cuda::arch::Device> stream ) const
 {
     // Get the particles that have had a collision.
     int num_particle =
@@ -114,7 +115,7 @@ void VR_Roulette<Geometry>::post_collision(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // do roulette
-    post_collision_kernel<<<num_blocks,threads_per_block>>>( 
+    post_collision_kernel<<<num_blocks,threads_per_block,0,stream.handle()>>>( 
 	num_particle,
 	d_Wc,
 	d_Ws,

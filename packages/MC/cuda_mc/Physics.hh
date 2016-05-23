@@ -149,7 +149,9 @@ class Physics
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process particles through a collision.
-    void collide( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles );
+    void collide( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
+                  cuda::Stream<cuda::arch::Device> stream =
+                  cuda::Stream<cuda::arch::Device>() );
 
     // Sample fission spectrum and initialize the physics state.
     PROFUGUS_DEVICE_FUNCTION
@@ -181,7 +183,9 @@ class Physics
     // Sample fission site.
     void sample_fission_site( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
                               Fission_Site_Container &fsc,
-                              double keff );
+                              double keff,
+                              cuda::Stream<cuda::arch::Device> stream =
+                              cuda::Stream<cuda::arch::Device>() );
 
     // Return whether a given material is fissionable
     PROFUGUS_DEVICE_FUNCTION
@@ -216,12 +220,6 @@ class Physics
     typedef def::Vec_Dbl         Vec_Dbl;
     typedef def::Vec_Int         Vec_Int;
     typedef std::vector<Vec_Dbl> Vec_Vec_Dbl;
-
-    // Collide stream
-    cuda::Stream<cuda::arch::Device> d_collide_stream;
-
-    // Sample fission site stream
-    cuda::Stream<cuda::arch::Device> d_fission_stream;
 
     // Boolean for implicit capture.
     bool d_implicit_capture;

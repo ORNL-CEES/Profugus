@@ -19,6 +19,7 @@
 #include "Bank.hh"
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_utils/Stream.hh"
 
 namespace cuda_profugus
 {
@@ -123,6 +124,15 @@ class Domain_Transporter
 
     // Current keff iterate.
     double d_keff;
+
+    // Take step stream.
+    cuda::Stream<cuda::arch::Device> d_take_step_stream;
+
+    // Boundary stream.
+    cuda::Stream<cuda::arch::Device> d_boundary_stream;
+
+    // Collision stream.
+    cuda::Stream<cuda::arch::Device> d_collision_stream;
 };
 
 } // end namespace cuda_profugus

@@ -414,7 +414,8 @@ void Physics<Geometry>::initialize(
  */
 template <class Geometry>
 void Physics<Geometry>::collide(
-    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
+    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
+    cuda::Stream<cuda::arch::Device> stream )
 {
     // Get the particles that will have a collision.
     int num_particle =
@@ -428,7 +429,7 @@ void Physics<Geometry>::collide(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Process the collisions.
-    collide_kernel<<<num_blocks,threads_per_block,0,d_collide_stream.handle()>>>(
+    collide_kernel<<<num_blocks,threads_per_block,0,stream.handle()>>>(
 	num_particle,
 	d_geometry.get_device_ptr(),
 	d_mat.get_device_ptr(),
@@ -466,7 +467,8 @@ template <class Geometry>
 void Physics<Geometry>::sample_fission_site(
     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
     Fission_Site_Container &fsc,
-    double                  keff)
+    double                  keff,
+    cuda::Stream<cuda::arch::Device> stream )
 {
     // Lazy allocate the fission site work vectors.
     if ( nullptr == d_device_sites )
@@ -487,7 +489,7 @@ void Physics<Geometry>::sample_fission_site(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Sample the fission sites.
-    sample_fission_site_kernel<<<num_blocks,threads_per_block,0,d_fission_stream.handle()>>>(
+    sample_fission_site_kernel<<<num_blocks,threads_per_block,0,stream.handle()>>>(
 	num_particle,
 	d_geometry.get_device_ptr(),
 	d_mat.get_device_ptr(),
@@ -499,10 +501,10 @@ void Physics<Geometry>::sample_fission_site(
 
     // Pull the fission sites off of the device.
     cuda::memory::Copy_To_Host_Async(
-	d_host_sites.data(), d_device_sites, num_particle, d_fission_stream );
+	d_host_sites.data(), d_device_sites, num_particle, stream );
 
     // Synchronize on this thread after copy.
-    cudaStreamSynchronize( d_fission_stream.handle() );
+    stream.synchronize();
 
     // Add the fission sites to the fission container.
     for ( int p = 0; p < num_particle; ++p )

@@ -16,6 +16,7 @@
 #include "utils/Definitions.hh"
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_utils/Stream.hh"
 #include "Bank.hh"
 #include "Physics.hh"
 
@@ -63,12 +64,16 @@ class Variance_Reduction
     //! Apply variance reduction method after a surface crossing
     virtual void post_surface(
 	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	cuda::Shared_Device_Ptr<Bank_t>& bank) const = 0;
+	cuda::Shared_Device_Ptr<Bank_t>& bank,
+        cuda::Stream<cuda::arch::Device> stream =
+        cuda::Stream<cuda::arch::Device>() ) const = 0;
 
     //! Apply variance reduction method after a collision
     virtual void post_collision(
 	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	cuda::Shared_Device_Ptr<Bank_t>& bank) const = 0;
+	cuda::Shared_Device_Ptr<Bank_t>& bank,
+        cuda::Stream<cuda::arch::Device> stream =
+        cuda::Stream<cuda::arch::Device>() ) const = 0;
 
   protected:
     // Problem geometry implementation.

@@ -183,6 +183,9 @@ void Cell_Tally<Geometry>::accumulate(
         d_num_batch,
         d_num_cells,
         d_tally );
+
+    // Synchronize after tally.
+    d_stream.synchronize();
 }
 
 //---------------------------------------------------------------------------//

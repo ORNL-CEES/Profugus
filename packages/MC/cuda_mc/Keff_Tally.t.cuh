@@ -183,7 +183,7 @@ void Keff_Tally<Geometry>::accumulate(
 	d_keff_host.data(), d_keff_device, num_particle, d_stream );
 
     // Synchronize on this thread.
-    cudaStreamSynchronize( d_stream.handle() );
+    d_stream.synchronize();
 
     // Add them to cycle tally.
     for ( int n = 0; n < num_particle; ++n )
