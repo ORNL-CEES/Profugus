@@ -59,12 +59,21 @@ Current_Tally<Geometry>::Current_Tally(RCP_ParameterList db,
     d_x_current.resize(num_x_faces);
     d_y_current.resize(num_y_faces);
     d_z_current.resize(num_z_faces);
-    d_x_std_dev.resize(num_x_faces);
-    d_y_std_dev.resize(num_y_faces);
-    d_z_std_dev.resize(num_z_faces);
-    d_x_hist.resize(num_x_faces);
-    d_y_hist.resize(num_y_faces);
-    d_z_hist.resize(num_z_faces);
+    d_x_current_std_dev.resize(num_x_faces);
+    d_y_current_std_dev.resize(num_y_faces);
+    d_z_current_std_dev.resize(num_z_faces);
+    d_x_current_hist.resize(num_x_faces);
+    d_y_current_hist.resize(num_y_faces);
+    d_z_current_hist.resize(num_z_faces);
+    d_x_flux.resize(num_x_faces);
+    d_y_flux.resize(num_y_faces);
+    d_z_flux.resize(num_z_faces);
+    d_x_flux_std_dev.resize(num_x_faces);
+    d_y_flux_std_dev.resize(num_y_faces);
+    d_z_flux_std_dev.resize(num_z_faces);
+    d_x_flux_hist.resize(num_x_faces);
+    d_y_flux_hist.resize(num_y_faces);
+    d_z_flux_hist.resize(num_z_faces);
 
     // Compute surface areas
     d_x_areas.resize(num_x_faces,0.0);
@@ -203,34 +212,37 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
     {
         int ind = x_face + d_x_edges.size() *
             (y_face + (d_y_edges.size() - 1) * z_face);
-        ENSURE (ind < d_x_hist.size());
+        ENSURE (ind < d_x_current_hist.size());
 
         const auto &dir = particle.geo_state().d_dir;
         double dot = profugus::dot_product(dir, {1.0, 0.0, 0.0});
 
-        d_x_hist[ind] += particle.wt() * dot;
+        d_x_current_hist[ind] += particle.wt() * dot;
+        d_x_flux_hist[ind]    += particle.wt();
     }
     else if (edge == J)
     {
         int ind = x_face + (d_x_edges.size() - 1) *
             (y_face + d_y_edges.size() * z_face);
-        ENSURE (ind < d_y_hist.size());
+        ENSURE (ind < d_y_current_hist.size());
 
         const auto &dir = particle.geo_state().d_dir;
         double dot = profugus::dot_product(dir, {0.0, 1.0, 0.0});
 
-        d_y_hist[ind] += particle.wt() * dot;
+        d_y_current_hist[ind] += particle.wt() * dot;
+        d_y_flux_hist[ind]    += particle.wt();
     }
     else if (edge == K)
     {
         int ind = x_face + (d_x_edges.size() - 1) *
             (y_face + (d_y_edges.size() - 1) * z_face);
-        ENSURE (ind < d_z_hist.size());
+        ENSURE (ind < d_z_current_hist.size());
 
         const auto &dir = particle.geo_state().d_dir;
         double dot = profugus::dot_product(dir, {0.0, 0.0, 1.0});
 
-        d_z_hist[ind] += particle.wt() * dot;
+        d_z_current_hist[ind] += particle.wt() * dot;
+        d_z_flux_hist[ind]    += particle.wt();
     }
 
 }
@@ -242,34 +254,49 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
 template <class Geometry>
 void Current_Tally<Geometry>::end_history()
 {
-    REQUIRE( d_x_hist.size() == d_x_current.size() );
-    REQUIRE( d_x_hist.size() == d_x_std_dev.size() );
-    REQUIRE( d_y_hist.size() == d_y_current.size() );
-    REQUIRE( d_y_hist.size() == d_y_std_dev.size() );
-    REQUIRE( d_z_hist.size() == d_z_current.size() );
-    REQUIRE( d_z_hist.size() == d_z_std_dev.size() );
+    REQUIRE( d_x_current_hist.size() == d_x_current.size() );
+    REQUIRE( d_x_current_hist.size() == d_x_current_std_dev.size() );
+    REQUIRE( d_y_current_hist.size() == d_y_current.size() );
+    REQUIRE( d_y_current_hist.size() == d_y_current_std_dev.size() );
+    REQUIRE( d_z_current_hist.size() == d_z_current.size() );
+    REQUIRE( d_z_current_hist.size() == d_z_current_std_dev.size() );
+    REQUIRE( d_x_flux_hist.size()    == d_x_current.size() );
+    REQUIRE( d_x_flux_hist.size()    == d_x_current_std_dev.size() );
+    REQUIRE( d_y_flux_hist.size()    == d_y_current.size() );
+    REQUIRE( d_y_flux_hist.size()    == d_y_current_std_dev.size() );
+    REQUIRE( d_z_flux_hist.size()    == d_z_current.size() );
+    REQUIRE( d_z_flux_hist.size()    == d_z_current_std_dev.size() );
 
     // Add contribution to mean and variance
-    for (int i = 0; i < d_x_hist.size(); ++i)
+    for (int i = 0; i < d_x_current_hist.size(); ++i)
     {
-        d_x_current[i] += d_x_hist[i];
-        d_x_std_dev[i] += d_x_hist[i]*d_x_hist[i];
+        d_x_current[i]         += d_x_current_hist[i];
+        d_x_current_std_dev[i] += d_x_current_hist[i]*d_x_current_hist[i];
+        d_x_flux[i]            += d_x_flux_hist[i];
+        d_x_flux_std_dev[i]    += d_x_flux_hist[i]*d_x_flux_hist[i];
     }
-    for (int j = 0; j < d_y_hist.size(); ++j)
+    for (int j = 0; j < d_y_current_hist.size(); ++j)
     {
-        d_y_current[j] += d_y_hist[j];
-        d_y_std_dev[j] += d_y_hist[j]*d_y_hist[j];
+        d_y_current[j]         += d_y_current_hist[j];
+        d_y_current_std_dev[j] += d_y_current_hist[j]*d_y_current_hist[j];
+        d_y_flux[j]            += d_y_flux_hist[j];
+        d_y_flux_std_dev[j]    += d_y_flux_hist[j]*d_y_flux_hist[j];
     }
-    for (int k = 0; k < d_z_hist.size(); ++k)
+    for (int k = 0; k < d_z_current_hist.size(); ++k)
     {
-        d_z_current[k] += d_z_hist[k];
-        d_z_std_dev[k] += d_z_hist[k]*d_z_hist[k];
+        d_z_current[k]         += d_z_current_hist[k];
+        d_z_current_std_dev[k] += d_z_current_hist[k]*d_z_current_hist[k];
+        d_z_flux[k]            += d_z_flux_hist[k];
+        d_z_flux_std_dev[k]    += d_z_flux_hist[k]*d_z_flux_hist[k];
     }
 
     // Reset history vectors
-    std::fill(d_x_hist.begin(), d_x_hist.end(), 0.0);
-    std::fill(d_y_hist.begin(), d_y_hist.end(), 0.0);
-    std::fill(d_z_hist.begin(), d_z_hist.end(), 0.0);
+    std::fill(d_x_current_hist.begin(), d_x_current_hist.end(), 0.0);
+    std::fill(d_y_current_hist.begin(), d_y_current_hist.end(), 0.0);
+    std::fill(d_z_current_hist.begin(), d_z_current_hist.end(), 0.0);
+    std::fill(d_x_flux_hist.begin(),    d_x_flux_hist.end(),    0.0);
+    std::fill(d_y_flux_hist.begin(),    d_y_flux_hist.end(),    0.0);
+    std::fill(d_z_flux_hist.begin(),    d_z_flux_hist.end(),    0.0);
 }
 
 //---------------------------------------------------------------------------//
@@ -279,17 +306,26 @@ void Current_Tally<Geometry>::end_history()
 template <class Geometry>
 void Current_Tally<Geometry>::finalize(double num_particles)
 {
-    REQUIRE( d_x_std_dev.size() == d_x_current.size() );
-    REQUIRE( d_y_std_dev.size() == d_y_current.size() );
-    REQUIRE( d_z_std_dev.size() == d_z_current.size() );
+    REQUIRE( d_x_current_std_dev.size() == d_x_current.size() );
+    REQUIRE( d_y_current_std_dev.size() == d_y_current.size() );
+    REQUIRE( d_z_current_std_dev.size() == d_z_current.size() );
+    REQUIRE( d_x_flux_std_dev.size() == d_x_flux.size() );
+    REQUIRE( d_y_flux_std_dev.size() == d_y_flux.size() );
+    REQUIRE( d_z_flux_std_dev.size() == d_z_flux.size() );
 
     // Do global reduction on first and second moments
     profugus::global_sum(d_x_current.data(), d_x_current.size());
     profugus::global_sum(d_y_current.data(), d_y_current.size());
     profugus::global_sum(d_z_current.data(), d_z_current.size());
-    profugus::global_sum(d_x_std_dev.data(), d_x_std_dev.size());
-    profugus::global_sum(d_y_std_dev.data(), d_y_std_dev.size());
-    profugus::global_sum(d_z_std_dev.data(), d_z_std_dev.size());
+    profugus::global_sum(d_x_current_std_dev.data(), d_x_current_std_dev.size());
+    profugus::global_sum(d_y_current_std_dev.data(), d_y_current_std_dev.size());
+    profugus::global_sum(d_z_current_std_dev.data(), d_z_current_std_dev.size());
+    profugus::global_sum(d_x_flux.data(), d_x_flux.size());
+    profugus::global_sum(d_y_flux.data(), d_y_flux.size());
+    profugus::global_sum(d_z_flux.data(), d_z_flux.size());
+    profugus::global_sum(d_x_flux_std_dev.data(), d_x_flux_std_dev.size());
+    profugus::global_sum(d_y_flux_std_dev.data(), d_y_flux_std_dev.size());
+    profugus::global_sum(d_z_flux_std_dev.data(), d_z_flux_std_dev.size());
 
     double inv_N = 1.0 / num_particles;
 
@@ -298,15 +334,27 @@ void Current_Tally<Geometry>::finalize(double num_particles)
     {
         double inv_A = 1.0 / d_x_areas[i];
 
+        // Current
         double avg_l  = d_x_current[i] * inv_N;
-        double avg_l2 = d_x_std_dev[i] * inv_N;
+        double avg_l2 = d_x_current_std_dev[i] * inv_N;
 
         d_x_current[i] = avg_l * inv_A;
 
         double var = num_particles / (num_particles - 1) * inv_A * inv_A *
             (avg_l2 - avg_l * avg_l);
 
-        d_x_std_dev[i] = std::sqrt(var * inv_N);
+        d_x_current_std_dev[i] = std::sqrt(var * inv_N);
+
+        // Flux
+        avg_l  = d_x_flux[i] * inv_N;
+        avg_l2 = d_x_flux_std_dev[i] * inv_N;
+
+        d_x_flux[i] = avg_l * inv_A;
+
+        var = num_particles / (num_particles - 1) * inv_A * inv_A *
+            (avg_l2 - avg_l * avg_l);
+
+        d_x_flux_std_dev[i] = std::sqrt(var * inv_N);
     }
 
     // Finalize y currents and std deviations
@@ -314,15 +362,27 @@ void Current_Tally<Geometry>::finalize(double num_particles)
     {
         double inv_A = 1.0 / d_y_areas[i];
 
+        // Current
         double avg_l  = d_y_current[i] * inv_N;
-        double avg_l2 = d_y_std_dev[i] * inv_N;
+        double avg_l2 = d_y_current_std_dev[i] * inv_N;
 
         d_y_current[i] = avg_l * inv_A;
 
         double var = num_particles / (num_particles - 1) * inv_A * inv_A *
             (avg_l2 - avg_l * avg_l);
 
-        d_y_std_dev[i] = std::sqrt(var * inv_N);
+        d_y_current_std_dev[i] = std::sqrt(var * inv_N);
+
+        // Flux
+        avg_l  = d_y_flux[i] * inv_N;
+        avg_l2 = d_y_flux_std_dev[i] * inv_N;
+
+        d_y_flux[i] = avg_l * inv_A;
+
+        var = num_particles / (num_particles - 1) * inv_A * inv_A *
+            (avg_l2 - avg_l * avg_l);
+
+        d_y_flux_std_dev[i] = std::sqrt(var * inv_N);
     }
 
     // Finalize z currents and std deviations
@@ -330,15 +390,27 @@ void Current_Tally<Geometry>::finalize(double num_particles)
     {
         double inv_A = 1.0 / d_z_areas[i];
 
+        // Current
         double avg_l  = d_z_current[i] * inv_N;
-        double avg_l2 = d_z_std_dev[i] * inv_N;
+        double avg_l2 = d_z_current_std_dev[i] * inv_N;
 
         d_z_current[i] = avg_l * inv_A;
 
         double var = num_particles / (num_particles - 1) * inv_A * inv_A *
             (avg_l2 - avg_l * avg_l);
 
-        d_z_std_dev[i] = std::sqrt(var * inv_N);
+        d_z_current_std_dev[i] = std::sqrt(var * inv_N);
+
+        // Flux
+        avg_l  = d_z_flux[i] * inv_N;
+        avg_l2 = d_z_flux_std_dev[i] * inv_N;
+
+        d_z_flux[i] = avg_l * inv_A;
+
+        var = num_particles / (num_particles - 1) * inv_A * inv_A *
+            (avg_l2 - avg_l * avg_l);
+
+        d_z_flux_std_dev[i] = std::sqrt(var * inv_N);
     }
 
 #ifdef USE_HDF5
@@ -363,9 +435,19 @@ void Current_Tally<Geometry>::finalize(double num_particles)
     writer.write("z_current",d_z_current);
 
     // Std dev
-    writer.write("x_current_std_dev",d_x_std_dev);
-    writer.write("y_current_std_dev",d_y_std_dev);
-    writer.write("z_current_std_dev",d_z_std_dev);
+    writer.write("x_current_std_dev",d_x_current_std_dev);
+    writer.write("y_current_std_dev",d_y_current_std_dev);
+    writer.write("z_current_std_dev",d_z_current_std_dev);
+
+    // Flux
+    writer.write("x_flux",d_x_flux);
+    writer.write("y_flux",d_y_flux);
+    writer.write("z_flux",d_z_flux);
+
+    // Std dev
+    writer.write("x_flux_std_dev",d_x_flux_std_dev);
+    writer.write("y_flux_std_dev",d_y_flux_std_dev);
+    writer.write("z_flux_std_dev",d_z_flux_std_dev);
 #endif
 }
 
@@ -376,15 +458,24 @@ void Current_Tally<Geometry>::finalize(double num_particles)
 template <class Geometry>
 void Current_Tally<Geometry>::reset()
 {
-    std::fill(d_x_current.begin(), d_x_current.end(), 0.0);
-    std::fill(d_y_current.begin(), d_y_current.end(), 0.0);
-    std::fill(d_z_current.begin(), d_z_current.end(), 0.0);
-    std::fill(d_x_std_dev.begin(), d_x_std_dev.end(), 0.0);
-    std::fill(d_y_std_dev.begin(), d_y_std_dev.end(), 0.0);
-    std::fill(d_z_std_dev.begin(), d_z_std_dev.end(), 0.0);
-    std::fill(d_x_hist.begin(), d_x_hist.end(), 0.0);
-    std::fill(d_y_hist.begin(), d_y_hist.end(), 0.0);
-    std::fill(d_z_hist.begin(), d_z_hist.end(), 0.0);
+    std::fill(d_x_current.begin(),         d_x_current.end(),         0.0);
+    std::fill(d_y_current.begin(),         d_y_current.end(),         0.0);
+    std::fill(d_z_current.begin(),         d_z_current.end(),         0.0);
+    std::fill(d_x_current_std_dev.begin(), d_x_current_std_dev.end(), 0.0);
+    std::fill(d_y_current_std_dev.begin(), d_y_current_std_dev.end(), 0.0);
+    std::fill(d_z_current_std_dev.begin(), d_z_current_std_dev.end(), 0.0);
+    std::fill(d_x_current_hist.begin(),    d_x_current_hist.end(),    0.0);
+    std::fill(d_y_current_hist.begin(),    d_y_current_hist.end(),    0.0);
+    std::fill(d_z_current_hist.begin(),    d_z_current_hist.end(),    0.0);
+    std::fill(d_x_flux.begin(),            d_x_flux.end(),            0.0);
+    std::fill(d_y_flux.begin(),            d_y_flux.end(),            0.0);
+    std::fill(d_z_flux.begin(),            d_z_flux.end(),            0.0);
+    std::fill(d_x_flux_std_dev.begin(),    d_x_flux_std_dev.end(),    0.0);
+    std::fill(d_y_flux_std_dev.begin(),    d_y_flux_std_dev.end(),    0.0);
+    std::fill(d_z_flux_std_dev.begin(),    d_z_flux_std_dev.end(),    0.0);
+    std::fill(d_x_flux_hist.begin(),       d_x_flux_hist.end(),       0.0);
+    std::fill(d_y_flux_hist.begin(),       d_y_flux_hist.end(),       0.0);
+    std::fill(d_z_flux_hist.begin(),       d_z_flux_hist.end(),       0.0);
 }
 
 } // end namespace profugus

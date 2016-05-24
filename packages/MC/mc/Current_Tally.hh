@@ -78,17 +78,41 @@ class Current_Tally : public Surface_Tally<Geometry>
     {
         return profugus::make_view(d_z_current);
     }
-    profugus::const_View_Field<double> x_std_dev() const
+    profugus::const_View_Field<double> x_current_std_dev() const
     {
-        return profugus::make_view(d_x_std_dev);
+        return profugus::make_view(d_x_current_std_dev);
     }
-    profugus::const_View_Field<double> y_std_dev() const
+    profugus::const_View_Field<double> y_current_std_dev() const
     {
-        return profugus::make_view(d_y_std_dev);
+        return profugus::make_view(d_y_current_std_dev);
     }
-    profugus::const_View_Field<double> z_std_dev() const
+    profugus::const_View_Field<double> z_current_std_dev() const
     {
-        return profugus::make_view(d_z_std_dev);
+        return profugus::make_view(d_z_current_std_dev);
+    }
+    profugus::const_View_Field<double> x_flux() const
+    {
+        return profugus::make_view(d_x_flux);
+    }
+    profugus::const_View_Field<double> y_flux() const
+    {
+        return profugus::make_view(d_y_flux);
+    }
+    profugus::const_View_Field<double> z_flux() const
+    {
+        return profugus::make_view(d_z_flux);
+    }
+    profugus::const_View_Field<double> x_flux_std_dev() const
+    {
+        return profugus::make_view(d_x_flux_std_dev);
+    }
+    profugus::const_View_Field<double> y_flux_std_dev() const
+    {
+        return profugus::make_view(d_y_flux_std_dev);
+    }
+    profugus::const_View_Field<double> z_flux_std_dev() const
+    {
+        return profugus::make_view(d_z_flux_std_dev);
     }
 
   private:
@@ -109,16 +133,25 @@ class Current_Tally : public Surface_Tally<Geometry>
     std::vector<double> d_x_current;
     std::vector<double> d_y_current;
     std::vector<double> d_z_current;
+    std::vector<double> d_x_flux;
+    std::vector<double> d_y_flux;
+    std::vector<double> d_z_flux;
 
     // Std deviations
-    std::vector<double> d_x_std_dev;
-    std::vector<double> d_y_std_dev;
-    std::vector<double> d_z_std_dev;
+    std::vector<double> d_x_current_std_dev;
+    std::vector<double> d_y_current_std_dev;
+    std::vector<double> d_z_current_std_dev;
+    std::vector<double> d_x_flux_std_dev;
+    std::vector<double> d_y_flux_std_dev;
+    std::vector<double> d_z_flux_std_dev;
 
     // Per-history accumulation
-    std::vector<double> d_x_hist;
-    std::vector<double> d_y_hist;
-    std::vector<double> d_z_hist;
+    std::vector<double> d_x_current_hist;
+    std::vector<double> d_y_current_hist;
+    std::vector<double> d_z_current_hist;
+    std::vector<double> d_x_flux_hist;
+    std::vector<double> d_y_flux_hist;
+    std::vector<double> d_z_flux_hist;
 };
 
 } // end namespace profugus
