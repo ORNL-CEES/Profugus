@@ -135,10 +135,10 @@ class Keff_TallyTest : public testing::Test
 TEST_F(Keff_TallyTest, test_keff)
 {
     // Make a keff tally
-    Tally_t keff(1.0, physics_tester->physics());
+    int num_particle = physics_tester->particle_tester().size();
+    Tally_t keff(1.0, physics_tester->physics(), num_particle);
 
     // Set some of the particles to collide and some to boundary so they tally.
-    int num_particle = physics_tester->particle_tester().size();
     Teuchos::Array<cuda_profugus::events::Event> events( 
 	num_particle, cuda_profugus::events::DEAD );
     int num_to_tally = 0;
@@ -171,13 +171,11 @@ TEST_F(Keff_TallyTest, test_keff)
     physics_tester->particle_tester().set_step( 1.4 );
     keff.accumulate( physics_tester->particles() );
     ref_k = 1.4 * 0.65 * 2.4 * 4.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 2
     physics_tester->particle_tester().set_group( 2 ); // no fission in group 2
     physics_tester->particle_tester().set_step( 1.8 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 0
     physics_tester->particle_tester().set_wt( 0.4 );
@@ -185,14 +183,12 @@ TEST_F(Keff_TallyTest, test_keff)
     physics_tester->particle_tester().set_step( 0.6 );
     keff.accumulate( physics_tester->particles() );
     ref_k += 0.4 * 0.6 * 2.4 * 3.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in material 0
     physics_tester->particle_tester().set_wt( 0.45 );
     physics_tester->particle_tester().set_matid( 0 );
     physics_tester->particle_tester().set_step( 0.2 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // End the cycle
     int tally_norm = 3.0 * num_particle;
@@ -217,7 +213,8 @@ TEST_F(Keff_TallyTest, test_keff)
 TEST_F(Keff_TallyTest, test_keff_var)
 {
     // Make a keff tally
-    Tally_t keff(1.0, physics_tester->physics());
+    int num_particle = physics_tester->particle_tester().size();
+    Tally_t keff(1.0, physics_tester->physics(), num_particle);
 
     // Create reference variables
     double ref_k     = 0.0;
@@ -233,7 +230,6 @@ TEST_F(Keff_TallyTest, test_keff_var)
 
     // Set some of the particles to collide and some to boundary so they
     // tally.
-    int num_particle = physics_tester->particle_tester().size();
     Teuchos::Array<cuda_profugus::events::Event> events( 
 	num_particle, cuda_profugus::events::DEAD );
     int num_to_tally = 0;
@@ -261,13 +257,11 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 1.4 );
     keff.accumulate( physics_tester->particles() );
     ref_k = 1.4 * 0.65 * 2.4 * 4.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 2
     physics_tester->particle_tester().set_group( 2 ); // no fission in group 2
     physics_tester->particle_tester().set_step( 1.8 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 0
     physics_tester->particle_tester().set_wt( 0.4 );
@@ -275,14 +269,12 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 0.6 );
     keff.accumulate( physics_tester->particles() );
     ref_k += 0.4 * 0.6 * 2.4 * 3.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in material 0
     physics_tester->particle_tester().set_wt( 0.45 );
     physics_tester->particle_tester().set_matid( 0 );
     physics_tester->particle_tester().set_step( 0.2 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // End the cycle
     int tally_norm = 3.0 * num_particle;
@@ -302,13 +294,11 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 1.4 );
     keff.accumulate( physics_tester->particles() );
     ref_k = 1.4 * 0.55 * 2.4 * 4.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 2
     physics_tester->particle_tester().set_group( 2 ); // no fission in group 2
     physics_tester->particle_tester().set_step( 1.8 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 0
     physics_tester->particle_tester().set_wt( 0.2 );
@@ -316,14 +306,12 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 0.6 );
     keff.accumulate( physics_tester->particles() );
     ref_k += 0.2 * 0.6 * 2.4 * 3.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in material 0
     physics_tester->particle_tester().set_wt( 0.55 );
     physics_tester->particle_tester().set_matid( 0 );
     physics_tester->particle_tester().set_step( 0.2 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // End the cycle
     keff.end_cycle(tally_norm);
@@ -345,13 +333,11 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 1.4 );
     keff.accumulate( physics_tester->particles() );
     ref_k = 1.4 * 0.65 * 2.4 * 4.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 2
     physics_tester->particle_tester().set_group( 2 ); // no fission in group 2
     physics_tester->particle_tester().set_step( 1.8 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 0
     physics_tester->particle_tester().set_wt( 0.4 );
@@ -359,14 +345,12 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 0.6 );
     keff.accumulate( physics_tester->particles() );
     ref_k += 0.4 * 0.6 * 2.4 * 3.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in material 0
     physics_tester->particle_tester().set_wt( 0.55 );
     physics_tester->particle_tester().set_matid( 0 );
     physics_tester->particle_tester().set_step( 0.2 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // End the cycle
     keff.end_cycle(tally_norm);
@@ -393,13 +377,11 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 1.4 );
     keff.accumulate( physics_tester->particles() );
     ref_k = 1.4 * 0.55 * 2.4 * 4.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 2
     physics_tester->particle_tester().set_group( 2 ); // no fission in group 2
     physics_tester->particle_tester().set_step( 1.8 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 0
     physics_tester->particle_tester().set_wt( 0.2 );
@@ -407,14 +389,12 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 0.6 );
     keff.accumulate( physics_tester->particles() );
     ref_k += 0.2 * 0.6 * 2.4 * 3.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in material 0
     physics_tester->particle_tester().set_wt( 0.55 );
     physics_tester->particle_tester().set_matid( 0 );
     physics_tester->particle_tester().set_step( 0.2 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // End the cycle
     keff.end_cycle(tally_norm);
@@ -443,13 +423,11 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 1.4 );
     keff.accumulate( physics_tester->particles() );
     ref_k = 1.4 * 0.8 * 2.4 * 4.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 2
     physics_tester->particle_tester().set_group( 2 ); // no fission in group 2
     physics_tester->particle_tester().set_step( 1.8 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in group 0
     physics_tester->particle_tester().set_wt( 0.65 );
@@ -457,14 +435,12 @@ TEST_F(Keff_TallyTest, test_keff_var)
     physics_tester->particle_tester().set_step( 0.6 );
     keff.accumulate( physics_tester->particles() );
     ref_k += 0.65 * 0.6 * 2.4 * 3.2 * num_to_tally;
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // Put particle in material 0
     physics_tester->particle_tester().set_wt( 0.55 );
     physics_tester->particle_tester().set_matid( 0 );
     physics_tester->particle_tester().set_step( 0.2 );
     keff.accumulate( physics_tester->particles() );
-    EXPECT_SOFTEQ(ref_k, keff.latest(), 1.0e-6);
 
     // End the cycle
     keff.end_cycle(tally_norm);

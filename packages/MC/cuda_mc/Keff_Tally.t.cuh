@@ -24,6 +24,20 @@ namespace cuda_profugus
 //---------------------------------------------------------------------------//
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
+// Reset keff device
+__global__ void reset_keff_kernel( const int num_particles,
+				   double* keff )
+{
+    // Get the thread index.
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if ( idx < num_particles )
+    {
+	keff[idx] = 0.0;
+    }
+}
+
+//---------------------------------------------------------------------------//
 // Tally accumulate kernel.
 template<class Geometry>
 __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
@@ -45,10 +59,10 @@ __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
 		   : idx - num_collision + boundary_start;
     
 	// Tally keff
-	keff[idx] = particles->wt(pidx) * particles->step(pidx) *
-		    phyiscs->total( physics::NU_FISSION,
-				    particles->matid(pidx),
-				    particles->group(pidx) );
+	keff[idx] += particles->wt(pidx) * particles->step(pidx) *
+                     phyiscs->total( physics::NU_FISSION,
+                                     particles->matid(pidx),
+                                     particles->group(pidx) );
     }
 }
 
@@ -61,15 +75,31 @@ __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
 template <class Geometry>
 Keff_Tally<Geometry>::Keff_Tally(
     const double keff_init,
-    const cuda::Shared_Device_Ptr<Physics_t>& physics )
+    const cuda::Shared_Device_Ptr<Physics_t>& physics,
+    const int vector_size )
     : d_physics( physics )
     , d_keff_cycle(keff_init)
     , d_keff_device(nullptr)
+    , d_vector_size( vector_size )
 {
     REQUIRE(physics);
 
+    // Allocate the keff work vectors.
+    d_keff_host.resize( d_vector_size );
+    cuda::memory::Malloc( d_keff_device, d_vector_size );
+    
     // reset tally
     reset();
+
+    // Reset device cycle keff
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+        cuda::Hardware<cuda::arch::Device>::default_block_size();
+    unsigned int num_blocks = d_vector_size / threads_per_block;
+    if ( d_vector_size % threads_per_block > 0 ) ++num_blocks;
+    reset_keff_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+        d_vector_size,
+        d_keff_device );
 }
 
 //---------------------------------------------------------------------------//
@@ -79,10 +109,7 @@ Keff_Tally<Geometry>::Keff_Tally(
 template<class Geometry>
 Keff_Tally<Geometry>::~Keff_Tally()
 {
-    if ( nullptr != d_keff_device )
-    {
-	cuda::memory::Free( d_keff_device );
-    }
+    cuda::memory::Free( d_keff_device );
 }
 
 //---------------------------------------------------------------------------//
@@ -146,14 +173,8 @@ template <class Geometry>
 void Keff_Tally<Geometry>::accumulate(
     const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
-    // Lazy allocate the keff work vector.
-    int vector_size = particles.get_host_ptr()->size();
-    if ( nullptr == d_keff_device )
-    {
-	d_keff_host.resize( vector_size );
-	cuda::memory::Malloc( d_keff_device, vector_size );
-    }
-    
+    REQUIRE( particles.get_host_ptr()->size() == d_vector_size );
+
     // Get the particles that just had a collision.
     int num_collision = 
         particles.get_host_ptr()->get_event_size( events::COLLISION );
@@ -177,19 +198,6 @@ void Keff_Tally<Geometry>::accumulate(
 	num_collision,
 	num_boundary,
 	d_keff_device );
-
-    // Pull tallies off the device.
-    cuda::memory::Copy_To_Host_Async( 
-	d_keff_host.data(), d_keff_device, num_particle, d_stream );
-
-    // Synchronize on this thread.
-    d_stream.synchronize();
-
-    // Add them to cycle tally.
-    for ( int n = 0; n < num_particle; ++n )
-    {
-	d_keff_cycle += d_keff_host[n];
-    }
 }
 
 //---------------------------------------------------------------------------//
@@ -215,6 +223,7 @@ void Keff_Tally<Geometry>::begin_active_cycles()
 template <class Geometry>
 void Keff_Tally<Geometry>::begin_cycle()
 {
+    // Reset cycle keff
     d_keff_cycle = 0.;
 }
 
@@ -233,6 +242,19 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
 {
     REQUIRE(num_particles > 0.);
 
+    // Pull tallies off the device.
+    cuda::memory::Copy_To_Host_Async( 
+	d_keff_host.data(), d_keff_device, d_vector_size, d_stream );
+
+    // Synchronize on this thread.
+    d_stream.synchronize();
+
+    // Add them to cycle tally.
+    for ( int n = 0; n < d_vector_size; ++n )
+    {
+	d_keff_cycle += d_keff_host[n];
+    }
+
     // Keff estimate is total nu-sigma-f reaction rate / num particles
     d_keff_cycle /= num_particles;
 
@@ -246,6 +268,16 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
 
     // Store keff estimate
     d_all_keff.push_back(d_keff_cycle);
+
+    // Reset device cycle keff
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+        cuda::Hardware<cuda::arch::Device>::default_block_size();
+    unsigned int num_blocks = d_vector_size / threads_per_block;
+    if ( d_vector_size % threads_per_block > 0 ) ++num_blocks;
+    reset_keff_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+        d_vector_size,
+        d_keff_device );
 }
 
 //---------------------------------------------------------------------------//

@@ -247,8 +247,9 @@ TYPED_TEST(SourceTransporterTest, fission_source)
     this->db->set("implicit_capture", false);
 
     // make the physics tester.
+    int vector_size = 100;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-				   1, this->rng, *(this->db), *(this->xs), 1 );
+				   vector_size, this->rng, *(this->db), *(this->xs), 1 );
 
     // make a roulette variance reduction
     auto vr = std::make_shared<VR_Roulette_t>( *(this->db) );
@@ -259,7 +260,7 @@ TYPED_TEST(SourceTransporterTest, fission_source)
     // add a keff tally
     double keff_init = 1.01;
     auto keff_tally = 
-        std::make_shared<Keff_Tally_t>( keff_init, physics_tester.physics());
+        std::make_shared<Keff_Tally_t>( keff_init, physics_tester.physics(), vector_size);
     keff_tally->begin_active_cycles();
     tallier->add_pathlength_tally( keff_tally );
     tallier->build();

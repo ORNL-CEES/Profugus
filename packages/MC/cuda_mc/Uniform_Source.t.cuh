@@ -221,10 +221,6 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     // Calculate the total number of particles we will create.
     int num_to_create = std::min( d_np_left, num_particle );
 
-    // update counters
-    d_np_left -= num_to_create;
-    d_np_run += num_to_create;
-
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
@@ -243,6 +239,10 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     	d_np_run,
     	d_batch_size,
     	particles.get_device_ptr() );
+
+    // update counters
+    d_np_left -= num_to_create;
+    d_np_run += num_to_create;
 }
 
 //---------------------------------------------------------------------------//

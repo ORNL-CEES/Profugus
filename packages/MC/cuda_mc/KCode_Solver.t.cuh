@@ -77,10 +77,12 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     CHECK(d_transporter->geometry() && d_transporter->physics());
 
     // get initial k and build keff tally
+    int vector_size = d_db->get("particle_vector_size",10000);
     double init_keff = d_db->get("keff_init", 1.0);
     INSIST(init_keff >= 0., "Initial keff guess must be nonnegative.");
     b_keff_tally = std::make_shared<Keff_Tally_t>(init_keff,
-                                                  d_transporter->physics());
+                                                  d_transporter->physics(),
+                                                  vector_size);
 
     // create our "disabled" (inactive cycle) tallier
     d_inactive_tallier = std::make_shared<Tallier_t>();

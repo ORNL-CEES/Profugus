@@ -75,6 +75,9 @@ class Keff_Tally : public Pathlength_Tally<Geometry>
     //! keff work vector on-device.
     double* d_keff_device;
 
+    //! Size of the particle vector.
+    int d_vector_size;
+
     // Execution stream.
     cuda::Stream<cuda::arch::Device> d_stream;
 
@@ -82,7 +85,8 @@ class Keff_Tally : public Pathlength_Tally<Geometry>
     
     // Kcode solver should construct this with initial keff estimate
     Keff_Tally( const double keff_init,
-		const cuda::Shared_Device_Ptr<Physics_t>& physics );
+		const cuda::Shared_Device_Ptr<Physics_t>& physics,
+                const int vector_size );
 
     // Destructor.
     ~Keff_Tally();
