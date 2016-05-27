@@ -207,37 +207,37 @@ TEST_F(CurrentTallyTest, multi_cell)
     double z_area = 0.5;
 
     // Check value on x face 1
-    double expected =  1.0 - 1.0/std::sqrt(2.0)  + // History 1
-                       2.0;                        // History 3
+    double expected =  1.0 - 1.0  + // History 1
+                       2.0;         // History 3
     expected /= (3.0  * x_area);
     EXPECT_SOFT_EQ(expected, x_current[1]);
 
     // Check value on y face
-    expected = 2.0/std::sqrt(2.0); // History 3
+    expected = 2.0; // History 3
     expected /= (3.0 * y_area);
     EXPECT_SOFT_EQ(expected, y_current[2]);
 
     // Check value on z face
-    expected = -0.5/std::sqrt(2.0); // History 2
+    expected = -0.5; // History 2
     expected /= (3.0 * z_area);
     EXPECT_SOFT_EQ(expected, z_current[5]);
 
     if (nodes == 1)
     {
-        expected = 2.160246899469286 / std::sqrt(3.0);
+        expected = 2.309401076758503 / std::sqrt(3.0);
         EXPECT_SOFT_EQ(expected, x_current_std_dev[1]);
-        expected = 3.265986323710904 / std::sqrt(3.0);
+        expected = 4.618802153517007 / std::sqrt(3.0);
         EXPECT_SOFT_EQ(expected, y_current_std_dev[2]);
-        expected = 0.408248290463863 / std::sqrt(3.0);
+        expected = 0.577350269189626 / std::sqrt(3.0);
         EXPECT_SOFT_EQ(expected, z_current_std_dev[5]);
     }
     else if (nodes == 4)
     {
-        expected = 1.842264745887353 / std::sqrt(12.0);
+        expected = 1.969463855669324 / std::sqrt(12.0);
         EXPECT_SOFT_EQ(expected, x_current_std_dev[1]);
-        expected = 2.785242495291166 / std::sqrt(12.0);
+        expected = 3.938927711338648 / std::sqrt(12.0);
         EXPECT_SOFT_EQ(expected, y_current_std_dev[2]);
-        expected = 0.348155311911396 / std::sqrt(12.0);
+        expected = 0.492365963917331 / std::sqrt(12.0);
         EXPECT_SOFT_EQ(expected, z_current_std_dev[5]);
     }
 
@@ -273,37 +273,37 @@ TEST_F(CurrentTallyTest, multi_cell)
     EXPECT_EQ( 18, z_flux_std_dev.size() );
 
     // Check value on x face 1
-    expected =  1.0 + 1.0  + // History 1
+    expected =  1.0 + 1.0*std::sqrt(2.0)  + // History 1
                       2.0;   // History 3
     expected /= (3.0 * x_area);
     EXPECT_SOFT_EQ(expected, x_flux[1]);
 
     // Check value on y face
-    expected = 2.0; // History 3
+    expected = 2.0*std::sqrt(2.0); // History 3
     expected /= (3.0 * y_area);
     EXPECT_SOFT_EQ(expected, y_flux[2]);
 
     // Check value on z face
-    expected = 0.5; // History 2
+    expected = 0.5*std::sqrt(2.0); // History 2
     expected /= (3.0 * z_area);
     EXPECT_SOFT_EQ(expected, z_flux[5]);
 
     if (nodes == 1)
     {
-        expected = 2.309401076758503 / std::sqrt(3.0);
+        expected = 2.581988897471611 / std::sqrt(3.0);
         EXPECT_SOFT_EQ(expected, x_flux_std_dev[1]);
-        expected = 4.618802153517007 / std::sqrt(3.0);
+        expected = 6.531972647421808 / std::sqrt(3.0);
         EXPECT_SOFT_EQ(expected, y_flux_std_dev[2]);
-        expected = 0.577350269189626 / std::sqrt(3.0);
+        expected = 0.816496580927726 / std::sqrt(3.0);
         EXPECT_SOFT_EQ(expected, z_flux_std_dev[5]);
     }
     else if (nodes == 4)
     {
-        expected = 1.969463855669324 / std::sqrt(12.0);
+        expected = 2.201927530252721 / std::sqrt(12.0);
         EXPECT_SOFT_EQ(expected, x_flux_std_dev[1]);
-        expected = 3.938927711338648 / std::sqrt(12.0);
+        expected = 5.570484990582331 / std::sqrt(12.0);
         EXPECT_SOFT_EQ(expected, y_flux_std_dev[2]);
-        expected = 0.492365963917331/ std::sqrt(12.0);
+        expected = 0.696310623822791 / std::sqrt(12.0);
         EXPECT_SOFT_EQ(expected, z_flux_std_dev[5]);
     }
 

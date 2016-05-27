@@ -167,8 +167,17 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
     int z_face = -1;
     auto itr = std::lower_bound(d_z_edges.begin(), d_z_edges.end(), xyz[K]);
     if (itr == d_z_edges.end())
-        return;
-    if (soft_equiv(*itr,xyz[K],tol))
+    {
+        // Check for particles "tol" beyond last z edge
+        if (soft_equiv(d_z_edges.back(),xyz[K],tol))
+        {
+            itr--;
+            edge = K;
+        }
+        else
+            return;
+    }
+    else if (soft_equiv(*itr,xyz[K],tol))
     {
         edge = K;
     }
@@ -182,8 +191,17 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
     int y_face = -1;
     itr = std::lower_bound(d_y_edges.begin(), d_y_edges.end(), xyz[J]);
     if (itr == d_y_edges.end())
-        return;
-    if (soft_equiv(*itr,xyz[J],tol))
+    {
+        // Check for particles "tol" beyond last y edge
+        if (soft_equiv(d_y_edges.back(),xyz[J],tol))
+        {
+            itr--;
+            edge = J;
+        }
+        else
+            return;
+    }
+    else if (soft_equiv(*itr,xyz[J],tol))
     {
         edge = J;
     }
@@ -197,8 +215,17 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
     int x_face = -1;
     itr = std::lower_bound(d_x_edges.begin(), d_x_edges.end(), xyz[I]);
     if (itr == d_x_edges.end())
-        return;
-    if (soft_equiv(*itr,xyz[I],tol))
+    {
+        // Check for particles "tol" beyond last x edge
+        if (soft_equiv(d_x_edges.back(),xyz[I],tol))
+        {
+            itr--;
+            edge = I;
+        }
+        else
+            return;
+    }
+    else if (soft_equiv(*itr,xyz[I],tol))
     {
         edge = I;
     }
@@ -210,6 +237,12 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
 
     if (edge == I)
     {
+        // Fix up points on edges/corners
+        if (y_face == d_y_edges.size()-1)
+            y_face--;
+        if (z_face == d_z_edges.size()-1)
+            z_face--;
+
         int ind = x_face + d_x_edges.size() *
             (y_face + (d_y_edges.size() - 1) * z_face);
         ENSURE (ind < d_x_current_hist.size());
@@ -217,11 +250,15 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
         const auto &dir = particle.geo_state().d_dir;
         double dot = profugus::dot_product(dir, {1.0, 0.0, 0.0});
 
-        d_x_current_hist[ind] += particle.wt() * dot;
-        d_x_flux_hist[ind]    += particle.wt();
+        d_x_current_hist[ind] += particle.wt() * (dot > 0.0 ? 1.0 : -1.0);
+        d_x_flux_hist[ind]    += particle.wt() / std::abs(dot);
     }
     else if (edge == J)
     {
+        // Fix up points on edges
+        if (z_face == d_z_edges.size()-1)
+            z_face--;
+
         int ind = x_face + (d_x_edges.size() - 1) *
             (y_face + d_y_edges.size() * z_face);
         ENSURE (ind < d_y_current_hist.size());
@@ -229,8 +266,8 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
         const auto &dir = particle.geo_state().d_dir;
         double dot = profugus::dot_product(dir, {0.0, 1.0, 0.0});
 
-        d_y_current_hist[ind] += particle.wt() * dot;
-        d_y_flux_hist[ind]    += particle.wt();
+        d_y_current_hist[ind] += particle.wt() * (dot > 0.0 ? 1.0 : -1.0);
+        d_y_flux_hist[ind]    += particle.wt() / std::abs(dot);
     }
     else if (edge == K)
     {
@@ -241,8 +278,8 @@ void Current_Tally<Geometry>::tally_surface(const Particle_t &particle)
         const auto &dir = particle.geo_state().d_dir;
         double dot = profugus::dot_product(dir, {0.0, 0.0, 1.0});
 
-        d_z_current_hist[ind] += particle.wt() * dot;
-        d_z_flux_hist[ind]    += particle.wt();
+        d_z_current_hist[ind] += particle.wt() * (dot > 0.0 ? 1.0 : -1.0);
+        d_z_flux_hist[ind]    += particle.wt() / std::abs(dot);
     }
 
 }
