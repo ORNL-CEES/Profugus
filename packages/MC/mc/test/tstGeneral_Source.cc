@@ -150,17 +150,20 @@ TEST_F(GeneralSourceTest, build_and_run)
     CHECK( src.getNumRows() == 5 );
     CHECK( src.getNumCols() == 2 );
 
+    const auto &volumes = b_geometry->cell_volumes();
+
     // Determine expected cell and energy distributions
     std::vector<double> cell_pdf(num_cells,0.0);
     std::vector<std::vector<double>> erg_pdfs(num_cells,
         std::vector<double>(num_groups,0.0));
     for( int cell = 0; cell < num_cells; ++cell )
     {
+        double vol = volumes[cell];
         auto &erg_pdf = erg_pdfs[cell];
         for( int g = 0; g < num_groups; ++g )
         {
             double val = src_vals[cell][g];
-            cell_pdf[cell] += val;
+            cell_pdf[cell] += val * vol;
             erg_pdf[g] += val;
             src[cell][g] = val;
         }
@@ -235,7 +238,7 @@ TEST_F(GeneralSourceTest, build_and_run)
     for( auto &val : cell_dist )
         val /= cell_sum;
 
-    double tol = 1e-2;
+    double tol = 2e-2;
     EXPECT_VEC_SOFTEQ( cell_pdf, cell_dist, tol );
     for( int cell = 0; cell < num_cells; ++cell )
         EXPECT_VEC_SOFTEQ( erg_pdfs[cell], erg_dists[cell], tol );

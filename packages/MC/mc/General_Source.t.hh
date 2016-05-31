@@ -72,6 +72,8 @@ void General_Source<Geometry>::build_source(Teuchos::TwoDArray<double> &source)
     REQUIRE( source.getNumRows() == b_geometry->num_cells() );
     REQUIRE( source.getNumCols() == b_physics->num_groups() );
 
+    const auto &volumes = b_geometry->cell_volumes();
+
     double cell_sum = 0.0;
     for( int cell = 0; cell < b_geometry->num_cells(); ++cell )
     {
@@ -82,6 +84,10 @@ void General_Source<Geometry>::build_source(Teuchos::TwoDArray<double> &source)
         double this_cell = std::accumulate(cell_source.begin(),
                                            cell_source.end(),
                                            0.0);
+
+        // Weight with cell volume
+        this_cell *= volumes[cell];
+
         cell_sum += this_cell;
         d_cell_cdf[cell] = cell_sum;
 
