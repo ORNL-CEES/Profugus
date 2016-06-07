@@ -86,6 +86,13 @@ template<class Geometry>
 void KDE_Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
 {
     REQUIRE(d_kernel);
+    SCOPED_TIMER("MC::KDE_Fission_Source.build_source");
+
+    // Because KDE samples from distribution instead of "using" individual
+    // fission sites, the fission site container is not emptied during a
+    // cycle.  We manually clear it here.
+    if (d_fission_sites)
+        d_fission_sites->clear();
 
     // Call Base method first.  Afterwards, we must use the internal fission
     // site container
