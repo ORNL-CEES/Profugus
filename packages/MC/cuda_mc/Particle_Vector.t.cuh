@@ -18,10 +18,7 @@
 #include <vector>
 
 #include <thrust/device_ptr.h>
-#include <thrust/execution_policy.h>
-#include <thrust/sort.h>
-#include <thrust/distance.h>
-#include <thrust/binary_search.h>
+#include <thrust/copy.h>
 
 #include <cuda_runtime.h>
 
@@ -31,49 +28,50 @@ namespace cuda_profugus
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
 // Initialize particle random number generators
-__global__ void init_rng_kernel( const std::size_t size,
+__global__ void init_rng_kernel( const int size,
 				 const int* seeds,
 				 curandState* rng )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) curand_init( seeds[idx], 0, 0, &rng[idx] );
 }
 
 //---------------------------------------------------------------------------//
 // Initialize particle local ids.
-__global__ void init_lid_kernel( const std::size_t size, std::size_t* lids )
+__global__ void init_lid_kernel( const int size, int* lids )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) lids[idx] = idx;
 }
 
 //---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
-__global__ void init_event_kernel( const std::size_t size,
+__global__ void init_event_kernel( const int size,
 				   events::Event* events )
 {
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) events[idx] = events::DEAD;
 }
 
 //---------------------------------------------------------------------------//
 // Get event lower bounds.
-__global__ void event_bounds_kernel( const events::Event* num_event,
+__global__ void event_bounds_kernel( const int size,
+                                     const int* num_event,
                                      int* event_bounds )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
     CHECK( 0 == idx );
 
     // Get the lower bound.
     event_bounds[0] = 0;
-    for ( int i = 1; i < num_event; ++i )
+    for ( int i = 1; i < size; ++i )
     {
-        event_bounds[2*i] = event_bounds[2*(i-1)] + num_event[i];
+        event_bounds[2*i] = event_bounds[2*(i-1)] + num_event[i-1];
     }
 
     // Get the upper bound.
-    for ( int i = 0; i < num_event; ++i )
+    for ( int i = 0; i < size; ++i )
     {
         event_bounds[2*i+1] = event_bounds[2*i] + num_event[i];
     }
@@ -189,7 +187,7 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
 
     // Bin them.
     event_bounds_kernel<<<1,1>>>(
-        d_num_event, d_event_bounds, d_lid );
+        static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
 
     // Clear the count for the next round.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(

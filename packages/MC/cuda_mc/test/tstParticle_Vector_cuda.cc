@@ -23,7 +23,8 @@
 //---------------------------------------------------------------------------//
 TEST(Particle_Vector, construction)
 {
-    int num_particle = 32768;
+    int num_particle = 32;
+//    int num_particle = 32768;
 
     profugus::RNG_Control control( 3420239343 );
 
@@ -116,8 +117,8 @@ TEST(Particle_Vector, construction)
     // Check event sorting.
     tester.set_event( host_events );
     tester.sort_by_event();
-    std::sort( host_events.begin(), host_events.end() );
     device_events = tester.event();
+    std::sort( host_events.begin(), host_events.end() );
     for ( int i = 0; i < num_particle; ++i )
     {
 	EXPECT_EQ( host_events[i], device_events[i] );

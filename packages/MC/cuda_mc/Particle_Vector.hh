@@ -74,7 +74,7 @@ class Particle_Vector
     Event_t* d_event;
 
     // Particle local index linked to the events.
-    std::size_t* d_lid;
+    int* d_lid;
 
     // Particle statistical batch id.
     int* d_batch;
@@ -130,7 +130,7 @@ class Particle_Vector
 
     //! Get a uniform random number on [0,1] from a particle's RNG.
     PROFUGUS_DEVICE_FUNCTION
-    double ran( const std::size_t i )
+    double ran( const int i )
     {
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -139,7 +139,7 @@ class Particle_Vector
 
     //! Set the weight of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void set_wt( const std::size_t i, const double wt ) const 
+    void set_wt( const int i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -148,7 +148,7 @@ class Particle_Vector
 
     //! Multiply the weight of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void multiply_wt( const std::size_t i, const double wt ) const 
+    void multiply_wt( const int i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -157,7 +157,7 @@ class Particle_Vector
 
     //! Get the weight of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    double wt( const std::size_t i ) const 
+    double wt( const int i ) const 
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -166,7 +166,7 @@ class Particle_Vector
 
     //! Get the group of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    int group( const std::size_t i ) const 
+    int group( const int i ) const 
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -175,7 +175,7 @@ class Particle_Vector
 
     //! Set the group of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void set_group( const std::size_t i, const int group )
+    void set_group( const int i, const int group )
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -184,7 +184,7 @@ class Particle_Vector
 
     //! Get the matid of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    int matid( const std::size_t i ) const 
+    int matid( const int i ) const 
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -193,7 +193,7 @@ class Particle_Vector
 
     //! Set the matid of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void set_matid( const std::size_t i, const int matid )
+    void set_matid( const int i, const int matid )
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -202,7 +202,7 @@ class Particle_Vector
 
     //! Get the alive status of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    bool alive( const std::size_t i ) const 
+    bool alive( const int i ) const 
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -211,7 +211,7 @@ class Particle_Vector
 
     //! Set the particle status to alive.
     PROFUGUS_DEVICE_FUNCTION
-    void live( const std::size_t i )
+    void live( const int i )
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -220,7 +220,7 @@ class Particle_Vector
 
     //! Kill a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void kill( const std::size_t i )
+    void kill( const int i )
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -229,7 +229,7 @@ class Particle_Vector
 
     //! Get the event of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    Event_t event( const std::size_t i ) const 
+    Event_t event( const int i ) const 
     { 
 	REQUIRE( i < d_size );
 	return d_event[ d_lid[i] ];
@@ -237,27 +237,32 @@ class Particle_Vector
 
     //! Set the event of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void set_event( const std::size_t i, const Event_t event )
+    void set_event( const int i, const Event_t event )
     { 
+#ifdef __NVCC__
 	REQUIRE( i < d_size );
 
         // Set the event.
 	d_event[ d_lid[i] ] = event;
 
         // Bin this particle with its event.
-        d_event_bins[ atomicAdd(&d_num_event[event],1) ] = d_lid[i];
+        int* address = &d_num_event[event];
+        int val = 1;
+        int bin_size = atomicAdd( address, val );
+        d_event_bins[ event*events::END_EVENT + bin_size ] = d_lid[i];
+#endif
     }
 
     //! Get the geometry state of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    const Geo_State_t& geo_state( const std::size_t i ) const 
+    const Geo_State_t& geo_state( const int i ) const 
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
 	return d_geo_state[ d_lid[i] ]; 
     }
     PROFUGUS_DEVICE_FUNCTION
-    Geo_State_t& geo_state( const std::size_t i )
+    Geo_State_t& geo_state( const int i )
     { 
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -267,7 +272,7 @@ class Particle_Vector
 
     //! Get the particle batch.
     PROFUGUS_DEVICE_FUNCTION
-    int batch( const std::size_t i ) const
+    int batch( const int i ) const
     {
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -276,7 +281,7 @@ class Particle_Vector
 
     //! Set the particle batch.
     PROFUGUS_DEVICE_FUNCTION
-    void set_batch( const std::size_t i, const int batch )
+    void set_batch( const int i, const int batch )
     {
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -285,7 +290,7 @@ class Particle_Vector
 
     //! Get the particle step.
     PROFUGUS_DEVICE_FUNCTION
-    double step( const std::size_t i ) const
+    double step( const int i ) const
     {
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -294,7 +299,7 @@ class Particle_Vector
 
     //! Set the particle step.
     PROFUGUS_DEVICE_FUNCTION
-    void set_step( const std::size_t i, const double step )
+    void set_step( const int i, const double step )
     {
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -303,7 +308,7 @@ class Particle_Vector
 
     //! Get the particle distance to collision.
     PROFUGUS_DEVICE_FUNCTION
-    double dist_mfp( const std::size_t i ) const
+    double dist_mfp( const int i ) const
     {
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
@@ -312,7 +317,7 @@ class Particle_Vector
 
     //! Set the particle distance to collision.
     PROFUGUS_DEVICE_FUNCTION
-    void set_dist_mfp( const std::size_t i, const double dist_mfp )
+    void set_dist_mfp( const int i, const double dist_mfp )
     {
 	REQUIRE( i < d_size );
 	REQUIRE( d_lid[i] < d_size );
