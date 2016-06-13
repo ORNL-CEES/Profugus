@@ -58,44 +58,36 @@ __global__ void init_event_kernel( const std::size_t size,
 
 //---------------------------------------------------------------------------//
 // Get event lower bounds.
-__global__ void event_bounds_kernel( const std::size_t size,
-                                     const events::Event* events,
+__global__ void event_bounds_kernel( const events::Event* num_event,
                                      int* event_bounds )
 {
     // Get the thread index.
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Initialize bounds.
-    if ( idx < events::END_EVENT )
-    {
-        event_bounds[ 2*idx ] = 0;
-        event_bounds[ 2*idx + 1 ] = 0;
-    }
+    CHECK( 0 == idx );
 
     // Get the lower bound.
-    if ( 0 == idx )
+    event_bounds[0] = 0;
+    for ( int i = 1; i < num_event; ++i )
     {
-        event_bounds[ 2*events[idx] ] = idx;
+        event_bounds[2*i] = event_bounds[2*(i-1)] + num_event[i];
     }
-    else if ( idx < size )
-    {
-        if ( events[idx-1] < events[idx] )
-        {
-            event_bounds[ 2*events[idx] ] = idx;
-        }
-    }
-    
+
     // Get the upper bound.
-    if ( idx == size - 1 )
+    for ( int i = 0; i < num_event; ++i )
     {
-        event_bounds[ 2*events[idx] + 1 ] = idx + 1;
+        event_bounds[2*i+1] = event_bounds[2*i] + num_event[i];
     }
-    else if ( idx < size-1 )
+}
+
+//---------------------------------------------------------------------------//
+// Clear the number of events on the device.
+__global__ void clear_num_event_kernel( const int size,
+                                         int* num_event )
+{
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( idx < size )
     {
-        if ( events[idx+1] > events[idx] )
-        {
-            event_bounds[ 2*events[idx] + 1] = idx + 1;
-        }
+        num_event[idx] = 0;
     }
 }
 
@@ -124,6 +116,8 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_step, d_size );
     cuda::memory::Malloc( d_dist_mfp, d_size );
     cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
+    cuda::memory::Malloc( d_num_event, events::END_EVENT );
+    cuda::memory::Malloc( d_event_bins, events::END_EVENT*d_size );    
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -154,6 +148,10 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );
 
+    // Initialize the number of events.
+    clear_num_event_kernel<<<1,events::END_EVENT>>>(
+        events::END_EVENT, d_num_event );
+    
     // All particles right now are dead.
     d_event_sizes[ events::DEAD ] = d_size;
 
@@ -178,6 +176,8 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_step );
     cuda::memory::Free( d_dist_mfp );
     cuda::memory::Free( d_event_bounds );
+    cuda::memory::Free( d_num_event );
+    cuda::memory::Free( d_event_bins );
 }
 
 //---------------------------------------------------------------------------//
@@ -187,22 +187,13 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
 {
     REQUIRE( sort_size <= d_size );
 
-    // Sort the events.
-    thrust::device_ptr<Event_t> event_begin( d_event );
-    thrust::device_ptr<Event_t> event_end( d_event + sort_size );
-    thrust::device_ptr<std::size_t> lid_begin( d_lid );
-    thrust::sort_by_key( thrust::device, event_begin, event_end, lid_begin );
-
-    // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
-    unsigned int num_blocks = d_size / threads_per_block;
-    if ( d_size % threads_per_block > 0 ) ++num_blocks;
-
     // Bin them.
-    event_bounds_kernel<<<num_blocks,threads_per_block>>>(
-        d_size, d_event, d_event_bounds );
+    event_bounds_kernel<<<1,1>>>(
+        d_num_event, d_event_bounds, d_lid );
+
+    // Clear the count for the next round.
+    clear_num_event_kernel<<<1,events::END_EVENT>>>(
+        events::END_EVENT, d_num_event );
 
     // Calculate event sizes.
     int work_size = 2 * events::END_EVENT;
@@ -213,6 +204,18 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     for ( int i = 0; i < events::END_EVENT; ++i )
     {
         d_event_sizes[ i ] = work[ 2*i + 1 ] - work[ 2*i ];
+    }
+
+    // Reorder the local ids to effectively sort the vector.
+    int count = 0;
+    thrust::device_ptr<int> lid_ptr( d_lid );
+    for ( int i = 0; i < events::END_EVENT; ++i )
+    {
+        thrust::device_ptr<int> event_ptr(
+            d_event_bins + i*events::END_EVENT );
+        thrust::copy(
+            event_ptr, event_ptr + d_event_sizes[i], lid_ptr + count );
+        count += d_event_sizes[i];
     }
 }
 

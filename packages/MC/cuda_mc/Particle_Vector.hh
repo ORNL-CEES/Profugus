@@ -88,6 +88,12 @@ class Particle_Vector
     // Event bounds. Updated at every sort.
     int* d_event_bounds;
 
+    // Number of particles with a given event.
+    int* d_num_event;
+
+    // Event bins.
+    int* d_event_bins;
+    
     // Number of particles with a given event. Host only.
     Teuchos::Array<int> d_event_sizes;
 
@@ -226,7 +232,7 @@ class Particle_Vector
     Event_t event( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
-	return d_event[i];
+	return d_event[ d_lid[i] ];
     }
 
     //! Set the event of a particle.
@@ -234,7 +240,12 @@ class Particle_Vector
     void set_event( const std::size_t i, const Event_t event )
     { 
 	REQUIRE( i < d_size );
-	d_event[i] = event; 
+
+        // Set the event.
+	d_event[ d_lid[i] ] = event;
+
+        // Bin this particle with its event.
+        d_event_bins[ atomicAdd(&d_num_event[event],1) ] = d_lid[i];
     }
 
     //! Get the geometry state of a particle.
