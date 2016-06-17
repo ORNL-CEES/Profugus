@@ -112,8 +112,8 @@ class Uniform_Source : public Source<Geometry>
 
     int d_num_groups;
 
-    int d_np_total;
-    int d_np_domain;
+    size_type d_np_total;
+    size_type d_np_domain;
 };
 
 } // end namespace cuda_mc

@@ -46,7 +46,7 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     REQUIRE(!db.is_null());
 
     // store the total number of requested particles
-    d_np_total = static_cast<size_type>(db->get("Np", 1000));
+    d_np_total = db->get<size_type>("Np", 1000);
     INSIST(d_np_total > 0., "Number of source particles must be positive");
     d_np_domain = d_np_total / profugus::nodes();
 

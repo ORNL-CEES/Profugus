@@ -114,7 +114,7 @@ class UniformSourceTest : public SourceTestBase
 
 TEST_F(UniformSourceTest, build_and_run)
 {
-    b_db->set("Np", 48);
+    b_db->set<def::size_type>("Np", 48);
 
     // make a uniform source
     Source source(b_db, b_geometry, b_physics, b_rcon);

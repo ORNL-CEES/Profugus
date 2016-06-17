@@ -44,7 +44,7 @@ class FixedSourceSolverTest : public TransporterTestBase
     {
         Base::SetUp();
 
-        db->set("Np", 10000);
+        db->set<def::size_type>("Np", 10000);
         db->set("mc_diag_frac", 0.2);
 
         this->init_source();

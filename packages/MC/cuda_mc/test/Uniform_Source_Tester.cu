@@ -105,7 +105,7 @@ void test_data(const thrust::device_vector<Space_Vector> &pts,
 {
     using def::I; using def::J; using def::K;
 
-    int Np = pts.size();
+    def::size_type Np = pts.size();
     EXPECT_EQ(dirs.size(),Np);
 
     // Copy data to host
@@ -168,7 +168,7 @@ void test_data(const thrust::device_vector<Space_Vector> &pts,
 
 void Uniform_Source_Tester::test_source()
 {
-    int Np = 1024;
+    def::size_type Np = 1024;
 
     auto geom = get_geometry();
 
@@ -207,7 +207,7 @@ void Uniform_Source_Tester::test_host_api()
 {
 
     // Copy values to device
-    int Np = 1024;
+    def::size_type Np = 1024;
 
     auto geom = get_geometry();
 

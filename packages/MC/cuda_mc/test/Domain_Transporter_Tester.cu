@@ -51,7 +51,7 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
 {
     REQUIRE(num_groups==3 || num_groups==5);
 
-    int num_particles = 128;
+    def::size_type num_particles = 128;
 
     auto xs = Test_XS::build_xs(num_groups);
 

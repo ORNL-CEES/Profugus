@@ -31,7 +31,7 @@ void Source_Transporter_Tester::test_transport(int num_groups)
 {
     auto xs = Test_XS::build_xs(num_groups);
 
-    int Np = 10000;
+    def::size_type Np = 10000;
 
     // Build geometry
     std::vector<double> edges = {0.0, 0.50, 1.0};

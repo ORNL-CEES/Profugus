@@ -49,7 +49,7 @@ void KCode_Solver_Tester::test_transport(int num_groups)
         matids = {0, 1, 1, 0, 0, 1, 1, 0};
     }
 
-    int num_particles = 10000;
+    def::size_type num_particles = 10000;
 
     // Build geometry
     auto geom = std::make_shared<Geom>(edges,edges,edges);
