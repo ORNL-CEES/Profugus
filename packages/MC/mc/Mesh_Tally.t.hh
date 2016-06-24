@@ -171,13 +171,26 @@ template <class Geometry>
 void Mesh_Tally<Geometry>::accumulate(double            step,
                                          const Particle_t &p)
 {
+    using def::I; using def::J; using def::K;
+
     // Get the cell index
     Mesh::Dim_Vector ijk;
     const Mesh::Space_Vector &xyz = p.geo_state().d_r;
     d_mesh->find_upper(xyz,ijk);
 
+    // Check boundaries for particles pushed just outside domain
+    using profugus::soft_equiv;
+    constexpr double tol = 1e-12;
+    for (auto dir : {I, J, K})
+    {
+        if (soft_equiv(xyz[dir],d_mesh->low_corner(dir),tol))
+            ijk[dir] = 0;
+        else if (soft_equiv(xyz[dir],d_mesh->high_corner(dir),tol))
+            ijk[dir] = d_mesh->num_cells_along(dir)-1;
+    }
+
     Mesh::size_type cell;
-    bool found = d_mesh->index( ijk[def::I], ijk[def::J], ijk[def::K], cell );
+    bool found = d_mesh->index( ijk[I], ijk[J], ijk[K], cell );
     if( found )
     {
         REQUIRE( cell >= 0 && cell < d_mesh->num_cells() );
