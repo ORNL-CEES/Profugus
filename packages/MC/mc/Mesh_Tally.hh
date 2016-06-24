@@ -69,8 +69,18 @@ class Mesh_Tally : public Pathlength_Tally<Geometry>
     // Map of tally moments.
     Result d_tally;
 
+    // Should fluxes be written every cycle?
+    bool d_cycle_output;
+
+    // Cycle tally
+    std::vector<double> d_cycle_tally;
+    int d_cycle;
+
     // Parameters
     RCP_Std_DB d_db;
+
+    // HDF5 output filename
+    std::string d_filename;
 
   public:
     // Constructor.
@@ -86,6 +96,12 @@ class Mesh_Tally : public Pathlength_Tally<Geometry>
 
     // Accumulate first and second moments
     void end_history();
+
+    // Begin new cycle
+    void begin_cycle();
+
+    // End cycle
+    void end_cycle(double num_particles);
 
     // Do post-processing on first and second moments
     void finalize(double num_particles);

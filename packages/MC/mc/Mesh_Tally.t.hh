@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include "Utils/comm/global.hh"
+#include "Utils/harness/Soft_Equivalence.hh"
 #include "Mesh_Tally.hh"
 #include "utils/Serial_HDF5_Writer.hh"
 
@@ -38,8 +39,13 @@ Mesh_Tally<Geometry>::Mesh_Tally(RCP_Std_DB db, SP_Physics physics)
     // set the tally name
     set_name("mesh");
 
+    REQUIRE( d_db->isType<std::string>("problem_name") );
+    d_filename = d_db->get<std::string>("problem_name") + "_mesh_tally.h5";
+
     // reset tally
     reset();
+
+    d_cycle_output = d_db->get("do_cycle_output",false);
 }
 
 //---------------------------------------------------------------------------//
@@ -57,7 +63,17 @@ void Mesh_Tally<Geometry>::set_mesh(SP_Mesh mesh)
 
     // Resize result vector
     d_tally.resize(mesh->num_cells(),{0.0,0.0});
-    d_hist.resize( mesh->num_cells(),0.0);
+    d_hist.resize(mesh->num_cells(),0.0);
+    d_cycle_tally.resize(mesh->num_cells(),0.0);
+
+#ifdef USE_HDF5
+    Serial_HDF5_Writer writer;
+    writer.open(d_filename);
+    writer.write("x_edges",d_mesh->edges(def::I));
+    writer.write("y_edges",d_mesh->edges(def::J));
+    writer.write("z_edges",d_mesh->edges(def::K));
+    writer.close();
+#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -78,10 +94,63 @@ void Mesh_Tally<Geometry>::end_history()
     {
         d_tally[cell].first  += d_hist[cell];
         d_tally[cell].second += d_hist[cell]*d_hist[cell];
+        d_cycle_tally[cell] += d_hist[cell];
     }
 
     // Clear the local tally
     clear_local();
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief Begin new cycle
+ */
+template <class Geometry>
+void Mesh_Tally<Geometry>::begin_cycle()
+{
+    REQUIRE( d_cycle_tally.size() == d_mesh->num_cells() );
+
+    std::fill(d_cycle_tally.begin(),d_cycle_tally.end(),0.0);
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief End cycle
+ */
+template <class Geometry>
+void Mesh_Tally<Geometry>::end_cycle(double num_particles)
+{
+    if (d_cycle_output)
+    {
+        REQUIRE( d_cycle_tally.size() == d_mesh->num_cells() );
+        REQUIRE( num_particles > 0.0 );
+
+        profugus::global_sum(&d_cycle_tally[0], d_cycle_tally.size());
+
+        for (int cell = 0; cell < d_cycle_tally.size(); ++cell)
+        {
+            CHECK(cell<d_mesh->num_cells());
+            double nrm_factor = num_particles * d_mesh->volume(cell);
+            CHECK(nrm_factor>0.0);
+            d_cycle_tally[cell] /= nrm_factor;
+        }
+
+#ifdef USE_HDF5
+        Serial_HDF5_Writer writer;
+        writer.open(d_filename,HDF5_IO::APPEND);
+
+        std::ostringstream m;
+        m << "cycle_" << d_cycle;
+        writer.begin_group(m.str());
+
+        writer.write("cycle_flux",d_cycle_tally);
+
+        writer.end_group();
+        writer.close();
+#endif
+    }
+
+    d_cycle++;
 }
 
 //---------------------------------------------------------------------------//
@@ -109,7 +178,7 @@ void Mesh_Tally<Geometry>::finalize(double num_particles)
     profugus::global_sum(&second[0], d_tally.size());
 
     // Store 1/N
-    double inv_N = 1.0 / static_cast<double>(num_particles);
+    double inv_N = 1.0 / num_particles;
 
     for( int cell = 0; cell < d_tally.size(); ++cell )
     {
@@ -138,14 +207,8 @@ void Mesh_Tally<Geometry>::finalize(double num_particles)
     }
 
 #ifdef USE_HDF5
-    REQUIRE( d_db->isType<std::string>("problem_name") );
-    std::string filename = d_db->get<std::string>("problem_name") +
-        "_mesh_tally.h5";
     Serial_HDF5_Writer writer;
-    writer.open(filename);
-    writer.write("x_edges",d_mesh->edges(def::I));
-    writer.write("y_edges",d_mesh->edges(def::J));
-    writer.write("z_edges",d_mesh->edges(def::K));
+    writer.open(d_filename,HDF5_IO::APPEND);
     writer.write("flux_mean",first);
     writer.write("flux_std_dev",second);
     writer.close();
@@ -161,6 +224,8 @@ void Mesh_Tally<Geometry>::reset()
 {
     // Clear the local tally
     clear_local();
+
+    d_cycle = 0;
 }
 
 //---------------------------------------------------------------------------//

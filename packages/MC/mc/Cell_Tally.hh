@@ -79,6 +79,12 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
 
     // >>> TALLY INTERFACE
 
+    // Begin new cycle
+    void begin_cycle();
+
+    // End cycle
+    void end_cycle(double num_particles);
+
     // Accumulate first and second moments
     void end_history();
 
@@ -101,8 +107,23 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Clear local values.
     void clear_local();
 
+    // Cycle counter
+    int d_cycle;
+
+    // Map for reordering fluxes from unordered map
+    std::vector<int> d_cell_map;
+
+    // Filename for HDF5 output
+    std::string d_outfile;
+
     // Tally for a history.
     History_Tally d_hist;
+
+    // Should we write fluxes at every cycle
+    bool d_cycle_output;
+
+    // Tally for single cycle
+    History_Tally d_cycle_tally;
 };
 
 //---------------------------------------------------------------------------//

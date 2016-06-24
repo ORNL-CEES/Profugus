@@ -40,6 +40,12 @@ Cell_Tally<Geometry>::Cell_Tally(RCP_Std_DB db, SP_Physics physics)
 
     // reset tally
     reset();
+
+    REQUIRE( d_db->isType<std::string>("problem_name") );
+    d_outfile = d_db->get<std::string>("problem_name") + "_flux.h5";
+
+    // Should we write fluxes at each cycle
+    d_cycle_output = d_db->get("do_cycle_output",false);
 }
 
 //---------------------------------------------------------------------------//
@@ -53,6 +59,7 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
 {
     // Make a new tally results
     Result tally;
+    History_Tally cycle_tally;
 
     // Iterate through the cells and insert them into the map
     for (const auto &cell : cells)
@@ -60,10 +67,32 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
         VALIDATE(cell < d_geometry->num_cells(),
                 "Cell tally index exceeds number of cells in geometry.");
         tally.insert({cell, {0.0, 0.0}});
+        cycle_tally.insert({cell, 0.0});
     }
 
     // Swap with the existing tally
-    std::swap(tally, d_tally);
+    std::swap(tally,       d_tally);
+    std::swap(cycle_tally, d_cycle_tally);
+
+    // Determine permutation vector for sorted cells
+    std::vector<std::pair<int,int>> sort_vec;
+    for (int i = 0; i < cells.size(); ++i)
+        sort_vec.push_back({cells[i],i});
+
+    std::sort(sort_vec.begin(), sort_vec.end(),
+        [](const std::pair<int,int> &lhs, const std::pair<int,int> &rhs)
+        { return lhs.first < rhs.first; } );
+
+    d_cell_map.resize(cells.size());
+    for (int i = 0; i < sort_vec.size(); ++i)
+        d_cell_map[i] = sort_vec[i].second;
+
+#ifdef USE_HDF5
+    Serial_HDF5_Writer writer;
+    writer.open(d_outfile);
+    writer.write("cells",cells);
+    writer.close();
+#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -87,10 +116,69 @@ void Cell_Tally<Geometry>::end_history()
         // Store the moments
         r.first  += t.second;
         r.second += t.second * t.second;
+
+        d_cycle_tally[t.first] += t.second;
     }
 
     // Clear the local tally
     clear_local();
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief Start new cycle
+ */
+template <class Geometry>
+void Cell_Tally<Geometry>::begin_cycle()
+{
+    // Reset cycle tally results
+    for (auto &r : d_cycle_tally)
+        r.second = 0.0;
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief End cycle
+ */
+template <class Geometry>
+void Cell_Tally<Geometry>::end_cycle(double num_particles)
+{
+    if (d_cycle_output)
+    {
+        std::vector<double> mean(d_cycle_tally.size(),0.0);
+
+        const auto &volumes = d_geometry->cell_volumes();
+
+        int ctr = 0;
+        for (const auto &t : d_cycle_tally)
+            mean[ctr++] = t.second / (num_particles * volumes[t.first]);
+
+        // Reorder vector
+        {
+            std::vector<double> tmp_mean  = mean;
+            for (int i = 0; i < d_cell_map.size(); ++i)
+            {
+                int ind = d_cell_map[i];
+                mean[i]  = tmp_mean[ind];
+            }
+        }
+
+        // Global reduction
+        profugus::global_sum(mean.data(), mean.size());
+
+#ifdef USE_HDF5
+        Serial_HDF5_Writer writer;
+        writer.open(d_outfile,HDF5_IO::APPEND);
+        std::ostringstream m;
+        m << "cycle_" << d_cycle;
+        writer.begin_group(m.str());
+        writer.write("cycle_flux",mean);
+        writer.end_group();
+        writer.close();
+#endif
+    }
+
+    d_cycle++;
 }
 
 //---------------------------------------------------------------------------//
@@ -169,27 +257,14 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
     }
     CHECK(ctr == d_tally.size());
 
-    // Determine permutation vector for sorted cells
-    std::vector<std::pair<int,int>> sort_vec;
-    for (int i = 0; i < cells.size(); ++i)
-        sort_vec.push_back({cells[i],i});
-
-    std::sort(sort_vec.begin(), sort_vec.end(),
-        [](const std::pair<int,int> &lhs, const std::pair<int,int> &rhs)
-        { return lhs.first < rhs.first; } );
-
-    std::vector<int> cell_map(cells.size());
-    for (int i = 0; i < sort_vec.size(); ++i)
-        cell_map[i] = sort_vec[i].second;
-
     // Reorder vectors
     {
         std::vector<int>    tmp_cells  = cells;
         std::vector<double> tmp_first  = first;
         std::vector<double> tmp_second = second;
-        for (int i = 0; i < cell_map.size(); ++i)
+        for (int i = 0; i < d_cell_map.size(); ++i)
         {
-            int ind = cell_map[i];
+            int ind = d_cell_map[i];
             cells[i]  = tmp_cells[ind];
             first[i]  = tmp_first[ind];
             second[i] = tmp_second[ind];
@@ -197,12 +272,8 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
     }
 
 #ifdef USE_HDF5
-    REQUIRE( d_db->isType<std::string>("problem_name") );
-    std::string filename = d_db->get<std::string>("problem_name") + "_flux.h5";
-
     Serial_HDF5_Writer writer;
-    writer.open(filename);
-    writer.write("cells",cells);
+    writer.open(d_outfile,HDF5_IO::APPEND);
     writer.write("flux_mean",first);
     writer.write("flux_std_dev",second);
     writer.close();
@@ -227,6 +298,8 @@ void Cell_Tally<Geometry>::reset()
     }
 
     ENSURE(d_hist.empty());
+
+    d_cycle = 0;
 }
 
 //---------------------------------------------------------------------------//
