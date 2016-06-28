@@ -302,7 +302,7 @@ void KCode_Solver<Geometry>::iterate()
 
     // set the solver to sample fission sites
     double safety_factor = 1.2;
-    int available_sites = safety_factor * d_Np;
+    int available_sites = safety_factor * d_source->num_to_transport();
     d_fission_sites->resize(available_sites);
     d_transporter->sample_fission_sites(d_fission_sites,
                                         d_keff_tally_host->latest());
