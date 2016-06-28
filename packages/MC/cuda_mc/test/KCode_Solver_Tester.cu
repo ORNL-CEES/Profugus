@@ -106,7 +106,7 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     else if (num_groups==5)
         exp_keff = 0.392492;
 
-    double tol = 10.0 / std::sqrt( static_cast<double>(num_particles) );
+    double tol = 20.0 / std::sqrt( static_cast<double>(num_particles) );
     EXPECT_SOFTEQ(exp_keff, keff, tol);
 
     // Statistical check on symmetry
