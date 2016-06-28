@@ -16,6 +16,7 @@
 #include <curand_kernel.h>
 #include <thrust/device_vector.h>
 
+#include "comm/Functions.hh"
 #include "harness/DBC.hh"
 
 namespace cuda_mc
@@ -55,7 +56,7 @@ class RNG_Control
 
       //!\brief Constructor.
       RNG_Control( int host_seed )
-          : d_gen(host_seed)
+          : d_gen(host_seed+profugus::node())
           , d_dist(limits::min(),limits::max())
       {
       }
