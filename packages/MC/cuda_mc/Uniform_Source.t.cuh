@@ -46,7 +46,13 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     REQUIRE(!db.is_null());
 
     // store the total number of requested particles
-    d_np_total = db->get<size_type>("Np", 1000);
+    d_np_total = 1000;
+    if (db->isType<int>("Np"))
+        d_np_total = db->get<int>("Np");
+    else if (db->isType<size_type>("Np"))
+        d_np_total = db->get<size_type>("Np");
+    else if (db->isParameter("Np"))
+        VALIDATE(false,"Unrecognized type for parameter Np.");
     INSIST(d_np_total > 0., "Number of source particles must be positive");
     d_np_domain = d_np_total / profugus::nodes();
 

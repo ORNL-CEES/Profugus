@@ -106,8 +106,14 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     INSIST(d_width[K] > 0., "Fission source z width is non-positive");
 
     // store the total number of requested particles per cycle
-    d_np_requested = db->get<size_type>("Np", 1000);
-    INSIST(d_np_requested > 0, "Number of source particles must be positive.");
+    d_np_requested = 1000;
+    if (db->isType<int>("Np"))
+        d_np_requested = db->get<int>("Np");
+    else if (db->isType<size_type>("Np"))
+        d_np_requested = db->get<size_type>("Np");
+    else if (db->isParameter("Np"))
+        VALIDATE(false,"Unrecognized type for parameter Np.");
+    INSIST(d_np_requested > 0., "Number of source particles must be positive");
 
     // initialize the total for the first cycle
     d_np_total = d_np_requested;
