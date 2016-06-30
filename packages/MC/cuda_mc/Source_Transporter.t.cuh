@@ -116,20 +116,19 @@ void Source_Transporter<Geometry>::solve()
     // is no need to communicate particles because the problem is replicated
     int num_alive = d_source->num_to_transport();
     int sort_size = d_vector_size;
+    std::vector<std::future<void> > futures(3);
     while ( !d_source->empty() || (num_alive > 0) )
     {
         // Get the sort size.
         sort_size = (d_source->empty()) ? num_alive : d_vector_size;
 
         // Run the events.
-        std::future<void> process_step_future = std::async( process_step );
-        std::future<void> transport_step_future = std::async( transport_step );
-        std::future<void> source_future = std::async( sample_source );
+        futures[0] = std::async( process_step );
+        futures[1] = std::async( transport_step );
+        futures[2] = std::async( sample_source );
 
         // Wait on the events.
-        source_future.get();
-        transport_step_future.get();
-        process_step_future.get();
+        for ( auto& f : futures ) f.get();
 
         // Sort the vector. This happens on the default stream and therefore
         // effectively synchronizes the device after events have run.

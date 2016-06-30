@@ -174,7 +174,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     this->db->set("implicit_capture", false);
 
     // make the physics tester.
-    int Np = 15;
+    int Np = 153223;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
 				   Np, this->rng, *(this->db), *(this->xs), 0 );
 
