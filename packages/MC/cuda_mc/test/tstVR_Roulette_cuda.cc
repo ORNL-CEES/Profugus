@@ -84,6 +84,7 @@ TEST_F(VR_RouletteTest, default_settings)
     event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_SURVIVE, i );
 
+    tester.sort_by_event();
     tester.live();
     tester.set_event(events);
     tester.sort_by_event();
@@ -98,6 +99,7 @@ TEST_F(VR_RouletteTest, default_settings)
     event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_KILLED, i );
 
+    tester.sort_by_event();
     tester.live();
     tester.set_event(events);
     tester.sort_by_event();
@@ -112,6 +114,7 @@ TEST_F(VR_RouletteTest, default_settings)
     event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::ROULETTE_KILLED, i );
 
+    tester.sort_by_event();
     tester.live();
     tester.set_event(events);
     tester.sort_by_event();
@@ -155,6 +158,7 @@ TEST_F(VR_RouletteTest, zero_cutoff)
     auto event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::COLLISION, i );
 
+    tester.sort_by_event();
     tester.live();
     tester.set_event(events);
     tester.sort_by_event();
@@ -169,6 +173,7 @@ TEST_F(VR_RouletteTest, zero_cutoff)
     event = tester.event();
     for ( auto i : event ) EXPECT_EQ( cuda_profugus::events::COLLISION, i );
 
+    tester.sort_by_event();
     tester.live();
     tester.set_event(events);
     tester.sort_by_event();
