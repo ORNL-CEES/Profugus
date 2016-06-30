@@ -77,8 +77,10 @@ TEST(Uniform_Source, construction)
     EXPECT_EQ( source.num_run(), 0 );
     EXPECT_EQ( source.num_left(), num_source / profugus::nodes() );
 
-    // Run the first batch of particles.
+    // Get the particles.
     auto particles = tester.particles();
+
+    // Run the first batch of particles.
     source.get_particles( particles );
 
     // Check the state of the particles.

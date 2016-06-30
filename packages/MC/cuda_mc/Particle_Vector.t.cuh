@@ -47,10 +47,17 @@ __global__ void init_lid_kernel( const int size, int* lids )
 //---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
 __global__ void init_event_kernel( const int size,
-				   events::Event* events )
+				   events::Event* events,
+                                   int* num_event,
+                                   int* event_bins )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size ) events[idx] = events::DEAD;
+    if ( idx < size ) 
+    {
+        events[idx] = events::DEAD;
+        atomicAdd( &num_event[events::DEAD], 1 );
+        event_bins[ events::DEAD*size + idx ] = idx;
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -143,16 +150,14 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Create the local ids.
     init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
 
-    // Initialize all particles to DEAD.
-    init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );
-
     // Initialize the number of events.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
         events::END_EVENT, d_num_event );
-    
-    // All particles right now are dead.
-    d_event_sizes[ events::DEAD ] = d_size;
 
+    // Initialize all particles to DEAD.
+    init_event_kernel<<<num_blocks,threads_per_block>>>( 
+        d_size, d_event, d_num_event, d_event_bins );
+    
     // Do the first sort to initialize particle event state.
     sort_by_event( d_size );
 }
