@@ -177,7 +177,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     int Np = 15;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
 				   Np, this->rng, *(this->db), *(this->xs), 0 );
-    
+
     // initialize the particles
     Space_Vector r, d;
     r.x = 50.0;
@@ -205,7 +205,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
         std::make_shared<Cell_Tally_t>( physics_tester.geometry(), num_batch );
     tallier->add_pathlength_tally( cell_tally );
     tallier->build();
-    
+
     // make a roulette variance reduction
     std::shared_ptr<VR_Roulette_t> vr = std::make_shared<VR_Roulette_t>( *(this->db) );
 
@@ -220,8 +220,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     transporter.transport_step( physics_tester.particles(), bank );
 
     // Sort the particles.
-    physics_tester.particles().get_host_ptr()->sort_by_event(
-        physics_tester.particles().get_host_ptr()->size());
+    physics_tester.particle_tester().sort_by_event();
 
     // Check the we have only collisions and boundaries.
     events = physics_tester.particle_tester().event();
@@ -235,8 +234,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     transporter.process_step( physics_tester.particles(), bank );
 
     // Sort the particles.
-    physics_tester.particles().get_host_ptr()->sort_by_event(
-        physics_tester.particles().get_host_ptr()->size());
+    physics_tester.particle_tester().sort_by_event();
 
     // Check that we have only dead particles and particles that will take
     // another step.

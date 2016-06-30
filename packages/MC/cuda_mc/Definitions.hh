@@ -21,24 +21,24 @@ namespace events
 
 //! Monte Carlo event descriptors.
 enum Event {
-    COLLISION = 0,		//!< Collided
-    ABSORPTION,			//!< Was absorbed
-    SCATTER,			//!< Scattered
-    BOUNDARY,			//!< Hit internal boundary
-    CUTOFF,			//!< Cutoff by energy
-    ESCAPE,			//!< Left problem through external boundary
-    ERROR_KILLED,		//!< Encountered unexpected error
-    IMPLICIT_CAPTURE,		//!< Weight decreased through implicit absorption
-    VR_POST_SURFACE,		//!< Ready for post-surface variance reduction
-    ROULETTE_KILLED,		//!< Killed by Russian roulette
-    ROULETTE_SURVIVE,		//!< Survived Russian roulette
-    SPLIT,			//!< Split by weight window
-    WEIGHT_WINDOW,		//!< Passed through weight window successfully
-    BOUNDARY_MESH,		//!< Encountered domain decomposition boundary
-    TAKE_STEP,                  //!< Take a transport step
-    BORN,			//!< Born
-    DEAD,			//!< The particle is dead and has no more events
-    END_EVENT
+    COLLISION        = 0,	//!< Collided
+    ABSORPTION       = 1,	//!< Was absorbed
+    SCATTER          = 2,	//!< Scattered
+    BOUNDARY         = 3,	//!< Hit internal boundary
+    CUTOFF           = 4,	//!< Cutoff by energy
+    ESCAPE           = 5,	//!< Left problem through external boundary
+    ERROR_KILLED     = 6,	//!< Encountered unexpected error
+    IMPLICIT_CAPTURE = 7,	//!< Weight decreased through implicit absorption
+    VR_POST_SURFACE  = 8,	//!< Ready for post-surface variance reduction
+    ROULETTE_KILLED  = 9,	//!< Killed by Russian roulette
+    ROULETTE_SURVIVE = 10,	//!< Survived Russian roulette
+    SPLIT            = 11,	//!< Split by weight window
+    WEIGHT_WINDOW    = 12,	//!< Passed through weight window successfully
+    BOUNDARY_MESH    = 13,	//!< Encountered domain decomposition boundary
+    TAKE_STEP        = 14,      //!< Take a transport step
+    BORN             = 15,	//!< Born
+    DEAD             = 16,	//!< The particle is dead and has no more events
+    END_EVENT        = 17
 };
 
 } // end namespace events

@@ -85,6 +85,18 @@ __global__ void event_bounds_kernel( const int size,
 }
 
 //---------------------------------------------------------------------------//
+// Reset the first event indicator for the particles.
+__global__ void reset_first_event_kernel( const int size,
+                                          bool* first_event )
+{
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( idx < size )
+    {
+        first_event[idx] = true;
+    }
+}
+
+//---------------------------------------------------------------------------//
 // Clear the number of events on the device.
 __global__ void clear_num_event_kernel( const int size,
                                          int* num_event )
@@ -116,6 +128,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_alive, d_size );
     cuda::memory::Malloc( d_geo_state, d_size );
     cuda::memory::Malloc( d_event, d_size );
+    cuda::memory::Malloc( d_first_event, d_size );
     cuda::memory::Malloc( d_lid, d_size );
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
@@ -154,6 +167,10 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
         events::END_EVENT, d_num_event );
 
+    // Reset the first event indicator.
+    reset_first_event_kernel<<<num_blocks,threads_per_block>>>( 
+        d_size, d_first_event );
+
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( 
         d_size, d_event, d_num_event, d_event_bins );
@@ -174,6 +191,7 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_alive );
     cuda::memory::Free( d_geo_state );
     cuda::memory::Free( d_event );
+    cuda::memory::Free( d_first_event );
     cuda::memory::Free( d_lid );
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
@@ -189,6 +207,18 @@ template <class Geometry>
 void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
 {
     REQUIRE( sort_size <= d_size );
+
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    // Reset the first event indicator so every particle starts with a first
+    // event next cycle.
+    reset_first_event_kernel<<<num_blocks,threads_per_block>>>( 
+        d_size, d_first_event );
 
     // Bin them.
     event_bounds_kernel<<<1,1>>>(
