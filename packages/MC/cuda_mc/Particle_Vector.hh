@@ -249,7 +249,7 @@ class Particle_Vector
         int* address = &d_num_event[event];
         int val = 1;
         int bin_size = atomicAdd( address, val );
-        d_event_bins[ event*events::END_EVENT + bin_size ] = d_lid[i];
+        d_event_bins[ event*d_size + bin_size ] = d_lid[i];
 #endif
     }
 

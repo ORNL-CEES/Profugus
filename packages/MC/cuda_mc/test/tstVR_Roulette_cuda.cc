@@ -58,6 +58,7 @@ TEST_F(VR_RouletteTest, default_settings)
     Teuchos::Array<cuda_profugus::events::Event> events( 
 	num_particle, cuda_profugus::events::COLLISION );
     tester.set_event(events);
+    tester.sort_by_event();
 
     Roulette vr(db);
     EXPECT_EQ(0.5,  vr.weight_survival());
@@ -85,6 +86,7 @@ TEST_F(VR_RouletteTest, default_settings)
 
     tester.live();
     tester.set_event(events);
+    tester.sort_by_event();
 
     // below cutoff. will die
     tester.set_wt(0.018);
@@ -98,6 +100,7 @@ TEST_F(VR_RouletteTest, default_settings)
 
     tester.live();
     tester.set_event(events);
+    tester.sort_by_event();
 
     // below cutoff. some should roulette
     tester.set_wt(0.20);
@@ -111,6 +114,7 @@ TEST_F(VR_RouletteTest, default_settings)
 
     tester.live();
     tester.set_event(events);
+    tester.sort_by_event();
 
     // below cutoff. will survive
     tester.set_wt(0.212501);
@@ -134,6 +138,7 @@ TEST_F(VR_RouletteTest, zero_cutoff)
     Teuchos::Array<cuda_profugus::events::Event> events( 
 	num_particle, cuda_profugus::events::COLLISION );
     tester.set_event(events);
+    tester.sort_by_event();
 
     db.set("weight_cutoff", 0.0);
     Roulette vr(db);
@@ -152,6 +157,7 @@ TEST_F(VR_RouletteTest, zero_cutoff)
 
     tester.live();
     tester.set_event(events);
+    tester.sort_by_event();
 
     // above cutoff
     tester.set_wt(0.000001);
@@ -165,6 +171,7 @@ TEST_F(VR_RouletteTest, zero_cutoff)
 
     tester.live();
     tester.set_event(events);
+    tester.sort_by_event();
 }
 
 //---------------------------------------------------------------------------//

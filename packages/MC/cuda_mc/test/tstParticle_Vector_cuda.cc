@@ -23,11 +23,13 @@
 //---------------------------------------------------------------------------//
 TEST(Particle_Vector, construction)
 {
-    int num_particle = 32;
-//    int num_particle = 32768;
+    // Number of particles. Must be an even number for this test.
+    int num_particle = 32768;
 
+    // Initialize rng
     profugus::RNG_Control control( 3420239343 );
 
+    // Initialize particle tester.
     Particle_Vector_Tester tester( num_particle, control.rng() );
 
     // check size

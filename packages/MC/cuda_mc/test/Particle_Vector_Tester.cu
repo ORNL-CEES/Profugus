@@ -438,8 +438,6 @@ void Particle_Vector_Tester::set_event( const Teuchos::Array<Event_t>& events )
 	d_vector.get_device_ptr(), device_event, d_size );
 
     cudaFree( device_event );
-
-    d_vector.get_host_ptr()->sort_by_event( d_vector.get_host_ptr()->size() );
 }
 
 //---------------------------------------------------------------------------//

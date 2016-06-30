@@ -194,7 +194,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     Teuchos::Array<cuda_profugus::events::Event> events( 
         Np, cuda_profugus::events::TAKE_STEP );
     physics_tester.particle_tester().set_event( events );
-    phyiscs_test.particle_tester().sort_by_event();
+    physics_tester.particle_tester().sort_by_event();
 
     // make a tallier
     std::shared_ptr<Tallier_t> tallier = std::make_shared<Tallier_t>();    

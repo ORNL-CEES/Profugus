@@ -190,6 +190,7 @@ TYPED_TEST(FissionSourceTest, sample_geometry)
     Teuchos::Array<cuda_profugus::events::Event> dead_event( 
 	this->vector_size, cuda_profugus::events::DEAD );
     this->physics_tester->particle_tester().set_event( dead_event );
+    this->physics_tester->particle_tester().sort_by_event(); 
 
     // Get particles from the source.
     source.get_particles( this->physics_tester->particles() );
@@ -248,6 +249,7 @@ TYPED_TEST(FissionSourceTest, sample_mesh)
     Teuchos::Array<cuda_profugus::events::Event> dead_event( 
 	this->vector_size, cuda_profugus::events::DEAD );
     this->physics_tester->particle_tester().set_event( dead_event );
+    this->physics_tester->particle_tester().sort_by_event(); 
 
     // Get particles from the source.
     source.get_particles( this->physics_tester->particles() );
@@ -315,6 +317,7 @@ TYPED_TEST(FissionSourceTest, sample_fission_sites)
     Teuchos::Array<cuda_profugus::events::Event> dead_event( 
 	this->vector_size, cuda_profugus::events::DEAD );
     this->physics_tester->particle_tester().set_event( dead_event );
+    this->physics_tester->particle_tester().sort_by_event(); 
 
     // Get particles from the source.
     source.get_particles( this->physics_tester->particles() );

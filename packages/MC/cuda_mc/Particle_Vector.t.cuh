@@ -210,7 +210,7 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     for ( int i = 0; i < events::END_EVENT; ++i )
     {
         thrust::device_ptr<int> event_ptr(
-            d_event_bins + i*events::END_EVENT );
+            d_event_bins + i*d_size );
         thrust::copy(
             event_ptr, event_ptr + d_event_sizes[i], lid_ptr + count );
         count += d_event_sizes[i];
