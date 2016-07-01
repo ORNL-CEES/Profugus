@@ -43,9 +43,6 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     , d_physics_host(physics)
     , d_nodes(profugus::nodes())
     , d_have_sites(false)
-    , d_np_requested(0)
-    , d_np_total(0)
-    , d_np_domain(0)
     , d_wt(0.0)
 {
     using def::I; using def::J; using def::K;
@@ -133,6 +130,8 @@ void Fission_Source<Geometry>::build_initial_source()
     // build the domain-replicated fission source
     build_DR();
 
+    d_np_left = d_np_domain;
+
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
            static_cast<double>(d_np_total);
@@ -180,6 +179,8 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Site_Vec &fission_sites)
     CHECK(d_np_domain >= d_fission_site_vec->size()); // there could be multiple
                                                       // fissions at a single
                                                       // site
+
+    d_np_left = d_np_domain;
 
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /

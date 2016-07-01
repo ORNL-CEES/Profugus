@@ -92,14 +92,6 @@ class Uniform_Source : public Source<Geometry>
     __device__ inline Particle_t get_particle(
         std::size_t idx, RNG_State_t *rng) const;
 
-    //! Number of particles to transport in the source on the current domain.
-    __host__ __device__
-    size_type num_to_transport() const { return d_np_domain; }
-
-    //! Total number of particles to transport in the entire problem/cycle.
-    __host__ __device__
-    size_type total_num_to_transport() const { return d_np_total; }
-
     // >>> CLASS ACCESSORS
 
     //! Starting weight for histories
@@ -109,11 +101,12 @@ class Uniform_Source : public Source<Geometry>
     // >>> IMPLEMENTATION
 
     using Base::b_geometry;
+    using Base::d_np_requested;
+    using Base::d_np_total;
+    using Base::d_np_domain;
+    using Base::d_np_left;
 
     int d_num_groups;
-
-    size_type d_np_total;
-    size_type d_np_domain;
 };
 
 } // end namespace cuda_mc

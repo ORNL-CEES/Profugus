@@ -50,6 +50,15 @@ class Source
     // Geometry and physics.
     Geometry_t  *b_geometry;
 
+    // Requested particles per cycle.
+    size_type d_np_requested;
+
+    // Number of particles: total, domain
+    size_type d_np_total, d_np_domain;
+    
+    // Number of particles remaining on this domain
+    size_type d_np_left;
+
   public:
     // Constructor.
     Source(SDP_Geometry geometry);
@@ -67,10 +76,20 @@ class Source
     //    std::size_t idx, RNG_State_t &rng) const;
 
     //! Number of particles to transport in the source on the current domain.
-    //size_type num_to_transport() const;
+    size_type num_to_transport() const {return d_np_domain;}
 
     //! Total number of particles to transport in the entire problem/cycle.
-    //size_type total_num_to_transport() const;
+    size_type total_num_to_transport() const {return d_np_total;}
+
+    //! Total number of particles to transport in the entire problem/cycle.
+    size_type num_left() const {return d_np_left;}
+
+    //! Update number of histories left
+    void update_particles(int Np)
+    {
+        REQUIRE(Np <= d_np_left);
+        d_np_left -= Np;
+    }
 
     // >>> INHERITED INTERFACE
 

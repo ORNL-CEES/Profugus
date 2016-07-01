@@ -121,14 +121,6 @@ class Fission_Source : public Source<Geometry>
     __device__ inline Particle_t get_particle(
         std::size_t idx, RNG_State_t *rng) const;
 
-    //! Number of particles to transport in the source on the current domain.
-    __host__ __device__
-    size_type num_to_transport() const { return d_np_domain; }
-
-    //! Total number of particles to transport in the entire problem/cycle.
-    __host__ __device__ 
-    size_type total_num_to_transport() const { return d_np_total; }
-
     // >>> CLASS ACCESSORS
 
     //! Get the current fission site container.
@@ -148,6 +140,10 @@ class Fission_Source : public Source<Geometry>
 
     typedef Source<Geometry> Base;
     using Base::b_geometry;
+    using Base::d_np_requested;
+    using Base::d_np_total;
+    using Base::d_np_domain;
+    using Base::d_np_left;
 
     // Build the domain replicated fission source.
     void build_DR();
@@ -165,12 +161,6 @@ class Fission_Source : public Source<Geometry>
     // Initial fission source lower coords and width.
     Space_Vector d_lower;
     Space_Vector d_width;
-
-    // Requested particles per cycle.
-    size_type d_np_requested;
-
-    // Number of particles: total, domain
-    size_type d_np_total, d_np_domain;
 
     // Particle weight.
     double d_wt;

@@ -41,7 +41,6 @@ template <class Geometry>
 Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
                                          SDP_Geometry   geometry)
     : Base(geometry)
-    , d_np_total(0)
 {
     REQUIRE(!db.is_null());
 
@@ -112,6 +111,7 @@ void Uniform_Source<Geometry>::build_source(SDP_Shape geometric_shape)
     // store the spatial shape
     d_geo_shape = geometric_shape.get_device_ptr();
 
+    d_np_left = d_np_domain;
     profugus::global_barrier();
 }
 
