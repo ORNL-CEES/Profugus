@@ -209,7 +209,7 @@ bool Particle_Vector<Geometry>::empty() const
 {
     int num_left = 0;
     for ( auto e : d_event_sizes ) num_left += e;
-    return num_left;
+    return (0 == num_left);
 }
 
 //---------------------------------------------------------------------------//
