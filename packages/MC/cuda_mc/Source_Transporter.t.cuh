@@ -114,10 +114,10 @@ void Source_Transporter<Geometry>::solve()
     // particles in the vector. we know when all the particles are dead when
     // the starting point for dead events is at the front of the vector. there
     // is no need to communicate particles because the problem is replicated
-    int num_alive = d_source->num_to_transport();
+    int num_alive = d_vector_size;
     int sort_size = d_vector_size;
     std::vector<std::future<void> > futures(3);
-    while ( !d_source->empty() || (num_alive > 0) )
+    while ( !d_source->empty() || !particles.get_host_ptr()->empty() )
     {
         // Get the sort size.
         sort_size = (d_source->empty()) ? num_alive : d_vector_size;
@@ -135,8 +135,7 @@ void Source_Transporter<Geometry>::solve()
         particles.get_host_ptr()->sort_by_event( sort_size );
 
         // Get the number of particles that are alive.
-        num_alive = d_vector_size -
-                    particles.get_host_ptr()->get_event_size( events::DEAD );
+        num_alive = particles.get_host_ptr()->num_alive();
 
         // update the event counter
         ++counter;

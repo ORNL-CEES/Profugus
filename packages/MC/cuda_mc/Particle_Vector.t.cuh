@@ -174,6 +174,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( 
         d_size, d_event, d_num_event, d_event_bins );
+    d_event_sizes[ events::DEAD ] = d_size;
     
     // Do the first sort to initialize particle event state.
     sort_by_event( d_size );
@@ -199,6 +200,26 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_event_bounds );
     cuda::memory::Free( d_num_event );
     cuda::memory::Free( d_event_bins );
+}
+
+//---------------------------------------------------------------------------//
+// Return if the vector is empty.
+template <class Geometry>
+bool Particle_Vector<Geometry>::empty() const
+{
+    int num_left = 0;
+    for ( auto e : d_event_sizes ) num_left += e;
+    return num_left;
+}
+
+//---------------------------------------------------------------------------//
+// Get the number of particles that are not dead.
+template <class Geometry>
+int Particle_Vector<Geometry>::num_alive() const
+{
+    int num_alive = 0;
+    for ( auto i = 0; i < events::DEAD; ++i ) num_alive += d_event_sizes[i];
+    return num_alive;
 }
 
 //---------------------------------------------------------------------------//

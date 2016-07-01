@@ -173,7 +173,7 @@ template <class Geometry>
 void Keff_Tally<Geometry>::accumulate(
     const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
-    REQUIRE( particles.get_host_ptr()->size() == d_vector_size );
+    std::cout << particles.get_host_ptr()->size() << " " << d_vector_size << std::endl;
 
     // Get the particles that just had a collision.
     int num_collision = 

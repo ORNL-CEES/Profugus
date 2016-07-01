@@ -111,6 +111,14 @@ class Particle_Vector
     // Destructor.
     ~Particle_Vector();
 
+    // Return if the vector is empty. If the vector has no events of any kind
+    // - not event dead particles, it is empty. We initialize everything to
+    // dead so it is not empty.
+    bool empty() const;
+
+    // Get the number of particles that are not dead.
+    int num_alive() const;
+
     // Sort the local indices by event key, effectively sorting the vector
     // using the default stream.
     void sort_by_event( const int sort_size );

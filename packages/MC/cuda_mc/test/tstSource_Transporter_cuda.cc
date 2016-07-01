@@ -76,7 +76,7 @@ class SourceTransporterTest : public testing::Test
         // make db
         db = Teuchos::rcp(new ParameterList_t("test"));
         db->set("weight_cutoff", 0.001);
-        db->set("particle_vector_size", 100);
+        db->set("particle_vector_size", 1000);
         db->set("Np", 10000);
         db->set("cuda_mc_diag_frac", 0.1);
     }
@@ -186,8 +186,9 @@ TYPED_TEST(SourceTransporterTest, fixed_source)
     this->db->set("implicit_capture", false);
 
     // make the physics tester.
+    int vector_size = 1000;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
-				   1, this->rng, *(this->db), *(this->xs), 1 );
+				   vector_size, this->rng, *(this->db), *(this->xs), 1 );
 
     // make a roulette variance reduction
     auto vr = std::make_shared<VR_Roulette_t>( *(this->db) );
@@ -247,7 +248,7 @@ TYPED_TEST(SourceTransporterTest, fission_source)
     this->db->set("implicit_capture", false);
 
     // make the physics tester.
-    int vector_size = 100;
+    int vector_size = 1000;
     Physics_Tester physics_tester( this->edges, this->edges, this->edges,
 				   vector_size, this->rng, *(this->db), *(this->xs), 1 );
 
