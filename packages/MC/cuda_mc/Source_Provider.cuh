@@ -50,16 +50,20 @@ class Source_Provider
 
     typedef Particle<Geometry>                  Particle_t;
     typedef thrust::device_vector<Particle_t>   Particle_Vector;
+    typedef int                                 index;
+    typedef thrust::device_vector<index>        Index_Vector;
     typedef std::shared_ptr<RNG_Control>        SP_RNG_Control;
     typedef std::shared_ptr<Source<Geometry>>   SP_Source;
+    typedef def::size_type                      size_type;
 
     //! Constructor
     Source_Provider(){}
 
     //! Get vector of particles
-    void get_particles( SP_Source        source,
-                        SP_RNG_Control   rng_control,
-                        Particle_Vector &particles ) const;
+    void get_particles( SP_Source           source,
+                        SP_RNG_Control      rng_control,
+                        Particle_Vector    &particles,
+                        const Index_Vector &indices ) const;
 
   private:
 
@@ -67,7 +71,8 @@ class Source_Provider
     template <class Src_Type>
     void get_particles_impl( std::shared_ptr<Src_Type>  source,
                              SP_RNG_Control             rng_control,
-                             Particle_Vector           &particles ) const;
+                             Particle_Vector           &particles,
+                             const Index_Vector        &indices ) const;
                         
 };
 

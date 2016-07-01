@@ -83,6 +83,9 @@ void Source_Transporter_Tester::test_transport(int num_groups)
     source->build_source(src_shape);
 
     // Build source transporter
+    pl->set("batch_size",1000);
+    pl->set("sort_frequency",4);
+    pl->set("verbosity",std::string("high"));
     Transporter trans(pl,sdp_geom,sdp_phys);
     trans.set(tallier);
     trans.solve(source);

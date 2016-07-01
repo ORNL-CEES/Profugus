@@ -236,7 +236,10 @@ void Uniform_Source_Tester::test_host_api()
     thrust::device_vector<Particle<Geometry>> particles;
 
     cuda_mc::Source_Provider<Geometry> provider;
-    provider.get_particles(source_host,rng_control,particles);
+    thrust::device_vector<int> indices(Np);
+    thrust::counting_iterator<int> cnt(0);
+    thrust::copy(cnt,cnt+indices.size(),indices.begin());
+    provider.get_particles(source_host,rng_control,particles,indices);
 
     EXPECT_EQ( particles.size(), Np );
     EXPECT_EQ( source_host->num_to_transport(), Np );
