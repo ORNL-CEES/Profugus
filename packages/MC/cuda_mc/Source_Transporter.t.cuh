@@ -143,7 +143,7 @@ void Source_Transporter<Geometry>::solve()
         ++counter;
 
         // print message if needed
-        if (counter % d_print_count == 0)
+        if (counter % d_print_count == 0 || 0 == num_alive)
         {
             double percent_complete = 
                 (100. * (d_source->num_run()-num_alive) ) / 
