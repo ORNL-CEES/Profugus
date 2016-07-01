@@ -320,6 +320,8 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
         d_verbosity = NONE;
     else if (verb == "low")
         d_verbosity = LOW;
+    else if (verb == "medium")
+        d_verbosity = MEDIUM;
     else if (verb == "high")
         d_verbosity = HIGH;
     else
@@ -381,7 +383,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
 
     while (num_particles_left>0)
     {
-        if (d_verbosity >= HIGH)
+        if (d_verbosity >= MEDIUM)
         {
             std::cout << "Starting batch with " << num_particles_left
                 << " particles" << std::endl;

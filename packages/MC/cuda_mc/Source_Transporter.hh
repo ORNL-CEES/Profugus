@@ -152,7 +152,7 @@ class Source_Transporter
     // >>> IMPLEMENTATION
 
     enum Sort_Type {ALIVE, MATID, GROUP, CELL};
-    enum Verbosity {NONE, LOW, HIGH};
+    enum Verbosity {NONE, LOW, MEDIUM, HIGH};
 
     // Nodes and node id.
     int d_node, d_nodes;
