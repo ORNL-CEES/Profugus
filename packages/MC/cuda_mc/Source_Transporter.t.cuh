@@ -368,7 +368,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     if (d_verbosity >= LOW)
     {
         std::cout << "Starting solve with " << num_particles
-            << " particles" << std::endl;
+            << " particles on node " << profugus::node() << std::endl;
     }
 
     thrust::device_vector<int> event(num_particles);
@@ -463,7 +463,10 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         d_sort_time += diff.count();
 
         if (d_verbosity >= HIGH)
-            std::cout << num_particles_left << " still alive" << std::endl;
+        {
+            std::cout << num_particles_left << " still alive on node "
+                << profugus::node() << std::endl;
+        }
     }
 
     // barrier at the end
