@@ -89,7 +89,11 @@ class Source
     size_type num_left() const {return d_np_left;}
 
     //! Number of particles to transport in current batch
-    size_type num_batch() const {return std::min(d_np_left,d_batch_size);}
+    size_type num_batch() const
+    {
+        REQUIRE(d_batch_size > 0);
+        return std::min(d_np_left,d_batch_size);
+    }
 
     //! Prepare for new batch of source particles
     virtual void begin_batch(size_type Np){};

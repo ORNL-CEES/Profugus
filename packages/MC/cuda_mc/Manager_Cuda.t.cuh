@@ -175,7 +175,7 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
         source->build_source(d_shape);
 
         // make the solver
-        d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>();
+        d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>(d_db);
 
         // set it
         d_fixed_solver->set(transporter, source, d_tallier);

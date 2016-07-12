@@ -80,8 +80,6 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     else if (d_db->isParameter("batch_size"))
         VALIDATE(false,"Unrecognized type for parameter batch_size.");
 
-    std::cout << "Batch size: " << d_batch_size << std::endl;
-
     // get a reference to the tallier
     b_tallier = cuda::Shared_Device_Ptr<Tallier_t>(tallier);
 

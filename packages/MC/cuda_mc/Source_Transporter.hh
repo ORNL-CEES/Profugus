@@ -158,9 +158,6 @@ class Source_Transporter
     int d_node, d_nodes;
     int d_block_size;
 
-    // Batch size for kernel launches
-    size_type d_batch_size;
-
     Sort_Type d_sort_type;
     Verbosity d_verbosity;
 

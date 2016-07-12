@@ -292,8 +292,6 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
 
     d_block_size = db->get("block_size",256);
 
-    d_batch_size = std::numeric_limits<size_type>::max();
-
     std::string sort_type = profugus::to_lower(db->get<std::string>("sort_type",
             std::string("alive")));
     if (sort_type == "alive" )
@@ -366,122 +364,106 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     // Get number of particles in source
     size_type num_particles      = source->num_batch();
     size_type num_particles_left = num_particles;
-    size_type num_particles_run  = 0;
 
     if (d_verbosity >= LOW)
     {
-        std::cout << "Starting solve with " << num_particles_left
+        std::cout << "Starting solve with " << num_particles
             << " particles" << std::endl;
     }
 
+    thrust::device_vector<int> event(num_particles);
+    thrust::device_vector<int> indirection(num_particles);
+    thrust::counting_iterator<int> cnt(0);
+    thrust::copy(cnt,cnt+num_particles,indirection.begin());
+
+    // Get source particles
+    start = std::chrono::high_resolution_clock::now();
+    Source_Provider<Geometry> provider;
+    thrust::device_vector<Particle_t> particles;
+    provider.get_particles(source, d_rng_control, particles, indirection);
+    cudaDeviceSynchronize();
+    end = std::chrono::high_resolution_clock::now();
+    diff = end - start;
+    d_source_time += diff.count();
+
     while (num_particles_left>0)
     {
-        if (d_verbosity >= MEDIUM)
-        {
-            std::cout << "Starting batch with " << num_particles_left
-                << " particles" << std::endl;
-        }
+        // Build launch args
+        cuda::Launch_Args<cuda::arch::Device> launch_args;
+        launch_args.set_block_size(d_block_size);
+        launch_args.set_num_elements(num_particles_left);
 
-        size_type num_particles_batch =
-            std::min(d_batch_size,num_particles_left);
-
-        thrust::device_vector<int> event(num_particles_batch);
-        thrust::device_vector<int> indirection(num_particles_batch);
-        thrust::counting_iterator<int> cnt(0);
-        thrust::copy(cnt,cnt+num_particles_batch,indirection.begin());
-
-        // Get source particles
+        // Build and execute kernel
+        cudaDeviceSynchronize();
         start = std::chrono::high_resolution_clock::now();
-        Source_Provider<Geometry> provider;
-        thrust::device_vector<Particle_t> particles;
-        provider.get_particles(source, d_rng_control, particles, indirection);
+        Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
+                particles.data().get(),
+                indirection.data().get() );
+        cuda::parallel_launch( f, launch_args );
+        REQUIRE(cudaSuccess == cudaGetLastError());
         cudaDeviceSynchronize();
         end = std::chrono::high_resolution_clock::now();
         diff = end - start;
-        d_source_time += diff.count();
+        d_transport_time += diff.count();
 
-        num_particles_left -= num_particles_batch;
-        num_particles_run  += num_particles_batch;
+        // Sort particles to put active particles up front
+        start = std::chrono::high_resolution_clock::now();
+        REQUIRE(cudaSuccess == cudaGetLastError());
 
-        while (num_particles_batch>0)
+        switch (d_sort_type)
         {
-            // Build launch args
-            cuda::Launch_Args<cuda::arch::Device> launch_args;
-            launch_args.set_block_size(d_block_size);
-            launch_args.set_num_elements(num_particles_batch);
-
-            // Build and execute kernel
-            cudaDeviceSynchronize();
-            start = std::chrono::high_resolution_clock::now();
-            Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
-                    particles.data().get(),
-                    indirection.data().get() );
-            cuda::parallel_launch( f, launch_args );
-            REQUIRE(cudaSuccess == cudaGetLastError());
-            cudaDeviceSynchronize();
-            end = std::chrono::high_resolution_clock::now();
-            diff = end - start;
-            d_transport_time += diff.count();
-
-            // Sort particles to put active particles up front
-            start = std::chrono::high_resolution_clock::now();
-            REQUIRE(cudaSuccess == cudaGetLastError());
-
-            switch (d_sort_type)
+            case ALIVE:
             {
-                case ALIVE:
-                {
-                    thrust::host_vector<int> ind_host = indirection;
+                thrust::host_vector<int> ind_host = indirection;
 
-                    GetAlive<Particle_t> alive_func(particles.data().get(),
-                            indirection.data().get(),
-                            event.data().get());
-                    cuda::parallel_launch( alive_func, launch_args );
-                    break;
-                }
-                case MATID:
-                {
-                    GetMatid<Particle_t> matid_func(particles.data().get(),
-                            indirection.data().get(),
-                            event.data().get());
-                    cuda::parallel_launch( matid_func, launch_args );
-                    break;
-                }
-                case GROUP:
-                {
-                    GetGroup<Particle_t> group_func(particles.data().get(),
-                            indirection.data().get(),
-                            event.data().get());
-                    cuda::parallel_launch( group_func, launch_args );
-                    break;
-                }
-                case CELL:
-                {
-                    GetCell<Geometry> cell_func(particles.data().get(),
-                            d_geometry.get_device_ptr(),
-                            indirection.data().get(),
-                            event.data().get());
-                    cuda::parallel_launch( cell_func, launch_args );
-                    break;
-                }
+                GetAlive<Particle_t> alive_func(particles.data().get(),
+                        indirection.data().get(),
+                        event.data().get());
+                cuda::parallel_launch( alive_func, launch_args );
+                break;
             }
-            cudaDeviceSynchronize();
-
-            thrust::stable_sort_by_key(event.begin(),
-                                       event.begin()+num_particles_batch,
-                                       indirection.begin());
-            auto itr = thrust::find( event.begin(),
-                    event.begin() + num_particles_batch, INT_MAX);
-            num_particles_batch = itr - event.begin();
-
-            cudaDeviceSynchronize();
-            end = std::chrono::high_resolution_clock::now();
-            diff = end - start;
-            d_sort_time += diff.count();
-
-            if (d_verbosity >= HIGH)
-                std::cout << num_particles_batch << " still alive" << std::endl;
+            case MATID:
+            {
+                GetMatid<Particle_t> matid_func(particles.data().get(),
+                        indirection.data().get(),
+                        event.data().get());
+                cuda::parallel_launch( matid_func, launch_args );
+                break;
+            }
+            case GROUP:
+            {
+                GetGroup<Particle_t> group_func(particles.data().get(),
+                        indirection.data().get(),
+                        event.data().get());
+                cuda::parallel_launch( group_func, launch_args );
+                break;
+            }
+            case CELL:
+            {
+                GetCell<Geometry> cell_func(particles.data().get(),
+                        d_geometry.get_device_ptr(),
+                        indirection.data().get(),
+                        event.data().get());
+                cuda::parallel_launch( cell_func, launch_args );
+                break;
+            }
         }
+        cudaDeviceSynchronize();
+
+        thrust::stable_sort_by_key(event.begin(),
+                                   event.begin()+num_particles_left,
+                                   indirection.begin());
+        auto itr = thrust::find( event.begin(),
+                event.begin() + num_particles_left, INT_MAX);
+        num_particles_left = itr - event.begin();
+
+        cudaDeviceSynchronize();
+        end = std::chrono::high_resolution_clock::now();
+        diff = end - start;
+        d_sort_time += diff.count();
+
+        if (d_verbosity >= HIGH)
+            std::cout << num_particles_left << " still alive" << std::endl;
     }
 
     // barrier at the end

@@ -48,6 +48,8 @@ class Fixed_Source_Solver : public Solver<Geometry>
     typedef std::shared_ptr<Source<Geometry>>       SP_Source;
     typedef Tallier<Geometry>                       Tallier_t;
     typedef std::shared_ptr<Tallier_t>              SP_Tallier;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_Std_DB;
+    typedef def::size_type                          size_type;
     //@}
 
   private:
@@ -63,7 +65,7 @@ class Fixed_Source_Solver : public Solver<Geometry>
 
   public:
     // Constructor.
-    Fixed_Source_Solver();
+    Fixed_Source_Solver(RCP_Std_DB db);
 
     // Set the underlying source transporter and source.
     void set(SP_Source_Transporter transporter,
@@ -83,6 +85,9 @@ class Fixed_Source_Solver : public Solver<Geometry>
 
     // Total, global number of particles to run.
     def::size_type d_Np;
+
+    // Number of particles per batch for kernel launches
+    def::size_type d_batch_size;
 
     // Processor/node info.
     int d_node, d_nodes;

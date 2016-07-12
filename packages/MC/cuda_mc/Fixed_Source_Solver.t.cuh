@@ -31,10 +31,21 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Fixed_Source_Solver<Geometry>::Fixed_Source_Solver()
+Fixed_Source_Solver<Geometry>::Fixed_Source_Solver(RCP_Std_DB db)
     : d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
+    d_batch_size = std::numeric_limits<size_type>::max();
+    if (db->isType<int>("batch_size"))
+    {
+        d_batch_size = db->get<int>("batch_size");
+    }
+    else if (db->isType<size_type>("batch_size"))
+    {
+        d_batch_size = db->get<size_type>("batch_size");
+    }
+    else if (db->isParameter("batch_size"))
+        VALIDATE(false,"Unrecognized type for parameter batch_size.");
 }
 
 //---------------------------------------------------------------------------//
@@ -94,7 +105,13 @@ void Fixed_Source_Solver<Geometry>::solve()
     if( uni_source )
     {
         d_Np = uni_source->total_num_to_transport();
-        d_transporter->solve(uni_source);
+        size_type this_batch_size =
+            std::min(d_batch_size,uni_source->num_to_transport());
+        uni_source->set_batch_size(this_batch_size);
+        while (uni_source->num_left() > 0)
+        {
+            d_transporter->solve(uni_source);
+        }
     }
 
     // Add other source types...

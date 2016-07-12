@@ -49,6 +49,7 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
     }
 
     def::size_type num_particles = 10000;
+    def::size_type batch_size    = num_particles / 5;
 
     // Build geometry
     auto geom = std::make_shared<Geom>(edges,edges,edges);
@@ -59,6 +60,8 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     pl->set("num_groups",xs->num_groups());
     pl->set("Np",num_particles);
+    pl->set("batch_size",batch_size);
+    pl->set("verbosity",std::string("high"));
     pl->set("implicit_capture",true);
     pl->set("variance reduction",std::string("roulette"));
     auto sdp_mat = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
@@ -95,7 +98,7 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
     // Build source transporter
     auto trans = std::make_shared<Transporter>(pl,sdp_geom,sdp_phys);
 
-    Fixed_Solver solver;
+    Fixed_Solver solver(pl);
     solver.set(trans,source,tallier);
     solver.solve();
 

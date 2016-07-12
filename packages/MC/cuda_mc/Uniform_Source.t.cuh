@@ -54,6 +54,7 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
         VALIDATE(false,"Unrecognized type for parameter Np.");
     INSIST(d_np_total > 0., "Number of source particles must be positive");
     d_np_domain = d_np_total / profugus::nodes();
+    this->set_batch_size(d_np_domain);
 
     // get the spectral shape
     d_num_groups = db->get<int>("num_groups");
