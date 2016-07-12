@@ -317,7 +317,8 @@ void KCode_Solver<Geometry>::iterate()
     // number of particles, whichever is larger
     double safety_factor = 1.2;
     size_type available_host_sites = safety_factor *
-        std::max(d_source->Np(),d_source->num_to_transport());
+        std::max(d_source->Np()/profugus::nodes(),
+                 d_source->num_to_transport());
     d_host_sites->resize(available_host_sites);
 
     // Allocate space for device fission sites
@@ -335,9 +336,9 @@ void KCode_Solver<Geometry>::iterate()
     }
     d_dev_sites->resize(available_dev_sites);
 
+    // initialize keff tally to the beginning of the cycle
     double latest_keff = d_keff_tally_host->latest();
 
-    // initialize keff tally to the beginning of the cycle
     b_tallier.get_host_ptr()->begin_cycle(this_batch_size);
     d_source->set_batch_size(this_batch_size);
 
