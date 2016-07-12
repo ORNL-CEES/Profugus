@@ -67,6 +67,8 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     phys->set_geometry(sdp_geom);
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
+    pl->set("verbosity",std::string("high"));
+
     // Build cell tally
     std::cout << "Building Cell_Tally" << std::endl;
     auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(

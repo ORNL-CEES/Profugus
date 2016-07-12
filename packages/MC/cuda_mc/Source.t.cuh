@@ -30,6 +30,7 @@ Source<Geometry>::Source(SDP_Geometry geometry)
     , d_np_requested(0)
     , d_np_total(0)
     , d_np_domain(0)
+    , d_np_run(0)
     , d_np_left(0)
 {
     REQUIRE(b_geometry);

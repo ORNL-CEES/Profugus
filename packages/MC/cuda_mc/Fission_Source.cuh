@@ -74,26 +74,29 @@ class Fission_Source : public Source<Geometry>
   public:
     //@{
     //! Typedefs.
-    typedef Geometry                                    Geometry_t;
-    typedef Physics<Geometry_t>                         Physics_t;
-    typedef thrust::device_vector<Fission_Site>         Fission_Site_Vector;
-    typedef Particle<Geometry_t>                        Particle_t;
-    typedef cuda_profugus::Space_Vector                 Space_Vector;
-    typedef RNG_Control::RNG_State_t                    RNG_State_t;
-    typedef cuda::Shared_Device_Ptr<Geometry>           SDP_Geometry;
-    typedef cuda::Shared_Device_Ptr<Physics_t>          SDP_Physics;
-    typedef std::shared_ptr<Fission_Rebalance>          SP_Fission_Rebalance;
-    typedef Teuchos::RCP<Teuchos::ParameterList>        RCP_Std_DB;
-    typedef def::size_type                              size_type;
-    typedef std::shared_ptr<Fission_Site_Vector>        SP_Fission_Site_Vec;
+    typedef Geometry                                Geometry_t;
+    typedef Physics<Geometry_t>                     Physics_t;
+    typedef std::vector<Fission_Site>               Host_Fission_Sites;
+    typedef thrust::device_vector<Fission_Site>     Device_Fission_Sites;
+    typedef Particle<Geometry_t>                    Particle_t;
+    typedef cuda_profugus::Space_Vector             Space_Vector;
+    typedef RNG_Control::RNG_State_t                RNG_State_t;
+    typedef cuda::Shared_Device_Ptr<Geometry>       SDP_Geometry;
+    typedef cuda::Shared_Device_Ptr<Physics_t>      SDP_Physics;
+    typedef std::shared_ptr<Fission_Rebalance>      SP_Fission_Rebalance;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_Std_DB;
+    typedef def::size_type                          size_type;
+    typedef std::shared_ptr<Host_Fission_Sites>     SP_Host_Fission_Sites;
+    typedef std::shared_ptr<Device_Fission_Sites>   SP_Device_Fission_Sites;
     //@}
 
   private:
     // >>> DATA
 
     // Fission site container.
-    SP_Fission_Site_Vec d_fission_site_vec;
-    Fission_Site       *d_fission_sites;
+    SP_Host_Fission_Sites   d_host_sites;
+    SP_Device_Fission_Sites d_device_sites;
+    Fission_Site           *d_fission_sites;
 
     // Fission rebalance (across sets).
     SP_Fission_Rebalance d_fission_rebalance;
@@ -110,7 +113,7 @@ class Fission_Source : public Source<Geometry>
     void build_initial_source();
 
     // Build a source from a fission site container.
-    void build_source(SP_Fission_Site_Vec &fission_sites);
+    void build_source(SP_Host_Fission_Sites &fission_sites);
 
     // Is this the initial source
     bool is_initial_source() const { return !d_have_sites; }
@@ -121,12 +124,14 @@ class Fission_Source : public Source<Geometry>
     __device__ inline Particle_t get_particle(
         std::size_t idx, RNG_State_t *rng) const;
 
+    void begin_batch(size_type num_sites);
+
     // >>> CLASS ACCESSORS
 
     //! Get the current fission site container.
-    SP_Fission_Site_Vec fission_sites() const
+    SP_Host_Fission_Sites fission_sites() const
     {
-        return d_fission_site_vec;
+        return d_host_sites;
     }
 
     //! Total number of requested particles per cycle.
@@ -144,6 +149,7 @@ class Fission_Source : public Source<Geometry>
     using Base::d_np_total;
     using Base::d_np_domain;
     using Base::d_np_left;
+    using Base::d_np_run;
 
     // Build the domain replicated fission source.
     void build_DR();

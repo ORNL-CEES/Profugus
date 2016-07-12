@@ -371,7 +371,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     std::chrono::duration<double> diff;
 
     // Get number of particles in source
-    size_type num_particles      = source->num_to_transport();
+    size_type num_particles      = source->num_left();
     size_type num_particles_left = num_particles;
     size_type num_particles_run  = 0;
 
@@ -424,6 +424,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
                     particles.data().get(),
                     indirection.data().get() );
             cuda::parallel_launch( f, launch_args );
+            REQUIRE(cudaSuccess == cudaGetLastError());
             cudaDeviceSynchronize();
             end = std::chrono::high_resolution_clock::now();
             diff = end - start;
@@ -431,43 +432,47 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
 
             // Sort particles to put active particles up front
             start = std::chrono::high_resolution_clock::now();
+            REQUIRE(cudaSuccess == cudaGetLastError());
 
             switch (d_sort_type)
             {
                 case ALIVE:
-                    {
-                        GetAlive<Particle_t> alive_func(particles.data().get(),
-                                indirection.data().get(),
-                                event.data().get());
-                        cuda::parallel_launch( alive_func, launch_args );
-                        break;
-                    }
+                {
+                    thrust::host_vector<int> ind_host = indirection;
+
+                    GetAlive<Particle_t> alive_func(particles.data().get(),
+                            indirection.data().get(),
+                            event.data().get());
+                    cuda::parallel_launch( alive_func, launch_args );
+                    break;
+                }
                 case MATID:
-                    {
-                        GetMatid<Particle_t> matid_func(particles.data().get(),
-                                indirection.data().get(),
-                                event.data().get());
-                        cuda::parallel_launch( matid_func, launch_args );
-                        break;
-                    }
+                {
+                    GetMatid<Particle_t> matid_func(particles.data().get(),
+                            indirection.data().get(),
+                            event.data().get());
+                    cuda::parallel_launch( matid_func, launch_args );
+                    break;
+                }
                 case GROUP:
-                    {
-                        GetGroup<Particle_t> group_func(particles.data().get(),
-                                indirection.data().get(),
-                                event.data().get());
-                        cuda::parallel_launch( group_func, launch_args );
-                        break;
-                    }
+                {
+                    GetGroup<Particle_t> group_func(particles.data().get(),
+                            indirection.data().get(),
+                            event.data().get());
+                    cuda::parallel_launch( group_func, launch_args );
+                    break;
+                }
                 case CELL:
-                    {
-                        GetCell<Geometry> cell_func(particles.data().get(),
-                                d_geometry.get_device_ptr(),
-                                indirection.data().get(),
-                                event.data().get());
-                        cuda::parallel_launch( cell_func, launch_args );
-                        break;
-                    }
+                {
+                    GetCell<Geometry> cell_func(particles.data().get(),
+                            d_geometry.get_device_ptr(),
+                            indirection.data().get(),
+                            event.data().get());
+                    cuda::parallel_launch( cell_func, launch_args );
+                    break;
+                }
             }
+            cudaDeviceSynchronize();
 
             thrust::stable_sort_by_key(event.begin(),
                                        event.begin()+num_particles_batch,

@@ -68,6 +68,20 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     d_Np = static_cast<double>(d_source->Np());
     CHECK(d_Np > 0.0);
 
+    d_batch_size = std::numeric_limits<size_type>::max();
+    if (d_db->isType<int>("batch_size"))
+    {
+        d_batch_size = d_db->get<int>("batch_size");
+    }
+    else if (d_db->isType<size_type>("batch_size"))
+    {
+        d_batch_size = d_db->get<size_type>("batch_size");
+    }
+    else if (d_db->isParameter("batch_size"))
+        VALIDATE(false,"Unrecognized type for parameter batch_size.");
+
+    std::cout << "Batch size: " << d_batch_size << std::endl;
+
     // get a reference to the tallier
     b_tallier = cuda::Shared_Device_Ptr<Tallier_t>(tallier);
 
@@ -84,7 +98,8 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     d_inactive_tallier = cuda::Shared_Device_Ptr<Tallier_t>(inactive_tallier);
 
     // Build fission site vector
-    d_fission_sites = std::make_shared<Fission_Site_Vector>();
+    d_host_sites = std::make_shared<Host_Fission_Sites>();
+    d_dev_sites  = std::make_shared<Dev_Fission_Sites>();
 
     d_build_phase = ASSIGNED;
 
@@ -127,8 +142,8 @@ void KCode_Solver<Geometry>::solve()
     ENSURE(num_total > 0);
 
     // Preallocate diagnostics
-    DIAGNOSTICS_ONE(vec_integers["np_fission"]      .reserve(num_total );)
-    DIAGNOSTICS_TWO(vec_doubles ["local_np_fission"].reserve(num_total );)
+    DIAGNOSTICS_ONE(vec_integers["np_fission"]      .reserve(num_total);)
+    DIAGNOSTICS_TWO(vec_doubles ["local_np_fission"].reserve(num_total);)
 
     // Timers (some required, some optional)
     profugus::Timer cycle_timer;
@@ -290,8 +305,7 @@ void KCode_Solver<Geometry>::initialize()
 template <class Geometry>
 void KCode_Solver<Geometry>::iterate()
 {
-    REQUIRE(d_fission_sites);
-    //REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
+    REQUIRE(d_host_sites);
     REQUIRE(d_build_phase == INACTIVE_SOLVE || d_build_phase == ACTIVE_SOLVE);
 
     // store the number of source particles for this cycle
@@ -300,38 +314,89 @@ void KCode_Solver<Geometry>::iterate()
     DIAGNOSTICS_TWO(vec_integers["local_np_fission"].push_back(
                         d_source->num_to_transport()));
 
-    // set the solver to sample fission sites
+    // Allocate space for host fission sites
+    // 20% above either the requested number of histories or the current
+    // number of particles, whichever is larger
     double safety_factor = 1.2;
-    int available_sites = safety_factor * d_source->num_to_transport();
-    d_fission_sites->resize(available_sites);
-    d_transporter->sample_fission_sites(d_fission_sites,
-                                        d_keff_tally_host->latest());
+    size_type available_host_sites = safety_factor *
+        std::max(d_source->Np(),d_source->num_to_transport());
+    d_host_sites->resize(available_host_sites);
+
+    // Allocate space for device fission sites
+    // 20% above the batch size
+    size_type this_batch_size = std::min(d_batch_size,
+        d_source->num_to_transport());
+    size_type available_dev_sites;
+    if (d_batch_size == std::numeric_limits<size_type>::max())
+    {
+        available_dev_sites = available_host_sites;
+    }
+    else
+    {
+        available_dev_sites = safety_factor * this_batch_size;
+    }
+    d_dev_sites->resize(available_dev_sites);
+
+    double latest_keff = d_keff_tally_host->latest();
 
     // initialize keff tally to the beginning of the cycle
-    b_tallier.get_host_ptr()->begin_cycle(d_fission_sites->size());
+    b_tallier.get_host_ptr()->begin_cycle(this_batch_size);
+    //d_source->set_batch_size(this_batch_size);
 
-    // solve the fixed source problem using the transporter
-    d_transporter->solve(d_source);
+    size_type num_sites = 0;
 
-    // update fission site vector
-    int num_sites = d_transporter->num_sampled_fission_sites();
-    if( num_sites > available_sites )
+    while (d_source->num_left() > 0)
+    {
+        // set the solver to sample fission sites
+        d_transporter->sample_fission_sites(d_dev_sites,latest_keff);
+
+        // solve the fixed source problem using the transporter
+        d_transporter->solve(d_source);
+
+        // update fission site vector
+        size_type num_sites_batch =
+            d_transporter->num_sampled_fission_sites();
+
+        if( num_sites_batch > available_dev_sites )
+        {
+            if( d_build_phase == INACTIVE_SOLVE )
+            {
+                profugus::log(profugus::WARNING) <<
+                    "Not enough space allocated for fission sites on cycle " <<
+                    num_cycles() << ". " << available_dev_sites <<
+                    " were allocated but " << num_sites_batch
+                    << " were required.";
+            }
+            else
+            {
+                INSIST(false,"Not enough space allocated for device fission "
+                        "sites during active cycle.");
+            }
+        }
+
+        thrust::copy(d_dev_sites->begin(),d_dev_sites->begin()+num_sites_batch,
+                     d_host_sites->begin()+num_sites);
+
+        num_sites += num_sites_batch;
+    }
+
+    if( num_sites > available_host_sites )
     {
         if( d_build_phase == INACTIVE_SOLVE )
         {
-            profugus::log(profugus::WARNING) << "Not enough space allocated "
-                << "for fission sites on cycle " << num_cycles() << ". "
-                << available_sites << " were allocated but " << num_sites
+            profugus::log(profugus::WARNING) <<
+                "Not enough space allocated for fission sites on cycle " <<
+                num_cycles() << ". " << available_host_sites <<
+                " were allocated but " << num_sites
                 << " were required.";
         }
         else
         {
-            INSIST(false,"Not enough space allocated for fission sites "
+            INSIST(false,"Not enough space allocated for host fission sites "
                     "during active cycle");
         }
     }
-    d_fission_sites->resize(std::min(available_sites,num_sites));
-
+    d_host_sites->resize(std::min(available_host_sites,num_sites));
 
     // do end-of-cycle tally processing including global sum Note: this is the
     // total *requested* number of particles, not the actual number of
@@ -340,9 +405,9 @@ void KCode_Solver<Geometry>::iterate()
     b_tallier.get_host_ptr()->end_cycle(d_Np);
 
     // build a new source from the fission site distribution
-    d_source->build_source(d_fission_sites);
+    d_source->build_source(d_host_sites);
 
-    ENSURE(d_fission_sites);
+    ENSURE(d_host_sites);
 }
 
 //---------------------------------------------------------------------------//

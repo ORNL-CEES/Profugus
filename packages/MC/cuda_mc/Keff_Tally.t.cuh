@@ -107,8 +107,9 @@ void Keff_Tally<Geometry>::begin_active_cycles()
  * This clears the current accumulated path lengths.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::begin_cycle(int num_particles)
+void Keff_Tally<Geometry>::begin_cycle(size_type num_particles)
 {
+    REQUIRE(num_particles>0);
     d_keff_cycle = 0.;
     d_keff_data.resize(num_particles);
     thrust::fill(d_keff_data.begin(),d_keff_data.end(),0.0);

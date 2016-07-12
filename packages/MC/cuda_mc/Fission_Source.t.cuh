@@ -148,39 +148,38 @@ void Fission_Source<Geometry>::build_initial_source()
  * \param fission_sites
  */
 template <class Geometry>
-void Fission_Source<Geometry>::build_source(SP_Fission_Site_Vec &fission_sites)
+void Fission_Source<Geometry>::build_source(SP_Host_Fission_Sites &fission_sites)
 {
     REQUIRE(fission_sites);
 
     // Make fission site vector if it hasn't been built yet
-    if( !d_fission_site_vec )
-        d_fission_site_vec = std::make_shared<Fission_Site_Vector>();
+    if( !d_host_sites )
+        d_host_sites = std::make_shared<Host_Fission_Sites>();
+    if( !d_device_sites )
+        d_device_sites = std::make_shared<Device_Fission_Sites>();
 
     SCOPED_TIMER("MC::Fission_Source.build_source");
 
     // swap the input fission sites with the internal storage fission sites
-    d_fission_site_vec.swap(fission_sites);
+    d_host_sites.swap(fission_sites);
 
     // rebalance across sets (when number of blocks per set > 1; the
     // set-rebalance may try to do some load-balancing when it can, that is
     // why this call should comm after the gather; otherwise the
     // load-balancing could provide poor results)
-    std::vector<Fission_Site> host_sites(d_fission_site_vec->size());
-    thrust::copy(d_fission_site_vec->begin(),
-                 d_fission_site_vec->end(),
-                 host_sites.begin());
-    d_fission_rebalance->rebalance(host_sites);
-    *d_fission_site_vec = host_sites;
+    d_fission_rebalance->rebalance(*d_host_sites);
 
     // get the number of fission sites on this domain, on this set, and
     // globally from the fission-rebalance
     d_np_domain = d_fission_rebalance->num_fissions();
     d_np_total  = d_fission_rebalance->num_global_fissions();
-    CHECK(d_np_domain >= d_fission_site_vec->size()); // there could be multiple
-                                                      // fissions at a single
-                                                      // site
+    CHECK(d_np_domain >= d_host_sites->size()); // there could be multiple
+                                                // fissions at a single
+                                                // site
 
     d_np_left = d_np_domain;
+    d_np_run  = 0;
+    d_have_sites = true;
 
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
@@ -188,11 +187,31 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Site_Vec &fission_sites)
 
     profugus::global_barrier();
 
-    // Assign raw pointer for on-device access
-    d_fission_sites = d_fission_site_vec->data().get();
-    d_have_sites = true;
-
     ENSURE(d_wt > 0.0);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build a source from a fission site container.
+ *
+ * \param fission_sites
+ */
+template <class Geometry>
+void Fission_Source<Geometry>::begin_batch(size_type batch_size)
+{
+    if (d_have_sites)
+    {
+        REQUIRE(d_host_sites->size() >= d_np_run+batch_size);
+
+        // Copy range of fission sites to device
+        d_device_sites->resize(batch_size);
+        thrust::copy(d_host_sites->begin()+d_np_run,
+                     d_host_sites->begin()+d_np_run+batch_size,
+                     d_device_sites->begin());
+
+        // Assign raw pointer for on-device access
+        d_fission_sites = d_device_sites->data().get();
+    }
 }
 
 //---------------------------------------------------------------------------//

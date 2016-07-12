@@ -98,6 +98,9 @@ void Source_Provider<Geometry>::get_particles(
     }
 }
 
+//---------------------------------------------------------------------------//
+// Geometry-templated implementation
+//---------------------------------------------------------------------------//
 template <class Geometry>
 template <class Src_Type>
 void Source_Provider<Geometry>::get_particles_impl(
@@ -111,6 +114,8 @@ void Source_Provider<Geometry>::get_particles_impl(
     rng_control->initialize(Np);
 
     particles.resize(Np);
+
+    source->begin_batch(Np);
 
     cuda::Shared_Device_Ptr<Src_Type> sdp_source(source);
 
@@ -129,11 +134,10 @@ void Source_Provider<Geometry>::get_particles_impl(
     cuda::parallel_launch( f, launch_args );
 
     // Update remaining particles in source
-    source->update_particles(Np);
+    source->end_batch(Np);
 
     cudaDeviceSynchronize();
 }
-
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda_mc

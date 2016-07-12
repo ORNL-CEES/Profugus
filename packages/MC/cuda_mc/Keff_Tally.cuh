@@ -46,7 +46,8 @@ class Keff_Tally
 
     //@{
     //! Misc typedefs.
-    typedef def::Vec_Dbl Vec_Dbl;
+    typedef def::Vec_Dbl    Vec_Dbl;
+    typedef def::size_type  size_type;
     //@}
 
   private:
@@ -120,7 +121,7 @@ class Keff_Tally
     void begin_active_cycles();
 
     // Begin a new cycle in a kcode calculation.
-    void begin_cycle(int num_particles);
+    void begin_cycle(size_type num_particles);
 
     // End a cycle in a kcode calculation.
     void end_cycle(double num_particles);

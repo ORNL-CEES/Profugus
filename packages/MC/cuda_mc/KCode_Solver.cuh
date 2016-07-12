@@ -66,20 +66,23 @@ class KCode_Solver : public Solver<Geometry>
   public:
     //@{
     //! Typedefs.
-    typedef Geometry                                    Geometry_t;
-    typedef Source_Transporter<Geometry_t>              Source_Transporter_t;
-    typedef Teuchos::RCP<Teuchos::ParameterList>        RCP_Std_DB;
-    typedef std::shared_ptr<Source_Transporter_t>       SP_Source_Transporter;
-    typedef Fission_Source<Geometry_t>                  FS_t;
-    typedef Tallier<Geometry_t>                         Tallier_t;
-    typedef Keff_Tally<Geometry_t>                      Keff_Tally_t;
-    typedef thrust::device_vector<Fission_Site>         Fission_Site_Vector;
-    typedef std::shared_ptr<FS_t>                       SP_Fission_Source;
-    typedef std::shared_ptr<Fission_Site_Vector>        SP_Fission_Site_Vector;
-    typedef std::shared_ptr<Tallier_t>                  SP_Tallier;
-    typedef cuda::Shared_Device_Ptr<Tallier_t>          SDP_Tallier;
-    typedef std::shared_ptr<Keff_Tally_t>               SP_Keff_Tally;
-    typedef cuda::Shared_Device_Ptr<Keff_Tally_t>       SDP_Keff_Tally;
+    typedef Geometry                                Geometry_t;
+    typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_Std_DB;
+    typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
+    typedef Fission_Source<Geometry_t>              FS_t;
+    typedef Tallier<Geometry_t>                     Tallier_t;
+    typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
+    typedef std::vector<Fission_Site>               Host_Fission_Sites;
+    typedef thrust::device_vector<Fission_Site>     Dev_Fission_Sites;
+    typedef std::shared_ptr<FS_t>                   SP_Fission_Source;
+    typedef std::shared_ptr<Host_Fission_Sites>     SP_Host_Fission_Sites;
+    typedef std::shared_ptr<Dev_Fission_Sites>      SP_Dev_Fission_Sites;
+    typedef std::shared_ptr<Tallier_t>              SP_Tallier;
+    typedef cuda::Shared_Device_Ptr<Tallier_t>      SDP_Tallier;
+    typedef std::shared_ptr<Keff_Tally_t>           SP_Keff_Tally;
+    typedef cuda::Shared_Device_Ptr<Keff_Tally_t>   SDP_Keff_Tally;
+    typedef def::size_type                          size_type;
 
   private:
 
@@ -95,8 +98,9 @@ class KCode_Solver : public Solver<Geometry>
     SP_Source_Transporter d_transporter;
 
     // Fission source.
-    SP_Fission_Source      d_source;
-    SP_Fission_Site_Vector d_fission_sites;
+    SP_Fission_Source       d_source;
+    SP_Host_Fission_Sites   d_host_sites;
+    SP_Dev_Fission_Sites    d_dev_sites;
 
     // Inactive tallier
     SDP_Tallier d_inactive_tallier;
@@ -179,6 +183,9 @@ class KCode_Solver : public Solver<Geometry>
 
     // Number of particles per cycle (constant weight).
     double d_Np;
+
+    // Number of particles in batch
+    size_type d_batch_size;
 };
 
 } // end namespace cuda_mc

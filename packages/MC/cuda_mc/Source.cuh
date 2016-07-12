@@ -56,7 +56,8 @@ class Source
     // Number of particles: total, domain
     size_type d_np_total, d_np_domain;
     
-    // Number of particles remaining on this domain
+    // Number of particles run/left on this domain
+    size_type d_np_run;
     size_type d_np_left;
 
   public:
@@ -84,11 +85,15 @@ class Source
     //! Total number of particles to transport in the entire problem/cycle.
     size_type num_left() const {return d_np_left;}
 
-    //! Update number of histories left
-    void update_particles(int Np)
+    //! Prepare for new batch of source particles
+    virtual void begin_batch(size_type Np){};
+
+    //! Update number of histories left after completing batch
+    void end_batch(size_type Np)
     {
         REQUIRE(Np <= d_np_left);
         d_np_left -= Np;
+        d_np_run  += Np;
     }
 
     // >>> INHERITED INTERFACE

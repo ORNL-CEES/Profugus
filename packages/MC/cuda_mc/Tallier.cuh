@@ -85,7 +85,7 @@ class Tallier
     void begin_active_cycles();
 
     // Tell the tallies to begin a new cycle in a kcode calculation
-    void begin_cycle(int num_particles);
+    void begin_cycle(def::size_type num_particles);
 
     // Tell the tallies to end a cycle in a kcode calculation
     void end_cycle(double num_particles);
