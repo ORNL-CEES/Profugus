@@ -50,6 +50,7 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     }
 
     def::size_type num_particles = 10000;
+    def::size_type batch_size    = num_particles / 5;
 
     // Build geometry
     auto geom = std::make_shared<Geom>(edges,edges,edges);
@@ -60,6 +61,7 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
     pl->set("num_groups",xs->num_groups());
     pl->set("Np",num_particles);
+    pl->set("batch_size",batch_size);
     pl->set("implicit_capture",true);
     pl->set("variance reduction",std::string("roulette"));
     auto sdp_mat = cuda::shared_device_ptr<cuda_profugus::XS_Device>(*xs);
@@ -67,7 +69,7 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     phys->set_geometry(sdp_geom);
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
-    pl->set("verbosity",std::string("high"));
+    pl->set("verbosity",std::string("medium"));
 
     // Build cell tally
     std::cout << "Building Cell_Tally" << std::endl;

@@ -60,6 +60,9 @@ class Source
     size_type d_np_run;
     size_type d_np_left;
 
+    // Size of batch
+    size_type d_batch_size;
+
   public:
     // Constructor.
     Source(SDP_Geometry geometry);
@@ -82,11 +85,22 @@ class Source
     //! Total number of particles to transport in the entire problem/cycle.
     size_type total_num_to_transport() const {return d_np_total;}
 
-    //! Total number of particles to transport in the entire problem/cycle.
+    //! Number of particles remaining to transport on current domain
     size_type num_left() const {return d_np_left;}
+
+    //! Number of particles to transport in current batch
+    size_type num_batch() const {return std::min(d_np_left,d_batch_size);}
 
     //! Prepare for new batch of source particles
     virtual void begin_batch(size_type Np){};
+
+    //! Set batch size
+    virtual void set_batch_size(size_type batch_size)
+    {
+        REQUIRE(batch_size>0);
+        REQUIRE(batch_size<=d_np_domain);
+        d_batch_size = batch_size;
+    }
 
     //! Update number of histories left after completing batch
     void end_batch(size_type Np)

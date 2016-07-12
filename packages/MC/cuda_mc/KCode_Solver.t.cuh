@@ -341,7 +341,7 @@ void KCode_Solver<Geometry>::iterate()
 
     // initialize keff tally to the beginning of the cycle
     b_tallier.get_host_ptr()->begin_cycle(this_batch_size);
-    //d_source->set_batch_size(this_batch_size);
+    d_source->set_batch_size(this_batch_size);
 
     size_type num_sites = 0;
 
@@ -373,6 +373,8 @@ void KCode_Solver<Geometry>::iterate()
                         "sites during active cycle.");
             }
         }
+
+        num_sites_batch = std::min(num_sites_batch,available_dev_sites);
 
         thrust::copy(d_dev_sites->begin(),d_dev_sites->begin()+num_sites_batch,
                      d_host_sites->begin()+num_sites);

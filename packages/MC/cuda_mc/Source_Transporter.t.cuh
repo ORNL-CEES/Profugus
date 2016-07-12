@@ -293,13 +293,6 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     d_block_size = db->get("block_size",256);
 
     d_batch_size = std::numeric_limits<size_type>::max();
-    if (db->isType<int>("batch_size"))
-        d_batch_size = db->get<int>("batch_size");
-    else if (db->isType<size_type>("batch_size"))
-        d_batch_size = db->get<size_type>("batch_size");
-    else if (db->isParameter("batch_size"))
-        VALIDATE(false,"Unrecognized type for parameter batch_size.");
-        
 
     std::string sort_type = profugus::to_lower(db->get<std::string>("sort_type",
             std::string("alive")));
@@ -371,7 +364,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     std::chrono::duration<double> diff;
 
     // Get number of particles in source
-    size_type num_particles      = source->num_left();
+    size_type num_particles      = source->num_batch();
     size_type num_particles_left = num_particles;
     size_type num_particles_run  = 0;
 
