@@ -96,7 +96,7 @@ void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
     profugus::global_barrier();
 
     // actual fissions on the set
-    int set_sites = 0;
+    size_type set_sites = 0;
 
     // iterate until the fission bank is balanced
     int converged_sets = 0;
@@ -127,7 +127,7 @@ void Fission_Rebalance::rebalance(Fission_Site_Container_t &fission_bank)
     d_target_set = fission_bank.size();
 
 #ifdef ENSURE_ON
-    int global_check = fission_bank.size();
+    size_type global_check = fission_bank.size();
     profugus::global_sum(global_check);
     VALIDATE(global_check == d_num_global,
              "Failed to preserve global fission sites: Calculated = "
@@ -164,7 +164,7 @@ void Fission_Rebalance::fission_bank_parameters(
     d_target_bnds.first = d_target_set * d_set;
 
     // determine extra sites when for non-uniform numbers of sites
-    int pad = d_num_global - d_target_set * d_num_sets;
+    size_type pad = d_num_global - d_target_set * d_num_sets;
     CHECK(pad >= 0 && pad < d_num_sets);
 
     // add sites to account for padding, one site is added to each set until
@@ -183,7 +183,7 @@ void Fission_Rebalance::fission_bank_parameters(
     d_target_bnds.second = d_target_bnds.first + d_target_set - 1;
 
 #ifdef CHECK_ON
-    int global_check = d_target_set;
+    size_type global_check = d_target_set;
     profugus::global_sum(global_check);
     VALIDATE(global_check == d_num_global,
             "Failed to accurately pad sets for non-uniform fission sites.");
@@ -202,10 +202,10 @@ void Fission_Rebalance::communicate(
     Fission_Site_Container_t recv_left, recv_right;
 
     // send/receive from right/left
-    int num_send_left  = 0;
-    int num_send_right = 0;
-    int num_recv_left  = 0;
-    int num_recv_right = 0;
+    size_type num_send_left  = 0;
+    size_type num_send_right = 0;
+    size_type num_recv_left  = 0;
+    size_type num_recv_right = 0;
 
     // calculate the number of sites to send/recv; sends are constrained by
     // the number of sites currently on the set
@@ -292,7 +292,7 @@ void Fission_Rebalance::calc_num_sites(
  * \brief Post receives.
  */
 void Fission_Rebalance::post_receives(
-        int                       num_recv,
+        size_type                 num_recv,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
         profugus::Request         &handle,
@@ -322,13 +322,13 @@ void Fission_Rebalance::post_receives(
  * \brief Send sites.
  */
 void Fission_Rebalance::send(
-        int                       num_send,
+        size_type                 num_send,
         Fission_Site_Container_t &bank,
         int                       destination,
         int                       tag)
 {
     REQUIRE(bank.size() >= num_send);
-    int size = bank.size();
+    size_type size = bank.size();
 
     if (num_send)
     {
@@ -362,14 +362,14 @@ void Fission_Rebalance::send(
  * \brief Receive sites.
  */
 void Fission_Rebalance::receive(
-        int                       num_recv,
+        size_type                 num_recv,
         Fission_Site_Container_t &bank,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
         profugus::Request        &handle,
         int                       tag)
 {
-    int size = bank.size();
+    size_type size = bank.size();
 
     if (num_recv)
     {
