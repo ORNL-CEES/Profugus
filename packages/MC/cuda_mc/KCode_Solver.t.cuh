@@ -375,28 +375,32 @@ void KCode_Solver<Geometry>::iterate()
 
         num_sites_batch = std::min(num_sites_batch,available_dev_sites);
 
+        if( num_sites+num_sites_batch > available_host_sites )
+        {
+            if( d_build_phase == INACTIVE_SOLVE )
+            {
+                profugus::log(profugus::WARNING) <<
+                    "Not enough space allocated for fission sites on cycle " <<
+                    num_cycles() << ". " << available_host_sites <<
+                    " were allocated but " << num_sites
+                    << " were required.";
+            }
+            else
+            {
+                INSIST(false,"Not enough space allocated for host fission sites "
+                        "during active cycle");
+            }
+        }
+
+        num_sites_batch = std::min(num_sites_batch,
+            available_host_sites-num_sites);
+
         thrust::copy(d_dev_sites->begin(),d_dev_sites->begin()+num_sites_batch,
                      d_host_sites->begin()+num_sites);
 
         num_sites += num_sites_batch;
     }
 
-    if( num_sites > available_host_sites )
-    {
-        if( d_build_phase == INACTIVE_SOLVE )
-        {
-            profugus::log(profugus::WARNING) <<
-                "Not enough space allocated for fission sites on cycle " <<
-                num_cycles() << ". " << available_host_sites <<
-                " were allocated but " << num_sites
-                << " were required.";
-        }
-        else
-        {
-            INSIST(false,"Not enough space allocated for host fission sites "
-                    "during active cycle");
-        }
-    }
     d_host_sites->resize(std::min(available_host_sites,num_sites));
 
     // do end-of-cycle tally processing including global sum Note: this is the
