@@ -202,42 +202,51 @@ void Fission_Rebalance::communicate(
     Fission_Site_Container_t recv_left, recv_right;
 
     // send/receive from right/left
-    size_type num_send_left  = 0;
-    size_type num_send_right = 0;
-    size_type num_recv_left  = 0;
-    size_type num_recv_right = 0;
+    int num_send_left  = 0;
+    int num_send_right = 0;
+    int num_recv_left  = 0;
+    int num_recv_right = 0;
 
     // calculate the number of sites to send/recv; sends are constrained by
     // the number of sites currently on the set
 
     // determine the number to send to the left
+    constexpr long maxval = std::numeric_limits<int>::max();
     if (d_bnds.first < d_target_bnds.first)
     {
         CHECK(d_left != -1);
-        num_send_left = std::min(d_target_bnds.first - d_bnds.first,
-                                 d_sites_set[d_set]);
+        size_type tmp_send_left = d_target_bnds.first - d_bnds.first;
+        INSIST(tmp_send_left < maxval,"Overflowing 32 bit integer!");
+        num_send_left = static_cast<int>(tmp_send_left);
+        num_send_left = std::min(num_send_left,d_sites_set[d_set]);
     }
     else if (d_bnds.first > d_target_bnds.first)
     {
         CHECK(d_left != -1);
-        num_recv_left = std::min(d_bnds.first - d_target_bnds.first,
-                                 d_sites_set[d_set - 1]);
+        size_type tmp_recv_left = d_bnds.first - d_target_bnds.first;
+        INSIST(tmp_recv_left < maxval,"Overflowing 32 bit integer!");
+        num_recv_left = static_cast<int>(tmp_recv_left);
+        num_recv_left = std::min(num_recv_left,d_sites_set[d_set - 1]);
     }
 
     // determine the number to send to the right
     if (d_bnds.second > d_target_bnds.second)
     {
         CHECK(d_right != -1);
-        num_send_right = std::min(d_bnds.second - d_target_bnds.second,
-                                  d_sites_set[d_set]);
+        size_type tmp_send_right = d_bnds.second - d_target_bnds.second;
+        INSIST(tmp_send_right < maxval,"Overflowing 32 bit integer!");
+        num_send_right = static_cast<int>(tmp_send_right);
+        num_send_right = std::min(num_send_right,d_sites_set[d_set]);
     }
 
     // determine the number we receive from the right
     else if (d_bnds.second < d_target_bnds.second)
     {
         CHECK(d_right != -1);
-        num_recv_right = std::min(d_target_bnds.second - d_bnds.second,
-                                  d_sites_set[d_set + 1]);
+        size_type tmp_recv_right = d_target_bnds.second - d_bnds.second;
+        INSIST(tmp_recv_right < maxval,"Overflowing 32 bit integer!");
+        num_recv_right = static_cast<int>(tmp_recv_right);
+        num_recv_right = std::min(num_recv_right,d_sites_set[d_set + 1]);
     }
 
     CHECK(num_send_left >= 0 && num_send_left <= d_sites_set[d_set]);
@@ -292,7 +301,7 @@ void Fission_Rebalance::calc_num_sites(
  * \brief Post receives.
  */
 void Fission_Rebalance::post_receives(
-        size_type                 num_recv,
+        int                       num_recv,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
         profugus::Request         &handle,
@@ -310,7 +319,7 @@ void Fission_Rebalance::post_receives(
 
         // post the receive
         profugus::receive_async(handle, reinterpret_cast<char *>(buffer),
-                               num_recv * d_size_fs, destination, tag);
+                                num_recv * d_size_fs, destination, tag);
 
         // increment receive counter
         ++d_num_recv;
@@ -322,13 +331,13 @@ void Fission_Rebalance::post_receives(
  * \brief Send sites.
  */
 void Fission_Rebalance::send(
-        size_type                 num_send,
+        int                       num_send,
         Fission_Site_Container_t &bank,
         int                       destination,
         int                       tag)
 {
     REQUIRE(bank.size() >= num_send);
-    size_type size = bank.size();
+    int size = bank.size();
 
     if (num_send)
     {
@@ -362,14 +371,14 @@ void Fission_Rebalance::send(
  * \brief Receive sites.
  */
 void Fission_Rebalance::receive(
-        size_type                 num_recv,
+        int                       num_recv,
         Fission_Site_Container_t &bank,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
         profugus::Request        &handle,
         int                       tag)
 {
-    size_type size = bank.size();
+    int size = bank.size();
 
     if (num_recv)
     {

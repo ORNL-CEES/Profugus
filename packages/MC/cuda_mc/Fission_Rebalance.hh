@@ -127,8 +127,8 @@ class Fission_Rebalance
     //@{
     //! Typedefs.
     typedef std::vector<Fission_Site>           Fission_Site_Container_t;
+    typedef std::vector<int>                    Vec_Int;
     typedef long                                size_type;
-    typedef std::vector<size_type>              Vec_Size_Type;
     typedef std::pair<size_type, size_type>     Array_Bnds;
     //@}
 
@@ -172,15 +172,15 @@ class Fission_Rebalance
     void calc_num_sites(const Fission_Site_Container_t &fission_bank);
 
     // Post receives.
-    void post_receives(size_type num_recv, Fission_Site_Container_t &recv_bank,
+    void post_receives(int num_recv, Fission_Site_Container_t &recv_bank,
                        int destination, profugus::Request &handle, int tag);
 
     // Send.
-    void send(size_type num_send, Fission_Site_Container_t &bank,
+    void send(int num_send, Fission_Site_Container_t &bank,
               int destination, int tag);
 
     // Receive.
-    void receive(size_type num_recv, Fission_Site_Container_t &bank,
+    void receive(int num_recv, Fission_Site_Container_t &bank,
                  Fission_Site_Container_t &recv_bank, int destination,
                  profugus::Request &handle, int tag);
 
@@ -196,10 +196,10 @@ class Fission_Rebalance
 
     // The target number of fission sites on this process and set after
     // rebalance.
-    size_type d_target_set;
+    int d_target_set;
 
     // Number of fission sites on each set.
-    Vec_Size_Type d_sites_set;
+    Vec_Int d_sites_set;
 
     // Current global fission bank array bounds on this set.
     Array_Bnds d_bnds;
