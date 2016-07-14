@@ -205,6 +205,7 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
         d_size, d_event, d_event_bounds );
 
     // Calculate event sizes.
+    int total_events = 0;
     int work_size = 2 * events::END_EVENT;
     Teuchos::Array<int> work( work_size );
     cuda::memory::Copy_To_Host( work.getRawPtr(),
@@ -213,7 +214,11 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     for ( int i = 0; i < events::END_EVENT; ++i )
     {
         d_event_sizes[ i ] = work[ 2*i + 1 ] - work[ 2*i ];
+        total_events += d_event_sizes[ i ];
     }
+    
+    //    std::cout << total_events << " " << work << std::endl;
+    INSIST( total_events == d_size, "Wrong number of events" );
 }
 
 //---------------------------------------------------------------------------//
