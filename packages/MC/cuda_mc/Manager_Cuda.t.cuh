@@ -57,23 +57,6 @@ Manager_Cuda<Geometry>::Manager_Cuda()
 template <class Geometry>
 void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
 {
-    // Get number of visible GPUs
-    int num_devices;
-    auto err = cudaGetDeviceCount(&num_devices);
-    CHECK( cudaSuccess == err );
-
-    std::cout << "Setting node " << d_node << " to run on device "
-        << d_node % num_devices << std::endl;
-
-    // Assign MPI tasks to devices by MPI rank
-    // We're assuming here that MPI ranks are assigned "depth first," filling
-    //  up an entire node before assigning tasks to other nodes.
-    // If MPI ranks are assigned "breadth first" or round-robin, this might
-    //  result in ranks on the same node getting assigned to the same device,
-    //  which would be terrible for performance.
-    err = cudaSetDevice(d_node % num_devices);
-    CHECK( cudaSuccess == err );
-
     SCOPED_TIMER("Manager_Cuda.setup");
     SCREEN_MSG("Building and initializing geometry, physics, "
                << "variance reduction, and tallies");
@@ -85,6 +68,25 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
     // store the problem name
     d_problem_name = d_db->get("problem_name", std::string("MC"));
     d_db->setName(d_problem_name + "-PROBLEM");
+
+    // Get number of visible GPUs
+    int num_devices;
+    auto err = cudaGetDeviceCount(&num_devices);
+    CHECK( cudaSuccess == err );
+
+
+    // Assign MPI tasks to devices by MPI rank
+    // We're assuming here that MPI ranks are assigned "depth first," filling
+    //  up an entire node before assigning tasks to other nodes.
+    // If MPI ranks are assigned "breadth first" or round-robin, this might
+    //  result in ranks on the same node getting assigned to the same device,
+    //  which would be terrible for performance.
+    int device_id = d_db->get("device_id",0);
+    device_id += d_node % num_devices;
+    std::cout << "Setting node " << d_node << " to run on device "
+        << device_id << std::endl;
+    err = cudaSetDevice(device_id);
+    CHECK( cudaSuccess == err );
 
     // get the geometry and physics
     build_geometry(master);
