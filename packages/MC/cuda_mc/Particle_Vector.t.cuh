@@ -57,13 +57,11 @@ __global__ void init_event_kernel( const std::size_t size,
 }
 
 //---------------------------------------------------------------------------//
-// Get event lower bounds.
-__global__ void event_bounds_kernel( const std::size_t size,
-                                     const events::Event* events,
-                                     int* event_bounds )
+// Reset event bounds.
+__global__ void reset_event_bounds_kernel( int* event_bounds )
 {
     // Get the thread index.
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Initialize bounds.
     if ( idx < events::END_EVENT )
@@ -71,6 +69,16 @@ __global__ void event_bounds_kernel( const std::size_t size,
         event_bounds[ 2*idx ] = 0;
         event_bounds[ 2*idx + 1 ] = 0;
     }
+}
+
+//---------------------------------------------------------------------------//
+// Get event bounds.
+__global__ void event_bounds_kernel( const std::size_t size,
+                                     const events::Event* events,
+                                     int* event_bounds )
+{
+    // Get the thread index.
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Get the lower bound.
     if ( 0 == idx )
@@ -200,12 +208,14 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
+    // Reset event bounds
+    reset_event_bounds_kernel<<<1,events::END_EVENT>>>( d_event_bounds );
+
     // Bin them.
     event_bounds_kernel<<<num_blocks,threads_per_block>>>(
         d_size, d_event, d_event_bounds );
 
     // Calculate event sizes.
-    int total_events = 0;
     int work_size = 2 * events::END_EVENT;
     Teuchos::Array<int> work( work_size );
     cuda::memory::Copy_To_Host( work.getRawPtr(),
@@ -214,11 +224,7 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     for ( int i = 0; i < events::END_EVENT; ++i )
     {
         d_event_sizes[ i ] = work[ 2*i + 1 ] - work[ 2*i ];
-        total_events += d_event_sizes[ i ];
     }
-    
-    //    std::cout << total_events << " " << work << std::endl;
-    INSIST( total_events == d_size, "Wrong number of events" );
 }
 
 //---------------------------------------------------------------------------//
