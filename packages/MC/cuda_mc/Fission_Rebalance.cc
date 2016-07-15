@@ -154,7 +154,9 @@ void Fission_Rebalance::fission_bank_parameters(
     calc_num_sites(fission_bank);
 
     // determine the global number of fission sites
-    d_num_global = std::accumulate(d_sites_set.begin(), d_sites_set.end(), 0);
+    d_num_global = 0;
+    for (const auto &sites : d_sites_set)
+        d_num_global += sites;
     CHECK(d_num_global > 0);
 
     // calculate the target number of fission sites on this set
@@ -291,7 +293,9 @@ void Fission_Rebalance::calc_num_sites(
     profugus::global_sum(&d_sites_set[0], d_num_sets);
 
     // make the array bounds on this set --> the array bounds are (first,last)
-    d_bnds.first  = std::accumulate(&d_sites_set[0], &d_sites_set[0]+d_set, 0);
+    d_bnds.first = 0;
+    for (int set = 0; set < d_set; ++set)
+        d_bnds.first += d_sites_set[set];
     d_bnds.second = d_bnds.first + d_sites_set[d_set] - 1;
     CHECK(d_bnds.second - d_bnds.first + 1 == d_sites_set[d_set]);
 }

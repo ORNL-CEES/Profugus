@@ -127,9 +127,9 @@ class Fission_Rebalance
     //@{
     //! Typedefs.
     typedef std::vector<Fission_Site>           Fission_Site_Container_t;
-    typedef std::vector<int>                    Vec_Int;
     typedef long                                size_type;
     typedef std::pair<size_type, size_type>     Array_Bnds;
+    typedef std::vector<int>                    Vec_Int;
     //@}
 
   public:
@@ -196,7 +196,7 @@ class Fission_Rebalance
 
     // The target number of fission sites on this process and set after
     // rebalance.
-    int d_target_set;
+    size_type d_target_set;
 
     // Number of fission sites on each set.
     Vec_Int d_sites_set;
