@@ -89,7 +89,14 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     }
 
     // store the total number of requested particles per cycle
-    d_np_requested = static_cast<size_type>(db->get("Np", 1000));
+    d_np_requested = 1000;
+    if (db->template isType<int>("Np"))
+        d_np_requested = db->template get<int>("Np");
+    else if (db->template isType<size_type>("Np"))
+        d_np_requested = db->template get<size_type>("Np");
+    else if (db->isParameter("Np"))
+        VALIDATE(false,"Unrecognized type for parameter Np.");
+
     VALIDATE(d_np_requested > 0, "Number of source particles ("
             << d_np_requested << ") must be positive");
 
