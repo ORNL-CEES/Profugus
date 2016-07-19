@@ -351,10 +351,10 @@ void Source_Transporter<Geometry>::set(SDP_Tallier tallier)
 template <class Geometry>
 void Source_Transporter<Geometry>::solve(SP_Source source) const
 {
+    // No global barriers in here.
+    // Introducing sync points here will be detrimental to efficiency
+    //  of particle batching
     REQUIRE(source);
-
-    // barrier at the start
-    profugus::global_barrier();
 
     SCOPED_TIMER("MC::Source_Transporter.solve");
 
@@ -468,9 +468,6 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
                 << profugus::node() << std::endl;
         }
     }
-
-    // barrier at the end
-    profugus::global_barrier();
 
     // increment the particle counter
     DIAGNOSTICS_ONE(integers["particles_transported"] += num_particles);
