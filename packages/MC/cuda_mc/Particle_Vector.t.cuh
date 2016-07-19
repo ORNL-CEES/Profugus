@@ -67,8 +67,7 @@ __global__ void event_bounds_kernel( const int size,
                                      int* event_bounds )
 {
     // Get the thread index.
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    CHECK( 0 == idx );
+    REQUIRE( 0 == threadIdx.x + blockIdx.x * blockDim.x );
 
     // Get the lower bound.
     event_bounds[0] = 0;
@@ -82,6 +81,31 @@ __global__ void event_bounds_kernel( const int size,
     {
         event_bounds[2*i+1] = event_bounds[2*i] + num_event[i];
     }
+}
+
+//---------------------------------------------------------------------------//
+// Reorder the local ids.
+__global__ void reorder_lid_kernel( const int vector_size,
+                                    const int* event_bounds,
+                                    const int* event_bins,
+                                    int* lids )
+{
+  // Get the thread index.
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  
+  if ( idx < vector_size )
+  {
+    // Get the event.
+    for ( int e = 0; e < events::END_EVENT; ++e )
+      {
+        if ( idx < event_bounds[ 2*e + 1 ] )
+          {
+            // Copy the local index from the event bins into the array.
+            lids[idx] = event_bins[ e*vector_size + idx - event_bounds[2*e] ];
+            break;
+          }
+      }
+  }
 }
 
 //---------------------------------------------------------------------------//
@@ -245,32 +269,20 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     event_bounds_kernel<<<1,1>>>(
         static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
 
+    // Reorder the local ids.
+    reorder_lid_kernel<<<num_blocks,threads_per_block>>>( d_size,
+                                                          d_event_bounds,
+                                                          d_event_bins,
+                                                          d_lid );
+
+    // Get the number of particles with each event.
+    cuda::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
+                                d_num_event,
+                                events::END_EVENT );
+
     // Clear the count for the next round.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
         events::END_EVENT, d_num_event );
-
-    // Calculate event sizes.
-    int work_size = 2 * events::END_EVENT;
-    Teuchos::Array<int> work( work_size );
-    cuda::memory::Copy_To_Host( work.getRawPtr(),
-                                d_event_bounds,
-                                work_size );
-    for ( int i = 0; i < events::END_EVENT; ++i )
-    {
-        d_event_sizes[ i ] = work[ 2*i + 1 ] - work[ 2*i ];
-    }
-
-    // Reorder the local ids to effectively sort the vector.
-    int count = 0;
-    thrust::device_ptr<int> lid_ptr( d_lid );
-    for ( int i = 0; i < events::END_EVENT; ++i )
-    {
-        thrust::device_ptr<int> event_ptr(
-            d_event_bins + i*d_size );
-        thrust::copy(
-            event_ptr, event_ptr + d_event_sizes[i], lid_ptr + count );
-        count += d_event_sizes[i];
-    }
 }
 
 //---------------------------------------------------------------------------//
