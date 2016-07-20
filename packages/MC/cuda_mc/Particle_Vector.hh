@@ -23,6 +23,8 @@
 
 #include <curand_kernel.h>
 
+#include <thrust/device_vector.h>
+
 namespace cuda_profugus
 {
 //===========================================================================//
@@ -73,9 +75,6 @@ class Particle_Vector
     // Latest particle event.
     Event_t* d_event;
 
-    // Particle local index linked to the events.
-    std::size_t* d_lid;
-
     // Particle statistical batch id.
     int* d_batch;
 
@@ -85,11 +84,20 @@ class Particle_Vector
     // Distance to next collision in mean-free-paths.
     double* d_dist_mfp;
 
-    // Event bounds. Updated at every sort.
-    int* d_event_bounds;
+    // Event indices.
+    int* d_event_indices;
 
     // Number of particles with a given event. Host only.
     Teuchos::Array<int> d_event_sizes;
+
+    // Local id vector for sorting.
+    thrust::device_vector<int> d_event_lid;    
+
+    // Stencil vector for sorting.
+    thrust::device_vector<int> d_event_stencil;
+
+    // Steering vector for sorting.
+    thrust::device_vector<int> d_event_steering;
 
   public:
 
@@ -114,12 +122,12 @@ class Particle_Vector
     PROFUGUS_HOST_DEVICE_FUNCTION
     int size() const { return d_size; }
 
-    //! Get the lower bound of an event in the vector.
+    //! Get the particle indices with a given event.
     PROFUGUS_DEVICE_FUNCTION
-    int event_lower_bound( const events::Event event ) const
+    int* event_indices( const events::Event event ) const
     {
         REQUIRE( event < events::END_EVENT );
-        return d_event_bounds[ 2*event ];
+        return d_event_indices + event*d_size;
     }
 
     //! Get a uniform random number on [0,1] from a particle's RNG.
@@ -127,8 +135,7 @@ class Particle_Vector
     double ran( const std::size_t i )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return curand_uniform( &d_rng[ d_lid[i] ] );
+	return curand_uniform( &d_rng[i] );
     }
 
     //! Set the weight of a particle.
@@ -136,8 +143,7 @@ class Particle_Vector
     void set_wt( const std::size_t i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_wt[ d_lid[i] ] = wt; 
+	d_wt[i] = wt; 
     }
 
     //! Multiply the weight of a particle.
@@ -145,8 +151,7 @@ class Particle_Vector
     void multiply_wt( const std::size_t i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_wt[ d_lid[i] ] *= wt; 
+	d_wt[i] *= wt; 
     }
 
     //! Get the weight of a particle.
@@ -154,8 +159,7 @@ class Particle_Vector
     double wt( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_wt[ d_lid[i] ]; 
+	return d_wt[i]; 
     }
 
     //! Get the group of a particle.
@@ -163,8 +167,7 @@ class Particle_Vector
     int group( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_group[ d_lid[i] ]; 
+	return d_group[i]; 
     }
 
     //! Set the group of a particle.
@@ -172,8 +175,7 @@ class Particle_Vector
     void set_group( const std::size_t i, const int group )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_group[ d_lid[i] ] = group; 
+	d_group[i] = group; 
     }
 
     //! Get the matid of a particle.
@@ -181,8 +183,7 @@ class Particle_Vector
     int matid( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_matid[ d_lid[i] ]; 
+	return d_matid[i]; 
     }
 
     //! Set the matid of a particle.
@@ -190,8 +191,7 @@ class Particle_Vector
     void set_matid( const std::size_t i, const int matid )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_matid[ d_lid[i] ] = matid;
+	d_matid[i] = matid;
     }
 
     //! Get the alive status of a particle.
@@ -199,8 +199,7 @@ class Particle_Vector
     bool alive( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_alive[ d_lid[i] ]; 
+	return d_alive[i]; 
     }
 
     //! Set the particle status to alive.
@@ -208,8 +207,7 @@ class Particle_Vector
     void live( const std::size_t i )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_alive[ d_lid[i] ] = true; 
+	d_alive[i] = true; 
     }
 
     //! Kill a particle.
@@ -217,8 +215,7 @@ class Particle_Vector
     void kill( const std::size_t i )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_alive[ d_lid[i] ] = false; 
+	d_alive[i] = false; 
     }
 
     //! Get the event of a particle.
@@ -242,15 +239,13 @@ class Particle_Vector
     const Geo_State_t& geo_state( const std::size_t i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_geo_state[ d_lid[i] ]; 
+	return d_geo_state[i]; 
     }
     PROFUGUS_DEVICE_FUNCTION
     Geo_State_t& geo_state( const std::size_t i )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_geo_state[ d_lid[i] ]; 
+	return d_geo_state[i]; 
     }
     //@}
 
@@ -259,8 +254,7 @@ class Particle_Vector
     int batch( const std::size_t i ) const
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_batch[ d_lid[i] ];
+	return d_batch[i];
     }
 
     //! Set the particle batch.
@@ -268,8 +262,7 @@ class Particle_Vector
     void set_batch( const std::size_t i, const int batch )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_batch[ d_lid[i] ] = batch;
+	d_batch[i] = batch;
     }
 
     //! Get the particle step.
@@ -277,8 +270,7 @@ class Particle_Vector
     double step( const std::size_t i ) const
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_step[ d_lid[i] ];
+	return d_step[i];
     }
 
     //! Set the particle step.
@@ -286,8 +278,7 @@ class Particle_Vector
     void set_step( const std::size_t i, const double step )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_step[ d_lid[i] ] = step;
+	d_step[i] = step;
     }
 
     //! Get the particle distance to collision.
@@ -295,8 +286,7 @@ class Particle_Vector
     double dist_mfp( const std::size_t i ) const
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_dist_mfp[ d_lid[i] ];
+	return d_dist_mfp[i];
     }
 
     //! Set the particle distance to collision.
@@ -304,9 +294,20 @@ class Particle_Vector
     void set_dist_mfp( const std::size_t i, const double dist_mfp )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_dist_mfp[ d_lid[i] ] = dist_mfp;
+	d_dist_mfp[i] = dist_mfp;
     }
+
+  private:
+
+    // Event stencil functor.
+    struct Stencil_Functor
+    {
+        events::Event d_event;
+
+        PROFUGUS_HOST_DEVICE_FUNCTION
+        int operator()(event::Event e )
+        { return (e == d_event) 1 : 0; }
+    };
 };
 
 //---------------------------------------------------------------------------//

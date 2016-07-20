@@ -18,10 +18,8 @@
 #include <vector>
 
 #include <thrust/device_ptr.h>
-#include <thrust/execution_policy.h>
-#include <thrust/sort.h>
-#include <thrust/distance.h>
-#include <thrust/binary_search.h>
+#include <thrust/transform.h>
+#include <thurst/reduce.h>
 
 #include <cuda_runtime.h>
 
@@ -40,70 +38,16 @@ __global__ void init_rng_kernel( const std::size_t size,
 }
 
 //---------------------------------------------------------------------------//
-// Initialize particle local ids.
-__global__ void init_lid_kernel( const std::size_t size, std::size_t* lids )
-{
-    std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size ) lids[idx] = idx;
-}
-
-//---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
 __global__ void init_event_kernel( const std::size_t size,
-				   events::Event* events )
+				   events::Event* events,
+                                   int* event_indices )
 {
     std::size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size ) events[idx] = events::DEAD;
-}
-
-//---------------------------------------------------------------------------//
-// Reset event bounds.
-__global__ void reset_event_bounds_kernel( int* event_bounds )
-{
-    // Get the thread index.
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Initialize bounds.
-    if ( idx < events::END_EVENT )
+    if ( idx < size ) 
     {
-        event_bounds[ 2*idx ] = 0;
-        event_bounds[ 2*idx + 1 ] = 0;
-    }
-}
-
-//---------------------------------------------------------------------------//
-// Get event bounds.
-__global__ void event_bounds_kernel( const std::size_t size,
-                                     const events::Event* events,
-                                     int* event_bounds )
-{
-    // Get the thread index.
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Get the lower bound.
-    if ( 0 == idx )
-    {
-        event_bounds[ 2*events[idx] ] = idx;
-    }
-    else if ( idx < size )
-    {
-        if ( events[idx-1] < events[idx] )
-        {
-            event_bounds[ 2*events[idx] ] = idx;
-        }
-    }
-    
-    // Get the upper bound.
-    if ( idx == size - 1 )
-    {
-        event_bounds[ 2*events[idx] + 1 ] = idx + 1;
-    }
-    else if ( idx < size-1 )
-    {
-        if ( events[idx+1] > events[idx] )
-        {
-            event_bounds[ 2*events[idx] + 1] = idx + 1;
-        }
+        events[idx] = events::DEAD;
+        event_indices[events::DEAD*size + idx] = idx;
     }
 }
 
@@ -118,6 +62,9 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 					    const profugus::RNG& rng )
     : d_size( num_particle )
     , d_event_sizes( events::END_EVENT, 0 )
+    , d_event_lid( d_size )
+    , d_event_stencil( d_size )
+    , d_event_steering( d_size )
 {
     // Allocate data arrays.
     cuda::memory::Malloc( d_matid, d_size );
@@ -127,11 +74,10 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_alive, d_size );
     cuda::memory::Malloc( d_geo_state, d_size );
     cuda::memory::Malloc( d_event, d_size );
-    cuda::memory::Malloc( d_lid, d_size );
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
     cuda::memory::Malloc( d_dist_mfp, d_size );
-    cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
+    cuda::memory::Malloc( d_event_indices, events::END_EVENT*d_size );
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -156,14 +102,16 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Deallocate the device seeds.
     cuda::memory::Free( device_seeds );
 
-    // Create the local ids.
-    init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
-
     // Initialize all particles to DEAD.
-    init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );
+    init_event_kernel<<<num_blocks,threads_per_block>>>( 
+        d_size, d_event, d_event_indices );
 
     // All particles right now are dead.
     d_event_sizes[ events::DEAD ] = d_size;
+
+    // Setup the local id vector for sorting.
+    thrust::device_vector<int> lid( d_size, 1 );
+    thrust::exclusive_scan( lid.begin(), lid.end(), d_event_lid.begin() );
 
     // Do the first sort to initialize particle event state.
     sort_by_event( d_size );
@@ -181,11 +129,10 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_alive );
     cuda::memory::Free( d_geo_state );
     cuda::memory::Free( d_event );
-    cuda::memory::Free( d_lid );
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
     cuda::memory::Free( d_dist_mfp );
-    cuda::memory::Free( d_event_bounds );
+    cuda::memory::Free( d_event_indices );
 }
 
 //---------------------------------------------------------------------------//
@@ -195,35 +142,43 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
 {
     REQUIRE( sort_size <= d_size );
 
-    // Sort the events.
-    thrust::device_ptr<Event_t> event_begin( d_event );
-    thrust::device_ptr<Event_t> event_end( d_event + sort_size );
-    thrust::device_ptr<std::size_t> lid_begin( d_lid );
-    thrust::sort_by_key( thrust::device, event_begin, event_end, lid_begin );
+    // Get pointers to the event array.
+    thrust::device_ptr<events::Event> event_begin( d_event );
+    thrust::device_ptr<events::Event> event_end( d_event + d_size );
+    
+    // Create a stencil functor.
+    Stencil_Functor stencil_functor;
 
-    // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
-    unsigned int num_blocks = d_size / threads_per_block;
-    if ( d_size % threads_per_block > 0 ) ++num_blocks;
-
-    // Reset event bounds
-    reset_event_bounds_kernel<<<1,events::END_EVENT>>>( d_event_bounds );
-
-    // Bin them.
-    event_bounds_kernel<<<num_blocks,threads_per_block>>>(
-        d_size, d_event, d_event_bounds );
-
-    // Calculate event sizes.
-    int work_size = 2 * events::END_EVENT;
-    Teuchos::Array<int> work( work_size );
-    cuda::memory::Copy_To_Host( work.getRawPtr(),
-                                d_event_bounds,
-                                work_size );
-    for ( int i = 0; i < events::END_EVENT; ++i )
+    // Gather the indices for each event.
+    for ( int e = 0; e < events::END_EVENT; ++e )
     {
-        d_event_sizes[ i ] = work[ 2*i + 1 ] - work[ 2*i ];
+        // Populate the work vector with the event stencil.
+        stencil_functor.d_event = e;
+        thrust::transform( event_begin, 
+                           event_end, 
+                           d_event_stencil.begin(),
+                           stencil_functor );
+
+        // Get the number of particles with this event.
+        d_event_sizes[e] = thrust::reduce( d_event_stencil.begin(),
+                                           d_event_stencil.end() );
+
+        // If some particles had this event then extract their indices.
+        if ( d_event_sizes[e] > 0 )
+        {
+            // Create the steering vector.
+            thrust::exclusive_scan( d_event_stencil.begin(),
+                                    d_event_stencil.end(),
+                                    d_event_steering.begin() );
+
+            // Scatter the particles into the event indices.
+            thrust::scatter_if( 
+                d_event_lid.begin(),
+                d_event_lid.end(),
+                d_event_steering.begin(),
+                d_event_stencil.begin(),
+                thrust::device_ptr<int>(d_event_indices + e*d_size) );
+        }
     }
 }
 
