@@ -297,7 +297,7 @@ class Particle_Vector
 	d_dist_mfp[i] = dist_mfp;
     }
 
-  private:
+  public:
 
     // Event stencil functor.
     struct Stencil_Functor
@@ -305,8 +305,8 @@ class Particle_Vector
         events::Event d_event;
 
         PROFUGUS_HOST_DEVICE_FUNCTION
-        int operator()(event::Event e )
-        { return (e == d_event) 1 : 0; }
+        int operator()(const Event_t e)
+        { return (e == d_event) ? 1 : 0; }
     };
 };
 

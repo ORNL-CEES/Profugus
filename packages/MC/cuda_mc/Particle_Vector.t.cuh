@@ -19,7 +19,8 @@
 
 #include <thrust/device_ptr.h>
 #include <thrust/transform.h>
-#include <thurst/reduce.h>
+#include <thrust/reduce.h>
+#include <thrust/execution_policy.h>
 
 #include <cuda_runtime.h>
 
@@ -152,27 +153,31 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     // Gather the indices for each event.
     for ( int e = 0; e < events::END_EVENT; ++e )
     {
-        // Populate the work vector with the event stencil.
-        stencil_functor.d_event = e;
-        thrust::transform( event_begin, 
+        // Create the stencil vector.
+        stencil_functor.d_event = static_cast<events::Event>(e);
+        thrust::transform( thrust::device,
+                           event_begin, 
                            event_end, 
                            d_event_stencil.begin(),
                            stencil_functor );
 
         // Get the number of particles with this event.
-        d_event_sizes[e] = thrust::reduce( d_event_stencil.begin(),
+        d_event_sizes[e] = thrust::reduce( thrust::device,
+                                           d_event_stencil.begin(),
                                            d_event_stencil.end() );
 
         // If some particles had this event then extract their indices.
         if ( d_event_sizes[e] > 0 )
         {
             // Create the steering vector.
-            thrust::exclusive_scan( d_event_stencil.begin(),
+            thrust::exclusive_scan( thrust::device,
+                                    d_event_stencil.begin(),
                                     d_event_stencil.end(),
                                     d_event_steering.begin() );
 
             // Scatter the particles into the event indices.
-            thrust::scatter_if( 
+            thrust::scatter_if(
+                thrust::device,
                 d_event_lid.begin(),
                 d_event_lid.end(),
                 d_event_steering.begin(),
