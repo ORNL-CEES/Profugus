@@ -80,6 +80,11 @@ class Cell_Tally
     std::vector<double> d_host_tally;
     std::vector<double> d_host_volumes;
 
+    // Data for batch statistics
+    std::vector<double> d_tally_sum;
+    std::vector<double> d_tally_sum_sq;
+    std::vector<double> d_batch_np;
+
   public:
 
     // Constructor.
@@ -98,6 +103,9 @@ class Cell_Tally
         REQUIRE( d_host_tally.size() == d_num_cells );
         return d_host_tally;
     }
+
+    // Finalize batch
+    void end_batch(double num_particles);
 
     // Do post-processing
     void finalize(double num_particles);

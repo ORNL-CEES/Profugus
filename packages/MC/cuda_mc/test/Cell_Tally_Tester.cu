@@ -145,7 +145,6 @@ void Cell_Tally_Tester::test_tally()
     std::vector<double> expected(cells.size(),1.5);
     double tol = 10.0 / std::sqrt( static_cast<double>(num_particles) );
     EXPECT_VEC_SOFTEQ( expected, tally_result, tol );
-    
 }
 
 //---------------------------------------------------------------------------//

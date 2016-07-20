@@ -81,6 +81,39 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
         int cell = d_host_cells[ind];
         d_host_volumes[ind] = all_volumes[cell];
     }
+
+    // Initilialize batch count
+    d_tally_sum.resize(d_num_cells,0.0);
+    d_tally_sum_sq.resize(d_num_cells,0.0);
+}
+
+//---------------------------------------------------------------------------//
+/*
+ * \brief End batch for statistics
+ */
+template <class Geometry>
+void Cell_Tally<Geometry>::end_batch(double num_particles)
+{
+    // Copy results to host to normalize tally results
+    d_host_tally.resize(d_num_cells);
+    cudaMemcpy( &d_host_tally[0], d_tally, d_num_cells * sizeof(double),
+                cudaMemcpyDeviceToHost );
+
+    // Global reduction on tally results
+    profugus::global_sum(&d_host_tally[0],d_num_cells);
+
+    for (int cell = 0; cell < d_num_cells; ++cell)
+    {
+        auto val = d_host_tally[cell];
+        d_tally_sum[cell]    += val;
+        d_tally_sum_sq[cell] += val*val / num_particles;
+    }
+
+    d_batch_np.push_back(num_particles);
+
+    // Zero out tally for next cycle
+    thrust::fill(d_host_tally.begin(),d_host_tally.end(),0.0);
+    d_tally_vec = d_host_tally;
 }
 
 //---------------------------------------------------------------------------//
@@ -92,27 +125,38 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
 {
     REQUIRE(num_particles > 0);
 
-    // Copy results to host to normalize tally results
-    d_host_tally.resize(d_num_cells);
-    cudaMemcpy( &d_host_tally[0], d_tally, d_num_cells * sizeof(double),
-                cudaMemcpyDeviceToHost );
+    // If no batches have been processed, make sure end_batch is called
+    if (d_batch_np.empty())
+        end_batch(num_particles);
 
-    // Global reduction on tally results
-    profugus::global_sum(&d_host_tally[0],d_num_cells);
+    // Make sure number of particles at finalization matches sum of batches
+    double sum_np = std::accumulate(d_batch_np.begin(),d_batch_np.end(),0.0);
+    REQUIRE(profugus::soft_equiv(num_particles,sum_np));
 
-    // Now normalize tally
-    for( int ind = 0; ind < d_num_cells; ++ind )
+    std::vector<double> tally_std_dev(d_num_cells,0.0);
+
+    // Now compute std dev and normalize tally
+    for (int cell = 0; cell < d_num_cells; ++cell)
     {
-        double norm_factor = 1.0 / (d_host_volumes[ind] * num_particles);
-        d_host_tally[ind] *= norm_factor;
+        double tally_mean = d_tally_sum[cell] / num_particles;
+        double var = (d_tally_sum_sq[cell] / num_particles) -
+                     tally_mean * tally_mean;
+
+        var /= num_particles * (num_particles - 1.0);
+
+        double vol = d_host_volumes[cell];
+        d_host_tally[cell] = tally_mean / vol;
+        tally_std_dev[cell] = std::sqrt(var) / vol;
     }
 
-    if( profugus::node() == 0 )
+    if (profugus::node() == 0)
     {
         std::cout << "Cell tally: ";
-        for( const auto &t : d_host_tally )
-            std::cout << t << " ";
-        std::cout << std::endl;
+        for (int cell = 0; cell < d_num_cells; ++cell)
+        {
+            std::cout << cell << " " << d_host_tally[cell] << " +/- "
+                << std::sqrt(tally_std_dev[cell]) << std::endl;
+        }
     }
 
 #ifdef USE_HDF5
@@ -121,15 +165,10 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
     profugus::Serial_HDF5_Writer writer;
     writer.open(filename);
 
-    // Write cell list
-    writer.begin_group("cells");
+    // Write data
     writer.write("cells",d_host_cells);
-    writer.end_group();
-
-    // Write tally result
-    writer.begin_group("flux");
-    writer.write("flux",d_host_tally);
-    writer.end_group();
+    writer.write("flux_mean",d_host_tally);
+    writer.write("flux_std_dev",tally_std_dev);
 
     writer.close();
 #endif
@@ -146,6 +185,10 @@ void Cell_Tally<Geometry>::reset()
     std::vector<double> z(d_num_cells,0.0);
     cudaMemcpy( d_tally, &z[0], d_num_cells*sizeof(double),
                 cudaMemcpyHostToDevice );
+
+    std::fill(d_tally_sum.begin(),d_tally_sum.end(),0.0);
+    std::fill(d_tally_sum_sq.begin(),d_tally_sum_sq.end(),0.0);
+    d_batch_np.clear();
 }
 
 
