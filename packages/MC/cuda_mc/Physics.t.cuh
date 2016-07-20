@@ -110,14 +110,12 @@ __global__ void collide_kernel(	const int num_particle,
 {
     // get the thread id.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // get the indices
-    int* indices = particles->event_indices( events::COLLISION );
+    int start_idx = particles->event_lower_bound( events::COLLISION );
 
     if ( idx < num_particle )
     {
 	// get the particle index
-	int pidx = indices[idx];
+	int pidx = idx + start_idx;
 	
 	REQUIRE(geometry);
 	REQUIRE(particles->event(pidx) == events::COLLISION);
@@ -206,14 +204,12 @@ __global__ void sample_fission_site_kernel(
 {
     // get the thread id.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    
-    // get indices
-    int* indices = particles->event_indices( events::COLLISION );
+    int start_idx = particles->event_lower_bound( events::COLLISION );
 
     if ( idx < num_particle )
     {
 	// get the particle index
-	int pidx = indices[idx];
+	int pidx = idx + start_idx;
 
 	REQUIRE(geometry);
 	REQUIRE(particles->event(pidx) == events::COLLISION);

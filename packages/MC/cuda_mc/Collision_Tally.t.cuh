@@ -45,14 +45,12 @@ __global__ void tally_kernel( const Geometry* geometry,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Get the indices.
-    int* indices = particles->event_indices( events::COLLISION );
+    int start_idx = particles->event_lower_bound( events::COLLISION );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	int pidx = indices[idx];
+	int pidx = idx + start_idx;
 
 	// Accumulate the particle in its batch and cell.
 	REQUIRE( particles->alive(pidx) );

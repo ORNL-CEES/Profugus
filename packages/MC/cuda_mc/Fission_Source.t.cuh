@@ -45,14 +45,12 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Get the indices.
-    int* indices = particles->event_indices( events::DEAD );
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	int pidx = indices[idx];
+	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
 	cuda::Space_Vector omega;
@@ -129,14 +127,12 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Get indices
-    int* indices = particles->event_indices( events::DEAD );
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	int pidx = indices[idx];
+	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
 	cuda::Space_Vector omega;
@@ -201,14 +197,12 @@ __global__ void sample_fission_sites_kernel(
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Get the indices
-    int* indices = particles->event_indices( events::DEAD );
+    int start_idx = particles->event_lower_bound( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	int pidx = indices[idx];
+	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
 	cuda::Space_Vector omega;
