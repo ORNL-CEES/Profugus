@@ -124,6 +124,17 @@ void Copy_To_Host_Async( T* host_ptr,
 }
 
 //---------------------------------------------------------------------------//
+// Copy device to device.
+template<typename T>
+void Copy_Device_To_Device( T* dest_ptr,
+                            const T* src_ptr,
+                            const std::size_t N )
+{
+    CudaCall( cudaMemcpy(dest_ptr, src_ptr, N*sizeof(T),
+			 cudaMemcpyDeviceToDevice) );
+}
+
+//---------------------------------------------------------------------------//
 
 } // end namespace memory
 

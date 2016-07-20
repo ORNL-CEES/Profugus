@@ -37,14 +37,6 @@ __global__ void init_rng_kernel( const int size,
 }
 
 //---------------------------------------------------------------------------//
-// Initialize particle local ids.
-__global__ void init_lid_kernel( const int size, int* lids )
-{
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size ) lids[idx] = idx;
-}
-
-//---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
 __global__ void init_event_kernel( const int size,
 				   events::Event* events,
@@ -58,54 +50,6 @@ __global__ void init_event_kernel( const int size,
         atomicAdd( &num_event[events::DEAD], 1 );
         event_bins[ events::DEAD*size + idx ] = idx;
     }
-}
-
-//---------------------------------------------------------------------------//
-// Get event lower bounds.
-__global__ void event_bounds_kernel( const int size,
-                                     const int* num_event,
-                                     int* event_bounds )
-{
-    // Get the thread index.
-    REQUIRE( 0 == threadIdx.x + blockIdx.x * blockDim.x );
-
-    // Get the lower bound.
-    event_bounds[0] = 0;
-    for ( int i = 1; i < size; ++i )
-    {
-        event_bounds[2*i] = event_bounds[2*(i-1)] + num_event[i-1];
-    }
-
-    // Get the upper bound.
-    for ( int i = 0; i < size; ++i )
-    {
-        event_bounds[2*i+1] = event_bounds[2*i] + num_event[i];
-    }
-}
-
-//---------------------------------------------------------------------------//
-// Reorder the local ids.
-__global__ void reorder_lid_kernel( const int vector_size,
-                                    const int* event_bounds,
-                                    const int* event_bins,
-                                    int* lids )
-{
-  // Get the thread index.
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  
-  if ( idx < vector_size )
-  {
-    // Get the event.
-    for ( int e = 0; e < events::END_EVENT; ++e )
-      {
-        if ( idx < event_bounds[ 2*e + 1 ] )
-          {
-            // Copy the local index from the event bins into the array.
-            lids[idx] = event_bins[ e*vector_size + idx - event_bounds[2*e] ];
-            break;
-          }
-      }
-  }
 }
 
 //---------------------------------------------------------------------------//
@@ -153,13 +97,12 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_geo_state, d_size );
     cuda::memory::Malloc( d_event, d_size );
     cuda::memory::Malloc( d_first_event, d_size );
-    cuda::memory::Malloc( d_lid, d_size );
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
     cuda::memory::Malloc( d_dist_mfp, d_size );
-    cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
     cuda::memory::Malloc( d_num_event, events::END_EVENT );
-    cuda::memory::Malloc( d_event_bins, events::END_EVENT*d_size );    
+    cuda::memory::Malloc( d_last_event_bins, events::END_EVENT*d_size );
+    cuda::memory::Malloc( d_current_event_bins, events::END_EVENT*d_size );        
 
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
@@ -184,9 +127,6 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Deallocate the device seeds.
     cuda::memory::Free( device_seeds );
 
-    // Create the local ids.
-    init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
-
     // Initialize the number of events.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
         events::END_EVENT, d_num_event );
@@ -197,7 +137,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( 
-        d_size, d_event, d_num_event, d_event_bins );
+        d_size, d_event, d_num_event, d_current_event_bins );
     d_event_sizes[ events::DEAD ] = d_size;
     
     // Do the first sort to initialize particle event state.
@@ -217,13 +157,12 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_geo_state );
     cuda::memory::Free( d_event );
     cuda::memory::Free( d_first_event );
-    cuda::memory::Free( d_lid );
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
     cuda::memory::Free( d_dist_mfp );
-    cuda::memory::Free( d_event_bounds );
     cuda::memory::Free( d_num_event );
-    cuda::memory::Free( d_event_bins );
+    cuda::memory::Free( d_last_event_bins );
+    cuda::memory::Free( d_current_event_bins );
 }
 
 //---------------------------------------------------------------------------//
@@ -265,16 +204,6 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     reset_first_event_kernel<<<num_blocks,threads_per_block>>>( 
         d_size, d_first_event );
 
-    // Bin them.
-    event_bounds_kernel<<<1,1>>>(
-        static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
-
-    // Reorder the local ids.
-    reorder_lid_kernel<<<num_blocks,threads_per_block>>>( d_size,
-                                                          d_event_bounds,
-                                                          d_event_bins,
-                                                          d_lid );
-
     // Get the number of particles with each event.
     cuda::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
                                 d_num_event,
@@ -283,6 +212,11 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     // Clear the count for the next round.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
         events::END_EVENT, d_num_event );
+
+    // Copy the event bins.
+    cuda::memory::Copy_Device_To_Device( d_last_event_bins, 
+                                         d_current_event_bins,
+                                         d_size*events::END_EVENT );
 }
 
 //---------------------------------------------------------------------------//

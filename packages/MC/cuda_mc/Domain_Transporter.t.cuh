@@ -34,12 +34,14 @@ __global__ void take_step_kernel( const Geometry* geometry,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int start_idx = particles->event_lower_bound( events::TAKE_STEP );
+
+    // Get the indices.
+    int* indices = particles->event_indices( events::TAKE_STEP );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	int pidx = start_idx + idx;
+	int pidx = indices[idx]; 
 
 	// Get the total cross section.
 	double xs_tot = physics->total( physics::TOTAL,
@@ -79,12 +81,14 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int start_idx = particles->event_lower_bound( events::BOUNDARY );
+
+    // Get the indices.
+    int* indices = particles->event_indices( events::BOUNDARY );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	int pidx = start_idx + idx;
+	int pidx = indices[idx];
 
 	// move the particle to the surface.
 	geometry->move_to_surface( particles->geo_state(pidx) );
@@ -136,12 +140,14 @@ __global__ void move_to_collision_kernel( const Geometry* geometry,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int start_idx = particles->event_lower_bound( events::COLLISION );
+
+    // Get the indices.
+    int* indices = particles->event_indices( events::COLLISION );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	int pidx = start_idx + idx;
+	int pidx = indices[idx];
 
 	// move the particle to the collision site
 	geometry->move_to_point( particles->step(pidx), 
@@ -161,12 +167,14 @@ __global__ void set_next_step_kernel(const events::Event event,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int start_idx = particles->event_lower_bound( event );
+
+    // Get the indices.
+    int* indices = particles->event_indices( event );
 
     if ( idx < num_particles )
     {
 	// Get the particle index.
-	int pidx = start_idx + idx;
+	int pidx = indices[idx];
 
         // Set survivors to take another step.
         if ( particles->alive(pidx) )
