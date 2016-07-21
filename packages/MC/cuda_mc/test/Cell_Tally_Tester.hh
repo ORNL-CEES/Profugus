@@ -22,8 +22,7 @@ class Cell_Tally_Tester
 {
   public:
 
-
-      static void test_tally();
+      static void test_tally(int num_batches);
 };
 
 #endif // cuda_mc_Cell_Tally_Tester_hh

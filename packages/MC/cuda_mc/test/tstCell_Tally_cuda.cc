@@ -16,9 +16,19 @@
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST(CellTally, tally)
+TEST(CellTally, tally_1_batch)
 {
-    Cell_Tally_Tester::test_tally();
+    Cell_Tally_Tester::test_tally(1);
+}
+
+TEST(CellTally, tally_10_batch)
+{
+    Cell_Tally_Tester::test_tally(10);
+}
+
+TEST(CellTally, tally_100_batch)
+{
+    Cell_Tally_Tester::test_tally(100);
 }
 
 //---------------------------------------------------------------------------//

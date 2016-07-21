@@ -133,7 +133,9 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
     double sum_np = std::accumulate(d_batch_np.begin(),d_batch_np.end(),0.0);
     REQUIRE(profugus::soft_equiv(num_particles,sum_np));
 
-    std::vector<double> tally_std_dev(d_num_cells,0.0);
+    double num_batches = static_cast<double>(d_batch_np.size());
+
+    d_host_std_dev.resize(d_num_cells,0.0);
 
     // Now compute std dev and normalize tally
     for (int cell = 0; cell < d_num_cells; ++cell)
@@ -142,21 +144,13 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
         double var = (d_tally_sum_sq[cell] / num_particles) -
                      tally_mean * tally_mean;
 
-        var /= num_particles * (num_particles - 1.0);
+        if (var > 0.0)
+            var /= num_batches;
 
+        // Normalize by volume
         double vol = d_host_volumes[cell];
         d_host_tally[cell] = tally_mean / vol;
-        tally_std_dev[cell] = std::sqrt(var) / vol;
-    }
-
-    if (profugus::node() == 0)
-    {
-        std::cout << "Cell tally: ";
-        for (int cell = 0; cell < d_num_cells; ++cell)
-        {
-            std::cout << cell << " " << d_host_tally[cell] << " +/- "
-                << std::sqrt(tally_std_dev[cell]) << std::endl;
-        }
+        d_host_std_dev[cell] = std::sqrt(var) / vol;
     }
 
 #ifdef USE_HDF5
@@ -168,7 +162,7 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
     // Write data
     writer.write("cells",d_host_cells);
     writer.write("flux_mean",d_host_tally);
-    writer.write("flux_std_dev",tally_std_dev);
+    writer.write("flux_std_dev",d_host_std_dev);
 
     writer.close();
 #endif

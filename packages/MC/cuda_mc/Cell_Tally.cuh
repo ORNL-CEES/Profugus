@@ -78,6 +78,7 @@ class Cell_Tally
     // Storage for host tally
     std::vector<int>    d_host_cells;
     std::vector<double> d_host_tally;
+    std::vector<double> d_host_std_dev;
     std::vector<double> d_host_volumes;
 
     // Data for batch statistics
@@ -102,6 +103,13 @@ class Cell_Tally
     {
         REQUIRE( d_host_tally.size() == d_num_cells );
         return d_host_tally;
+    }
+
+    // Get tally results.
+    const std::vector<double> & std_dev() const
+    {
+        REQUIRE( d_host_std_dev.size() == d_num_cells );
+        return d_host_std_dev;
     }
 
     // Finalize batch

@@ -27,7 +27,8 @@ typedef cuda_profugus::Space_Vector  Space_Vector;
 
 __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
                                    Geom             *geom,
-                                   int               num_vals)
+                                   int               num_vals,
+                                   int               seed)
 {
      using def::I; using def::J; using def::K;
 
@@ -43,7 +44,7 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
 
          // Create and initialize RNG state
          curandState_t rng_state;
-         curand_init(tid,0,0,&rng_state);
+         curand_init(seed,tid,0,&rng_state);
          p.set_rng(&rng_state);
          
          // Initialize particle uniformly on [0, 1]
@@ -72,7 +73,7 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
      }
 }
 
-void Cell_Tally_Tester::test_tally()
+void Cell_Tally_Tester::test_tally(int num_batches)
 {
     // Mesh edges
     std::vector<double> x_edges = {0.0, 0.20, 1.0};
@@ -112,39 +113,66 @@ void Cell_Tally_Tester::test_tally()
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    // Launch kernel
-    int block_size = 256;
-    int num_blocks = num_particles / block_size;
-    if( num_blocks > 0 )
+    for (int batch = 0; batch < num_batches; ++batch)
     {
-        test_tally_kernel<<<num_blocks,block_size>>>(
-            tally.get_device_ptr(), sdp_geom.get_device_ptr(), num_particles );
+        // Launch kernel
+        int block_size = 256;
+        int num_blocks = num_particles / block_size;
+        REQUIRE(num_particles % block_size == 0);
+        if( num_blocks > 0 )
+        {
+            test_tally_kernel<<<num_blocks,block_size>>>(
+                tally.get_device_ptr(), sdp_geom.get_device_ptr(),
+                num_particles, batch);
+        }
+
+        REQUIRE( cudaGetLastError() == cudaSuccess );
+        cudaDeviceSynchronize();
+
+        tally.update_host();
+        sp_tally->end_batch(num_particles);
+        tally.update_device();
     }
-
-    REQUIRE( cudaGetLastError() == cudaSuccess );
-    cudaDeviceSynchronize();
-
-    if( num_particles % block_size != 0 )
-    {
-        test_tally_kernel<<<1,num_particles%block_size>>>(
-            tally.get_device_ptr(), sdp_geom.get_device_ptr(), num_particles );
-    }
-
-    REQUIRE( cudaGetLastError() == cudaSuccess );
-    cudaDeviceSynchronize();
 
     tally.update_host();
-    sp_tally->finalize(num_particles);
+    sp_tally->finalize(num_particles*num_batches);
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
-    // Copy tally result to host
-    auto tally_result = sp_tally->results();
+    // Get tally result
+    const auto &tally_result = sp_tally->results();
     EXPECT_EQ( tally_result.size(), cells.size() );
+
+    const auto &tally_std_dev = sp_tally->std_dev();
+    EXPECT_EQ( tally_std_dev.size(), cells.size() );
 
     // Each value should be 1.5 within statistical noise
     std::vector<double> expected(cells.size(),1.5);
-    double tol = 10.0 / std::sqrt( static_cast<double>(num_particles) );
-    EXPECT_VEC_SOFTEQ( expected, tally_result, tol );
+
+    // If only one batch then the computed variance is zero,
+    //  evaluate heuristically
+    if (num_batches == 1)
+    {
+        double tol = 10.0 / std::sqrt( static_cast<double>(num_particles*num_batches) );
+        EXPECT_VEC_SOFTEQ( expected, tally_result, tol );
+
+        std::vector<double> z(cells.size(),0.0);
+        EXPECT_VEC_SOFT_EQ(z, tally_std_dev);
+    }
+    else
+    {
+        // Make sure all values are within 3 sigma, half within 1 sigma
+        int num_converged = 0;
+        for (int cell = 0; cell < cells.size(); ++cell)
+        {
+            double sig = tally_std_dev[cell];
+            EXPECT_SOFTEQ(expected[cell],tally_result[cell],3*sig);
+            if (profugus::soft_equiv(expected[cell],tally_result[cell],sig))
+                num_converged++;
+        }
+        std::cout << num_converged << " out of " << cells.size()
+            << " cells were within 1 sigma of true mean" << std::endl;
+        EXPECT_GE(num_converged,cells.size()/2);
+    }
 }
 
 //---------------------------------------------------------------------------//
