@@ -100,6 +100,12 @@ void KCode_Solver_Tester::test_transport(int num_groups)
         std::cout << x << " ";
     std::cout << std::endl;
 
+    auto tally_std_dev = sp_cell_tally->std_dev();
+    std::cout << "Tally std dev: ";
+    for (auto x : tally_std_dev)
+        std::cout << x << " ";
+    std::cout << std::endl;
+
     std::cout << "Computed keff: " << keff << std::endl;
 
     double exp_keff;

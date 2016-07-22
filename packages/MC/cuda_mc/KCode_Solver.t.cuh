@@ -80,6 +80,11 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     else if (d_db->isParameter("batch_size"))
         VALIDATE(false,"Unrecognized type for parameter batch_size.");
 
+    // Determine batching parameter for statistics
+    d_cycles_per_batch = d_db->get<int>("cycles_per_batch",1);
+    VALIDATE(d_cycles_per_batch>0,
+        "Number of cycles per statistics batch must be positive.");
+
     // get a reference to the tallier
     b_tallier = cuda::Shared_Device_Ptr<Tallier_t>(tallier);
 
@@ -201,6 +206,10 @@ void KCode_Solver<Geometry>::solve()
         this->iterate();
         cycle_timer.stop();
 
+        // End batch in tallier at specified interval
+        if (cycle % d_cycles_per_batch == 0)
+            b_tallier.get_host_ptr()->end_batch(d_cycles_per_batch*d_Np);
+
         // Print diagnostic output
         if (!d_quiet)
         {
@@ -216,6 +225,11 @@ void KCode_Solver<Geometry>::solve()
         }
     }
     CHECK(num_cycles() == num_active);
+
+    // End final batch for remaining odd cycles
+    int extra_cycles = num_active % d_cycles_per_batch;
+    if (extra_cycles > 0)
+        b_tallier.get_host_ptr()->end_batch(extra_cycles*d_Np);
 
     if (!d_quiet)
         cout << endl;

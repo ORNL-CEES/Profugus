@@ -186,6 +186,9 @@ class KCode_Solver : public Solver<Geometry>
 
     // Number of particles in batch
     size_type d_batch_size;
+
+    // Number of cycles per statistics batch
+    int d_cycles_per_batch;
 };
 
 } // end namespace cuda_mc
