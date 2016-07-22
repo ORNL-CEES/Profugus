@@ -135,6 +135,21 @@ void Tallier<Geometry>::end_cycle(double num_particles)
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Tell the tallies to end a particle batch
+ */
+template <class Geometry>
+void Tallier<Geometry>::end_batch(double num_particles)
+{
+    if( d_cell_tally_host.get_host_ptr() )
+    {
+        d_cell_tally_host.update_host();
+        d_cell_tally_host.get_host_ptr()->end_batch(num_particles);
+        d_cell_tally_host.update_device();
+    }
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Finalize tallies.
  *
  * Does post-solve processing of tallies including parallel reductions and

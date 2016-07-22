@@ -95,6 +95,8 @@ void Fixed_Source_Solver<Geometry>::solve()
     DIAGNOSTICS_TWO(vec_integers["local_np"].push_back(
                         d_source->num_to_transport()));
 
+    auto host_tallier = b_tallier.get_host_ptr();
+
     // start the timer
     profugus::Timer fixed_source_timer;
     fixed_source_timer.start();
@@ -105,12 +107,20 @@ void Fixed_Source_Solver<Geometry>::solve()
     if( uni_source )
     {
         d_Np = uni_source->total_num_to_transport();
-        size_type this_batch_size =
-            std::min(d_batch_size,uni_source->num_to_transport());
-        uni_source->set_batch_size(this_batch_size);
+
+        // Compute actual batch size
+        uni_source->set_batch_size(d_batch_size);
+
         while (uni_source->num_left() > 0)
         {
+            // Get actual particle count for this batch
+            auto num_batch = uni_source->num_batch();
+
+            // Transport batch of particles
             d_transporter->solve(uni_source);
+
+            // Finalize batch in source and tallier
+            host_tallier->end_batch(static_cast<double>(num_batch));
         }
     }
 
@@ -129,7 +139,7 @@ void Fixed_Source_Solver<Geometry>::solve()
           << " seconds" << endl;
 
     // Finalize tallies using global number of particles
-    b_tallier.get_host_ptr()->finalize(d_Np);
+    host_tallier->finalize(d_Np);
 }
 
 } // end namespace cuda_mc

@@ -11,6 +11,7 @@
 #ifndef cuda_mc_Source_cuh
 #define cuda_mc_Source_cuh
 
+#include <iostream>
 #include <memory>
 
 #include "utils/Definitions.hh"
@@ -102,8 +103,7 @@ class Source
     virtual void set_batch_size(size_type batch_size)
     {
         REQUIRE(batch_size>0);
-        REQUIRE(batch_size<=d_np_domain);
-        d_batch_size = batch_size;
+        d_batch_size = std::min(batch_size,d_np_domain);
     }
 
     //! Update number of histories left after completing batch

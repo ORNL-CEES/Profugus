@@ -104,7 +104,13 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
 
     auto tally = sp_cell_tally->results();
     std::cout << "Tally result: ";
-    for( auto x : tally )
+    for (auto x : tally)
+        std::cout << x << " ";
+    std::cout << std::endl;
+
+    auto tally_std_dev = sp_cell_tally->std_dev();
+    std::cout << "Tally std dev: ";
+    for (auto x : tally_std_dev)
         std::cout << x << " ";
     std::cout << std::endl;
 
@@ -113,7 +119,7 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
     if (num_groups==1)
     {
         double mean = 0.0;
-        for( auto x : tally )
+        for (auto x : tally)
             mean += x;
         mean /= static_cast<double>(tally.size());
 

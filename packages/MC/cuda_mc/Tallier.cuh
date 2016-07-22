@@ -90,6 +90,9 @@ class Tallier
     // Tell the tallies to end a cycle in a kcode calculation
     void end_cycle(double num_particles);
 
+    // Tell the tallies to end a particle batch
+    void end_batch(double num_particles);
+
     // Finalize tallies.
     void finalize(double num_particles);
 

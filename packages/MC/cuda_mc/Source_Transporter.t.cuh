@@ -386,6 +386,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     diff = end - start;
     d_source_time += diff.count();
 
+    // Loop until all particles have died
     while (num_particles_left>0)
     {
         // Build launch args
