@@ -60,17 +60,15 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
     d_num_cells = d_host_cells.size();
     REQUIRE( d_num_cells > 0 );
 
-    d_cell_vec.resize(d_num_cells);
     d_tally_vec.resize(d_num_cells,0.0);
+
+    // Copy cells to device
+    d_cell_vec = d_host_cells;
+    CHECK(d_cell_vec.size()==d_num_cells);
 
     // Extract pointers for on-device access
     d_cells  = d_cell_vec.data().get();
     d_tally  = d_tally_vec.data().get();
-
-    // Copy cells to device
-    cudaMemcpy( d_cells, &d_host_cells[0], d_num_cells*sizeof(int),
-        cudaMemcpyHostToDevice);
-    REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Compute volumes for tally cells
     d_host_volumes.resize(d_num_cells);
@@ -96,8 +94,7 @@ void Cell_Tally<Geometry>::end_batch(double num_particles)
 {
     // Copy results to host to normalize tally results
     d_host_tally.resize(d_num_cells);
-    cudaMemcpy( &d_host_tally[0], d_tally, d_num_cells * sizeof(double),
-                cudaMemcpyDeviceToHost );
+    thrust::copy(d_tally_vec.begin(),d_tally_vec.end(),d_host_tally.begin());
 
     // Global reduction on tally results
     profugus::global_sum(&d_host_tally[0],d_num_cells);
@@ -176,15 +173,11 @@ template <class Geometry>
 void Cell_Tally<Geometry>::reset()
 {
     // Clear all current tally results (keep cell list)
-    std::vector<double> z(d_num_cells,0.0);
-    cudaMemcpy( d_tally, &z[0], d_num_cells*sizeof(double),
-                cudaMemcpyHostToDevice );
-
+    thrust::fill(d_tally_vec.begin(),d_tally_vec.end(),0.0);
     std::fill(d_tally_sum.begin(),d_tally_sum.end(),0.0);
     std::fill(d_tally_sum_sq.begin(),d_tally_sum_sq.end(),0.0);
     d_batch_np.clear();
 }
-
 
 } // end namespace cuda_mc
 
