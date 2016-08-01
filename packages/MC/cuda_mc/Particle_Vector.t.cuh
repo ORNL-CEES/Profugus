@@ -47,16 +47,12 @@ __global__ void init_lid_kernel( const int size, int* lids )
 //---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
 __global__ void init_event_kernel( const int size,
-				   events::Event* events,
-                                   int* num_event,
-                                   int* event_bins )
+				   events::Event* events )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) 
     {
         events[idx] = events::DEAD;
-        atomicAdd( &num_event[events::DEAD], 1 );
-        event_bins[ events::DEAD*size + idx ] = idx;
     }
 }
 
@@ -196,14 +192,8 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     // Create the local ids.
     init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
 
-    // Initialize the number of events.
-    clear_num_event_kernel<<<1,events::END_EVENT>>>(
-        events::END_EVENT, d_num_event );
-
     // Initialize all particles to DEAD.
-    init_event_kernel<<<num_blocks,threads_per_block>>>( 
-        d_size, d_event, d_num_event, d_event_bins );
-    d_event_sizes[ events::DEAD ] = d_size;
+    init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );
     
     // Do the first sort to initialize particle event state.
     sort_by_event( d_size );
@@ -231,13 +221,11 @@ Particle_Vector<Geometry>::~Particle_Vector()
 }
 
 //---------------------------------------------------------------------------//
-// Return if the vector is empty.
+// Return if the vector is empty. This is true if all the particles are dead.
 template <class Geometry>
 bool Particle_Vector<Geometry>::empty() const
 {
-    int num_left = 0;
-    for ( auto e : d_event_sizes ) num_left += e;
-    return (0 == num_left);
+    return (d_event_sizes[events::DEAD] == d_size);
 }
 
 //---------------------------------------------------------------------------//
@@ -264,7 +252,7 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    // Clear the count.
+    // Clear the event count.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
         events::END_EVENT, d_num_event );
 
