@@ -73,10 +73,6 @@ class Particle_Vector
     // Latest particle event.
     Event_t* d_event;
 
-    // Event cycle boolean. False if the particle has been assigned its first
-    // event in a cycle.
-    bool* d_first_event;
-
     // Particle local index linked to the events.
     int* d_lid;
 
@@ -251,30 +247,8 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_event( const int i, const Event_t event )
     { 
-#ifdef __NVCC__
 	REQUIRE( i < d_size );
-
-        // If this is not the first event for this particle, we have to clear
-        // the last event this particle had before creating a new one.
-        if ( !d_first_event[ d_lid[i] ] )
-        {
-            auto last_event = d_event[ d_lid[i] ];
-            int* address = &d_num_event[ last_event ];
-            atomicAdd( address, -1 );
-        }
-
-        // Set the event.
 	d_event[ d_lid[i] ] = event;
-
-        // Bin this particle with its event.
-        int* address = &d_num_event[event];
-        int bin_size = atomicAdd( address, 1 );
-        d_event_bins[ event*d_size + bin_size ] = d_lid[i];
-
-        // Indicate that this particle has had at least one event during this
-        // cycle.
-        d_first_event[ d_lid[i] ] = false;
-#endif
     }
 
     //! Get the geometry state of a particle.
