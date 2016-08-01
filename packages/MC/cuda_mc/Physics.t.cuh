@@ -127,6 +127,9 @@ __global__ void collide_kernel(	const int num_particle,
 	// get the group index
 	int group = particles->group(pidx);
 
+        // scattering flag.
+        bool do_scatter = true;
+
 	// calculate the scattering cross section ratio
 	double c = scatter[matid_g2l[matid]*xs->num_groups() + group] /
 		   xs->vector(matid, profugus::XS::TOTAL)(group);
@@ -138,9 +141,6 @@ __global__ void collide_kernel(	const int num_particle,
 	// do implicit capture
 	if (implicit_capture && c > 0.0)
 	{
-	    // set the event
-	    particles->set_event(pidx,events::IMPLICIT_CAPTURE);
-
 	    // do implicit absorption
 	    particles->multiply_wt(pidx,c);
 	}
@@ -151,21 +151,16 @@ __global__ void collide_kernel(	const int num_particle,
 	    // sample the interaction type
 	    if (particles->ran(pidx) > c)
 	    {
-		// set event indicator
-		particles->set_event(pidx,events::ABSORPTION);
+		// indicate absorption.
+                do_scatter = false;
 
 		// kill particle
 		particles->kill(pidx);
 	    }
-	    else
-	    {
-		// set event indicator
-		particles->set_event(pidx,events::SCATTER);
-	    }
 	}
 
 	// process scattering events
-	if (particles->event(pidx) != events::ABSORPTION)
+	if ( do_scatter )
 	{
 	    // determine new group of particle
 	    group = sample_group(xs, scatter, matid_g2l,

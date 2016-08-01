@@ -55,9 +55,6 @@ __global__ void post_collision_kernel( const int num_collision,
 		{
 		    // set the new weight of the surviving particle
 		    particles->set_wt(pidx,w_s);
-
-		    // update the event
-		    particles->set_event(pidx,events::ROULETTE_SURVIVE);
 		}
 
 		// otherwise the particle dies
@@ -65,9 +62,6 @@ __global__ void post_collision_kernel( const int num_collision,
 		{
 		    // kill the particle
 		    particles->kill(pidx);
-
-		    // update the event
-		    particles->set_event(pidx,events::ROULETTE_KILLED);
 		}
 	    }
 
