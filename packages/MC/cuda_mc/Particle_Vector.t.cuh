@@ -15,6 +15,8 @@
 #include "cuda_utils/Hardware.hh"
 #include "cuda_utils/Memory.cuh"
 
+#include "comm/Timing.hh"
+
 #include <vector>
 
 #include <thrust/device_ptr.h>
@@ -233,6 +235,8 @@ int Particle_Vector<Geometry>::num_alive() const
 template <class Geometry>
 void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
 {
+    SCOPED_TIMER("CUDA_MC::Particle_Vector.sort_by_event");
+
     REQUIRE( sort_size <= d_size );
 
     // Get CUDA launch parameters.
