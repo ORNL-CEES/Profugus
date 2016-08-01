@@ -61,28 +61,6 @@ __global__ void init_event_kernel( const int size,
 }
 
 //---------------------------------------------------------------------------//
-// Finalize events after a cycle.
-__global__ void finalize_events_kernel( const int size,
-                                        const events::Event* events,
-                                        const int* lids,
-                                        int* num_event,
-                                        int* event_bins )
-{
-    // Get the thread index.
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-    // Process events.
-    if ( idx < size )
-    {
-        int lid = lids[idx];
-        events::Event event = events[lid];
-        int* address = &num_event[ event ];
-        int bin_size = atomicAdd( address, 1 );
-        event_bins[ event * size + bin_size ] = lid;
-    }
-}
-
-//---------------------------------------------------------------------------//
 // Get event lower bounds.
 __global__ void event_bounds_kernel( const int size,
                                      const int* num_event,
@@ -131,6 +109,18 @@ __global__ void reorder_lid_kernel( const int vector_size,
 }
 
 //---------------------------------------------------------------------------//
+// Reset the first event indicator for the particles.
+__global__ void reset_first_event_kernel( const int size,
+                                          bool* first_event )
+{
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if ( idx < size )
+    {
+        first_event[idx] = true;
+    }
+}
+
+//---------------------------------------------------------------------------//
 // Clear the number of events on the device.
 __global__ void clear_num_event_kernel( const int size,
                                          int* num_event )
@@ -162,6 +152,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( d_alive, d_size );
     cuda::memory::Malloc( d_geo_state, d_size );
     cuda::memory::Malloc( d_event, d_size );
+    cuda::memory::Malloc( d_first_event, d_size );
     cuda::memory::Malloc( d_lid, d_size );
     cuda::memory::Malloc( d_batch, d_size );
     cuda::memory::Malloc( d_step, d_size );
@@ -200,6 +191,10 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
         events::END_EVENT, d_num_event );
 
+    // Reset the first event indicator.
+    reset_first_event_kernel<<<num_blocks,threads_per_block>>>( 
+        d_size, d_first_event );
+
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( 
         d_size, d_event, d_num_event, d_event_bins );
@@ -221,6 +216,7 @@ Particle_Vector<Geometry>::~Particle_Vector()
     cuda::memory::Free( d_alive );
     cuda::memory::Free( d_geo_state );
     cuda::memory::Free( d_event );
+    cuda::memory::Free( d_first_event );
     cuda::memory::Free( d_lid );
     cuda::memory::Free( d_batch );
     cuda::memory::Free( d_step );
@@ -264,16 +260,11 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
-    // Clear the count.
-    clear_num_event_kernel<<<1,events::END_EVENT>>>(
-        events::END_EVENT, d_num_event );
+    // Reset the first event indicator so every particle starts with a first
+    // event next cycle.
+    reset_first_event_kernel<<<num_blocks,threads_per_block>>>( 
+        d_size, d_first_event );
 
-    // Finalize the events.
-    finalize_events_kernel<<<num_blocks,threads_per_block>>>( d_size,
-                                                              d_event,
-                                                              d_lid,
-                                                              d_num_event,
-                                                              d_event_bins );
     // Bin them.
     event_bounds_kernel<<<1,1>>>(
         static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
@@ -288,6 +279,10 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     cuda::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
                                 d_num_event,
                                 events::END_EVENT );
+
+    // Clear the count for the next round.
+    clear_num_event_kernel<<<1,events::END_EVENT>>>(
+        events::END_EVENT, d_num_event );
 }
 
 //---------------------------------------------------------------------------//
