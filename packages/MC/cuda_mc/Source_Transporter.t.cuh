@@ -52,8 +52,9 @@ Source_Transporter<Geometry>::Source_Transporter(const RCP_Std_DB& db,
     // set the output frequency for particle transport diagnostics
     d_print_fraction = db->get("cuda_mc_diag_frac", 1.1);
 
-    // Get the particle vector size.
-    d_vector_size = db->get("particle_vector_size",10000);
+    // Get the number of source batches.
+    d_num_batch = db->get("num_source_batch",1);
+    ENSURE( 0 < d_num_batch );
 }
 
 //---------------------------------------------------------------------------//
@@ -74,6 +75,10 @@ void Source_Transporter<Geometry>::assign_source(const SP_Source& source)
 
     // calculate the frequency of output diagnostics
     d_print_count = ceil(d_source->num_to_transport() * d_print_fraction);
+
+    // Calculate the particle vector size.
+    CHECK( 0 == d_source->num_to_transport() % d_num_batch );
+    d_vector_size = d_source->num_to_transport() / d_num_batch;
 }
 
 //---------------------------------------------------------------------------//
@@ -103,53 +108,58 @@ void Source_Transporter<Geometry>::solve()
         d_vector_size, profugus::Global_RNG::d_rng );
 
     // Create tasks.
-    auto sample_source = [&](){ d_source->get_particles(particles); };
     auto transport_step = [&](){ d_transporter.transport_step(particles,bank); };
     auto process_step = [&](){ d_transporter.process_step(particles,bank); };
 
     // START PROFILING
     cudaProfilerStart();
 
-    // run all the local histories while the source exists and there are live
-    // particles in the vector. we know when all the particles are dead when
-    // the starting point for dead events is at the front of the vector. there
-    // is no need to communicate particles because the problem is replicated
-    int num_alive = d_vector_size;
-    int sort_size = d_vector_size;
-    std::vector<std::future<void> > futures(3);
-    while ( !d_source->empty() || !particles.get_host_ptr()->empty() )
+    // Run all source batches.
+    for ( int b = 0; b < d_num_batch; ++b )
     {
-        // Get the sort size.
-        sort_size = (d_source->empty()) ? num_alive : d_vector_size;
+        // Fill the vector.
+        d_source->get_particles(particles);
 
-        // Run the events.
-        futures[0] = std::async( process_step );
-        futures[1] = std::async( transport_step );
-        futures[2] = std::async( sample_source );
-
-        // Wait on the events.
-        for ( auto& f : futures ) f.get();
-
-        // Sort the vector. This happens on the default stream and therefore
-        // effectively synchronizes the device after events have run.
-        particles.get_host_ptr()->sort_by_event( sort_size );
-
-        // Get the number of particles that are alive.
-        num_alive = particles.get_host_ptr()->num_alive();
-
-        // update the event counter
-        ++counter;
-
-        // print message if needed
-        if (counter % d_print_count == 0 || particles.get_host_ptr()->empty() )
+        // run all the local histories while there are live particles in the
+        // vector. we know when all the particles are dead when the starting
+        // point for dead events is at the front of the vector. there is no
+        // need to communicate particles because the problem is replicated
+        int num_alive = d_vector_size;
+        int sort_size = d_vector_size;
+        std::vector<std::future<void> > futures(2);
+        while ( !particles.get_host_ptr()->empty() )
         {
-            double percent_complete = 
-                (100. * (d_source->num_run()-num_alive) ) / 
-                 (d_source->num_to_transport());
-            cout << ">>> Finished " << counter << " events and ("
-                 << std::setw(6) << std::fixed << std::setprecision(2)
-                 << percent_complete << "%) particles on domain "
-                 << d_node << endl;
+            // Get the sort size.
+            sort_size = (d_source->empty()) ? num_alive : d_vector_size;
+
+            // Run the events.
+            futures[0] = std::async( process_step );
+            futures[1] = std::async( transport_step );
+
+            // Wait on the events.
+            for ( auto& f : futures ) f.get();
+
+            // Sort the vector. This happens on the default stream and therefore
+            // effectively synchronizes the device after events have run.
+            particles.get_host_ptr()->sort_by_event( sort_size );
+
+            // Get the number of particles that are alive.
+            num_alive = particles.get_host_ptr()->num_alive();
+
+            // update the event counter
+            ++counter;
+
+            // print message if needed
+            if (counter % d_print_count == 0 || particles.get_host_ptr()->empty() )
+            {
+                double percent_complete = 
+                    (100. * (d_source->num_run()-num_alive) ) / 
+                    (d_source->num_to_transport());
+                cout << ">>> Finished " << counter << " events and ("
+                     << std::setw(6) << std::fixed << std::setprecision(2)
+                     << percent_complete << "%) particles on domain "
+                     << d_node << endl;
+            }
         }
     }
 
