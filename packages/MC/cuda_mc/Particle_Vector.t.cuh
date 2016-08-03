@@ -82,15 +82,18 @@ __global__ void event_bounds_kernel( const int size,
 
 //---------------------------------------------------------------------------//
 // Reorder the local ids.
-__global__ void reorder_lid_kernel( const int vector_size,
+__global__ void reorder_lid_kernel( const int sort_size,
+                                    const int vector_size,
                                     const int* event_bounds,
                                     const int* event_bins,
                                     int* lids )
 {
+  REQUIRE( sort_size <= vector_size );
+
   // Get the thread index.
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   
-  if ( idx < vector_size )
+  if ( idx < sort_size )
   {
     // Get the event.
     for ( int e = 0; e < events::END_EVENT; ++e )
@@ -238,7 +241,7 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
 	cuda::Hardware<cuda::arch::Device>::default_block_size();
-    unsigned int num_blocks = d_size / threads_per_block;
+    unsigned int num_blocks = sort_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
     // Bin them.
@@ -247,7 +250,8 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
       
 
     // Reorder the local ids.
-    reorder_lid_kernel<<<num_blocks,threads_per_block>>>( d_size,
+    reorder_lid_kernel<<<num_blocks,threads_per_block>>>( sort_size,
+                                                          d_size,
                                                           d_event_bounds,
                                                           d_event_bins,
                                                           d_lid );
