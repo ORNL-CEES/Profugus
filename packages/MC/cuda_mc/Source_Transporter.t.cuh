@@ -117,6 +117,9 @@ void Source_Transporter<Geometry>::solve()
     // Run all source batches.
     for ( int b = 0; b < d_num_batch; ++b )
     {
+        // Reset the vector.
+        particles.get_host_ptr()->reset();
+      
         // Fill the vector.
         d_source->get_particles(particles);
 
@@ -130,7 +133,7 @@ void Source_Transporter<Geometry>::solve()
         while ( !particles.get_host_ptr()->empty() )
         {
             // Get the sort size.
-            sort_size = (d_source->empty()) ? num_alive : d_vector_size;
+            sort_size = num_alive;
 
             // Run the events.
             futures[0] = std::async( process_step );

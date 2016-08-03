@@ -275,6 +275,25 @@ int Particle_Vector<Geometry>::get_event_size( const events::Event event ) const
 }
 
 //---------------------------------------------------------------------------//
+// Reset the vector.
+template<class Geometry>
+void Particle_Vector<Geometry>::reset()
+{
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    // Initialize all particles to DEAD.
+    init_event_kernel<<<num_blocks,threads_per_block>>>( 
+        d_size, d_event, d_num_event, d_event_bins );
+    d_event_sizes[ events::DEAD ] = d_size;
+}
+
+
+//---------------------------------------------------------------------------//
 
 } // end namespace profugus
 
