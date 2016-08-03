@@ -133,7 +133,7 @@ class Particle_Vector
     int event_lower_bound( const events::Event event ) const
     {
         REQUIRE( event < events::END_EVENT );
-        return d_event_bounds[ 2*event ];
+        return d_event_bounds[ event ];
     }
 
     //! Get a uniform random number on [0,1] from a particle's RNG.

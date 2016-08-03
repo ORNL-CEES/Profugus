@@ -19,9 +19,6 @@
 
 #include <vector>
 
-#include <thrust/device_ptr.h>
-#include <thrust/copy.h>
-
 #include <cuda_runtime.h>
 
 namespace cuda_profugus
@@ -69,20 +66,18 @@ __global__ void event_bounds_kernel( const int size,
                                      int* event_bounds )
 {
     // Get the thread index.
-    REQUIRE( 0 == threadIdx.x + blockIdx.x * blockDim.x );
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
     // Get the lower bound.
-    event_bounds[0] = 0;
-    for ( int i = 1; i < size; ++i )
+    event_bounds[idx] = 0;
+    for ( int i = 0; i < idx; ++i ) 
     {
-        event_bounds[2*i] = event_bounds[2*(i-1)] + num_event[i-1];
+        event_bounds[idx] += num_event[i];
     }
 
     // Get the upper bound.
-    for ( int i = 0; i < size; ++i )
-    {
-        event_bounds[2*i+1] = event_bounds[2*i] + num_event[i];
-    }
+    event_bounds[ events::END_EVENT + idx ] = 
+      event_bounds[idx] + num_event[idx];
 }
 
 //---------------------------------------------------------------------------//
@@ -100,10 +95,10 @@ __global__ void reorder_lid_kernel( const int vector_size,
     // Get the event.
     for ( int e = 0; e < events::END_EVENT; ++e )
       {
-        if ( idx < event_bounds[ 2*e + 1 ] )
+        if ( idx < event_bounds[events::END_EVENT + e] )
           {
             // Copy the local index from the event bins into the array.
-            lids[idx] = event_bins[ e*vector_size + idx - event_bounds[2*e] ];
+            lids[idx] = event_bins[ e*vector_size + idx - event_bounds[e] ];
             break;
           }
       }
@@ -247,8 +242,9 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
     // Bin them.
-    event_bounds_kernel<<<1,1>>>(
+    event_bounds_kernel<<<1,events::END_EVENT>>>(
         static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
+      
 
     // Reorder the local ids.
     reorder_lid_kernel<<<num_blocks,threads_per_block>>>( d_size,
