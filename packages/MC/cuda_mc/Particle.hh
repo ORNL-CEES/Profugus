@@ -13,9 +13,11 @@
 
 #include "utils/Definitions.hh"
 #include "cuda_utils/CudaMacros.hh"
-#include "rng/RNG.hh"
 #include "geometry/RTK_State.hh"
 #include "Definitions.hh"
+
+#include <cuda_runtime.h>
+#include <curand_kernel.h>
 
 namespace cuda_profugus
 {
@@ -66,9 +68,50 @@ class Particle
     // Particle batch.
     int d_batch;
 
+    // Distance of the last particle step.
+    double d_step;
+
+    // Distance to next collision in mean-free-paths.
+    double d_dist_mfp;
+
+    // Random number generator.
+    curandState* d_rng;
+
   public:
     // >>> PARTICLE FUNCTIONS
+    
+    // Constructor.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    Particle()
+    {
+#ifdef __NVCC__
+        cudaMalloc( (void**) &d_rng, sizeof(curandState) );
+#endif
+    }
 
+    // Destructor
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    ~Particle()
+    {
+#ifdef __NVCC__
+        cudaFree( d_rng );
+#endif
+    }
+
+    //! Initialize the random number generator.
+    PROFUGUS_DEVICE_FUNCTION
+    void init_rng( const int seed )
+    {
+        curand_init( seed, 0, 0, d_rng );
+    }
+
+    //! Get a random number.
+    PROFUGUS_DEVICE_FUNCTION
+    void ran()
+    {
+        return curand_uniform( d_rng );
+    }
+    
     //! Set a new weight.
     PROFUGUS_HOST_DEVICE_FUNCTION
     void set_wt(double wt) { d_wt = wt; }
@@ -101,6 +144,14 @@ class Particle
     PROFUGUS_HOST_DEVICE_FUNCTION
     void set_batch(int b) { d_batch = b; }
 
+    //! Set the particle step.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    void set_step( const double step ) { d_step = step; }
+
+    //! Set the particle distance to collision.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    void set_dist_mfp( const double dist_mfp ) { d_dist_mfp = dist_mfp; }
+
     //@{
     //! Get a handle to the geometric state of the particle.
     PROFUGUS_HOST_DEVICE_FUNCTION
@@ -129,7 +180,15 @@ class Particle
 
     PROFUGUS_HOST_DEVICE_FUNCTION
     int batch() const{ return d_batch; }
-    //@}
+
+    //! Get the particle step.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    double step() const { return d_step; }
+
+    //! Get the particle distance to collision.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    double dist_mfp() const { return d_dist_mfp; }
+   //@}
 };
 
 //---------------------------------------------------------------------------//

@@ -29,10 +29,17 @@ namespace cuda_profugus
 // Initialize particle random number generators
 __global__ void init_rng_kernel( const int size,
 				 const int* seeds,
-				 curandState* rng )
+				 Particle_t* particles )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size ) curand_init( seeds[idx], 0, 0, &rng[idx] );
+    if ( idx < size )
+    {
+        // create the particle
+        particles[idx] = Particle_t();
+
+        // Initialize the rng.
+        particles[idx].init_rng( seeds[idx] );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -46,14 +53,14 @@ __global__ void init_lid_kernel( const int size, int* lids )
 //---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
 __global__ void init_event_kernel( const int size,
-				   events::Event* events,
+                                   Particle_t* particles,
                                    int* num_event,
                                    int* event_bins )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) 
     {
-        events[idx] = events::DEAD;
+        particles[idx].set_event( events::DEAD );
         atomicAdd( &num_event[events::DEAD], 1 );
         event_bins[ events::DEAD*size + idx ] = idx;
     }
@@ -111,7 +118,7 @@ __global__ void reorder_lid_kernel( const int sort_size,
 //---------------------------------------------------------------------------//
 // Clear the number of events on the device.
 __global__ void clear_num_event_kernel( const int size,
-                                         int* num_event )
+                                        int* num_event )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size )
@@ -133,17 +140,8 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     , d_event_sizes( events::END_EVENT, 0 )
 {
     // Allocate data arrays.
-    cuda::memory::Malloc( d_matid, d_size );
-    cuda::memory::Malloc( d_group, d_size );
-    cuda::memory::Malloc( d_wt, d_size );
-    cuda::memory::Malloc( d_rng, d_size );
-    cuda::memory::Malloc( d_alive, d_size );
-    cuda::memory::Malloc( d_geo_state, d_size );
-    cuda::memory::Malloc( d_event, d_size );
+    cuda::memory::Malloc( d_particles, d_size );
     cuda::memory::Malloc( d_lid, d_size );
-    cuda::memory::Malloc( d_batch, d_size );
-    cuda::memory::Malloc( d_step, d_size );
-    cuda::memory::Malloc( d_dist_mfp, d_size );
     cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
     cuda::memory::Malloc( d_num_event, events::END_EVENT );
     cuda::memory::Malloc( d_event_bins, events::END_EVENT*d_size );    
@@ -164,9 +162,9 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda::memory::Malloc( device_seeds, d_size );
     cuda::memory::Copy_To_Device( device_seeds, host_seeds.data(), d_size );
 
-    // Initialize the generators.
+    // Initialize the particles and their generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 
-	d_size, device_seeds, d_rng );
+	d_size, device_seeds, d_particles );
 
     // Deallocate the device seeds.
     cuda::memory::Free( device_seeds );
@@ -187,27 +185,6 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     sort_by_event( d_size );
 }
     
-//---------------------------------------------------------------------------//
-// Destructor.
-template <class Geometry>
-Particle_Vector<Geometry>::~Particle_Vector()
-{
-    cuda::memory::Free( d_matid );
-    cuda::memory::Free( d_group );
-    cuda::memory::Free( d_wt );
-    cuda::memory::Free( d_rng );
-    cuda::memory::Free( d_alive );
-    cuda::memory::Free( d_geo_state );
-    cuda::memory::Free( d_event );
-    cuda::memory::Free( d_lid );
-    cuda::memory::Free( d_batch );
-    cuda::memory::Free( d_step );
-    cuda::memory::Free( d_dist_mfp );
-    cuda::memory::Free( d_event_bounds );
-    cuda::memory::Free( d_num_event );
-    cuda::memory::Free( d_event_bins );
-}
-
 //---------------------------------------------------------------------------//
 // Return if the vector is empty.
 template <class Geometry>
