@@ -23,6 +23,8 @@
 
 #include <Teuchos_Array.hpp>
 
+#include <curand_kernel.h>
+
 namespace cuda_profugus
 {
 //===========================================================================//
@@ -42,7 +44,9 @@ class Particle_Vector
   public:
     //@{
     //! Typedefs.
-    typedef Particle<Geometry> Particle_t;
+    typedef Particle<Geometry>               Particle_t;
+    typedef typename Particle_t::Event_t     Event_t;
+    typedef typename Particle_t::Geo_State_t Geo_State_t;
     //@}
 
   private:
@@ -53,6 +57,9 @@ class Particle_Vector
 
     // Particles.
     Particle_t* d_particles;
+
+    // Random number generator.
+    curandState* d_rng;
 
     // Particle local index linked to the events.
     int* d_lid;
@@ -130,19 +137,21 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     double ran( const int i )
     {
-	return particle(i).ran();
+      REQUIRE( i < d_size );
+      REQUIRE( d_lid[i] < d_size );
+      return curand_uniform( &d_rng[ d_lid[i] ] );
     }
 
     //! Set the weight of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void set_wt( const int i, const double wt ) const 
+    void set_wt( const int i, const double wt )
     { 
         particle(i).set_wt( wt );
     }
 
     //! Multiply the weight of a particle.
     PROFUGUS_DEVICE_FUNCTION
-    void multiply_wt( const int i, const double wt ) const 
+    void multiply_wt( const int i, const double wt )
     { 
         particle(i).multiply_wt( wt );
     }

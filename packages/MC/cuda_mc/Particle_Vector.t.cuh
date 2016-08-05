@@ -28,18 +28,11 @@ namespace cuda_profugus
 //---------------------------------------------------------------------------//
 // Initialize particle random number generators
 __global__ void init_rng_kernel( const int size,
-				 const int* seeds,
-				 Particle_t* particles )
+                                 const int* seeds,
+                                 curandState* rng )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size )
-    {
-        // create the particle
-        particles[idx] = Particle_t();
-
-        // Initialize the rng.
-        particles[idx].init_rng( seeds[idx] );
-    }
+    if ( idx < size ) curand_init( seeds[idx], 0, 0, &rng[idx] );
 }
 
 //---------------------------------------------------------------------------//
@@ -52,8 +45,9 @@ __global__ void init_lid_kernel( const int size, int* lids )
 
 //---------------------------------------------------------------------------//
 // Initialize particles to DEAD.
+template<class Geometry>
 __global__ void init_event_kernel( const int size,
-                                   Particle_t* particles,
+                                   Particle<Geometry>* particles,
                                    int* num_event,
                                    int* event_bins )
 {
@@ -141,6 +135,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 {
     // Allocate data arrays.
     cuda::memory::Malloc( d_particles, d_size );
+    cuda::memory::Malloc( d_rng, d_size );
     cuda::memory::Malloc( d_lid, d_size );
     cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
     cuda::memory::Malloc( d_num_event, events::END_EVENT );
@@ -164,7 +159,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Initialize the particles and their generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 
-	d_size, device_seeds, d_particles );
+	d_size, device_seeds, d_rng );
 
     // Deallocate the device seeds.
     cuda::memory::Free( device_seeds );
@@ -178,11 +173,24 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( 
-        d_size, d_event, d_num_event, d_event_bins );
+        d_size, d_particles, d_num_event, d_event_bins );
     d_event_sizes[ events::DEAD ] = d_size;
     
     // Do the first sort to initialize particle event state.
     sort_by_event( d_size );
+}
+
+//---------------------------------------------------------------------------//
+// Destructor.
+template <class Geometry>
+Particle_Vector<Geometry>::~Particle_Vector()
+{
+    cuda::memory::Free( d_rng );
+    cuda::memory::Free( d_particles );
+    cuda::memory::Free( d_lid );
+    cuda::memory::Free( d_event_bounds );
+    cuda::memory::Free( d_num_event );
+    cuda::memory::Free( d_event_bins );
 }
     
 //---------------------------------------------------------------------------//

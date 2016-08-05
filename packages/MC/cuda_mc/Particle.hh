@@ -17,7 +17,6 @@
 #include "Definitions.hh"
 
 #include <cuda_runtime.h>
-#include <curand_kernel.h>
 
 namespace cuda_profugus
 {
@@ -40,7 +39,7 @@ class Particle
     //@{
     //! Typedefs.
     typedef def::Space_Vector               Space_Vector;
-    typedef events::Event                   Event_Type;
+    typedef events::Event                   Event_t;
     typedef typename Geometry::Geo_State_t  Geo_State_t;
     //@}
 
@@ -60,7 +59,7 @@ class Particle
     bool d_alive;
 
     // Latest particle event.
-    Event_Type d_event;
+    Event_t d_event;
 
     // Particle geometric state.
     Geo_State_t d_geo_state;
@@ -74,44 +73,9 @@ class Particle
     // Distance to next collision in mean-free-paths.
     double d_dist_mfp;
 
-    // Random number generator.
-    curandState* d_rng;
-
   public:
     // >>> PARTICLE FUNCTIONS
-    
-    // Constructor.
-    PROFUGUS_HOST_DEVICE_FUNCTION
-    Particle()
-    {
-#ifdef __NVCC__
-        cudaMalloc( (void**) &d_rng, sizeof(curandState) );
-#endif
-    }
 
-    // Destructor
-    PROFUGUS_HOST_DEVICE_FUNCTION
-    ~Particle()
-    {
-#ifdef __NVCC__
-        cudaFree( d_rng );
-#endif
-    }
-
-    //! Initialize the random number generator.
-    PROFUGUS_DEVICE_FUNCTION
-    void init_rng( const int seed )
-    {
-        curand_init( seed, 0, 0, d_rng );
-    }
-
-    //! Get a random number.
-    PROFUGUS_DEVICE_FUNCTION
-    void ran()
-    {
-        return curand_uniform( d_rng );
-    }
-    
     //! Set a new weight.
     PROFUGUS_HOST_DEVICE_FUNCTION
     void set_wt(double wt) { d_wt = wt; }
@@ -126,7 +90,7 @@ class Particle
 
     //! Set the particle event flag.
     PROFUGUS_HOST_DEVICE_FUNCTION
-    void set_event(Event_Type event) { d_event = event; }
+    void set_event(Event_t event) { d_event = event; }
 
     //! Set the material id of the region occupied by the particle.
     PROFUGUS_HOST_DEVICE_FUNCTION
@@ -170,7 +134,7 @@ class Particle
     double wt() const { return d_wt; }
 
     PROFUGUS_HOST_DEVICE_FUNCTION
-    Event_Type event() const { return d_event; }
+    Event_t event() const { return d_event; }
 
     PROFUGUS_HOST_DEVICE_FUNCTION
     int matid() const { return d_matid; }
