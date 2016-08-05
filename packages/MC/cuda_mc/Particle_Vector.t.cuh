@@ -27,12 +27,18 @@ namespace cuda_profugus
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
 // Initialize particle random number generators
+template<class Geometry>
 __global__ void init_rng_kernel( const int size,
                                  const int* seeds,
-                                 curandState* rng )
+                                 curandState* rng,
+                                 Particle<Geometry>* particles )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < size ) curand_init( seeds[idx], 0, 0, &rng[idx] );
+    if ( idx < size ) 
+    {
+        curand_init( seeds[idx], 0, 0, &rng[idx] );
+        particles[idx].set_rng( &rng[idx] );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -61,9 +67,9 @@ __global__ void init_event_kernel( const int size,
 }
 
 //---------------------------------------------------------------------------//
-// Get event lower bounds.
+// Get event lower bounds and clear the number of events after a cycle.
 __global__ void event_bounds_kernel( const int size,
-                                     const int* num_event,
+                                     int* num_event,
                                      int* event_bounds )
 {
     // Get the thread index.
@@ -79,6 +85,9 @@ __global__ void event_bounds_kernel( const int size,
     // Get the upper bound.
     event_bounds[ events::END_EVENT + idx ] = 
       event_bounds[idx] + num_event[idx];
+
+    // Clear the number of events.
+    num_event[idx] = 0;
 }
 
 //---------------------------------------------------------------------------//
@@ -159,7 +168,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Initialize the particles and their generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 
-	d_size, device_seeds, d_rng );
+        d_size, device_seeds, d_rng, d_particles );
 
     // Deallocate the device seeds.
     cuda::memory::Free( device_seeds );
@@ -229,6 +238,11 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     unsigned int num_blocks = sort_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
+    // Get the number of particles with each event.
+    cuda::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
+                                d_num_event,
+                                events::END_EVENT );
+
     // Bin them.
     event_bounds_kernel<<<1,events::END_EVENT>>>(
         static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
@@ -240,15 +254,6 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
                                                           d_event_bounds,
                                                           d_event_bins,
                                                           d_lid );
-
-    // Get the number of particles with each event.
-    cuda::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
-                                d_num_event,
-                                events::END_EVENT );
-
-    // Clear the count for the next round.
-    clear_num_event_kernel<<<1,events::END_EVENT>>>(
-        events::END_EVENT, d_num_event );
 }
 
 //---------------------------------------------------------------------------//

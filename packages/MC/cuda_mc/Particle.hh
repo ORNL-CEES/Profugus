@@ -17,6 +17,7 @@
 #include "Definitions.hh"
 
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 
 namespace cuda_profugus
 {
@@ -73,8 +74,20 @@ class Particle
     // Distance to next collision in mean-free-paths.
     double d_dist_mfp;
 
+    // Random number generator.
+    curandState* d_rng;
+
   public:
     // >>> PARTICLE FUNCTIONS
+
+    //! Set the random number generator.
+    PROFUGUS_DEVICE_FUNCTION
+    void set_rng( curandState* rng )
+    { d_rng = rng; }
+
+    //! Get a random number.
+    PROFUGUS_DEVICE_FUNCTION
+    double ran() { return curand_uniform(d_rng); }  
 
     //! Set a new weight.
     PROFUGUS_HOST_DEVICE_FUNCTION

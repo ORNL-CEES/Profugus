@@ -137,9 +137,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     double ran( const int i )
     {
-      REQUIRE( i < d_size );
-      REQUIRE( d_lid[i] < d_size );
-      return curand_uniform( &d_rng[ d_lid[i] ] );
+      return particle(i).ran();
     }
 
     //! Set the weight of a particle.
