@@ -12,9 +12,6 @@
 
 #include "Particle_Vector.hh"
 
-#include "cuda_utils/Hardware.hh"
-#include "cuda_utils/Memory.cuh"
-
 #include "comm/Timing.hh"
 
 #include <vector>
@@ -130,24 +127,36 @@ template <class Geometry>
 Particle_Vector<Geometry>::Particle_Vector( const int num_particle, 
 					    const profugus::RNG& rng )
     : d_size( num_particle )
-    , d_event_sizes( events::END_EVENT, 0 )
+    , d_matid_vec( d_size )
+    , d_matid( d_matid_vec.data().get() )
+    , d_group_vec( d_size )
+    , d_group( d_group_vec.data().get() )
+    , d_wt_vec( d_size )
+    , d_wt( d_wt_vec.data().get() )
+    , d_rng_vec( d_size )
+    , d_rng( d_rng_vec.data().get() )
+    , d_alive_vec( d_size )
+    , d_alive( d_alive_vec.data().get() )
+    , d_geo_state_vec( d_size )
+    , d_geo_state( d_geo_state_vec.data().get() )
+    , d_event_vec( d_size )
+    , d_event( d_event_vec.data().get() )
+    , d_lid_vec( d_size )
+    , d_lid( d_lid_vec.data().get() )
+    , d_batch_vec( d_size )
+    , d_batch( d_batch_vec.data().get() )
+    , d_step_vec( d_size )
+    , d_step( d_step_vec.data().get() )
+    , d_dist_mfp_vec( d_size )
+    , d_dist_mfp( d_dist_mfp_vec.data().get() )
+    , d_event_bounds_vec( 2*events::END_EVENT )
+    , d_event_bounds( d_event_bounds_vec.data().get() )
+    , d_num_event_vec( events::END_EVENT )
+    , d_num_event( d_num_event_vec.data().get() )
+    , d_event_bins_vec( d_size*events::END_EVENT )
+    , d_event_bins( d_event_bins_vec.data().get() )
+    , d_event_sizes( events::END_EVENT, 0 )      
 {
-    // Allocate data arrays.
-    cuda::memory::Malloc( d_matid, d_size );
-    cuda::memory::Malloc( d_group, d_size );
-    cuda::memory::Malloc( d_wt, d_size );
-    cuda::memory::Malloc( d_rng, d_size );
-    cuda::memory::Malloc( d_alive, d_size );
-    cuda::memory::Malloc( d_geo_state, d_size );
-    cuda::memory::Malloc( d_event, d_size );
-    cuda::memory::Malloc( d_lid, d_size );
-    cuda::memory::Malloc( d_batch, d_size );
-    cuda::memory::Malloc( d_step, d_size );
-    cuda::memory::Malloc( d_dist_mfp, d_size );
-    cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
-    cuda::memory::Malloc( d_num_event, events::END_EVENT );
-    cuda::memory::Malloc( d_event_bins, events::END_EVENT*d_size );    
-
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
@@ -160,16 +169,11 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     for ( auto& s : host_seeds ) s = rng.uniform<int>();
 
     // Copy the seeds to the device.
-    int* device_seeds = NULL;
-    cuda::memory::Malloc( device_seeds, d_size );
-    cuda::memory::Copy_To_Device( device_seeds, host_seeds.data(), d_size );
+    thrust::device_vector<int> device_seeds( host_seeds );
 
     // Initialize the generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 
-	d_size, device_seeds, d_rng );
-
-    // Deallocate the device seeds.
-    cuda::memory::Free( device_seeds );
+	d_size, device_seeds.data().get(), d_rng );
 
     // Create the local ids.
     init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
@@ -187,27 +191,6 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     sort_by_event( d_size );
 }
     
-//---------------------------------------------------------------------------//
-// Destructor.
-template <class Geometry>
-Particle_Vector<Geometry>::~Particle_Vector()
-{
-    cuda::memory::Free( d_matid );
-    cuda::memory::Free( d_group );
-    cuda::memory::Free( d_wt );
-    cuda::memory::Free( d_rng );
-    cuda::memory::Free( d_alive );
-    cuda::memory::Free( d_geo_state );
-    cuda::memory::Free( d_event );
-    cuda::memory::Free( d_lid );
-    cuda::memory::Free( d_batch );
-    cuda::memory::Free( d_step );
-    cuda::memory::Free( d_dist_mfp );
-    cuda::memory::Free( d_event_bounds );
-    cuda::memory::Free( d_num_event );
-    cuda::memory::Free( d_event_bins );
-}
-
 //---------------------------------------------------------------------------//
 // Return if the vector is empty.
 template <class Geometry>
@@ -257,9 +240,9 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
                                                           d_lid );
 
     // Get the number of particles with each event.
-    cuda::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
-                                d_num_event,
-                                events::END_EVENT );
+    thrust::copy( d_num_event_vec.begin(),
+                  d_num_event_vec.end(),
+                  d_event_sizes_vec.begin() );
 
     // Clear the count for the next round.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(

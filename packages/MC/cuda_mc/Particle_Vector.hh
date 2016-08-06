@@ -21,6 +21,8 @@
 
 #include <Teuchos_Array.hpp>
 
+#include <thurst/device_vector.h>
+
 #include <curand_kernel.h>
 
 namespace cuda_profugus
@@ -53,45 +55,59 @@ class Particle_Vector
     int d_size;
 
     // Material id in current region.
+    thrust::device_vector<int> d_matid_vec;
     int* d_matid;
 
     // Particle group index.
+    thrust::device_vector<int> d_group_vec;
     int* d_group;
 
     // Particle weight.
+    thrust::device_vector<double> d_wt_vec;
     double* d_wt;
 
     // Random number generator.
+    thrust::device_vector<curandState> d_rng_vec;
     curandState* d_rng;
 
     // Alive/dead status.
+    thrust::device_vector<bool> d_alive_vec;
     bool* d_alive;
 
     // Particle geometric state.
+    thrust::device_vector<Geo_State_t> d_geo_state_vec;
     Geo_State_t* d_geo_state;
 
     // Latest particle event.
+    thrust::device_vector<Event_t> d_event_vec;
     Event_t* d_event;
 
     // Particle local index linked to the events.
+    thrust::device_vector<int> d_lid_vec;
     int* d_lid;
 
     // Particle statistical batch id.
+    thrust::device_vector<int> d_batch_vec;
     int* d_batch;
 
     // Distance of last particle step.
+    thrust::device_vector<double> d_step_vec;
     double* d_step;
 
     // Distance to next collision in mean-free-paths.
+    thrust::device_vector<double> d_dist_mfp_vec;
     double* d_dist_mfp;
 
     // Event bounds. Updated at every sort.
+    thrust::device_vector<int> d_event_bounds_vec;
     int* d_event_bounds;
 
     // Number of particles with a given event.
+    thrust::device_vector<int> d_num_event_vec;
     int* d_num_event;
 
     // Event bins.
+    thrust::device_vector<int> d_event_bins_vec;
     int* d_event_bins;
     
     // Number of particles with a given event. Host only.
@@ -104,9 +120,6 @@ class Particle_Vector
     // Constructor
     Particle_Vector( const int num_particle, const profugus::RNG& rng );
     
-    // Destructor.
-    ~Particle_Vector();
-
     // Return if the vector is empty. If the vector has no events of any kind
     // - not event dead particles, it is empty. We initialize everything to
     // dead so it is not empty.
