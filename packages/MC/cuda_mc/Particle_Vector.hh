@@ -19,9 +19,8 @@
 
 #include "Definitions.hh"
 
-#include <Teuchos_Array.hpp>
-
-#include <thurst/device_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 
 #include <curand_kernel.h>
 
@@ -111,7 +110,7 @@ class Particle_Vector
     int* d_event_bins;
     
     // Number of particles with a given event. Host only.
-    Teuchos::Array<int> d_event_sizes;
+    thrust::host_vector<int> d_event_sizes;
 
   public:
 

@@ -14,6 +14,8 @@
 
 #include "comm/Timing.hh"
 
+#include "cuda_utils/Hardware.hh"
+
 #include <vector>
 
 #include <cuda_runtime.h>
@@ -242,7 +244,7 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     // Get the number of particles with each event.
     thrust::copy( d_num_event_vec.begin(),
                   d_num_event_vec.end(),
-                  d_event_sizes_vec.begin() );
+                  d_event_sizes.begin() );
 
     // Clear the count for the next round.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
