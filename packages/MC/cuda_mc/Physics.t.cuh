@@ -138,36 +138,25 @@ __global__ void collide_kernel(	const int num_particle,
 	// regardless of whether implicit capture is on or not
 
 	// do implicit capture
+        bool do_scatter = true;
 	if (implicit_capture && c > 0.0)
 	{
-	    // set the event
-	    particles->set_event(pidx,events::IMPLICIT_CAPTURE);
-
 	    // do implicit absorption
 	    particles->multiply_wt(pidx,c);
 	}
 
 	// do analog transport
-	else
-	{
-	    // sample the interaction type
-	    if (particles->ran(pidx) > c)
-	    {
-		// set event indicator
-		particles->set_event(pidx,events::ABSORPTION);
+	else if (particles->ran(pidx) > c)
+        {              
+            // set event indicator
+            do_scatter = false;
 
-		// kill particle
-		particles->kill(pidx);
-	    }
-	    else
-	    {
-		// set event indicator
-		particles->set_event(pidx,events::SCATTER);
-	    }
+            // kill particle
+            particles->kill(pidx);
 	}
 
 	// process scattering events
-	if (particles->event(pidx) != events::ABSORPTION)
+	if ( do_scatter )
 	{
 	    // determine new group of particle
 	    group = sample_group(xs, scatter, matid_g2l,
