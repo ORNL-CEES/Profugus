@@ -103,6 +103,7 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
 
 		// the particle has left the problem geometry. set the event
 		// to escape and kill
+		particles->set_event( pidx, events::ESCAPE );
 		particles->kill( pidx );
 		break;
 
