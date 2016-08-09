@@ -95,9 +95,12 @@ void move_from_outside(
 
     // Now move the particle, with a little extra push to make sure it's just
     // inside the boundary
-    r[X] += distance * omega[X];
-    r[Y] += distance * omega[Y];
-    r[Z] += distance * omega[Z];
+    r[X] += distance * omega[X] +
+            sgn(omega[X]) * std::numeric_limits<double>::epsilon();
+    r[Y] += distance * omega[Y] +
+            sgn(omega[Y]) * std::numeric_limits<double>::epsilon();
+    r[Z] += distance * omega[Z] +
+            sgn(omega[Z]) * std::numeric_limits<double>::epsilon();
 
     // Now again, check if it missed our outer boundaries and move it to inside
     // the array

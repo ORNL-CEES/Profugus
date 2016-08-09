@@ -17,6 +17,13 @@
 namespace profugus
 {
 
+// Return the sign of a value
+// Taken from http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+template <typename T> int sgn(T val)
+{
+    return (T(0) < val) - (val < T(0));
+}
+
 // Transport to the array boundaries from a point outside the geometry.
 void move_from_outside(
         const def::Space_Vector& lower,
