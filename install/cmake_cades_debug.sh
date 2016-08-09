@@ -12,7 +12,7 @@ module load mpi/openmpi/gcc5/1.10.2
 
 # SOURCE AND INSTALL
 SOURCE=/home/gqe/Codes/Profugus/source/
-INSTALL=/home/gqe/Codes/Profugus/installs/release
+INSTALL=/home/gqe/Codes/Profugus/installs/debug
 
 # BUILD OPTIONS
 BUILD="DEBUG"
