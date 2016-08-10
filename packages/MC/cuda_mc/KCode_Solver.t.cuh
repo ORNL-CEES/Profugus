@@ -77,7 +77,9 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     CHECK(d_transporter->geometry() && d_transporter->physics());
 
     // get initial k and build keff tally
-    int vector_size = d_db->get("particle_vector_size",10000);
+    int num_batch = d_db->get("num_source_batch",1);
+    int np = d_db->get("Np", 1000);
+    int vector_size = 1.3*std::ceil(np / num_batch);
     double init_keff = d_db->get("keff_init", 1.0);
     INSIST(init_keff >= 0., "Initial keff guess must be nonnegative.");
     b_keff_tally = std::make_shared<Keff_Tally_t>(init_keff,
