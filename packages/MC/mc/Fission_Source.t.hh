@@ -233,6 +233,8 @@ auto Fission_Source<Geometry>::get_particle() -> SP_Particle
 {
     using def::I; using def::J; using def::K;
 
+    std::cout << "Ok_A" << std::endl;
+        
     REQUIRE(d_wt > 0.0);
     REQUIRE(profugus::Global_RNG::d_rng.assigned());
 
@@ -268,6 +270,8 @@ auto Fission_Source<Geometry>::get_particle() -> SP_Particle
     // sample flag
     bool sampled;
 
+    std::cout << "Ok_B" << std::endl;
+    
     // if there is a fission site container than get the particle from there;
     // otherwise assume this is an initial source
     if (!is_initial_source())
@@ -295,9 +299,16 @@ auto Fission_Source<Geometry>::get_particle() -> SP_Particle
     }
     else
     {
+        std::cout << "Ok_B.1" << std::endl;
+        
         matid = sample_geometry(r, omega, *p, rng);
+
+        std::cout << "Ok_B.2" << std::endl;
+
     }
 
+    std::cout << "Ok_C" << std::endl;
+    
     // set the material id in the particle
     p->set_matid(matid);
 
@@ -311,6 +322,8 @@ auto Fission_Source<Geometry>::get_particle() -> SP_Particle
     d_num_left--;
     d_num_run++;
 
+    std::cout << "Ok_D" << std::endl;
+    
     ENSURE(p->matid() == matid);
     return p;
 }
@@ -470,10 +483,10 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
             ++d_current_cell;
             CHECK(d_current_cell < d_fis_dist.size());
         }
-
+        
         // get the logical cell indices in the mesh
         auto ijk = d_fis_mesh->cardinal(d_current_cell);
-
+        
         // get the low/high bounds for the cell
         double xdims[] = {d_fis_mesh->edges(I)[ijk[I]],
                           d_fis_mesh->edges(I)[ijk[I] + 1]};
@@ -482,6 +495,14 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
         double zdims[] = {d_fis_mesh->edges(K)[ijk[K]],
                           d_fis_mesh->edges(K)[ijk[K] + 1]};
 
+        std::cout << "Sampling a particle from cell " << d_current_cell
+                  << " indices (" << ijk[I] << "," << ijk[J] << ","
+                  << ijk[K] << ") with x-bounds (" << xdims[0] << ","
+                  << xdims[1] << ") y-bounds (" << ydims[0] << ","
+                  << ydims[1] << ") z-bounds (" << zdims[0] << ","
+                  << zdims[1] << ")" << std::endl;
+
+        
         // sample the appropriate cell until a fissionable region is found
         while (!sampled)
         {
