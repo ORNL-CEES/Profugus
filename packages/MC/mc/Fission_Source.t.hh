@@ -341,6 +341,46 @@ void Fission_Source<Geometry>::build_DR(SP_Cart_Mesh     mesh,
     // fission distribution
     if (mesh)
     {
+        // Check extents of Cartesian mesh vs. geometry
+        auto geom_extents = b_geometry->get_extents();
+        double tol = 1e-10;
+
+        // X bounds
+        double mesh_bnd = mesh->low_corner(def::I);
+        double geom_bnd = geom_extents.lower()[def::I];
+        VALIDATE(mesh_bnd > geom_bnd - tol,
+                 "Lower x bound of mesh (" << mesh_bnd << ") is below MC "
+                 "geometry lower x bound (" << geom_bnd << ")");
+        mesh_bnd = mesh->high_corner(def::I);
+        geom_bnd = geom_extents.upper()[def::I];
+        VALIDATE(mesh_bnd < geom_bnd + tol,
+                 "Upper x bound of mesh (" << mesh_bnd << ") is above MC "
+                 "geometry upper x bound (" << geom_bnd << ")");
+
+        // Y bounds
+        mesh_bnd = mesh->low_corner(def::J);
+        geom_bnd = geom_extents.lower()[def::J];
+        VALIDATE(mesh_bnd > geom_bnd - tol,
+                 "Lower y bound of mesh (" << mesh_bnd << ") is below MC "
+                 "geometry lower y bound (" << geom_bnd << ")");
+        mesh_bnd = mesh->high_corner(def::J);
+        geom_bnd = geom_extents.upper()[def::J];
+        VALIDATE(mesh_bnd < geom_bnd + tol,
+                 "Upper y bound of mesh (" << mesh_bnd << ") is above MC "
+                 "geometry upper y bound (" << geom_bnd << ")");
+
+        // Z bounds
+        mesh_bnd = mesh->low_corner(def::K);
+        geom_bnd = geom_extents.lower()[def::K];
+        VALIDATE(mesh_bnd > geom_bnd - tol,
+                 "Lower z bound of mesh (" << mesh_bnd << ") is below MC "
+                 "geometry lower z bound (" << geom_bnd << ")");
+        mesh_bnd = mesh->high_corner(def::K);
+        geom_bnd = geom_extents.upper()[def::K];
+        VALIDATE(mesh_bnd < geom_bnd + tol,
+                 "Upper z bound of mesh (" << mesh_bnd << ") is above MC "
+                 "geometry upper z bound (" << geom_bnd << ")");
+
         REQUIRE(mesh->num_cells() == fis_dens.size());
 
         // number of cells in the mesh
