@@ -138,7 +138,7 @@ class Source_Transporter
     // particle vector size.
     size_type d_vector_size;
 
-    // number of batches.
+    // number of source batches
     int d_num_batch;
 };
 

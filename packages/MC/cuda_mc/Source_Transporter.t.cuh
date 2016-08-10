@@ -76,9 +76,8 @@ void Source_Transporter<Geometry>::assign_source(const SP_Source& source)
     // calculate the frequency of output diagnostics
     d_print_count = ceil(d_source->num_to_transport() * d_print_fraction);
 
-    // Calculate the particle vector size.
-    CHECK( 0 == d_source->num_to_transport() % d_num_batch );
-    d_vector_size = d_source->num_to_transport() / d_num_batch;
+    // Calculate the particle vector size. Over size for possible increase from kcode.
+    d_vector_size = 1.3*std::ceil(d_source->num_to_transport() / d_num_batch);
 }
 
 //---------------------------------------------------------------------------//
@@ -114,22 +113,22 @@ void Source_Transporter<Geometry>::solve()
     // START PROFILING
     cudaProfilerStart();
 
-    // Run all source batches.
-    int sort_size = 0;
-    int num_alive = 0;
+    // Run all Source batches
     for ( int b = 0; b < d_num_batch; ++b )
-      {
-        // Set the initial number of live particles in the vector for the batch.
-        num_alive = (d_source->num_to_transport() >= d_vector_size )
-          ? d_vector_size : d_source->num_to_transport();
+     {
+        // Reset the vector.
+        particles.get_host_ptr()->reset();
 
         // Fill the vector.
+        int source_size = d_source->num_left();
         d_source->get_particles(particles);
 
         // run all the local histories while the source exists and there are live
         // particles in the vector. we know when all the particles are dead when
         // the starting point for dead events is at the front of the vector. there
         // is no need to communicate particles because the problem is replicated
+        int num_alive = source_size - d_source->num_left();
+        int sort_size = num_alive;
         while ( num_alive > 0 )
           {
             // Get the sort size.
@@ -148,8 +147,7 @@ void Source_Transporter<Geometry>::solve()
             particles.get_host_ptr()->sort_by_event( sort_size );
 
             // Get the number of particles that are alive.
-            num_alive = d_vector_size -
-              particles.get_host_ptr()->get_event_size( events::DEAD );
+            num_alive = particles.get_host_ptr()->num_alive();
 
             // update the event counter
             ++counter;

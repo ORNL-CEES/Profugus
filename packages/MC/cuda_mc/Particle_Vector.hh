@@ -108,6 +108,12 @@ class Particle_Vector
     // Get the number of particles with a given event on the host.
     int get_event_size( const events::Event event ) const;
 
+    // Get the number of particles that are not dead.
+    int num_alive() const;
+
+    // Reset the vector.
+    void reset();
+
     // >>> DEVICE API
 
     //! Get the number of particles in the vector.

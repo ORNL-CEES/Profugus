@@ -311,7 +311,8 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     d_np_total = d_np_requested;
 
     // Allocate device data.
-    d_vector_size = db->get("particle_vector_size",10000);
+    int num_batch = db->get("num_source_batch",1);
+    d_vector_size = 1.3*std::ceil(d_np_requested / num_batch);
     cuda::memory::Malloc( d_fission_sites_device, d_vector_size );
     cuda::memory::Malloc( d_fission_cells_device, d_vector_size );
 }

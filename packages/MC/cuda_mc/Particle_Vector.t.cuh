@@ -191,6 +191,16 @@ Particle_Vector<Geometry>::~Particle_Vector()
 }
 
 //---------------------------------------------------------------------------//
+// Get the number of particles that are not dead.
+template <class Geometry>
+int Particle_Vector<Geometry>::num_alive() const
+{
+    int num_alive = 0;
+    for ( auto i = 0; i < events::DEAD; ++i ) num_alive += d_event_sizes[i];
+    return num_alive;
+}
+
+//---------------------------------------------------------------------------//
 // Sort the local indices by event key.
 template <class Geometry>
 void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
@@ -236,6 +246,23 @@ template<class Geometry>
 int Particle_Vector<Geometry>::get_event_size( const events::Event event ) const
 {
     return d_event_sizes[ event ];
+}
+
+//---------------------------------------------------------------------------//
+// Reset the vector.
+template<class Geometry>
+void Particle_Vector<Geometry>::reset()
+{
+    // Get CUDA launch parameters.
+    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    unsigned int threads_per_block = 
+	cuda::Hardware<cuda::arch::Device>::default_block_size();
+    unsigned int num_blocks = d_size / threads_per_block;
+    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+
+    // Initialize all particles to DEAD.
+    init_event_kernel<<<num_blocks,threads_per_block>>>( d_size, d_event );
+    d_event_sizes[ events::DEAD ] = d_size;
 }
 
 //---------------------------------------------------------------------------//
