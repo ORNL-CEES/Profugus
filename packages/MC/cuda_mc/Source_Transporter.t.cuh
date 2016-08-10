@@ -55,6 +55,10 @@ Source_Transporter<Geometry>::Source_Transporter(const RCP_Std_DB& db,
     // Get the number of source batches.
     d_num_batch = db->get("num_source_batch",1);
     ENSURE( 0 < d_num_batch );
+
+    // Calculate the vector size.
+    int np = db->get("Np", 1000);
+    d_vector_size = 1.3*std::ceil(np / d_num_batch);
 }
 
 //---------------------------------------------------------------------------//
@@ -75,9 +79,6 @@ void Source_Transporter<Geometry>::assign_source(const SP_Source& source)
 
     // calculate the frequency of output diagnostics
     d_print_count = ceil(d_source->num_to_transport() * d_print_fraction);
-
-    // Calculate the particle vector size. Over size for possible increase from kcode.
-    d_vector_size = 1.3*std::ceil(d_source->num_to_transport() / d_num_batch);
 }
 
 //---------------------------------------------------------------------------//
