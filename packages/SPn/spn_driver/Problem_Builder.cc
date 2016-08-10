@@ -160,9 +160,9 @@ void Problem_Builder::build_mesh()
     int ncx = radial_mesh * d_Np[I] * d_Na[I];
     int ncy = radial_mesh * d_Np[J] * d_Na[J];
     d_db->set("num_cells_i", ncx);
-    d_db->set("delta_x", pitch);
+    d_db->set("delta_x", pitch / static_cast<double>(radial_mesh));
     d_db->set("num_cells_j", ncy);
-    d_db->set("delta_y", pitch);
+    d_db->set("delta_y", pitch / static_cast<double>(radial_mesh));
 
     // set the mesh axial dimensions
     int ncz = std::accumulate(axial_mesh.begin(), axial_mesh.end(), 0);
