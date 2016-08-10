@@ -59,6 +59,7 @@ Source_Transporter<Geometry>::Source_Transporter(const RCP_Std_DB& db,
     // Calculate the vector size.
     int np = db->get("Np", 1000);
     d_vector_size = 1.3*std::ceil(np / d_num_batch);
+    std::cout << "VECTOR SIZE " << d_vector_size << std::endl;
 }
 
 //---------------------------------------------------------------------------//
@@ -114,9 +115,13 @@ void Source_Transporter<Geometry>::solve()
     // START PROFILING
     cudaProfilerStart();
 
+    std::cout << "SOURCE TRANSPORT " << d_source->num_to_transport() << std::endl;
+
     // Run all Source batches
     for ( int b = 0; b < d_num_batch; ++b )
      {
+       std::cout << "BATCH " << b << " " << std::endl;
+
         // Reset the vector.
         particles.get_host_ptr()->reset();
 
