@@ -118,11 +118,11 @@ Axial_KDE_Kernel<Geometry>::sample_position_fiss_rej(
 
         // Increment failure counter.
         ++failures;
-    } while (failures != 1000);
+    } while (failures != 100000);
 
     // No luck
     b_num_sampled += failures;
-    throw profugus::assertion("1000 consecutive nonfissionable rejections in "
+    throw profugus::assertion("100000 consecutive nonfissionable rejections in "
                               "KDE.");
     return Space_Vector(0,0,0);
 }
@@ -176,11 +176,11 @@ Axial_KDE_Kernel<Geometry>::sample_position_cell_rej(
 
         // Increment failure counter.
         ++failures;
-    } while (failures != 1000);
+    } while (failures != 100000);
 
     // No luck
     b_num_sampled += failures;
-    throw profugus::assertion("1000 consecutive nonfissionable rejections in "
+    throw profugus::assertion("100000 consecutive nonfissionable rejections in "
                               "KDE.");
     return Space_Vector(0,0,0);
 }
