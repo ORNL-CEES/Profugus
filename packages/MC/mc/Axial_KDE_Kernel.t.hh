@@ -103,9 +103,6 @@ Axial_KDE_Kernel<Geometry>::sample_position_fiss_rej(
         // Ensure that the sampled point is in the geometry
         if (b_geometry->boundary_state(new_pos) == geometry::INSIDE)
         {
-            // Get the matid for sampled point
-            unsigned int matid = b_geometry->matid(new_pos);
-
             // Get matid from sampled point (may raise error if outside
             // geometry)
             if (b_physics->is_fissionable(b_geometry->matid(new_pos)))
@@ -176,6 +173,8 @@ Axial_KDE_Kernel<Geometry>::sample_position_cell_rej(
                 // Accept: sampled point is in the same cell
                 b_num_sampled += failures + 1;
                 ++b_num_accepted;
+
+                ENSURE(b_physics->is_fissionable(b_geometry->matid(new_pos)));
                 return new_pos;
             }
         }
