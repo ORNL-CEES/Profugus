@@ -123,8 +123,12 @@ Axial_KDE_Kernel<Geometry>::sample_position_fiss_rej(
     // No luck
     b_num_sampled += failures;
     throw profugus::assertion("100000 consecutive nonfissionable rejections in "
-                              "KDE.");
-    return Space_Vector(0,0,0);
+                              "KDE [cell " + std::to_string(cellid) + ", "
+                              + "original position ("
+                              + std::to_string(orig_position[def::X]) + ", "
+                              + std::to_string(orig_position[def::Y]) + ", "
+                              + std::to_string(orig_position[def::Z]) + ")]");
+    return Space_Vector(0,0,0); // Make compiler happy
 }
 
 //---------------------------------------------------------------------------//
@@ -180,9 +184,13 @@ Axial_KDE_Kernel<Geometry>::sample_position_cell_rej(
 
     // No luck
     b_num_sampled += failures;
-    throw profugus::assertion("100000 consecutive nonfissionable rejections in "
-                              "KDE.");
-    return Space_Vector(0,0,0);
+    throw profugus::assertion("100000 consecutive cell-based rejections in "
+                              "KDE kernel [cell " + std::to_string(cellid) +
+                              " fission site ("
+                              + std::to_string(orig_position[def::X]) + ", "
+                              + std::to_string(orig_position[def::Y]) + ", "
+                              + std::to_string(orig_position[def::Z]) + ")]");
+    return Space_Vector(0,0,0); // Make compiler happy
 }
 
 //---------------------------------------------------------------------------//
