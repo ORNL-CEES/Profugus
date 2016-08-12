@@ -31,6 +31,11 @@ TEST(MeshGeometry, move_to_surf)
     Mesh_Geometry_Tester::test_move_to_surf();
 }
 
+TEST(MeshGeometry, reflect)
+{
+    Mesh_Geometry_Tester::test_reflect();
+}
+
 //---------------------------------------------------------------------------//
 // end of MC/cuda_geometry/test/tstMesh_Geometry.cc
 //---------------------------------------------------------------------------//

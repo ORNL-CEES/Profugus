@@ -21,6 +21,7 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
     RCP_ParameterList master) -> SDP_Geometry
 {
     auto mesh_db = Teuchos::sublist(master, "MESH");
+    auto problem_db = Teuchos::sublist(master, "PROBLEM");
 
     // Ensure all required parameters are present
     REQUIRE( mesh_db->isParameter("x_edges") );
@@ -45,6 +46,18 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
                                    (y_edges.size()-1) *
                                    (z_edges.size()-1) ) );
     geom->set_matids(sp_matids);
+
+    // set the boundary conditions
+    def::Vec_Int boundary(6, 0);
+    if (problem_db->get<std::string>("boundary") == "reflect")
+    {
+        CHECK(problem_db->isSublist("boundary_db"));
+        CHECK(problem_db->sublist("boundary_db").isParameter("reflect"));
+        const auto &bnd_array =
+            problem_db->sublist("boundary_db").get<OneDArray_int>("reflect");
+        std::copy(bnd_array.begin(), bnd_array.end(), boundary.begin());
+    }
+    geom->set_reflecting(boundary);
 
     return SDP_Geometry(geom);
 }

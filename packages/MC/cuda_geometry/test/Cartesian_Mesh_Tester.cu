@@ -14,14 +14,13 @@
 #include "utils/View_Field.hh"
 #include "gtest/Gtest_Functions.hh"
 #include "cuda_utils/CudaDBC.hh"
-#include "cuda_utils/Device_Vector_device.t.hh"
 
 #include "../Cartesian_Mesh.hh"
 #include "Cartesian_Mesh_Tester.hh"
 
 typedef profugus::geometry::cell_type cell_type;
-typedef cuda::Space_Vector            Point;
-typedef cuda::Coordinates             Coords;
+typedef cuda::Space_Vector      Point;
+typedef cuda::Coordinates       Coords;
 typedef cuda_profugus::Cartesian_Mesh Cartesian_Mesh;
 
 __global__ void compute_indices_kernel(Cartesian_Mesh mesh,
@@ -108,26 +107,25 @@ void Cartesian_Mesh_Tester::test_index()
 
     int num_points = host_ii.size();
 
-    // Create memroy on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,int> device_ii(profugus::make_view(host_ii));
-    cuda::Device_Vector<Arch,int> device_jj(profugus::make_view(host_jj));
-    cuda::Device_Vector<Arch,int> device_kk(profugus::make_view(host_kk));
-    cuda::Device_Vector<Arch,cell_type> device_cells(num_points);
+    // Create memory on device
+    thrust::device_vector<int> device_ii(host_ii);
+    thrust::device_vector<int> device_jj(host_jj);
+    thrust::device_vector<int> device_kk(host_kk);
+    thrust::device_vector<cell_type> device_cells(num_points);
 
     // Execute kernel
     compute_indices_kernel<<<1,num_points>>>( *mesh,
                                                num_points,
-                                               device_ii.data(),
-                                               device_jj.data(),
-                                               device_kk.data(),
-                                               device_cells.data() );
+                                               device_ii.data().get(),
+                                               device_jj.data().get(),
+                                               device_kk.data().get(),
+                                               device_cells.data().get() );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy data back to host
-    std::vector<cell_type> host_cells(host_ii.size());
-    device_cells.to_host(profugus::make_view(host_cells));
+    std::vector<cell_type> host_cells(num_points);
+    thrust::copy(device_cells.begin(),device_cells.end(),host_cells.begin());
 
     std::vector<cell_type> expected_cells = {4, 1, 22, 11};
     EXPECT_VEC_EQ(expected_cells, host_cells);
@@ -144,21 +142,19 @@ void Cartesian_Mesh_Tester::test_cardinal()
 
     int num_points = host_cells.size();
 
-    // Create memroy on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,cell_type> device_cells(
-        profugus::make_view(host_cells));
-    cuda::Device_Vector<Arch,int>       device_ii(num_points);
-    cuda::Device_Vector<Arch,int>       device_jj(num_points);
-    cuda::Device_Vector<Arch,int>       device_kk(num_points);
+    // Create memory on device
+    thrust::device_vector<cell_type> device_cells(host_cells);
+    thrust::device_vector<int> device_ii(num_points);
+    thrust::device_vector<int> device_jj(num_points);
+    thrust::device_vector<int> device_kk(num_points);
 
     // Execute kernel
     compute_cardinals_kernel<<<1,num_points>>>( *mesh,
                                                  num_points,
-                                                 device_cells.data(),
-                                                 device_ii.data(),
-                                                 device_jj.data(),
-                                                 device_kk.data() );
+                                                 device_cells.data().get(),
+                                                 device_ii.data().get(),
+                                                 device_jj.data().get(),
+                                                 device_kk.data().get() );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
@@ -166,9 +162,9 @@ void Cartesian_Mesh_Tester::test_cardinal()
     std::vector<int> host_ii(num_points);
     std::vector<int> host_jj(num_points);
     std::vector<int> host_kk(num_points);
-    device_ii.to_host(profugus::make_view(host_ii));
-    device_jj.to_host(profugus::make_view(host_jj));
-    device_kk.to_host(profugus::make_view(host_kk));
+    thrust::copy(device_ii.begin(),device_ii.end(),host_ii.begin());
+    thrust::copy(device_jj.begin(),device_jj.end(),host_jj.begin());
+    thrust::copy(device_kk.begin(),device_kk.end(),host_kk.begin());
 
     std::vector<int> expected_ii = {0, 1, 2, 3};
     std::vector<int> expected_jj = {1, 0, 1, 0};
@@ -189,23 +185,22 @@ void Cartesian_Mesh_Tester::test_volume()
 
     int num_points = host_cells.size();
 
-    // Create memroy on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,cell_type> device_cells(
-        profugus::make_view(host_cells));
-    cuda::Device_Vector<Arch,double> device_volumes(num_points);
+    // Create memory on device
+    thrust::device_vector<cell_type> device_cells(host_cells);
+    thrust::device_vector<double>    device_volumes(num_points);
 
     // Execute kernel
     compute_volumes_kernel<<<1,num_points>>>( *mesh,
                                                num_points,
-                                               device_cells.data(),
-                                               device_volumes.data() );
+                                               device_cells.data().get(),
+                                               device_volumes.data().get() );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy data back to host
     std::vector<double> host_volumes(num_points);
-    device_volumes.to_host(profugus::make_view(host_volumes));
+    thrust::copy(device_volumes.begin(),device_volumes.end(),
+                 host_volumes.begin());
 
     std::vector<double> expected_volumes = {0.1 * 0.6 * 0.6,
                                             0.5 * 0.4 * 0.6,
@@ -229,23 +224,21 @@ void Cartesian_Mesh_Tester::test_find_upper()
     std::vector<Point> host_points = {{-1.0, 1.0, 0.1}, {0.2, 0.45, 0.4}};
     int num_points = host_points.size();
 
-    // Create memroy on device
-    typedef cuda::arch::Device Arch;
-    cuda::Device_Vector<Arch,Point> device_points(
-        profugus::make_view(host_points));
-    cuda::Device_Vector<Arch,Coords> device_coords(num_points);
+    // Create memory on device
+    thrust::device_vector<Point>  device_points(host_points);
+    thrust::device_vector<Coords> device_coords(num_points);
 
     // Execute kernel
     compute_coords_kernel<<<1,num_points>>>( *mesh,
                                               num_points,
-                                              device_points.data(),
-                                              device_coords.data() );
+                                              device_points.data().get(),
+                                              device_coords.data().get() );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Copy data back to host
     std::vector<Coords> host_coords(num_points);
-    device_coords.to_host(profugus::make_view(host_coords));
+    thrust::copy(device_coords.begin(),device_coords.end(),host_coords.begin());
 
     std::vector<Coords> expected_coords = {{-1, 3, 1}, {1, 2, 2}};
     
