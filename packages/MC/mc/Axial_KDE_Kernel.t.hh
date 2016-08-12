@@ -79,7 +79,8 @@ Axial_KDE_Kernel<Geometry>::sample_position_fiss_rej(
     REQUIRE(b_physics);
     REQUIRE(b_geometry);
     REQUIRE(rng.assigned());
-
+    REQUIRE(b_physics->is_fissionable(b_geometry->matid(orig_position)));
+    
     // Get the cell at the position
     cell_type cellid = b_geometry->cell(orig_position);
 
@@ -144,7 +145,8 @@ Axial_KDE_Kernel<Geometry>::sample_position_cell_rej(
     REQUIRE(b_physics);
     REQUIRE(b_geometry);
     REQUIRE(rng.assigned());
-
+    REQUIRE(b_physics->is_fissionable(b_geometry->matid(orig_position)));
+    
     // Get the cell at the position
     cell_type cellid = b_geometry->cell(orig_position);
 
