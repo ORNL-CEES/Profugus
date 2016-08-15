@@ -20,6 +20,7 @@
 #include "utils/String_Functions.hh"
 #include "xs/XS_Builder.hh"
 #include "solvers/LinAlgTypedefs.hh"
+#include "cuda_utils/Hardware.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "cuda_mc/Box_Shape.hh"
 #include "cuda_mc/VR_Analog.hh"
@@ -61,6 +62,13 @@ void Problem_Builder<Geometry>::setup(RCP_ParameterList master)
     d_db       = Teuchos::sublist(master, "PROBLEM");
 
     CHECK(!d_db.is_null());
+
+    // Set the default CUDA block size.
+    if(d_db->isParameter("block_size"))
+      {
+        cuda::Hardware<cuda::arch::Device>::set_default_block_size( 
+            d_db->get<int>("block_size") );
+      }
 
     // default the boundary conditions to reflecting
     if (!d_db->isParameter("boundary"))
