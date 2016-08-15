@@ -77,39 +77,52 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     state.next_ijk = state.ijk;
 
     // unrolled check
-    // bool positive = false;
-    // bool negative = false;
+    int positive = 0;
+    int negative = 0;
+    int either = 0;
+    int none = 1;
 
     // X SURFACE
-    if (state.d_dir.x > 0.0 && state.ijk.i < extents.i)
-    {
-        test_dist = (edges_x[state.ijk.i+1] - state.d_r.x) / state.d_dir.x;
-        test_next = state.ijk.i + 1;
-    }
-    else if (state.d_dir.x < 0.0 && state.ijk.i > -1)
-    {
-        test_dist = (edges_x[state.ijk.i] - state.d_r.x) / state.d_dir.x;
-        test_next = state.ijk.i - 1;
-    }
+    positive = 
+        static_cast<int>(state.d_dir.x > 0.0 && state.ijk.i < extents.i);
+    negative =
+        static_cast<int>(state.d_dir.x < 0.0 && state.ijk.i > -1);
+    either = positive + negative;
+    none = 1 - either;
+    CHECK( positive == 1 || positive == 0 );
+    CHECK( negative == 1 || negative == 0 );
+    CHECK( none == 1 || none == 0 );
+    CHECK( either == 1 || either == 0 );
+    CHECK( none + either == 1 );
 
+    test_dist = 
+        either * (edges_x[state.ijk.i+positive] - state.d_r.x / state.d_dir.x)
+        + none * 99e99;
+
+    test_next = state.ijk.i + positive - negative;
+    
     // initialize to x distance
     state.next_dist   = test_dist;
     state.next_ijk.i = test_next;
 
-    // reset the local dist-to-boundary to a large value to handle dir=0.0
-    test_dist = 99e99;
-
     // Y SURFACE
-    if (state.d_dir.y > 0.0 && state.ijk.j < extents.j)
-    {
-        test_dist = (edges_y[state.ijk.j+1] - state.d_r.y) / state.d_dir.y;
-        test_next = state.ijk.j + 1;
-    }
-    else if (state.d_dir.y < 0.0 && state.ijk.j > -1)
-    {
-        test_dist = (edges_y[state.ijk.j] - state.d_r.y) / state.d_dir.y;
-        test_next = state.ijk.j - 1;
-    }
+    positive = 
+        static_cast<int>(state.d_dir.y > 0.0 && state.ijk.j < extents.j);
+    negative =
+        static_cast<int>(state.d_dir.y < 0.0 && state.ijk.j > -1);
+    either = positive + negative;
+    none = 1 - either;
+    CHECK( positive == 1 || positive == 0 );
+    CHECK( negative == 1 || negative == 0 );
+    CHECK( none == 1 || none == 0 );
+    CHECK( either == 1 || either == 0 );
+    CHECK( none + either == 1 );
+
+    test_dist = 
+        either * (edges_y[state.ijk.j+positive] - state.d_r.y / state.d_dir.y)
+        + none * 99e99;
+
+    test_next = state.ijk.j + positive - negative;
 
     // update running value of distance to boundary
     if (test_dist < state.next_dist)
@@ -119,20 +132,24 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
         state.next_ijk.j = test_next;
     }
 
-    // reset the local dist-to-boundary to a large value to handle dir=0.0
-    test_dist = 99e99;
-
     // Z SURFACE
-    if (state.d_dir.z > 0.0 && state.ijk.k < extents.k)
-    {
-        test_dist = (edges_z[state.ijk.k+1] - state.d_r.z) / state.d_dir.z;
-        test_next = state.ijk.k + 1;
-    }
-    else if (state.d_dir.z < 0.0 && state.ijk.k > -1)
-    {
-        test_dist = (edges_z[state.ijk.k] - state.d_r.z) / state.d_dir.z;
-        test_next = state.ijk.k - 1;
-    }
+    positive = 
+        static_cast<int>(state.d_dir.z > 0.0 && state.ijk.k < extents.k);
+    negative =
+        static_cast<int>(state.d_dir.z < 0.0 && state.ijk.k > -1);
+    either = positive + negative;
+    none = 1 - either;
+    CHECK( positive == 1 || positive == 0 );
+    CHECK( negative == 1 || negative == 0 );
+    CHECK( none == 1 || none == 0 );
+    CHECK( either == 1 || either == 0 );
+    CHECK( none + either == 1 );
+
+    test_dist = 
+        either * (edges_z[state.ijk.k+positive] - state.d_r.z / state.d_dir.z)
+        + none * 99e99;
+
+    test_next = state.ijk.k + positive - negative;
 
     // update running value of distance to boundary
     if (test_dist < state.next_dist)
