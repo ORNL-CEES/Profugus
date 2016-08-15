@@ -13,7 +13,7 @@
 
 #include "Definitions.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 // Declare class so it can be our friend
 template<typename Arch_Switch> class Atomic_Lock;
@@ -142,7 +142,7 @@ class Atomic_Lock_Kernel<arch::Host>
 };
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_Atomic_Lock_Kernel_cuh
 
 //---------------------------------------------------------------------------//

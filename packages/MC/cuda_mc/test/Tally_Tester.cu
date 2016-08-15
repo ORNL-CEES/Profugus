@@ -74,14 +74,14 @@ Tally_Tester::Tally_Tester(  const std::vector<double>& x_edges,
 						 const int num_batch )
 {
     // Acquire hardware for the test.
-    cuda::Hardware<cuda::arch::Device>::acquire();
+    cuda_utils::Hardware<cuda_utils::arch::Device>::acquire();
 
     // Create the geometry.
-    d_geometry = cuda::shared_device_ptr<Geometry>( x_edges, y_edges, z_edges );
+    d_geometry = cuda_utils::shared_device_ptr<Geometry>( x_edges, y_edges, z_edges );
     int num_cells = d_geometry.get_host_ptr()->num_cells();
 
     // Create the particle vector.
-    d_particles = cuda::shared_device_ptr<Particle_Vector>( num_particle, rng );
+    d_particles = cuda_utils::shared_device_ptr<Particle_Vector>( num_particle, rng );
 
     // Initialize the state of the particle vector. The first half of the
     // cells will have a particle with a collision event, the rest will

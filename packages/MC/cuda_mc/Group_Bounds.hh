@@ -97,8 +97,8 @@ class Group_Bounds
 	// Find the group index; use std::greater because it's in descending
 	// order
 	group_index = 
-	    cuda::utility::lower_bound( d_bounds, (d_bounds + d_size), energy,
-					cuda::utility::greater_than<double>() )
+	    cuda_utils::utility::lower_bound( d_bounds, (d_bounds + d_size), energy,
+					cuda_utils::utility::greater_than<double>() )
 	    - d_bounds - 1;
 
 	if (group_index == -1)

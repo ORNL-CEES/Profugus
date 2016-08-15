@@ -23,7 +23,7 @@
 #include "Host_Vector.hh"
 #include "Stream.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 /*!
@@ -372,7 +372,7 @@ void Device_Vector<arch::Device,T>::to_host_async(
 
 //===========================================================================//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Device_Vector_device_t_hh
 

@@ -10,7 +10,7 @@
 
 #include "Host_Vector.t.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 template class Host_Vector<int>;
@@ -18,7 +18,7 @@ template class Host_Vector<unsigned int>;
 template class Host_Vector<float>;
 template class Host_Vector<double>;
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Host_Vector.pt.cc

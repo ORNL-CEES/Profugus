@@ -216,7 +216,7 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     transporter.set( tallier );
 
     // Move the particles a step.
-    cuda::Shared_Device_Ptr<Bank_t> bank;
+    cuda_utils::Shared_Device_Ptr<Bank_t> bank;
     transporter.transport_step( physics_tester.particles(), bank );
 
     // Sort the particles.

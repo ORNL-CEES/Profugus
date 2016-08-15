@@ -13,7 +13,7 @@
 
 #include "../cuda_utils/CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // KERNELS
@@ -66,9 +66,9 @@ void texture_vector_test(
 // INSTANTIATIONS
 //---------------------------------------------------------------------------//
 #ifdef __NVCC__
-typedef ::cuda::arch::Device Arch_t;
+typedef ::cuda_utils::arch::Device Arch_t;
 #else
-typedef ::cuda::arch::Host Arch_t;
+typedef ::cuda_utils::arch::Host Arch_t;
 #endif
 
 template void texture_vector_test(
@@ -83,7 +83,7 @@ template void texture_vector_test(
 
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Texture_Vector_Test_Kernel.cu

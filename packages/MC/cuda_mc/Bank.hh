@@ -106,7 +106,7 @@ class Bank
     }
 
     //! Emit the topmost particles from the stack into empty spots in a vector
-    void pop( cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
+    void pop( cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
     //@}
 
     //! \name Implementation-specific operations

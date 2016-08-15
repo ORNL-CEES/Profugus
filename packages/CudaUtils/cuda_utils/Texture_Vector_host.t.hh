@@ -18,7 +18,7 @@
 #include "Host_Vector.hh"
 #include "Device_Vector.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // PUBLIC METHODS
@@ -121,7 +121,7 @@ void Texture_Vector<arch::Host,T>::assign(const Device_Vector_t& devicevec)
     ENSURE(is_initialized());
 }
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Texture_Vector_host_t_hh
 

@@ -16,7 +16,7 @@
 #include "CudaDBC.hh"
 #include "CudaMacros.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 //---------------------------------------------------------------------------//
@@ -95,7 +95,7 @@ class SerialDenseDeviceMatrix
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_SerialDenseDeviceMatrix_hh
 

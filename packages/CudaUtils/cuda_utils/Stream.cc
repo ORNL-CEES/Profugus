@@ -14,10 +14,10 @@
 #include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
-using cuda::arch::Host;
-using cuda::arch::Device;
+using cuda_utils::arch::Host;
+using cuda_utils::arch::Device;
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 /*!
@@ -220,7 +220,7 @@ void Stream<Host>::destroy_impl()
 template class Stream<Host>;
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Stream.cc

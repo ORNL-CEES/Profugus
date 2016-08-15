@@ -25,7 +25,7 @@
 #include "utils/View_Field.hh"
 #include "CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 /*!
@@ -146,7 +146,7 @@ void Host_Vector<T>::assign(const This& rhs)
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Host_Vector_t_hh
 

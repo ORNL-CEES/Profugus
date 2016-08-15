@@ -18,10 +18,10 @@
 #include "Hardware.hh"
 #include "Stream.hh"
 
-using cuda::arch::Host;
-using cuda::arch::Device;
+using cuda_utils::arch::Host;
+using cuda_utils::arch::Device;
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 // HOST SPECIALIZATION
@@ -74,7 +74,7 @@ float Event<Host>::elapsed_time_since(const This& start) const
 Event<Device>::Event(unsigned int flags)
  : d_handle(NULL)
 {
-    typedef cuda::Hardware<Arch_t> Hardware_t;
+    typedef cuda_utils::Hardware<Arch_t> Hardware_t;
     REQUIRE(Hardware_t::have_acquired());
 
     CudaCall(cudaEventCreateWithFlags(&d_handle, flags));
@@ -155,7 +155,7 @@ float Event<Device>::elapsed_time_since(const This& start) const
 
 #endif //USE_CUDA
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Event.cc

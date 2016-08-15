@@ -79,7 +79,7 @@ class Source_Tally : public Tally<Geometry>
 
     //! Tally events at particle birth.
     virtual void birth(
-	const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) = 0;
+	const cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) = 0;
 };
 
 //---------------------------------------------------------------------------//
@@ -101,7 +101,7 @@ class Pathlength_Tally : public Tally<Geometry>
 
     //! Track particle and tally.
     virtual void accumulate(
-	const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles 
+	const cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles 
 	) = 0;
 };
 

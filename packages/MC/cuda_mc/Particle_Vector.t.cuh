@@ -136,25 +136,25 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     , d_event_sizes( events::END_EVENT, 0 )
 {
     // Allocate data arrays.
-    cuda::memory::Malloc( d_matid, d_size );
-    cuda::memory::Malloc( d_group, d_size );
-    cuda::memory::Malloc( d_wt, d_size );
-    cuda::memory::Malloc( d_rng, d_size );
-    cuda::memory::Malloc( d_alive, d_size );
-    cuda::memory::Malloc( d_geo_state, d_size );
-    cuda::memory::Malloc( d_event, d_size );
-    cuda::memory::Malloc( d_lid, d_size );
-    cuda::memory::Malloc( d_batch, d_size );
-    cuda::memory::Malloc( d_step, d_size );
-    cuda::memory::Malloc( d_dist_mfp, d_size );
-    cuda::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
-    cuda::memory::Malloc( d_num_event, events::END_EVENT );
-    cuda::memory::Malloc( d_event_bins, events::END_EVENT*d_size );    
+    cuda_utils::memory::Malloc( d_matid, d_size );
+    cuda_utils::memory::Malloc( d_group, d_size );
+    cuda_utils::memory::Malloc( d_wt, d_size );
+    cuda_utils::memory::Malloc( d_rng, d_size );
+    cuda_utils::memory::Malloc( d_alive, d_size );
+    cuda_utils::memory::Malloc( d_geo_state, d_size );
+    cuda_utils::memory::Malloc( d_event, d_size );
+    cuda_utils::memory::Malloc( d_lid, d_size );
+    cuda_utils::memory::Malloc( d_batch, d_size );
+    cuda_utils::memory::Malloc( d_step, d_size );
+    cuda_utils::memory::Malloc( d_dist_mfp, d_size );
+    cuda_utils::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
+    cuda_utils::memory::Malloc( d_num_event, events::END_EVENT );
+    cuda_utils::memory::Malloc( d_event_bins, events::END_EVENT*d_size );    
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -164,15 +164,15 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Copy the seeds to the device.
     int* device_seeds = NULL;
-    cuda::memory::Malloc( device_seeds, d_size );
-    cuda::memory::Copy_To_Device( device_seeds, host_seeds.data(), d_size );
+    cuda_utils::memory::Malloc( device_seeds, d_size );
+    cuda_utils::memory::Copy_To_Device( device_seeds, host_seeds.data(), d_size );
 
     // Initialize the generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 
 	d_size, device_seeds, d_rng );
 
     // Deallocate the device seeds.
-    cuda::memory::Free( device_seeds );
+    cuda_utils::memory::Free( device_seeds );
 
     // Create the local ids.
     init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
@@ -195,20 +195,20 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 template <class Geometry>
 Particle_Vector<Geometry>::~Particle_Vector()
 {
-    cuda::memory::Free( d_matid );
-    cuda::memory::Free( d_group );
-    cuda::memory::Free( d_wt );
-    cuda::memory::Free( d_rng );
-    cuda::memory::Free( d_alive );
-    cuda::memory::Free( d_geo_state );
-    cuda::memory::Free( d_event );
-    cuda::memory::Free( d_lid );
-    cuda::memory::Free( d_batch );
-    cuda::memory::Free( d_step );
-    cuda::memory::Free( d_dist_mfp );
-    cuda::memory::Free( d_event_bounds );
-    cuda::memory::Free( d_num_event );
-    cuda::memory::Free( d_event_bins );
+    cuda_utils::memory::Free( d_matid );
+    cuda_utils::memory::Free( d_group );
+    cuda_utils::memory::Free( d_wt );
+    cuda_utils::memory::Free( d_rng );
+    cuda_utils::memory::Free( d_alive );
+    cuda_utils::memory::Free( d_geo_state );
+    cuda_utils::memory::Free( d_event );
+    cuda_utils::memory::Free( d_lid );
+    cuda_utils::memory::Free( d_batch );
+    cuda_utils::memory::Free( d_step );
+    cuda_utils::memory::Free( d_dist_mfp );
+    cuda_utils::memory::Free( d_event_bounds );
+    cuda_utils::memory::Free( d_num_event );
+    cuda_utils::memory::Free( d_event_bins );
 }
 
 //---------------------------------------------------------------------------//
@@ -241,14 +241,14 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     REQUIRE( sort_size <= d_size );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = sort_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
     // Get the number of particles with each event.
-    cuda::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
+    cuda_utils::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
                                 d_num_event,
                                 events::END_EVENT );
 

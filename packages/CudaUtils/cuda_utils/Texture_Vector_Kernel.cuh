@@ -13,7 +13,7 @@
 
 #include "harness/DBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // HOST INTERFACES
@@ -154,7 +154,7 @@ class Texture_Vector_Kernel<arch::Host, T>
     }
 };
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_Texture_Vector_Kernel_cuh
 
 //---------------------------------------------------------------------------//

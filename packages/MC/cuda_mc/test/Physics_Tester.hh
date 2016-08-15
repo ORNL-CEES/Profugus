@@ -52,19 +52,19 @@ class Physics_Tester
 		    const int matid );
 
     // Get the physics.
-    cuda::Shared_Device_Ptr<Physics>& physics()
+    cuda_utils::Shared_Device_Ptr<Physics>& physics()
     { return d_physics; }
 
     // Get the geometry.
-    cuda::Shared_Device_Ptr<Geometry>& geometry()
+    cuda_utils::Shared_Device_Ptr<Geometry>& geometry()
     { return d_geometry; }
 
     // Get the cartesian mesh under the geometry.
-    cuda::Shared_Device_Ptr<Cartesian_Mesh>& cart_mesh()
+    cuda_utils::Shared_Device_Ptr<Cartesian_Mesh>& cart_mesh()
     { return d_cart_mesh; }
 
     // Get the particles
-    cuda::Shared_Device_Ptr<Particle_Vector>& particles()
+    cuda_utils::Shared_Device_Ptr<Particle_Vector>& particles()
     { return d_particle_tester.get_vector(); }
 
     // Get the particle vector tester.
@@ -102,15 +102,15 @@ class Physics_Tester
 				       bool& sampled ) const;
 
     // Get the source shape.
-    cuda::Shared_Device_Ptr<Shape> source_shape() const 
+    cuda_utils::Shared_Device_Ptr<Shape> source_shape() const 
     { return d_shape; }
 
   private:
     
-    cuda::Shared_Device_Ptr<Physics> d_physics;
-    cuda::Shared_Device_Ptr<Geometry> d_geometry;
-    cuda::Shared_Device_Ptr<Cartesian_Mesh> d_cart_mesh;
-    cuda::Shared_Device_Ptr<Shape> d_shape;
+    cuda_utils::Shared_Device_Ptr<Physics> d_physics;
+    cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda_utils::Shared_Device_Ptr<Cartesian_Mesh> d_cart_mesh;
+    cuda_utils::Shared_Device_Ptr<Shape> d_shape;
     Particle_Vector_Tester d_particle_tester;
     int d_size;    
 };

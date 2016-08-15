@@ -13,7 +13,7 @@
 
 #include "../cuda_utils/CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // KERNELS
@@ -92,9 +92,9 @@ void stream_test(Stream_Test_Kernel_Data<Arch_T, Float_T>& kd)
 // INSTANTIATIONS
 //---------------------------------------------------------------------------//
 #ifdef __NVCC__
-typedef ::cuda::arch::Device Arch_t;
+typedef ::cuda_utils::arch::Device Arch_t;
 #else
-typedef ::cuda::arch::Host Arch_t;
+typedef ::cuda_utils::arch::Host Arch_t;
 #endif
 
 template void stream_test(Stream_Test_Kernel_Data<Arch_t,float>&);
@@ -102,7 +102,7 @@ template void stream_test(Stream_Test_Kernel_Data<Arch_t,double>&);
 
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Stream_Test_Kernel.cu

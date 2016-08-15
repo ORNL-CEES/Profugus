@@ -20,7 +20,7 @@
 #include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // DEFINITIONS FOR HOST LOCK SPECIALIZATIONS
@@ -86,7 +86,7 @@ Atomic_Lock<arch::Device>::~Atomic_Lock()
 //---------------------------------------------------------------------------//
 #endif // USE_CUDA
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Atomic_Lock.cc

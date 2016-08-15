@@ -46,8 +46,8 @@ Manager<Geometry>::Manager()
     , d_nodes(profugus::nodes())
 {
     // Acquire hardware.   
-    if ( !cuda::Hardware<cuda::arch::Device>::have_acquired() )
-        cuda::Hardware<cuda::arch::Device>::acquire();
+    if ( !cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() )
+        cuda_utils::Hardware<cuda_utils::arch::Device>::acquire();
 
     // Set global rng.
     profugus::RNG_Control control( 3420239343 );

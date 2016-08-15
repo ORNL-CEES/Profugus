@@ -56,20 +56,20 @@ class XS_Device
 
     // Return the 1-D data vector for a given matid and type.
     PROFUGUS_DEVICE_FUNCTION
-    const cuda::SerialDenseDeviceVector vector(int matid, int type) const
+    const cuda_utils::SerialDenseDeviceVector vector(int matid, int type) const
     { 
 	PROFUGUS_INSIST_ON_DEVICE;
 	int offset = type * d_Nm * d_Ng + d_matid_g2l[matid] * d_Ng;
-	return cuda::SerialDenseDeviceVector( d_Ng, d_totals+offset );
+	return cuda_utils::SerialDenseDeviceVector( d_Ng, d_totals+offset );
     }
 
     // Return the 2-D data matrix for a given matid and Pn order.
     PROFUGUS_DEVICE_FUNCTION
-    const cuda::SerialDenseDeviceMatrix matrix(int matid, int pn) const
+    const cuda_utils::SerialDenseDeviceMatrix matrix(int matid, int pn) const
     { 
 	PROFUGUS_INSIST_ON_DEVICE;
 	int offset = pn * d_Nm * d_Ng * d_Ng + d_matid_g2l[matid] * d_Ng * d_Ng;
-	return cuda::SerialDenseDeviceMatrix( d_Ng, d_Ng, d_scatter+offset );
+	return cuda_utils::SerialDenseDeviceMatrix( d_Ng, d_Ng, d_scatter+offset );
     }
 
   private:

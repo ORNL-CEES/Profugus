@@ -13,7 +13,7 @@
 #include "gtest/utils_gtest.hh"
 #include "../cuda_utils/Hardware.hh"
 
-using cuda::BLAS_Handle;
+using cuda_utils::BLAS_Handle;
 
 //---------------------------------------------------------------------------//
 // Test fixture
@@ -23,8 +23,8 @@ class BLASTest : public ::testing::Test
   protected:
     virtual void SetUp()
     {
-        typedef cuda::arch::Device     Arch_t;
-        typedef cuda::Hardware<Arch_t> Hardware_t;
+        typedef cuda_utils::arch::Device     Arch_t;
+        typedef cuda_utils::Hardware<Arch_t> Hardware_t;
 
         // Initialize device
         if (!Hardware_t::have_acquired())
@@ -39,7 +39,7 @@ class BLASTest : public ::testing::Test
 //---------------------------------------------------------------------------//
 TEST_F(BLASTest, handle_count)
 {
-    using cuda::BLAS_Handle;
+    using cuda_utils::BLAS_Handle;
 
     ASSERT_EQ(0, BLAS_Handle::handle_count());
     {

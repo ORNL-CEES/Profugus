@@ -21,20 +21,20 @@
 //---------------------------------------------------------------------------//
 // Cuda_RNG test functor.
 template<typename Arch>
-void run_cuda_rng( cuda::Host_Vector<int>& seeds,
-		   cuda::Host_Vector<cuda::Cuda_RNG>& rng,
-		   cuda::Host_Vector<double>& data )
+void run_cuda_rng( cuda_utils::Host_Vector<int>& seeds,
+		   cuda_utils::Host_Vector<cuda_utils::Cuda_RNG>& rng,
+		   cuda_utils::Host_Vector<double>& data )
 {
     // Copy input data to the device.
-    std::shared_ptr<cuda::Device_Vector<Arch,int> > device_seeds =
-	std::make_shared<cuda::Device_Vector<Arch,int> >( seeds );
-    std::shared_ptr<cuda::Device_Vector<Arch,cuda::Cuda_RNG> > device_rng =
-	std::make_shared<cuda::Device_Vector<Arch,cuda::Cuda_RNG> >( rng );
-    std::shared_ptr<cuda::Device_Vector<Arch,double> > device_data =
-	std::make_shared<cuda::Device_Vector<Arch,double> >( data );
+    std::shared_ptr<cuda_utils::Device_Vector<Arch,int> > device_seeds =
+	std::make_shared<cuda_utils::Device_Vector<Arch,int> >( seeds );
+    std::shared_ptr<cuda_utils::Device_Vector<Arch,cuda_utils::Cuda_RNG> > device_rng =
+	std::make_shared<cuda_utils::Device_Vector<Arch,cuda_utils::Cuda_RNG> >( rng );
+    std::shared_ptr<cuda_utils::Device_Vector<Arch,double> > device_data =
+	std::make_shared<cuda_utils::Device_Vector<Arch,double> >( data );
 
     // Make launch args.
-    cuda::Launch_Args<Arch> args;
+    cuda_utils::Launch_Args<Arch> args;
     args.set_block_size(256);
     args.set_num_elements(data.size());
 
@@ -47,10 +47,10 @@ void run_cuda_rng( cuda::Host_Vector<int>& seeds,
 	fill_kernel( device_rng, device_data );
 
     // Initialize the rngs.
-    cuda::parallel_launch( init_kernel, args );
+    cuda_utils::parallel_launch( init_kernel, args );
 
     // Fill the vector.
-    cuda::parallel_launch( fill_kernel, args );
+    cuda_utils::parallel_launch( fill_kernel, args );
 
     // Copy the results back to the host.
     device_seeds->to_host( seeds );

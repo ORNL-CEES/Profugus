@@ -30,7 +30,7 @@ template<typename T> class View_Field;
 template<typename T> class const_View_Field;
 }
 
-namespace cuda
+namespace cuda_utils
 {
 // Declare host vector
 template <typename T> class Host_Vector;
@@ -89,8 +89,8 @@ class Device_Vector<arch::Device, T>
     //! Field/vector typedefs
     typedef profugus::const_View_Field<T> const_View_Field_t;
     typedef profugus::View_Field<T>       View_Field_t;
-    typedef cuda::Host_Vector<T>         Host_Vector_t;
-    typedef cuda::Stream<Arch_t>         Stream_t;
+    typedef cuda_utils::Host_Vector<T>         Host_Vector_t;
+    typedef cuda_utils::Stream<Arch_t>         Stream_t;
     //@}
 
   public:
@@ -243,8 +243,8 @@ class Device_Vector<arch::Host, T>
     //! Field/vector typedefs
     typedef profugus::const_View_Field<T> const_View_Field_t;
     typedef profugus::View_Field<T>       View_Field_t;
-    typedef cuda::Host_Vector<T>         Host_Vector_t;
-    typedef cuda::Stream<Arch_t>         Stream_t;
+    typedef cuda_utils::Host_Vector<T>         Host_Vector_t;
+    typedef cuda_utils::Stream<Arch_t>         Stream_t;
     //@}
 
   public:
@@ -391,7 +391,7 @@ inline void swap(
 
 //===========================================================================//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Device_Vector_hh
 

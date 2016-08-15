@@ -49,7 +49,7 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // >>> DATA
 
     // Geometry over which we are tallying.
-    cuda::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
 
     // Number of statistical batches in the tally.
     int d_num_batch;
@@ -61,14 +61,14 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     double* d_tally;
 
     // Execution stream.
-    cuda::Stream<cuda::arch::Device> d_stream;
+    cuda_utils::Stream<cuda_utils::arch::Device> d_stream;
 
   public:
 
     // >>> HOST API
 
     // Constructor
-    Cell_Tally( const cuda::Shared_Device_Ptr<Geometry>& geometry, 
+    Cell_Tally( const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
 		const int num_batch );
     
     // Destructor.
@@ -82,7 +82,7 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
 
     // Tally the particles in a vector.
     void accumulate( 
-	const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles ) override;
+	const cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles ) override;
 
     // Query if this tally is on during inactive cycles.
     bool inactive_cycle_tally() const override { return false; }

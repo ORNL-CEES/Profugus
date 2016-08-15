@@ -14,7 +14,7 @@
 
 #include "harness/DBC.hh"
 
-typedef cuda::arch::Host Arch_t;
+typedef cuda_utils::arch::Host Arch_t;
 
 //---------------------------------------------------------------------------//
 // ANONYMOUS NAMESPACE FUNCTIONS
@@ -23,14 +23,14 @@ namespace {
 /*!
  * \brief Internal function to convert to CUDA enum
  */
-inline Teuchos::ETransp transpose_convert(const cuda::Transpose t)
+inline Teuchos::ETransp transpose_convert(const cuda_utils::Transpose t)
 {
     Teuchos::ETransp result = Teuchos::NO_TRANS;
     switch (t)
     {
-        case cuda::NO_TRANS:   result = Teuchos::NO_TRANS;   break;
-        case cuda::TRANS:      result = Teuchos::TRANS;      break;
-        case cuda::CONJ_TRANS: result = Teuchos::CONJ_TRANS; break;
+        case cuda_utils::NO_TRANS:   result = Teuchos::NO_TRANS;   break;
+        case cuda_utils::TRANS:      result = Teuchos::TRANS;      break;
+        case cuda_utils::CONJ_TRANS: result = Teuchos::CONJ_TRANS; break;
         default:
             CHECK(0);
     }
@@ -38,7 +38,7 @@ inline Teuchos::ETransp transpose_convert(const cuda::Transpose t)
 }
 } // end anonymous namespace
 
-namespace cuda
+namespace cuda_utils
 {
 
 //---------------------------------------------------------------------------//
@@ -92,7 +92,7 @@ void BLAS<Arch_t,T>::GEMV(
 template class BLAS<Arch_t,float> ;
 template class BLAS<Arch_t,double>;
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of BLAS_host.cc

@@ -17,7 +17,7 @@
 #include "../cuda_utils/Vector_Traits.hh"
 #include "../cuda_utils/Device_Vector.hh"
 
-using cuda::Multi_Vector;
+using cuda_utils::Multi_Vector;
 
 //---------------------------------------------------------------------------//
 // POLYGLOT TESTS
@@ -27,8 +27,8 @@ class MultiDeviceVectorTest : public ::testing::Test
 {
   protected:
     typedef Arch_Switch                         Arch_t;
-    typedef cuda::Hardware<Arch_t>              Hardware_t;
-    typedef cuda::Vector_Traits<Arch_t, double> V_Traits_t;
+    typedef cuda_utils::Hardware<Arch_t>              Hardware_t;
+    typedef cuda_utils::Vector_Traits<Arch_t, double> V_Traits_t;
 
     typedef typename V_Traits_t::Multi_Vector_Float  MDV_t;
     typedef typename V_Traits_t::Device_Vector_Float Device_Vector_t;
@@ -39,10 +39,10 @@ class MultiDeviceVectorTest : public ::testing::Test
 
 #ifdef USE_CUDA
 // instantiate both host and device code
-typedef ::testing::Types<cuda::arch::Device, cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Device, cuda_utils::arch::Host> ArchTypes;
 #else
 // instantiate host-only code
-typedef ::testing::Types<cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Host> ArchTypes;
 #endif
 
 TYPED_TEST_CASE(MultiDeviceVectorTest, ArchTypes);
@@ -97,7 +97,7 @@ TYPED_TEST(MultiDeviceVectorTest, simple)
     swap(mv[5], mv[6]);
 
     Vector_t result(5);
-    cuda::device_to_host(mv[5], profugus::make_view(result));
+    cuda_utils::device_to_host(mv[5], profugus::make_view(result));
     EXPECT_VEC_SOFT_EQ(host_data, result);
 }
 

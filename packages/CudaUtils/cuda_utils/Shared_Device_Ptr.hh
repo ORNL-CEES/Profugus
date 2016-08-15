@@ -17,7 +17,7 @@
 
 #include "CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 /*!
@@ -103,7 +103,7 @@ Shared_Device_Ptr<T> shared_device_ptr( Args&&... args )
 }
 
 //===========================================================================//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Shared_Device_Ptr_hh
 

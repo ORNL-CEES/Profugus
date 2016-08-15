@@ -95,7 +95,7 @@
 //---------------------------------------------------------------------------//
 // FUNCTION DEFINITIONS
 //---------------------------------------------------------------------------//
-namespace cuda
+namespace cuda_utils
 {
 
 // Raise profugus::assertion with a formatted error message
@@ -105,7 +105,7 @@ void toss_cuda_cookies(
         const char* file,
         int         line);
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 // MACRO DEFINITIONS
@@ -129,7 +129,7 @@ void toss_cuda_cookies(
         if (result_ != cudaSuccess) \
         { \
             cudaGetLastError(); \
-            ::cuda::toss_cuda_cookies(cudaGetErrorString(result_), #COND, \
+            ::cuda_utils::toss_cuda_cookies(cudaGetErrorString(result_), #COND, \
                 __FILE__, __LINE__); \
         } \
     } while (0);
@@ -148,7 +148,7 @@ void toss_cuda_cookies(
         if (result_ != cudaSuccess) \
         { \
             cudaGetLastError(); \
-            ::cuda::toss_cuda_cookies(MSG, cudaGetErrorString(result_), \
+            ::cuda_utils::toss_cuda_cookies(MSG, cudaGetErrorString(result_), \
                 __FILE__, __LINE__); \
         } \
     } while (0);

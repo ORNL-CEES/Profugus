@@ -27,7 +27,7 @@ namespace Teuchos
 template<typename OrdinalType, typename ScalarType> class BLAS;
 }
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 /*!
@@ -64,7 +64,7 @@ class BLAS<arch::Host, T>
     typedef BLAS<arch::Host, T> This;
   public:
     //! Architecture type
-    typedef cuda::arch::Host Arch_t;
+    typedef cuda_utils::arch::Host Arch_t;
     //! Ordinal type
     typedef int ord_type;
     //! Floating point type
@@ -112,7 +112,7 @@ class BLAS<arch::Device, T>
     typedef BLAS<arch::Device, T> This;
   public:
     //! Architecture type
-    typedef cuda::arch::Device Arch_t;
+    typedef cuda_utils::arch::Device Arch_t;
     //! Ordinal type
     typedef int ord_type;
     //! Floating point type
@@ -152,7 +152,7 @@ class BLAS<arch::Device, T>
 #endif // USE_CUDA
 //===========================================================================//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_BLAS_hh
 

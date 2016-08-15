@@ -12,7 +12,7 @@
 #include "../cuda_utils/Launch_Args.t.cuh"
 #include "Run_Launch_Args.t.hh"
 
-typedef cuda::arch::Device Device;
+typedef cuda_utils::arch::Device Device;
 template void run_launch_args<Device>(std::vector<double> &);
 
 //---------------------------------------------------------------------------//

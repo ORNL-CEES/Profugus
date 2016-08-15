@@ -13,7 +13,7 @@
 
 #include "../cuda_utils/Device_Vector.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // HOST INTERFACES
@@ -26,7 +26,7 @@ unsigned long int operation_test(
         Device_Vector<Arch_T, Float_T>& data);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_test_Profiler_Kernel_cuh
 
 //---------------------------------------------------------------------------//

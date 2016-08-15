@@ -18,7 +18,7 @@
 
 #include "Definitions.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 // Declare Event class
 template <typename Arch_T> class Event;
@@ -118,7 +118,7 @@ inline void swap(Stream<Arch_T>& left, Stream<Arch_T>& right)
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Stream_hh
 

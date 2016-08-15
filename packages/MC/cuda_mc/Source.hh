@@ -38,7 +38,7 @@ class Source
 
     //! Get particles from the source.
     virtual void get_particles( 
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) = 0;
+	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) = 0;
 
     //! Whether the source has finished emitting all its particles.
     virtual bool empty() const = 0;

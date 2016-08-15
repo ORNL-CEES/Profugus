@@ -13,7 +13,7 @@
 #include "../cuda_utils/Launch_Args.t.hh"
 #include "Run_Launch_Args.t.hh"
 
-typedef cuda::arch::Host Host;
+typedef cuda_utils::arch::Host Host;
 template void run_launch_args<Host>(std::vector<double> &);
 
 //---------------------------------------------------------------------------//

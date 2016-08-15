@@ -14,7 +14,7 @@
 #include "Launch_Args.hh"
 #include "cuda_runtime.h"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // GLOBAL CUDA KERNEL
@@ -33,7 +33,7 @@ __global__ void cuda_kernel( Kernel kernel, std::size_t N )
 // Cuda specialization.
 template <class Kernel>
 void parallel_launch(
-    Kernel& kernel, const Launch_Args<cuda::arch::Device>& launch_args )
+    Kernel& kernel, const Launch_Args<cuda_utils::arch::Device>& launch_args )
 {
     REQUIRE( launch_args.is_valid() );
 
@@ -48,7 +48,7 @@ void parallel_launch(
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Launch_Args_t_cuh
 

@@ -57,7 +57,7 @@ __global__ void tally_kernel( const Geometry* geometry,
 	int tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
 	CHECK( tally_idx < num_batch * num_cell );
-	cuda::Atomic_Add<cuda::arch::Device>::fetch_add( 
+	cuda_utils::Atomic_Add<cuda_utils::arch::Device>::fetch_add( 
 	    &tally[tally_idx], particles->wt(pidx) );
     }
 }
@@ -119,7 +119,7 @@ __global__ void moments_kernel( const int num_batch,
 // Constructor.
 template <class Geometry>
 Collision_Tally<Geometry>::Collision_Tally( 
-    const cuda::Shared_Device_Ptr<Geometry>& geometry, 
+    const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
     const int num_batch )
     : d_geometry( geometry )
     , d_num_batch( num_batch )
@@ -127,12 +127,12 @@ Collision_Tally<Geometry>::Collision_Tally(
 {
     // Allocate the tally.
     int size = d_num_batch * d_num_cells;
-    cuda::memory::Malloc( d_tally, size );
+    cuda_utils::memory::Malloc( d_tally, size );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = size / threads_per_block;
     if ( size % threads_per_block > 0 ) ++num_blocks;
 
@@ -145,23 +145,23 @@ Collision_Tally<Geometry>::Collision_Tally(
 template <class Geometry>
 Collision_Tally<Geometry>::~Collision_Tally()
 {
-    cuda::memory::Free( d_tally );
+    cuda_utils::memory::Free( d_tally );
 }
 
 //---------------------------------------------------------------------------//
 // Tally the particles in a vector.
 template <class Geometry>
 void Collision_Tally<Geometry>::accumulate( 
-    const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
+    const cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     // Get the particles that have had a collision.
     int num_particle =
         particles.get_host_ptr()->get_event_size( events::COLLISION );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -181,9 +181,9 @@ void Collision_Tally<Geometry>::finalize( const int total_num_particle )
 {
     // Get CUDA launch parameters.
     int size = d_num_batch * d_num_cells;
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = size / threads_per_block;
     if ( size % threads_per_block > 0 ) ++num_blocks;
 
@@ -203,14 +203,14 @@ void Collision_Tally<Geometry>::copy_moments_to_host(
 {
     // Allocate moments on device.
     double* device_first_moment = NULL;
-    cuda::memory::Malloc( device_first_moment, d_num_cells );
+    cuda_utils::memory::Malloc( device_first_moment, d_num_cells );
     double* device_second_moment = NULL;
-    cuda::memory::Malloc( device_second_moment, d_num_cells );
+    cuda_utils::memory::Malloc( device_second_moment, d_num_cells );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = d_num_cells / threads_per_block;
     if ( d_num_cells % threads_per_block > 0 ) ++num_blocks;
 
@@ -223,15 +223,15 @@ void Collision_Tally<Geometry>::copy_moments_to_host(
 
     // Copy moments to host.
     first_moment.resize( d_num_cells );
-    cuda::memory::Copy_To_Host( 
+    cuda_utils::memory::Copy_To_Host( 
 	first_moment.getRawPtr(), device_first_moment, d_num_cells );
     second_moment.resize( d_num_cells );
-    cuda::memory::Copy_To_Host( 
+    cuda_utils::memory::Copy_To_Host( 
 	second_moment.getRawPtr(), device_second_moment, d_num_cells );
 
     // Free device moments.
-    cuda::memory::Free( device_first_moment );
-    cuda::memory::Free( device_second_moment );
+    cuda_utils::memory::Free( device_first_moment );
+    cuda_utils::memory::Free( device_second_moment );
 }
 
 //---------------------------------------------------------------------------//

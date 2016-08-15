@@ -15,7 +15,7 @@
 #include "../cuda_utils/Device_Vector.hh"
 #include "../cuda_utils/Launch_Args.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 //! Lock kernel data wrapper
@@ -23,7 +23,7 @@ template<typename Arch_Switch, typename Float_T>
 struct Atomic_Add_Kernel_Data
 {
     // >>> Typedefs
-    typedef cuda::Vector_Traits<Arch_Switch, Float_T> Traits_t;
+    typedef cuda_utils::Vector_Traits<Arch_Switch, Float_T> Traits_t;
     typedef typename Traits_t::Device_Vector_Float    Device_Vector_Float;
     typedef Launch_Args<Arch_Switch>                  Launch_Args_t;
 
@@ -44,7 +44,7 @@ struct Atomic_Add_Kernel_Data
 };
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_test_Atomic_Add_Kernel_Data_hh
 

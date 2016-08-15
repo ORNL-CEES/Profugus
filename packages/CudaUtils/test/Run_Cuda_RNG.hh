@@ -18,9 +18,9 @@
 //---------------------------------------------------------------------------//
 // Cuda_RNG test function.
 template<typename Arch_T>
-void run_cuda_rng(cuda::Host_Vector<int>& seeds,
-		  cuda::Host_Vector<cuda::Cuda_RNG>& rng,
-		  cuda::Host_Vector<double> &data);
+void run_cuda_rng(cuda_utils::Host_Vector<int>& seeds,
+		  cuda_utils::Host_Vector<cuda_utils::Cuda_RNG>& rng,
+		  cuda_utils::Host_Vector<double> &data);
 
 #endif // cuda_utils_test_Run_Cuda_RNG_hh
 

@@ -44,9 +44,9 @@ class EventTest : public ::testing::Test
     typedef typename Kernel_Traits_t::Arch_t Arch_t;
     typedef typename Kernel_Traits_t::Data_t Data_t;
 
-    typedef cuda::Hardware<Arch_t>              Hardware_t;
-    typedef cuda::Event<Arch_t>                 Event_t;
-    typedef cuda::Device_Vector<Arch_t, Data_t> Device_Vector_t;
+    typedef cuda_utils::Hardware<Arch_t>              Hardware_t;
+    typedef cuda_utils::Event<Arch_t>                 Event_t;
+    typedef cuda_utils::Device_Vector<Arch_t, Data_t> Device_Vector_t;
 
     void SetUp()
     {
@@ -74,13 +74,13 @@ class EventTest : public ::testing::Test
 };
 
 
-typedef Kernel_Traits<cuda::arch::Host, int>    KT_HI;
-typedef Kernel_Traits<cuda::arch::Host, float>  KT_HF;
-typedef Kernel_Traits<cuda::arch::Host, double> KT_HD;
+typedef Kernel_Traits<cuda_utils::arch::Host, int>    KT_HI;
+typedef Kernel_Traits<cuda_utils::arch::Host, float>  KT_HF;
+typedef Kernel_Traits<cuda_utils::arch::Host, double> KT_HD;
 #ifdef USE_CUDA
-typedef Kernel_Traits<cuda::arch::Device, int>    KT_DI;
-typedef Kernel_Traits<cuda::arch::Device, float>  KT_DF;
-typedef Kernel_Traits<cuda::arch::Device, double> KT_DD;
+typedef Kernel_Traits<cuda_utils::arch::Device, int>    KT_DI;
+typedef Kernel_Traits<cuda_utils::arch::Device, float>  KT_DF;
+typedef Kernel_Traits<cuda_utils::arch::Device, double> KT_DD;
 // instantiate both host and device code
 typedef ::testing::Types<KT_HI, KT_HF, KT_HD, KT_DI, KT_DF, KT_DD> ArchDataTypes;
 #else
@@ -115,7 +115,7 @@ TYPED_TEST(EventTest, performance)
     // instructions for the current GPU choice)
 
     std::cout << "Doing first kernel executions..." << std::endl;
-    cuda::operation_test(num_blocks, num_threads, data);
+    cuda_utils::operation_test(num_blocks, num_threads, data);
 
     std::cout << "Running on " << num_blocks << " blocks"
         << " x " << num_threads << " threads..." << std::flush;
@@ -126,7 +126,7 @@ TYPED_TEST(EventTest, performance)
         event_start.record();
 
         // Call the CUDA code which wraps the kernel
-        operations += cuda::operation_test(num_blocks, num_threads, data);
+        operations += cuda_utils::operation_test(num_blocks, num_threads, data);
 
         // Add an event that fires after the kernel is finished
         event_stop.record();

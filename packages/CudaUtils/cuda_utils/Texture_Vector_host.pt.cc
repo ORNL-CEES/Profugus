@@ -10,7 +10,7 @@
 
 #include "Texture_Vector_host.t.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 typedef arch::Host Arch_t;
@@ -19,7 +19,7 @@ template class Texture_Vector<Arch_t,float>;
 template class Texture_Vector<Arch_t,double>;
 template class Texture_Vector<Arch_t,int>;
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Texture_Vector_host.pt.cc

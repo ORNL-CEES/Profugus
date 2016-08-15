@@ -50,15 +50,15 @@ class Cartesian_Mesh
     typedef int                           dim_type;
     typedef size_t                        size_type;
     typedef profugus::geometry::cell_type cell_type;
-    typedef cuda::Space_Vector            Space_Vector;
-    typedef cuda::Coordinates             Coordinates;
+    typedef cuda_utils::Space_Vector            Space_Vector;
+    typedef cuda_utils::Coordinates             Coordinates;
     typedef std::vector<double>           Vec_Dbl;
 
     template <class T>
-    using Device_Vector = cuda::Device_Vector<cuda::arch::Device,T>;
+    using Device_Vector = cuda_utils::Device_Vector<cuda_utils::arch::Device,T>;
 
     template <class T>
-    using Host_Vector = cuda::Host_Vector<T>;
+    using Host_Vector = cuda_utils::Host_Vector<T>;
 
     template <class T>
     using SP = std::shared_ptr<T>;
@@ -227,7 +227,7 @@ class Cartesian_Mesh
             edges_start = dd_z_edges;
             edges_end   = dd_z_edges+d_cells_z+1;
         }
-        return cuda::utility::lower_bound(edges_start,edges_end,r)
+        return cuda_utils::utility::lower_bound(edges_start,edges_end,r)
             - edges_start - 1;
     }
 

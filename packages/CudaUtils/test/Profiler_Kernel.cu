@@ -21,7 +21,7 @@
 #define PROFILER_INNER_LOOPS  16
 #endif
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // FUNCTORS
@@ -138,9 +138,9 @@ __host__ unsigned long int operation_test(
 // EXPLICIT INSTANTIATION
 //---------------------------------------------------------------------------//
 #ifdef __NVCC__
-typedef ::cuda::arch::Device Arch_t;
+typedef ::cuda_utils::arch::Device Arch_t;
 #else
-typedef ::cuda::arch::Host Arch_t;
+typedef ::cuda_utils::arch::Host Arch_t;
 #endif
 
 //---------------------------------------------------------------------------//
@@ -155,7 +155,7 @@ template __host__ unsigned long int operation_test(unsigned int, unsigned int,
         Device_Vector<Arch_t, int>&);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Profiler_Kernel.cu

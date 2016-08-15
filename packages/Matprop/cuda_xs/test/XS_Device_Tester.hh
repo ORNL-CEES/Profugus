@@ -30,7 +30,7 @@ class XS_Device_Tester
 
   private:
 
-    cuda::Shared_Device_Ptr<cuda_profugus::XS_Device> d_xs;
+    cuda_utils::Shared_Device_Ptr<cuda_profugus::XS_Device> d_xs;
 };
 
 //---------------------------------------------------------------------------//

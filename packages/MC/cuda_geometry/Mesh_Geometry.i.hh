@@ -30,8 +30,8 @@ __device__ void Mesh_Geometry::initialize(
         const Space_Vector& direction,
         Geo_State_t       & state) const
 {
-    using cuda::utility::soft_equiv;
-    using cuda::utility::vector_normalize;
+    using cuda_utils::utility::soft_equiv;
+    using cuda_utils::utility::vector_normalize;
     using def::I; using def::J; using def::K;
 
     // Set struct attributes
@@ -56,15 +56,15 @@ __device__
 double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
 {
     using def::I; using def::J; using def::K;
-    using cuda::utility::soft_equiv;
-    using cuda::utility::vector_magnitude;
+    using cuda_utils::utility::soft_equiv;
+    using cuda_utils::utility::vector_magnitude;
 
     REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.e-5));
 
     const double * edges_x(d_mesh.edges(I));
     const double * edges_y(d_mesh.edges(J));
     const double * edges_z(d_mesh.edges(K));
-    cuda::Coordinates extents = {d_mesh.num_cells_along(I),
+    cuda_utils::Coordinates extents = {d_mesh.num_cells_along(I),
                                        d_mesh.num_cells_along(J),
                                        d_mesh.num_cells_along(K)};
 
@@ -77,6 +77,8 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     state.next_ijk = state.ijk;
 
     // unrolled check
+    // bool positive = false;
+    // bool negative = false;
 
     // X SURFACE
     if (state.d_dir.x > 0.0 && state.ijk.i < extents.i)
@@ -153,8 +155,8 @@ __device__
 bool Mesh_Geometry::reflect(Geo_State_t& state) const
 {
     using def::X; using def::Y; using def::Z;
-    using cuda::utility::soft_equiv;
-    using cuda::utility::vector_magnitude;
+    using cuda_utils::utility::soft_equiv;
+    using cuda_utils::utility::vector_magnitude;
     REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
     // If we're not in a reflecting state, return
@@ -185,7 +187,7 @@ bool Mesh_Geometry::reflect(Geo_State_t& state) const
  * \brief Return the outward normal at the location dictated by the state.
  */
 __device__
-cuda::Space_Vector Mesh_Geometry::normal(const Geo_State_t& state) const
+cuda_utils::Space_Vector Mesh_Geometry::normal(const Geo_State_t& state) const
 {
     // Choose normal based on exiting face
     if( state.exiting_face == Geo_State_t::MINUS_X )

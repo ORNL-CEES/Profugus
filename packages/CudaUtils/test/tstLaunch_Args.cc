@@ -25,10 +25,10 @@ class Launch_Args_Test : public testing::Test
 
 #ifdef USE_CUDA
 // instantiate both host and device code
-typedef ::testing::Types<cuda::arch::Host, cuda::arch::Device> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Host, cuda_utils::arch::Device> ArchTypes;
 #else
 // instantiate host-only code
-typedef ::testing::Types<cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Host> ArchTypes;
 #endif
 
 TYPED_TEST_CASE(Launch_Args_Test, ArchTypes);

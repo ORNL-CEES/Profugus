@@ -18,7 +18,7 @@
 
 #include <type_traits>
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 #ifdef __NVCC__
@@ -170,14 +170,14 @@ class Launch_Args
 
 template <class Kernel>
 void parallel_launch( Kernel& kernel,
-                      const Launch_Args<cuda::arch::Host>& launch_args );
+                      const Launch_Args<cuda_utils::arch::Host>& launch_args );
 
 template <class Kernel>
 void parallel_launch( Kernel& kernel,
-                      const Launch_Args<cuda::arch::Device>& launch_args );
+                      const Launch_Args<cuda_utils::arch::Device>& launch_args );
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Launch_Args_hh
 

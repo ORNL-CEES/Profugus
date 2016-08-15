@@ -89,13 +89,13 @@ class Physics
     // >>> DATA
 
     // Cross section database.
-    cuda::Shared_Device_Ptr<XS_Device> d_mat;
+    cuda_utils::Shared_Device_Ptr<XS_Device> d_mat;
 
     // XS raw device pointer for inline device functions.
     XS_Device* d_mat_device;
 
     // Geometry.
-    cuda::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
 
   public:
     // Constructor that auto-creates group bounds.
@@ -107,15 +107,15 @@ class Physics
     // >>> PUBLIC TRANSPORT INTERFACE
 
     //! Set the geometry.
-    void set_geometry(const cuda::Shared_Device_Ptr<Geometry>& g)
+    void set_geometry(const cuda_utils::Shared_Device_Ptr<Geometry>& g)
     { REQUIRE(g); d_geometry = g; }
 
     //! Get the geometry.
-    cuda::Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
+    cuda_utils::Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
 
     // Initialize the physics state.
     void initialize( const std::vector<double>& energy, 
-		     cuda::Shared_Device_Ptr<Particle_Vector_t>& particles );
+		     cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Get a total cross section from the physics library.
     PROFUGUS_DEVICE_FUNCTION
@@ -149,9 +149,9 @@ class Physics
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process particles through a collision.
-    void collide( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
-                  cuda::Stream<cuda::arch::Device> stream =
-                  cuda::Stream<cuda::arch::Device>() );
+    void collide( cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles,
+                  cuda_utils::Stream<cuda_utils::arch::Device> stream =
+                  cuda_utils::Stream<cuda_utils::arch::Device>() );
 
     // Sample fission spectrum and initialize the physics state.
     PROFUGUS_DEVICE_FUNCTION
@@ -181,11 +181,11 @@ class Physics
     }
 
     // Sample fission site.
-    void sample_fission_site( cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
+    void sample_fission_site( cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles,
                               Fission_Site_Container &fsc,
                               double keff,
-                              cuda::Stream<cuda::arch::Device> stream =
-                              cuda::Stream<cuda::arch::Device>() );
+                              cuda_utils::Stream<cuda_utils::arch::Device> stream =
+                              cuda_utils::Stream<cuda_utils::arch::Device>() );
 
     // Return whether a given material is fissionable
     PROFUGUS_DEVICE_FUNCTION
@@ -205,13 +205,13 @@ class Physics
     // >>> CLASS FUNCTIONS
 
     //! Get cross section database.
-    const cuda::Shared_Device_Ptr<XS_Device>& xs() const { return d_mat; }
+    const cuda_utils::Shared_Device_Ptr<XS_Device>& xs() const { return d_mat; }
 
     //! Number of discrete energy groups
     int num_groups() const { return d_Ng; }
 
     //! Group boundaries
-    const cuda::Shared_Device_Ptr<Group_Bounds>& group_bounds() const { return d_gb; }
+    const cuda_utils::Shared_Device_Ptr<Group_Bounds>& group_bounds() const { return d_gb; }
 
   private:
     // >>> IMPLEMENTATION
@@ -228,7 +228,7 @@ class Physics
     int d_Ng, d_Nm;
 
     // Group boundaries.
-    cuda::Shared_Device_Ptr<Group_Bounds> d_gb;
+    cuda_utils::Shared_Device_Ptr<Group_Bounds> d_gb;
 
     // Raw pointer to group boundaries for inline device functions.
     Group_Bounds* d_gb_device;

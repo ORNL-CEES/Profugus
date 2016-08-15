@@ -89,11 +89,11 @@ class Tallier
 
     // Process path-length tally events.
     void path_length(
-	const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles );
+	const cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Tally any source events.
     void source(
-	const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles );
+	const cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Tell the tallies to begin active kcode cycles
     void begin_active_cycles();

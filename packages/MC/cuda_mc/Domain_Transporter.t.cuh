@@ -289,9 +289,9 @@ void Domain_Transporter<Geometry>::transport_step(
         particles.get_host_ptr()->get_event_size( events::TAKE_STEP );
     
     // get CUDA launch parameters
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-        cuda::Hardware<cuda::arch::Device>::default_block_size();
+        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -339,9 +339,9 @@ void Domain_Transporter<Geometry>::process_boundary(
         particles.get_host_ptr()->get_event_size( events::BOUNDARY );
     
     // get CUDA launch parameters
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -376,9 +376,9 @@ void Domain_Transporter<Geometry>::process_collision(
         particles.get_host_ptr()->get_event_size( events::COLLISION );
     
     // get CUDA launch parameters
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 

@@ -47,7 +47,7 @@ class Collision_Tally
     // >>> DATA
 
     // Geometry over which we are tallying.
-    cuda::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
 
     // Number of statistical batches in the tally.
     int d_num_batch;
@@ -63,7 +63,7 @@ class Collision_Tally
     // >>> HOST API
 
     // Constructor
-    Collision_Tally( const cuda::Shared_Device_Ptr<Geometry>& geometry, 
+    Collision_Tally( const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
 		     const int num_batch );
     
     // Destructor.
@@ -77,7 +77,7 @@ class Collision_Tally
 
     // Tally the particles in a vector.
     void accumulate( 
-	const cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
+	const cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
 
     // Finalize the tally.
     void finalize( const int total_num_particle );

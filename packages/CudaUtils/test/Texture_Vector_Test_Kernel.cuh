@@ -14,7 +14,7 @@
 #include "../cuda_utils/Texture_Vector.hh"
 #include "../cuda_utils/Device_Vector.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // HOST INTERFACES
@@ -26,7 +26,7 @@ void texture_vector_test(
               Device_Vector<Arch_Switch, T>&  output);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_test_Texture_Vector_Test_Kernel_cuh
 
 //---------------------------------------------------------------------------//

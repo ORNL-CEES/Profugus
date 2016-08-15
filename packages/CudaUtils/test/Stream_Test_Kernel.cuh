@@ -13,7 +13,7 @@
 
 #include "Stream_Test_Kernel_Data.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // HOST INTERFACES
@@ -23,7 +23,7 @@ template<typename Arch_T, typename Float_T>
 void stream_test(Stream_Test_Kernel_Data<Arch_T, Float_T>& kd);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_test_Stream_Test_Kernel_cuh
 
 //---------------------------------------------------------------------------//

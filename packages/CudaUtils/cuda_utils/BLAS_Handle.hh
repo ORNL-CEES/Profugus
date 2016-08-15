@@ -17,7 +17,7 @@
 
 #include "harness/DBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 //===========================================================================//
@@ -62,7 +62,7 @@ class BLAS_Handle
     static unsigned int d_handle_count;
 };
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_BLAS_Handle_hh
 

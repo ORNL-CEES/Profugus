@@ -11,13 +11,13 @@
 #ifndef cuda_utils_Functions_hh
 #define cuda_utils_Functions_hh
 
-namespace cuda
+namespace cuda_utils
 {
 
 // Return smallest value that satisfies result * divisor >= dividend
 unsigned int ceil_quotient(unsigned int dividend, unsigned int divisor);
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Functions_hh
 

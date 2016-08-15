@@ -66,7 +66,7 @@ void Problem_Builder<Geometry>::setup(RCP_ParameterList master)
     // Set the default CUDA block size.
     if(d_db->isParameter("block_size"))
       {
-        cuda::Hardware<cuda::arch::Device>::set_default_block_size( 
+        cuda_utils::Hardware<cuda_utils::arch::Device>::set_default_block_size( 
             d_db->get<int>("block_size") );
       }
 

@@ -58,10 +58,10 @@ class Domain_Transporter
 
     //@{
     //! Smart pointers.
-    typedef cuda::Shared_Device_Ptr<Geometry_t>		SDP_Geometry;
-    typedef cuda::Shared_Device_Ptr<Physics_t>		SDP_Physics;
-    typedef cuda::Shared_Device_Ptr<Particle_Vector_t>	SDP_Particle_Vector;
-    typedef cuda::Shared_Device_Ptr<Bank_t>		SDP_Bank;
+    typedef cuda_utils::Shared_Device_Ptr<Geometry_t>		SDP_Geometry;
+    typedef cuda_utils::Shared_Device_Ptr<Physics_t>		SDP_Physics;
+    typedef cuda_utils::Shared_Device_Ptr<Particle_Vector_t>	SDP_Particle_Vector;
+    typedef cuda_utils::Shared_Device_Ptr<Bank_t>		SDP_Bank;
     typedef std::shared_ptr<Variance_Reduction_t>	SP_Variance_Reduction;
     typedef std::shared_ptr<Tallier_t>			SP_Tallier;
     typedef std::shared_ptr<Fission_Site_Container>	SP_Fission_Sites;
@@ -126,13 +126,13 @@ class Domain_Transporter
     double d_keff;
 
     // Take step stream.
-    cuda::Stream<cuda::arch::Device> d_take_step_stream;
+    cuda_utils::Stream<cuda_utils::arch::Device> d_take_step_stream;
 
     // Boundary stream.
-    cuda::Stream<cuda::arch::Device> d_boundary_stream;
+    cuda_utils::Stream<cuda_utils::arch::Device> d_boundary_stream;
 
     // Collision stream.
-    cuda::Stream<cuda::arch::Device> d_collision_stream;
+    cuda_utils::Stream<cuda_utils::arch::Device> d_collision_stream;
 };
 
 } // end namespace cuda_profugus

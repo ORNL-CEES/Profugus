@@ -18,7 +18,7 @@
 #include <cmath>
 #include <functional>
 
-namespace cuda
+namespace cuda_utils
 {
 
 namespace utility
@@ -125,7 +125,7 @@ int sample_discrete_CDF(int nb, const T *c, const T ran)
 //---------------------------------------------------------------------------//
 // Sample an angle isotropically.
 PROFUGUS_DEVICE_FUNCTION 
-void sample_angle( cuda::Space_Vector& omega,
+void sample_angle( cuda_utils::Space_Vector& omega,
 		   const double ran1,
 		   const double ran2 )
 {
@@ -152,7 +152,7 @@ void sample_angle( cuda::Space_Vector& omega,
  * \return vector magnitude
  */
 PROFUGUS_DEVICE_FUNCTION 
-double vector_magnitude(const cuda::Space_Vector &vector)
+double vector_magnitude(const cuda_utils::Space_Vector &vector)
 {
     return sqrt(vector.x * vector.x +
                 vector.y * vector.y +
@@ -171,8 +171,8 @@ double vector_magnitude(const cuda::Space_Vector &vector)
  * \return dot product
  */
 PROFUGUS_DEVICE_FUNCTION 
-double dot_product(const cuda::Space_Vector &v,
-		   const cuda::Space_Vector &w)
+double dot_product(const cuda_utils::Space_Vector &v,
+		   const cuda_utils::Space_Vector &w)
 {
     return v.x*w.x + v.y*w.y + v.z*w.z;
 }
@@ -190,7 +190,7 @@ double dot_product(const cuda::Space_Vector &v,
  * general normalize function.
  */
 PROFUGUS_DEVICE_FUNCTION 
-void vector_normalize(cuda::Space_Vector &vector)
+void vector_normalize(cuda_utils::Space_Vector &vector)
 {
     double norm     = 1.0 / vector_magnitude(vector);
     vector.x *= norm;
@@ -236,7 +236,7 @@ void vector_normalize(cuda::Space_Vector &vector)
  */
 PROFUGUS_DEVICE_FUNCTION 
 void cartesian_vector_transform(double costheta, double phi,
-				cuda::Space_Vector &vector)
+				cuda_utils::Space_Vector &vector)
 {
     REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 
@@ -246,7 +246,7 @@ void cartesian_vector_transform(double costheta, double phi,
     const double sintheta = sqrt(1.0 - costheta * costheta);
 
     // make a copy of the old direction
-    cuda::Space_Vector old = vector;
+    cuda_utils::Space_Vector old = vector;
 
     // calculate alpha
     const double alpha = sqrt(1.0 - old.z * old.z);
@@ -286,7 +286,7 @@ void cartesian_vector_transform(double costheta, double phi,
 
 } // end namespace utility
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // CudaUtils_cuda_utils_Utility_Functions_hh
 

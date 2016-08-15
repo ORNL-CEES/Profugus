@@ -13,7 +13,7 @@
 
 #include "Polyglot_Kernel_Data.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // HOST INTERFACES
@@ -30,8 +30,8 @@ void polyglot_copy(
 //---------------------------------------------------------------------------//
 template<typename Arch_Switch, typename Float_Type>
 void polyglot_copy(
-        const cuda::Host_Vector<Float_Type>&   in,  // Must be mapped memory
-              cuda::Device_Vector<Arch_Switch,Float_Type>& out);
+        const cuda_utils::Host_Vector<Float_Type>&   in,  // Must be mapped memory
+              cuda_utils::Device_Vector<Arch_Switch,Float_Type>& out);
 
 //---------------------------------------------------------------------------//
 template<typename Arch_Switch, typename Float_Type>
@@ -40,7 +40,7 @@ void polyglot_copy_vector(
               Device_Vector<Arch_Switch, Float_Type>& output);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_test_Polyglot_Kernel_cuh
 

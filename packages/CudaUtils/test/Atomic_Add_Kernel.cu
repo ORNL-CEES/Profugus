@@ -13,7 +13,7 @@
 #include "../cuda_utils/Atomic_Add.cuh"
 #include "../cuda_utils/CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // KERNELS
@@ -57,16 +57,16 @@ void atomic_add_test(Atomic_Add_Kernel_Data<Arch_Switch, Float_T>& kd)
 // INSTANTIATIONS
 //---------------------------------------------------------------------------//
 #ifdef __NVCC__
-typedef ::cuda::arch::Device Arch_t;
+typedef ::cuda_utils::arch::Device Arch_t;
 #else
-typedef ::cuda::arch::Host Arch_t;
+typedef ::cuda_utils::arch::Host Arch_t;
 #endif
 
 template void atomic_add_test(Atomic_Add_Kernel_Data<Arch_t, float>& kd);
 template void atomic_add_test(Atomic_Add_Kernel_Data<Arch_t, double>& kd);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Atomic_Add_Kernel.cu

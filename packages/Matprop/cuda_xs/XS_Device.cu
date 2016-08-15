@@ -44,15 +44,15 @@ XS_Device::XS_Device( const profugus::XS& xs )
     }
 
     // Allocate a matid global-to-local map.
-    cuda::memory::Malloc( d_matid_g2l, matid_g2l_size );
+    cuda_utils::memory::Malloc( d_matid_g2l, matid_g2l_size );
 
     // Copy the matid list to the device.
-    cuda::memory::Copy_To_Device( 
+    cuda_utils::memory::Copy_To_Device( 
 	d_matid_g2l, host_matid_g2l.getRawPtr(), matid_g2l_size );
     host_matid_g2l.clear();
 
     // Allocate total cross sections.
-    cuda::memory::Malloc( d_totals, d_totals_size );
+    cuda_utils::memory::Malloc( d_totals, d_totals_size );
 
     // Extract the total cross sections.
     double* host_xs;
@@ -63,12 +63,12 @@ XS_Device::XS_Device( const profugus::XS& xs )
 	{
 	    host_xs = xs.vector( matids[m], t ).values();
 	    offset = t * d_Nm * d_Ng + m * d_Ng;
-	    cuda::memory::Copy_To_Device( d_totals + offset, host_xs, d_Ng );
+	    cuda_utils::memory::Copy_To_Device( d_totals + offset, host_xs, d_Ng );
 	}
     }
 
     // Allocate the scattering cross sections.
-    cuda::memory::Malloc( d_scatter, d_scatter_size );
+    cuda_utils::memory::Malloc( d_scatter, d_scatter_size );
 
     // Extract the scattering cross sections.
     for ( int pn = 0; pn < d_pn+1; ++pn )
@@ -77,7 +77,7 @@ XS_Device::XS_Device( const profugus::XS& xs )
 	{
 	    host_xs = xs.matrix( matids[m], pn ).values();
 	    offset = pn * d_Nm * d_Ng * d_Ng + m * d_Ng * d_Ng;
-	    cuda::memory::Copy_To_Device( 
+	    cuda_utils::memory::Copy_To_Device( 
 		d_scatter + offset, host_xs, d_Ng*d_Ng );
 	}
     }
@@ -89,9 +89,9 @@ XS_Device::XS_Device( const profugus::XS& xs )
  */
 XS_Device::~XS_Device()
 {
-    cuda::memory::Free( d_matid_g2l );
-    cuda::memory::Free( d_totals );
-    cuda::memory::Free( d_scatter );
+    cuda_utils::memory::Free( d_matid_g2l );
+    cuda_utils::memory::Free( d_totals );
+    cuda_utils::memory::Free( d_scatter );
 }
 
 //---------------------------------------------------------------------------//

@@ -13,7 +13,7 @@
 #include <iostream>
 #include "BLAS_device_common.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // STATIC DATA
@@ -86,7 +86,7 @@ BLAS_Handle::~BLAS_Handle()
     }
 }
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of BLAS_Handle.cc

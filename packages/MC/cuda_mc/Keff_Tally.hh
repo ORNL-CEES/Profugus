@@ -52,7 +52,7 @@ class Keff_Tally : public Pathlength_Tally<Geometry>
     // >>> DATA
 
     //! Physics.
-    cuda::Shared_Device_Ptr<Physics_t> d_physics;
+    cuda_utils::Shared_Device_Ptr<Physics_t> d_physics;
     
     //! Estimate of k-effective from this cycle
     double d_keff_cycle;
@@ -79,13 +79,13 @@ class Keff_Tally : public Pathlength_Tally<Geometry>
     int d_vector_size;
 
     // Execution stream.
-    cuda::Stream<cuda::arch::Device> d_stream;
+    cuda_utils::Stream<cuda_utils::arch::Device> d_stream;
 
   public:
     
     // Kcode solver should construct this with initial keff estimate
     Keff_Tally( const double keff_init,
-		const cuda::Shared_Device_Ptr<Physics_t>& physics,
+		const cuda_utils::Shared_Device_Ptr<Physics_t>& physics,
                 const int vector_size );
 
     // Destructor.
@@ -120,7 +120,7 @@ class Keff_Tally : public Pathlength_Tally<Geometry>
 
     // Track particle and do tallying.
     void accumulate( 
-	const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles ) override;
+	const cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles ) override;
 
     // Query if this tally is on during inactive cycles.
     bool inactive_cycle_tally() const override { return true; }

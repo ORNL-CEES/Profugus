@@ -14,13 +14,13 @@
 #include "harness/DBC.hh"
 #include "Launch_Args.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // Host specialization.
 template <class Kernel>
 void parallel_launch(
-    Kernel& kernel, const Launch_Args<cuda::arch::Host>& launch_args )
+    Kernel& kernel, const Launch_Args<cuda_utils::arch::Host>& launch_args )
 {
     REQUIRE( launch_args.is_valid() );
     std::size_t num_t = launch_args.num_elements();
@@ -32,7 +32,7 @@ void parallel_launch(
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Launch_Args_t_hh
 

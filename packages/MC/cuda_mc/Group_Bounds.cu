@@ -33,8 +33,8 @@ Group_Bounds::Group_Bounds(const Vec_Dbl &bounds)
     }
 
     // Copy to device.
-    cuda::memory::Malloc( d_bounds, bounds.size() );
-    cuda::memory::Copy_To_Device( d_bounds, bounds.data(), bounds.size() );
+    cuda_utils::memory::Malloc( d_bounds, bounds.size() );
+    cuda_utils::memory::Copy_To_Device( d_bounds, bounds.data(), bounds.size() );
 }
 
 //---------------------------------------------------------------------------//
@@ -43,7 +43,7 @@ Group_Bounds::Group_Bounds(const Vec_Dbl &bounds)
  */
 Group_Bounds::~Group_Bounds()
 {
-    cuda::memory::Free( d_bounds );
+    cuda_utils::memory::Free( d_bounds );
 }
 
 //---------------------------------------------------------------------------//

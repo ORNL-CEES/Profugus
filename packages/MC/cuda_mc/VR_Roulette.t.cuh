@@ -93,18 +93,18 @@ VR_Roulette<Geometry>::VR_Roulette( ParameterList_t& db)
  */
 template <class Geometry>
 void VR_Roulette<Geometry>::post_collision(
-    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-    cuda::Shared_Device_Ptr<Bank_t>& bank,
-    cuda::Stream<cuda::arch::Device> stream ) const
+    cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles, 
+    cuda_utils::Shared_Device_Ptr<Bank_t>& bank,
+    cuda_utils::Stream<cuda_utils::arch::Device> stream ) const
 {
     // Get the particles that have had a collision.
     int num_particle =
         particles.get_host_ptr()->get_event_size( events::COLLISION );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 

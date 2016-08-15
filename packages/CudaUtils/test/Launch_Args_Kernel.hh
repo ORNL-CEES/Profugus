@@ -21,8 +21,8 @@ template<typename Arch_T>
 class Functor
 {
   public:
-    typedef cuda::Device_Vector<Arch_T,double> Device_Vector_t;
-    typedef cuda::Host_Vector<double>          Host_Vector_t;
+    typedef cuda_utils::Device_Vector<Arch_T,double> Device_Vector_t;
+    typedef cuda_utils::Host_Vector<double>          Host_Vector_t;
 
     Functor( const int data_size, const double value )
 	: d_data_size(data_size)

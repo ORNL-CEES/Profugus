@@ -31,7 +31,7 @@ class Particle_Vector_Tester
     Particle_Vector_Tester( const int num_particle, const profugus::RNG& rng );
 
     // get the underlying vector.
-    cuda::Shared_Device_Ptr<Particle_Vector>& get_vector()
+    cuda_utils::Shared_Device_Ptr<Particle_Vector>& get_vector()
     { return d_vector; }
 
     // get the size of the vector
@@ -106,7 +106,7 @@ class Particle_Vector_Tester
     
     int d_size;
 
-    cuda::Shared_Device_Ptr<Particle_Vector> d_vector;
+    cuda_utils::Shared_Device_Ptr<Particle_Vector> d_vector;
 };
 
 //---------------------------------------------------------------------------//

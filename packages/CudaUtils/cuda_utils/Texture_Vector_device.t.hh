@@ -68,7 +68,7 @@ struct Resource_Desc_Data<double>
 }
 //---------------------------------------------------------------------------//
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // PUBLIC METHODS
@@ -272,7 +272,7 @@ void Texture_Vector<arch::Device,T>::destroy_texture()
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Texture_Vector_device_t_hh
 

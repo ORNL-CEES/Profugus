@@ -50,10 +50,10 @@ class Bar
 
     const std::shared_ptr<Foo>& get_foo_on_host() const;
 
-    cuda::Shared_Device_Ptr<Foo> get_foo() { return d_foo; }
+    cuda_utils::Shared_Device_Ptr<Foo> get_foo() { return d_foo; }
 
   private:
-    cuda::Shared_Device_Ptr<Foo> d_foo;
+    cuda_utils::Shared_Device_Ptr<Foo> d_foo;
 };
 
 //---------------------------------------------------------------------------//

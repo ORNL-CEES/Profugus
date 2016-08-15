@@ -18,8 +18,8 @@
 // Make sure we can acquire the device for real
 TEST(Initialize, acquire)
 {
-    typedef cuda::arch::Device     Arch_t;
-    typedef cuda::Hardware<Arch_t> Hardware_t;
+    typedef cuda_utils::arch::Device     Arch_t;
+    typedef cuda_utils::Hardware<Arch_t> Hardware_t;
 
     if (!Hardware_t::valid_device_exists())
     {
@@ -43,7 +43,7 @@ class HardwareTest : public ::testing::Test
 };
 
 // instantiate both host and device code
-typedef ::testing::Types<cuda::arch::Device, cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Device, cuda_utils::arch::Host> ArchTypes;
 
 TYPED_TEST_CASE(HardwareTest, ArchTypes);
 
@@ -53,7 +53,7 @@ TYPED_TEST_CASE(HardwareTest, ArchTypes);
 TYPED_TEST(HardwareTest, everything)
 {
     typedef typename TestFixture::Arch_t Arch_t;
-    typedef cuda::Hardware<Arch_t>       Hardware_t;
+    typedef cuda_utils::Hardware<Arch_t>       Hardware_t;
 
     // Note: even if CUDA is disabled or not installed, this test should still
     // compile, and the "valid_device_exists" check should still work.

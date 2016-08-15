@@ -67,10 +67,10 @@ class Uniform_Source : public Source<Geometry>
     // >>> DATA
 
     // Geometry.
-    cuda::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
 
     // Source geometric shape.
-    cuda::Shared_Device_Ptr<Shape> d_shape;
+    cuda_utils::Shared_Device_Ptr<Shape> d_shape;
 
     // Number of energy groups.
     int d_num_groups;
@@ -88,7 +88,7 @@ class Uniform_Source : public Source<Geometry>
     
     // Constructor.
     Uniform_Source( const RCP_Std_DB& db, 
-		    const cuda::Shared_Device_Ptr<Geometry>& geometry,
+		    const cuda_utils::Shared_Device_Ptr<Geometry>& geometry,
 		    const int num_groups,
 		    const int num_batch );
 
@@ -96,13 +96,13 @@ class Uniform_Source : public Source<Geometry>
     ~Uniform_Source();
 
     // Build the initial source.
-    void build_source( const cuda::Shared_Device_Ptr<Shape>& shape );
+    void build_source( const cuda_utils::Shared_Device_Ptr<Shape>& shape );
 
     // >>> HOST-API
 
     // Get particles from the source.
     void get_particles( 
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
+	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
 
     //! Boolean operator for source (true when source still has particles).
     bool empty() const override { return d_np_left == 0; }
@@ -136,7 +136,7 @@ class Uniform_Source : public Source<Geometry>
   private:
 
     // Execution stream.
-    cuda::Stream<cuda::arch::Device> d_stream;
+    cuda_utils::Stream<cuda_utils::arch::Device> d_stream;
 
     // Requested particles.
     int d_np_requested;

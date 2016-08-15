@@ -21,7 +21,7 @@
 #include "Stream_Test_Kernel.cuh"
 #include "Stream_Test_Kernel_Data.hh"
 
-using cuda::Stream;
+using cuda_utils::Stream;
 
 #if DBC == 0
 #define NUM_SEGMENTS 128u
@@ -32,7 +32,7 @@ using cuda::Stream;
 //---------------------------------------------------------------------------//
 TEST(StreamUsageTest, copy_constructor)
 {
-    typedef Stream<cuda::arch::Host> Stream_t;
+    typedef Stream<cuda_utils::arch::Host> Stream_t;
 
     Stream_t s;
     EXPECT_EQ(1, s.use_count());
@@ -48,7 +48,7 @@ TEST(StreamUsageTest, copy_constructor)
 //---------------------------------------------------------------------------//
 TEST(StreamUsageTest, swap)
 {
-    typedef Stream<cuda::arch::Host> Stream_t;
+    typedef Stream<cuda_utils::arch::Host> Stream_t;
 
     Stream_t sa;
     Stream_t sa2(sa);
@@ -67,7 +67,7 @@ TEST(StreamUsageTest, swap)
 //---------------------------------------------------------------------------//
 TEST(StreamUsageTest, assign)
 {
-    typedef Stream<cuda::arch::Host> Stream_t;
+    typedef Stream<cuda_utils::arch::Host> Stream_t;
 
     Stream_t sa;
     Stream_t sa2(sa);
@@ -91,7 +91,7 @@ struct Completion
 };
 
 template<>
-struct Completion<cuda::arch::Device>
+struct Completion<cuda_utils::arch::Device>
 {
     enum { HAS_ASYNC = 1 };
 };
@@ -115,13 +115,13 @@ class StreamTest : public ::testing::Test
     typedef typename Kernel_Traits_t::Arch_t  Arch_t;
     typedef typename Kernel_Traits_t::Float_t Float_t;
 
-    typedef cuda::Hardware<Arch_t>               Hardware_t;
-    typedef cuda::Event<Arch_t>                  Event_t;
-    typedef cuda::Stream<Arch_t>                 Stream_t;
-    typedef cuda::Device_Vector<Arch_t, Float_t> Device_Vector_t;
-    typedef cuda::Host_Vector<Float_t>           Host_Vector_t;
+    typedef cuda_utils::Hardware<Arch_t>               Hardware_t;
+    typedef cuda_utils::Event<Arch_t>                  Event_t;
+    typedef cuda_utils::Stream<Arch_t>                 Stream_t;
+    typedef cuda_utils::Device_Vector<Arch_t, Float_t> Device_Vector_t;
+    typedef cuda_utils::Host_Vector<Float_t>           Host_Vector_t;
 
-    typedef cuda::Stream_Test_Kernel_Data<Arch_t, Float_t> Kernel_Data_t;
+    typedef cuda_utils::Stream_Test_Kernel_Data<Arch_t, Float_t> Kernel_Data_t;
 
     void SetUp()
     {
@@ -190,11 +190,11 @@ class StreamTest : public ::testing::Test
 };
 
 
-typedef Kernel_Traits<cuda::arch::Host, float>  KT_HF;
-typedef Kernel_Traits<cuda::arch::Host, double> KT_HD;
+typedef Kernel_Traits<cuda_utils::arch::Host, float>  KT_HF;
+typedef Kernel_Traits<cuda_utils::arch::Host, double> KT_HD;
 #ifdef USE_CUDA
-typedef Kernel_Traits<cuda::arch::Device, float>  KT_DF;
-typedef Kernel_Traits<cuda::arch::Device, double> KT_DD;
+typedef Kernel_Traits<cuda_utils::arch::Device, float>  KT_DF;
+typedef Kernel_Traits<cuda_utils::arch::Device, double> KT_DD;
 // instantiate both host and device code
 typedef ::testing::Types<KT_HF, KT_HD, KT_DF, KT_DD> ArchDataTypes;
 //typedef ::testing::Types<KT_DD> ArchDataTypes;
@@ -284,7 +284,7 @@ TYPED_TEST(StreamTest, performance)
         // Call the kernel
         std::cout << "K" << std::flush;
         kernel_start.record(active_stream);
-        cuda::stream_test(data);
+        cuda_utils::stream_test(data);
         kernel_stop.record(active_stream);
         EXPECT_EQ(complete, active_stream.is_complete());
 

@@ -20,7 +20,7 @@ __global__ void get_vector_kernel( const cuda_profugus::XS_Device* xs,
 				   const int type,
 				   double* out_vector )
 {
-    cuda::SerialDenseDeviceVector in_vector = xs->vector( matid, type );
+    cuda_utils::SerialDenseDeviceVector in_vector = xs->vector( matid, type );
     int i = threadIdx.x;
     out_vector[i] = in_vector(i);
 }
@@ -31,7 +31,7 @@ __global__ void get_matrix_kernel( const cuda_profugus::XS_Device* xs,
 				   const int pn,
 				   double* out_matrix )
 {
-    cuda::SerialDenseDeviceMatrix in_matrix = xs->matrix( matid, pn );
+    cuda_utils::SerialDenseDeviceMatrix in_matrix = xs->matrix( matid, pn );
     int row = threadIdx.x;
     int col = threadIdx.y;
     int num_rows = in_matrix.num_rows();
@@ -42,7 +42,7 @@ __global__ void get_matrix_kernel( const cuda_profugus::XS_Device* xs,
 // XS_Device_Tester
 //---------------------------------------------------------------------------//
 XS_Device_Tester::XS_Device_Tester( const profugus::XS& xs )
-: d_xs( cuda::shared_device_ptr<cuda_profugus::XS_Device>(xs) )
+: d_xs( cuda_utils::shared_device_ptr<cuda_profugus::XS_Device>(xs) )
 { /* ... */ }
 
 //---------------------------------------------------------------------------//

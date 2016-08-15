@@ -18,7 +18,7 @@
 
 #include "Definitions.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 // Declare Stream class
 template <typename Arch_T> class Stream;
@@ -56,12 +56,12 @@ class Event
 // HOST SPECIALIZATION (just use timer functionality)
 //===========================================================================//
 template<>
-class Event<cuda::arch::Host>
+class Event<cuda_utils::arch::Host>
 {
-    typedef Event<cuda::arch::Host> This;
+    typedef Event<cuda_utils::arch::Host> This;
   public:
     //! Architecture type
-    typedef cuda::arch::Host Arch_t;
+    typedef cuda_utils::arch::Host Arch_t;
     typedef Stream<Arch_t>   Stream_t;
 
   private:
@@ -97,12 +97,12 @@ class Event<cuda::arch::Host>
 // DEVICE SPECIALIZATION (actually use CUDA)
 //===========================================================================//
 template<>
-class Event<cuda::arch::Device>
+class Event<cuda_utils::arch::Device>
 {
-    typedef Event<cuda::arch::Device> This;
+    typedef Event<cuda_utils::arch::Device> This;
   public:
     //! Architecture type
-    typedef cuda::arch::Device Arch_t;
+    typedef cuda_utils::arch::Device Arch_t;
     typedef Stream<Arch_t>     Stream_t;
 
   private:
@@ -133,7 +133,7 @@ class Event<cuda::arch::Device>
 };
 #endif // USE_CUDA && !PSEUDO_CUDA
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Event_hh
 

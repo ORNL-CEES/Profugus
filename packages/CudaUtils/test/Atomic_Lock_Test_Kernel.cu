@@ -14,7 +14,7 @@
 #include "../cuda_utils/Atomic_Lock_Kernel.cuh"
 #include "../cuda_utils/CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // KERNELS
@@ -66,15 +66,15 @@ __host__ void lock_test(Lock_Kernel_Data<Arch_Switch>& kd)
 // INSTANTIATIONS
 //---------------------------------------------------------------------------//
 #ifdef __NVCC__
-typedef ::cuda::arch::Device Arch_t;
+typedef ::cuda_utils::arch::Device Arch_t;
 #else
-typedef ::cuda::arch::Host Arch_t;
+typedef ::cuda_utils::arch::Host Arch_t;
 #endif
 
 template void lock_test(Lock_Kernel_Data<Arch_t>& kd);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Atomic_Lock_Test_Kernel.cu

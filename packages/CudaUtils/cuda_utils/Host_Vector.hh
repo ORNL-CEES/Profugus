@@ -21,7 +21,7 @@ template<typename T> class View_Field;
 template<typename T> class const_View_Field;
 }
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 namespace alloc
@@ -41,14 +41,14 @@ alloc::Flag adjust_alloc_flag(alloc::Flag);
 
 //! For host emulation, don't use write-combined or mapped memory
 template<>
-inline alloc::Flag adjust_alloc_flag<cuda::arch::Host>(alloc::Flag)
+inline alloc::Flag adjust_alloc_flag<cuda_utils::arch::Host>(alloc::Flag)
 {
     return alloc::DEFAULT;
 }
 
 //! For actual device mode, pass through the given flags
 template<>
-inline alloc::Flag adjust_alloc_flag<cuda::arch::Device>(alloc::Flag flag)
+inline alloc::Flag adjust_alloc_flag<cuda_utils::arch::Device>(alloc::Flag flag)
 {
     return flag;
 }
@@ -212,7 +212,7 @@ class Host_Vector
     Host_Vector(const This&);
 };
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Host_Vector_hh
 

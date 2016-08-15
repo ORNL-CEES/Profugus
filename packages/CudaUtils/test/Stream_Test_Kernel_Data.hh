@@ -14,7 +14,7 @@
 #include "../cuda_utils/Device_Vector.hh"
 #include "../cuda_utils/Launch_Args.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 
@@ -62,7 +62,7 @@ struct Stream_Test_Kernel_Data
 
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_test_Stream_Test_Kernel_Data_hh
 
 //---------------------------------------------------------------------------//

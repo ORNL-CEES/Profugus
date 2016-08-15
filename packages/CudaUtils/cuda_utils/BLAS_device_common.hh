@@ -15,7 +15,7 @@
 #include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 
@@ -28,14 +28,14 @@ namespace cuda
         { \
             std::ostringstream msg; \
             msg << "CUDA BLAS error " << result; \
-            ::cuda::toss_cuda_cookies(#COND, msg.str().c_str(), \
+            ::cuda_utils::toss_cuda_cookies(#COND, msg.str().c_str(), \
                     __FILE__, __LINE__); \
         } \
     } while (0);
 
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_BLAS_device_common_hh
 
 //---------------------------------------------------------------------------//

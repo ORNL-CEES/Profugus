@@ -13,7 +13,7 @@
 
 #include "Atomic_Lock_Kernel.cuh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 //===========================================================================//
@@ -62,7 +62,7 @@ class Atomic_Lock
     Atomic_Lock(const Atomic_Lock&);
 };
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // Profugus_cuda_utils_Atomic_Lock_hh
 

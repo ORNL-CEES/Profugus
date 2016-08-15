@@ -49,11 +49,11 @@ class Variance_Reduction
     virtual ~Variance_Reduction() { /*...*/ }
 
     //! Set the geometry class
-    void set( const cuda::Shared_Device_Ptr<Geometry_t>& geometry) 
+    void set( const cuda_utils::Shared_Device_Ptr<Geometry_t>& geometry) 
     { REQUIRE(geometry); b_geometry = geometry; }
 
     //! Set the physics class
-    void set(const cuda::Shared_Device_Ptr<Physics_t>& physics) 
+    void set(const cuda_utils::Shared_Device_Ptr<Physics_t>& physics) 
     { REQUIRE(physics); b_physics = physics; }
 
     //! Return the splitting boolean
@@ -63,24 +63,24 @@ class Variance_Reduction
 
     //! Apply variance reduction method after a surface crossing
     virtual void post_surface(
-	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	cuda::Shared_Device_Ptr<Bank_t>& bank,
-        cuda::Stream<cuda::arch::Device> stream =
-        cuda::Stream<cuda::arch::Device>() ) const = 0;
+	cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles, 
+	cuda_utils::Shared_Device_Ptr<Bank_t>& bank,
+        cuda_utils::Stream<cuda_utils::arch::Device> stream =
+        cuda_utils::Stream<cuda_utils::arch::Device>() ) const = 0;
 
     //! Apply variance reduction method after a collision
     virtual void post_collision(
-	cuda::Shared_Device_Ptr<Particle_Vector_t>& particles, 
-	cuda::Shared_Device_Ptr<Bank_t>& bank,
-        cuda::Stream<cuda::arch::Device> stream =
-        cuda::Stream<cuda::arch::Device>() ) const = 0;
+	cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles, 
+	cuda_utils::Shared_Device_Ptr<Bank_t>& bank,
+        cuda_utils::Stream<cuda_utils::arch::Device> stream =
+        cuda_utils::Stream<cuda_utils::arch::Device>() ) const = 0;
 
   protected:
     // Problem geometry implementation.
-    cuda::Shared_Device_Ptr<Geometry_t> b_geometry;
+    cuda_utils::Shared_Device_Ptr<Geometry_t> b_geometry;
 
     // Problem physics implementation.
-    cuda::Shared_Device_Ptr<Physics_t> b_physics;
+    cuda_utils::Shared_Device_Ptr<Physics_t> b_physics;
 
     // Boolean is true if VR method uses splitting
     bool b_splitting;

@@ -15,7 +15,7 @@
 #include "BLAS_device_common.hh"
 #include "CudaDBC.hh"
 
-typedef cuda::arch::Device Arch_t;
+typedef cuda_utils::arch::Device Arch_t;
 
 //---------------------------------------------------------------------------//
 // ANONYMOUS NAMESPACE FUNCTIONS
@@ -24,14 +24,14 @@ namespace {
 /*!
  * \brief Internal function to convert to CUDA enum
  */
-cublasOperation_t transpose_convert(const cuda::Transpose t)
+cublasOperation_t transpose_convert(const cuda_utils::Transpose t)
 {
     cublasOperation_t result = CUBLAS_OP_N;
     switch (t)
     {
-        case cuda::NO_TRANS:   result = CUBLAS_OP_N; break;
-        case cuda::TRANS:      result = CUBLAS_OP_T; break;
-        case cuda::CONJ_TRANS: result = CUBLAS_OP_C; break;
+        case cuda_utils::NO_TRANS:   result = CUBLAS_OP_N; break;
+        case cuda_utils::TRANS:      result = CUBLAS_OP_T; break;
+        case cuda_utils::CONJ_TRANS: result = CUBLAS_OP_C; break;
         default:
             CHECK(0);
     }
@@ -39,7 +39,7 @@ cublasOperation_t transpose_convert(const cuda::Transpose t)
 }
 } // end anonymous namespace
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // TEMPLATE MEMBER FUNCTIONS
@@ -139,7 +139,7 @@ template class BLAS<Arch_t,float> ;
 template class BLAS<Arch_t,double>;
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of BLAS_device.cc

@@ -50,11 +50,11 @@ class Mesh_Geometry
     typedef std::vector<double>                  Vec_Dbl;
     typedef std::vector<int>                     Vec_Int;
     typedef std::vector<matid_type>              Vec_Matids;
-    typedef cuda::arch::Device                   Arch;
+    typedef cuda_utils::arch::Device                   Arch;
     typedef thrust::device_vector<double>        Dev_Dbl_Vec;
     typedef thrust::device_vector<int>           Dev_Int_Vec;
-    typedef cuda::Coordinates              Coordinates;
-    typedef cuda::Space_Vector             Space_Vector;
+    typedef cuda_utils::Coordinates              Coordinates;
+    typedef cuda_utils::Space_Vector             Space_Vector;
     typedef Mesh_State                           Geo_State_t;
 
     //! Constructor
@@ -239,7 +239,7 @@ class Mesh_Geometry
     {
         // update and normalize the direction
         state.d_dir = new_direction;
-        cuda::utility::vector_normalize(state.d_dir);
+        cuda_utils::utility::vector_normalize(state.d_dir);
     }
 
     //! Change the direction through an angle
@@ -247,7 +247,7 @@ class Mesh_Geometry
                                       double       phi,
                                       Geo_State_t& state) const
     {
-        cuda::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
+        cuda_utils::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
     //! Reflect the direction at a reflecting surface.
@@ -279,8 +279,8 @@ class Mesh_Geometry
     __device__ void move(double dist, Geo_State_t &state) const
     {
         REQUIRE(dist >= 0.0);
-        REQUIRE(cuda::utility::soft_equiv(
-                    cuda::utility::vector_magnitude(state.d_dir),
+        REQUIRE(cuda_utils::utility::soft_equiv(
+                    cuda_utils::utility::vector_magnitude(state.d_dir),
                         1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)

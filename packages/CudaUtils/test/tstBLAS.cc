@@ -35,11 +35,11 @@ class BLASTest : public ::testing::Test
     typedef typename Traits_T::Arch_t     Arch_t;
     typedef typename Traits_T::float_type float_type;
 
-    typedef cuda::Hardware<Arch_t>                  Hardware_t;
-    typedef cuda::BLAS<Arch_t, float_type>          BLAS_t;
+    typedef cuda_utils::Hardware<Arch_t>                  Hardware_t;
+    typedef cuda_utils::BLAS<Arch_t, float_type>          BLAS_t;
     typedef profugus::const_View_Field<float_type>   const_View_Field_t;
     typedef profugus::View_Field<float_type>         View_Field_t;
-    typedef cuda::Device_Vector<Arch_t, float_type> Device_Vector_t;
+    typedef cuda_utils::Device_Vector<Arch_t, float_type> Device_Vector_t;
 
   protected:
     virtual void SetUp()
@@ -56,11 +56,11 @@ class BLASTest : public ::testing::Test
 };
 //---------------------------------------------------------------------------//
 
-typedef Test_Traits<cuda::arch::Host, float>  TT_HF;
-typedef Test_Traits<cuda::arch::Host, double> TT_HD;
+typedef Test_Traits<cuda_utils::arch::Host, float>  TT_HF;
+typedef Test_Traits<cuda_utils::arch::Host, double> TT_HD;
 #ifdef USE_CUDA
-typedef Test_Traits<cuda::arch::Device, float>  TT_DF;
-typedef Test_Traits<cuda::arch::Device, double> TT_DD;
+typedef Test_Traits<cuda_utils::arch::Device, float>  TT_DF;
+typedef Test_Traits<cuda_utils::arch::Device, double> TT_DD;
 // instantiate both host and device code
 typedef ::testing::Types<TT_HF, TT_HD, TT_DF, TT_DD> ArchTypes;
 #else
@@ -103,7 +103,7 @@ TYPED_TEST(BLASTest, GEMV)
     // Instantiate BLAS
     BLAS_t blas;
     // do y = 1.25 * a * x + 0. * y
-    blas.GEMV(cuda::TRANS, 4, 4,
+    blas.GEMV(cuda_utils::TRANS, 4, 4,
             1.25, matrix_a_gpu.cdata(), 4,
                   vector_x_gpu.cdata(), 1,
             0.,   vector_y_gpu.data(), 1);
@@ -113,7 +113,7 @@ TYPED_TEST(BLASTest, GEMV)
 
     // Copy back to CPU
     std::vector<float_type> result(4);
-    cuda::device_to_host(vector_y_gpu, profugus::make_view(result));
+    cuda_utils::device_to_host(vector_y_gpu, profugus::make_view(result));
 
     // Test
     std::vector<double> result_dbl(result.begin(), result.end());
@@ -156,7 +156,7 @@ TYPED_TEST(BLASTest, GEMM)
     // Instantiate BLAS
     BLAS_t blas;
     // do y = 1.25 * a * x + 0. * y
-    blas.GEMM(cuda::TRANS, cuda::TRANS,
+    blas.GEMM(cuda_utils::TRANS, cuda_utils::TRANS,
             4, 4, 4,
             1.25, matrix_a_gpu.cdata(), 4,
                   matrix_b_gpu.cdata(), 4,
@@ -167,7 +167,7 @@ TYPED_TEST(BLASTest, GEMM)
 
     // Copy back to CPU
     std::vector<float_type> result(4 * 4);
-    cuda::device_to_host(matrix_c_gpu, profugus::make_view(result));
+    cuda_utils::device_to_host(matrix_c_gpu, profugus::make_view(result));
 
     // Test
     std::vector<double> result_dbl(result.begin(), result.end());

@@ -12,7 +12,7 @@
 
 #include "harness/DBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 /*!
@@ -35,7 +35,7 @@ unsigned int ceil_quotient(unsigned int dividend, unsigned int divisor)
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Functions.cc

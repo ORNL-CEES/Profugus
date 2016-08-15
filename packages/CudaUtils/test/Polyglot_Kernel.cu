@@ -19,7 +19,7 @@
 //---------------------------------------------------------------------------//
 // DEFINITIONS
 //---------------------------------------------------------------------------//
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // KERNELS
@@ -78,7 +78,7 @@ void polyglot_copy(
 {
     REQUIRE(input.size() == output.size());
 
-    typedef ::cuda::Hardware<Arch_Switch> Hardware_t;
+    typedef ::cuda_utils::Hardware<Arch_Switch> Hardware_t;
 
     unsigned int num_threads = Hardware_t::num_cores_per_mp();
     unsigned int num_blocks  = Hardware_t::num_multiprocessors();
@@ -105,7 +105,7 @@ void polyglot_copy(
     REQUIRE(input.is_mapped());
     REQUIRE(input.size() == output.size());
 
-    typedef ::cuda::Hardware<Arch_Switch> Hardware_t;
+    typedef ::cuda_utils::Hardware<Arch_Switch> Hardware_t;
 
     unsigned int num_threads = Hardware_t::num_cores_per_mp();
     unsigned int num_blocks  = Hardware_t::num_multiprocessors();
@@ -150,7 +150,7 @@ void polyglot_copy_vector(
     output_device = &output;
 #endif
 
-    typedef ::cuda::Hardware<Arch_Switch> Hardware_t;
+    typedef ::cuda_utils::Hardware<Arch_Switch> Hardware_t;
 
     unsigned int num_threads = Hardware_t::num_cores_per_mp();
     unsigned int num_blocks  = Hardware_t::num_multiprocessors();
@@ -174,9 +174,9 @@ void polyglot_copy_vector(
 // INSTANTIATIONS
 //---------------------------------------------------------------------------//
 #ifdef __NVCC__
-typedef ::cuda::arch::Device Arch_t;
+typedef ::cuda_utils::arch::Device Arch_t;
 #else
-typedef ::cuda::arch::Host Arch_t;
+typedef ::cuda_utils::arch::Host Arch_t;
 #endif
 
 template void polyglot_copy(Polyglot_Kernel_Data<Arch_t>& kd);
@@ -192,7 +192,7 @@ template void polyglot_copy_vector(
 
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of cuda_utils/test/Polyglot_Kernel.cu

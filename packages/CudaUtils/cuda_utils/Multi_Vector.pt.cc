@@ -13,7 +13,7 @@
 #include "config.h"
 #include "Device_Vector.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 
@@ -28,7 +28,7 @@ template class Multi_Vector<arch::Device, double>;
 #endif
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Multi_Vector.pt.cc

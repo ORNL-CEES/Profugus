@@ -19,9 +19,9 @@
 #include <iostream>
 #include "comm/global.hh"
 
-using cuda::arch::Device;
+using cuda_utils::arch::Device;
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 // DEVICE SPECIALIZATION
@@ -193,7 +193,7 @@ unsigned int Hardware<Device>::num_cores_per_mp(int major, int minor)
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Hardware.cc

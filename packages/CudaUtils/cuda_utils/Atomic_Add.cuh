@@ -13,7 +13,7 @@
 
 #include "Definitions.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 /*!
@@ -99,7 +99,7 @@ __inline__ __device__ double Atomic_Add<arch::Device>::fetch_add<double>(
 #endif // __NVCC__
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_Atomic_Add_cuh
 
 //---------------------------------------------------------------------------//

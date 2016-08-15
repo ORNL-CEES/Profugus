@@ -55,12 +55,12 @@ void sample_source_kernel( const Geometry* geometry,
 	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
-	cuda::Space_Vector omega;
-	cuda::utility::sample_angle( 
+	cuda_utils::Space_Vector omega;
+	cuda_utils::utility::sample_angle( 
 	    omega, particles->ran(pidx), particles->ran(pidx) );
 
 	// sample the geometry shape to get a starting position
-	cuda::Space_Vector r = shape->sample(
+	cuda_utils::Space_Vector r = shape->sample(
 	    particles->ran(pidx), particles->ran(pidx), particles->ran(pidx) );
 
 	// intialize the geometry state
@@ -70,7 +70,7 @@ void sample_source_kernel( const Geometry* geometry,
 	unsigned int matid = geometry->matid( particles->geo_state(pidx) );
 
 	// initialize the physics state by manually sampling the group
-	int group = cuda::utility::sample_discrete_CDF(
+	int group = cuda_utils::utility::sample_discrete_CDF(
 	    num_group, erg_cdf, particles->ran(pidx) );
 	CHECK( group < num_group );
 	particles->set_group( pidx, group );
@@ -105,7 +105,7 @@ void sample_source_kernel( const Geometry* geometry,
 template <class Geometry, class Shape>
 Uniform_Source<Geometry,Shape>::Uniform_Source(
     const RCP_Std_DB& db,
-    const cuda::Shared_Device_Ptr<Geometry>& geometry,
+    const cuda_utils::Shared_Device_Ptr<Geometry>& geometry,
     const int num_groups,
     const int num_batch )
     : d_geometry( geometry )
@@ -148,8 +148,8 @@ Uniform_Source<Geometry,Shape>::Uniform_Source(
     CHECK(profugus::soft_equiv(1.0, host_cdf.back(), 1.0e-6));
 
     // Allocate and copy the cdf to the device.
-    cuda::memory::Malloc( d_erg_cdf, d_num_groups );
-    cuda::memory::Copy_To_Device( 
+    cuda_utils::memory::Malloc( d_erg_cdf, d_num_groups );
+    cuda_utils::memory::Copy_To_Device( 
 	d_erg_cdf, host_cdf.getRawPtr(), d_num_groups );
 
     // initialize timers in this class, which may be necessary because domains
@@ -167,7 +167,7 @@ Uniform_Source<Geometry,Shape>::Uniform_Source(
 template <class Geometry, class Shape>
 Uniform_Source<Geometry,Shape>::~Uniform_Source()
 {
-    cuda::memory::Free( d_erg_cdf );
+    cuda_utils::memory::Free( d_erg_cdf );
 }
 
 //---------------------------------------------------------------------------//
@@ -179,7 +179,7 @@ Uniform_Source<Geometry,Shape>::~Uniform_Source()
  */
 template <class Geometry, class Shape>
 void Uniform_Source<Geometry,Shape>::build_source(
-    const cuda::Shared_Device_Ptr<Shape>& shape )
+    const cuda_utils::Shared_Device_Ptr<Shape>& shape )
 {
     REQUIRE(shape.get_host_ptr());
 
@@ -202,7 +202,7 @@ void Uniform_Source<Geometry,Shape>::build_source(
  */
 template <class Geometry, class Shape>
 void Uniform_Source<Geometry,Shape>::get_particles(
-    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
+    cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     REQUIRE(d_wt > 0.0);
     REQUIRE(d_shape.get_device_ptr());
@@ -222,9 +222,9 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     int num_to_create = std::min( d_np_left, num_particle );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_to_create / threads_per_block;
     if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
 

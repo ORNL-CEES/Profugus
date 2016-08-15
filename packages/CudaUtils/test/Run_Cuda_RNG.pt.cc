@@ -13,10 +13,10 @@
 #include "../cuda_utils/Launch_Args.t.hh"
 #include "Run_Cuda_RNG.t.hh"
 
-typedef cuda::arch::Host Host;
-template void run_cuda_rng<Host>( cuda::Host_Vector<int>&,
-				  cuda::Host_Vector<cuda::Cuda_RNG>&,
-				  cuda::Host_Vector<double>& );
+typedef cuda_utils::arch::Host Host;
+template void run_cuda_rng<Host>( cuda_utils::Host_Vector<int>&,
+				  cuda_utils::Host_Vector<cuda_utils::Cuda_RNG>&,
+				  cuda_utils::Host_Vector<double>& );
 
 //---------------------------------------------------------------------------//
 //                        end of Cuda_RNG_Kernel.pt.cc

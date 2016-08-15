@@ -15,7 +15,7 @@
 #include "harness/DBC.hh"
 #include "Device_Vector.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 //===========================================================================//
@@ -105,7 +105,7 @@ class Multi_Vector
     Multi_Vector(const Multi_Vector&);
 };
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 #endif // cuda_utils_Multi_Vector_hh

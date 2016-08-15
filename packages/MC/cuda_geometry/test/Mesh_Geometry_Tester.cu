@@ -17,8 +17,8 @@
 #include "Mesh_Geometry_Tester.hh"
 
 typedef profugus::geometry::cell_type  cell_type;
-typedef cuda::Space_Vector       Point;
-typedef cuda::Coordinates        Coords;
+typedef cuda_utils::Space_Vector       Point;
+typedef cuda_utils::Coordinates        Coords;
 typedef cuda_profugus::Mesh_Geometry   Mesh_Geometry;
 
 // Get volume from the mesh for each specified cell
@@ -182,12 +182,12 @@ void Mesh_Geometry_Tester::test_matid()
 {
     auto mesh = get_mesh();
 
-    std::vector<int> all_matids = {1, 3, 2, 0,
-                                   3, 1, 4, 1,
-                                   2, 5, 2, 1,
-                                   0, 1, 2, 3,
-                                   1, 2, 3, 4,
-                                   2, 3, 4, 5};
+    std::vector<profugus::geometry::matid_type> all_matids = {1, 3, 2, 0,
+                                                              3, 1, 4, 1,
+                                                              2, 5, 2, 1,
+                                                              0, 1, 2, 3,
+                                                              1, 2, 3, 4,
+                                                              2, 3, 4, 5};
 
     std::vector<Point> host_points = {{0.7,  -0.9,  2.1},
                                       {0.5,  -0.5,  2.5},

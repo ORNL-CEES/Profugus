@@ -97,7 +97,7 @@ void Tallier<Geometry>::build()
  */
 template <class Geometry>
 void Tallier<Geometry>::path_length(
-    const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
+    const cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
     REQUIRE(d_build_phase == BUILT);
 
@@ -121,7 +121,7 @@ void Tallier<Geometry>::path_length(
  */
 template <class Geometry>
 void Tallier<Geometry>::source(
-    const cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
+    const cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
     REQUIRE(d_build_phase == BUILT);
 

@@ -42,15 +42,15 @@ class Uniform_Source_Tester
 			   const int num_group );
 
     // Get the geometry.
-    cuda::Shared_Device_Ptr<Geometry> geometry() const 
+    cuda_utils::Shared_Device_Ptr<Geometry> geometry() const 
     { return d_geometry; }
 
     // Get the source shape.
-    cuda::Shared_Device_Ptr<Shape> shape() const 
+    cuda_utils::Shared_Device_Ptr<Shape> shape() const 
     { return d_shape; }
 
     // Get the particles
-    cuda::Shared_Device_Ptr<Particle_Vector> particles()
+    cuda_utils::Shared_Device_Ptr<Particle_Vector> particles()
     { return d_particles; }
 
     // get a vector of matids.
@@ -77,9 +77,9 @@ class Uniform_Source_Tester
   private:
     
     int d_size;
-    cuda::Shared_Device_Ptr<Geometry> d_geometry;
-    cuda::Shared_Device_Ptr<Shape> d_shape;
-    cuda::Shared_Device_Ptr<Particle_Vector> d_particles;
+    cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda_utils::Shared_Device_Ptr<Shape> d_shape;
+    cuda_utils::Shared_Device_Ptr<Particle_Vector> d_particles;
 };
 
 //---------------------------------------------------------------------------//

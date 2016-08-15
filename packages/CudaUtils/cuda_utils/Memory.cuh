@@ -19,7 +19,7 @@
 
 #include <cuda_runtime.h>
 
-namespace cuda
+namespace cuda_utils
 {
 
 namespace memory
@@ -105,7 +105,7 @@ template<typename T>
 void Copy_To_Device_Async( T* device_ptr, 
 			   const T* host_ptr, 
 			   const std::size_t N,
-			   ::cuda::Stream<::cuda::arch::Device>& stream )
+			   ::cuda_utils::Stream<::cuda_utils::arch::Device>& stream )
 {
     CudaCall( cudaMemcpyAsync(device_ptr, host_ptr, N*sizeof(T),
 			      cudaMemcpyHostToDevice, stream.handle()) );
@@ -117,7 +117,7 @@ template<typename T>
 void Copy_To_Host_Async( T* host_ptr, 
 			 const T* device_ptr, 
 			 const std::size_t N,
-			 ::cuda::Stream<::cuda::arch::Device>& stream )
+			 ::cuda_utils::Stream<::cuda_utils::arch::Device>& stream )
 {
     CudaCall( cudaMemcpyAsync(host_ptr, device_ptr, N*sizeof(T),
 			      cudaMemcpyDeviceToHost, stream.handle()) );
@@ -127,7 +127,7 @@ void Copy_To_Host_Async( T* host_ptr,
 
 } // end namespace memory
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // CudaUtils_cuda_utils_Memory_cuh
 

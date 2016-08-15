@@ -16,7 +16,7 @@
 
 #include "Definitions.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 //===========================================================================//
@@ -42,7 +42,7 @@ class Hardware;
 
 //! Specialization on Host
 template<>
-class Hardware<cuda::arch::Host>
+class Hardware<cuda_utils::arch::Host>
 {
   public:
     // >>> ACQUISITION
@@ -98,7 +98,7 @@ class Hardware<cuda::arch::Host>
 //===========================================================================//
 //! Specialization on Device
 template<>
-class Hardware<cuda::arch::Device>
+class Hardware<cuda_utils::arch::Device>
 {
   public:
     //! How to choose the device. We may add one that does e.g. node-based
@@ -231,7 +231,7 @@ class Hardware<cuda::arch::Device>
     static unsigned int num_cores_per_mp(int major, int minor);
 };
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Hardware_hh
 

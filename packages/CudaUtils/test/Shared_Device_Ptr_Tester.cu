@@ -22,7 +22,7 @@ __global__ void foo_kernel( Foo* foo )
 // Kernel launch.
 void foo_kernel_launch( Bar& bar )
 {
-    cuda::Shared_Device_Ptr<Foo> foo = bar.get_foo();
+    cuda_utils::Shared_Device_Ptr<Foo> foo = bar.get_foo();
     foo_kernel<<<1,1>>>( foo.get_device_ptr() );
 }
 
@@ -61,7 +61,7 @@ int Foo::get_int_on_host() const
 //---------------------------------------------------------------------------//
 // Bar functions.
 Bar::Bar( const double d, const int i )
-    : d_foo( cuda::shared_device_ptr<Foo>(d, i) )
+    : d_foo( cuda_utils::shared_device_ptr<Foo>(d, i) )
 { /* ... */ }
 
 Bar::Bar( const std::shared_ptr<Foo>& foo )

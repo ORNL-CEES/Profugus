@@ -14,7 +14,7 @@
 #include "Multi_Vector.hh"
 #include "utils/View_Field.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 template <typename Arch_Switch, typename T>
@@ -61,7 +61,7 @@ void Multi_Vector<Arch_Switch,T>::initialize(
 }
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Multi_Vector_t_hh
 

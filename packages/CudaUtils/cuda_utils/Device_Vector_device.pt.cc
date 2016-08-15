@@ -10,7 +10,7 @@
 
 #include "Device_Vector_device.t.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 typedef arch::Device Arch_t;
 
@@ -46,7 +46,7 @@ template void device_to_host(
         const Device_Vector<Arch_t,unsigned int>&,
         Host_Vector<unsigned int>&);
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 //                 end of Device_Vector_device.pt.cc

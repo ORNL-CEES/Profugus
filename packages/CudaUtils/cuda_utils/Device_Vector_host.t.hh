@@ -20,7 +20,7 @@
 #include "utils/View_Field.hh"
 #include "Host_Vector.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 /*!
@@ -158,7 +158,7 @@ void Device_Vector<arch::Host,T>::to_host(Host_Vector<T>& out) const
 
 //===========================================================================//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Device_Vector_host_t_hh
 

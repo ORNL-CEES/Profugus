@@ -16,7 +16,7 @@
 #include "CudaMacros.hh"
 #include "CudaDBC.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 
 //---------------------------------------------------------------------------//
@@ -80,7 +80,7 @@ class SerialDenseDeviceVector
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_SerialDenseDeviceVector_hh
 

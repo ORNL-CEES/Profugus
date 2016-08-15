@@ -26,11 +26,11 @@
 class HostVectorTest : public ::testing::Test
 {
   protected:
-    typedef cuda::arch::Device                Arch_t;
-    typedef cuda::Device_Vector<Arch_t,float> Device_Vector_t;
+    typedef cuda_utils::arch::Device                Arch_t;
+    typedef cuda_utils::Device_Vector<Arch_t,float> Device_Vector_t;
 
     typedef std::vector<float>               Vector_t;
-    typedef cuda::Host_Vector<float>         Host_Vector_t;
+    typedef cuda_utils::Host_Vector<float>         Host_Vector_t;
     typedef profugus::const_View_Field<float> const_View_Field_t;
     typedef profugus::View_Field<float>       View_Field_t;
 
@@ -38,7 +38,7 @@ class HostVectorTest : public ::testing::Test
     void SetUp()
     {
 #ifdef USE_CUDA
-        typedef cuda::Hardware<Arch_t> Hardware_t;
+        typedef cuda_utils::Hardware<Arch_t> Hardware_t;
         // Initialize device
         if (!Hardware_t::have_acquired())
         {
@@ -100,7 +100,7 @@ TEST_F(HostVectorTest, mapped_memory)
     // Create a "mapped memory, write-only" vector where assigning to the host
     // memory will automagically be copied to the GPU
     Host_Vector_t hv(original.size(), 0.f,
-            cuda::alloc::MAPPED_WRITE_COMBINED);
+            cuda_utils::alloc::MAPPED_WRITE_COMBINED);
 
     // Create blank destination vector
     Device_Vector_t gpu_out(original.size());
@@ -124,7 +124,7 @@ TEST_F(HostVectorTest, mapped_memory)
 #else
     // No cuda, no mapped memory; Insist should be raised
     EXPECT_THROW({Host_Vector_t hv(original.size(), 0.f,
-            cuda::alloc::MAPPED_WRITE_COMBINED);}, profugus::assertion);
+            cuda_utils::alloc::MAPPED_WRITE_COMBINED);}, profugus::assertion);
 #endif
 }
 //---------------------------------------------------------------------------//

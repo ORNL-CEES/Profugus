@@ -50,7 +50,7 @@ __global__ void sample_group_kernel(
     if ( i < num_particle ) 
     {
 	int group =
-	    cuda::utility::sample_discrete_CDF( cdf_size, cdf, vector->ran(i) );
+	    cuda_utils::utility::sample_discrete_CDF( cdf_size, cdf, vector->ran(i) );
 	vector->set_group( i, group );
     }
 }
@@ -121,8 +121,8 @@ Physics_Tester::Physics_Tester(
     , d_particle_tester( vector_size, rng )
 {
     // Acquire hardware for the test.
-    if ( !cuda::Hardware<cuda::arch::Device>::have_acquired() )
-	cuda::Hardware<cuda::arch::Device>::acquire();
+    if ( !cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() )
+	cuda_utils::Hardware<cuda_utils::arch::Device>::acquire();
 
     // Create the geometry on the host.
     std::shared_ptr<Geometry> host_geom = 
@@ -134,19 +134,19 @@ Physics_Tester::Physics_Tester(
     host_geom->set_matids( matids );
 
     // Create a device copy of the geometry.
-    d_geometry = cuda::Shared_Device_Ptr<Geometry>( host_geom );
+    d_geometry = cuda_utils::Shared_Device_Ptr<Geometry>( host_geom );
 
     // Create the cartesian mesh.
-    d_cart_mesh = cuda::shared_device_ptr<Cartesian_Mesh>( host_geom->mesh() );
+    d_cart_mesh = cuda_utils::shared_device_ptr<Cartesian_Mesh>( host_geom->mesh() );
 
     // Create the physics.
-    d_physics = cuda::shared_device_ptr<Physics>( db, xs );
+    d_physics = cuda_utils::shared_device_ptr<Physics>( db, xs );
 
     // Set the geometry with the physics.
     d_physics.get_host_ptr()->set_geometry( d_geometry );
 
     // Create the source shape.
-    d_shape = cuda::shared_device_ptr<Shape>( 
+    d_shape = cuda_utils::shared_device_ptr<Shape>( 
 	*std::min_element(x_edges.begin(),x_edges.end()),
 	*std::max_element(x_edges.begin(),x_edges.end()),
 	*std::min_element(y_edges.begin(),y_edges.end()),
@@ -161,7 +161,7 @@ void Physics_Tester::geometry_initialize(
     const Space_Vector r, const Space_Vector d, const int matid )
 {
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -178,12 +178,12 @@ void Physics_Tester::sample_group( const std::vector<double>& cdf )
 {
     // copy the cdf to the device.
     double* device_cdf;
-    cuda::memory::Malloc( device_cdf, cdf.size() );
-    cuda::memory::Copy_To_Device( device_cdf, cdf.data(), cdf.size() );
+    cuda_utils::memory::Malloc( device_cdf, cdf.size() );
+    cuda_utils::memory::Copy_To_Device( device_cdf, cdf.data(), cdf.size() );
 
     // Sample the cdf and set the particle groups.
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = d_size / threads_per_block;
     if ( d_size % threads_per_block > 0 ) ++num_blocks;
 
@@ -191,7 +191,7 @@ void Physics_Tester::sample_group( const std::vector<double>& cdf )
 	particles().get_device_ptr(), device_cdf, cdf.size(), d_size );
 
     // free allocated data.
-    cuda::memory::Free( device_cdf );
+    cuda_utils::memory::Free( device_cdf );
 }
 
 //---------------------------------------------------------------------------//
@@ -199,12 +199,12 @@ void Physics_Tester::sample_group( const std::vector<double>& cdf )
 bool Physics_Tester::is_fissionable(const int matid) const
 {
     int* is_f_device;
-    cuda::memory::Malloc( is_f_device, 1 );
+    cuda_utils::memory::Malloc( is_f_device, 1 );
     is_fissionable_kernel<<<1,1>>>( d_physics.get_device_ptr(), matid, is_f_device );
 
     int is_f_host = 0;
-    cuda::memory::Copy_To_Host( &is_f_host, is_f_device, 1 );
-    cuda::memory::Free( is_f_device );
+    cuda_utils::memory::Copy_To_Host( &is_f_host, is_f_device, 1 );
+    cuda_utils::memory::Free( is_f_device );
     return is_f_host;
 }
 
@@ -216,7 +216,7 @@ double Physics_Tester::get_total(
     const cuda_profugus::physics::Reaction_Type type ) const
 {
     double* total_device;
-    cuda::memory::Malloc( total_device, 1 );
+    cuda_utils::memory::Malloc( total_device, 1 );
     total_kernel<<<1,1>>>( d_physics.get_device_ptr(),
 			   type,
 			   matid,
@@ -224,8 +224,8 @@ double Physics_Tester::get_total(
 			   total_device );
 
     double total_host = 0;
-    cuda::memory::Copy_To_Host( &total_host, total_device, 1 );
-    cuda::memory::Free( total_device );
+    cuda_utils::memory::Copy_To_Host( &total_host, total_device, 1 );
+    cuda_utils::memory::Free( total_device );
     return total_host;
 }
 
@@ -234,13 +234,13 @@ double Physics_Tester::get_total(
 void Physics_Tester::get_min_max_energy( double& min, double& max ) const
 {
     double* minmax_device;
-    cuda::memory::Malloc( minmax_device, 2 );
+    cuda_utils::memory::Malloc( minmax_device, 2 );
     min_max_energy_kernel<<<1,1>>>( d_physics.get_device_ptr(),
 				    minmax_device );
 
     double minmax_host[2];
-    cuda::memory::Copy_To_Host( minmax_host, minmax_device, 2 );
-    cuda::memory::Free( minmax_device );
+    cuda_utils::memory::Copy_To_Host( minmax_host, minmax_device, 2 );
+    cuda_utils::memory::Free( minmax_device );
 
     min = minmax_host[0];
     max = minmax_host[1];
@@ -254,19 +254,19 @@ void Physics_Tester::initialize_fission_from_spectrum( const int matid,
 						       bool& sampled ) const
 {
     int* result;
-    cuda::memory::Malloc( result, 2 );
+    cuda_utils::memory::Malloc( result, 2 );
 
     initialize_fission_from_spectrum_kernel<<<1,1>>>( d_physics.get_device_ptr(),
 						      matid,
 						      ran,
 						      result );
 
-    cuda::memory::Copy_To_Host( &group, &result[0], 1 );
+    cuda_utils::memory::Copy_To_Host( &group, &result[0], 1 );
     int sampled_int = 0;
-    cuda::memory::Copy_To_Host( &sampled_int, &result[1], 1 );
+    cuda_utils::memory::Copy_To_Host( &sampled_int, &result[1], 1 );
     sampled = sampled_int;
 
-    cuda::memory::Free( result );
+    cuda_utils::memory::Free( result );
 }
 
 //---------------------------------------------------------------------------//
@@ -277,19 +277,19 @@ void Physics_Tester::initialize_fission_from_site( const Fission_Site &fs,
 						   bool& sampled ) const
 {
     int* result;
-    cuda::memory::Malloc( result, 2 );
+    cuda_utils::memory::Malloc( result, 2 );
 
     initialize_fission_from_site_kernel<<<1,1>>>( d_physics.get_device_ptr(),
 						  fs,
 						  ran,
 						  result );
 
-    cuda::memory::Copy_To_Host( &group, &result[0], 1 );
+    cuda_utils::memory::Copy_To_Host( &group, &result[0], 1 );
     int sampled_int = 0;
-    cuda::memory::Copy_To_Host( &sampled_int, &result[1], 1 );
+    cuda_utils::memory::Copy_To_Host( &sampled_int, &result[1], 1 );
     sampled = sampled_int;
 
-    cuda::memory::Free( result );
+    cuda_utils::memory::Free( result );
 }
 
 //---------------------------------------------------------------------------//

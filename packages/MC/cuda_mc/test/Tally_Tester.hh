@@ -38,17 +38,17 @@ class Tally_Tester
 			    const int num_batch );
 
     // Get the geometry.
-    cuda::Shared_Device_Ptr<Geometry> geometry() const 
+    cuda_utils::Shared_Device_Ptr<Geometry> geometry() const 
     { return d_geometry; }
 
     // Get the particles
-    cuda::Shared_Device_Ptr<Particle_Vector> particles() const 
+    cuda_utils::Shared_Device_Ptr<Particle_Vector> particles() const 
     { return d_particles; }
 
   private:
     
-    cuda::Shared_Device_Ptr<Geometry> d_geometry;
-    cuda::Shared_Device_Ptr<Particle_Vector> d_particles;
+    cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
+    cuda_utils::Shared_Device_Ptr<Particle_Vector> d_particles;
 };
 
 //---------------------------------------------------------------------------//

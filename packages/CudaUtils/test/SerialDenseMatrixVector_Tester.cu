@@ -20,9 +20,9 @@ __global__ void multiply_kernel( const int N,
 				 double* x,
 				 double* y )
 {
-    const cuda::SerialDenseDeviceMatrix Amat( N, N, A );
-    const cuda::SerialDenseDeviceVector xvec( N , x );
-    cuda::SerialDenseDeviceVector yvec( N, y );
+    const cuda_utils::SerialDenseDeviceMatrix Amat( N, N, A );
+    const cuda_utils::SerialDenseDeviceVector xvec( N , x );
+    cuda_utils::SerialDenseDeviceVector yvec( N, y );
 
     int i = threadIdx.x;
     yvec(i) = 0.0;

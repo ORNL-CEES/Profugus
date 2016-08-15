@@ -86,7 +86,7 @@ Uniform_Source_Tester::Uniform_Source_Tester(
     : d_size( vector_size )
 {
     // Acquire hardware for the test.
-    cuda::Hardware<cuda::arch::Device>::acquire();
+    cuda_utils::Hardware<cuda_utils::arch::Device>::acquire();
 
     // Create the geometry host .
     std::shared_ptr<Geometry> host_geom = 
@@ -98,13 +98,13 @@ Uniform_Source_Tester::Uniform_Source_Tester(
     host_geom->set_matids( matids );
 
     // Create a device copy of the geometry.
-    d_geometry = cuda::Shared_Device_Ptr<Geometry>( host_geom );
+    d_geometry = cuda_utils::Shared_Device_Ptr<Geometry>( host_geom );
 
     // Create the particle vector.
-    d_particles = cuda::shared_device_ptr<Particle_Vector>( vector_size, rng );
+    d_particles = cuda_utils::shared_device_ptr<Particle_Vector>( vector_size, rng );
 
     // Create the source shape.
-    d_shape = cuda::shared_device_ptr<Shape>( 
+    d_shape = cuda_utils::shared_device_ptr<Shape>( 
 	*std::min_element(x_edges.begin(),x_edges.end()),
 	*std::max_element(x_edges.begin(),x_edges.end()),
 	*std::min_element(y_edges.begin(),y_edges.end()),

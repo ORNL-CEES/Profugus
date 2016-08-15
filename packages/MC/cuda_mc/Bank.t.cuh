@@ -55,7 +55,7 @@ void pop_kernel( const Particle<Geometry>* bank,
 // Emit the topmost particles from the stack into empty spots in a vector
 template <class Geometry>
 void Bank<Geometry>::pop( 
-    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
+    cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     REQUIRE(!empty());
     REQUIRE(!d_particles.empty());
@@ -98,13 +98,13 @@ void Bank<Geometry>::pop(
 
     // Move the host particles to the device.
     Particle_t* device_bank;
-    cuda::memory::Malloc( device_bank, num_to_pop );
-    cuda::memory::Copy_To_Device( device_bank, host_bank.data(), num_to_pop );
+    cuda_utils::memory::Malloc( device_bank, num_to_pop );
+    cuda_utils::memory::Copy_To_Device( device_bank, host_bank.data(), num_to_pop );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_to_pop / threads_per_block;
     if ( num_to_pop % threads_per_block > 0 ) ++num_blocks;
 
@@ -114,7 +114,7 @@ void Bank<Geometry>::pop(
 						  particles.get_device_ptr() );
 
     // Free the device bank.
-    cuda::memory::Free( device_bank );
+    cuda_utils::memory::Free( device_bank );
 }
 
 //---------------------------------------------------------------------------//

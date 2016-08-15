@@ -62,7 +62,7 @@ __device__ int sample_group( const XS_Device* xs,
         if (rnd <= cdf)
             return gp;
     }
-    CHECK( cuda::utility::soft_equiv(cdf, 1.0) );
+    CHECK( cuda_utils::utility::soft_equiv(cdf, 1.0) );
 
     // we failed to sample
     return -1;
@@ -261,7 +261,7 @@ Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
     , d_device_sites( nullptr )     
 {
     // Create the device cross sections
-    d_mat = cuda::shared_device_ptr<XS_Device>( mat );
+    d_mat = cuda_utils::shared_device_ptr<XS_Device>( mat );
     d_mat_device = d_mat.get_device_ptr();
     
     REQUIRE(d_mat);
@@ -269,7 +269,7 @@ Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
     REQUIRE(mat.num_mat() > 0);
 
     // Make the group bounds.
-    d_gb = cuda::shared_device_ptr<Group_Bounds>(
+    d_gb = cuda_utils::shared_device_ptr<Group_Bounds>(
 	Vec_Dbl(mat.bounds().values(),
 		mat.bounds().values() + mat.bounds().length()) );
     d_gb_device = d_gb.get_device_ptr();
@@ -292,15 +292,15 @@ Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
     }
 
     // Allocate a matid global-to-local map.
-    cuda::memory::Malloc( d_matid_g2l, matid_g2l_size );
+    cuda_utils::memory::Malloc( d_matid_g2l, matid_g2l_size );
 
     // Copy the matid list to the device.
-    cuda::memory::Copy_To_Device( 
+    cuda_utils::memory::Copy_To_Device( 
 	d_matid_g2l, host_matid_g2l.getRawPtr(), matid_g2l_size );
     host_matid_g2l.clear();
 
     // Allocate scattering.
-    cuda::memory::Malloc( d_scatter, d_Nm * d_Ng );
+    cuda_utils::memory::Malloc( d_scatter, d_Nm * d_Ng );
 
     // calculate total scattering over all groups for each material and
     // determine if fission is available for a given material
@@ -331,7 +331,7 @@ Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
 
 	// Copy the scattering to the device.
 	offset = m * d_Ng;
-	cuda::memory::Copy_To_Device( 
+	cuda_utils::memory::Copy_To_Device( 
 	    d_scatter + offset, matid_scatter.data(), d_Ng );
 
         // see if this material is fissionable by checking Chi
@@ -340,8 +340,8 @@ Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
     }
 
     // Copy the fissionable vector to the device.
-    cuda::memory::Malloc( d_fissionable, d_Nm );
-    cuda::memory::Copy_To_Device( 
+    cuda_utils::memory::Malloc( d_fissionable, d_Nm );
+    cuda_utils::memory::Copy_To_Device( 
 	d_fissionable, host_fissionable.data(), d_Nm );
 
     ENSURE(d_Nm > 0);
@@ -355,12 +355,12 @@ Physics<Geometry>::Physics( ParameterList_t& db, const XS_t& mat )
 template <class Geometry>
 Physics<Geometry>::~Physics()
 {
-    cuda::memory::Free( d_matid_g2l );
-    cuda::memory::Free( d_scatter );
-    cuda::memory::Free( d_fissionable );
+    cuda_utils::memory::Free( d_matid_g2l );
+    cuda_utils::memory::Free( d_scatter );
+    cuda_utils::memory::Free( d_fissionable );
     if ( nullptr != d_device_sites )
     {
-	cuda::memory::Free( d_device_sites );
+	cuda_utils::memory::Free( d_device_sites );
     }
 }
 
@@ -378,20 +378,20 @@ Physics<Geometry>::~Physics()
 template <class Geometry>
 void Physics<Geometry>::initialize(
     const std::vector<double>& energy, 
-    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles )
+    cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles )
 {
     int num_particle = particles.get_host_ptr()->size();
     REQUIRE( energy.size() == num_particle );
 
     // Copy the energies to the device.
     double* device_energy;
-    cuda::memory::Malloc( device_energy, energy.size() );
-    cuda::memory::Copy_To_Device( device_energy, energy.data(), energy.size() );
+    cuda_utils::memory::Malloc( device_energy, energy.size() );
+    cuda_utils::memory::Copy_To_Device( device_energy, energy.data(), energy.size() );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -400,7 +400,7 @@ void Physics<Geometry>::initialize(
 	device_energy, d_gb.get_device_ptr(), particles.get_device_ptr() );
 
     // Free the device energy array.
-    cuda::memory::Free( device_energy );
+    cuda_utils::memory::Free( device_energy );
 }
 
 //---------------------------------------------------------------------------//
@@ -409,17 +409,17 @@ void Physics<Geometry>::initialize(
  */
 template <class Geometry>
 void Physics<Geometry>::collide(
-    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
-    cuda::Stream<cuda::arch::Device> stream )
+    cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles,
+    cuda_utils::Stream<cuda_utils::arch::Device> stream )
 {
     // Get the particles that will have a collision.
     int num_particle =
         particles.get_host_ptr()->get_event_size( events::COLLISION );
     
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -460,16 +460,16 @@ void Physics<Geometry>::collide(
  */
 template <class Geometry>
 void Physics<Geometry>::sample_fission_site(
-    cuda::Shared_Device_Ptr<Particle_Vector_t>& particles,
+    cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles,
     Fission_Site_Container &fsc,
     double                  keff,
-    cuda::Stream<cuda::arch::Device> stream )
+    cuda_utils::Stream<cuda_utils::arch::Device> stream )
 {
     // Lazy allocate the fission site work vectors.
     if ( nullptr == d_device_sites )
     {
 	d_host_sites.resize( particles.get_host_ptr()->size() );
-	cuda::memory::Malloc( d_device_sites, particles.get_host_ptr()->size() );
+	cuda_utils::memory::Malloc( d_device_sites, particles.get_host_ptr()->size() );
     }
 
     // Get the particles that will have a collision.
@@ -477,9 +477,9 @@ void Physics<Geometry>::sample_fission_site(
         particles.get_host_ptr()->get_event_size( events::COLLISION );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_particle / threads_per_block;
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
@@ -495,7 +495,7 @@ void Physics<Geometry>::sample_fission_site(
 	d_device_sites );
 
     // Pull the fission sites off of the device.
-    cuda::memory::Copy_To_Host_Async(
+    cuda_utils::memory::Copy_To_Host_Async(
 	d_host_sites.data(), d_device_sites, num_particle, stream );
 
     // Synchronize on this thread after copy.

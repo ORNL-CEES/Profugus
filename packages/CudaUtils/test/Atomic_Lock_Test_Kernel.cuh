@@ -13,7 +13,7 @@
 
 #include "Lock_Kernel_Data.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // HOST INTERFACES
@@ -23,7 +23,7 @@ template<typename Arch_Switch>
 void lock_test(Lock_Kernel_Data<Arch_Switch>& kd);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_test_Lock_Kernel_cuh
 
 //---------------------------------------------------------------------------//

@@ -29,17 +29,17 @@ class DeviceVectorTest : public ::testing::Test
 {
   protected:
     typedef Arch_Switch                       Arch_t;
-    typedef cuda::Device_Vector<Arch_t,float> Device_Vector_t;
+    typedef cuda_utils::Device_Vector<Arch_t,float> Device_Vector_t;
 
     typedef std::vector<float>               Vector_t;
     typedef profugus::const_View_Field<float> const_View_Field_t;
     typedef profugus::View_Field<float> View_Field_t;
-    typedef cuda::Host_Vector<float>         Host_Vector_t;
+    typedef cuda_utils::Host_Vector<float>         Host_Vector_t;
 
   protected:
     void SetUp()
     {
-        typedef cuda::Hardware<Arch_t> Hardware_t;
+        typedef cuda_utils::Hardware<Arch_t> Hardware_t;
 
         // Initialize device
         if (!Hardware_t::have_acquired())
@@ -74,10 +74,10 @@ class DeviceVectorTest : public ::testing::Test
 
 #ifdef USE_CUDA
 // instantiate both host and device code
-typedef ::testing::Types<cuda::arch::Host, cuda::arch::Device> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Host, cuda_utils::arch::Device> ArchTypes;
 #else
 // instantiate host-only code
-typedef ::testing::Types<cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Host> ArchTypes;
 #endif
 
 TYPED_TEST_CASE(DeviceVectorTest, ArchTypes);
@@ -178,7 +178,7 @@ TYPED_TEST(DeviceVectorTest, write_combined_memory)
     typedef typename TestFixture::Host_Vector_t   Host_Vector_t;
     typedef typename TestFixture::Vector_t        Vector_t;
 
-    using namespace cuda::alloc;
+    using namespace cuda_utils::alloc;
 
     const Vector_t& original = this->original;
 
@@ -189,7 +189,7 @@ TYPED_TEST(DeviceVectorTest, write_combined_memory)
     // write-combined memory: hence adjust_alloc_flag<Arch_t>
     // Assign data to write-only host vector
     Host_Vector_t host_data(original.size(), 0.f,
-            cuda::adjust_alloc_flag<Arch_t>(WRITE_COMBINED));
+            cuda_utils::adjust_alloc_flag<Arch_t>(WRITE_COMBINED));
     std::copy(original.begin(), original.end(), host_data.begin());
 
     // Copy to device vector
@@ -219,7 +219,7 @@ TYPED_TEST(DeviceVectorTest, mapped_memory)
 
     const Vector_t& original = this->original;
 
-    Host_Vector_t a(original.size(), 0, cuda::alloc::MAPPED);
+    Host_Vector_t a(original.size(), 0, cuda_utils::alloc::MAPPED);
     // Assign to mapped memory
     std::copy(original.begin(), original.end(), a.begin());
 
@@ -230,7 +230,7 @@ TYPED_TEST(DeviceVectorTest, mapped_memory)
     b.assign(a);
 
     // Create host vector (mapped)
-    Host_Vector_t c(original.size(), 0, cuda::alloc::MAPPED);
+    Host_Vector_t c(original.size(), 0, cuda_utils::alloc::MAPPED);
     device_to_host(b, c);
 
     // Check result
@@ -321,7 +321,7 @@ TYPED_TEST( DeviceVectorTest, device_api )
     typedef typename TestFixture::Vector_t           Vector_t;
 
     // This test is for device-only vectors.
-    if ( std::is_same<typename TestFixture::Arch_t,cuda::arch::Device>::value )
+    if ( std::is_same<typename TestFixture::Arch_t,cuda_utils::arch::Device>::value )
     {
 	const Vector_t& original = this->original;
 

@@ -81,12 +81,12 @@ class Fission_Source : public Source<Geometry>
     typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
     typedef typename Geometry_t::Space_Vector           Space_Vector;
-    typedef cuda::Shared_Device_Ptr<Geometry>           SDP_Geometry;
-    typedef cuda::Shared_Device_Ptr<Physics_t>          SDP_Physics;
+    typedef cuda_utils::Shared_Device_Ptr<Geometry>           SDP_Geometry;
+    typedef cuda_utils::Shared_Device_Ptr<Physics_t>          SDP_Physics;
     typedef std::shared_ptr<Fission_Site_Container>     SP_Fission_Sites;
     typedef Fission_Rebalance<Geometry_t>               Fission_Rebalance_t;
     typedef std::shared_ptr<Fission_Rebalance_t>        SP_Fission_Rebalance;
-    typedef cuda::Shared_Device_Ptr<Cartesian_Mesh>     SDP_Cart_Mesh;
+    typedef cuda_utils::Shared_Device_Ptr<Cartesian_Mesh>     SDP_Cart_Mesh;
     typedef Teuchos::ArrayView<const double>            Const_Array_View;
     typedef def::Vec_Dbl                                Vec_Dbl;
     typedef def::Vec_Int                                Vec_Int;
@@ -121,7 +121,7 @@ class Fission_Source : public Source<Geometry>
 
     //! Get particles from the source.
     void get_particles( 
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
+	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
 
     //! Boolean operator for source (true when source still has particles).
     bool empty() const override { return d_np_left == 0; }
@@ -168,21 +168,21 @@ class Fission_Source : public Source<Geometry>
 
     // Sample the geometry to generate particles
     void sample_geometry(
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
 	const int num_particle,
 	const unsigned int num_blocks,
 	const unsigned int threads_per_block );
 
     // Sample the fission mesh to generate particles
     void sample_mesh(
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
 	const int num_particle,
 	const unsigned int num_blocks,
 	const unsigned int threads_per_block );
 
     // Sample the fission_sites to generate particles
     void sample_fission_sites(
-	cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
 	const int num_particle,
 	const unsigned int num_blocks,
 	const unsigned int threads_per_block );
@@ -191,7 +191,7 @@ class Fission_Source : public Source<Geometry>
     // >>> DATA
 
     // Execution stream.
-    cuda::Stream<cuda::arch::Device> d_stream;
+    cuda_utils::Stream<cuda_utils::arch::Device> d_stream;
 
     // Geometry
     SDP_Geometry d_geometry;

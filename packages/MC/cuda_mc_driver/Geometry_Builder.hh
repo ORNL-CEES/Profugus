@@ -37,7 +37,7 @@ class Geometry_Builder
 {
   public:
 
-    typedef cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> SDP_Geometry;
+    typedef cuda_utils::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> SDP_Geometry;
     typedef Teuchos::RCP<Teuchos::ParameterList>  RCP_ParameterList;
 
     Geometry_Builder()
@@ -58,7 +58,7 @@ class Geometry_Builder<cuda_profugus::Mesh_Geometry>
 {
   public:
 
-    typedef cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> SDP_Geometry;
+    typedef cuda_utils::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> SDP_Geometry;
     typedef Teuchos::RCP<Teuchos::ParameterList>                  RCP_ParameterList;
     typedef Teuchos::Array<int>                                   OneDArray_int;
     typedef Teuchos::Array<double>                                OneDArray_dbl;

@@ -25,16 +25,16 @@ class ArchSwitchTest : public ::testing::Test
 {
   protected:
     typedef Arch_Switch                 Arch_t;
-    typedef cuda::Hardware<Arch_t>      Hardware_t;
-    typedef cuda::Vector_Traits<Arch_t> Vector_Traits_t;
+    typedef cuda_utils::Hardware<Arch_t>      Hardware_t;
+    typedef cuda_utils::Vector_Traits<Arch_t> Vector_Traits_t;
 };
 
 #ifdef USE_CUDA
 // instantiate both host and device code
-typedef ::testing::Types<cuda::arch::Device, cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Device, cuda_utils::arch::Host> ArchTypes;
 #else
 // instantiate host-only code
-typedef ::testing::Types<cuda::arch::Host> ArchTypes;
+typedef ::testing::Types<cuda_utils::arch::Host> ArchTypes;
 #endif
 
 TYPED_TEST_CASE(ArchSwitchTest, ArchTypes);
@@ -42,12 +42,12 @@ TYPED_TEST_CASE(ArchSwitchTest, ArchTypes);
 //---------------------------------------------------------------------------//
 TYPED_TEST(ArchSwitchTest, PolyglotKernel)
 {
-    using cuda::polyglot_copy;
+    using cuda_utils::polyglot_copy;
     typedef typename TestFixture::Arch_t          Arch_t;
     typedef typename TestFixture::Hardware_t      Hardware_t;
     typedef typename TestFixture::Vector_Traits_t Vector_Traits_t;
 
-    typedef cuda::Polyglot_Kernel_Data<Arch_t> Kernel_Data_t;
+    typedef cuda_utils::Polyglot_Kernel_Data<Arch_t> Kernel_Data_t;
 
     typedef typename Vector_Traits_t::Host_Vector_Float Host_Vector_Float;
 
@@ -77,11 +77,11 @@ TYPED_TEST(ArchSwitchTest, PolyglotKernel)
     data.input.assign(original);
 
     // Do the kernel call
-    cuda::polyglot_copy(data);
+    cuda_utils::polyglot_copy(data);
 
     // Check results
     Host_Vector_Float cpu_result(data.output.size());
-    cuda::device_to_host(data.output, cpu_result);
+    cuda_utils::device_to_host(data.output, cpu_result);
 
     EXPECT_EQ(original.size(), cpu_result.size());
     for (unsigned int i = 0; i < original.size(); ++i)

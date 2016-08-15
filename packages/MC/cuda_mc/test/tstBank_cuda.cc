@@ -61,7 +61,7 @@ TEST_F( BankTest, cuda_pop )
     int num_particle = 256;
     profugus::RNG_Control control( 3420239343 );
     Particle_Vector_Tester vector_tester( num_particle, control.rng() );
-    cuda::Shared_Device_Ptr<cuda_profugus::Particle_Vector<cuda_profugus::Mesh_Geometry> >
+    cuda_utils::Shared_Device_Ptr<cuda_profugus::Particle_Vector<cuda_profugus::Mesh_Geometry> >
 	particles = vector_tester.get_vector();
     b.pop( particles );
 

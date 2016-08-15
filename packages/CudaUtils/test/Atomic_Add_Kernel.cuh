@@ -13,7 +13,7 @@
 
 #include "Atomic_Add_Kernel_Data.hh"
 
-namespace cuda
+namespace cuda_utils
 {
 //---------------------------------------------------------------------------//
 // HOST INTERFACES
@@ -23,7 +23,7 @@ template<typename Arch_Switch, typename Float_T>
 void atomic_add_test(Atomic_Add_Kernel_Data<Arch_Switch, Float_T>& kd);
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 #endif // cuda_utils_test_Atomic_Add_Kernel_cuh
 
 //---------------------------------------------------------------------------//

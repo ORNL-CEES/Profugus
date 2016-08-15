@@ -96,10 +96,10 @@ void Source_Transporter<Geometry>::solve()
     size_type counter = 0;
 
     // make a particle bank
-    cuda::Shared_Device_Ptr<typename Transporter_t::Bank_t> bank;
+    cuda_utils::Shared_Device_Ptr<typename Transporter_t::Bank_t> bank;
 
     // make a particle vector
-    auto particles = cuda::shared_device_ptr<Particle_Vector<Geometry> >(
+    auto particles = cuda_utils::shared_device_ptr<Particle_Vector<Geometry> >(
         d_vector_size, profugus::Global_RNG::d_rng );
 
     // Create tasks.

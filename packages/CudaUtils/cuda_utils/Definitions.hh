@@ -11,7 +11,7 @@
 #ifndef cuda_utils_Definitions_hh
 #define cuda_utils_Definitions_hh
 
-namespace cuda
+namespace cuda_utils
 {
 //===========================================================================//
 
@@ -51,7 +51,7 @@ struct Space_Vector
 };
 
 //===========================================================================//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Definitions_hh
 

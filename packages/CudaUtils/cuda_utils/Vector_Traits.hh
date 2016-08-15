@@ -20,7 +20,7 @@ template <typename T> class View_Field;
 template <typename T> class const_View_Field;
 }
 
-namespace cuda
+namespace cuda_utils
 {
 // declare host/device/multi/pseudo classes
 template<typename T> class Host_Vector;
@@ -77,7 +77,7 @@ struct Vector_Traits
     //@}
 };
 
-} // end namespace cuda
+} // end namespace cuda_utils
 
 #endif // cuda_utils_Vector_Traits_hh
 

@@ -53,8 +53,8 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
-	cuda::Space_Vector omega;
-	cuda::utility::sample_angle( 
+	cuda_utils::Space_Vector omega;
+	cuda_utils::utility::sample_angle( 
 	    omega, particles->ran(pidx), particles->ran(pidx) );
 
 	// get the logical indices of the birth cell
@@ -73,7 +73,7 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 	int group = -1;
 	int matid = -1;
 	bool sampled = false;
-	cuda::Space_Vector r;
+	cuda_utils::Space_Vector r;
 	while (!sampled)
 	{
 	    // sample a point in the geometry
@@ -121,8 +121,8 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 					const Physics<Geometry>* physics,
 					const int num_particle,
 					const double weight,
-					const cuda::Space_Vector width,
-					const cuda::Space_Vector lower,
+					const cuda_utils::Space_Vector width,
+					const cuda_utils::Space_Vector lower,
 					Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
@@ -135,15 +135,15 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
-	cuda::Space_Vector omega;
-	cuda::utility::sample_angle( 
+	cuda_utils::Space_Vector omega;
+	cuda_utils::utility::sample_angle( 
 	    omega, particles->ran(pidx), particles->ran(pidx) );
 
 	// sample the geometry until a fission site is found
 	int group = -1;
 	int matid = -1;
 	bool sampled = false;
-	cuda::Space_Vector r;
+	cuda_utils::Space_Vector r;
 	while (!sampled)
 	{
 	    // sample a point in the geometry
@@ -205,8 +205,8 @@ __global__ void sample_fission_sites_kernel(
 	int pidx = idx + start_idx;
 
 	// sample the angle isotropically
-	cuda::Space_Vector omega;
-	cuda::utility::sample_angle( 
+	cuda_utils::Space_Vector omega;
+	cuda_utils::utility::sample_angle( 
 	    omega, particles->ran(pidx), particles->ran(pidx) );
 
 	// initialize the geometry state
@@ -280,8 +280,8 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     extents = db->get("init_fission_src", extents);
 
     // get the low and upper bounds of the geometry
-    const cuda::Space_Vector &low_edge  = d_geometry.get_host_ptr()->lower();
-    const cuda::Space_Vector &high_edge = d_geometry.get_host_ptr()->upper();
+    const cuda_utils::Space_Vector &low_edge  = d_geometry.get_host_ptr()->lower();
+    const cuda_utils::Space_Vector &high_edge = d_geometry.get_host_ptr()->upper();
 
     double lower_x = extents[2 * I];
     double upper_x = extents[2 * I + 1];
@@ -312,8 +312,8 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
 
     // Allocate device data.
     d_vector_size = db->get("particle_vector_size",10000);
-    cuda::memory::Malloc( d_fission_sites_device, d_vector_size );
-    cuda::memory::Malloc( d_fission_cells_device, d_vector_size );
+    cuda_utils::memory::Malloc( d_fission_sites_device, d_vector_size );
+    cuda_utils::memory::Malloc( d_fission_cells_device, d_vector_size );
 }
 
 //---------------------------------------------------------------------------//
@@ -323,8 +323,8 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
 template <class Geometry>
 Fission_Source<Geometry>::~Fission_Source()
 {
-    cuda::memory::Free( d_fission_sites_device );
-    cuda::memory::Free( d_fission_cells_device );
+    cuda_utils::memory::Free( d_fission_sites_device );
+    cuda_utils::memory::Free( d_fission_cells_device );
 }
 
 //---------------------------------------------------------------------------//
@@ -445,7 +445,7 @@ auto Fission_Source<Geometry>::create_fission_site_container() const
 */
 template <class Geometry>
 void Fission_Source<Geometry>::get_particles(
-    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
+    cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles )
 {
     REQUIRE(d_wt > 0.0);
     REQUIRE( particles.get_host_ptr()->size() == d_vector_size );
@@ -464,9 +464,9 @@ void Fission_Source<Geometry>::get_particles(
     int num_to_create = std::min( d_np_left, num_particle );
 
     // Get CUDA launch parameters.
-    REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
+    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
-	cuda::Hardware<cuda::arch::Device>::default_block_size();
+	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = num_to_create / threads_per_block;
     if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
 
@@ -580,14 +580,14 @@ void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
  */
 template <class Geometry>
 void Fission_Source<Geometry>::sample_fission_sites(
-    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+    cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
     const int num_particle,
     const unsigned int num_blocks,
     const unsigned int threads_per_block )
 {
     // Extract the fission sites.
     int copy_start = d_fission_sites->size() - num_particle;
-    cuda::memory::Copy_To_Device_Async( d_fission_sites_device,
+    cuda_utils::memory::Copy_To_Device_Async( d_fission_sites_device,
                                         d_fission_sites->data() + copy_start,
                                         num_particle,
                                         d_stream );
@@ -612,7 +612,7 @@ void Fission_Source<Geometry>::sample_fission_sites(
  */
 template <class Geometry>
 void Fission_Source<Geometry>::sample_mesh(
-    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+    cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
     const int num_particle,
     const unsigned int num_blocks,
     const unsigned int threads_per_block )
@@ -638,7 +638,7 @@ void Fission_Source<Geometry>::sample_mesh(
     }
 
     // Copy the fission cells to the device.
-    cuda::memory::Copy_To_Device_Async( d_fission_cells_device,
+    cuda_utils::memory::Copy_To_Device_Async( d_fission_cells_device,
                                         fission_cells.data(),
                                         num_particle,
                                         d_stream );
@@ -660,7 +660,7 @@ void Fission_Source<Geometry>::sample_mesh(
  */
 template <class Geometry>
 void Fission_Source<Geometry>::sample_geometry(
-    cuda::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
+    cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles,
     const int num_particle,
     const unsigned int num_blocks,
     const unsigned int threads_per_block )
