@@ -24,6 +24,7 @@
 #include "cuda_utils/Hardware.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "cuda_mc/Box_Shape.hh"
+#include "cuda_mc/Cell_Tally.hh"
 #include "cuda_mc/VR_Analog.hh"
 #include "cuda_mc/VR_Roulette.hh"
 #include "Problem_Builder.hh"
@@ -268,6 +269,15 @@ void Problem_Builder<Geometry>::build_tallies()
 
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
+
+    // add the cell tally.
+    if ( d_db->isSublist("cell_tally_db") )
+    {
+        int num_batch = d_db->get<int>("num_batch",1);
+        auto cell_tally = std::make_shared<Cell_Tally<Geometry> >(
+            d_geometry, num_batch );
+        d_tallier->add_pathlength_tally( cell_tally );
+    }
 
     ENSURE(d_tallier);
 }
