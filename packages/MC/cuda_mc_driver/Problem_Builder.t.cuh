@@ -274,7 +274,7 @@ void Problem_Builder<Geometry>::build_tallies()
     if ( d_db->isSublist("cell_tally_db") )
     {
         int num_batch = d_db->get<int>("num_batch",1);
-        auto cell_tally = std::make_shared<Cell_Tally<Geometry> >(
+        auto cell_tally = std::make_shared<cuda_profugus::Cell_Tally<Geometry> >(
             d_geometry, num_batch );
         d_tallier->add_pathlength_tally( cell_tally );
     }
