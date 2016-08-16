@@ -70,6 +70,58 @@ bool Hardware<Device>::valid_device_exists()
     return num_devices > 0;
 }
 
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Set the CUDA device with the given id.
+ */
+void Hardware<Device>::set_device( const int device_id )
+{
+    INSIST(d_device_id == -1, "A device has already been acquired.");
+
+#ifdef USE_CUDA
+    // Get the number of devices.
+    int num_devices = -1;
+    CudaCall(cudaGetDeviceCount(&num_devices));
+
+    // Get the device id for this rank.
+    d_device_id = device_id + profugus::node() % num_devices;
+    CHECK( d_device_id < num_devices );
+
+    // Get properties
+    cudaDeviceProp prop;
+    CudaCall(cudaGetDeviceProperties(&prop, d_device_id));
+    d_name                        = prop.name;
+    d_multiProcessorCount         = prop.multiProcessorCount;
+    d_totalConstMem               = prop.totalConstMem;
+    d_sharedMemPerBlock           = prop.sharedMemPerBlock;
+    d_cores_per_mp                = num_cores_per_mp(prop.major, prop.minor);
+    d_maxThreadsPerMultiProcessor = prop.maxThreadsPerMultiProcessor;
+
+    // Set the device.
+    CudaCall(cudaSetDevice(d_device_id));
+
+    // Reset the device
+    CudaCall(cudaDeviceReset());
+
+    // Initialize device, causing the ~.2 second penalty to appear in this
+    // function rather than in later initialization
+    CudaCall(cudaFree(0));
+
+    std::size_t free, total;
+    CudaCall(cudaMemGetInfo(&free, &total));
+
+    std::cout << "*** Initialized device '"
+              << d_name
+              << "' (Device ID " << d_device_id << ")"
+              << " on MPI rank " << profugus::node()
+              << " which has " << (free >> 20) << " of "
+              << (total >> 20) << "MB free."
+              << std::endl;
+
+#else // USE_CUDA disabled
+    INSIST(false, "CUDA is disabled in this build.");
+#endif // USE_CUDA
+}
 
 //---------------------------------------------------------------------------//
 /*!

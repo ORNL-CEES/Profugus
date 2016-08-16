@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <sstream>
 
+#include "comm/global.hh"
 #include "harness/DBC.hh"
 #include "utils/Definitions.hh"
 #include "utils/String_Functions.hh"
@@ -63,12 +64,22 @@ void Problem_Builder<Geometry>::setup(RCP_ParameterList master)
 
     CHECK(!d_db.is_null());
 
+    // Get number of visible GPUs
+    int num_devices;
+    auto err = cudaGetDeviceCount(&num_devices);
+    CHECK( cudaSuccess == err );
+
+    // Assign MPI tasks to devices by MPI rank
+    int device_id = d_db->get("device_id",0);
+    cuda_utils::Hardware<cuda_utils::arch::Device>::set_device( device_id );
+    CHECK( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+
     // Set the default CUDA block size.
     if(d_db->isParameter("block_size"))
-      {
-        cuda_utils::Hardware<cuda_utils::arch::Device>::set_default_block_size( 
+    {
+        cuda_utils::Hardware<cuda_utils::arch::Device>::set_default_block_size(
             d_db->get<int>("block_size") );
-      }
+    }
 
     // default the boundary conditions to reflecting
     if (!d_db->isParameter("boundary"))

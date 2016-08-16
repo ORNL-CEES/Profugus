@@ -145,6 +145,9 @@ class Hardware<cuda_utils::arch::Device>
     // Get the best device
     static void acquire(Acquire_Method method = HIGHEST_FLOPS);
 
+    // Set the device.
+    static void set_device( const int device_id );
+
     //! Have we got a device yet?
     static bool have_acquired() { return d_device_id != -1; }
 
