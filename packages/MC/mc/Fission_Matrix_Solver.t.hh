@@ -217,10 +217,11 @@ void Fission_Matrix_Solver<Geometry,T>::solve(const Fission_Site_Container &f)
              << "(x*,g) = " << ortho[0] << " which is > 1.0e-8");
 
     // check the residual
+    ATraits::MvNorm(*rhs, denominator);
     OT::Apply(*d_operator, *d_g, *d_work);
     ATraits::MvAddMv(1.0, *rhs, -1.0, *d_work, *d_work);
     ATraits::MvNorm(*d_work, numerator);
-    VALIDATE(numerator[0] < 1.0e-3,
+    VALIDATE(numerator[0]/denominator[0] < 1.0e-3,
              "Residual does not preserve the original operator solution, "
              << " r = " << numerator[0]);
 #endif
