@@ -21,6 +21,7 @@
 #include "xs/XS_Builder.hh"
 #include "solvers/LinAlgTypedefs.hh"
 #include "geometry/Mesh_Geometry.hh"
+#include "mc/Cell_Tally.hh"
 #include "mc/Box_Shape.hh"
 #include "mc/VR_Analog.hh"
 #include "mc/VR_Roulette.hh"
@@ -327,6 +328,16 @@ void Problem_Builder<Geometry>::build_tallies()
         // add this to the tallier
         d_tallier->add_source_tally(src_tally);
     }
+
+    // check for cell tallies.
+    if ( d_db->isSublist("cell_tally_db") )
+      {
+        auto cell_tally = std::make_shared<profugus::Cell_Tally<Geometry> >( d_physics );
+        std::vector<int> tally_cells( d_geometry->num_cells() );
+        for ( int i = 0; i < d_geometry->num_cells(); ++i ) tally_cells[i] = i;
+        cell_tally->set_cells( tally_cells );
+        d_tallier->add_pathlength_tally( cell_tally );
+      }
 
     ENSURE(d_tallier);
 }
