@@ -214,8 +214,8 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
     // Get the tally moments from the device.
     std::vector<int>    cells(d_num_cells,  0);
     for ( int i = 0; i < d_num_cells; ++i ) cells[i] = i;
-    std::vector<double> local_first(d_num_cells,  0.0);
-    std::vector<double> local_second(d_num_cells, 0.0);
+    std::vector<double> local_first;
+    std::vector<double> local_second;
     copy_moments_to_host( local_first, local_second );
 
     // Do global reductions on the moments
