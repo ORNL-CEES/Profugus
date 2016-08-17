@@ -71,13 +71,14 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     CHECK(norm > 0.0);
 
     // assign to the shape cdf
-    REMEMBER(double sum = 0.0);
+    double sum = 0.0;
     norm  = 1.0 / norm;
     int n = 0;
     for (double &c : d_erg_cdf)
     {
-        c = shape[n] * norm;
-        REMEMBER(sum += c);
+        double val = shape[n] * norm;
+        sum += val;
+        c = sum;
         ++n;
     }
     ENSURE(soft_equiv(sum, 1.0));
