@@ -117,7 +117,9 @@ void KDE_Kernel<Geometry>::calc_bandwidths(
 
         std::cout << "Cell " << cell << "  Coeff: " << b_coefficient
                   << "  Variance: " << variance << "  Comb. Exp.: "
-                  << std::pow(N, b_exponent) << std::endl;
+                  << std::pow(N, b_exponent)
+                  << "  N: " << N
+                  << std::endl;
         CHECK(b_bndwidth_map[cell] >= 0.0);
     }
 }
