@@ -111,15 +111,13 @@ void KDE_Kernel<Geometry>::calc_bandwidths(
         // Calculate the variance
         double variance = sum_sq/N - (sum/N)*(sum/N);
 
+        // Low particle counts can results in very small variance, which can
+        // go to zero with roundoff.  Change to zero if this happens
+        variance = std::max(variance, 0.0);
+
         // Calculate the bandwidth
         b_bndwidth_map[cell] = b_coefficient*std::sqrt(variance)*
                                std::pow(N, b_exponent);
-
-        std::cout << "Cell " << cell << "  Coeff: " << b_coefficient
-                  << "  Variance: " << variance << "  Comb. Exp.: "
-                  << std::pow(N, b_exponent)
-                  << "  N: " << N
-                  << std::endl;
         CHECK(b_bndwidth_map[cell] >= 0.0);
     }
 }
