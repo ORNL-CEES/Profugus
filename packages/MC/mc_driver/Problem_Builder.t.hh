@@ -332,7 +332,7 @@ void Problem_Builder<Geometry>::build_tallies()
     // check for cell tallies.
     if ( d_db->isSublist("cell_tally_db") )
       {
-        auto cell_tally = std::make_shared<profugus::Cell_Tally<Geometry> >( d_physics );
+        auto cell_tally = std::make_shared<profugus::Cell_Tally<Geometry> >( d_db, d_physics );
         std::vector<int> tally_cells( d_geometry->num_cells() );
         for ( int i = 0; i < d_geometry->num_cells(); ++i ) tally_cells[i] = i;
         cell_tally->set_cells( tally_cells );

@@ -49,6 +49,8 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     typedef std::pair<double, double>        Moments;
     typedef std::unordered_map<int, Moments> Result;
     typedef std::shared_ptr<Physics_t>       SP_Physics;
+    typedef Teuchos::ParameterList           ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>    RCP_Std_DB;
     //@}
 
   private:
@@ -62,9 +64,12 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Map of tally moments.
     Result d_tally;
 
+    // Database
+    RCP_Std_DB d_db;
+
   public:
     // Constructor.
-    Cell_Tally(SP_Physics physics);
+    Cell_Tally(RCP_Std_DB db, SP_Physics physics);
 
     // Add tally cells.
     void set_cells(const std::vector<int> &cells);

@@ -43,6 +43,7 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     typedef Particle_Vector<Geometry> Particle_Vector_t;
     typedef typename Geometry::Geo_State_t Geo_State_t;
     typedef events::Event Event_t;
+    typedef Teuchos::RCP<ParameterList_t>    RCP_Std_DB;
     //@}
 
   private:
@@ -63,12 +64,16 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Execution stream.
     cuda_utils::Stream<cuda_utils::arch::Device> d_stream;
 
+    // Database
+    RCP_Std_DB d_db;
+
   public:
 
     // >>> HOST API
 
     // Constructor
-    Cell_Tally( const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
+    Cell_Tally( RCP_Std_DB db,
+                const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
 		const int num_batch );
     
     // Destructor.

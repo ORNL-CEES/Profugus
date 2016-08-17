@@ -15,6 +15,8 @@
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Atomic_Add.cuh"
 
+#include "utils/Serial_HDF5_Writer.hh"
+
 #include "mc/Definitions.hh"
 
 #include "Cell_Tally.hh"
@@ -123,11 +125,13 @@ __global__ void moments_kernel( const int num_batch,
 // Constructor.
 template <class Geometry>
 Cell_Tally<Geometry>::Cell_Tally( 
+    RCP_Std_DB db,
     const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
     const int num_batch )
     : d_geometry( geometry )
     , d_num_batch( num_batch )
     , d_num_cells( d_geometry.get_host_ptr()->num_cells() )
+    , d_db(db)
 {
     // Allocate the tally.
     int size = d_num_batch * d_num_cells;

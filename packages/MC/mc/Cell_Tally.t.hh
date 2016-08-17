@@ -16,6 +16,7 @@
 
 #include "Utils/comm/global.hh"
 #include "Cell_Tally.hh"
+#include "utils/Serial_HDF5_Writer.hh"
 
 namespace profugus
 {
@@ -27,9 +28,10 @@ namespace profugus
  * \brief Constructor.
  */
 template <class Geometry>
-Cell_Tally<Geometry>::Cell_Tally(SP_Physics physics)
+Cell_Tally<Geometry>::Cell_Tally(RCP_Std_DB db, SP_Physics physics)
     : Base(physics, false)
     , d_geometry(b_physics->get_geometry())
+    , d_db(db)
 {
     REQUIRE(d_geometry);
 
@@ -55,6 +57,8 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
     // Iterate through the cells and insert them into the map
     for (const auto &cell : cells)
     {
+        VALIDATE(cell < d_geometry->num_cells(),
+                "Cell tally index exceeds number of cells in geometry.");
         tally.insert({cell, {0.0, 0.0}});
     }
 
@@ -99,6 +103,7 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
     REQUIRE(num_particles > 1);
 
     // Do a global reduction on moments
+    std::vector<int>    cells(d_tally.size(),  0.0);
     std::vector<double> first(d_tally.size(),  0.0);
     std::vector<double> second(d_tally.size(), 0.0);
 
@@ -109,6 +114,7 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
         auto &moments = t.second;
 
         // Copy the moments into the communciation buffer
+        cells[ctr]  = t.first;
         first[ctr]  = moments.first;
         second[ctr] = moments.second;
 
@@ -154,10 +160,53 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
         // Store the error of the sample mean
         moments.second = std::sqrt(var * inv_N);
 
+        // Store values back into vectors for HDF5 writing
+        first[ctr]  = moments.first;
+        second[ctr] = moments.second;
+
         // Update the counter
         ++ctr;
     }
     CHECK(ctr == d_tally.size());
+
+    // Determine permutation vector for sorted cells
+    std::vector<std::pair<int,int>> sort_vec;
+    for (int i = 0; i < cells.size(); ++i)
+        sort_vec.push_back({cells[i],i});
+
+    std::sort(sort_vec.begin(), sort_vec.end(),
+        [](const std::pair<int,int> &lhs, const std::pair<int,int> &rhs)
+        { return lhs.first < rhs.first; } );
+
+    std::vector<int> cell_map(cells.size());
+    for (int i = 0; i < sort_vec.size(); ++i)
+        cell_map[i] = sort_vec[i].second;
+
+    // Reorder vectors
+    {
+        std::vector<int>    tmp_cells  = cells;
+        std::vector<double> tmp_first  = first;
+        std::vector<double> tmp_second = second;
+        for (int i = 0; i < cell_map.size(); ++i)
+        {
+            int ind = cell_map[i];
+            cells[i]  = tmp_cells[ind];
+            first[i]  = tmp_first[ind];
+            second[i] = tmp_second[ind];
+        }
+    }
+
+#ifdef USE_HDF5
+    REQUIRE( d_db->isType<std::string>("problem_name") );
+    std::string filename = d_db->get<std::string>("problem_name") + "_flux.h5";
+
+    Serial_HDF5_Writer writer;
+    writer.open(filename);
+    writer.write("cells",cells);
+    writer.write("flux_mean",first);
+    writer.write("flux_std_dev",second);
+    writer.close();
+#endif
 }
 
 //---------------------------------------------------------------------------//
