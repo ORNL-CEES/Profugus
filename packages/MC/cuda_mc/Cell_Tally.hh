@@ -11,6 +11,7 @@
 #define cuda_mc_Cell_Tally_hh
 
 #include <Teuchos_Array.hpp>
+#include <Teuchos_ParameterList.hpp>
 
 #include "utils/Definitions.hh"
 
@@ -43,7 +44,7 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     typedef Particle_Vector<Geometry> Particle_Vector_t;
     typedef typename Geometry::Geo_State_t Geo_State_t;
     typedef events::Event Event_t;
-    typedef Teuchos::RCP<ParameterList_t>    RCP_Std_DB;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_Std_DB;
     //@}
 
   private:
