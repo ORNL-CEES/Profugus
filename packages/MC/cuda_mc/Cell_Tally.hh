@@ -95,12 +95,6 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
 
     // Finalize the tally.
     void finalize( double num_particles ) override;
-
-    // Copy the first and second tally moments from the device to the
-    // host. The moments are lazy-evaluated in this function and indexed by
-    // cell.
-    void copy_moments_to_host( Teuchos::Array<double>& first_moment,
-			       Teuchos::Array<double>& second_moment ) const;
 };
 
 //---------------------------------------------------------------------------//
