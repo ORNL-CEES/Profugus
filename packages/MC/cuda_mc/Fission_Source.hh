@@ -240,6 +240,12 @@ class Fission_Source : public Source<Geometry>
 
     // Device fission cells.
     int* d_fission_cells_device;
+
+    // number of inactive cycles.
+    int d_num_inactive_cycle;
+
+    // active cycle counter.
+    int d_active_cycle_counter;
 };
 
 } // end namespace cuda_profugus

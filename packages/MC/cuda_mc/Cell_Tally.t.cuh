@@ -71,20 +71,6 @@ __global__ void tally_kernel( const Geometry* geometry,
 }
 
 //---------------------------------------------------------------------------//
-// Finalize the tally.
-__global__ void finalize_kernel( const int num_batch,
-				 const int num_cell,
-				 const double num_particles,
-				 double* tally )
-{
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if ( idx < num_batch * num_cell ) 
-    {
-	tally[idx] = (tally[idx] * num_batch) / num_particles;
-    }
-}
-
-//---------------------------------------------------------------------------//
 // HOST API
 //---------------------------------------------------------------------------//
 // Constructor.
@@ -162,55 +148,55 @@ void Cell_Tally<Geometry>::accumulate(
 template <class Geometry>
 void Cell_Tally<Geometry>::finalize( double num_particles )
 {
-    // Get CUDA launch parameters.
-    int size = d_num_batch * d_num_cells;
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = size / threads_per_block;
-    if ( size % threads_per_block > 0 ) ++num_blocks;
-
-    // Finalize the tally.
-    finalize_kernel<<<num_blocks,threads_per_block>>>( d_num_batch,
-						       d_num_cells,
-						       num_particles,
-						       d_tally );
-
     // Copy the local tally to the host.
+    int size = d_num_batch * d_num_cells;
     std::vector<double> host_tally( size );
     cuda_utils::memory::Copy_To_Host( host_tally.data(), d_tally, size );
 
     // Calculate the first moment.
+    int total_num_batch = (profugus::nodes() * d_num_batch);
+    int particles_per_batch = num_particles / total_num_batch;
     std::vector<double> first( d_num_cells, 0.0 );
-    double first_scaling = d_num_batch * profugus::nodes();
     for ( int c = 0; c < d_num_cells; ++c )
     {
         for ( int b = 0; b < d_num_batch; ++b )
         {
             first[ c ] += host_tally[ b * d_num_cells + c ];
         }
-        first[ c ] /= first_scaling * d_geometry.get_host_ptr()->mesh().volume_host(c);
+        first[ c ] /= particles_per_batch;
     }
     profugus::global_sum(first.data(),  first.size());
 
     // Calculate the second moment.
     std::vector<double> second( d_num_cells, 0.0 );
-    double second_scaling = profugus::nodes() * d_num_batch *
-                            (profugus::nodes() * d_num_batch - 1);
     for ( int c = 0; c < d_num_cells; ++c )
     {
         for ( int b = 0; b < d_num_batch; ++b )
         {
             second[ c ] += host_tally[ b * d_num_cells + c ] *
-                           host_tally[ b * d_num_cells + c ] -
-                           first[ c ] * first[ c ];
+                           host_tally[ b * d_num_cells + c ];
         }
-        second[ c ] /= second_scaling *
-                       d_geometry.get_host_ptr()->mesh().volume_host(c) *
-                       d_geometry.get_host_ptr()->mesh().volume_host(c);
+        second[ c ] /= particles_per_batch * particles_per_batch;
     }
-    profugus::global_sum(second.data(),  second.size());    
+    profugus::global_sum(second.data(),  second.size());
+
+    // Calculate the variance.
+    for ( int c = 0; c < d_num_cells; ++c )
+    {
+      second[ c ] *= (total_num_batch / (total_num_batch-1)) *
+        (second[c]/total_num_batch - first[c]*first[c]/(total_num_batch*total_num_batch)) /
+        (d_geometry.get_host_ptr()->mesh().volume_host( c ) *
+         d_geometry.get_host_ptr()->mesh().volume_host( c ) );        
+    }
     
+    // Calculate the mean.
+    for ( int c = 0; c < d_num_cells; ++c )
+    {
+      first[ c ] /= total_num_batch * d_geometry.get_host_ptr()->mesh().volume_host( c );
+    }
+    
+    // Calculate the variance.
+
     // Determine permutation vector for sorted cells
     std::vector<int>    cells(d_num_cells,  0);
     std::vector<std::pair<int,int>> sort_vec;

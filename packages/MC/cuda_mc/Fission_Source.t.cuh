@@ -39,6 +39,7 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 				    const int* fission_cells,
 				    const int num_particle,
 				    const double weight,
+                                    const int active_cycle,
 				    Particle_Vector<Geometry>* particles )
 {
     using def::I; using def::J; using def::K;
@@ -109,6 +110,9 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 	// set the event.
 	particles->set_event( pidx, events::TAKE_STEP );
 
+        // set the batch.
+        particles->set_batch( pidx, active_cycle );
+
 	// make particle alive
 	particles->live( pidx );
     }
@@ -123,6 +127,7 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 					const double weight,
 					const cuda_utils::Space_Vector width,
 					const cuda_utils::Space_Vector lower,
+                                        const int active_cycle,
 					Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
@@ -179,6 +184,9 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 	// set the event.
 	particles->set_event( pidx, events::TAKE_STEP );
 
+        // set the batch.
+        particles->set_batch( pidx, active_cycle );
+
 	// make particle alive
 	particles->live( pidx );
     }
@@ -193,6 +201,7 @@ __global__ void sample_fission_sites_kernel(
     const int num_particle,
     const typename Physics<Geometry>::Fission_Site* fission_sites,
     const double weight,
+    const int active_cycle,
     Particle_Vector<Geometry>* particles )
 {
     // Get the thread index.
@@ -240,6 +249,9 @@ __global__ void sample_fission_sites_kernel(
 	// set the event.
 	particles->set_event( pidx, events::TAKE_STEP );
 
+        // set the batch.
+        particles->set_batch( pidx, active_cycle );
+
 	// make particle alive
 	particles->live( pidx );
    }
@@ -264,6 +276,7 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     , d_wt(0.0)
     , d_np_left(0)
     , d_np_run(0)
+    , d_active_cycle_counter(0)
 {
     using def::I; using def::J; using def::K;
 
@@ -304,16 +317,19 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
     d_lower.z = lower_z;
     d_width.z = upper_z - lower_z;
 
-    // store the total number of requested particles per cycle
+    // store the total number of requested particles per active_cycle
     d_np_requested = static_cast<int>(db->get("Np", 1000));
 
-    // initialize the total for the first cycle
+    // initialize the total for the first active_cycle
     d_np_total = d_np_requested;
 
     // Allocate device data.
     d_vector_size = db->get("particle_vector_size",10000);
     cuda_utils::memory::Malloc( d_fission_sites_device, d_vector_size );
     cuda_utils::memory::Malloc( d_fission_cells_device, d_vector_size );
+
+    // Get the number of active cycles.
+    d_num_inactive_cycle = db->get<int>("num_inactive_cycles");
 }
 
 //---------------------------------------------------------------------------//
@@ -419,6 +435,9 @@ void Fission_Source<Geometry>::build_source(SP_Fission_Sites &fission_sites)
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
            static_cast<double>(d_np_total);
+
+    // Increment the active_cycle count.
+    ++d_active_cycle_counter;
 
     ENSURE(d_wt > 0.0);
     ENSURE(fission_sites);
@@ -603,6 +622,7 @@ void Fission_Source<Geometry>::sample_fission_sites(
 	num_particle,
 	d_fission_sites_device,
 	d_wt,
+        d_active_cycle_counter - d_num_inactive_cycle,
 	particles.get_device_ptr() );
 }
 
@@ -651,6 +671,7 @@ void Fission_Source<Geometry>::sample_mesh(
 	d_fission_cells_device,
 	num_particle,
 	d_wt,
+        d_active_cycle_counter - d_num_inactive_cycle,
 	particles.get_device_ptr() );
 }
 
@@ -673,6 +694,7 @@ void Fission_Source<Geometry>::sample_geometry(
     	d_wt,
     	d_width,
     	d_lower,
+        d_active_cycle_counter - d_num_inactive_cycle,
     	particles.get_device_ptr() );
 }
 

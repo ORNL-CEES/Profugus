@@ -259,6 +259,7 @@ void Uniform_Source<Geometry,Shape>::build_DR()
 
     // increase the domain count to get an equivalent number per batch
     d_np_domain += d_np_domain % d_num_batch;
+    CHECK( 0 == d_np_domain % d_num_batch );
 
     // Get the actual batch size.
     d_batch_size = d_np_domain / d_num_batch;
