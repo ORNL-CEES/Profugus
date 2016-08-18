@@ -17,6 +17,8 @@
 
 #include "utils/Serial_HDF5_Writer.hh"
 
+#include "comm/global.hh"
+
 #include "mc/Definitions.hh"
 
 #include "Cell_Tally.hh"
@@ -161,6 +163,7 @@ template <class Geometry>
 void Cell_Tally<Geometry>::finalize( double num_particles )
 {
     // Get CUDA launch parameters.
+    int size = d_num_batch * d_num_cells;
     REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
 	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
@@ -174,7 +177,6 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
 						       d_tally );
 
     // Copy the local tally to the host.
-    int size = d_num_batch * d_num_cells;
     std::vector<double> host_tally( size );
     cuda_utils::memory::Copy_To_Host( host_tally.data(), d_tally, size );
 
@@ -187,12 +189,12 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
         {
             first[ c ] += host_tally[ b * d_num_cells + c ];
         }
-        first[ c ] /= first_scaling * d_geometry.get_host_ptr()->mesh().host_volume(c);
+        first[ c ] /= first_scaling * d_geometry.get_host_ptr()->mesh().volume_host(c);
     }
     profugus::global_sum(first.data(),  first.size());
 
     // Calculate the second moment.
-    std::vector<double> first( d_num_cells, 0.0 );
+    std::vector<double> second( d_num_cells, 0.0 );
     double second_scaling = profugus::nodes() * d_num_batch *
                             (profugus::nodes() * d_num_batch - 1);
     for ( int c = 0; c < d_num_cells; ++c )
@@ -204,16 +206,19 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
                            first[ c ] * first[ c ];
         }
         second[ c ] /= second_scaling *
-                       d_geometry.get_host_ptr()->mesh().host_volume(c) *
-                       d_geometry.get_host_ptr()->mesh().host_volume(c);
+                       d_geometry.get_host_ptr()->mesh().volume_host(c) *
+                       d_geometry.get_host_ptr()->mesh().volume_host(c);
     }
     profugus::global_sum(second.data(),  second.size());    
     
     // Determine permutation vector for sorted cells
-    std::vector<int>    cells(d_num_cells,  0);    
+    std::vector<int>    cells(d_num_cells,  0);
     std::vector<std::pair<int,int>> sort_vec;
     for (int i = 0; i < cells.size(); ++i)
+      {
+        cells[i] = i;
         sort_vec.push_back({cells[i],i});
+      }
 
     std::sort(sort_vec.begin(), sort_vec.end(),
         [](const std::pair<int,int> &lhs, const std::pair<int,int> &rhs)
@@ -241,7 +246,7 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
     REQUIRE( d_db->isType<std::string>("problem_name") );
     std::string filename = d_db->get<std::string>("problem_name") + "_flux.h5";
 
-    Serial_HDF5_Writer writer;
+    profugus::Serial_HDF5_Writer writer;
     writer.open(filename);
     writer.write("cells",cells);
     writer.write("flux_mean",first);
