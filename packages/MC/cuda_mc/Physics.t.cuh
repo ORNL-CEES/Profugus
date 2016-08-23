@@ -53,19 +53,20 @@ __device__ int sample_group( const XS_Device* xs,
     const auto scat_matrix = xs->matrix(matid, 0);
 
     // sample g'
-    for (int gp = 0; gp < num_groups; ++gp)
+    for (int gp = 0; gp < num_groups-1; ++gp)
     {
         // calculate the cdf for scattering to this group
         cdf += scat_matrix(gp,g) * total;
 
-        // see if we have sampled this group
+        // see if we have sampled this group.
         if (rnd <= cdf)
             return gp;
     }
-    CHECK( cuda::utility::soft_equiv(cdf, 1.0) );
+    CHECK( cuda::utility::soft_equiv(
+        cdf+scat_matrix(num_groups-1,g)*total, 1.0) );
 
-    // we failed to sample
-    return -1;
+    // we are in the last group.
+    return num_groups-1;
 }
 
 //---------------------------------------------------------------------------//
