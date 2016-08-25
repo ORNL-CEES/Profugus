@@ -415,8 +415,6 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         {
             case ALIVE:
             {
-                thrust::host_vector<int> ind_host = indirection;
-
                 GetAlive<Particle_t> alive_func(particles.data().get(),
                         indirection.data().get(),
                         event.data().get());
