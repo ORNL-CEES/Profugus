@@ -228,7 +228,27 @@ __device__ inline void cartesian_vector_transform(
 
     // normalize the particle to avoid roundoff errors
     vector_normalize(vector);
+}
 
+
+/*!
+ * \brief Perform warp-wide all-reduce sum.
+ */
+template <class T>
+__device__ inline T warpAllReduceSum(T val)
+{
+    for (int mask = warpSize/2; mask > 0; mask /= 2)
+        val += __shfl_xor(val, mask);
+    return val;
+}
+
+/*!
+ * \brief Perform warp-local broadcast
+ */
+template <class T>
+__device__ inline void warpBroadcast(T &val)
+{
+    val = __shfl(val, 0);
 }
 
 } // end namespace utility
