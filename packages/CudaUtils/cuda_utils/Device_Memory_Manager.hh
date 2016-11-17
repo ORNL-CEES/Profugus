@@ -18,7 +18,7 @@ namespace cuda_utils
 
 //===========================================================================//
 /*!
- * \class Device_Handle
+ * \class Device_Memory_Manager
  * \brief Opaque host handle to device memory.
  *
  * This is a base class that provides an opaque handle, stored on the host, to
