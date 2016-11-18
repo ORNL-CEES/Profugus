@@ -201,7 +201,8 @@ TRIBITS_ADD_TEST_DIRECTORIES(
 
 IF(USE_CUDA)
   TRIBITS_ADD_TEST_DIRECTORIES(
-    cuda_geometry/test)
+    cuda_geometry/test
+    cuda_rtk/test)
 ENDIF()
 
 ##---------------------------------------------------------------------------##
