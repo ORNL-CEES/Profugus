@@ -17,11 +17,11 @@
 
 #include <thrust/device_vector.h>
 
-#include "Utils/harness/DBC.hh"
-#include "Device_Memory_Manager.hhh"
+#include "harness/DBC.hh"
+#include "Device_Memory_Manager.hh"
 #include "Device_View_Field.hh"
 
-namespace cuda_utils
+namespace cuda
 {
 
 //===========================================================================//
@@ -81,12 +81,12 @@ class Device_View
     // Get Device_View_Field to data
     Device_View_Field<T>       get_view()
     {
-        return cuda_utils::make_view(d_field);
+        return cuda::make_view(d_field);
     }
 
     const_Device_View_Field<T> get_view() const
     {
-        return cuda_utils::make_view(d_field);
+        return cuda::make_view(d_field);
     }
 
     //@{
@@ -101,7 +101,7 @@ class Device_View
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda_utils
+} // end namespace cuda
 
 #endif // CudaUtils_cuda_utils_Device_View_hh
 

@@ -13,10 +13,10 @@
 
 #include "thrust/device_vector.h"
 
-#include "Utils/harness/DBC.hh"
+#include "harness/DBC.hh"
 #include "CudaDBC.hh"
 
-namespace cuda_utils
+namespace cuda
 {
 
 //===========================================================================//
@@ -299,7 +299,7 @@ const_Device_View_Field<T> make_const_view(const thrust::device_vector<T> &vec)
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda_utils
+} // end namespace cuda
 
 #endif // CudaUtils_cuda_utils_Device_View_Field_hh
 

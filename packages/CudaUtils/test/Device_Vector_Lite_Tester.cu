@@ -67,7 +67,7 @@ void Device_Vector_Lite_Tester::test_host()
     EXPECT_EQ(2, b[0]);
     EXPECT_EQ(0, b[1]);
     EXPECT_EQ(12,b[2]);
-    
+
 }
 
 void Device_Vector_Lite_Tester::test_device()

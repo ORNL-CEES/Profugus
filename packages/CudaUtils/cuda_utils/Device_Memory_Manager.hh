@@ -13,7 +13,7 @@
 
 #include <type_traits>
 
-namespace cuda_utils
+namespace cuda
 {
 
 //===========================================================================//
@@ -49,7 +49,7 @@ class Device_Memory_Manager
 
 //---------------------------------------------------------------------------//
 
-} // end namespace cuda_utils
+} // end namespace cuda
 
 #endif // CudaUtils_cuda_utils_Device_Memory_Manager_hh
 
