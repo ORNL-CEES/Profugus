@@ -54,8 +54,34 @@ struct RTK_State
                 R1_VESSEL = 2001,
                 VESSEL    = 2002};
 
-    static const int plus_face[3];
-    static const int minus_face[3];
+    //@{
+    //! Plus/minus faces.
+    __device__
+    static int plus_face(int d)
+    {
+        if (d == 0)
+            return PLUS_X;
+        else if (d == 1)
+            return PLUS_Y;
+        else if (d == 2)
+            return PLUS_Z;
+
+        return -1;
+    }
+
+    __device__
+    static int minus_face(int d)
+    {
+    if (d == 0)
+        return MINUS_X;
+    else if (d == 1)
+        return MINUS_Y;
+    else if (d == 2)
+        return MINUS_Z;
+
+    return -1;
+    }
+    //@}
 
     //@{
     //! Pin-cell semantics.
@@ -71,14 +97,13 @@ struct RTK_State
     //! Exiting face indicator.
     int exiting_face;
 
-    //! Max levels supported.
-    static const int max_levels = 3;
+    // >>> Max levels supported = 3
 
     //! Coordinates in array at each level.
-    Device_Vector_Lite<Coordinates, max_levels> level_coord;
+    Device_Vector_Lite<Coordinates, 3> level_coord;
 
     //! Crossing boundary indicator by level.
-    Device_Vector_Lite<int, max_levels> exiting_level;
+    Device_Vector_Lite<int, 3> exiting_level;
 
     //! Escaping face in geometry.
     int escaping_face;

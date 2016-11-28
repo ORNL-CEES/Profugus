@@ -163,6 +163,7 @@ IF(USE_CUDA)
   SET(CUDA_GEOMETRY_SOURCES
     cuda_geometry/Cartesian_Mesh.cu
     cuda_geometry/Mesh_Geometry.cu
+    cuda_rtk/RTK_Cell.cu
     )
   LIST(APPEND CUDDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_GEOMETRY_SOURCES})

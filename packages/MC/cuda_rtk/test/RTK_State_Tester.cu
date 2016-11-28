@@ -57,6 +57,7 @@ void on_device(Space_Vector *r,
     i[0] = state.escaping_face;
     i[1] = state.region;
     i[2] = state.face;
+    i[3] = State::plus_face(1);
 }
 
 //---------------------------------------------------------------------------//
@@ -87,7 +88,7 @@ void test_on_device()
     thrust::device_vector<Space_Vector> r(1);
     thrust::device_vector<Space_Vector> d(1);
     thrust::device_vector<Coordinates>  c(3);
-    thrust::device_vector<int>          i(3);
+    thrust::device_vector<int>          i(4);
 
     on_device<<<1,1>>>(r.data().get(),
                        d.data().get(),
@@ -123,6 +124,7 @@ void test_on_device()
     EXPECT_EQ(1004, ret_i[0]);
     EXPECT_EQ(2,    ret_i[1]);
     EXPECT_EQ(1001, ret_i[2]);
+    EXPECT_EQ(State::PLUS_Y, ret_i[3]);
 }
 
 //---------------------------------------------------------------------------//
