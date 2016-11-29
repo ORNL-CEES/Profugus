@@ -17,7 +17,7 @@
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Device_Vector_Lite.hh"
 
-typedef cuda_profugus::Device_Vector_Lite<int,3> Vec_Lite;
+typedef cuda_utils::Device_Vector_Lite<int,3> Vec_Lite;
 
 __global__ void from_device(Vec_Lite *vals, int num_vals)
 {

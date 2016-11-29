@@ -10,7 +10,6 @@
 
 #include <type_traits>
 
-
 #include "Device_Vector_Lite_Tester.hh"
 #include "gtest/utils_gtest.hh"
 
