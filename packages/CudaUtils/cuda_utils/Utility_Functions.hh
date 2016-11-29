@@ -80,7 +80,7 @@ __host__ __device__ inline bool soft_equiv(double a,
  * \return vector magnitude
  */
 __device__ inline double vector_magnitude(
-    const cuda::Device_Vector_Lite<double, 3> &vector)
+    const cuda_utils::Device_Vector_Lite<double, 3> &vector)
 {
     return sqrt(vector[0] * vector[0] +
                 vector[1] * vector[1] +

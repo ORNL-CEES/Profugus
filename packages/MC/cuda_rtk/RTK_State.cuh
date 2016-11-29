@@ -28,8 +28,8 @@ struct RTK_State
 {
     //@{
     //! Types.
-    using Space_Vector = Device_Vector_Lite<double, 3>;
-    using Coordinates  = Device_Vector_Lite<int, 3>;
+    using Space_Vector = cuda_utils::Device_Vector_Lite<double, 3>;
+    using Coordinates  = cuda_utils::Device_Vector_Lite<int, 3>;
     //@}
 
     //! Position.
@@ -100,10 +100,10 @@ struct RTK_State
     // >>> Max levels supported = 3
 
     //! Coordinates in array at each level.
-    Device_Vector_Lite<Coordinates, 3> level_coord;
+    cuda_utils::Device_Vector_Lite<Coordinates, 3> level_coord;
 
     //! Crossing boundary indicator by level.
-    Device_Vector_Lite<int, 3> exiting_level;
+    cuda_utils::Device_Vector_Lite<int, 3> exiting_level;
 
     //! Escaping face in geometry.
     int escaping_face;

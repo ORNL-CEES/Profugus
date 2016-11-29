@@ -18,6 +18,7 @@
 #include "CudaUtils/cuda_utils/Device_View_Field.hh"
 #include "CudaUtils/cuda_utils/Device_Vector_Lite.hh"
 #include "CudaUtils/cuda_utils/Device_Memory_Manager.hh"
+#include "CudaUtils/cuda_utils/Utility_Functions.hh"
 #include "MC/geometry/RTK_Cell.hh"
 #include "RTK_State.cuh"
 
@@ -56,7 +57,7 @@ class RTK_Cell
     View_Int d_ids;
 
     // Radial dimensions (pitch).
-    cuda_profugus::Device_Vector_Lite<double, 2> d_xy;
+    cuda_utils::Device_Vector_Lite<double, 2> d_xy;
 
     // Z-extent.
     double d_z;
@@ -156,14 +157,14 @@ class RTK_Cell
 
     // Distance to a shell.
     __device__
-    void dist_to_shell(double x, double y, double omega_x, double omega_y,
-                       double r, int face);
+    double dist_to_shell(double x, double y, double omega_x, double omega_y,
+                         double r, int face);
 
     // Update state if it hits a shell.
     __device__
-    void check_shell(const Space_Vector &r, const Space_Vector &omega,
-                     int shell, int face, int next_region, int next_face,
-                     Geo_State_t &state);
+    double check_shell(const Space_Vector &r, const Space_Vector &omega,
+                       int shell, int face, int next_region, int next_face,
+                       Geo_State_t &state);
 
     // Transform to vessel coordinates.
     __device__
