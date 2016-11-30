@@ -21,7 +21,7 @@ namespace cuda_profugus
  */
 RTK_Cell::RTK_Cell(int      mod_id,
                    View_Dbl r,
-                   View_Dbl ids,
+                   View_Int ids,
                    double   height,
                    int      num_segments)
 {

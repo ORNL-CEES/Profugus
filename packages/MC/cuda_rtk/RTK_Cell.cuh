@@ -64,7 +64,7 @@ class RTK_Cell
 
   public:
     // Constructor.
-    RTK_Cell(int mod_id, View_Dbl r, View_Dbl ids, double height,
+    RTK_Cell(int mod_id, View_Dbl r, View_Int ids, double height,
              int num_segments);
 
     // Initialize a state.
