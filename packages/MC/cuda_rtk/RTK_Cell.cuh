@@ -64,6 +64,8 @@ class RTK_Cell
 
   public:
     // Constructor.
+    RTK_Cell(int mod_id, View_Dbl r, View_Dbl ids, double height,
+             int num_segments);
 
     // Initialize a state.
     __device__
@@ -244,8 +246,9 @@ class RTK_Cell_DMM
 
     // POD data need to construct device object.
     int    d_mod_id;
+    int    d_num_segments;
     double d_z;
-    
+    double d_extent[2][2];
 };
 
 } // end namespace cuda_profugus
