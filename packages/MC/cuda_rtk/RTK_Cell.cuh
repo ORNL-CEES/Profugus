@@ -222,10 +222,30 @@ class RTK_Cell_DMM
     using Host_RTK_Cell = profugus::RTK_Cell;
 
   private:
+    // >>> DEVICE MEMORY MANAGEMENT DATA
+
+    // Shell radii.
+    thrust::device_vector<double> d_r;
+
+    // Shell ids.
+    thrust::device_vector<int> d_ids;
 
   public:
     // Constructor.
     RTK_Cell_DMM(const Host_RTK_Cell &host_cell);
+
+    // >>> DERIVED INTERFACE
+
+    // Create a device instance.
+    RTK_Cell device_instance();
+
+  private:
+    // >>> IMPLEMENTATION
+
+    // POD data need to construct device object.
+    int    d_mod_id;
+    double d_z;
+    
 };
 
 } // end namespace cuda_profugus
