@@ -49,6 +49,15 @@ __global__ void write_from_const_view(const_DVF view, int *vals)
     vals[tid] = new_view[tid];
 }
 
+__global__ void check_null(DVF view, int *vals)
+{
+    DEVICE_REQUIRE(vals[0] == -1);
+    DEVICE_REQUIRE(vals[1] == -1);
+
+    vals[0] = static_cast<int>(view.empty());
+    vals[1] = view.size();
+}
+
 //---------------------------------------------------------------------------//
 // TEST FUNCTIONS
 //---------------------------------------------------------------------------//
@@ -85,6 +94,20 @@ void Device_View_Field_Tester::test_views()
     host_result.resize(8,-1);
     thrust::copy(result.begin(),result.end(),host_result.begin());
     EXPECT_VEC_EQ(ref,host_result);
+
+    // Make an empty device vector
+    thrust::device_vector<int> null;
+    EXPECT_TRUE(null.empty());
+
+    result.resize(2);
+    thrust::fill(result.begin(), result.end(), -1);
+    check_null<<<1,1>>>(cuda::make_view(null), result.data().get());
+
+    host_result.resize(2,-1);
+    thrust::copy(result.begin(),result.end(),host_result.begin());
+
+    EXPECT_EQ(1, host_result[0]);
+    EXPECT_EQ(0, host_result[1]);
 }
 
 //---------------------------------------------------------------------------//
