@@ -11,48 +11,47 @@
 #ifndef MC_cuda_rtk_test_RTK_Cell_Tester_hh
 #define MC_cuda_rtk_test_RTK_Cell_Tester_hh
 
-namespace cuda_profugus
+#include <memory>
+#include <vector>
+
+#include "Utils/gtest/Gtest_Functions.hh"
+#include "MC/geometry/RTK_Cell.hh"
+
+//---------------------------------------------------------------------------//
+// TESTERS
+//---------------------------------------------------------------------------//
+
+class Base : public ::utils::Test
 {
+  protected:
+    using RTK_Cell = profugus::RTK_Cell;
+    using SP_Cell  = std::shared_ptr<Host_Cell>;
+    using Vec_Cell = std::vector<SP_Cell>;
 
-//===========================================================================//
-/*!
- * \class RTK_Cell_Tester
- * \brief <++>
- *
- * Long description or discussion goes here.
- */
-/*!
- * \example cuda_rtk/test/tstRTK_Cell_Tester.cc
- *
- * Test of RTK_Cell_Tester.
- */
-//===========================================================================//
-
-class RTK_Cell_Tester
-{
-  public:
-    //@{
-    //! Typedefs
-    <++>
-    //@}
-
-  private:
-    // >>> DATA
-
-  public:
-
-    // Constructor
-    RTK_Cell_Tester();
+  protected:
+    Vec_Cell pins;
 };
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda_profugus
+
+class Single_Shell : public Base
+{
+  protected:
+
+    void SetUp()
+    {
+        SP_Cell pin1 = std::make_shared<RTK_Cell>(1, 0.54, 10, 1.26, 14.28);
+        SP_Cell pin2 = std::make_shared<RTK_Cell>(1, 0.45, 2, 1.2, 14.28);
+        pins         = {pin1, pin2};
+    }
+
+    void run();
+};
 
 //---------------------------------------------------------------------------//
-// INLINE DEFINITIONS
-//---------------------------------------------------------------------------//
-// #include "RTK_Cell_Tester.i.hh"
-//---------------------------------------------------------------------------//
+
+} // end namespace rtk_cell_tester
+
 #endif // MC_cuda_rtk_test_RTK_Cell_Tester_hh
 
 //---------------------------------------------------------------------------//
