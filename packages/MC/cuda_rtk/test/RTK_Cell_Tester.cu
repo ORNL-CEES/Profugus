@@ -33,13 +33,18 @@ __global__
 void single_shell_kernel1(
     Device_Cell   pin,
     int          *ints,
-    dbls         *dbls,
+    double	 *dbls,
     Space_Vector *svs)
 {
+    auto r  = pin.radii();
+    dbls[0] = r[0];
+    dbls[1] = pin.pitch(X);
+    dbls[2] = pin.pitch(Y);
+
     ints[0] = pin.num_regions();
     ints[1] = pin.num_shells();
-    ints[2] = pin.region(0.0, 0.5401);
-    ints[3] = pin.region(0.0, 0.5399);
+    //ints[2] = pin.region(0.0, 0.5401);
+    //ints[3] = pin.region(0.0, 0.5399);
     ints[4] = pin.matid(0);
     ints[5] = pin.matid(1);
 
@@ -63,17 +68,22 @@ void Single_Shell::run()
     auto p1 = d1.device_instance();
     auto p2 = d2.device_instance();
 
-    {
-        thrust::device_vector<int>          ints(6, -1);
-        thrust::device_vector<double>       dbls;
-        thrust::device_vector<Space_Vector> svs(2);
+    thrust::device_vector<int>          ints(20, -1);
+    thrust::device_vector<double>       dbls(20, -1);
+    thrust::device_vector<Space_Vector> svs(20);
 
-        single_shell_kernel1<<<1,1>>>(p1);
+    {
+
+        single_shell_kernel1<<<1,1>>>(p1, ints.data().get(),
+dbls.data().get(), svs.data().get() );
 
         thrust::host_vector<int>          rints(ints.begin(), ints.end());
         thrust::host_vector<double>       rdbls(dbls.begin(), dbls.end());
         thrust::host_vector<Space_Vector> rsvs(svs.begin(), svs.end());
 
+        EXPECT_EQ(0.54, dbls[0]);
+        EXPECT_EQ(1.26, dbls[1]);
+        EXPECT_EQ(1.26, dbls[2]);
 
         EXPECT_EQ(2,  rints[0]);
         EXPECT_EQ(1,  rints[1]);

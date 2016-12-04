@@ -123,7 +123,7 @@ class RTK_Cell
 
     //! Return pin-pitch in X or Y dimension.
     __device__
-    double pitch(int d) const { REQUIRE(d < 2); return d_xy[d]; }
+    double pitch(int d) const { DEVICE_REQUIRE(d < 2); return d_xy[d]; }
 
     //! Return height.
     __device__
