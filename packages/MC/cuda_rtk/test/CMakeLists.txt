@@ -20,6 +20,7 @@ SET(SOURCES
 
 SET(CUDA_SOURCES
   RTK_State_Tester.cu
+  RTK_Cell_Tester.cu
 )
 
 PACKAGE_ADD_CUDA_LIBRARY(
@@ -34,7 +35,8 @@ PACKAGE_ADD_CUDA_LIBRARY(
 
 SET(DEPS DEPLIBS mc_cuda_rtk_test_cuda)
 
-ADD_UTILS_TEST(tstRTK_State.cc NP 1 ${DEPS})
+ADD_UTILS_TEST(tstRTK_State_cuda.cc NP 1 ${DEPS})
+ADD_UTILS_TEST(tstRTK_Cell_cuda.cc  NP 1 ${DEPS})
 
 ##---------------------------------------------------------------------------##
 ##                        end of cuda_utils/test/CMakeLists.txt

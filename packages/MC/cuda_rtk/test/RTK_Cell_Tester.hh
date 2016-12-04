@@ -21,12 +21,15 @@
 // TESTERS
 //---------------------------------------------------------------------------//
 
-class Base : public ::utils::Test
+class Base : public ::testing::Test
 {
   protected:
     using RTK_Cell = profugus::RTK_Cell;
-    using SP_Cell  = std::shared_ptr<Host_Cell>;
+    using SP_Cell  = std::shared_ptr<RTK_Cell>;
     using Vec_Cell = std::vector<SP_Cell>;
+
+  protected:
+    virtual ~Base() = default;
 
   protected:
     Vec_Cell pins;
@@ -49,8 +52,6 @@ class Single_Shell : public Base
 };
 
 //---------------------------------------------------------------------------//
-
-} // end namespace rtk_cell_tester
 
 #endif // MC_cuda_rtk_test_RTK_Cell_Tester_hh
 
