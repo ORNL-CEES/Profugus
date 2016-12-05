@@ -36,6 +36,7 @@ RTK_Cell::RTK_Cell(int      mod_id,
     , d_num_int_faces(d_seg_faces + d_num_shells)
     , d_mod_region(d_num_regions - 1)
     , d_num_cells(d_num_regions * d_segments)
+    , d_vessel(false)
 {
     using def::X; using def::Y;
 
@@ -112,6 +113,7 @@ RTK_Cell RTK_Cell_DMM::device_instance()
     return RTK_Cell(d_mod_id,
                     cuda::make_view(d_r),
                     cuda::make_view(d_ids),
+                    d_extent,
                     d_z,
                     d_num_segments);
 }
