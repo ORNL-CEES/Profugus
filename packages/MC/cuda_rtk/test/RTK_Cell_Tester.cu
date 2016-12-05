@@ -33,7 +33,7 @@ __global__
 void single_shell_kernel1(
     Device_Cell   pin,
     int          *ints,
-    double	 *dbls,
+    double       *dbls,
     Space_Vector *svs)
 {
     auto r  = pin.radii();
@@ -43,8 +43,8 @@ void single_shell_kernel1(
 
     ints[0] = pin.num_regions();
     ints[1] = pin.num_shells();
-    //ints[2] = pin.region(0.0, 0.5401);
-    //ints[3] = pin.region(0.0, 0.5399);
+    ints[2] = pin.region(0.0, 0.5401);
+    ints[3] = pin.region(0.0, 0.5399);
     ints[4] = pin.matid(0);
     ints[5] = pin.matid(1);
 
@@ -73,9 +73,8 @@ void Single_Shell::run()
     thrust::device_vector<Space_Vector> svs(20);
 
     {
-
-        single_shell_kernel1<<<1,1>>>(p1, ints.data().get(),
-dbls.data().get(), svs.data().get() );
+        single_shell_kernel1<<<1,1>>>(
+            p1, ints.data().get(), dbls.data().get(), svs.data().get());
 
         thrust::host_vector<int>          rints(ints.begin(), ints.end());
         thrust::host_vector<double>       rdbls(dbls.begin(), dbls.end());

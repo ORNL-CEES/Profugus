@@ -22,9 +22,32 @@ namespace cuda_profugus
 RTK_Cell::RTK_Cell(int      mod_id,
                    View_Dbl r,
                    View_Int ids,
+                   double   (&extents)[2][2],
                    double   height,
                    int      num_segments)
+    : d_mod_id(mod_id)
+    , d_r(r)
+    , d_ids(ids)
+    , d_z(height)
+    , d_num_shells(r.size())
+    , d_num_regions(d_num_shells + 1)
+    , d_segments(num_segments)
+    , d_seg_faces(d_segments / 2)
+    , d_num_int_faces(d_seg_faces + d_num_shells)
+    , d_mod_region(d_num_regions - 1)
+    , d_num_cells(d_num_regions * d_segments)
 {
+    using def::X; using def::Y;
+
+    // Set the extents
+    d_extent[X][LO] = extents[X][LO];
+    d_extent[X][HI] = extents[X][HI];
+    d_extent[Y][LO] = extents[Y][LO];
+    d_extent[Y][HI] = extents[Y][HI];
+
+    // Set the pitch
+    d_xy[X] = d_extent[X][HI] - d_extent[X][LO];
+    d_xy[Y] = d_extent[Y][HI] - d_extent[Y][LO];
 }
 
 //---------------------------------------------------------------------------//
