@@ -46,6 +46,7 @@ IF(USE_CUDA)
     Shared_Device_Ptr_Tester.cu
     Stream_Test_Kernel.cu
     Texture_Vector_Test_Kernel.cu
+    Utility_Functions_Tester.cu
     )
 
   PACKAGE_ADD_CUDA_LIBRARY(
@@ -80,6 +81,7 @@ ADD_UTILS_TEST(tstStream.cc                     NP 1 ${DEPS})
 ADD_UTILS_TEST(tstTexture_Vector.cc             NP 1 ${DEPS})
 ADD_UTILS_TEST(tstDevice_View.cc                NP 1 ${DEPS})
 ADD_UTILS_TEST(tstDevice_View_Field.cc          NP 1 ${DEPS})
+ADD_UTILS_TEST(tstUtility_Functions.cc          NP 1 ${DEPS})
 
 IF(USE_CUDA)
   ADD_UTILS_TEST(tstBLAS_Handle.cc        NP 1        )

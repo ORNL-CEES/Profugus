@@ -22,6 +22,67 @@ namespace utility
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Return a thread id.
+ *
+ * The global thread id in a grid can be defined in 2 ways:
+ *
+ * \arg threads are given a global index based on their global \e (i,j,k)
+ * indices that is \e independent of the number of blocks (only dependent on
+ * the number of global threads in each dimension).
+ *
+ * \arg threads are ordered by block such that \e [0,...,N) are the global
+ * indices of block 0, \e [N,N+1,...,2N) are the global indices on on block 1,
+ * etc and \e N is the number of threads per block.
+ *
+ * Since the blocks can be run independently (concurrently) we choose the
+ * second method for better cache efficiency (blocks will operate on data that
+ * is contiguous).  The global thread id is given by
+ * \f[
+ *   t_\mathrm{id} = n + Nb_\mathrm{id}
+ * \f]
+ * where \e N is the number of threads per block:
+ * \f[
+ *   N =
+ *     \mathrm{blockDim.x}\times\mathrm{blockDim.y}\times\mathrm{blockDim.z}
+ * \f]
+ * The block id is (grids can have 2D arrays of blocks):
+ * \f[
+ *   b_\mathrm{id} = \mathrm{blockIdx.x} +
+ *                   \mathrm{gridDim.x}\times\mathrm{blockIdx.y}
+ * \f]
+ * Finally, \e n is the block-local thread id that is defined on a 3D thread
+ * block
+ * \f[
+ *   n = \mathrm{threadIdx.x} +
+ *       \mathrm{blockDim.x}\times(\mathrm{threadIdx.y} +
+ *       \mathrm{blockDim.y}\times(\mathrm{threadIdx.z}))
+ * \f]
+ *
+ * The CUDA variables are:
+ *
+ * \arg \c (threadIdx.x,threadIdx.y,threadIdx.z) : local indices of thread in
+ * a block in each dimension
+ *
+ * \arg \c (blockDim.x,blockDim.y,blockDim.z) : number of threads per block in
+ * each dimension
+ *
+ * \arg \c (blockIdx.x,blockIdx.y) : indices of block in a grid in each
+ * dimension
+ *
+ * \arg \c (gridDim.x,gridDim.y) : number of blocks in a grid in each
+ * dimension
+ */
+__device__
+inline int thread_id()
+{
+    return threadIdx.x + blockDim.x *
+        (threadIdx.y + blockDim.y * (threadIdx.z)) +
+        (blockDim.x * blockDim.y * blockDim.z) *
+        (blockIdx.x + gridDim.x * blockIdx.y);
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief On-device lower bound binary search.
  */
 template <class T>
