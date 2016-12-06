@@ -47,10 +47,11 @@ class Device_View
     //! Typedefs.
     using SP_Memory_Manager = std::shared_ptr<Device_Memory_Manager<T>>;
     using Managers          = std::vector<SP_Memory_Manager>;
-    using Field             = std::vector<T>;
-    using const_pointer     = typename Field::const_pointer;
-    using pointer           = typename Field::pointer;
-    using size_type         = typename Field::size_type;
+    using DVF               = Device_View_Field<T>;
+    using const_DVF         = const_Device_View_Field<T>;
+    using const_pointer     = typename std::vector<T>::const_pointer;
+    using pointer           = typename std::vector<T>::pointer;
+    using size_type         = typename std::vector<T>::size_type;
     //@}
 
   private:
@@ -67,7 +68,7 @@ class Device_View
     Device_View(Managers managers)
         : d_managers(std::move(managers))
     {
-        Field field;
+        std::vector<T> field;
         for (auto &manager : d_managers)
         {
             field.push_back(manager->device_instance());
@@ -78,16 +79,18 @@ class Device_View
 
     // >>> ACCESSORS
 
-    // Get Device_View_Field to data
-    Device_View_Field<T>       get_view()
+    //@{
+    //! Get Device_View_Field to data
+    DVF get_view()
     {
         return cuda::make_view(d_field);
     }
 
-    const_Device_View_Field<T> get_view() const
+    const_DVF get_view() const
     {
         return cuda::make_view(d_field);
     }
+    //@}
 
     //@{
     //! Return pointer to device field.

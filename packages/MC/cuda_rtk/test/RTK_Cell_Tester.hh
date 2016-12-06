@@ -48,7 +48,45 @@ class Single_Shell : public Base
         pins         = {pin1, pin2};
     }
 
-    void run();
+    void construct();
+    void track();
+};
+
+//---------------------------------------------------------------------------//
+
+class Multi_Shell : public Base
+{
+  protected:
+
+    void SetUp()
+    {
+        // make pin with clad
+        std::vector<int>    ids = {1, 2};
+        std::vector<double> rad = {0.49, 0.54};
+
+        SP_Cell pin = std::make_shared<RTK_Cell>(ids, rad, 3, 1.26, 14.28);
+        pins        = {pin};
+    }
+
+    void construct();
+    void track();
+};
+
+//---------------------------------------------------------------------------//
+
+class Empty : public Base
+{
+  protected:
+
+    void SetUp()
+    {
+        SP_Cell pin1 = std::make_shared<RTK_Cell>(11, 1.26, 14.28);
+        SP_Cell pin2 = std::make_shared<RTK_Cell>(11, 0.25, 1.26, 14.28);
+        pins         = {pin1, pin2};
+    }
+
+    void square();
+    void rectangle();
 };
 
 //---------------------------------------------------------------------------//
