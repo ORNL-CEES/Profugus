@@ -63,13 +63,20 @@ class Multi_Shell : public Base
         // make pin with clad
         std::vector<int>    ids = {1, 2};
         std::vector<double> rad = {0.49, 0.54};
+        SP_Cell pin1 = std::make_shared<RTK_Cell>(ids, rad, 3, 1.26, 14.28);
 
-        SP_Cell pin = std::make_shared<RTK_Cell>(ids, rad, 3, 1.26, 14.28);
-        pins        = {pin};
+        ids = {1, 2, 5};
+        rad = {0.27, 0.486, 0.54};
+        SP_Cell pin2 = std::make_shared<RTK_Cell>(ids, rad, 10, 1.26, 14.28, 4);
+
+        pins = {pin1, pin2};
     }
 
     void construct();
     void track();
+
+    void multiseg_contruct();
+    void multiseg_track();
 };
 
 //---------------------------------------------------------------------------//

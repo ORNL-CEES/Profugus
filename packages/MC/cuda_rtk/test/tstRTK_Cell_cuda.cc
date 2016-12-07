@@ -45,6 +45,20 @@ TEST_F(Multi_Shell, tracking)
 
 //---------------------------------------------------------------------------//
 
+TEST_F(Multi_Shell, multiseg_construction)
+{
+    multiseg_construct();
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(Multi_Shell, multisegment_tracking)
+{
+    multiseg_track();
+}
+
+//---------------------------------------------------------------------------//
+
 TEST_F(Empty, square)
 {
     square();

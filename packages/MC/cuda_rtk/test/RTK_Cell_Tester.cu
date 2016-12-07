@@ -550,6 +550,464 @@ void Multi_Shell::track()
 }
 
 //---------------------------------------------------------------------------//
+
+__global__
+void multi_shell_kernel3(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls)
+{
+    int n = 0, m = 0;
+
+    ints[n++] = pin.num_cells();
+    ints[n++] = pin.num_regions();
+    ints[n++] = pin.num_shells();
+    ints[n++] = pin.num_segments();
+
+    ints[n++] = pin.region(0.28, 0.0);
+    ints[n++] = pin.segment(0.28, 0.0);
+    ints[n++] = pin.segment(0.28, -0.01);
+
+    ints[n++] = pin.cell(0, 0);
+    ints[n++] = pin.cell(1, 0);
+    ints[n++] = pin.cell(2, 0);
+    ints[n++] = pin.cell(3, 0);
+
+    ints[n++] = pin.cell(0, 1);
+    ints[n++] = pin.cell(1, 1);
+    ints[n++] = pin.cell(2, 1);
+    ints[n++] = pin.cell(3, 1);
+
+    ints[n++] = pin.cell(0, 2);
+    ints[n++] = pin.cell(1, 2);
+    ints[n++] = pin.cell(2, 2);
+    ints[n++] = pin.cell(3, 2);
+
+    ints[n++] = pin.cell(0, 3);
+    ints[n++] = pin.cell(1, 3);
+    ints[n++] = pin.cell(2, 3);
+    ints[n++] = pin.cell(3, 3);
+}
+
+//---------------------------------------------------------------------------//
+
+__global__
+void multi_shell_kernel4(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls)
+{
+    int n = 0, m = 0;
+
+    State  state;
+    Vector r, omega;
+
+    // test tracking
+    r     = {  0.43,   0.51,   1.20};
+    omega = { -0.267261241912,  -0.534522483825,   0.801783725737};
+
+    // initialize
+    pin.initialize(r, state);
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+    ints[n++] = state.next_segment;
+    ints[n++] = state.exiting_face;
+
+    // move to surface
+    r[0] += omega[0] * state.dist_to_next_region;
+    r[1] += omega[1] * state.dist_to_next_region;
+    r[2] += omega[2] * state.dist_to_next_region;
+
+    // cross the surface
+    pin.cross_surface(state);
+
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.exiting_face;
+
+    // get distance to boundary
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.face;
+    ints[n++] = state.region;
+    ints[n++] = state.segment;
+    ints[n++] = state.next_face;
+    ints[n++] = state.exiting_face;
+}
+
+//---------------------------------------------------------------------------//
+
+void Multi_Shell::multiseg_construct()
+{
+    Manager dmm(*pins[1]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+
+    multi_shell_kernel3<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+
+    int n = 0, m = 0;
+
+    EXPECT_EQ(16, rints[n++]);
+    EXPECT_EQ(4,  rints[n++]);
+    EXPECT_EQ(3,  rints[n++]);
+    EXPECT_EQ(4,  rints[n++]);
+
+    EXPECT_EQ(1,  rints[n++]);
+    EXPECT_EQ(0,  rints[n++]);
+    EXPECT_EQ(2,  rints[n++]);
+
+    EXPECT_EQ(0,  rints[n++]);
+    EXPECT_EQ(1,  rints[n++]);
+    EXPECT_EQ(2,  rints[n++]);
+    EXPECT_EQ(3,  rints[n++]);
+
+    EXPECT_EQ(4,  rints[n++]);
+    EXPECT_EQ(5,  rints[n++]);
+    EXPECT_EQ(6,  rints[n++]);
+    EXPECT_EQ(7,  rints[n++]);
+
+    EXPECT_EQ(8,  rints[n++]);
+    EXPECT_EQ(9,  rints[n++]);
+    EXPECT_EQ(10, rints[n++]);
+    EXPECT_EQ(11, rints[n++]);
+
+    EXPECT_EQ(12, rints[n++]);
+    EXPECT_EQ(13, rints[n++]);
+    EXPECT_EQ(14, rints[n++]);
+    EXPECT_EQ(15, rints[n++]);
+}
+
+//---------------------------------------------------------------------------//
+
+void Multi_Shell::multiseg_track()
+{
+    Manager dmm(*pins[1]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(100, -1);
+    thrust::device_vector<double> dbls(100, -1);
+
+    multi_shell_kernel4<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+
+    int    n   = 0, m = 0;
+    double eps = 1.0e-6;
+
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(State::NONE, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 2.2028008712e-01, eps);
+    EXPECT_EQ(State::NONE, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 9.4898743120e-02, eps);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 4.0177140025e-01, eps);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 2.3717240314e-01, eps);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(4, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(4, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 4.9908842021e-01, eps);
+    EXPECT_EQ(4, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 1.5570162247e-01, eps);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 2.4606977777e-01, eps);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 9.4898743120e-02, eps);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 1.8286351326e-01, eps);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(State::NONE, rints[n++]);
+    EXPECT_EQ(State::MINUS_Y, rints[n++]);
+}
+
+//---------------------------------------------------------------------------//
 // EMPTY CELL
 //---------------------------------------------------------------------------//
 
