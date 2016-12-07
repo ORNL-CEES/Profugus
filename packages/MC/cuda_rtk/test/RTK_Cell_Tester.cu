@@ -557,7 +557,7 @@ void multi_shell_kernel3(
     int         *ints,
     double      *dbls)
 {
-    int n = 0, m = 0;
+    int n = 0;
 
     ints[n++] = pin.num_cells();
     ints[n++] = pin.num_regions();
@@ -831,7 +831,7 @@ void Multi_Shell::multiseg_construct()
     thrust::host_vector<int>    rints(ints.begin(), ints.end());
     thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
 
-    int n = 0, m = 0;
+    int n = 0;
 
     EXPECT_EQ(16, rints[n++]);
     EXPECT_EQ(4,  rints[n++]);

@@ -75,7 +75,7 @@ class Multi_Shell : public Base
     void construct();
     void track();
 
-    void multiseg_contruct();
+    void multiseg_construct();
     void multiseg_track();
 };
 
