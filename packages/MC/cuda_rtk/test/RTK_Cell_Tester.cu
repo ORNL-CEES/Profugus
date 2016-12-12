@@ -99,6 +99,9 @@ void single_shell_kernel1(
         ints[16] = state.exiting_face;
         ints[17] = state.region;
     }
+
+    // Should not have vessel
+    ints[18] = pin.has_vessel();
 }
 
 //---------------------------------------------------------------------------//
@@ -270,6 +273,8 @@ void Single_Shell::construct()
     EXPECT_SOFTEQ(rdbls[4], 0.63, 1.e-12);
     EXPECT_EQ(State::MINUS_X, rints[16]);
     EXPECT_EQ(1, rints[17]);
+
+    EXPECT_FALSE(rints[18]);
 }
 
 //---------------------------------------------------------------------------//
@@ -1365,6 +1370,7 @@ void gap_kernel1(
     ints[n++] = state.exiting_face;
     ints[n++] = state.region;
 }
+
 //---------------------------------------------------------------------------//
 
 __global__
@@ -1399,6 +1405,76 @@ void gap_kernel2(
     ints[n++] = pin.region(-0.7, 0.7);
     ints[n++] = pin.region(-0.64, 0.1);
     ints[n++] = pin.region(0.1, 0.64);
+}
+
+//---------------------------------------------------------------------------//
+
+__global__
+void gap_kernel3(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls,
+    Vector      *svs)
+{
+    int n = 0, m = 0;
+
+    pin.get_extents(svs[0], svs[1]);
+
+    dbls[m++] = pin.radii()[0];
+    dbls[m++] = pin.radii()[1];
+    dbls[m++] = pin.pitch(0);
+    dbls[m++] = pin.pitch(1);
+    dbls[m++] = pin.height();
+
+    ints[n++] = pin.num_regions();
+    ints[n++] = pin.num_shells();
+    ints[n++] = pin.num_segments();
+
+    ints[n++] = pin.matid(0);
+    ints[n++] = pin.matid(1);
+    ints[n++] = pin.matid(2);
+
+    ints[n++] = pin.region(0.1, 0.48);
+    ints[n++] = pin.region(0.1, 0.479);
+    ints[n++] = pin.region(0.5, 0.3);
+    ints[n++] = pin.region(0.4, 0.35);
+    ints[n++] = pin.region(0.7, 0.7);
+    ints[n++] = pin.region(0.64, 0.1);
+    ints[n++] = pin.region(0.1, 0.64);
+}
+
+//---------------------------------------------------------------------------//
+
+__global__
+void gap_kernel4(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls,
+    Vector      *svs)
+{
+    int n = 0, m = 0;
+
+    pin.get_extents(svs[0], svs[1]);
+
+    dbls[m++] = pin.pitch(0);
+    dbls[m++] = pin.pitch(1);
+    dbls[m++] = pin.height();
+
+    ints[n++] = pin.num_regions();
+    ints[n++] = pin.num_shells();
+    ints[n++] = pin.num_segments();
+
+    ints[n++] = pin.matid(0);
+
+    ints[n++] = pin.region(0.1, 0.48);
+    ints[n++] = pin.region(0.1, 0.479);
+    ints[n++] = pin.region(0.5, 0.3);
+    ints[n++] = pin.region(0.4, 0.35);
+    ints[n++] = pin.region(0.7, 0.7);
+    ints[n++] = pin.region(0.64, 0.1);
+    ints[n++] = pin.region(0.1, 0.64);
+
+    ints[n++] = pin.has_vessel();
 }
 
 //---------------------------------------------------------------------------//
@@ -1545,12 +1621,100 @@ void Gap::lox_hiy()
 
 void Gap::hix_hiy()
 {
+    Manager dmm(*pins[2]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+    thrust::device_vector<Vector> svs(20);
+
+    gap_kernel3<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get(), svs.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+    thrust::host_vector<Vector> rsvs(svs.begin(), svs.end());
+
+    int n = 0, m = 0;
+
+    EXPECT_SOFT_EQ(-0.63, rsvs[0][0]);
+    EXPECT_SOFT_EQ(-0.63, rsvs[0][1]);
+    EXPECT_SOFT_EQ(0.0,   rsvs[0][2]);
+    EXPECT_SOFT_EQ(0.73,  rsvs[1][0]);
+    EXPECT_SOFT_EQ(0.73,  rsvs[1][1]);
+    EXPECT_SOFT_EQ(14.28, rsvs[1][2]);
+
+    EXPECT_SOFT_EQ(0.49, rdbls[m++]);
+    EXPECT_SOFT_EQ(0.54, rdbls[m++]);
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_EQ(14.28, rdbls[m++]);
+
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
 }
 
 //---------------------------------------------------------------------------//
 
 void Gap::hom_hix_hiy()
 {
+    Manager dmm(*pins[3]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+    thrust::device_vector<Vector> svs(20);
+
+    gap_kernel4<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get(), svs.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+    thrust::host_vector<Vector> rsvs(svs.begin(), svs.end());
+
+    int n = 0, m = 0;
+
+    EXPECT_SOFT_EQ(-0.63, rsvs[0][0]);
+    EXPECT_SOFT_EQ(-0.63, rsvs[0][1]);
+    EXPECT_SOFT_EQ(0.0,   rsvs[0][2]);
+    EXPECT_SOFT_EQ(0.73,  rsvs[1][0]);
+    EXPECT_SOFT_EQ(0.73,  rsvs[1][1]);
+    EXPECT_SOFT_EQ(14.28, rsvs[1][2]);
+
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_EQ(14.28, rdbls[m++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_EQ(3, rints[n++]);
+
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+
+    EXPECT_FALSE(rints[n++]);
 }
 
 //---------------------------------------------------------------------------//
