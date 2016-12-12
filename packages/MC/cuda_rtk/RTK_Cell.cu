@@ -8,6 +8,8 @@
  */
 //---------------------------------------------------------------------------//
 
+#include <cmath>
+
 #include "RTK_Cell.cuh"
 
 namespace cuda_profugus
@@ -49,6 +51,76 @@ RTK_Cell::RTK_Cell(int      mod_id,
     // Set the pitch
     d_xy[X] = d_extent[X][HI] - d_extent[X][LO];
     d_xy[Y] = d_extent[Y][HI] - d_extent[Y][LO];
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Add a vessel.
+ */
+void RTK_Cell::add_vessel(
+    int    vessel_id,
+    double R0,
+    double R1,
+    double (&offsets)[2])
+{
+    using def::X; using def::Y;
+
+    // Set internal data
+    d_vessel     = true;
+    d_vessel_id  = vessel_id;
+    d_offsets[0] = offsets[0];
+    d_offsets[1] = offsets[1];
+    d_R0         = -1.0;
+    d_R1         = -1.0;
+    d_inner      = false;
+    d_outer      = false;
+
+    // Near and far corners relative to the origin of vessel cylinder
+    double near[2], far[2];
+
+    for (int dir = 0; dir < 2; ++dir)
+    {
+        near[dir] = this->l2g(d_extent[dir][LO], dir);
+        far[dir]  = this->l2g(d_extent[dir][HI], dir);
+
+        if (d_offsets[dir] < 0.0)
+        {
+            near[dir] = this->l2g(d_extent[dir][HI], dir);
+            far[dir]  = this->l2g(d_extent[dir][LO], dir);
+        }
+    }
+
+    // calculate the near and far radii bisecting the pincell
+    double nearR2 = near[X]*near[X] + near[Y]*near[Y];
+    double farR2  = far[X]*far[X] + far[Y]*far[Y];
+    double R0_2   = R0 * R0;
+    double R1_2   = R1 * R1;
+
+    // check to see if R0 or R1 bisect the cell, R0 < R1 so if R0 > farR the
+    // vessel does not bisect the cell
+    VALIDATE(R0_2 < farR2,
+             "R0 = " << R0 << " is greater than the far extent "
+             << "of the pincell, " << std::sqrt(farR2));
+
+    // likewise if R1 < nearR the vessel cannot bisect the cell
+    VALIDATE(R1_2 > nearR2,
+             "R1 = " << R1 <<  " is less than the near extent "
+             << "of the pincell, " << std::sqrt(farR2));
+
+    // now we have to check each vessel radius
+    if (R0_2 > nearR2)
+    {
+        CHECK(R0_2 < farR2);
+        d_R0    = R0;
+        d_inner = true;
+    }
+
+    if (R1_2 < farR2)
+    {
+        CHECK(R1_2 > nearR2);
+        d_R1    = R1;
+        d_outer = true;
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -101,6 +173,10 @@ RTK_Cell_DMM::RTK_Cell_DMM(
     d_extent[Y][1] = high[Y];
     CHECK(high[2] == d_z);
 
+    // Store vessel data
+    d_vessel = host_cell.vessel_data(
+        d_vessel_id, d_R0, d_R1, d_offsets[0], d_offsets[1]);
+
     ENSURE(host_cell.num_cells() == num_regions * d_num_segments);
 }
 
@@ -110,12 +186,17 @@ RTK_Cell_DMM::RTK_Cell_DMM(
  */
 RTK_Cell RTK_Cell_DMM::device_instance()
 {
-    return RTK_Cell(d_mod_id,
-                    cuda::make_view(d_r),
-                    cuda::make_view(d_ids),
-                    d_extent,
-                    d_z,
-                    d_num_segments);
+    RTK_Cell cell(d_mod_id,
+                  cuda::make_view(d_r),
+                  cuda::make_view(d_ids),
+                  d_extent,
+                  d_z,
+                  d_num_segments);
+
+    // Add the vessel if it exists
+    if (d_vessel) cell.add_vessel(d_vessel_id, d_R0, d_R1, d_offsets);
+
+    return cell;
 }
 
 } // end namespace cuda_profugus

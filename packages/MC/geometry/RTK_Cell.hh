@@ -187,7 +187,8 @@ class RTK_Cell
     void build_volumes(Vec_Dbl &v, int offset) const;
 
     // Vessel radius and offsets.
-    bool vessel_data(double &R0, double &R1, double &xc, double &yc) const;
+    bool vessel_data(int &id, double &R0, double &R1, double &xc,
+                     double &yc) const;
 
   private:
     // >>> IMPLEMENTATION

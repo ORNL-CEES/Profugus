@@ -67,6 +67,9 @@ class RTK_Cell
     RTK_Cell(int mod_id, View_Dbl r, View_Int ids, double (&extents)[2][2],
              double height, int num_segments);
 
+    // Add a vessel.
+    void add_vessel(int vessel_id, double R0, double R1, double (&offsets)[2]);
+
     // Initialize a state.
     __device__
     void initialize(const Space_Vector &r, Geo_State_t &state) const;
@@ -169,7 +172,7 @@ class RTK_Cell
                        Geo_State_t &state);
 
     // Transform to vessel coordinates.
-    __device__
+    __host__ __device__
     double l2g(double local, int dir) const
     {
         return local + d_offsets[dir];
@@ -199,12 +202,12 @@ class RTK_Cell
     int d_num_cells;
 
     // Vessel parameters.
-    bool d_vessel;         // indicates this cell has a vessel
-    double d_offsets[2];   // radial offsets from origin of outer rtk-array to
-                           // origin of the pincell
-    double d_R0, d_R1;     // inner and outer vessel radii
-    bool d_inner, d_outer; // booleans for inner/outer vessel bisections
-    int d_vessel_id;       // vessel mat id
+    bool   d_vessel;         // indicates this cell has a vessel
+    double d_offsets[2];     // radial offsets from origin of outer rtk-array
+                             // to origin of the pincell
+    double d_R0, d_R1;       // inner and outer vessel radii
+    bool   d_inner, d_outer; // booleans for inner/outer vessel bisections
+    int    d_vessel_id;      // vessel mat id
 };
 
 //===========================================================================//
@@ -249,6 +252,12 @@ class RTK_Cell_DMM
     int    d_num_segments;
     double d_z;
     double d_extent[2][2];
+
+    // Vessel data
+    bool   d_vessel;
+    int    d_vessel_id;
+    double d_offsets[2];
+    double d_R0, d_R1;
 };
 
 } // end namespace cuda_profugus
