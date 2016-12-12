@@ -1261,5 +1261,298 @@ void Empty::rectangle()
 }
 
 //---------------------------------------------------------------------------//
+// GAP
+//---------------------------------------------------------------------------//
+
+__global__
+void gap_kernel1(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls,
+    Vector      *svs)
+{
+    int n = 0, m = 0;
+
+    State  state;
+    Vector r, omega;
+
+    pin.get_extents(svs[0], svs[1]);
+
+    dbls[m++] = pin.radii()[0];
+    dbls[m++] = pin.radii()[1];
+    dbls[m++] = pin.pitch(0);
+    dbls[m++] = pin.pitch(1);
+    dbls[m++] = pin.height();
+
+    ints[n++] = pin.num_regions();
+    ints[n++] = pin.num_shells();
+    ints[n++] = pin.num_segments();
+
+    ints[n++] = pin.matid(0);
+    ints[n++] = pin.matid(1);
+    ints[n++] = pin.matid(2);
+
+    ints[n++] = pin.region(0.1, 0.48);
+    ints[n++] = pin.region(0.1, 0.479);
+    ints[n++] = pin.region(0.5, 0.3);
+    ints[n++] = pin.region(0.4, 0.35);
+    ints[n++] = pin.region(-0.7, -0.7);
+    ints[n++] = pin.region(-0.64, 0.1);
+    ints[n++] = pin.region(0.1, -0.64);
+
+    // Tracking tests
+    r     = {  0.50,   0.30,  12.10};
+    omega = { -0.740797197487,  -0.642024237822,   0.197545919330};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+    ints[n++] = state.next_region;
+
+    pin.cross_surface(state);
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+
+    for (int i = 0; i < 3; ++i)
+        r[i] += state.dist_to_next_region * omega[i];
+
+    pin.distance_to_boundary(r, omega, state);
+
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+    ints[n++] = state.next_region;
+
+    pin.cross_surface(state);
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+
+    for (int i = 0; i < 3; ++i)
+        r[i] += state.dist_to_next_region * omega[i];
+
+    pin.distance_to_boundary(r, omega, state);
+
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+    ints[n++] = state.next_region;
+
+    pin.cross_surface(state);
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+
+    for (int i = 0; i < 3; ++i)
+        r[i] += state.dist_to_next_region * omega[i];
+
+    pin.distance_to_boundary(r, omega, state);
+
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+    ints[n++] = state.next_region;
+
+    pin.cross_surface(state);
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+
+    for (int i = 0; i < 3; ++i)
+        r[i] += state.dist_to_next_region * omega[i];
+
+    pin.distance_to_boundary(r, omega, state);
+
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.region;
+}
+//---------------------------------------------------------------------------//
+
+__global__
+void gap_kernel2(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls,
+    Vector      *svs)
+{
+    int n = 0, m = 0;
+
+    pin.get_extents(svs[0], svs[1]);
+
+    dbls[m++] = pin.radii()[0];
+    dbls[m++] = pin.radii()[1];
+    dbls[m++] = pin.pitch(0);
+    dbls[m++] = pin.pitch(1);
+    dbls[m++] = pin.height();
+
+    ints[n++] = pin.num_regions();
+    ints[n++] = pin.num_shells();
+    ints[n++] = pin.num_segments();
+
+    ints[n++] = pin.matid(0);
+    ints[n++] = pin.matid(1);
+    ints[n++] = pin.matid(2);
+
+    ints[n++] = pin.region(0.1, 0.48);
+    ints[n++] = pin.region(0.1, 0.479);
+    ints[n++] = pin.region(0.5, 0.3);
+    ints[n++] = pin.region(0.4, 0.35);
+    ints[n++] = pin.region(-0.7, 0.7);
+    ints[n++] = pin.region(-0.64, 0.1);
+    ints[n++] = pin.region(0.1, 0.64);
+}
+
+//---------------------------------------------------------------------------//
+
+void Gap::lox_loy()
+{
+    Manager dmm(*pins[0]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+    thrust::device_vector<Vector> svs(20);
+
+    gap_kernel1<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get(), svs.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+    thrust::host_vector<Vector> rsvs(svs.begin(), svs.end());
+
+    int n = 0, m = 0;
+    double eps = 1.0e-6;
+
+    EXPECT_SOFT_EQ(-0.73, rsvs[0][0]);
+    EXPECT_SOFT_EQ(-0.73, rsvs[0][1]);
+    EXPECT_SOFT_EQ(0.0,   rsvs[0][2]);
+    EXPECT_SOFT_EQ(0.63,  rsvs[1][0]);
+    EXPECT_SOFT_EQ(0.63,  rsvs[1][1]);
+    EXPECT_SOFT_EQ(14.28, rsvs[1][2]);
+
+    EXPECT_SOFT_EQ(0.49, rdbls[m++]);
+    EXPECT_SOFT_EQ(0.54, rdbls[m++]);
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_EQ(14.28, rdbls[m++]);
+
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+
+    // Tracking results
+    EXPECT_SOFTEQ(rdbls[m++], 0.0446878772402, eps);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 0.0520128055639, eps);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 0.978336739656, eps);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 0.0520128055639, eps);
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+
+    EXPECT_EQ(State::INTERNAL, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+
+    EXPECT_SOFTEQ(rdbls[m++], 0.4772505785762855, eps);
+    EXPECT_EQ(State::MINUS_Y, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+}
+
+//---------------------------------------------------------------------------//
+
+void Gap::lox_hiy()
+{
+    Manager dmm(*pins[1]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+    thrust::device_vector<Vector> svs(20);
+
+    gap_kernel2<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get(), svs.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+    thrust::host_vector<Vector> rsvs(svs.begin(), svs.end());
+
+    int n = 0, m = 0;
+
+    EXPECT_SOFT_EQ(-0.73, rsvs[0][0]);
+    EXPECT_SOFT_EQ(-0.63, rsvs[0][1]);
+    EXPECT_SOFT_EQ(0.0,   rsvs[0][2]);
+    EXPECT_SOFT_EQ(0.63,  rsvs[1][0]);
+    EXPECT_SOFT_EQ(0.73,  rsvs[1][1]);
+    EXPECT_SOFT_EQ(14.28, rsvs[1][2]);
+
+    EXPECT_SOFT_EQ(0.49, rdbls[m++]);
+    EXPECT_SOFT_EQ(0.54, rdbls[m++]);
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_SOFT_EQ(1.36, rdbls[m++]);
+    EXPECT_EQ(14.28, rdbls[m++]);
+
+    EXPECT_EQ(3, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(3, rints[n++]);
+
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(0, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(1, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+    EXPECT_EQ(2, rints[n++]);
+}
+
+//---------------------------------------------------------------------------//
+
+void Gap::hix_hiy()
+{
+}
+
+//---------------------------------------------------------------------------//
+
+void Gap::hom_hix_hiy()
+{
+}
+
+//---------------------------------------------------------------------------//
 // end of MC/cuda_rtk/test/RTK_Cell_Tester.cu
 //---------------------------------------------------------------------------//

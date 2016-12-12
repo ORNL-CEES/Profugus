@@ -98,6 +98,55 @@ class Empty : public Base
 
 //---------------------------------------------------------------------------//
 
+class Gap : public Base
+{
+  protected:
+
+    void SetUp()
+    {
+        std::vector<int>    ids = {1, 2};
+        std::vector<double> rad = {0.49, 0.54};
+
+        // Lox/Loy
+        {
+            RTK_Cell::Gap_Vector gap(0.1, 0.0, 0.1, 0.0);
+            SP_Cell pin = std::make_shared<RTK_Cell>(
+                ids, rad, 3, 1.26, 14.28, gap);
+            pins.push_back(pin);
+        }
+
+        // Lox/Hiy
+        {
+            RTK_Cell::Gap_Vector gap(0.1, 0.0, 0.0, 0.1);
+            SP_Cell pin = std::make_shared<RTK_Cell>(
+                ids, rad, 3, 1.26, 14.28, gap);
+            pins.push_back(pin);
+        }
+
+        // Hix/Hiy
+        {
+            RTK_Cell::Gap_Vector gap(0.0, 0.1, 0.0, 0.1);
+            SP_Cell pin = std::make_shared<RTK_Cell>(
+                ids, rad, 3, 1.26, 14.28, gap);
+            pins.push_back(pin);
+        }
+
+        // Homogeneous Hix/Hiy
+        {
+            RTK_Cell::Gap_Vector gap(0.0, 0.1, 0.0, 0.1);
+            SP_Cell pin = std::make_shared<RTK_Cell>(3, 1.26, 14.28, gap);
+            pins.push_back(pin);
+        }
+    }
+
+    void lox_loy();
+    void lox_hiy();
+    void hix_hiy();
+    void hom_hix_hiy();
+};
+
+//---------------------------------------------------------------------------//
+
 #endif // MC_cuda_rtk_test_RTK_Cell_Tester_hh
 
 //---------------------------------------------------------------------------//
