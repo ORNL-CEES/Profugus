@@ -72,29 +72,29 @@ class RTK_Cell
 
     // Initialize a state.
     __device__
-    void initialize(const Space_Vector &r, Geo_State_t &state) const;
+    inline void initialize(const Space_Vector &r, Geo_State_t &state) const;
 
     // Track to next boundary.
     __device__
-    void distance_to_boundary(const Space_Vector &r,
-                              const Space_Vector &omega,
-                              Geo_State_t &state);
+    inline void distance_to_boundary(const Space_Vector &r,
+                                     const Space_Vector &omega,
+                                     Geo_State_t &state);
 
     // Update a state at collision sites.
     __device__
-    void update_state(Geo_State_t &state) const;
+    inline void update_state(Geo_State_t &state) const;
 
     // Cross a surface.
     __device__
-    void cross_surface(Geo_State_t &state) const;
+    inline void cross_surface(Geo_State_t &state) const;
 
     // Query to find region.
     __device__
-    int region(double x, double y) const;
+    inline int region(double x, double y) const;
 
     // Query to find segment.
     __device__
-    int segment(double x, double y) const;
+    inline int segment(double x, double y) const;
 
     // Query to find cell.
     __device__
@@ -145,31 +145,32 @@ class RTK_Cell
 
     // Intersections with shells.
     __device__
-    void calc_shell_db(const Space_Vector &r, const Space_Vector &omega,
-                       Geo_State_t &state);
+    inline void calc_shell_db(const Space_Vector &r, const Space_Vector &omega,
+                              Geo_State_t &state);
 
     // Distance to external surface.
     __device__
-    void dist_to_radial_face(int axis, double p, double dir,
-                             Geo_State_t &state);
+    inline void dist_to_radial_face(int axis, double p, double dir,
+                                    Geo_State_t &state);
     __device__
-    void dist_to_axial_face(double p, double dir, Geo_State_t &state);
+    inline void dist_to_axial_face(double p, double dir, Geo_State_t &state);
 
     // Distance to vessel.
     __device__
-    void dist_to_vessel(const Space_Vector &r, const Space_Vector &omega,
-                        Geo_State_t &state);
+    inline void dist_to_vessel(const Space_Vector &r, const Space_Vector &omega,
+                               Geo_State_t &state);
 
     // Distance to a shell.
     __device__
-    double dist_to_shell(double x, double y, double omega_x, double omega_y,
-                         double r, int face);
+    inline double dist_to_shell(double x, double y, double
+                                omega_x, double omega_y,
+                                double r, int face);
 
     // Update state if it hits a shell.
     __device__
-    double check_shell(const Space_Vector &r, const Space_Vector &omega,
-                       int shell, int face, int next_region, int next_face,
-                       Geo_State_t &state);
+    inline double check_shell(const Space_Vector &r, const Space_Vector &omega,
+                              int shell, int face, int next_region,
+                              int next_face, Geo_State_t &state);
 
     // Transform to vessel coordinates.
     __host__ __device__
