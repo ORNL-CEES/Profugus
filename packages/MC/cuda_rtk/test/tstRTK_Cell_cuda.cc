@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/cuda_rtk/test/tstRTK_Cell.cc
+ * \file   MC/cuda_rtk/test/tstRTK_Cell_cuda.cc
  * \author Tom Evans
  * \date   Tue Nov 29 17:09:01 2016
  * \brief  Tests for class RTK_Cell.
@@ -135,5 +135,5 @@ TEST_F(Vessel, track_Lo2Hi)
 }
 
 //---------------------------------------------------------------------------//
-// end of MC/cuda_rtk/test/tstRTK_Cell.cc
+// end of tstRTK_Cell_cuda.cc
 //---------------------------------------------------------------------------//

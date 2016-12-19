@@ -1,6 +1,6 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/cuda_rtk/test/tstRTK_State.cc
+ * \file   MC/cuda_rtk/test/tstRTK_State_cuda.cc
  * \author Tom Evans
  * \date   Fri Nov 18 15:25:20 2016
  * \brief  Tests for class RTK_State.
@@ -38,5 +38,5 @@ TEST(RTK_StateTest, to_device)
 }
 
 //---------------------------------------------------------------------------//
-// end of MC/cuda_rtk/test/tstRTK_State.cc
+// end of tstRTK_State_cuda.cc
 //---------------------------------------------------------------------------//
