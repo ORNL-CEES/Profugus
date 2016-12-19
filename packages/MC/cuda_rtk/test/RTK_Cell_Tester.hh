@@ -147,6 +147,49 @@ class Gap : public Base
 
 //---------------------------------------------------------------------------//
 
+class Vessel : public Base
+{
+  protected:
+
+    void SetUp()
+    {
+        double x_off = 0.0, y_off = 0.0;
+        {
+            x_off = 21.62 * 5.0;
+            y_off = 30.0 * 2.0;
+            
+            SP_Cell vessel = std::make_shared<RTK_Cell>(
+                10, 21.62, 30.0, 14.28, 140.0, 158.0, x_off, y_off, 101);
+            pins.push_back(vessel);
+        }
+        {
+            x_off = 21.62 * 5.0;
+            y_off = 30.0 * 2.0;
+            
+            SP_Cell vessel = std::make_shared<RTK_Cell>(
+                10, 21.62, 30.0, 14.28, 122.0, 140.0, x_off, y_off, 101);
+            pins.push_back(vessel);
+        }
+        {
+            x_off = 21.62 * 5.0;
+            y_off = 30.0 * 2.0;
+            
+            SP_Cell vessel = std::make_shared<RTK_Cell>(
+                10, 21.62, 30.0, 14.28, 135.0, 140.0, x_off, y_off, 101
+                );
+            pins.push_back(vessel);
+        }
+    }
+
+    void track_LoR();
+    void track_HiR();
+    void track_LoHiR();
+    void track_Hi2Lo();
+    void track_Lo2Hi();
+};
+
+//---------------------------------------------------------------------------//
+
 #endif // MC_cuda_rtk_test_RTK_Cell_Tester_hh
 
 //---------------------------------------------------------------------------//

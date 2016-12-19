@@ -1718,5 +1718,313 @@ void Gap::hom_hix_hiy()
 }
 
 //---------------------------------------------------------------------------//
+// VESSEL
+//---------------------------------------------------------------------------//
+
+__global__
+void vessel_kernel1(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls)
+{
+    int n = 0, m = 0;
+
+    State  state;
+    Vector r, omega;
+
+    ints[n++] = pin.has_vessel();
+
+    r     = { -0.52,  -0.25,  11.80};
+    omega = {  0.942738909161,   0.021633902593,  -0.332829270666};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+
+    r     = { -2.52,  -4.20,  11.80};
+    omega = {  0.130844809690,  -0.929686805689,  -0.344328446552};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+
+    r     = { -0.52,  -0.25,  11.80};
+    omega = { -0.638224253549,  -0.728778909543,  -0.248094947929};
+    pin.initialize(r, state);
+    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+
+    r     = { -2.52,  -4.20,  11.80};
+    omega = {  0.077270894187,   0.976053400258,  -0.203344458387};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+}
+
+//---------------------------------------------------------------------------//
+
+__global__
+void vessel_kernel2(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls)
+{
+    int n = 0, m = 0;
+
+    State  state;
+    Vector r, omega;
+
+    ints[n++] = pin.has_vessel();
+
+    r     = { -0.52,  -0.25,  11.80};
+    omega = {  0.942738909161,   0.021633902593,  -0.332829270666};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+
+    r     = { -2.52,  -4.20,  11.80};
+    omega = {  0.130844809690,  -0.929686805689,  -0.344328446552};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+
+    r     = { -0.52,  -0.25,  11.80};
+    omega = { -0.638224253549,  -0.728778909543,  -0.248094947929};
+    pin.initialize(r, state);
+    ints[n++] = state.region;
+    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+
+    r     = { -2.52,  -4.20,  11.80};
+    omega = {  0.077270894187,   0.976053400258,  -0.203344458387};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+}
+//---------------------------------------------------------------------------//
+
+__global__
+void vessel_kernel3(
+    Device_Cell  pin,
+    int         *ints,
+    double      *dbls)
+{
+    int n = 0, m = 0;
+
+    State  state;
+    Vector r, omega;
+
+    ints[n++] = pin.has_vessel();
+
+    r     = { -0.52,  -0.25,  11.80};
+    omega = {  0.942738909161,   0.021633902593,  -0.332829270666};
+    pin.initialize(r, state);
+    pin.distance_to_boundary(r, omega, state);
+    ints[n++] = state.region;
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+
+    r     = { -0.52,  -0.25,  11.80};
+    omega = { -0.638224253549,  -0.728778909543,  -0.248094947929};
+    pin.initialize(r, state);
+    ints[n++] = state.region;
+    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+
+    r     = { -2.52,  -4.20,  11.80};
+    omega = {  0.130844809690,  -0.929686805689,  -0.344328446552};
+    pin.initialize(r, state);
+    ints[n++] = state.region;
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+
+    r     = { -2.52,  -4.20,  11.80};
+    omega = {  0.077270894187,   0.976053400258,  -0.203344458387};
+    pin.initialize(r, state);
+    ints[n++] = state.region;
+    pin.distance_to_boundary(r, omega, state);
+    dbls[m++] = state.dist_to_next_region;
+    ints[n++] = state.exiting_face;
+    ints[n++] = state.next_face;
+    ints[n++] = state.next_region;
+}
+
+//---------------------------------------------------------------------------//
+
+void Vessel::track_LoR()
+{
+    Manager dmm(*pins[0]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+
+    vessel_kernel1<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+
+    int n = 0, m = 0;
+    double eps = 1.0e-10;
+
+    EXPECT_TRUE(ints[n++]);
+
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.2018173738e+01, eps);
+    EXPECT_EQ(State::PLUS_X, ints[n++]);
+
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.1616815398e+01, eps);
+    EXPECT_EQ(State::MINUS_Y, ints[n++]);
+
+    EXPECT_EQ(State::NONE, ints[n++]);
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.4437568710e-02, eps);
+    EXPECT_EQ(State::INTERNAL, ints[n++]);
+    EXPECT_EQ(State::R0_VESSEL, ints[n++]);
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 6.4107157490e+00, eps);
+    EXPECT_EQ(State::INTERNAL, ints[n++]);
+    EXPECT_EQ(State::R0_VESSEL, ints[n++]);
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+}
+
+//---------------------------------------------------------------------------//
+
+void Vessel::track_HiR()
+{
+    Manager dmm(*pins[1]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+
+    vessel_kernel2<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+
+    int n = 0, m = 0;
+    double eps = 1.0e-10;
+
+    EXPECT_TRUE(ints[n++]);
+
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.2018173738e+01, eps);
+    EXPECT_EQ(State::PLUS_X, ints[n++]);
+
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.1616815398e+01, eps);
+    EXPECT_EQ(State::MINUS_Y, ints[n++]);
+
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+    EXPECT_EQ(State::NONE, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.4437568710e-02, eps);
+    EXPECT_EQ(State::INTERNAL, ints[n++]);
+    EXPECT_EQ(State::R1_VESSEL, ints[n++]);
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 6.4107157490e+00, eps);
+    EXPECT_EQ(State::INTERNAL, ints[n++]);
+    EXPECT_EQ(State::R1_VESSEL, ints[n++]);
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+}
+
+//---------------------------------------------------------------------------//
+
+void Vessel::track_LoHiR()
+{
+    Manager dmm(*pins[2]);
+
+    auto pin = dmm.device_instance();
+
+    thrust::device_vector<int>    ints(50, -1);
+    thrust::device_vector<double> dbls(50, -1);
+
+    vessel_kernel3<<<1,1>>>(
+        pin, ints.data().get(), dbls.data().get());
+
+    thrust::host_vector<int>    rints(ints.begin(), ints.end());
+    thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
+
+    int n = 0, m = 0;
+    double eps = 1.0e-10;
+
+    EXPECT_TRUE(ints[n++]);
+
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.2018173738e+01, eps);
+    EXPECT_EQ(State::PLUS_X, ints[n++]);
+
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+    EXPECT_EQ(State::NONE, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 1.4437568710e-02, eps);
+    EXPECT_EQ(State::INTERNAL, ints[n++]);
+    EXPECT_EQ(State::R1_VESSEL, ints[n++]);
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 3.4045225628e+00, eps);
+    EXPECT_EQ(State::INTERNAL, ints[n++]);
+    EXPECT_EQ(State::R0_VESSEL, ints[n++]);
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+
+    EXPECT_EQ(State::VESSEL, ints[n++]);
+    EXPECT_SOFTEQ(dbls[m++], 6.4107157490e+00, eps);
+    EXPECT_EQ(State::INTERNAL, ints[n++]);
+    EXPECT_EQ(State::R1_VESSEL, ints[n++]);
+    EXPECT_EQ(State::MODERATOR, ints[n++]);
+}
+
+//---------------------------------------------------------------------------//
+
+void Vessel::track_Hi2Lo()
+{
+}
+
+//---------------------------------------------------------------------------//
+
+void Vessel::track_Lo2Hi()
+{
+}
+
+//---------------------------------------------------------------------------//
 // end of MC/cuda_rtk/test/RTK_Cell_Tester.cu
 //---------------------------------------------------------------------------//

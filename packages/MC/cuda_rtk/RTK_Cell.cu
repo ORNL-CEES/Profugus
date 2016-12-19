@@ -65,6 +65,8 @@ void RTK_Cell::add_vessel(
 {
     using def::X; using def::Y;
 
+    REQUIRE(R0 > 0.0 || R1 > 0.0);
+
     // Set internal data
     d_vessel     = true;
     d_vessel_id  = vessel_id;
@@ -96,28 +98,33 @@ void RTK_Cell::add_vessel(
     double R0_2   = R0 * R0;
     double R1_2   = R1 * R1;
 
-    // check to see if R0 or R1 bisect the cell, R0 < R1 so if R0 > farR the
-    // vessel does not bisect the cell
-    VALIDATE(R0_2 < farR2,
-             "R0 = " << R0 << " is greater than the far extent "
-             << "of the pincell, " << std::sqrt(farR2));
-
-    // likewise if R1 < nearR the vessel cannot bisect the cell
-    VALIDATE(R1_2 > nearR2,
-             "R1 = " << R1 <<  " is less than the near extent "
-             << "of the pincell, " << std::sqrt(farR2));
-
-    // now we have to check each vessel radius
-    if (R0_2 > nearR2)
+    // Process low R radius
+    if (R0 > 0.0)
     {
+        // check to see if R0 or R1 bisect the cell, R0 < R1 so if R0 > farR
+        // the vessel does not bisect the cell
+        VALIDATE(R0_2 < farR2,
+                 "R0 = " << R0 << " is greater than the far extent "
+                 << "of the pincell, " << std::sqrt(farR2));
+
+        CHECK(R0_2 > nearR2);
         CHECK(R0_2 < farR2);
+
         d_R0    = R0;
         d_inner = true;
     }
 
-    if (R1_2 < farR2)
+    // Process high R radius
+    if (R1 > 0.0)
     {
+        // likewise if R1 < nearR the vessel cannot bisect the cell
+        VALIDATE(R1 > 0.0 && R1_2 > nearR2,
+                 "R1 = " << R1 <<  " is less than the near extent "
+                 << "of the pincell, " << std::sqrt(farR2));
+
+        CHECK(R1_2 < farR2);
         CHECK(R1_2 > nearR2);
+
         d_R1    = R1;
         d_outer = true;
     }
@@ -194,7 +201,10 @@ RTK_Cell RTK_Cell_DMM::device_instance()
                   d_num_segments);
 
     // Add the vessel if it exists
-    if (d_vessel) cell.add_vessel(d_vessel_id, d_R0, d_R1, d_offsets);
+    if (d_vessel)
+    {
+        cell.add_vessel(d_vessel_id, d_R0, d_R1, d_offsets);
+    }
 
     return cell;
 }
