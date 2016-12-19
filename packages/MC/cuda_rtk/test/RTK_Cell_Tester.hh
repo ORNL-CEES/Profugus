@@ -157,7 +157,7 @@ class Vessel : public Base
         {
             x_off = 21.62 * 5.0;
             y_off = 30.0 * 2.0;
-            
+
             SP_Cell vessel = std::make_shared<RTK_Cell>(
                 10, 21.62, 30.0, 14.28, 140.0, 158.0, x_off, y_off, 101);
             pins.push_back(vessel);
@@ -165,7 +165,7 @@ class Vessel : public Base
         {
             x_off = 21.62 * 5.0;
             y_off = 30.0 * 2.0;
-            
+
             SP_Cell vessel = std::make_shared<RTK_Cell>(
                 10, 21.62, 30.0, 14.28, 122.0, 140.0, x_off, y_off, 101);
             pins.push_back(vessel);
@@ -173,7 +173,7 @@ class Vessel : public Base
         {
             x_off = 21.62 * 5.0;
             y_off = 30.0 * 2.0;
-            
+
             SP_Cell vessel = std::make_shared<RTK_Cell>(
                 10, 21.62, 30.0, 14.28, 135.0, 140.0, x_off, y_off, 101
                 );
