@@ -9,7 +9,6 @@
 //---------------------------------------------------------------------------//
 
 #include "RTK_Array.cuh"
-#include "RTK_Cell.cuh"
 
 namespace cuda_profugus
 {
@@ -26,14 +25,20 @@ RTK_Array<T>::RTK_Array()
 }
 
 //---------------------------------------------------------------------------//
+// EXPLICIT INSTANTIATIONS
+//---------------------------------------------------------------------------//
+
+template class RTK_Array<RTK_Cell>;
+template class RTK_Array< RTK_Array<RTK_Cell> >;
+
+//---------------------------------------------------------------------------//
 // RTK_ARRAY_DMM MEMBERS
 //---------------------------------------------------------------------------//
 /*!
  * \brief Constructor.
  */
-template<class T>
-RTK_Array_DMM<T>::RTK_Array_DMM(
-    const Host_RTK_Array &host_array)
+RTK_Core_Array_DMM::RTK_Core_Array_DMM(
+    const Host_Core_Array &host_array)
 {
 }
 
@@ -41,18 +46,11 @@ RTK_Array_DMM<T>::RTK_Array_DMM(
 /*!
  * \brief Create a device instance.
  */
-template<class T>
-RTK_Array<T> RTK_Array_DMM<T>::device_instance()
+RTK_Core_Array_DMM::Core_Array
+RTK_Core_Array_DMM::device_instance()
 {
-    return RTK_Array<T>();
+    return Core_Array();
 }
-
-//---------------------------------------------------------------------------//
-// EXPLICIT INSTANTIATIONS
-//---------------------------------------------------------------------------//
-
-template class RTK_Array<RTK_Cell>;
-template class RTK_Array< RTK_Array<RTK_Cell> >;
 
 } // end namespace cuda_profugus
 

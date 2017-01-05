@@ -11,6 +11,7 @@
 #ifndef MC_cuda_rtk_RTK_Array_cuh
 #define MC_cuda_rtk_RTK_Array_cuh
 
+#include <memory>
 #include <thrust/device_vector.h>
 
 #include "CudaUtils/cuda_utils/Device_Memory_Manager.hh"
@@ -18,7 +19,9 @@
 #include "CudaUtils/cuda_utils/CudaDBC.hh"
 #include "CudaUtils/cuda_utils/Device_View_Field.hh"
 #include "CudaUtils/cuda_utils/Device_Vector_Lite.hh"
+#include "MC/geometry/RTK_Cell.hh"
 #include "MC/geometry/RTK_Array.hh"
+#include "RTK_Cell.cuh"
 #include "RTK_State.cuh"
 
 namespace cuda_profugus
@@ -91,34 +94,35 @@ class RTK_Array
  */
 //===========================================================================//
 
-template<class T>
-class RTK_Array_DMM
-    : public cuda::Device_Memory_Manager< RTK_Array<T> >
+class RTK_Core_Array_DMM
+    : public cuda::Device_Memory_Manager< RTK_Array< RTK_Array<RTK_Cell> > >
 {
-    using Base = cuda::Device_Memory_Manager< RTK_Array<T> >;
-
   public:
     //! Host type.
-    using Host_RTK_Array = profugus::RTK_Array<T>;
+    using Host_Lattice_Array = profugus::RTK_Array<profugus::RTK_Cell>;
+    using Host_Core_Array    = profugus::RTK_Array<Host_Lattice_Array>;
+    using Lattice_Array      = RTK_Array<RTK_Cell>;
+    using Core_Array         = RTK_Array<Lattice_Array>;
 
   private:
     // Types.
-    using DV = cuda::Device_View<T>;
+    using Base          = cuda::Device_Memory_Manager<Core_Array>;
+    using SP_DV         = std::shared_ptr< cuda::Device_View<Lattice_Array> >;
 
   private:
     // >>> DEVICE MEMORY MANAGEMENT DATA
 
     // Objects stored in this array.
-    DV d_objects;
+    SP_DV d_objects;
 
   public:
     // Constructor.
-    RTK_Array_DMM(const Host_RTK_Array &host_array);
+    RTK_Core_Array_DMM(const Host_Core_Array &host_array);
 
     // >>> DERIVED INTERFACE
 
     // Create a device instance.
-    RTK_Array<T> device_instance();
+    Core_Array device_instance();
 
   private:
     // >>> IMPLEMENTATION

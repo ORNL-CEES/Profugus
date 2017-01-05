@@ -20,12 +20,18 @@
 // TYPES
 //---------------------------------------------------------------------------//
 
+using Core_Manager = cuda_profugus::RTK_Core_Array_DMM;
+using Core_Array   = Core_Manager::Core_Array;
+using Vector       = Core_Array::Space_Vector;
+using State        = Core_Array::Geo_State_t;
+
 //---------------------------------------------------------------------------//
 // SIMPLECORE
 //---------------------------------------------------------------------------//
 
 void SimpleCore::run_test()
 {
+    Core_Manager dmm(*core);
 }
 
 //---------------------------------------------------------------------------//
