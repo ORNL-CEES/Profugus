@@ -251,6 +251,21 @@ void RTK_Array<T>::add_vessel_to_object(int    i,
 }
 
 //---------------------------------------------------------------------------//
+/*!
+ * \brief Return the array edges.
+ */
+template<class T>
+const typename RTK_Array<T>::Vec_Dbl&
+RTK_Array<T>::edges(int dim) const
+{
+    if (dim == 0)
+        return d_x;
+    else if (dim == 1)
+        return d_y;
+    return d_z;
+}
+
+//---------------------------------------------------------------------------//
 // RTK PIN-CELL SPECIALIZATION INLINE FUNCTIONS
 //---------------------------------------------------------------------------//
 

@@ -203,6 +203,9 @@ class RTK_Array
     //! Query if vessel is defined.
     bool has_vessel() const { return d_vessel; }
 
+    // Return the array edges.
+    inline const Vec_Dbl& edges(int dim) const;
+
   private:
     // >>> IMPLEMENTATION
 

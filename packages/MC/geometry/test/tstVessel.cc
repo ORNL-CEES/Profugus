@@ -760,102 +760,103 @@ TEST_F(Lattice_Test, set_vessel)
         EXPECT_EQ(1, lattice->id(3, 3, k));
     }
 
+    int    vid = 0;
     double R0 = 0.0, R1 = 0.0, xc = 0.0, yc = 0.0;
     double eps = 1.0e-12;
 
     for (int k = 0; k < 4; ++k)
     {
-        EXPECT_TRUE(lattice->object(0, 0, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(0, 0, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(-4.5, xc, eps);
         EXPECT_SOFTEQ(-4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(1, 0, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(1, 0, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(-1.5, xc, eps);
         EXPECT_SOFTEQ(-4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(2, 0, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(2, 0, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(0.0, xc, eps);
         EXPECT_SOFTEQ(-4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(3, 0, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(3, 0, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(1.5, xc, eps);
         EXPECT_SOFTEQ(-4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(4, 0, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(4, 0, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(4.5, xc, eps);
         EXPECT_SOFTEQ(-4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(0, 4, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(0, 4, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(-4.5, xc, eps);
         EXPECT_SOFTEQ( 4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(1, 4, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(1, 4, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(-1.5, xc, eps);
         EXPECT_SOFTEQ( 4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(2, 4, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(2, 4, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(0.0, xc, eps);
         EXPECT_SOFTEQ( 4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(3, 4, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(3, 4, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(1.5, xc, eps);
         EXPECT_SOFTEQ( 4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(4, 4, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(4, 4, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(4.5, xc, eps);
         EXPECT_SOFTEQ( 4.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(0, 1, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(0, 1, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(-4.5, xc, eps);
         EXPECT_SOFTEQ(-1.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(0, 2, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(0, 2, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(-4.5, xc, eps);
         EXPECT_SOFTEQ( 0.0, yc, eps);
 
-        EXPECT_TRUE(lattice->object(0, 3, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(0, 3, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(-4.5, xc, eps);
         EXPECT_SOFTEQ( 1.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(4, 1, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(4, 1, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(4.5, xc, eps);
         EXPECT_SOFTEQ(-1.5, yc, eps);
 
-        EXPECT_TRUE(lattice->object(4, 2, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(4, 2, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(4.5, xc, eps);
         EXPECT_SOFTEQ( 0.0, yc, eps);
 
-        EXPECT_TRUE(lattice->object(4, 3, k).vessel_data(R0, R1, xc, yc));
+        EXPECT_TRUE(lattice->object(4, 3, k).vessel_data(vid, R0, R1, xc, yc));
         EXPECT_SOFTEQ(6.0, R0, eps);
         EXPECT_SOFTEQ(6.5, R1, eps);
         EXPECT_SOFTEQ(4.5, xc, eps);
@@ -1370,14 +1371,15 @@ TEST_F(Core_Baffle_Test, set_vessel)
         EXPECT_FALSE(core->object(3,1,k).object(1,1,0).has_vessel());
         EXPECT_TRUE(core->object(3,1,k).object(2,1,0).has_vessel());
 
+        int vid = 0;
         double R0, R1, Xc, Yc;
-        core->object(3, 1, k).object(2, 0, 0).vessel_data(R0, R1, Xc, Yc);
+        core->object(3, 1, k).object(2, 0, 0).vessel_data(vid, R0, R1, Xc, Yc);
         EXPECT_EQ(7.0, R0);
         EXPECT_EQ(8.0, R1);
         EXPECT_SOFTEQ(-2.4, Yc, 1.0e-12);
         EXPECT_SOFTEQ(6.75, Xc, 1.0e-12);
 
-        core->object(0, 1, k).object(1, 0, 0).vessel_data(R0, R1, Xc, Yc);
+        core->object(0, 1, k).object(1, 0, 0).vessel_data(vid, R0, R1, Xc, Yc);
         EXPECT_EQ(7.0, R0);
         EXPECT_EQ(8.0, R1);
         EXPECT_SOFTEQ(-2.4, Yc, 1.0e-12);
