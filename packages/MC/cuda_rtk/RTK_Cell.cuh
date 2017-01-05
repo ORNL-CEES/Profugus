@@ -30,6 +30,11 @@ namespace cuda_profugus
  * \class RTK_Cell
  * \brief CUDA implementation of profugus::RTK_Cell.
  */
+/*!
+ * \example cuda_rtk/test/tstRTK_Cell_cuda.cc
+ *
+ * Test of RTK_Cell.
+ */
 //===========================================================================//
 
 class RTK_Cell
