@@ -27,6 +27,11 @@ TEST(DeviceVectorLite, device)
     Device_Vector_Lite_Tester::test_device();
 }
 
+TEST(DeviceVectorLite, host_copy)
+{
+    Device_Vector_Lite_Tester::test_host_copy();
+}
+
 //---------------------------------------------------------------------------//
 // end of CudaUtils/test/tstDevice_Vector_Lite.cc
 //---------------------------------------------------------------------------//

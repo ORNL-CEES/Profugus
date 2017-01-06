@@ -22,8 +22,9 @@ class Device_Vector_Lite_Tester
 {
   public:
 
-      static void test_host();
-      static void test_device();
+    static void test_host();
+    static void test_device();
+    static void test_host_copy();
 };
 
 //---------------------------------------------------------------------------//

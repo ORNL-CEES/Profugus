@@ -11,6 +11,7 @@
 #ifndef CudaUtils_cuda_utils_Device_Vector_Lite_hh
 #define CudaUtils_cuda_utils_Device_Vector_Lite_hh
 
+#include "utils/Vector_Lite.hh"
 #include "CudaDBC.hh"
 
 namespace cuda_utils
@@ -32,6 +33,7 @@ template <class T, size_t N>
 class Device_Vector_Lite
 {
   public:
+    using Host_Vec_Lite = profugus::Vector_Lite<T, N>;
 
 #ifdef __NVCC__
     __host__ __device__
@@ -49,6 +51,17 @@ class Device_Vector_Lite
     {
         DEVICE_REQUIRE( i < N );
         return d_data[i];
+    }
+
+    //! Create from a host profugus::Vector_Lite (on host).
+    static Device_Vector_Lite<T, N> from_host(const Host_Vec_Lite &host_vector)
+    {
+        Device_Vector_Lite<T, N> x;
+        for (int n = 0; n < N; ++n)
+        {
+            x[n] = host_vector[n];
+        }
+        return x;
     }
 
     // This data member is public so that the class satisfies the

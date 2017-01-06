@@ -17,7 +17,12 @@
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Device_Vector_Lite.hh"
 
-typedef cuda_utils::Device_Vector_Lite<int,3> Vec_Lite;
+using Vec_Lite      = cuda_utils::Device_Vector_Lite<int, 3>;
+using Host_Vec_Lite = Vec_Lite::Host_Vec_Lite;
+
+//---------------------------------------------------------------------------//
+// KERNELS
+//---------------------------------------------------------------------------//
 
 __global__ void from_device(Vec_Lite *vals, int num_vals)
 {
@@ -30,6 +35,8 @@ __global__ void from_device(Vec_Lite *vals, int num_vals)
     else if (tid == 1)
         vals[tid] = {1, 3, 5};
 }
+
+//---------------------------------------------------------------------------//
 
 __global__ void copy_back(const Vec_Lite *vals_in,
                                 Vec_Lite *vals_out,
@@ -46,6 +53,10 @@ __global__ void copy_back(const Vec_Lite *vals_in,
         vals_out[tid] = tmp;
     }
 }
+
+//---------------------------------------------------------------------------//
+// FUNCTIONS
+//---------------------------------------------------------------------------//
 
 void Device_Vector_Lite_Tester::test_host()
 {
@@ -67,8 +78,9 @@ void Device_Vector_Lite_Tester::test_host()
     EXPECT_EQ(2, b[0]);
     EXPECT_EQ(0, b[1]);
     EXPECT_EQ(12,b[2]);
-
 }
+
+//---------------------------------------------------------------------------//
 
 void Device_Vector_Lite_Tester::test_device()
 {
@@ -107,6 +119,34 @@ void Device_Vector_Lite_Tester::test_device()
     EXPECT_EQ(1, host_v3[1][0]);
     EXPECT_EQ(3, host_v3[1][1]);
     EXPECT_EQ(5, host_v3[1][2]);
+}
+
+//---------------------------------------------------------------------------//
+
+void Device_Vector_Lite_Tester::test_host_copy()
+{
+    Host_Vec_Lite h = {1, 2, 3};
+    Vec_Lite      d = {0, 0, 0};
+
+    EXPECT_EQ(1, h[0]);
+    EXPECT_EQ(2, h[1]);
+    EXPECT_EQ(3, h[2]);
+
+    EXPECT_EQ(0, d[0]);
+    EXPECT_EQ(0, d[1]);
+    EXPECT_EQ(0, d[2]);
+
+    d = Vec_Lite::from_host(h);
+
+    h[2] = 5;
+
+    EXPECT_EQ(1, h[0]);
+    EXPECT_EQ(2, h[1]);
+    EXPECT_EQ(5, h[2]);
+
+    EXPECT_EQ(1, d[0]);
+    EXPECT_EQ(2, d[1]);
+    EXPECT_EQ(3, d[2]);
 }
 
 //---------------------------------------------------------------------------//
