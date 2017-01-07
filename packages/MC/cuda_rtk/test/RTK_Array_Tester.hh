@@ -37,6 +37,50 @@ class Base : public ::testing::Test
 
 //---------------------------------------------------------------------------//
 
+class SimpleLattice : public Base
+{
+  protected:
+
+    void SetUp()
+    {
+        using SP_Object = Lattice::SP_Object;
+        using Object_t  = Lattice::Object_t;
+
+        // make a 3x2x1 lattice with 10 pin-types (only 3 defined)
+        lattice = std::make_shared<Lattice>(3, 2, 1, 10);
+        Lattice& lat = *lattice;
+
+        // pins 0, 3 and 5
+        SP_Object pin0(std::make_shared<Object_t>(0, 0.62, 10, 1.26, 14.28));
+        SP_Object pin3(std::make_shared<Object_t>(3, 0.45, 10, 1.26, 14.28));
+        SP_Object pin5(std::make_shared<Object_t>(5, 0.54, 10, 1.26, 14.28));
+
+        CHECK(2 == pin0->num_cells());
+        CHECK(2 == pin3->num_cells());
+        CHECK(2 == pin5->num_cells());
+
+        // assign pins to the lattice
+        lat.id(0, 0, 0) = 3;
+        lat.id(1, 0, 0) = 3;
+        lat.id(2, 0, 0) = 3;
+        lat.id(0, 1, 0) = 5;
+        lat.id(1, 1, 0) = 0;
+        lat.id(2, 1, 0) = 5;
+
+        // assign pins to ids
+        lat.assign_object(pin0, 0);
+        lat.assign_object(pin3, 3);
+        lat.assign_object(pin5, 5);
+    }
+
+    void run_test();
+
+  protected:
+    std::shared_ptr<Lattice> lattice;
+};
+
+//---------------------------------------------------------------------------//
+
 class SimpleCore : public Base
 {
   protected:

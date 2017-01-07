@@ -20,10 +20,20 @@
 // TYPES
 //---------------------------------------------------------------------------//
 
-using Core_Manager = cuda_profugus::RTK_Core_Array_DMM;
-using Core_Array   = Core_Manager::Core_Array;
-using Vector       = Core_Array::Space_Vector;
-using State        = Core_Array::Geo_State_t;
+using Lattice_Manager = cuda_profugus::RTK_Lattice_Array_DMM;
+using Lattice_Array   = cuda_profugus::Lattice_Array;
+// using Core_Manager    = cuda_profugus::RTK_Core_Array_DMM;
+// using Core_Array      = cuda_profugus::Core_Array;
+using Vector          = Lattice_Array::Space_Vector;
+using State           = Lattice_Array::Geo_State_t;
+
+//---------------------------------------------------------------------------//
+// SIMPLELATTICE
+//---------------------------------------------------------------------------//
+
+void SimpleLattice::run_test()
+{
+}
 
 //---------------------------------------------------------------------------//
 // SIMPLECORE
@@ -31,7 +41,7 @@ using State        = Core_Array::Geo_State_t;
 
 void SimpleCore::run_test()
 {
-    Core_Manager dmm(*core);
+    // Core_Manager dmm(*core);
 }
 
 //---------------------------------------------------------------------------//
