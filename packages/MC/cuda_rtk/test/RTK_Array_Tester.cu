@@ -20,7 +20,7 @@
 // TYPES
 //---------------------------------------------------------------------------//
 
-using Lattice_Manager = cuda_profugus::RTK_Lattice_Array_DMM;
+using Lattice_Manager = cuda_profugus::Lattice_Array_DMM;
 using Lattice_Array   = cuda_profugus::Lattice_Array;
 // using Core_Manager    = cuda_profugus::RTK_Core_Array_DMM;
 // using Core_Array      = cuda_profugus::Core_Array;
@@ -37,11 +37,47 @@ void lattice_kernel(
     int           *ints)
 {
     State state;
-    Vector r = {1.261, 2.44, 12.1};
+    Vector r;
+    int m = 0;
 
+    r = {1.261, 2.44, 12.1};
     array.initialize(r, state);
 
-    int m = 0;
+    ints[++m] = state.level_coord[0][0];
+    ints[++m] = state.level_coord[0][1];
+    ints[++m] = state.level_coord[0][2];
+    ints[++m] = state.region;
+    ints[++m] = array.matid(state);
+
+    r = {1.259, 1.27, 1.1};
+    array.initialize(r, state);
+
+    ints[++m] = state.level_coord[0][0];
+    ints[++m] = state.level_coord[0][1];
+    ints[++m] = state.level_coord[0][2];
+    ints[++m] = state.region;
+    ints[++m] = array.matid(state);
+
+    r = {3.560000,   2.239887,   1.300000};
+    array.initialize(r, state);
+
+    ints[++m] = state.level_coord[0][0];
+    ints[++m] = state.level_coord[0][1];
+    ints[++m] = state.level_coord[0][2];
+    ints[++m] = state.region;
+    ints[++m] = array.matid(state);
+
+    r = {1.570000,   0.931993,   2.700000};
+    array.initialize(r, state);
+
+    ints[++m] = state.level_coord[0][0];
+    ints[++m] = state.level_coord[0][1];
+    ints[++m] = state.level_coord[0][2];
+    ints[++m] = state.region;
+    ints[++m] = array.matid(state);
+
+    r = {1.300000,   2.044919,   3.800000};
+    array.initialize(r, state);
 
     ints[++m] = state.level_coord[0][0];
     ints[++m] = state.level_coord[0][1];
@@ -73,6 +109,30 @@ void SimpleLattice::run_test()
     EXPECT_EQ(0,  ints[++m]);
     EXPECT_EQ(1,  ints[++m]);
     EXPECT_EQ(10, ints[++m]);
+
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(10, ints[++m]);
+
+    EXPECT_EQ(2,  ints[++m]);
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(5,  ints[++m]);
+
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(3,  ints[++m]);
+
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
 }
 
 //---------------------------------------------------------------------------//

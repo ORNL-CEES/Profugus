@@ -18,6 +18,44 @@ namespace cuda_profugus
 {
 
 //---------------------------------------------------------------------------//
+// TRAITS FOR RTK DMM MANAGERS
+//---------------------------------------------------------------------------//
+
+namespace
+{
+
+//---------------------------------------------------------------------------//
+
+template<class Device_T>
+class RTK_DMM_Traits
+{
+};
+
+//---------------------------------------------------------------------------//
+// Specialization on RTK_Cell
+
+template<>
+class RTK_DMM_Traits<RTK_Cell>
+{
+  public:
+    using DMM = RTK_Cell_DMM;
+};
+
+//---------------------------------------------------------------------------//
+// Specialization on RTK_Lattice
+
+template<>
+class RTK_DMM_Traits< RTK_Array<RTK_Cell> >
+{
+  public:
+    using DMM = RTK_Array_DMM<
+      profugus::RTK_Array<profugus::RTK_Cell>,
+      RTK_Array<RTK_Cell> >;
+};
+
+} // end unnamed namespace
+
+//---------------------------------------------------------------------------//
 // RTK_ARRAY MEMBERS
 //---------------------------------------------------------------------------//
 /*!
@@ -55,31 +93,33 @@ template class RTK_Array<RTK_Cell>;
 template class RTK_Array< RTK_Array<RTK_Cell> >;
 
 //---------------------------------------------------------------------------//
-// RTK_LATTICE_ARRAY_DMM MEMBERS
+// RTK_ARRAY_DMM_MEMBERS
 //---------------------------------------------------------------------------//
 /*!
  * \brief Constructor.
  */
-RTK_Lattice_Array_DMM::RTK_Lattice_Array_DMM(
-    const Host_Lattice_Array &host_array)
+template<class Host_Array_T, class Device_Array_T>
+RTK_Array_DMM<Host_Array_T,Device_Array_T>::RTK_Array_DMM(
+    const Host_Array_T &host_array)
 {
+    using Object_DMM = typename RTK_DMM_Traits<Object_t>::DMM;
     using def::X; using def::Y; using def::Z;
     using def::I; using def::J; using def::K;
 
-    // Get the number of pincells in this array
-    auto num_pins = host_array.num_objects();
+    // Get the number of objects in this array
+    auto num_objects = host_array.num_objects();
 
-    // Make managers for the pincells
-    DV::Managers managers(num_pins);
+    // Make managers for the objects
+    typename DV::Managers managers(num_objects);
 
     // Build the managers
-    for (int n = 0; n < num_pins; ++n)
+    for (int n = 0; n < num_objects; ++n)
     {
-        // Get the pin on the host
-        const auto &pin = host_array.object(n);
+        // Get the object
+        const auto &host_object = host_array.object(n);
 
         // Make the device manager
-        managers[n] = std::make_shared<RTK_Cell_DMM>(pin);
+        managers[n] = std::make_shared<Object_DMM>(host_object);
     }
 
     // Build the device view to the pins in this array
@@ -95,39 +135,43 @@ RTK_Lattice_Array_DMM::RTK_Lattice_Array_DMM(
 
     // Build the number of cells
     d_N = {host_array.size(X), host_array.size(Y), host_array.size(Z)};
-    CHECK(num_pins == d_N[X] * d_N[Y] * d_N[Z]);
+    CHECK(num_objects == d_N[X] * d_N[Y] * d_N[Z]);
 
     // Get the corner and length
-    Host_Lattice_Array::Space_Vector lo, hi;
+    typename Host_Array_T::Space_Vector lo, hi;
     host_array.get_extents(lo, hi);
 
     d_corner = Space_Vector::from_host(lo);
     d_length = Space_Vector::from_host(hi - lo);
 
     // Build the layout
-    std::vector<int> layout(num_pins, -1);
+    std::vector<int> layout(num_objects, -1);
     for (int k = 0; k < d_N[K]; ++k)
     {
         for (int j = 0; j < d_N[J]; ++j)
         {
             for (int i = 0; i < d_N[I]; ++i)
             {
-                CHECK(host_array.index(i, j, k) < num_pins);
+                CHECK(host_array.index(i, j, k) < num_objects);
                 layout[host_array.index(i, j, k)] = host_array.id(i, j, k);
             }
         }
     }
     d_layout = thrust::device_vector<int>(layout.begin(), layout.end());
+
+    // Set the level
+    d_level = host_array.level();
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Create a device instance.
  */
-Lattice_Array RTK_Lattice_Array_DMM::device_instance()
+template<class Host_Array_T, class Device_Array_T>
+Device_Array_T RTK_Array_DMM<Host_Array_T,Device_Array_T>::device_instance()
 {
-    return Lattice_Array(
-        0,
+    return Device_Array_T(
+        d_level,
         d_N,
         cuda::make_view(d_layout),
         d_objects->get_view(),
@@ -139,26 +183,16 @@ Lattice_Array RTK_Lattice_Array_DMM::device_instance()
 }
 
 //---------------------------------------------------------------------------//
-// RTK_CORE_ARRAY_DMM MEMBERS
+// RTK_ARRAY_DMM EXPLICIT INSTANTIATIONS
 //---------------------------------------------------------------------------//
-#if 0
-/*!
- * \brief Constructor.
- */
-RTK_Core_Array_DMM::RTK_Core_Array_DMM(
-    const Host_Core_Array &host_array)
-{
-}
 
-//---------------------------------------------------------------------------//
-/*!
- * \brief Create a device instance.
- */
-Core_Array RTK_Core_Array_DMM::device_instance()
-{
-    return Core_Array();
-}
-#endif
+template class RTK_Array_DMM<
+    profugus::RTK_Array<profugus::RTK_Cell>,
+    RTK_Array<RTK_Cell> >;
+template class RTK_Array_DMM<
+    profugus::RTK_Array< profugus::RTK_Array<profugus::RTK_Cell> >,
+    RTK_Array< RTK_Array<RTK_Cell> > >;
+
 } // end namespace cuda_profugus
 
 //---------------------------------------------------------------------------//
