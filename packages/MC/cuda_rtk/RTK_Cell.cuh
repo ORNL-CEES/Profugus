@@ -83,7 +83,7 @@ class RTK_Cell
     __device__
     inline void distance_to_boundary(const Space_Vector &r,
                                      const Space_Vector &omega,
-                                     Geo_State_t &state);
+                                     Geo_State_t &state) const;
 
     // Update a state at collision sites.
     __device__
@@ -151,31 +151,32 @@ class RTK_Cell
     // Intersections with shells.
     __device__
     inline void calc_shell_db(const Space_Vector &r, const Space_Vector &omega,
-                              Geo_State_t &state);
+                              Geo_State_t &state) const;
 
     // Distance to external surface.
     __device__
     inline void dist_to_radial_face(int axis, double p, double dir,
-                                    Geo_State_t &state);
+                                    Geo_State_t &state) const;
     __device__
-    inline void dist_to_axial_face(double p, double dir, Geo_State_t &state);
+    inline void dist_to_axial_face(double p, double dir,
+                                   Geo_State_t &state) const;
 
     // Distance to vessel.
     __device__
     inline void dist_to_vessel(const Space_Vector &r, const Space_Vector &omega,
-                               Geo_State_t &state);
+                               Geo_State_t &state) const;
 
     // Distance to a shell.
     __device__
     inline double dist_to_shell(double x, double y, double
                                 omega_x, double omega_y,
-                                double r, int face);
+                                double r, int face) const;
 
     // Update state if it hits a shell.
     __device__
     inline double check_shell(const Space_Vector &r, const Space_Vector &omega,
                               int shell, int face, int next_region,
-                              int next_face, Geo_State_t &state);
+                              int next_face, Geo_State_t &state) const;
 
     // Transform to vessel coordinates.
     __host__ __device__

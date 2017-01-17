@@ -81,6 +81,9 @@ class RTK_Array
     // Level
     int d_level;
 
+    // Reflecting faces
+    cuda_utils::Device_Vector_Lite<int, 6> d_reflect;
+
   public:
     // Constructor.
     RTK_Array(int level, Dim_Vector N, View_Int layout, Object_View objects,
@@ -95,19 +98,40 @@ class RTK_Array
     __device__
     inline void initialize(const Space_Vector &r, Geo_State_t &state) const;
 
+    // Track to next boundary.
+    __device__
+    inline void distance_to_boundary(const Space_Vector &r,
+                                     const Space_Vector &omega,
+                                     Geo_State_t &state) const;
+
+    // Update a state at collision sites.
+    __device__
+    inline void update_state(Geo_State_t &state) const;
+
+    // Cross a surface.
+    __device__
+    inline void cross_surface(const Space_Vector &r, Geo_State_t &state);
+
     // >>> ACCESSORS
 
-    //! Level of array.
+    // Level of array.
     __device__
     int level() const { return d_level; }
 
-    // Find the object a point is in.c
+    // Find the object a point is in.
     __device__
     inline int find_object(const Space_Vector &r, Geo_State_t &state) const;
+    __device__
+    inline int find_object_on_boundary(const Space_Vector &r, int face,
+                                       int face_type, Geo_State_t &state) const;
 
-    //! Array indexing.
+    // Array indexing.
     __device__
     inline int index(int i, int j, int k) const;
+
+    // Return the current material id.
+    __device__
+    inline int matid(const Geo_State_t &state) const;
 
   private:
     // >>> IMPLEMENTATION
@@ -120,6 +144,23 @@ class RTK_Array
     // Get object.
     __device__
     inline const Object_t& object(const Geo_State_t &state) const;
+
+    // Determine boundary crossings at each level in the array.
+    __device__
+    inline void determine_boundary_crossings(Geo_State_t &state) const;
+
+    // Update the coordinates of each level in the array.
+    __device__
+    inline void update_coordinates(const Space_Vector &r,
+                                   Geo_State_t &state) const;
+
+    // Cross surface into next array element.
+    __device__
+    inline void calc_high_face(Geo_State_t &state, int face_type,
+                               int exiting_face) const;
+    __device__
+    inline void calc_low_face(Geo_State_t &state, int face_type,
+                              int exiting_face) const;
 };
 
 //---------------------------------------------------------------------------//

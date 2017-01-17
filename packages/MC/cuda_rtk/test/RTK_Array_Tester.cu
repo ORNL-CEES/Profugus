@@ -31,8 +31,48 @@ using State           = Lattice_Array::Geo_State_t;
 // SIMPLELATTICE
 //---------------------------------------------------------------------------//
 
+__global__
+void lattice_kernel(
+    Lattice_Array  array,
+    int           *ints)
+{
+    State state;
+    Vector r = {1.261, 2.44, 12.1};
+
+    array.initialize(r, state);
+
+    int m = 0;
+
+    ints[++m] = state.level_coord[0][0];
+    ints[++m] = state.level_coord[0][1];
+    ints[++m] = state.level_coord[0][2];
+    ints[++m] = state.region;
+    ints[++m] = array.matid(state);
+}
+
+//---------------------------------------------------------------------------//
+
 void SimpleLattice::run_test()
 {
+    // Make DMM
+    Lattice_Manager dmm(*lattice);
+
+    // Get the host object
+    auto array = dmm.device_instance();
+
+    thrust::device_vector<int> ints(25, -1);
+
+    lattice_kernel<<<1,1>>>(array, ints.data().get());
+
+    int m = 0;
+
+    thrust::host_vector<int> rints(ints.begin(), ints.end());
+
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(0,  ints[++m]);
+    EXPECT_EQ(1,  ints[++m]);
+    EXPECT_EQ(10, ints[++m]);
 }
 
 //---------------------------------------------------------------------------//

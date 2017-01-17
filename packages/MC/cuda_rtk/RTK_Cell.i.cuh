@@ -122,7 +122,7 @@ __device__
 void RTK_Cell::distance_to_boundary(
     const Space_Vector &r,
     const Space_Vector &omega,
-    Geo_State_t        &state)
+    Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
     using cuda::utility::vector_magnitude;
@@ -396,7 +396,7 @@ __device__
 void RTK_Cell::calc_shell_db(
     const Space_Vector &r,
     const Space_Vector &omega,
-    Geo_State_t        &state)
+    Geo_State_t        &state) const
 {
     DEVICE_REQUIRE(d_num_shells > 0);
 
@@ -481,7 +481,7 @@ void RTK_Cell::dist_to_radial_face(
     int          axis,
     double       p,
     double       dir,
-    Geo_State_t &state)
+    Geo_State_t &state) const
 {
     double db = profugus::constants::huge;
     int face  = 0;
@@ -516,7 +516,7 @@ __device__
 void RTK_Cell::dist_to_axial_face(
     double       p,
     double       dir,
-    Geo_State_t &state)
+    Geo_State_t &state) const
 {
     double db = profugus::constants::huge;
     int face  = 0;
@@ -551,7 +551,7 @@ __device__
 void RTK_Cell::dist_to_vessel(
     const Space_Vector &r,
     const Space_Vector &omega,
-    Geo_State_t        &state)
+    Geo_State_t        &state) const
 {
     using def::X; using def::Y;
 
@@ -643,7 +643,7 @@ double RTK_Cell::dist_to_shell(
     double omega_x,
     double omega_y,
     double r,
-    int    face)
+    int    face) const
 {
     // initialize distance to boundary
     double db = -1.0;
@@ -697,7 +697,7 @@ double RTK_Cell::check_shell(
     int                 face,
     int                 next_region,
     int                 next_face,
-    Geo_State_t        &state)
+    Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
 

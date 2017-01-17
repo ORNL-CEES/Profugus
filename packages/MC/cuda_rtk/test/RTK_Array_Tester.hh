@@ -71,6 +71,8 @@ class SimpleLattice : public Base
         lat.assign_object(pin0, 0);
         lat.assign_object(pin3, 3);
         lat.assign_object(pin5, 5);
+
+        lat.complete(0.0, 0.0, 0.0);
     }
 
     void run_test();

@@ -43,6 +43,7 @@ RTK_Array<T>::RTK_Array(
     , d_corner(std::move(corner))
     , d_length(std::move(length))
     , d_level(level)
+    , d_reflect({0, 0, 0, 0, 0, 0})
 {
 }
 
