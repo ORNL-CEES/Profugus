@@ -157,8 +157,8 @@ RTK_Array<T>::object(const Geo_State_t &state) const
     using def::X; using def::Y; using def::Z;
     REQUIRE(d_completed);
     ENSURE(d_objects[d_layout[index(state.level_coord[d_level][X],
-                                     state.level_coord[d_level][Y],
-                                     state.level_coord[d_level][Z])]]);
+                                    state.level_coord[d_level][Y],
+                                    state.level_coord[d_level][Z])]]);
     return d_objects[d_layout[index(state.level_coord[d_level][X],
                                     state.level_coord[d_level][Y],
                                     state.level_coord[d_level][Z])]];
