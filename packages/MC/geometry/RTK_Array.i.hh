@@ -44,6 +44,17 @@ typename RTK_Array<T>::Object_t& RTK_Array<T>::object(int index) const
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Query object existence.
+ */
+template<class T>
+bool RTK_Array<T>::has_object(int index) const
+{
+    REQUIRE(index >= 0 && index < d_objects.size());
+    return static_cast<bool>(d_objects[index]);
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Return the cardinal index given logical indices in the array.
  */
 template<class T>

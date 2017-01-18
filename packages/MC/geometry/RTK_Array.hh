@@ -152,6 +152,9 @@ class RTK_Array
     // Return object.
     inline Object_t& object(int index) const;
 
+    //! Query object at index.
+    inline bool has_object(int index) const;
+
     //! Number of objects.
     int num_objects() const { return d_objects.size(); }
 
