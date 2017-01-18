@@ -653,7 +653,7 @@ inline void RTK_Array<RTK_Cell>::determine_boundary_crossings(
  * leaves the pin cell.
  */
 template<>
-void RTK_Array<RTK_Cell>::update_coordinates(
+inline void RTK_Array<RTK_Cell>::update_coordinates(
     const Space_Vector &r,
     Geo_State_t        &state) const
 {
