@@ -109,18 +109,34 @@ RTK_Array_DMM<Host_Array_T,Device_Array_T>::RTK_Array_DMM(
     // Get the number of objects in this array
     auto num_objects = host_array.num_objects();
 
-    // Make managers for the objects
-    typename DV::Managers managers(num_objects);
+    // Make map from host object index to device object index
+    std::vector<int> h2d(num_objects, -1);
 
-    // Build the managers
+    // Device object index
+    int devidx = 0;
+
+    // Make managers for the objects
+    typename DV::Managers managers;
+
+    // Get the host-to-device layout index mapping and build the managers
     for (int n = 0; n < num_objects; ++n)
     {
-        // Get the object
-        const auto &host_object = host_array.object(n);
+        if (host_array.has_object(n))
+        {
+            // Make the mapping
+            h2d[n] = devidx;
 
-        // Make the device manager
-        managers[n] = std::make_shared<Object_DMM>(host_object);
+            // Get the object
+            const auto &host_object = host_array.object(n);
+
+            // Make the device manager
+            managers.push_back(std::make_shared<Object_DMM>(host_object));
+
+            // Advance the device index
+            ++devidx;
+        }
     }
+    CHECK(devidx == managers.size());
 
     // Build the device view to the pins in this array
     d_objects = std::make_shared<DV>(managers);
@@ -133,9 +149,9 @@ RTK_Array_DMM<Host_Array_T,Device_Array_T>::RTK_Array_DMM(
     d_y = thrust::device_vector<double>(y.begin(), y.end());
     d_z = thrust::device_vector<double>(z.begin(), z.end());
 
-    // Build the number of cells
+    // Build the number of cells in each axis
     d_N = {host_array.size(X), host_array.size(Y), host_array.size(Z)};
-    CHECK(num_objects == d_N[X] * d_N[Y] * d_N[Z]);
+    CHECK(host_array.size() == d_N[X] * d_N[Y] * d_N[Z]);
 
     // Get the corner and length
     typename Host_Array_T::Space_Vector lo, hi;
@@ -145,15 +161,22 @@ RTK_Array_DMM<Host_Array_T,Device_Array_T>::RTK_Array_DMM(
     d_length = Space_Vector::from_host(hi - lo);
 
     // Build the layout
-    std::vector<int> layout(num_objects, -1);
+    std::vector<int> layout(host_array.size(), -1);
     for (int k = 0; k < d_N[K]; ++k)
     {
         for (int j = 0; j < d_N[J]; ++j)
         {
             for (int i = 0; i < d_N[I]; ++i)
             {
-                CHECK(host_array.index(i, j, k) < num_objects);
-                layout[host_array.index(i, j, k)] = host_array.id(i, j, k);
+                CHECK(host_array.id(i, j, k) < num_objects);
+
+                // Get the device index of the object
+                devidx = h2d[host_array.id(i,j,k)];
+                CHECK(devidx >= 0);
+                CHECK(devidx < d_objects->size());
+
+                // Assign the layout
+                layout[host_array.index(i, j, k)] = devidx;
             }
         }
     }
