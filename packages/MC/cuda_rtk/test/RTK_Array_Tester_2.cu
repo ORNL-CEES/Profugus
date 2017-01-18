@@ -1,6 +1,6 @@
 //---------------------------------*-CUDA-*----------------------------------//
 /*!
- * \file   MC/cuda_rtk/test/RTK_Array_Tester.cu
+ * \file   MC/cuda_rtk/test/RTK_Array_Tester_2.cu
  * \author Tom Evans
  * \date   Wed Jan 04 23:32:17 2017
  * \brief  RTK_Array_Tester member and kernel definitions.
@@ -629,5 +629,5 @@ void RegCore::run_test()
 }
 
 //---------------------------------------------------------------------------//
-// end of MC/cuda_rtk/test/RTK_Array_Tester.cu
+// end of RTK_Array_Tester_2.cu
 //---------------------------------------------------------------------------//
