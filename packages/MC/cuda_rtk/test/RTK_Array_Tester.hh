@@ -128,6 +128,97 @@ class SimpleCore : public Base
     void run_test();
 };
 
+//---------------------------------------------------------------------------//
+
+class RegCore : public Base
+{
+  protected:
+
+    void SetUp()
+    {
+        // 3x3 core with 3 objects (2 lattice types, one reflector) + water on
+        // top
+        core = std::make_shared<Core>(3, 3, 2, 3);
+        {
+            // 2 pin types
+
+            // local id = 0
+            Lattice::SP_Object black = std::make_shared<Lattice::Object_t>(
+                1, 0.54, 5, 1.26, 14.28);
+            EXPECT_EQ(2, black->num_cells());
+
+            // local id = 0
+            Lattice::SP_Object purple = std::make_shared<Lattice::Object_t>(
+                2, 0.54, 5, 1.26, 14.28);
+            EXPECT_EQ(2, purple->num_cells());
+
+            // local id = 0
+            Lattice::SP_Object water = std::make_shared<Lattice::Object_t>(
+                5, 2.52, 14.28);
+            EXPECT_EQ(1, water->num_cells());
+
+            // 3 lattices
+            Core::SP_Object lat1 = std::make_shared<Lattice>(2, 2, 1, 1);
+            Core::SP_Object lat2 = std::make_shared<Lattice>(2, 2, 1, 1);
+            Core::SP_Object lat0 = std::make_shared<Lattice>(1, 1, 1, 1);
+
+            // assign pins to ids
+            lat1->assign_object(black,  0);
+            lat2->assign_object(purple, 0);
+            lat0->assign_object(water, 0);
+
+            // assign pins in the lattices
+            lat1->id(0, 0, 0) = 0;
+            lat1->id(1, 0, 0) = 0;
+            lat1->id(0, 1, 0) = 0;
+            lat1->id(1, 1, 0) = 0;
+
+            lat2->id(0, 0, 0) = 0;
+            lat2->id(1, 0, 0) = 0;
+            lat2->id(0, 1, 0) = 0;
+            lat2->id(1, 1, 0) = 0;
+
+            lat0->id(0, 0, 0) = 0;
+
+            lat1->complete(0.0, 0.0, 0.0);
+            lat2->complete(0.0, 0.0, 0.0);
+            lat0->complete(0.0, 0.0, 0.0);
+
+            // assign lattices to core
+            core->assign_object(lat1, 1);
+            core->assign_object(lat2, 2);
+            core->assign_object(lat0, 0);
+
+            // assign ids
+            core->id(0, 0, 0) = 1;
+            core->id(1, 0, 0) = 2;
+            core->id(2, 0, 0) = 0;
+            core->id(0, 1, 0) = 2;
+            core->id(1, 1, 0) = 1;
+            core->id(2, 1, 0) = 0;
+            core->id(0, 2, 0) = 0;
+            core->id(1, 2, 0) = 0;
+            core->id(2, 2, 0) = 0;
+            core->id(0, 0, 1) = 0;
+            core->id(1, 0, 1) = 0;
+            core->id(2, 0, 1) = 0;
+            core->id(0, 1, 1) = 0;
+            core->id(1, 1, 1) = 0;
+            core->id(2, 1, 1) = 0;
+            core->id(0, 2, 1) = 0;
+            core->id(1, 2, 1) = 0;
+            core->id(2, 2, 1) = 0;
+
+            // complete assignment
+            core->complete(0.0, 0.0, 0.0);
+        }
+
+        run_test();
+    }
+
+    void run_test();
+};
+
 #endif // MC_cuda_rtk_test_RTK_Array_Tester_hh
 
 //---------------------------------------------------------------------------//
