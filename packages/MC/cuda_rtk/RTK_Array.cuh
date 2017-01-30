@@ -47,10 +47,11 @@ class RTK_Array
   public:
     //@{
     //! Types.
-    using Object_t     = T;
-    using Geo_State_t  = RTK_State;
-    using Space_Vector = Geo_State_t::Space_Vector;
-    using Dim_Vector   = cuda_utils::Device_Vector_Lite<int, 3>;
+    using Object_t         = T;
+    using Geo_State_t      = RTK_State;
+    using Space_Vector     = Geo_State_t::Space_Vector;
+    using Dim_Vector       = cuda_utils::Device_Vector_Lite<int, 3>;
+    using Reflecting_Faces = cuda_utils::Device_Vector_Lite<int, 6>;
     //@}
 
   private:
@@ -82,13 +83,13 @@ class RTK_Array
     int d_level;
 
     // Reflecting faces
-    cuda_utils::Device_Vector_Lite<int, 6> d_reflect;
+    Reflecting_Faces d_reflect;
 
   public:
     // Constructor.
     RTK_Array(int level, Dim_Vector N, View_Int layout, Object_View objects,
               View_Dbl x, View_Dbl y, View_Dbl z, Space_Vector corner,
-              Space_Vector length);
+              Space_Vector length, Reflecting_Faces reflect);
 
     // >>> DEVICE FUNCTIONS
 
@@ -218,6 +219,9 @@ class RTK_Array_DMM
 
     // Level of the array.
     int d_level;
+
+    // Reflecting faces.
+    cuda_utils::Device_Vector_Lite<int, 6> d_reflect;
 };
 
 //---------------------------------------------------------------------------//

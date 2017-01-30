@@ -31,6 +31,18 @@ TEST_F(SimpleCore, init)
 
 TEST_F(RegCore, track)
 {
+    core->complete(0.0, 0.0, 0.0);
+    run_test();
+}
+
+//---------------------------------------------------------------------------//
+
+TEST_F(RegCore, reflect)
+{
+    Core::Vec_Int reflect = {1, 0, 1, 0, 1, 0};
+    core->set_reflecting(reflect);
+    core->complete(0.0, 0.0, 0.0);
+    reflect_test();
 }
 
 //---------------------------------------------------------------------------//

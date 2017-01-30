@@ -209,6 +209,9 @@ class RTK_Array
     // Return the array edges.
     inline const Vec_Dbl& edges(int dim) const;
 
+    //! Return the relecting faces.
+    const Vec_Int& reflecting_faces() const { return d_reflect; }
+
   private:
     // >>> IMPLEMENTATION
 

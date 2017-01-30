@@ -24,6 +24,7 @@ SET(CUDA_SOURCES
   RTK_Cell_Tester_2.cu
   RTK_Array_Tester_1.cu
   RTK_Array_Tester_2.cu
+  RTK_Array_Tester_3.cu
 )
 
 PACKAGE_ADD_CUDA_LIBRARY(

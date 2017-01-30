@@ -208,15 +208,11 @@ class RegCore : public Base
             core->id(0, 2, 1) = 0;
             core->id(1, 2, 1) = 0;
             core->id(2, 2, 1) = 0;
-
-            // complete assignment
-            core->complete(0.0, 0.0, 0.0);
         }
-
-        run_test();
     }
 
     void run_test();
+    void reflect_test();
 };
 
 #endif // MC_cuda_rtk_test_RTK_Array_Tester_hh

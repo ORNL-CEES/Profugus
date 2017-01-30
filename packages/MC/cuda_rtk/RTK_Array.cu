@@ -63,15 +63,16 @@ class RTK_DMM_Traits< RTK_Array<RTK_Cell> >
  */
 template<class T>
 RTK_Array<T>::RTK_Array(
-    int          level,
-    Dim_Vector   N,
-    View_Int     layout,
-    Object_View  objects,
-    View_Dbl     x,
-    View_Dbl     y,
-    View_Dbl     z,
-    Space_Vector corner,
-    Space_Vector length)
+    int              level,
+    Dim_Vector       N,
+    View_Int         layout,
+    Object_View      objects,
+    View_Dbl         x,
+    View_Dbl         y,
+    View_Dbl         z,
+    Space_Vector     corner,
+    Space_Vector     length,
+    Reflecting_Faces reflect)
     : d_N(std::move(N))
     , d_layout(std::move(layout))
     , d_objects(std::move(objects))
@@ -81,7 +82,7 @@ RTK_Array<T>::RTK_Array(
     , d_corner(std::move(corner))
     , d_length(std::move(length))
     , d_level(level)
-    , d_reflect({0, 0, 0, 0, 0, 0})
+    , d_reflect(reflect)
 {
 }
 
@@ -184,6 +185,10 @@ RTK_Array_DMM<Host_Array_T,Device_Array_T>::RTK_Array_DMM(
 
     // Set the level
     d_level = host_array.level();
+
+    // Store the reflecting faces.
+    const auto &r = host_array.reflecting_faces();
+    d_reflect     = {r[0], r[1], r[2], r[3], r[4], r[5]};
 }
 
 //---------------------------------------------------------------------------//
@@ -202,7 +207,8 @@ Device_Array_T RTK_Array_DMM<Host_Array_T,Device_Array_T>::device_instance()
         cuda::make_view(d_y),
         cuda::make_view(d_z),
         d_corner,
-        d_length);
+        d_length,
+        d_reflect);
 }
 
 //---------------------------------------------------------------------------//
