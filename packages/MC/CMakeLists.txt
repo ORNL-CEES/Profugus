@@ -165,6 +165,7 @@ IF(USE_CUDA)
     cuda_geometry/Mesh_Geometry.cu
     cuda_rtk/RTK_Cell.cu
     cuda_rtk/RTK_Array.cu
+    cuda_rtk/RTK_Geometry.cu
     )
   LIST(APPEND CUDDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_GEOMETRY_SOURCES})
