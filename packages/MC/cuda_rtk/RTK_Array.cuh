@@ -123,7 +123,7 @@ class RTK_Array
     // >>> ACCESSORS
 
     // Level of array.
-    __device__
+    __host__ __device__
     int level() const { return d_level; }
 
     // Array indexing.

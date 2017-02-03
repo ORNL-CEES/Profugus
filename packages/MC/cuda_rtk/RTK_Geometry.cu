@@ -24,6 +24,7 @@ namespace cuda_profugus
 RTK_Geometry::RTK_Geometry(
     Array_t array)
     : d_array(array)
+    , d_level(d_array.level())
 {
 }
 
