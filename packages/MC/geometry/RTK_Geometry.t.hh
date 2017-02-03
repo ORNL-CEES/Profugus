@@ -40,15 +40,16 @@ RTK_Geometry<Array>::RTK_Geometry(SP_Array array)
 //---------------------------------------------------------------------------//
 // PUBLIC INTERFACE
 //---------------------------------------------------------------------------//
-/*! \brief Initialize a track.
+/*!
+ * \brief Initialize a track.
  *
  * This also checks for whether the starting position is outside the geometry
  * (possible for sources and especially meshing).
  */
 template<class Array>
 void RTK_Geometry<Array>::initialize(const Space_Vector &r,
-                                 const Space_Vector &direction,
-                                 Geo_State_t        &state)
+                                     const Space_Vector &direction,
+                                     Geo_State_t        &state)
 {
     REQUIRE(d_array);
 
