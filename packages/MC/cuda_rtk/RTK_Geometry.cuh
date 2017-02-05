@@ -44,17 +44,10 @@ class RTK_Geometry
     //@}
 
   private:
-    // Types
-    using View_Dbl = cuda::const_Device_View_Field<double>;
-
-  private:
     // >>> DATA
 
     // Underlying core array.
     Array_t d_array;
-
-    // Volumes.
-    View_Dbl d_volumes;
 
     // Level of array.
     const int d_level;
@@ -100,20 +93,6 @@ class RTK_Geometry
 
         // update the array state to clear any surface tags
         d_array.update_state(state);
-    }
-
-    //! Number of cells (excluding "outside" cell)
-    __device__
-    int num_cells() const { return d_volumes.size(); }
-
-    //! Get the volume for a cell.
-    __device__
-    double cell_volume(int cellid) const
-    {
-        DEVICE_CHECK(cellid < num_cells());
-        double vol = d_volumes[cellid];
-        DEVICE_ENSURE(vol >= 0.0);
-        return vol;
     }
 
     //! Return the current material ID.

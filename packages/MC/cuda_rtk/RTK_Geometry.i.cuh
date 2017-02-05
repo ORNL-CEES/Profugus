@@ -50,8 +50,8 @@ RTK_Geometry::boundary_state(
     {
         // if the particle has escaped indicate that the particle
         // is outside the geometry
-        CHECK(state.exiting_level[d_level]
-              || state.next_face == Geo_State_t::NONE);
+        DEVICE_CHECK(state.exiting_level[d_level]
+                     || state.next_face == Geo_State_t::NONE);
         return profugus::geometry::OUTSIDE;
     }
     else if (state.reflecting_face != Geo_State_t::NONE)

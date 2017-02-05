@@ -11,6 +11,9 @@
 #ifndef MC_cuda_rtk_test_RTK_Geometry_Tester_hh
 #define MC_cuda_rtk_test_RTK_Geometry_Tester_hh
 
+#include <vector>
+#include <random>
+#include <limits>
 #include <memory>
 
 #include "Utils/gtest/Gtest_Functions.hh"
@@ -106,12 +109,33 @@ class Core : public Base
 
         // finish the geometry
         geometry = std::make_shared<Core_Geometry>(core);
+
+        // Set number of threads to run on
+        num_threads = 256;
+        num_blocks  = 8;
+
+        // Make random number seeds
+        seeds.resize(num_threads * num_blocks);
+        {
+            std::mt19937 rng(42342);
+            std::uniform_int_distribution<unsigned long> dist(
+                std::numeric_limits<unsigned long>::min(),
+                std::numeric_limits<unsigned long>::max());
+
+            for (auto &seed : seeds)
+            {
+                seed = dist(rng);
+            }
+        }
     }
 
     void heuristic();
 
   protected:
 
+    std::vector<unsigned long> seeds;
+    unsigned int num_threads;
+    unsigned int num_blocks;
 };
 
 #endif // MC_cuda_rtk_test_RTK_Geometry_Tester_hh

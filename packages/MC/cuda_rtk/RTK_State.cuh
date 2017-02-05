@@ -72,14 +72,14 @@ struct RTK_State
     __device__
     static int minus_face(int d)
     {
-    if (d == 0)
-        return MINUS_X;
-    else if (d == 1)
-        return MINUS_Y;
-    else if (d == 2)
-        return MINUS_Z;
+        if (d == 0)
+            return MINUS_X;
+        else if (d == 1)
+            return MINUS_Y;
+        else if (d == 2)
+            return MINUS_Z;
 
-    return -1;
+        return -1;
     }
     //@}
 
