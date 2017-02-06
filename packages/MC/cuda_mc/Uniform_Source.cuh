@@ -59,7 +59,7 @@ class Uniform_Source : public Source<Geometry>
     typedef Geometry                             Geometry_t;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_Std_DB;
     typedef Particle<Geometry>                   Particle_t;
-    typedef cuda_profugus::Space_Vector          Space_Vector;
+    typedef cuda_utils::Space_Vector             Space_Vector;
     typedef std::shared_ptr<Box_Shape>           SP_Shape;
     typedef cuda::Shared_Device_Ptr<Box_Shape>   SDP_Shape;
     typedef cuda::Shared_Device_Ptr<Geometry_t>  SDP_Geometry;

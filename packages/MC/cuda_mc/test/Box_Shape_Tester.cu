@@ -18,7 +18,7 @@
 
 using namespace cuda_mc;
 
-typedef cuda_profugus::Space_Vector Space_Vector;
+typedef cuda_utils::Space_Vector Space_Vector;
 
 __global__ void compute_inside_kernel( Box_Shape           box,
                                        const Space_Vector *pts,

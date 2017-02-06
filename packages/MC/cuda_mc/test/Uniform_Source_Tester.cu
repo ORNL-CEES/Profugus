@@ -19,7 +19,7 @@
 
 using namespace cuda_mc;
 
-typedef cuda_profugus::Space_Vector     Space_Vector;
+typedef cuda_utils::Space_Vector        Space_Vector;
 typedef cuda_profugus::Mesh_Geometry    Geometry;
 typedef Uniform_Source<Geometry>        Uniform_Src;
 typedef Particle<Geometry>              Particle_t;

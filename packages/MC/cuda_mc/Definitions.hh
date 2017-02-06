@@ -29,8 +29,8 @@ typedef curandState_t RNG_State_t;
 //! Fission site structure for storing fission sites in k-code.
 struct Fission_Site
 {
-    int                         m;
-    cuda_profugus::Space_Vector r;
+    int                      m;
+    cuda_utils::Space_Vector r;
 };
 
 

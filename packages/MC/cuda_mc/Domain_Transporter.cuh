@@ -47,7 +47,7 @@ class Domain_Transporter
     //! Useful typedefs.
     typedef Geometry                                   Geometry_t;
     typedef Physics<Geometry_t>                        Physics_t;
-    typedef cuda_profugus::Space_Vector                Space_Vector;
+    typedef cuda_utils::Space_Vector                   Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef Particle<Geometry_t>                       Particle_t;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;

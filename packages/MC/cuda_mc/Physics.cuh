@@ -67,7 +67,7 @@ class Physics
     typedef Teuchos::RCP<XS_t>                  RCP_XS;
     typedef Teuchos::ParameterList              ParameterList_t;
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
-    typedef cuda_profugus::Space_Vector         Space_Vector;
+    typedef cuda_utils::Space_Vector            Space_Vector;
     typedef profugus::physics::Reaction_Type    Reaction_Type;
     //@}
 

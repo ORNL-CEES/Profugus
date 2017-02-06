@@ -23,7 +23,7 @@ using namespace cuda_mc;
 
 typedef profugus::XS                 XS_t;
 typedef cuda_profugus::Mesh_Geometry Geom;
-typedef cuda_profugus::Space_Vector  Space_Vector;
+typedef cuda_utils::Space_Vector     Space_Vector;
 
 __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
                                    Geom             *geom,

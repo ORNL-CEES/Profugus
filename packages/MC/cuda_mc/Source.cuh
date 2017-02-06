@@ -36,7 +36,7 @@ class Source
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
-    typedef cuda_profugus::Space_Vector         Space_Vector;
+    typedef cuda_utils::Space_Vector            Space_Vector;
     typedef def::size_type                      size_type;
     //@}
 
