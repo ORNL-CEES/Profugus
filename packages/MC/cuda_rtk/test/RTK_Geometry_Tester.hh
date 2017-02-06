@@ -53,6 +53,13 @@ class Core : public Base
 
     void SetUp()
     {
+        // Set number of threads to run on
+        num_threads = 256;
+        num_blocks  = 8;
+    }
+
+    void build(bool reflect)
+    {
         // 2 fuel pin types
         SP_Pin_Cell pin1(std::make_shared<Pin_Cell_t>(1, 0.54, 3, 1.26, 14.28));
         SP_Pin_Cell pin2(std::make_shared<Pin_Cell_t>(2, 0.54, 3, 1.26, 14.28));
@@ -104,15 +111,18 @@ class Core : public Base
         core->id(1, 2, 1) = 3; // lattice 3 (reflector)
         core->id(2, 2, 1) = 3; // lattice 3 (reflector)
 
+        // set reflected faces (if on)
+        if (reflect)
+        {
+            std::vector<int> refl = {1, 0, 1, 0, 1, 0};
+            core->set_reflecting(refl);
+        }
+
         // complete the core
         core->complete(0.0, 0.0, 0.0);
 
         // finish the geometry
         geometry = std::make_shared<Core_Geometry>(core);
-
-        // Set number of threads to run on
-        num_threads = 256;
-        num_blocks  = 8;
 
         // Make random number seeds
         seeds.resize(num_threads * num_blocks);
@@ -130,6 +140,7 @@ class Core : public Base
     }
 
     void heuristic();
+    void reflecting();
 
   protected:
 
