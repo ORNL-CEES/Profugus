@@ -17,16 +17,17 @@
 #include "RTK_Geometry_Tester.hh"
 
 #include "CudaUtils/cuda_utils/Utility_Functions.hh"
+#include "CudaUtils/cuda_utils/Shared_Device_Ptr.hh"
 #include "../RTK_Geometry.cuh"
 
 //---------------------------------------------------------------------------//
 // TYPES
 //---------------------------------------------------------------------------//
 
-using Core_Geometry         = cuda_profugus::Core;
-using Core_Geometry_Manager = cuda_profugus::Core_DMM;
-using State                 = Core_Geometry::Geo_State_t;
-using Space_Vector          = Core_Geometry::Space_Vector;
+using Device_Geometry         = cuda_profugus::Core;
+using Device_Geometry_Manager = cuda_profugus::Core_DMM;
+using State                   = Device_Geometry::Geo_State_t;
+using Space_Vector            = Device_Geometry::Space_Vector;
 
 //---------------------------------------------------------------------------//
 // CORE
@@ -34,10 +35,10 @@ using Space_Vector          = Core_Geometry::Space_Vector;
 
 __global__
 void heuristic_kernel(
-    unsigned long *dseeds,
-    curandState_t *rngs,
-    Core_Geometry  geometry,
-    int           *bins)
+    unsigned long   *dseeds,
+    curandState_t   *rngs,
+    Device_Geometry *geometry,
+    int             *bins)
 {
     // Get the thread id
     auto tid = cuda::utility::thread_id();
@@ -73,15 +74,15 @@ void heuristic_kernel(
         omega[2] = costheta;
 
         // initialize track
-        geometry.initialize(r, omega, state);
+        geometry->initialize(r, omega, state);
 
-        while (geometry.boundary_state(state) == profugus::geometry::INSIDE)
+        while (geometry->boundary_state(state) == profugus::geometry::INSIDE)
         {
             // get distance-to-boundary
-            geometry.distance_to_boundary(state);
+            geometry->distance_to_boundary(state);
 
             // update position of particle and cross the surface
-            geometry.move_to_surface(state);
+            geometry->move_to_surface(state);
         }
 
         if (state.escaping_face == State::MINUS_X)
@@ -103,11 +104,11 @@ void heuristic_kernel(
 
 __global__
 void reflecting_kernel(
-    unsigned long *dseeds,
-    curandState_t *rngs,
-    Core_Geometry  geometry,
-    int           *face_bin,
-    int           *refl_bin)
+    unsigned long   *dseeds,
+    curandState_t   *rngs,
+    Device_Geometry *geometry,
+    int             *face_bin,
+    int             *refl_bin)
 {
     // Get the thread id
     auto tid = cuda::utility::thread_id();
@@ -143,7 +144,7 @@ void reflecting_kernel(
         omega[2] = costheta;
 
         // initialize track
-        geometry.initialize(r, omega, state);
+        geometry->initialize(r, omega, state);
 
         // continue flag
         bool done = false;
@@ -151,13 +152,13 @@ void reflecting_kernel(
         while (!done)
         {
             // get distance-to-boundary
-            geometry.distance_to_boundary(state);
+            geometry->distance_to_boundary(state);
 
             // update position of particle to the surface and process it through
-            geometry.move_to_surface(state);
+            geometry->move_to_surface(state);
 
             // if the particle is reflected then do the reflection
-            if (geometry.boundary_state(state) == profugus::geometry::REFLECT)
+            if (geometry->boundary_state(state) == profugus::geometry::REFLECT)
             {
                 if (state.exiting_face == State::MINUS_X)
                     ++refl_bin[0 + 6 * tid];
@@ -173,11 +174,11 @@ void reflecting_kernel(
                     ++refl_bin[5 + 6 * tid];
 
                 // reflect the particle
-                geometry.reflect(state);
+                geometry->reflect(state);
             }
 
             // terminate on escape
-            if (geometry.boundary_state(state) == profugus::geometry::OUTSIDE)
+            if (geometry->boundary_state(state) == profugus::geometry::OUTSIDE)
             {
                 done = true;
             }
@@ -207,10 +208,11 @@ void Core::heuristic()
     build(false);
 
     // Build the manager
-    Core_Geometry_Manager dmm(*geometry);
+    Device_Geometry_Manager dmm(*geometry);
 
     // Get the host object
-    auto device_geo = dmm.device_instance();
+    auto device_geo = cuda::shared_device_ptr<Device_Geometry>(
+        dmm.device_instance());
 
     // Send over random number seeds and states
     thrust::device_vector<unsigned long> dseeds(seeds.begin(), seeds.end());
@@ -223,8 +225,9 @@ void Core::heuristic()
     dim3 threads = {num_threads};
     heuristic_kernel<<<blocks,threads>>>(dseeds.data().get(),
                                          rngs.data().get(),
-                                         device_geo,
+                                         device_geo.get_device_ptr(),
                                          bins.data().get());
+    cudaDeviceSynchronize();
 
     thrust::host_vector<int> rbins(bins.begin(), bins.end());
 
@@ -292,10 +295,11 @@ void Core::reflecting()
     build(true);
 
     // Build the manager
-    Core_Geometry_Manager dmm(*geometry);
+    Device_Geometry_Manager dmm(*geometry);
 
     // Get the host object
-    auto device_geo = dmm.device_instance();
+    auto device_geo = cuda::shared_device_ptr<Device_Geometry>(
+        dmm.device_instance());
 
     // Send over random number seeds and states
     thrust::device_vector<unsigned long> dseeds(seeds.begin(), seeds.end());
@@ -309,7 +313,7 @@ void Core::reflecting()
     dim3 threads = {num_threads};
     reflecting_kernel<<<blocks,threads>>>(dseeds.data().get(),
                                           rngs.data().get(),
-                                          device_geo,
+                                          device_geo.get_device_ptr(),
                                           face_bins.data().get(),
                                           refl_bins.data().get());
 
