@@ -41,11 +41,11 @@ struct Device
 
 #include "Device_Vector_Lite.hh"
 
-namespace cuda_profugus
+namespace cuda_utils
 {
 
-typedef cuda_profugus::Device_Vector_Lite<int,3>    Coordinates;
-typedef cuda_profugus::Device_Vector_Lite<double,3> Space_Vector;
+typedef Device_Vector_Lite<int,3>    Coordinates;
+typedef Device_Vector_Lite<double,3> Space_Vector;
 
 //===========================================================================//
 } // end namespace cuda_profugus

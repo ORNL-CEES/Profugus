@@ -37,6 +37,8 @@ IF(USE_CUDA)
     Atomic_Add_Kernel.cu
     Atomic_Lock_Test_Kernel.cu
     Device_Vector_Lite_Tester.cu
+    Device_View_Tester.cu
+    Device_View_Field_Tester.cu
     Run_Launch_Args.pt.cu
     Polyglot_Kernel.cu
     Profiler_Kernel.cu
@@ -44,6 +46,7 @@ IF(USE_CUDA)
     Shared_Device_Ptr_Tester.cu
     Stream_Test_Kernel.cu
     Texture_Vector_Test_Kernel.cu
+    Utility_Functions_Tester.cu
     )
 
   PACKAGE_ADD_CUDA_LIBRARY(
@@ -76,6 +79,9 @@ ADD_UTILS_TEST(tstSerialDenseMatrixVector.cc    NP 1 ${DEPS})
 ADD_UTILS_TEST(tstShared_Device_Ptr.cc          NP 1 ${DEPS})
 ADD_UTILS_TEST(tstStream.cc                     NP 1 ${DEPS})
 ADD_UTILS_TEST(tstTexture_Vector.cc             NP 1 ${DEPS})
+ADD_UTILS_TEST(tstDevice_View.cc                NP 1 ${DEPS})
+ADD_UTILS_TEST(tstDevice_View_Field.cc          NP 1 ${DEPS})
+ADD_UTILS_TEST(tstUtility_Functions.cc          NP 1 ${DEPS})
 
 IF(USE_CUDA)
   ADD_UTILS_TEST(tstBLAS_Handle.cc        NP 1        )

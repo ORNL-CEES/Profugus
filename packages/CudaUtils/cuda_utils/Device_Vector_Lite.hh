@@ -12,10 +12,10 @@
 #define CudaUtils_cuda_utils_Device_Vector_Lite_hh
 
 #include <cstddef>
-
+#include "utils/Vector_Lite.hh"
 #include "CudaDBC.hh"
 
-namespace cuda_profugus
+namespace cuda_utils
 {
 
 //===========================================================================//
@@ -30,10 +30,11 @@ namespace cuda_profugus
  */
 //===========================================================================//
 
-template <class T, std::size_t N>
+template <class T, size_t N>
 class Device_Vector_Lite
 {
   public:
+    using Host_Vec_Lite = profugus::Vector_Lite<T, N>;
 
 #ifdef __NVCC__
     __host__ __device__
@@ -53,13 +54,24 @@ class Device_Vector_Lite
         return d_data[i];
     }
 
+    //! Create from a host profugus::Vector_Lite (on host).
+    static Device_Vector_Lite<T, N> from_host(const Host_Vec_Lite &host_vector)
+    {
+        Device_Vector_Lite<T, N> x;
+        for (int n = 0; n < N; ++n)
+        {
+            x[n] = host_vector[n];
+        }
+        return x;
+    }
+
     // This data member is public so that the class satisfies the
     // C++11 is_standard_layout concept.
     T d_data[N];
 };
 
 //---------------------------------------------------------------------------//
-} // end namespace cuda
+} // end namespace cuda_utils
 
 //---------------------------------------------------------------------------//
 #endif // CudaUtils_cuda_utils_Device_Vector_Lite_hh

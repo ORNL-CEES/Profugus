@@ -28,6 +28,9 @@ struct Mesh_State
 {
   public:
 
+      typedef cuda_utils::Coordinates  Coordinates;
+      typedef cuda_utils::Space_Vector Space_Vector;
+
     //! Faces in pin-cell.
     enum Face {
         NONE = 0,

@@ -152,6 +152,9 @@ class RTK_Array
     // Return object.
     inline Object_t& object(int index) const;
 
+    //! Query object at index.
+    inline bool has_object(int index) const;
+
     //! Number of objects.
     int num_objects() const { return d_objects.size(); }
 
@@ -202,6 +205,12 @@ class RTK_Array
 
     //! Query if vessel is defined.
     bool has_vessel() const { return d_vessel; }
+
+    // Return the array edges.
+    inline const Vec_Dbl& edges(int dim) const;
+
+    //! Return the relecting faces.
+    const Vec_Int& reflecting_faces() const { return d_reflect; }
 
   private:
     // >>> IMPLEMENTATION

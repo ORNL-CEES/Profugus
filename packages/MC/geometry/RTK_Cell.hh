@@ -127,10 +127,6 @@ class RTK_Cell
     // Pin-cells are completed on construction.
     bool completed() const { return true; }
 
-    // Add vessel to pin-cell.
-    bool add_vessel(double R0, double R1, double x_offset, double y_offset,
-                    int vessel_id);
-
     // Initialize a state.
     void initialize(const Space_Vector &r, Geo_State_t &state) const;
 
@@ -191,7 +187,8 @@ class RTK_Cell
     void build_volumes(Vec_Dbl &v, int offset) const;
 
     // Vessel radius and offsets.
-    bool vessel_data(double &R0, double &R1, double &xc, double &yc) const;
+    bool vessel_data(int &id, double &R0, double &R1, double &xc,
+                     double &yc) const;
 
   private:
     // >>> IMPLEMENTATION

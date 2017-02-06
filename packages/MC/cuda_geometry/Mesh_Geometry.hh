@@ -51,6 +51,8 @@ class Mesh_Geometry
     typedef cuda::arch::Device                   Arch;
     typedef thrust::device_vector<double>        Dev_Dbl_Vec;
     typedef thrust::device_vector<int>           Dev_Int_Vec;
+    typedef cuda_utils::Coordinates              Coordinates;
+    typedef cuda_utils::Space_Vector             Space_Vector;
     typedef Mesh_State                           Geo_State_t;
 
     //! Constructor
@@ -64,7 +66,7 @@ class Mesh_Geometry
     // >>> HOST API
 
     //! Set materials
-    void set_matids(const Vec_Int & matids)
+    void set_matids(const Vec_Int& matids)
     {
         DEVICE_REQUIRE( matids.size() == num_cells() );
         d_matid_vec = matids;
@@ -281,6 +283,7 @@ class Mesh_Geometry
     __device__ void move(double dist, Geo_State_t &state) const
     {
         using def::I; using def::J; using def::K;
+
         DEVICE_REQUIRE(dist >= 0.0);
         DEVICE_REQUIRE(cuda::utility::soft_equiv(
                     cuda::utility::vector_magnitude(state.d_dir),

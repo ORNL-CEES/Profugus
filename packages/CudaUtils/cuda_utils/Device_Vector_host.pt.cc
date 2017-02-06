@@ -14,6 +14,7 @@
 namespace cuda
 {
 typedef arch::Host Arch_t;
+typedef cuda_utils::Space_Vector Space_Vector;
 
 template class Device_Vector<Arch_t,float>;
 template class Device_Vector<Arch_t,double>;

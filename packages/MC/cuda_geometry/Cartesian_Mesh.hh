@@ -47,6 +47,8 @@ class Cartesian_Mesh
     typedef int                           dim_type;
     typedef size_t                        size_type;
     typedef profugus::geometry::cell_type cell_type;
+    typedef cuda_utils::Space_Vector      Space_Vector;
+    typedef cuda_utils::Coordinates       Coordinates;
     typedef std::vector<double>           Vec_Dbl;
     //@}
 

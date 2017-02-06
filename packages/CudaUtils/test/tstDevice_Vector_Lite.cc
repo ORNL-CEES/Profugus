@@ -10,7 +10,6 @@
 
 #include <type_traits>
 
-
 #include "Device_Vector_Lite_Tester.hh"
 #include "gtest/utils_gtest.hh"
 
@@ -26,6 +25,11 @@ TEST(DeviceVectorLite, host)
 TEST(DeviceVectorLite, device)
 {
     Device_Vector_Lite_Tester::test_device();
+}
+
+TEST(DeviceVectorLite, host_copy)
+{
+    Device_Vector_Lite_Tester::test_host_copy();
 }
 
 //---------------------------------------------------------------------------//

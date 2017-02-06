@@ -47,7 +47,6 @@ __device__ void Mesh_Geometry::initialize(
     DEVICE_ENSURE(state.ijk[I] >= -1 && state.ijk[I] <= d_mesh.num_cells_along(I));
     DEVICE_ENSURE(state.ijk[J] >= -1 && state.ijk[J] <= d_mesh.num_cells_along(J));
     DEVICE_ENSURE(state.ijk[K] >= -1 && state.ijk[K] <= d_mesh.num_cells_along(K));
-
 }
 
 //---------------------------------------------------------------------------//
@@ -66,7 +65,8 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     const double * edges_x(d_mesh.edges(I));
     const double * edges_y(d_mesh.edges(J));
     const double * edges_z(d_mesh.edges(K));
-    cuda_profugus::Coordinates extents = {d_mesh.num_cells_along(I),
+
+    cuda_utils::Coordinates extents = {d_mesh.num_cells_along(I),
                                           d_mesh.num_cells_along(J),
                                           d_mesh.num_cells_along(K)};
 
@@ -155,6 +155,7 @@ __device__
 bool Mesh_Geometry::reflect(Geo_State_t& state) const
 {
     using def::I; using def::J; using def::K;
+
     using cuda::utility::soft_equiv;
     using cuda::utility::vector_magnitude;
     DEVICE_REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
@@ -186,7 +187,7 @@ bool Mesh_Geometry::reflect(Geo_State_t& state) const
 /*!
  * \brief Return the outward normal at the location dictated by the state.
  */
-__device__ cuda_profugus::Space_Vector
+__device__ cuda_utils::Space_Vector
 Mesh_Geometry::normal(const Geo_State_t& state) const
 {
     // Choose normal based on exiting face
@@ -218,8 +219,6 @@ Mesh_Geometry::normal(const Geo_State_t& state) const
     // We weren't on a boundary
     return {0.0, 0.0, 0.0};
 }
-
-
 
 } // end namespace cuda_profugus
 
