@@ -16,24 +16,12 @@
 #include "../Mesh_Geometry.hh"
 #include "Mesh_Geometry_Tester.hh"
 
-typedef profugus::geometry::cell_type   cell_type;
-typedef profugus::geometry::matid_type  matid_type;
-typedef cuda_utils::Space_Vector        Point;
-typedef cuda_utils::Coordinates         Coords;
-typedef cuda_profugus::Mesh_Geometry    Mesh_Geometry;
-
-// Get volume from the mesh for each specified cell
-__global__ void compute_volumes_kernel(Mesh_Geometry    mesh,
-                                       int              num_points,
-                                       const cell_type *cells,
-                                       double          *volumes)
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    if( tid < num_points )
-    {
-        volumes[tid] = mesh.volume(cells[tid]);
-    }
-}
+typedef profugus::geometry::cell_type       cell_type;
+typedef profugus::geometry::matid_type      matid_type;
+typedef cuda_utils::Space_Vector            Point;
+typedef cuda_utils::Coordinates             Coords;
+typedef cuda_profugus::Mesh_Geometry        Mesh_Geometry;
+typedef cuda_profugus::Mesh_Geometry_DMM    Mesh_Geometry_DMM;
 
 // Compute the matid for particle at each specified spatial location
 __global__ void compute_matids_kernel(Mesh_Geometry   mesh,
@@ -129,13 +117,13 @@ namespace
 {
 
 // Build Mesh_Geometry
-std::shared_ptr<Mesh_Geometry> get_mesh()
+std::shared_ptr<Mesh_Geometry_DMM> get_mesh()
 {
     std::vector<double> x_edges = {0.0, 0.1, 0.6, 0.9, 1.0};
     std::vector<double> y_edges = {-1.0, -0.6, 0.0};
     std::vector<double> z_edges = {2.0, 2.6, 3.4, 4.0};
     
-    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
     return mesh;
 }
 
@@ -148,32 +136,21 @@ void Mesh_Geometry_Tester::test_volume()
 {
     auto mesh = get_mesh();
 
-    std::vector<cell_type> host_cells = {4, 1, 22, 11};
-    int num_points = host_cells.size();
+    std::vector<cell_type> cells = {4, 1, 22, 11};
+    int num_cells = cells.size();
 
-    // Create memory on device
-    thrust::device_vector<cell_type> device_cells(host_cells);
-    thrust::device_vector<double> device_volumes(num_points);
+    const auto& all_volumes = mesh->volumes();
+    std::vector<double> cell_volumes(num_cells);
 
-    // Execute kernel
-    compute_volumes_kernel<<<1,num_points>>>( *mesh,
-                                               num_points,
-                                               device_cells.data().get(),
-                                               device_volumes.data().get());
-
-    REQUIRE( cudaGetLastError() == cudaSuccess );
-
-    // Copy volumes back to host
-    std::vector<double> host_volumes(num_points);
-    thrust::copy(device_volumes.begin(),device_volumes.end(),
-                 host_volumes.begin());
+    for (int cellid = 0; cellid < num_cells; ++cellid)
+        cell_volumes[cellid] = all_volumes[cells[cellid]];
 
     std::vector<double> expected_volumes = {0.1 * 0.6 * 0.6,
                                             0.5 * 0.4 * 0.6,
                                             0.3 * 0.6 * 0.6,
                                             0.1 * 0.4 * 0.8};
 
-    EXPECT_VEC_SOFT_EQ( expected_volumes, host_volumes );
+    EXPECT_VEC_SOFT_EQ( expected_volumes, cell_volumes );
 }
 
 //---------------------------------------------------------------------------//
@@ -206,7 +183,7 @@ void Mesh_Geometry_Tester::test_matid()
 
     // Execute kernel
     compute_matids_kernel<<<1,num_points>>>(
-            *mesh,
+             mesh->device_instance(),
              num_points,
              device_points.data().get(),
              device_cell_matids.data().get());
@@ -234,7 +211,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
     auto z_edges = {-0.1, 0.0, 0.15, 0.50};
-    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
 
 
     double sqrt_half = sqrt(0.5);
@@ -253,7 +230,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
 
     // Execute kernel
     distance_kernel<<<1,num_points>>>(
-            *mesh,
+             mesh->device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs.data().get(),
@@ -293,7 +270,7 @@ void Mesh_Geometry_Tester::test_move_to_surf()
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
     auto z_edges = {-0.1, 0.0, 0.15, 0.50};
-    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
 
     double sqrt_half = sqrt(0.5);
     std::vector<Point> host_points = {{0.01, 0.01, -0.01},
@@ -310,7 +287,7 @@ void Mesh_Geometry_Tester::test_move_to_surf()
 
     // Execute kernel
     move_to_surf_kernel<<<1,num_points>>>(
-            *mesh,
+             mesh->device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs.data().get(),
@@ -344,7 +321,7 @@ void Mesh_Geometry_Tester::test_reflect()
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
     auto z_edges = {-0.1, 0.0, 0.15, 0.50};
-    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
 
     std::vector<int> refl = {1, 0, 0, 0, 1, 1};
     mesh->set_reflecting(refl);
@@ -381,7 +358,7 @@ void Mesh_Geometry_Tester::test_reflect()
 
     // Execute kernel
     reflect_kernel<<<1,num_points>>>(
-            *mesh,
+             mesh->device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs_in.data().get(),

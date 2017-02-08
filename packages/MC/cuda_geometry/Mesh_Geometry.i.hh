@@ -44,9 +44,12 @@ __device__ void Mesh_Geometry::initialize(
 
     update_state(state);
 
-    DEVICE_ENSURE(state.ijk[I] >= -1 && state.ijk[I] <= d_mesh.num_cells_along(I));
-    DEVICE_ENSURE(state.ijk[J] >= -1 && state.ijk[J] <= d_mesh.num_cells_along(J));
-    DEVICE_ENSURE(state.ijk[K] >= -1 && state.ijk[K] <= d_mesh.num_cells_along(K));
+    DEVICE_ENSURE(state.ijk[I] >= -1 &&
+                  state.ijk[I] <= d_mesh.num_cells_along(I));
+    DEVICE_ENSURE(state.ijk[J] >= -1 &&
+                  state.ijk[J] <= d_mesh.num_cells_along(J));
+    DEVICE_ENSURE(state.ijk[K] >= -1 &&
+                  state.ijk[K] <= d_mesh.num_cells_along(K));
 }
 
 //---------------------------------------------------------------------------//
@@ -62,13 +65,13 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
 
     DEVICE_REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.e-5));
 
-    const double * edges_x(d_mesh.edges(I));
-    const double * edges_y(d_mesh.edges(J));
-    const double * edges_z(d_mesh.edges(K));
+    const Double_View& edges_x = d_mesh.edges(I);
+    const Double_View& edges_y = d_mesh.edges(J);
+    const Double_View& edges_z = d_mesh.edges(K);
 
     cuda_utils::Coordinates extents = {d_mesh.num_cells_along(I),
-                                          d_mesh.num_cells_along(J),
-                                          d_mesh.num_cells_along(K)};
+                                       d_mesh.num_cells_along(J),
+                                       d_mesh.num_cells_along(K)};
 
     // min distance to boundary; initializing test_dist to a large number before
     // each surface check implicitly handles the case where omega[dir] == 0.0
