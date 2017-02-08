@@ -96,7 +96,8 @@ class Cell_Tally
     Cell_Tally& operator=(const Cell_Tally &phys) = delete;
 
     // Set cell list for tally
-    void set_cells(const std::vector<int> &cells);
+    void set_cells(const std::vector<int>    &cells,
+                   const std::vector<double> &volumes);
 
     // Get tally results.
     const std::vector<double> & results() const

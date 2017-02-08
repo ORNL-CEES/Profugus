@@ -70,7 +70,7 @@ class KCode_Solver : public Solver<Geometry>
     typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_Std_DB;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
-    typedef Fission_Source<Geometry_t>              FS_t;
+    typedef Fission_Source_DMM<Geometry_t>          FS_t;
     typedef Tallier<Geometry_t>                     Tallier_t;
     typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
     typedef std::vector<Fission_Site>               Host_Fission_Sites;

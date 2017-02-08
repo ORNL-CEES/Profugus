@@ -19,10 +19,12 @@
 
 using namespace cuda_mc;
 
-typedef cuda_utils::Space_Vector        Space_Vector;
-typedef cuda_profugus::Mesh_Geometry    Geometry;
-typedef Uniform_Source<Geometry>        Uniform_Src;
-typedef Particle<Geometry>              Particle_t;
+typedef cuda_utils::Space_Vector            Space_Vector;
+typedef cuda_profugus::Mesh_Geometry        Geometry;
+typedef cuda_profugus::Mesh_Geometry_DMM    Geometry_DMM;
+typedef Uniform_Source<Geometry>            Uniform_Src;
+typedef Uniform_Source_DMM<Geometry>        Uniform_Src_DMM;
+typedef Particle<Geometry>                  Particle_t;
 
 __global__ void compute_source_kernel( Uniform_Src   source,
                                        Space_Vector *pts,
@@ -64,7 +66,7 @@ __global__ void extract_data( Particle_t         *parts,
     }
 }
 
-cuda::Shared_Device_Ptr<Geometry> get_geometry()
+std::shared_ptr<Geometry_DMM> get_geometry()
 {
     // Build geometry edges, mesh doesn't really matter
     std::vector<double> geom_bounds = {-4.0, 2.0, -1.0, 1.0, 1.0, 12.0};
@@ -93,10 +95,10 @@ cuda::Shared_Device_Ptr<Geometry> get_geometry()
         z_edges[iz] = zlo_geom + static_cast<double>(iz) * dz;
 
     // Build Geometry
-    auto geom_host = std::make_shared<Geometry>(x_edges,y_edges,z_edges);
+    auto geom_host = std::make_shared<Geometry_DMM>(x_edges,y_edges,z_edges);
     std::vector<int> matids(Nx*Ny*Nz,0);
     geom_host->set_matids(matids);
-    return cuda::Shared_Device_Ptr<Geometry>(geom_host);
+    return geom_host;
 }
 
 void test_data(const thrust::device_vector<Space_Vector> &pts,
@@ -136,9 +138,12 @@ void test_data(const thrust::device_vector<Space_Vector> &pts,
     std::cout << "Actual mean z = " << z_mean << std::endl;
 
     double sqrt_N = std::sqrt(static_cast<double>(Np));
-    EXPECT_TRUE( std::abs(x_mean - x_expected) < (bounds[1] - bounds[0])/sqrt_N );
-    EXPECT_TRUE( std::abs(y_mean - y_expected) < (bounds[3] - bounds[2])/sqrt_N );
-    EXPECT_TRUE( std::abs(z_mean - z_expected) < (bounds[5] - bounds[4])/sqrt_N );
+    EXPECT_TRUE(std::abs(x_mean - x_expected) <
+                (bounds[1] - bounds[0])/sqrt_N );
+    EXPECT_TRUE(std::abs(y_mean - y_expected) <
+                (bounds[3] - bounds[2])/sqrt_N );
+    EXPECT_TRUE(std::abs(z_mean - z_expected) <
+                (bounds[5] - bounds[4])/sqrt_N );
 
     // Now compute mean of each direction component
     double mu_mean = 0.0;
@@ -170,7 +175,9 @@ void Uniform_Source_Tester::test_source()
 {
     def::size_type Np = 1024;
 
-    auto geom = get_geometry();
+    auto geom_dmm = get_geometry();
+    auto geom = 
+        cuda::shared_device_ptr<Geometry>(geom_dmm->device_instance());
 
     auto db = Teuchos::rcp( new Teuchos::ParameterList() );
     db->set("Np",Np);
@@ -187,7 +194,7 @@ void Uniform_Source_Tester::test_source()
             xlo, xhi, ylo, yhi, zlo, zhi);
 
     // Build source
-    Uniform_Src source(db,geom);
+    Uniform_Src_DMM source(db,geom);
     source.build_source(src_shape);
 
     // Allocate device vectors
@@ -196,7 +203,8 @@ void Uniform_Source_Tester::test_source()
 
     // Launch kernel
     std::cout << "Launching kernel with " << Np << " particles" << std::endl;
-    compute_source_kernel<<<1,Np>>>(source, device_pts.data().get(),
+    compute_source_kernel<<<1,Np>>>(source.device_instance(),
+                                    device_pts.data().get(),
                                     device_dirs.data().get(), Np);
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
@@ -209,7 +217,9 @@ void Uniform_Source_Tester::test_host_api()
     // Copy values to device
     def::size_type Np = 1024;
 
-    auto geom = get_geometry();
+    auto geom_dmm = get_geometry();
+    auto geom = 
+        cuda::shared_device_ptr<Geometry>(geom_dmm->device_instance());
 
     auto db = Teuchos::rcp( new Teuchos::ParameterList() );
     db->set("Np",Np);
@@ -226,7 +236,7 @@ void Uniform_Source_Tester::test_host_api()
             xlo, xhi, ylo, yhi, zlo, zhi);
 
     // Build source
-    auto source_host = std::make_shared<Uniform_Src>(db,geom);
+    auto source_host = std::make_shared<Uniform_Src_DMM>(db,geom);
     source_host->build_source(src_shape);
 
     // Initialize RNG

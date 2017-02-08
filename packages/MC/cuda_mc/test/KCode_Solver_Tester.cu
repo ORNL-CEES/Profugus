@@ -25,7 +25,8 @@
 using namespace cuda_mc;
 
 typedef cuda_profugus::Mesh_Geometry       Geom;
-typedef cuda_mc::Fission_Source<Geom>      Fission_Src;
+typedef cuda_profugus::Mesh_Geometry_DMM   Geom_DMM;
+typedef cuda_mc::Fission_Source_DMM<Geom>  Fission_Src;
 typedef cuda_mc::Source_Transporter<Geom>  Transporter;
 typedef cuda_mc::KCode_Solver<Geom>        Keff_Solver;
 
@@ -53,9 +54,9 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     def::size_type batch_size    = num_particles / 5;
 
     // Build geometry
-    auto geom = std::make_shared<Geom>(edges,edges,edges);
-    geom->set_matids(matids);
-    cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
+    auto geom_dmm = std::make_shared<Geom_DMM>(edges,edges,edges);
+    geom_dmm->set_matids(matids);
+    auto sdp_geom = cuda::shared_device_ptr<Geom>(geom_dmm->device_instance());
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
@@ -76,7 +77,7 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(
         sdp_geom,sdp_phys);
     std::vector<int> cells = {0, 1, 2, 3, 4, 5, 6, 7};
-    sp_cell_tally->set_cells(cells);
+    sp_cell_tally->set_cells(cells,geom_dmm->volumes());
     cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
 
     std::cout << "Building Tallier" << std::endl;
@@ -84,7 +85,8 @@ void KCode_Solver_Tester::test_transport(int num_groups)
     tallier->add_cell_tally(cell_tally);
 
     // Build source
-    auto source = std::make_shared<Fission_Src>(pl,sdp_geom,sdp_phys);
+    auto source = std::make_shared<Fission_Src>(pl,sdp_geom,sdp_phys,
+            geom_dmm->lower(),geom_dmm->upper());
 
     // Build source transporter
     auto trans = std::make_shared<Transporter>(pl,sdp_geom,sdp_phys);

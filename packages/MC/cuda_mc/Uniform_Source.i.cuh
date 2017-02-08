@@ -56,15 +56,15 @@ Uniform_Source<Geometry>::get_particle(std::size_t  tid,
     r = d_geo_shape->sample(rng);
 
     // intialize the geometry state
-    b_geometry->initialize(r, omega, p.geo_state());
+    d_geometry->initialize(r, omega, p.geo_state());
 
     // get the material id
-    matid = b_geometry->matid(p.geo_state());
+    matid = d_geometry->matid(p.geo_state());
 
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
-        d_num_groups, d_erg_cdf, p.ran());
-    DEVICE_CHECK(group < d_num_groups);
+        d_erg_cdf.size(), d_erg_cdf.begin(), p.ran());
+    DEVICE_CHECK(group < d_erg_cdf.size());
     p.set_group(group);
 
     // set the material id in the particle

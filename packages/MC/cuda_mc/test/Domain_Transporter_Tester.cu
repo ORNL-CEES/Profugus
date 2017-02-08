@@ -21,7 +21,9 @@
 using namespace cuda_mc;
 
 typedef cuda_profugus::Mesh_Geometry      Geom;
+typedef cuda_profugus::Mesh_Geometry_DMM  Geom_DMM;
 typedef cuda_mc::Uniform_Source<Geom>     Uniform_Src;
+typedef cuda_mc::Uniform_Source_DMM<Geom> Uniform_Src_DMM;
 typedef cuda_mc::Domain_Transporter<Geom> Transporter;
 
 __global__ void test_transport_kernel( Uniform_Src *source,
@@ -58,9 +60,9 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
     // Build geometry
     std::vector<double> edges = {0.0, 0.50, 1.0};
     std::vector<int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
-    auto geom = std::make_shared<Geom>(edges,edges,edges);
-    geom->set_matids(matids);
-    cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
+    auto geom_dmm = std::make_shared<Geom_DMM>(edges,edges,edges);
+    geom_dmm->set_matids(matids);
+    auto sdp_geom = cuda::shared_device_ptr<Geom>(geom_dmm->device_instance());
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
@@ -86,9 +88,10 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
             src_bounds[4], src_bounds[5]);
 
     // Build source
-    auto sp_source = std::make_shared<Uniform_Src>(pl,sdp_geom);
+    auto sp_source = std::make_shared<Uniform_Src_DMM>(pl,sdp_geom);
     sp_source->build_source(src_shape);
-    cuda::Shared_Device_Ptr<Uniform_Src> sdp_source(sp_source);
+    auto sdp_source = cuda::shared_device_ptr<Uniform_Src>(
+            sp_source->device_instance());
 
     // Allocate data on device
     thrust::device_vector<int> device_events(num_particles);

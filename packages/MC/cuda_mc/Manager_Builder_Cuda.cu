@@ -19,10 +19,10 @@ namespace cuda_mc
 auto Manager_Builder_Cuda::build( const RCP_ParameterList &pl )
     -> SP_Manager_Base
 {
-    typedef cuda_profugus::Mesh_Geometry Mesh;
+    typedef cuda_profugus::Mesh_Geometry_DMM Mesh_DMM;
 
     if( pl->isSublist("MESH") )
-        return std::make_shared<Manager_Cuda<Mesh>>();
+        return std::make_shared<Manager_Cuda<Mesh_DMM>>();
     else
         INSIST(false,"Only MESH geometry available in cuda.");
 

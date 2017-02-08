@@ -57,16 +57,16 @@ auto Fission_Source<Geometry>::get_particle(
 
     // if there is a fission site container than get the particle from there;
     // otherwise assume this is an initial source
-    if (d_have_sites)
+    if (!is_initial_source())
     {
         // get the corresponding element in the site container
-        Fission_Site &fs = d_fission_sites[tid];
+        const Fission_Site &fs = d_fission_sites[tid];
 
         // intialize the geometry state
-        b_geometry->initialize(fs.r, omega, p.geo_state());
+        d_geometry->initialize(fs.r, omega, p.geo_state());
 
         // get the material id
-        matid = b_geometry->matid(p.geo_state());
+        matid = d_geometry->matid(p.geo_state());
 
         // initialize the physics state at the fission site
         bool sampled = d_physics->initialize_fission(fs, p);
@@ -124,10 +124,10 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
         r[K] = d_width[K] * curand_uniform_double(rng) + d_lower[K];
 
         // intialize the geometry state
-        b_geometry->initialize(r, omega, p.geo_state());
+        d_geometry->initialize(r, omega, p.geo_state());
 
         // get the material id
-        matid = b_geometry->matid(p.geo_state());
+        matid = d_geometry->matid(p.geo_state());
 
         // try initializing fission here, if it is successful we are
         // finished

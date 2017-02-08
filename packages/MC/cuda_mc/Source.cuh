@@ -35,6 +35,7 @@ class Source
     //@{
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
+    typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry_t;
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
     typedef cuda_utils::Space_Vector            Space_Vector;
     typedef def::size_type                      size_type;
@@ -49,7 +50,7 @@ class Source
     // >>> DATA
 
     // Geometry and physics.
-    Geometry_t  *b_geometry;
+    SDP_Geometry_t  b_geometry;
 
     // Requested particles per cycle.
     size_type d_np_requested;
@@ -70,15 +71,6 @@ class Source
 
     // Virtual destructor for polymorphism.
     virtual ~Source(){}
-
-    // Derived classes should implement the following functions,
-    // but because this is an on-device class there can be NO virtual
-    // functions.  Toggling between derived classes must be handled
-    // through templates.
-
-    //! Get a particle from the source on specified thread.
-    //__device__ Particle_t get_particle(
-    //    std::size_t idx, RNG_State_t &rng) const;
 
     //! Number of particles to transport in the source on the current domain.
     size_type num_to_transport() const {return d_np_domain;}
@@ -117,7 +109,7 @@ class Source
     // >>> INHERITED INTERFACE
 
     //! Get the geometry.
-    const Geometry_t& geometry() const { return *b_geometry; }
+    SDP_Geometry geometry() const { return b_geometry; }
 };
 
 } // end namespace cuda_mc

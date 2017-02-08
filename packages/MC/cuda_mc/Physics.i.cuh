@@ -249,8 +249,8 @@ int Physics<Geometry>::sample_fission_site(const Particle_t   &p,
  */
 template <class Geometry>
 __device__
-bool Physics<Geometry>::initialize_fission(Fission_Site &fs,
-                                           Particle_t   &p) const
+bool Physics<Geometry>::initialize_fission(const Fission_Site &fs,
+                                                 Particle_t   &p) const
 {
     DEVICE_REQUIRE(fs.m < d_mat->num_mat());
     DEVICE_REQUIRE(is_fissionable(fs.m));

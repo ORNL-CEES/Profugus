@@ -69,10 +69,11 @@ class Source_Provider
 
     // Implementation of get_particles for particular source type
     template <class Src_Type>
-    void get_particles_impl( std::shared_ptr<Src_Type>  source,
+    void get_particles_impl( Src_Type                  &source,
                              SP_RNG_Control             rng_control,
                              Particle_Vector           &particles,
-                             const Index_Vector        &indices ) const;
+                             const Index_Vector        &indices,
+                             size_type                  Np) const;
                         
 };
 

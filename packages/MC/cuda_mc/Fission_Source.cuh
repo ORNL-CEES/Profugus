@@ -69,7 +69,89 @@ namespace cuda_mc
 //===========================================================================//
 
 template <class Geometry>
-class Fission_Source : public Source<Geometry>
+class Fission_Source
+{
+  public:
+    //@{
+    //! Typedefs.
+    typedef Geometry                                Geometry_t;
+    typedef Physics<Geometry_t>                     Physics_t;
+    typedef cuda::Device_View_Field<Fission_Site>   Fission_Site_View;
+    typedef Particle<Geometry_t>                    Particle_t;
+    typedef cuda_utils::Space_Vector                Space_Vector;
+    typedef RNG_Control::RNG_State_t                RNG_State_t;
+    typedef def::size_type                          size_type;
+    //@}
+
+  private:
+
+    // >>> DATA
+
+    // Fission sites container.
+    Fission_Site_View d_fission_sites;
+
+    // Geometry
+    Geometry_t *d_geometry;
+
+    // Physics
+    Physics_t  *d_physics;
+
+    // Initial fission source lower coords and width.
+    Space_Vector d_lower;
+    Space_Vector d_width;
+
+    // Particle weight.
+    double d_wt;
+
+  public:
+
+    // Constructor.
+    Fission_Source(Geometry_t       *geometry,
+                   Physics_t        *physics,
+                   Fission_Site_View fission_sites,
+                   Space_Vector      lower,
+                   Space_Vector      width,
+                   double            wt)
+        : d_geometry(geometry)
+        , d_physics(physics)
+        , d_fission_sites(fission_sites)
+        , d_lower(lower)
+        , d_width(width)
+        , d_wt(wt)
+    {}
+
+    // Is this the initial source
+    __device__ bool is_initial_source() const
+    {
+        return d_fission_sites.empty();
+    }
+
+    // >>> DERIVED PUBLIC INTERFACE
+
+    // Get a particle from the source.
+    __device__ inline Particle_t get_particle(
+        std::size_t idx, RNG_State_t *rng) const;
+
+  private:
+    // >>> IMPLEMENTATION
+
+    // Sample the geometry.
+    __device__ inline
+    int sample_geometry(Space_Vector &r, const Space_Vector &omega,
+                        Particle_t &p, RNG_State_t *rng) const;
+
+};
+
+//===========================================================================//
+/*!
+ * \class Fission_Source_DMM
+ * \brief Device memory manager for Fission_Source.
+ */
+//===========================================================================//
+
+template <class Geometry>
+class Fission_Source_DMM : public Source<Geometry>,
+    public cuda::Device_Memory_Manager<Fission_Source<Geometry>>
 {
   public:
     //@{
@@ -91,24 +173,41 @@ class Fission_Source : public Source<Geometry>
     //@}
 
   private:
+
     // >>> DATA
 
     // Fission site container.
     SP_Host_Fission_Sites   d_host_sites;
     SP_Device_Fission_Sites d_device_sites;
-    Fission_Site           *d_fission_sites;
 
     // Fission rebalance (across sets).
     SP_Fission_Rebalance d_fission_rebalance;
 
     // Physics
-    SDP_Physics d_physics_host;
-    Physics_t  *d_physics;
+    SDP_Physics d_physics;
 
   public:
-    // Constructor.
-    Fission_Source(RCP_Std_DB db, SDP_Geometry geometry, SDP_Physics physics);
 
+    // Constructor.
+    Fission_Source_DMM(RCP_Std_DB db,
+                       SDP_Geometry geometry,
+                       SDP_Physics physics,
+                       def::Space_Vector low_corner,
+                       def::Space_Vector high_corner);
+
+    // DMM Interface
+    Fission_Source<Geometry_t> device_instance()
+    {
+        Fission_Source<Geometry_t> src(
+            b_geometry.get_device_ptr(),
+            d_physics.get_device_ptr(),
+            cuda::make_view(*d_device_sites),
+            d_lower,
+            d_width,
+            d_wt);
+        return src;
+    }
+    
     // Build the initial fission source.
     void build_initial_source();
 
@@ -116,13 +215,13 @@ class Fission_Source : public Source<Geometry>
     void build_source(SP_Host_Fission_Sites &fission_sites);
 
     // Is this the initial source
-    bool is_initial_source() const { return !d_have_sites; }
+    bool is_initial_source() const
+    {
+        REQUIRE(d_host_sites->empty() == d_device_sites->empty());
+        return d_device_sites->empty();
+    }
 
     // >>> DERIVED PUBLIC INTERFACE
-
-    // Get a particle from the source.
-    __device__ inline Particle_t get_particle(
-        std::size_t idx, RNG_State_t *rng) const;
 
     void begin_batch(size_type num_sites);
 
@@ -135,7 +234,7 @@ class Fission_Source : public Source<Geometry>
     }
 
     //! Total number of requested particles per cycle.
-    __host__ __device__ size_type Np() const { return d_np_requested; }
+    size_type Np() const { return d_np_requested; }
 
     //! Set a new number per cycle.
     void update_Np(size_type np) { d_np_requested = np; }
@@ -154,15 +253,7 @@ class Fission_Source : public Source<Geometry>
     // Build the domain replicated fission source.
     void build_DR();
 
-    // Sample the geometry.
-    __device__ inline
-    int sample_geometry(Space_Vector &r, const Space_Vector &omega,
-                        Particle_t &p, RNG_State_t *rng) const;
-
     int d_nodes;
-
-    // Have we populated fission_sites yet?
-    bool d_have_sites;
 
     // Initial fission source lower coords and width.
     Space_Vector d_lower;

@@ -103,7 +103,7 @@ void Fixed_Source_Solver<Geometry>::solve()
 
     // Determine source type
     auto uni_source =
-        std::dynamic_pointer_cast<Uniform_Source<Geometry>>(d_source);
+        std::dynamic_pointer_cast<Uniform_Source_DMM<Geometry>>(d_source);
     if( uni_source )
     {
         d_Np = uni_source->total_num_to_transport();

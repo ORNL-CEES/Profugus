@@ -38,8 +38,8 @@ namespace cuda_mc
  * \param physics
  */
 template <class Geometry>
-Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
-                                         SDP_Geometry   geometry)
+Uniform_Source_DMM<Geometry>::Uniform_Source_DMM(RCP_Std_DB     db,
+                                                 SDP_Geometry   geometry)
     : Base(geometry)
 {
     REQUIRE(!db.is_null());
@@ -62,7 +62,7 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
         "spectral_shape", Teuchos::Array<double>(d_num_groups, 1.0));
     CHECK(shape.size() == d_num_groups);
 
-    d_erg_cdf_vec.resize(d_num_groups);
+    d_erg_cdf.resize(d_num_groups);
 
     // calculate the normalization
     double norm = std::accumulate(shape.begin(), shape.end(), 0.0);
@@ -83,8 +83,7 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
     ENSURE(cuda::utility::soft_equiv(sum, 1.0));
 
     // Copy to device
-    d_erg_cdf_vec = erg_cdf;
-    d_erg_cdf = d_erg_cdf_vec.data().get();
+    d_erg_cdf = erg_cdf;
 
     // initialize timers in this class, which may be necessary because domains
     // with no source will not make this timer otherwise
@@ -102,15 +101,14 @@ Uniform_Source<Geometry>::Uniform_Source(RCP_Std_DB     db,
  * \param geometric_shape
  */
 template <class Geometry>
-void Uniform_Source<Geometry>::build_source(SDP_Shape geometric_shape)
+void Uniform_Source_DMM<Geometry>::build_source(SDP_Shape geometric_shape)
 {
-    REQUIRE(geometric_shape.get_host_ptr());
     REQUIRE(geometric_shape.get_device_ptr());
 
     SCOPED_TIMER("profugus::Uniform_Source.build_source");
 
     // store the spatial shape
-    d_geo_shape = geometric_shape.get_device_ptr();
+    d_geo_shape = geometric_shape;
 
     d_np_left = d_np_domain;
     profugus::global_barrier();

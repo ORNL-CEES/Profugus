@@ -26,14 +26,14 @@ namespace cuda_mc
  */
 template <class Geometry>
 Source<Geometry>::Source(SDP_Geometry geometry)
-    : b_geometry( geometry.get_device_ptr() )
+    : b_geometry(geometry)
     , d_np_requested(0)
     , d_np_total(0)
     , d_np_domain(0)
     , d_np_run(0)
     , d_np_left(0)
 {
-    REQUIRE(b_geometry);
+    REQUIRE(b_geometry.get_device_ptr());
 }
 
 } // end namespace profugus

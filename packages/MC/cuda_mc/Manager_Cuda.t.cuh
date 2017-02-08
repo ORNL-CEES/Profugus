@@ -42,8 +42,8 @@ namespace cuda_mc
 /*!
  * \brief Constructor.
  */
-template <class Geometry>
-Manager_Cuda<Geometry>::Manager_Cuda()
+template <class Geometry_DMM>
+Manager_Cuda<Geometry_DMM>::Manager_Cuda()
     : d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
@@ -54,8 +54,8 @@ Manager_Cuda<Geometry>::Manager_Cuda()
  * \brief Setup the problem.
  * \param master Problem parameters.
  */
-template <class Geometry>
-void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
+template <class Geometry_DMM>
+void Manager_Cuda<Geometry_DMM>::setup(RCP_ParameterList master)
 {
     SCOPED_TIMER("Manager_Cuda.setup");
     SCREEN_MSG("Building and initializing geometry, physics, "
@@ -74,7 +74,6 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
     auto err = cudaGetDeviceCount(&num_devices);
     CHECK( cudaSuccess == err );
 
-
     // Assign MPI tasks to devices by MPI rank
     // We're assuming here that MPI ranks are assigned "depth first," filling
     //  up an entire node before assigning tasks to other nodes.
@@ -90,6 +89,7 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
 
     // get the geometry and physics
     build_geometry(master);
+    CHECK(d_geometry_dmm);
     CHECK(d_geometry.get_host_ptr());
     CHECK(d_geometry.get_device_ptr());
 
@@ -123,7 +123,8 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
 
         auto cell_tally_host = std::make_shared<Cell_Tally<Geom_t>>(
             d_geometry, d_physics);
-        cell_tally_host->set_cells( cells.toVector() );
+        cell_tally_host->set_cells(cells.toVector(),
+                                   d_geometry_dmm->volumes());
 
         auto cell_tally =
             cuda::Shared_Device_Ptr<Cell_Tally<Geom_t>>(cell_tally_host);
@@ -139,7 +140,9 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
     {
         // make the fission source
         auto source =
-            std::make_shared<Fission_Source_t>(d_db, d_geometry, d_physics);
+            std::make_shared<Fission_Source_t>(d_db, d_geometry, d_physics,
+                                               d_geometry_dmm->lower(),
+                                               d_geometry_dmm->upper());
 
         // make the kcode solver
         d_keff_solver =
@@ -172,7 +175,7 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
         d_db->set("spectral_shape",spectrum);
 
         // make the uniform source
-        auto source = std::make_shared<cuda_mc::Uniform_Source<Geometry> >(
+        auto source = std::make_shared<cuda_mc::Uniform_Source_DMM<Geom_t> >(
                 d_db, d_geometry);
         source->build_source(d_shape);
 
@@ -198,8 +201,8 @@ void Manager_Cuda<Geometry>::setup(RCP_ParameterList master)
 /*!
  * \brief Solve the problem.
  */
-template <class Geometry>
-void Manager_Cuda<Geometry>::solve()
+template <class Geometry_DMM>
+void Manager_Cuda<Geometry_DMM>::solve()
 {
     if (d_db->template get<bool>("do_transport", true))
     {
@@ -229,8 +232,8 @@ void Manager_Cuda<Geometry>::solve()
 /*!
  * \brief Do output.
  */
-template <class Geometry>
-void Manager_Cuda<Geometry>::output()
+template <class Geometry_DMM>
+void Manager_Cuda<Geometry_DMM>::output()
 {
     using std::string;
 
@@ -292,8 +295,8 @@ void Manager_Cuda<Geometry>::output()
 /*!
  * \brief Build geometry
  */
-template <class Geometry>
-void Manager_Cuda<Geometry>::build_geometry(RCP_ParameterList master_db)
+template <class Geometry_DMM>
+void Manager_Cuda<Geometry_DMM>::build_geometry(RCP_ParameterList master_db)
 {
     INSIST( master_db->isSublist("MESH"), "Must have MESH sublist." );
 
@@ -311,13 +314,13 @@ void Manager_Cuda<Geometry>::build_geometry(RCP_ParameterList master_db)
     const auto &matids  = mesh_db->get<Array_Int>("matids");
 
     // Build Mesh
-    auto geometry_host = std::make_shared<cuda_profugus::Mesh_Geometry>(
+    d_geometry_dmm = std::make_shared<cuda_profugus::Mesh_Geometry_DMM>(
         x_edges.toVector(),y_edges.toVector(),z_edges.toVector());
 
     REQUIRE( matids.size() == ( (x_edges.size()-1) *
                                 (y_edges.size()-1) *
                                 (z_edges.size()-1) ) );
-    geometry_host->set_matids(matids.toVector());
+    d_geometry_dmm->set_matids(matids.toVector());
 
     // Get reflecting data
     auto problem_db = Teuchos::sublist(master_db,"PROBLEM");
@@ -340,7 +343,7 @@ void Manager_Cuda<Geometry>::build_geometry(RCP_ParameterList master_db)
 
             if (!bdry_db->isType<OneDArray_int>("reflect"))
             {
-                boundary = {1, 1, 1, 1, 1};
+                boundary = {1, 1, 1, 1, 1, 1};
             }
             else
             {
@@ -351,17 +354,18 @@ void Manager_Cuda<Geometry>::build_geometry(RCP_ParameterList master_db)
             }
         }
     }
-    geometry_host->set_reflecting(boundary);
+    d_geometry_dmm->set_reflecting(boundary);
 
-    d_geometry = SDP_Geometry( geometry_host );
+    d_geometry = cuda::shared_device_ptr<Geom_t>(
+        d_geometry_dmm->device_instance());
 }
 
 //---------------------------------------------------------------------------//
 /*!
  * \brief Build physics
  */
-template <class Geometry>
-void Manager_Cuda<Geometry>::build_physics(RCP_ParameterList master_db)
+template <class Geometry_DMM>
+void Manager_Cuda<Geometry_DMM>::build_physics(RCP_ParameterList master_db)
 {
     typedef profugus::XS_Builder::Matid_Map Matid_Map;
     typedef profugus::XS_Builder::RCP_XS    RCP_XS;

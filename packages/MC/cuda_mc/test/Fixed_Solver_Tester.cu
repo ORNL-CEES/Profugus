@@ -25,7 +25,9 @@
 using namespace cuda_mc;
 
 typedef cuda_profugus::Mesh_Geometry       Geom;
+typedef cuda_profugus::Mesh_Geometry_DMM   Geom_DMM;
 typedef cuda_mc::Uniform_Source<Geom>      Uniform_Src;
+typedef cuda_mc::Uniform_Source_DMM<Geom>  Uniform_Src_DMM;
 typedef cuda_mc::Source_Transporter<Geom>  Transporter;
 typedef cuda_mc::Fixed_Source_Solver<Geom> Fixed_Solver;
 
@@ -52,9 +54,9 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
     def::size_type batch_size    = num_particles / 5;
 
     // Build geometry
-    auto geom = std::make_shared<Geom>(edges,edges,edges);
-    geom->set_matids(matids);
-    cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
+    auto geom_dmm = std::make_shared<Geom_DMM>(edges,edges,edges);
+    geom_dmm->set_matids(matids);
+    auto sdp_geom = cuda::shared_device_ptr<Geom>(geom_dmm->device_instance());
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
@@ -74,7 +76,7 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
     auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(
         sdp_geom,sdp_phys);
     std::vector<int> cells = {0, 1, 2, 3, 4, 5, 6, 7};
-    sp_cell_tally->set_cells(cells);
+    sp_cell_tally->set_cells(cells,geom_dmm->volumes());
     cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
 
     std::cout << "Building Tallier" << std::endl;
@@ -92,14 +94,14 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
             src_bounds[4], src_bounds[5]);
 
     // Build source
-    auto source = std::make_shared<Uniform_Src>(pl,sdp_geom);
-    source->build_source(src_shape);
+    auto source_dmm = std::make_shared<Uniform_Src_DMM>(pl,sdp_geom);
+    source_dmm->build_source(src_shape);
 
     // Build source transporter
     auto trans = std::make_shared<Transporter>(pl,sdp_geom,sdp_phys);
 
     Fixed_Solver solver(pl);
-    solver.set(trans,source,tallier);
+    solver.set(trans,source_dmm,tallier);
     solver.solve();
 
     auto tally = sp_cell_tally->results();

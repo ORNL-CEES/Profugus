@@ -116,7 +116,8 @@ class Physics
     __device__ bool initialize_fission(unsigned int matid, Particle_t &p) const;
 
     // Initialize a physics state at a fission site.
-    __device__ bool initialize_fission(Fission_Site &fs, Particle_t &p) const;
+    __device__ bool initialize_fission(const Fission_Site &fs,
+                                             Particle_t   &p) const;
 
     // Return whether a given material is fissionable
     __device__ bool is_fissionable(unsigned int matid) const

@@ -14,6 +14,8 @@
 #include <vector>
 #include <thrust/device_vector.h>
 
+#include "cuda_utils/Device_Memory_Manager.hh"
+#include "cuda_utils/Device_View_Field.hh"
 #include "Box_Shape.cuh"
 #include "Source.cuh"
 #include "Particle.cuh"
@@ -50,7 +52,62 @@ namespace cuda_mc
 //===========================================================================//
 
 template <class Geometry>
-class Uniform_Source : public Source<Geometry>
+class Uniform_Source
+{
+  public:
+    //@{
+    //! Typedefs.
+    typedef Geometry                              Geometry_t;
+    typedef Particle<Geometry>                    Particle_t;
+    typedef cuda_utils::Space_Vector              Space_Vector;
+    typedef def::size_type                        size_type;
+    typedef cuda::const_Device_View_Field<double> Double_View;
+    //@}
+
+  private:
+    // >>> DATA
+
+    // Geometry
+    const Geometry_t *d_geometry;
+
+    // Source geometric shape.
+    Box_Shape  *d_geo_shape;
+
+    // Energy shape CDF.
+    Double_View d_erg_cdf;
+
+  public:
+    // Constructor.
+    Uniform_Source(const Geometry_t *geometry,
+                   Box_Shape        *geo_shape,
+                   Double_View       erg_cdf)
+      : d_geometry(geometry)
+      , d_geo_shape(geo_shape)
+      , d_erg_cdf(erg_cdf)
+    {}
+
+    // >>> REQUIRED PUBLIC INTERFACE
+
+    // Get a particle from the source.
+    __device__ inline Particle_t get_particle(
+        std::size_t idx, RNG_State_t *rng) const;
+
+    // >>> CLASS ACCESSORS
+
+    //! Starting weight for histories
+    __device__ double wt() const { return 1.0; }
+};
+
+//===========================================================================//
+/*!
+ * \class Uniform_Source_DMM
+ * \brief Device memory manager for Uniform_Source.
+ */
+//===========================================================================//
+
+template <class Geometry>
+class Uniform_Source_DMM : public Source<Geometry>,
+    public cuda::Device_Memory_Manager<Uniform_Source<Geometry>>
 {
   public:
     //@{
@@ -73,29 +130,26 @@ class Uniform_Source : public Source<Geometry>
     // >>> DATA
 
     // Source geometric shape.
-    Box_Shape  *d_geo_shape;
+    SDP_Shape d_geo_shape;
 
     // Energy shape CDF.
-    Device_Dbl d_erg_cdf_vec;
-    double *d_erg_cdf;
+    Device_Dbl d_erg_cdf;
 
   public:
     // Constructor.
-    Uniform_Source(RCP_Std_DB db, SDP_Geometry geometry);
+    Uniform_Source_DMM(RCP_Std_DB db, SDP_Geometry geometry);
+
+    // DMM interface
+    Uniform_Source<Geometry_t> device_instance()
+    {
+        Uniform_Source<Geometry_t> src(b_geometry.get_device_ptr(),
+                                       d_geo_shape.get_device_ptr(),
+                                       cuda::make_view(d_erg_cdf));
+        return src;
+    }
 
     // Build the initial source on the host.
     void build_source(SDP_Shape geometric_shape);
-
-    // >>> REQUIRED PUBLIC INTERFACE
-
-    // Get a particle from the source.
-    __device__ inline Particle_t get_particle(
-        std::size_t idx, RNG_State_t *rng) const;
-
-    // >>> CLASS ACCESSORS
-
-    //! Starting weight for histories
-    __host__ __device__ double wt() const { return 1.0; }
 
   private:
     // >>> IMPLEMENTATION

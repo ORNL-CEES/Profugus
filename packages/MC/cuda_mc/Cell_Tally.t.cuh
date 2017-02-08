@@ -51,7 +51,8 @@ Cell_Tally<Geometry>::Cell_Tally(SDP_Geometry geometry,
  * \brief Do post-processing of tally
  */
 template <class Geometry>
-void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
+void Cell_Tally<Geometry>::set_cells(const std::vector<int>    &cells,
+                                     const std::vector<double> &all_volumes)
 {
     REQUIRE( std::is_sorted(cells.begin(),cells.end()) );
 
@@ -72,13 +73,8 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int> &cells)
 
     // Compute volumes for tally cells
     d_host_volumes.resize(d_num_cells);
-    const auto &geom_host = d_geometry_shared.get_host_ptr();
-    const auto &all_volumes = geom_host->volumes();
-    for( int ind = 0; ind < d_num_cells; ++ind )
-    {
-        int cell = d_host_cells[ind];
-        d_host_volumes[ind] = all_volumes[cell];
-    }
+    for (int cell_id = 0; cell_id < d_num_cells; ++cell_id)
+        d_host_volumes[cell_id] = all_volumes[cells[cell_id]];
 
     // Initilialize batch count
     d_tally_sum.resize(d_num_cells,0.0);

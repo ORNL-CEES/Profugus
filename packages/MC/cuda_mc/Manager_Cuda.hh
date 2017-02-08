@@ -34,12 +34,13 @@ namespace cuda_mc
  */
 //===========================================================================//
 
-template <class Geometry>
+template <class Geometry_DMM>
 class Manager_Cuda : public mc::Manager_Base
 {
   private:
     // Typedefs.
-    typedef Geometry                                    Geom_t;
+    typedef std::shared_ptr<Geometry_DMM>               SP_Geometry_DMM;
+    typedef typename Geometry_DMM::Geometry_t           Geom_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>        RCP_ParameterList;
     typedef Physics<Geom_t>                             Physics_t;
     typedef cuda::Shared_Device_Ptr<Physics_t>          SDP_Physics;
@@ -57,7 +58,7 @@ class Manager_Cuda : public mc::Manager_Base
     typedef cuda::Shared_Device_Ptr<Box_Shape>          SDP_Shape;
     typedef Source_Transporter<Geom_t>                  Transporter_t;
     typedef std::shared_ptr<Transporter_t>              SP_Transporter;
-    typedef Fission_Source<Geom_t>                      Fission_Source_t;
+    typedef Fission_Source_DMM<Geom_t>                  Fission_Source_t;
     typedef std::shared_ptr<Fission_Source_t>           SP_Fission_Source;
     typedef Teuchos::Array<double>                      Array_Dbl;
     typedef Teuchos::Array<int>                         Array_Int;
@@ -69,6 +70,7 @@ class Manager_Cuda : public mc::Manager_Base
     RCP_ParameterList d_db;
 
     // Geometry.
+    SP_Geometry_DMM d_geometry_dmm;
     SDP_Geometry d_geometry;
 
     // Physics.

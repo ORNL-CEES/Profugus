@@ -19,8 +19,9 @@
 
 using namespace cuda_mc;
 
-typedef cuda_profugus::Mesh_Geometry Geom;
-typedef cuda_utils::Space_Vector     Space_Vector;
+typedef cuda_profugus::Mesh_Geometry     Geom;
+typedef cuda_profugus::Mesh_Geometry_DMM Geom_DMM;
+typedef cuda_utils::Space_Vector         Space_Vector;
 
 __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
                                    Geom             *geom,
@@ -82,11 +83,11 @@ void Keff_Tally_Tester::test_tally(int num_groups)
     std::vector<double> x_edges = {0.0, 0.20, 1.0};
     std::vector<double> y_edges = {0.0, 0.50, 1.0};
     std::vector<double> z_edges = {0.0, 0.70, 1.0};
-    auto geom = std::make_shared<Geom>(x_edges,
+    auto geom_dmm = std::make_shared<Geom_DMM>(x_edges,
         y_edges,z_edges);
-    std::vector<int> matids(geom->num_cells(),0);
-    geom->set_matids(matids);
-    cuda::Shared_Device_Ptr<Geom> sdp_geom(geom);
+    std::vector<int> matids(geom_dmm->num_cells(),0);
+    geom_dmm->set_matids(matids);
+    auto sdp_geom = cuda::shared_device_ptr<Geom>(geom_dmm->device_instance());
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 

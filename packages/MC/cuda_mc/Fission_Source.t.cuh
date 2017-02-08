@@ -35,23 +35,20 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
-                                         SDP_Geometry   geometry,
-                                         SDP_Physics    physics)
+Fission_Source_DMM<Geometry>::Fission_Source_DMM(RCP_Std_DB        db,
+                                                 SDP_Geometry      geometry,
+                                                 SDP_Physics       physics,
+                                                 def::Space_Vector low_corner,
+                                                 def::Space_Vector high_corner)
     : Base(geometry)
     , d_fission_rebalance(std::make_shared<Fission_Rebalance>())
-    , d_physics_host(physics)
+    , d_physics(physics)
     , d_nodes(profugus::nodes())
-    , d_have_sites(false)
     , d_wt(0.0)
 {
     using def::I; using def::J; using def::K;
 
-    REQUIRE(b_geometry);
-
-    REQUIRE(d_physics_host.get_host_ptr());
-    REQUIRE(d_physics_host.get_device_ptr());
-    d_physics = physics.get_device_ptr();
+    REQUIRE(b_geometry.get_device_ptr());
 
     // Boundaries in -X, +X, -Y, +Y, -Z, +Z
     Teuchos::Array<double> extents(6, 0.);
@@ -64,16 +61,12 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
 
     INSIST(extents.size() == 6, "Fission source must have 6 entries");
 
-    // get the low and upper bounds of the geometry
-    auto low_edge  = geometry.get_host_ptr()->lower();
-    auto high_edge = geometry.get_host_ptr()->upper();
-
     // X Bounds
     double lower = extents[0];
     double upper = extents[1];
 
-    lower = std::max(lower, low_edge[I]);
-    upper = std::min(upper, high_edge[I]);
+    lower = std::max(lower, low_corner[I]);
+    upper = std::min(upper, high_corner[I]);
 
     d_lower[I] = lower;
     d_width[I] = upper - lower;
@@ -82,8 +75,8 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     lower = extents[2];
     upper = extents[3];
 
-    lower = std::max(lower, low_edge[J]);
-    upper = std::min(upper, high_edge[J]);
+    lower = std::max(lower, low_corner[J]);
+    upper = std::min(upper, high_corner[J]);
 
     d_lower[J] = lower;
     d_width[J] = upper - lower;
@@ -92,8 +85,8 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
     lower = extents[4];
     upper = extents[5];
 
-    lower = std::max(lower, low_edge[K]);
-    upper = std::min(upper, high_edge[K]);
+    lower = std::max(lower, low_corner[K]);
+    upper = std::min(upper, high_corner[K]);
 
     d_lower[K] = lower;
     d_width[K] = upper - lower;
@@ -123,7 +116,7 @@ Fission_Source<Geometry>::Fission_Source(RCP_Std_DB     db,
  * \brief Build the initial fission source.
  */
 template <class Geometry>
-void Fission_Source<Geometry>::build_initial_source()
+void Fission_Source_DMM<Geometry>::build_initial_source()
 {
     REQUIRE(d_np_total > 0);
 
@@ -148,7 +141,8 @@ void Fission_Source<Geometry>::build_initial_source()
  * \param fission_sites
  */
 template <class Geometry>
-void Fission_Source<Geometry>::build_source(SP_Host_Fission_Sites &fission_sites)
+void Fission_Source_DMM<Geometry>::build_source(
+    SP_Host_Fission_Sites &fission_sites)
 {
     REQUIRE(fission_sites);
 
@@ -179,7 +173,6 @@ void Fission_Source<Geometry>::build_source(SP_Host_Fission_Sites &fission_sites
 
     d_np_left = d_np_domain;
     d_np_run  = 0;
-    d_have_sites = true;
 
     // weight per particle
     d_wt = static_cast<double>(d_np_requested) /
@@ -197,9 +190,9 @@ void Fission_Source<Geometry>::build_source(SP_Host_Fission_Sites &fission_sites
  * \param fission_sites
  */
 template <class Geometry>
-void Fission_Source<Geometry>::begin_batch(size_type batch_size)
+void Fission_Source_DMM<Geometry>::begin_batch(size_type batch_size)
 {
-    if (d_have_sites)
+    if (!is_initial_source())
     {
         REQUIRE(d_host_sites->size() >= d_np_run+batch_size);
 
@@ -208,9 +201,6 @@ void Fission_Source<Geometry>::begin_batch(size_type batch_size)
         thrust::copy(d_host_sites->begin()+d_np_run,
                      d_host_sites->begin()+d_np_run+batch_size,
                      d_device_sites->begin());
-
-        // Assign raw pointer for on-device access
-        d_fission_sites = d_device_sites->data().get();
     }
 }
 
@@ -225,7 +215,7 @@ void Fission_Source<Geometry>::begin_batch(size_type batch_size)
  * number of particles per domain.
  */
 template <class Geometry>
-void Fission_Source<Geometry>::build_DR()
+void Fission_Source_DMM<Geometry>::build_DR()
 {
     // calculate the number of particles per domain and set (equivalent)
     d_np_domain = d_np_total / d_nodes;

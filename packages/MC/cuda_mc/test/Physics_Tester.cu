@@ -19,8 +19,9 @@
 
 using namespace cuda_mc;
 
-typedef cuda_profugus::Mesh_Geometry Geom;
-typedef cuda_utils::Space_Vector     Space_Vector;
+typedef cuda_profugus::Mesh_Geometry     Geom;
+typedef cuda_profugus::Mesh_Geometry_DMM Geom_DMM;
+typedef cuda_utils::Space_Vector         Space_Vector;
 
 __global__ void test_total_kernel( Physics<Geom> *phys,
                                    double        *totals,
@@ -87,10 +88,9 @@ void Physics_Tester::test_total()
     // Build geometry
     std::vector<double> edges = {0.0, 0.50, 1.0};
     std::vector<int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
-    auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(edges,
-        edges,edges);
-    geom->set_matids(matids);
-    cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
+    auto geom_dmm = std::make_shared<Geom_DMM>(edges,edges,edges);
+    geom_dmm->set_matids(matids);
+    auto sdp_geom = cuda::shared_device_ptr<Geom>(geom_dmm->device_instance());
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
@@ -128,10 +128,9 @@ void Physics_Tester::test_collide()
     // Build geometry
     std::vector<double> edges = {0.0, 0.50, 1.0};
     std::vector<int> matids = {0, 1, 1, 0, 0, 1, 1, 0};
-    auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(edges,
-        edges,edges);
-    geom->set_matids(matids);
-    cuda::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> sdp_geom(geom);
+    auto geom_dmm = std::make_shared<Geom_DMM>(edges,edges,edges);
+    geom_dmm->set_matids(matids);
+    auto sdp_geom = cuda::shared_device_ptr<Geom>(geom_dmm->device_instance());
 
     // Build physics
     Teuchos::RCP<Teuchos::ParameterList> pl( new Teuchos::ParameterList() );
