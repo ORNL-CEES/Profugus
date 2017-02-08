@@ -107,6 +107,10 @@ Fission_Source_DMM<Geometry>::Fission_Source_DMM(RCP_Std_DB        db,
 
     // initialize the total for the first cycle
     d_np_total = d_np_requested;
+
+    // Make fission site vectors
+    d_host_sites = std::make_shared<Host_Fission_Sites>();
+    d_device_sites = std::make_shared<Device_Fission_Sites>();
 }
 
 //---------------------------------------------------------------------------//
@@ -145,12 +149,8 @@ void Fission_Source_DMM<Geometry>::build_source(
     SP_Host_Fission_Sites &fission_sites)
 {
     REQUIRE(fission_sites);
-
-    // Make fission site vector if it hasn't been built yet
-    if( !d_host_sites )
-        d_host_sites = std::make_shared<Host_Fission_Sites>();
-    if( !d_device_sites )
-        d_device_sites = std::make_shared<Device_Fission_Sites>();
+    REQUIRE(d_host_sites);
+    REQUIRE(d_device_sites);
 
     SCOPED_TIMER("MC::Fission_Source.build_source");
 

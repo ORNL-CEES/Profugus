@@ -198,6 +198,7 @@ class Fission_Source_DMM : public Source<Geometry>,
     // DMM Interface
     Fission_Source<Geometry_t> device_instance()
     {
+        REQUIRE(d_device_sites);
         Fission_Source<Geometry_t> src(
             b_geometry.get_device_ptr(),
             d_physics.get_device_ptr(),
@@ -217,8 +218,8 @@ class Fission_Source_DMM : public Source<Geometry>,
     // Is this the initial source
     bool is_initial_source() const
     {
-        REQUIRE(d_host_sites->empty() == d_device_sites->empty());
-        return d_device_sites->empty();
+        REQUIRE(d_host_sites);
+        return d_host_sites->empty();
     }
 
     // >>> DERIVED PUBLIC INTERFACE
