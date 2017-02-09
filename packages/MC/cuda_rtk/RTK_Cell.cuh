@@ -105,6 +105,10 @@ class RTK_Cell
     __device__
     inline int cell(int region, int segment) const;
 
+    // Get cellid from state
+    __device__
+    inline int cellid(const Geo_State_t& state) const;
+
     // Get extents of this geometry element in the parent reference frame
     __device__
     inline void get_extents(Space_Vector &lower, Space_Vector &upper) const;
