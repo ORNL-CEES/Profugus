@@ -39,6 +39,16 @@ int RTK_Cell::cell(
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Find the cell for a point.
+ */
+__device__
+inline int RTK_Cell::cellid(const Geo_State_t& state) const
+{
+    return cell(state.region,state.segment);
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Return the matid for a region.
  */
 __device__

@@ -70,6 +70,8 @@ RTK_Array<T>::RTK_Array(
     View_Dbl         x,
     View_Dbl         y,
     View_Dbl         z,
+    View_Int         num_cells,
+    View_Int         cell_offsets,
     Space_Vector     corner,
     Space_Vector     length,
     Reflecting_Faces reflect)
@@ -79,6 +81,8 @@ RTK_Array<T>::RTK_Array(
     , d_x(std::move(x))
     , d_y(std::move(y))
     , d_z(std::move(z))
+    , d_num_cells(std::move(num_cells))
+    , d_cell_offsets(std::move(cell_offsets))
     , d_corner(std::move(corner))
     , d_length(std::move(length))
     , d_level(level)
@@ -189,6 +193,23 @@ RTK_Array_DMM<Host_Array_T,Device_Array_T>::RTK_Array_DMM(
     // Store the reflecting faces.
     const auto &r = host_array.reflecting_faces();
     d_reflect     = {r[0], r[1], r[2], r[3], r[4], r[5]};
+
+    // Compute cell counts and offset
+    std::vector<int> host_cells;
+    for (int obj_id = 0; obj_id < host_array.num_objects(); ++obj_id)
+    {
+        const auto& obj = host_array.object(obj_id);
+        host_cells.push_back(obj.num_cells());
+    }
+    REQUIRE(host_cells.size() == host_array.num_objects());
+
+    std::vector<int> host_offsets(host_array.num_objects(),0);
+    std::partial_sum(host_cells.begin(),host_cells.end()-1,
+                     host_offsets.begin()+1);
+
+    // Copy to device
+    d_num_cells    = host_cells;
+    d_cell_offsets = host_offsets;
 }
 
 //---------------------------------------------------------------------------//
@@ -206,6 +227,8 @@ Device_Array_T RTK_Array_DMM<Host_Array_T,Device_Array_T>::device_instance()
         cuda::make_view(d_x),
         cuda::make_view(d_y),
         cuda::make_view(d_z),
+        cuda::make_view(d_num_cells),
+        cuda::make_view(d_cell_offsets),
         d_corner,
         d_length,
         d_reflect);

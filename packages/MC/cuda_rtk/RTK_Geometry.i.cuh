@@ -24,7 +24,7 @@ __device__
 inline void RTK_Geometry::initialize(
     const Space_Vector &r,
     const Space_Vector &direction,
-    Geo_State_t        &state)
+    Geo_State_t        &state) const
 {
     // add position and direction to the state
     state.d_r   = r;
@@ -79,7 +79,7 @@ RTK_Geometry::boundary_state(
  */
 __device__
 inline bool RTK_Geometry::reflect(
-    Geo_State_t &state)
+    Geo_State_t &state) const
 {
     using def::X; using def::Y; using def::Z;
 

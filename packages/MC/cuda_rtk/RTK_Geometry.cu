@@ -38,6 +38,11 @@ RTK_Geometry_DMM::RTK_Geometry_DMM(
     const Host_Geometry &geometry)
     : d_array_manager(geometry.array())
 {
+    d_volumes = geometry.cell_volumes();
+
+    auto box = geometry.get_extents();
+    d_lower = box.lower();
+    d_upper = box.upper();
 }
 
 //---------------------------------------------------------------------------//

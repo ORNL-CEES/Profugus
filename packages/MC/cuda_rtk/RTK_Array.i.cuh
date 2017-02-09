@@ -95,7 +95,7 @@ template<class T>
 __device__
 void RTK_Array<T>::cross_surface(
     const Space_Vector &r,
-    Geo_State_t        &state)
+    Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -345,6 +345,21 @@ int RTK_Array<T>::matid(
     const Geo_State_t &state) const
 {
     return object(state).matid(state);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the current cell id.
+ */
+template<class T>
+__device__
+int RTK_Array<T>::cellid(
+    const Geo_State_t &state) const
+{
+    return object(state).cellid(state) +
+           d_cell_offsets[index(state.level_coord[d_level][0],
+                                state.level_coord[d_level][1],
+                                state.level_coord[d_level][2])];
 }
 
 //---------------------------------------------------------------------------//

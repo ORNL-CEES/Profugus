@@ -75,6 +75,12 @@ class RTK_Array
     // Array dimensions.
     View_Dbl d_x, d_y, d_z;
 
+    // Cells per object
+    View_Int d_num_cells;
+
+    // Cell offsets
+    View_Int d_cell_offsets;
+
     // Corner and length.
     Space_Vector d_corner;
     Space_Vector d_length;
@@ -88,7 +94,8 @@ class RTK_Array
   public:
     // Constructor.
     RTK_Array(int level, Dim_Vector N, View_Int layout, Object_View objects,
-              View_Dbl x, View_Dbl y, View_Dbl z, Space_Vector corner,
+              View_Dbl x, View_Dbl y, View_Dbl z, View_Int num_cells,
+              View_Int cell_offsets, Space_Vector corner,
               Space_Vector length, Reflecting_Faces reflect);
 
     // >>> DEVICE FUNCTIONS
@@ -111,7 +118,7 @@ class RTK_Array
 
     // Cross a surface.
     __device__
-    inline void cross_surface(const Space_Vector &r, Geo_State_t &state);
+    inline void cross_surface(const Space_Vector &r, Geo_State_t &state) const;
 
     // Find the object a point is in.
     __device__
@@ -133,6 +140,10 @@ class RTK_Array
     // Return the current material id.
     __device__
     inline int matid(const Geo_State_t &state) const;
+
+    // Current cell id
+    __device__
+    inline int cellid(const Geo_State_t &state) const;
 
   private:
     // >>> IMPLEMENTATION
@@ -195,6 +206,12 @@ class RTK_Array_DMM
 
     // Array layout.
     thrust::device_vector<int> d_layout;
+
+    // Number of cell per object
+    thrust::device_vector<int> d_num_cells;
+
+    // Cell offset for each object
+    thrust::device_vector<int> d_cell_offsets;
 
   public:
     // Constructor.
