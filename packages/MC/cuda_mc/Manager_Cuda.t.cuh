@@ -28,6 +28,8 @@
 #include "Uniform_Source.cuh"
 #include "Tallier.cuh"
 #include "Manager_Cuda.hh"
+#include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_mc
 {
@@ -295,8 +297,9 @@ void Manager_Cuda<Geometry_DMM>::output()
 /*!
  * \brief Build geometry
  */
-template <class Geometry_DMM>
-void Manager_Cuda<Geometry_DMM>::build_geometry(RCP_ParameterList master_db)
+template <>
+void Manager_Cuda<cuda_profugus::Mesh_Geometry_DMM>::build_geometry(
+    RCP_ParameterList master_db)
 {
     INSIST( master_db->isSublist("MESH"), "Must have MESH sublist." );
 
@@ -358,6 +361,17 @@ void Manager_Cuda<Geometry_DMM>::build_geometry(RCP_ParameterList master_db)
 
     d_geometry = cuda::shared_device_ptr<Geom_t>(
         d_geometry_dmm->device_instance());
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Build geometry
+ */
+template <>
+void Manager_Cuda<cuda_profugus::RTK_Geometry_DMM>::build_geometry(
+    RCP_ParameterList master_db)
+{
+    INSIST(false, "Constructing Cuda RTK geometry not yet implemented.");
 }
 
 //---------------------------------------------------------------------------//

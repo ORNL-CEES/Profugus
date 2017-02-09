@@ -10,12 +10,14 @@
 
 #include "Source_Provider.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_mc
 {
 //---------------------------------------------------------------------------//
 
 template class Source_Provider<cuda_profugus::Mesh_Geometry>;
+template class Source_Provider<cuda_profugus::Core>;
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda_mc

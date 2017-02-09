@@ -10,13 +10,13 @@
 
 #include "Uniform_Source.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_mc
 {
 
-typedef cuda_profugus::Mesh_Geometry Mesh_Geom;
-
-template class Uniform_Source<Mesh_Geom>;
+template class Uniform_Source_DMM<cuda_profugus::Mesh_Geometry>;
+template class Uniform_Source_DMM<cuda_profugus::Core>;
 
 } // end namespace cuda_mc
 

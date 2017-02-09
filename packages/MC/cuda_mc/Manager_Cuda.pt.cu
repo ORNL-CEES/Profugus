@@ -10,11 +10,13 @@
 
 #include "Manager_Cuda.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_mc
 {
 
-template class Manager_Cuda<cuda_profugus::Mesh_Geometry>;
+template class Manager_Cuda<cuda_profugus::Mesh_Geometry_DMM>;
+template class Manager_Cuda<cuda_profugus::Core_DMM>;
 
 } // end namespace cuda_mc
 
