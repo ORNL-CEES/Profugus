@@ -22,7 +22,8 @@ class KCode_Solver_Tester
 {
   public:
 
-      static void test_transport(int num_groups);
+      static void test_mesh(int num_groups);
+      static void test_rtk();
 };
 
 #endif // cuda_mc_KCode_Solver_Tester_hh

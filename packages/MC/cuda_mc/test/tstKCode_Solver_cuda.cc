@@ -18,17 +18,22 @@
 
 TEST(KCodeSolver, five_group)
 {
-    KCode_Solver_Tester::test_transport(5);
+    KCode_Solver_Tester::test_mesh(5);
 }
 
 TEST(KCode_Solver_cudaTest, three_group)
 {
-    KCode_Solver_Tester::test_transport(3);
+    KCode_Solver_Tester::test_mesh(3);
 }
 
 TEST(KCodeSolver, one_group)
 {
-    KCode_Solver_Tester::test_transport(1);
+    KCode_Solver_Tester::test_mesh(1);
+}
+
+TEST(KCodeSolver, rtk)
+{
+    KCode_Solver_Tester::test_rtk();
 }
 
 //---------------------------------------------------------------------------//
