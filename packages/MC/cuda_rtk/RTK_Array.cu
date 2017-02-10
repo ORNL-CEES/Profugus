@@ -196,14 +196,20 @@ RTK_Array_DMM<Host_Array_T,Device_Array_T>::RTK_Array_DMM(
 
     // Compute cell counts and offset
     std::vector<int> host_cells;
-    for (int obj_id = 0; obj_id < host_array.num_objects(); ++obj_id)
+    for (int iz = 0; iz < host_array.size(K); ++iz)
     {
-        const auto& obj = host_array.object(obj_id);
-        host_cells.push_back(obj.num_cells());
+        for (int iy = 0; iy < host_array.size(J); ++iy)
+        {
+            for (int ix = 0; ix < host_array.size(I); ++ix)
+            {
+                const auto& obj = host_array.object(ix,iy,iz);
+                host_cells.push_back(obj.num_cells());
+            }
+        }
     }
-    REQUIRE(host_cells.size() == host_array.num_objects());
 
-    std::vector<int> host_offsets(host_array.num_objects(),0);
+    // Create cell offsets from cell counts
+    std::vector<int> host_offsets(host_cells.size(),0);
     std::partial_sum(host_cells.begin(),host_cells.end()-1,
                      host_offsets.begin()+1);
 
