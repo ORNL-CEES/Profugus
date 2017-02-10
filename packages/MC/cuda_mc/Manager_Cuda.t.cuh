@@ -30,6 +30,7 @@
 #include "Manager_Cuda.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "cuda_rtk/RTK_Geometry.cuh"
+#include "mc_driver/Geometry_Builder.hh"
 
 namespace cuda_mc
 {
@@ -89,12 +90,17 @@ void Manager_Cuda<Geometry_DMM>::setup(RCP_ParameterList master)
     err = cudaSetDevice(device_id);
     CHECK( cudaSuccess == err );
 
-    // get the geometry and physics
+    // get the geometry
     build_geometry(master);
     CHECK(d_geometry_dmm);
+
+    // build device geometry from DMM
+    d_geometry = cuda::shared_device_ptr<Geom_t>(
+        d_geometry_dmm->device_instance());
     CHECK(d_geometry.get_host_ptr());
     CHECK(d_geometry.get_device_ptr());
 
+    // build physics
     build_physics(master);
     CHECK(d_physics.get_host_ptr());
     CHECK(d_physics.get_device_ptr());
@@ -295,7 +301,7 @@ void Manager_Cuda<Geometry_DMM>::output()
 
 //---------------------------------------------------------------------------//
 /*!
- * \brief Build geometry
+ * \brief Build mesh geometry
  */
 template <>
 void Manager_Cuda<cuda_profugus::Mesh_Geometry_DMM>::build_geometry(
@@ -358,9 +364,6 @@ void Manager_Cuda<cuda_profugus::Mesh_Geometry_DMM>::build_geometry(
         }
     }
     d_geometry_dmm->set_reflecting(boundary);
-
-    d_geometry = cuda::shared_device_ptr<Geom_t>(
-        d_geometry_dmm->device_instance());
 }
 
 //---------------------------------------------------------------------------//
@@ -371,7 +374,12 @@ template <>
 void Manager_Cuda<cuda_profugus::RTK_Geometry_DMM>::build_geometry(
     RCP_ParameterList master_db)
 {
-    INSIST(false, "Constructing Cuda RTK geometry not yet implemented.");
+    // Build host geometry
+    mc::Geometry_Builder<profugus::Core> builder;
+    auto host_geometry = builder.build(master_db);
+
+    d_geometry_dmm =
+        std::make_shared<cuda_profugus::RTK_Geometry_DMM>(*host_geometry);
 }
 
 //---------------------------------------------------------------------------//

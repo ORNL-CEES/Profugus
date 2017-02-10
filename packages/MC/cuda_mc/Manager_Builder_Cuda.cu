@@ -11,6 +11,7 @@
 #include "Manager_Builder_Cuda.hh"
 #include "Manager_Cuda.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_mc
 {
@@ -20,11 +21,14 @@ auto Manager_Builder_Cuda::build( const RCP_ParameterList &pl )
     -> SP_Manager_Base
 {
     typedef cuda_profugus::Mesh_Geometry_DMM Mesh_DMM;
+    typedef cuda_profugus::Core_DMM          Core_DMM;
 
-    if( pl->isSublist("MESH") )
+    if (pl->isSublist("MESH"))
         return std::make_shared<Manager_Cuda<Mesh_DMM>>();
+    else if (pl->isSublist("CORE"))
+        return std::make_shared<Manager_Cuda<Core_DMM>>();
     else
-        INSIST(false,"Only MESH geometry available in cuda.");
+        VALIDATE(false,"Unrecognized geometry type.");
 
     return SP_Manager_Base();
 }
