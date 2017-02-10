@@ -48,6 +48,7 @@ void lattice_kernel(
     ints[m++] = state.level_coord[0][2];
     ints[m++] = state.region;
     ints[m++] = array.matid(state);
+    ints[m++] = array.cellid(state);
 
     r = {1.259, 1.27, 1.1};
     array.initialize(r, state);
@@ -57,6 +58,7 @@ void lattice_kernel(
     ints[m++] = state.level_coord[0][2];
     ints[m++] = state.region;
     ints[m++] = array.matid(state);
+    ints[m++] = array.cellid(state);
 
     r = {3.560000,   2.239887,   1.300000};
     array.initialize(r, state);
@@ -66,6 +68,7 @@ void lattice_kernel(
     ints[m++] = state.level_coord[0][2];
     ints[m++] = state.region;
     ints[m++] = array.matid(state);
+    ints[m++] = array.cellid(state);
 
     r = {1.570000,   0.931993,   2.700000};
     array.initialize(r, state);
@@ -75,6 +78,7 @@ void lattice_kernel(
     ints[m++] = state.level_coord[0][2];
     ints[m++] = state.region;
     ints[m++] = array.matid(state);
+    ints[m++] = array.cellid(state);
 
     r = {1.300000,   2.044919,   3.800000};
     array.initialize(r, state);
@@ -84,6 +88,7 @@ void lattice_kernel(
     ints[m++] = state.level_coord[0][2];
     ints[m++] = state.region;
     ints[m++] = array.matid(state);
+    ints[m++] = array.cellid(state);
 }
 
 //---------------------------------------------------------------------------//
@@ -96,7 +101,7 @@ void SimpleLattice::run_test()
     // Get the host object
     auto array = dmm.device_instance();
 
-    thrust::device_vector<int> ints(25, -1);
+    thrust::device_vector<int> ints(30, -1);
 
     lattice_kernel<<<1,1>>>(array, ints.data().get());
 
@@ -109,30 +114,35 @@ void SimpleLattice::run_test()
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(1,  rints[m++]);
     EXPECT_EQ(10, rints[m++]);
+    EXPECT_EQ(9,  rints[m++]);
 
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(1,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(1,  rints[m++]);
     EXPECT_EQ(10, rints[m++]);
+    EXPECT_EQ(7,  rints[m++]);
 
     EXPECT_EQ(2,  rints[m++]);
     EXPECT_EQ(1,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(5,  rints[m++]);
+    EXPECT_EQ(10, rints[m++]);
 
     EXPECT_EQ(1,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(3,  rints[m++]);
+    EXPECT_EQ(2,  rints[m++]);
 
     EXPECT_EQ(1,  rints[m++]);
     EXPECT_EQ(1,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
     EXPECT_EQ(0,  rints[m++]);
+    EXPECT_EQ(8,  rints[m++]);
 }
 
 //---------------------------------------------------------------------------//
@@ -158,6 +168,7 @@ void core_kernel(
     ints[m++] = state.level_coord[0][1];
     ints[m++] = state.level_coord[0][2];
     ints[m++] = state.region;
+    ints[m++] = array.cellid(state);
 
     r = {8.34, 2.3, -3.1};
     array.initialize(r, state);
@@ -169,6 +180,7 @@ void core_kernel(
     ints[m++] = state.level_coord[0][1];
     ints[m++] = state.level_coord[0][2];
     ints[m++] = state.region;
+    ints[m++] = array.cellid(state);
 }
 
 //---------------------------------------------------------------------------//
@@ -181,7 +193,7 @@ void SimpleCore::run_test()
     // Get the host object
     auto array = dmm.device_instance();
 
-    thrust::device_vector<int> ints(25, -1);
+    thrust::device_vector<int> ints(16, -1);
 
     core_kernel<<<1,1>>>(array, ints.data().get());
 
@@ -189,21 +201,23 @@ void SimpleCore::run_test()
 
     thrust::host_vector<int> rints(ints.begin(), ints.end());
 
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(2, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(1, rints[m++]);
+    EXPECT_EQ(0,   rints[m++]);
+    EXPECT_EQ(0,   rints[m++]);
+    EXPECT_EQ(2,   rints[m++]);
+    EXPECT_EQ(0,   rints[m++]);
+    EXPECT_EQ(0,   rints[m++]);
+    EXPECT_EQ(0,   rints[m++]);
+    EXPECT_EQ(1,   rints[m++]);
+    EXPECT_EQ(145, rints[m++]);
 
-    EXPECT_EQ(2, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(1, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
-    EXPECT_EQ(0, rints[m++]);
+    EXPECT_EQ(2,  rints[m++]);
+    EXPECT_EQ(0,  rints[m++]);
+    EXPECT_EQ(0,  rints[m++]);
+    EXPECT_EQ(0,  rints[m++]);
+    EXPECT_EQ(1,  rints[m++]);
+    EXPECT_EQ(0,  rints[m++]);
+    EXPECT_EQ(0,  rints[m++]);
+    EXPECT_EQ(20, rints[m++]);
 }
 
 //---------------------------------------------------------------------------//
