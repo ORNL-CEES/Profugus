@@ -148,6 +148,9 @@ class RTK_Array
   private:
     // >>> IMPLEMENTATION
 
+    // Required to access private members of same class with different template
+    template<class X> friend class RTK_Array;
+
     // Transform to object coordinate system.
     __device__
     inline Space_Vector transform(const Space_Vector &r,
