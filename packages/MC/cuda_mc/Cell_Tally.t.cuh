@@ -61,6 +61,10 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int>    &cells,
     d_num_cells = d_host_cells.size();
     REQUIRE( d_num_cells > 0 );
 
+    auto total_cells = all_volumes.size();
+    for (const auto& cell : cells)
+        INSIST(cell < total_cells, "Invalid cell id");
+
     d_tally_vec.resize(d_num_cells,0.0);
 
     // Copy cells to device
