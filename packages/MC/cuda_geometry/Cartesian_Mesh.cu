@@ -21,28 +21,15 @@ namespace cuda_profugus
 /*!
  * \brief Initialize cartesian mesh with cell edges.
  */
-Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
-                               const Vec_Dbl& y_edges,
-                               const Vec_Dbl& z_edges)
-    : d_x_edges_vec(x_edges)
-    , d_y_edges_vec(y_edges)
-    , d_z_edges_vec(z_edges)
+Cartesian_Mesh_DMM::Cartesian_Mesh_DMM(const Vec_Dbl& x_edges,
+                                       const Vec_Dbl& y_edges,
+                                       const Vec_Dbl& z_edges)
+    : d_x_edges(x_edges)
+    , d_y_edges(y_edges)
+    , d_z_edges(z_edges)
 {
     // Hard-coded to 3D
     d_dimension = 3;
-
-    // Get cell counts for each dimensions
-    d_cells_x = x_edges.size() - 1;
-    d_cells_y = y_edges.size() - 1;
-    d_cells_z = z_edges.size() - 1;
-    REQUIRE( d_cells_x > 0 );
-    REQUIRE( d_cells_y > 0 );
-    REQUIRE( d_cells_z > 0 );
-
-    // Get raw pointers from device vectors
-    dd_x_edges = d_x_edges_vec.data().get();
-    dd_y_edges = d_y_edges_vec.data().get();
-    dd_z_edges = d_z_edges_vec.data().get();
 
     INSIST(profugus::is_sorted(x_edges.begin(), x_edges.end()),
            "Mesh along x axis is not monotonically increasing.");
@@ -51,32 +38,39 @@ Cartesian_Mesh::Cartesian_Mesh(const Vec_Dbl& x_edges,
     INSIST(profugus::is_sorted(z_edges.begin(), z_edges.end()),
            "Mesh along z axis is not monotonically increasing.");
 
-    d_num_cells = d_cells_x * d_cells_y * d_cells_z;
-
     // Compute cell volumes on host
-    thrust::host_vector<double> host_volumes(d_num_cells);
-    for( int cell_k = 0; cell_k < d_cells_z; ++cell_k )
+    int num_cells_x = x_edges.size()-1;
+    int num_cells_y = y_edges.size()-1;
+    int num_cells_z = z_edges.size()-1;
+    int num_cells = num_cells_x * num_cells_y * num_cells_z;
+    d_volumes.resize(num_cells,0.0);
+    for( int cell_k = 0; cell_k < num_cells_z; ++cell_k )
     {
         double width_k = z_edges[cell_k+1] - z_edges[cell_k];
         REQUIRE( width_k > 0.0 );
-        for( int cell_j = 0; cell_j < d_cells_y; ++cell_j )
+        for( int cell_j = 0; cell_j < num_cells_y; ++cell_j )
         {
             double width_j = y_edges[cell_j+1] - y_edges[cell_j];
             REQUIRE( width_j > 0.0 );
-            for( int cell_i = 0; cell_i < d_cells_x; ++cell_i )
+            for( int cell_i = 0; cell_i < num_cells_x; ++cell_i )
             {
                 double width_i = x_edges[cell_i+1] - x_edges[cell_i];
                 REQUIRE( width_j > 0.0 );
-                cell_type cell;
-                this->index(cell_i,cell_j,cell_k,cell);
-                host_volumes[cell] = width_i * width_j * width_k;
+                cell_type cell = cell_i + num_cells_x *
+                    (cell_j + num_cells_y * cell_k);
+                d_volumes[cell] = width_i * width_j * width_k;
             }
         }
     }
-    d_volumes_vec = host_volumes;
-    dd_volumes = d_volumes_vec.data().get();
 
-    ENSURE(d_num_cells >= 1);
+    // Compute bounding box
+    using def::I; using def::J; using def::K;
+    d_lower[I] = x_edges.front();
+    d_lower[J] = y_edges.front();
+    d_lower[K] = z_edges.front();
+    d_upper[I] = x_edges.back();
+    d_upper[J] = y_edges.back();
+    d_upper[K] = z_edges.back();
 }
 
 } // end namespace cuda_profugus

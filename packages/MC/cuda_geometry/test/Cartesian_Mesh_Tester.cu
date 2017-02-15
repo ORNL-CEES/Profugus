@@ -18,10 +18,11 @@
 #include "../Cartesian_Mesh.hh"
 #include "Cartesian_Mesh_Tester.hh"
 
-typedef profugus::geometry::cell_type cell_type;
-typedef cuda_utils::Space_Vector      Point;
-typedef cuda_utils::Coordinates       Coords;
-typedef cuda_profugus::Cartesian_Mesh Cartesian_Mesh;
+typedef profugus::geometry::cell_type       cell_type;
+typedef cuda_utils::Space_Vector            Point;
+typedef cuda_utils::Coordinates             Coords;
+typedef cuda_profugus::Cartesian_Mesh       Cartesian_Mesh;
+typedef cuda_profugus::Cartesian_Mesh_DMM   Cartesian_Mesh_DMM;
 
 __global__ void compute_indices_kernel(Cartesian_Mesh mesh,
                                        int            num_vals,
@@ -53,18 +54,6 @@ __global__ void compute_cardinals_kernel(Cartesian_Mesh mesh,
     }
 }
 
-__global__ void compute_volumes_kernel(Cartesian_Mesh mesh,
-                                       int              num_points,
-                                       const cell_type *cells,
-                                       double          *volumes)
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    if( tid < num_points )
-    {
-        volumes[tid] = mesh.volume(cells[tid]);
-    }
-}
-
 __global__ void compute_coords_kernel(Cartesian_Mesh   mesh,
                                       int              num_points,
                                       const Point     *points,
@@ -81,13 +70,13 @@ namespace
 {
 
 // Build Cartesian_Mesh
-std::shared_ptr<Cartesian_Mesh> get_mesh()
+std::shared_ptr<Cartesian_Mesh_DMM> get_mesh()
 {
     std::vector<double> x_edges = {0.0, 0.1, 0.6, 0.9, 1.0};
     std::vector<double> y_edges = {-1.0, -0.6, 0.0};
     std::vector<double> z_edges = {2.0, 2.6, 3.4, 4.0};
     
-    auto mesh = std::make_shared<Cartesian_Mesh>(
+    auto mesh = std::make_shared<Cartesian_Mesh_DMM>(
         x_edges,y_edges,z_edges);
     return mesh;
 }
@@ -114,12 +103,12 @@ void Cartesian_Mesh_Tester::test_index()
     thrust::device_vector<cell_type> device_cells(num_points);
 
     // Execute kernel
-    compute_indices_kernel<<<1,num_points>>>( *mesh,
-                                               num_points,
-                                               device_ii.data().get(),
-                                               device_jj.data().get(),
-                                               device_kk.data().get(),
-                                               device_cells.data().get() );
+    compute_indices_kernel<<<1,num_points>>>(mesh->device_instance(),
+                                             num_points,
+                                             device_ii.data().get(),
+                                             device_jj.data().get(),
+                                             device_kk.data().get(),
+                                             device_cells.data().get() );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
@@ -149,12 +138,12 @@ void Cartesian_Mesh_Tester::test_cardinal()
     thrust::device_vector<int> device_kk(num_points);
 
     // Execute kernel
-    compute_cardinals_kernel<<<1,num_points>>>( *mesh,
-                                                 num_points,
-                                                 device_cells.data().get(),
-                                                 device_ii.data().get(),
-                                                 device_jj.data().get(),
-                                                 device_kk.data().get() );
+    compute_cardinals_kernel<<<1,num_points>>>(mesh->device_instance(),
+                                               num_points,
+                                               device_cells.data().get(),
+                                               device_ii.data().get(),
+                                               device_jj.data().get(),
+                                               device_kk.data().get() );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
@@ -181,33 +170,23 @@ void Cartesian_Mesh_Tester::test_volume()
 {
     auto mesh = get_mesh();
 
-    std::vector<cell_type> host_cells = {4, 1, 22, 11};
+    std::vector<cell_type> cells = {4, 1, 22, 11};
 
-    int num_points = host_cells.size();
+    int num_cells = cells.size();
 
-    // Create memory on device
-    thrust::device_vector<cell_type> device_cells(host_cells);
-    thrust::device_vector<double>    device_volumes(num_points);
+    std::vector<double> cell_volumes(num_cells);
 
-    // Execute kernel
-    compute_volumes_kernel<<<1,num_points>>>( *mesh,
-                                               num_points,
-                                               device_cells.data().get(),
-                                               device_volumes.data().get() );
+    const auto &volumes = mesh->volumes();
 
-    REQUIRE( cudaGetLastError() == cudaSuccess );
-
-    // Copy data back to host
-    std::vector<double> host_volumes(num_points);
-    thrust::copy(device_volumes.begin(),device_volumes.end(),
-                 host_volumes.begin());
+    for (int cell = 0; cell < num_cells; ++cell)
+        cell_volumes[cell] = volumes[cells[cell]];
 
     std::vector<double> expected_volumes = {0.1 * 0.6 * 0.6,
                                             0.5 * 0.4 * 0.6,
                                             0.3 * 0.6 * 0.6,
                                             0.1 * 0.4 * 0.8};
     
-    EXPECT_VEC_SOFT_EQ(expected_volumes,host_volumes);
+    EXPECT_VEC_SOFT_EQ(expected_volumes,cell_volumes);
 }
 
 //---------------------------------------------------------------------------//
@@ -219,7 +198,7 @@ void Cartesian_Mesh_Tester::test_find_upper()
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
     auto z_edges = {-0.1, 0.0, 0.15, 0.50};
 
-    auto mesh = std::make_shared<Cartesian_Mesh>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Cartesian_Mesh_DMM>(x_edges,y_edges,z_edges);
 
     std::vector<Point> host_points = {{-1.0, 1.0, 0.1}, {0.2, 0.45, 0.4}};
     int num_points = host_points.size();
@@ -229,10 +208,10 @@ void Cartesian_Mesh_Tester::test_find_upper()
     thrust::device_vector<Coords> device_coords(num_points);
 
     // Execute kernel
-    compute_coords_kernel<<<1,num_points>>>( *mesh,
-                                              num_points,
-                                              device_points.data().get(),
-                                              device_coords.data().get() );
+    compute_coords_kernel<<<1,num_points>>>(mesh->device_instance(),
+                                            num_points,
+                                            device_points.data().get(),
+                                            device_coords.data().get() );
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
@@ -242,12 +221,13 @@ void Cartesian_Mesh_Tester::test_find_upper()
 
     std::vector<Coords> expected_coords = {{-1, 3, 1}, {1, 2, 2}};
     
-    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
-    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
-    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
-    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
-    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
-    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+    using def::I; using def::J; using def::K;
+    EXPECT_EQ(expected_coords[0][I], host_coords[0][I]);
+    EXPECT_EQ(expected_coords[0][J], host_coords[0][J]);
+    EXPECT_EQ(expected_coords[0][K], host_coords[0][K]);
+    EXPECT_EQ(expected_coords[1][I], host_coords[1][I]);
+    EXPECT_EQ(expected_coords[1][J], host_coords[1][J]);
+    EXPECT_EQ(expected_coords[1][K], host_coords[1][K]);
 }
 
 //---------------------------------------------------------------------------//

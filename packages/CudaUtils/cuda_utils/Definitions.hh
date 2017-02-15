@@ -39,22 +39,13 @@ struct Device
 //===========================================================================//
 } // end namespace cuda
 
+#include "Device_Vector_Lite.hh"
+
 namespace cuda_utils
 {
 
-struct Coordinates
-{
-    int i;
-    int j;
-    int k;
-};
-
-struct Space_Vector
-{
-    double x;
-    double y;
-    double z;
-};
+typedef Device_Vector_Lite<int,3>    Coordinates;
+typedef Device_Vector_Lite<double,3> Space_Vector;
 
 //===========================================================================//
 } // end namespace cuda_utils

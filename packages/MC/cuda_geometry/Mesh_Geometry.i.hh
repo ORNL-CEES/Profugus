@@ -42,10 +42,12 @@ __device__ void Mesh_Geometry::initialize(
 
     update_state(state);
 
-    DEVICE_ENSURE(state.ijk.i >= -1 && state.ijk.i <= d_mesh.num_cells_along(I));
-    DEVICE_ENSURE(state.ijk.j >= -1 && state.ijk.j <= d_mesh.num_cells_along(J));
-    DEVICE_ENSURE(state.ijk.k >= -1 && state.ijk.i <= d_mesh.num_cells_along(K));
-
+    DEVICE_ENSURE(state.ijk[I] >= -1 &&
+                  state.ijk[I] <= d_mesh.num_cells_along(I));
+    DEVICE_ENSURE(state.ijk[J] >= -1 &&
+                  state.ijk[J] <= d_mesh.num_cells_along(J));
+    DEVICE_ENSURE(state.ijk[K] >= -1 &&
+                  state.ijk[K] <= d_mesh.num_cells_along(K));
 }
 
 //---------------------------------------------------------------------------//
@@ -61,9 +63,10 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
 
     DEVICE_REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.e-5));
 
-    const double * edges_x(d_mesh.edges(I));
-    const double * edges_y(d_mesh.edges(J));
-    const double * edges_z(d_mesh.edges(K));
+    const Double_View& edges_x = d_mesh.edges(I);
+    const Double_View& edges_y = d_mesh.edges(J);
+    const Double_View& edges_z = d_mesh.edges(K);
+
     cuda_utils::Coordinates extents = {d_mesh.num_cells_along(I),
                                        d_mesh.num_cells_along(J),
                                        d_mesh.num_cells_along(K)};
@@ -71,7 +74,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     // min distance to boundary; initializing test_dist to a large number before
     // each surface check implicitly handles the case where omega[dir] == 0.0
     double test_dist = 99e99;
-    int    test_next = state.ijk.i;
+    int    test_next = state.ijk[I];
 
     // initialize the next surface
     state.next_ijk = state.ijk;
@@ -79,66 +82,66 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
     // unrolled check
 
     // X SURFACE
-    if (state.d_dir.x > 0.0 && state.ijk.i < extents.i)
+    if (state.d_dir[I] > 0.0 && state.ijk[I] < extents[I])
     {
-        test_dist = (edges_x[state.ijk.i+1] - state.d_r.x) / state.d_dir.x;
-        test_next = state.ijk.i + 1;
+        test_dist = (edges_x[state.ijk[I]+1] - state.d_r[I]) / state.d_dir[I];
+        test_next = state.ijk[I] + 1;
     }
-    else if (state.d_dir.x < 0.0 && state.ijk.i > -1)
+    else if (state.d_dir[I] < 0.0 && state.ijk[I] > -1)
     {
-        test_dist = (edges_x[state.ijk.i] - state.d_r.x) / state.d_dir.x;
-        test_next = state.ijk.i - 1;
+        test_dist = (edges_x[state.ijk[I]] - state.d_r[I]) / state.d_dir[I];
+        test_next = state.ijk[I] - 1;
     }
 
     // initialize to x distance
     state.next_dist   = test_dist;
-    state.next_ijk.i = test_next;
+    state.next_ijk[I] = test_next;
 
     // reset the local dist-to-boundary to a large value to handle dir=0.0
     test_dist = 99e99;
 
     // Y SURFACE
-    if (state.d_dir.y > 0.0 && state.ijk.j < extents.j)
+    if (state.d_dir[J] > 0.0 && state.ijk[J] < extents[J])
     {
-        test_dist = (edges_y[state.ijk.j+1] - state.d_r.y) / state.d_dir.y;
-        test_next = state.ijk.j + 1;
+        test_dist = (edges_y[state.ijk[J]+1] - state.d_r[J]) / state.d_dir[J];
+        test_next = state.ijk[J] + 1;
     }
-    else if (state.d_dir.y < 0.0 && state.ijk.j > -1)
+    else if (state.d_dir[J] < 0.0 && state.ijk[J] > -1)
     {
-        test_dist = (edges_y[state.ijk.j] - state.d_r.y) / state.d_dir.y;
-        test_next = state.ijk.j - 1;
+        test_dist = (edges_y[state.ijk[J]] - state.d_r[J]) / state.d_dir[J];
+        test_next = state.ijk[J] - 1;
     }
 
     // update running value of distance to boundary
     if (test_dist < state.next_dist)
     {
         state.next_dist   = test_dist;
-        state.next_ijk.i = state.ijk.i;
-        state.next_ijk.j = test_next;
+        state.next_ijk[I] = state.ijk[I];
+        state.next_ijk[J] = test_next;
     }
 
     // reset the local dist-to-boundary to a large value to handle dir=0.0
     test_dist = 99e99;
 
     // Z SURFACE
-    if (state.d_dir.z > 0.0 && state.ijk.k < extents.k)
+    if (state.d_dir[K] > 0.0 && state.ijk[K] < extents[K])
     {
-        test_dist = (edges_z[state.ijk.k+1] - state.d_r.z) / state.d_dir.z;
-        test_next = state.ijk.k + 1;
+        test_dist = (edges_z[state.ijk[K]+1] - state.d_r[K]) / state.d_dir[K];
+        test_next = state.ijk[K] + 1;
     }
-    else if (state.d_dir.z < 0.0 && state.ijk.k > -1)
+    else if (state.d_dir[K] < 0.0 && state.ijk[K] > -1)
     {
-        test_dist = (edges_z[state.ijk.k] - state.d_r.z) / state.d_dir.z;
-        test_next = state.ijk.k - 1;
+        test_dist = (edges_z[state.ijk[K]] - state.d_r[K]) / state.d_dir[K];
+        test_next = state.ijk[K] - 1;
     }
 
     // update running value of distance to boundary
     if (test_dist < state.next_dist)
     {
         state.next_dist  = test_dist;
-        state.next_ijk.i = state.ijk.i;
-        state.next_ijk.j = state.ijk.j;
-        state.next_ijk.k = test_next;
+        state.next_ijk[I] = state.ijk[I];
+        state.next_ijk[J] = state.ijk[J];
+        state.next_ijk[K] = test_next;
     }
 
     DEVICE_ENSURE(state.next_dist >= 0.);
@@ -152,7 +155,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_t& state) const
 __device__
 bool Mesh_Geometry::reflect(Geo_State_t& state) const
 {
-    using def::X; using def::Y; using def::Z;
+    using def::I; using def::J; using def::K;
     using cuda::utility::soft_equiv;
     using cuda::utility::vector_magnitude;
     DEVICE_REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
@@ -165,15 +168,15 @@ bool Mesh_Geometry::reflect(Geo_State_t& state) const
     Space_Vector n = normal(state);
 
     // calculate the dot-product of the incoming angle and outward normal
-    double dot = state.d_dir.x*n.x +
-                 state.d_dir.y*n.y +
-                 state.d_dir.z*n.z;
+    double dot = state.d_dir[I]*n[I] +
+                 state.d_dir[J]*n[J] +
+                 state.d_dir[K]*n[K];
 
     DEVICE_CHECK( dot != 0.0 );
 
-    state.d_dir.x -= 2.0 * n.x * dot;
-    state.d_dir.y -= 2.0 * n.y * dot;
-    state.d_dir.z -= 2.0 * n.z * dot;
+    state.d_dir[I] -= 2.0 * n[I] * dot;
+    state.d_dir[J] -= 2.0 * n[J] * dot;
+    state.d_dir[K] -= 2.0 * n[K] * dot;
 
     DEVICE_ENSURE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
