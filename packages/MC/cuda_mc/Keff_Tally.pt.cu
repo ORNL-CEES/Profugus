@@ -15,8 +15,8 @@
 namespace cuda_mc
 {
 
-template class Keff_Tally<cuda_profugus::Mesh_Geometry>;
-template class Keff_Tally<cuda_profugus::Core>;
+template class Keff_Tally_DMM<cuda_profugus::Mesh_Geometry>;
+template class Keff_Tally_DMM<cuda_profugus::Core>;
 
 } // end namespace cuda_mc
 

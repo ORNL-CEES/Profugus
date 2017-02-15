@@ -205,7 +205,7 @@ Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
             site.r = d_geometry->position(particle.geo_state());
 
             // Get index of first site to be written using an atomic
-            int offset = atomicAdd(&d_num_fission_sites,num_sites);
+            int offset = atomicAdd(d_num_fission_sites,num_sites);
             
             // Don't write past end of allocated array
             num_sites = min(num_sites,d_max_fission_sites-offset);

@@ -30,35 +30,21 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Domain_Transporter<Geometry>::Domain_Transporter(RCP_Std_DB     db,
-                                                 SDP_Geometry   geometry,
-                                                 SDP_Physics    physics,
-                                                 SDP_VR         vr)
-    : d_sample_fission_sites(false)
+Domain_Transporter_DMM<Geometry>::Domain_Transporter_DMM(
+        RCP_Std_DB     db,
+        SDP_Geometry   geometry,
+        SDP_Physics    physics,
+        SDP_VR         vr)
+    : d_geometry(geometry)
+    , d_physics(physics)
+    , d_vr(vr)
+    , d_sample_fission_sites(false)
     , d_keff(0.0)
 {
-    REQUIRE(geometry.get_host_ptr());
-    REQUIRE(geometry.get_device_ptr());
-    REQUIRE(physics.get_host_ptr());
-    REQUIRE(physics.get_device_ptr());
-    d_geometry = geometry.get_device_ptr();
-    d_physics  = physics.get_device_ptr();
+    REQUIRE(d_geometry.get_device_ptr());
+    REQUIRE(d_physics.get_device_ptr());
 
     d_max_steps = db->get("sort_frequency",std::numeric_limits<int>::max());
-
-    // Initialize tallier to null
-    d_tallier = nullptr;
-
-    // VR is optional
-    if( vr.get_host_ptr() )
-    {
-        d_vr = vr.get_device_ptr();
-        REQUIRE( d_vr );
-    }
-    else
-    {
-        d_vr = nullptr;
-    }
 }
 
 //---------------------------------------------------------------------------//
@@ -66,10 +52,10 @@ Domain_Transporter<Geometry>::Domain_Transporter(RCP_Std_DB     db,
  * \brief Set tallier
  */
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(SDP_Tallier tallier)
+void Domain_Transporter_DMM<Geometry>::set(SDP_Tallier tallier)
 {
-    REQUIRE( tallier.get_device_ptr() );
-    d_tallier = tallier.get_device_ptr();
+    REQUIRE(tallier.get_device_ptr());
+    d_tallier = tallier;
 }
 
 //---------------------------------------------------------------------------//
@@ -80,11 +66,13 @@ void Domain_Transporter<Geometry>::set(SDP_Tallier tallier)
  * \param keff
  */
 template <class Geometry>
-void Domain_Transporter<Geometry>::set(SP_Fission_Site_Vec fission_sites,
-                                       double              keff)
+void Domain_Transporter_DMM<Geometry>::set(SP_Fission_Site_Vec fission_sites,
+                                           double              keff)
 {
+    REQUIRE(fission_sites);
+
     // assign the container
-    d_fission_sites = fission_sites->data().get();
+    d_fission_sites = fission_sites;
 
     // Number of allocated sites
     d_max_fission_sites = fission_sites->size();
@@ -94,15 +82,14 @@ void Domain_Transporter<Geometry>::set(SP_Fission_Site_Vec fission_sites,
 
     // set the flag indicating whether fission sites should be sampled or not
     if (d_max_fission_sites > 0)
-    {
         d_sample_fission_sites = true;
-    }
 
     // assign current iterate of keff
     d_keff = keff;
 
     // initialize the number of fission sites to 0
-    d_num_fission_sites = 0;
+    d_num_fission_sites.resize(1);
+    d_num_fission_sites[0] = 0;
 }
 
 } // end namespace cuda_mc

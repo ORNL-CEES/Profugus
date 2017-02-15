@@ -57,7 +57,7 @@ Fixed_Source_Solver<Geometry>::Fixed_Source_Solver(RCP_Std_DB db)
 template <class Geometry>
 void Fixed_Source_Solver<Geometry>::set(SP_Source_Transporter transporter,
                                         SP_Source             source,
-                                        SP_Tallier            tallier)
+                                        SP_Tallier_DMM        tallier)
 {
     REQUIRE(transporter);
     REQUIRE(source);
@@ -69,8 +69,8 @@ void Fixed_Source_Solver<Geometry>::set(SP_Source_Transporter transporter,
     // assign the source
     d_source = source;
 
-    // get the tallies and assign them
-    b_tallier = cuda::Shared_Device_Ptr<Tallier_t>(tallier);
+    // assign tallier
+    b_tallier = tallier;
     d_transporter->set(b_tallier);
 }
 
@@ -86,16 +86,13 @@ void Fixed_Source_Solver<Geometry>::solve()
     using profugus::endl; using profugus::pcout;
 
     REQUIRE(d_source);
-    REQUIRE(b_tallier.get_host_ptr());
-    REQUIRE(b_tallier.get_device_ptr());
+    REQUIRE(b_tallier);
 
     SCOPED_TIMER("MC::Fixed_Source_Solver.solve");
 
     // store the number of source particles
     DIAGNOSTICS_TWO(vec_integers["local_np"].push_back(
                         d_source->num_to_transport()));
-
-    auto host_tallier = b_tallier.get_host_ptr();
 
     // start the timer
     profugus::Timer fixed_source_timer;
@@ -120,7 +117,7 @@ void Fixed_Source_Solver<Geometry>::solve()
             d_transporter->solve(uni_source);
 
             // Finalize batch in source and tallier
-            host_tallier->end_batch(static_cast<double>(num_batch));
+            b_tallier->end_batch(static_cast<double>(num_batch));
         }
     }
 
@@ -139,7 +136,7 @@ void Fixed_Source_Solver<Geometry>::solve()
           << " seconds" << endl;
 
     // Finalize tallies using global number of particles
-    host_tallier->finalize(d_Np);
+    b_tallier->finalize(d_Np);
 }
 
 } // end namespace cuda_mc

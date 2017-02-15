@@ -66,17 +66,16 @@ void run_transport(std::shared_ptr<Geom_DMM> geom_dmm,
 
     // Build cell tally
     std::cout << "Building Cell_Tally" << std::endl;
-    auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(
+    auto cell_tally = std::make_shared<Cell_Tally_DMM<Geom>>(
         sdp_geom,sdp_phys);
     int num_cells = geom_dmm->volumes().size();
     std::vector<int> cells;
     for (int cell = 0; cell < num_cells; ++cell)
         cells.push_back(cell);
-    sp_cell_tally->set_cells(cells,geom_dmm->volumes());
-    cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
+    cell_tally->set_cells(cells,geom_dmm->volumes());
 
     std::cout << "Building Tallier" << std::endl;
-    auto tallier = std::make_shared<Tallier<Geom>>();
+    auto tallier = std::make_shared<Tallier_DMM<Geom>>();
     tallier->add_cell_tally(cell_tally);
 
     // Build source
@@ -91,13 +90,13 @@ void run_transport(std::shared_ptr<Geom_DMM> geom_dmm,
     solver.solve();
     keff = solver.keff();
 
-    tally_mean = sp_cell_tally->results();
+    tally_mean = cell_tally->results();
     std::cout << "Tally result: ";
     for (auto x : tally_mean)
         std::cout << x << " ";
     std::cout << std::endl;
 
-    tally_std_dev = sp_cell_tally->std_dev();
+    tally_std_dev = cell_tally->std_dev();
     std::cout << "Tally std dev: ";
     for (auto x : tally_std_dev)
         std::cout << x << " ";

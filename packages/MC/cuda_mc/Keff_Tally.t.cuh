@@ -26,12 +26,12 @@ namespace cuda_mc
  * \brief Kcode solver should construct this with initial keff estimate.
  */
 template <class Geometry>
-Keff_Tally<Geometry>::Keff_Tally(double         keff_init,
-                                 SDP_Physics    physics)
+Keff_Tally_DMM<Geometry>::Keff_Tally_DMM(double         keff_init,
+                                         SDP_Physics    physics)
     : d_keff_cycle(keff_init)
+    , d_physics(physics)
 {
-    d_physics = physics.get_device_ptr();
-    REQUIRE( d_physics );
+    REQUIRE(d_physics.get_device_ptr());
 
     // reset tally
     reset();
@@ -51,7 +51,7 @@ Keff_Tally<Geometry>::Keff_Tally(double         keff_init,
  * we'll return an arbitrary value.
  */
 template <class Geometry>
-double Keff_Tally<Geometry>::mean() const
+double Keff_Tally_DMM<Geometry>::mean() const
 {
     if (d_cycle < 1)
         return -1.;
@@ -70,7 +70,7 @@ double Keff_Tally<Geometry>::mean() const
  * we'll return an arbitrary value.
  */
 template <class Geometry>
-double Keff_Tally<Geometry>::variance() const
+double Keff_Tally_DMM<Geometry>::variance() const
 {
     if (d_cycle < 2)
         return d_keff_sum * d_keff_sum;
@@ -93,7 +93,7 @@ double Keff_Tally<Geometry>::variance() const
  * This resets the accumulated keff statistics.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::begin_active_cycles()
+void Keff_Tally_DMM<Geometry>::begin_active_cycles()
 {
     d_cycle       = 0;
     d_keff_sum    = 0.;
@@ -107,13 +107,12 @@ void Keff_Tally<Geometry>::begin_active_cycles()
  * This clears the current accumulated path lengths.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::begin_cycle(size_type num_particles)
+void Keff_Tally_DMM<Geometry>::begin_cycle(size_type num_particles)
 {
     REQUIRE(num_particles>0);
     d_keff_cycle = 0.;
     d_keff_data.resize(num_particles);
     thrust::fill(d_keff_data.begin(),d_keff_data.end(),0.0);
-    d_thread_keff = d_keff_data.data().get();
 }
 
 //---------------------------------------------------------------------------//
@@ -127,7 +126,7 @@ void Keff_Tally<Geometry>::begin_cycle(size_type num_particles)
  * averages and variances.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::end_cycle(double num_particles)
+void Keff_Tally_DMM<Geometry>::end_cycle(double num_particles)
 {
     REQUIRE(num_particles > 0.);
 
@@ -156,7 +155,7 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
  * will be sampled correctly.
  */
 template <class Geometry>
-void Keff_Tally<Geometry>::reset()
+void Keff_Tally_DMM<Geometry>::reset()
 {
     d_cycle       = 0;
     d_keff_sum    = 0.;

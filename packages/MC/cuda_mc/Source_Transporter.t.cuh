@@ -48,7 +48,6 @@ class Transport_Functor
   public:
 
     typedef Domain_Transporter<Geometry>    Transporter_t;
-    typedef Tallier<Geometry>               Tallier_t;
     typedef Particle<Geometry>              Particle_t;
 
     // Constructor
@@ -321,7 +320,7 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     d_rng_control = std::make_shared<RNG_Control>(seed);
 
     // Build domain transporter
-    d_transporter = cuda::shared_device_ptr<Transporter_t>(
+    d_transporter = std::make_shared<Transporter_DMM_t>(
         db, d_geometry, d_physics, d_vr );
 }
 
@@ -330,14 +329,12 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
  * \brief Set new tallier
  */
 template <class Geometry>
-void Source_Transporter<Geometry>::set(SDP_Tallier tallier)
+void Source_Transporter<Geometry>::set(SP_Tallier_DMM tallier)
 {
-    REQUIRE( tallier.get_host_ptr() );
-    REQUIRE( tallier.get_device_ptr() );
+    REQUIRE(tallier);
     d_tallier = tallier;
-
-    d_transporter.get_host_ptr()->set(d_tallier);
-    d_transporter.update_device();
+    
+    // Don't build on-device tallier here, wait until just before kernel launch
 }
 
 //---------------------------------------------------------------------------//
@@ -360,6 +357,14 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
 
     std::chrono::high_resolution_clock::time_point start, end;
     std::chrono::duration<double> diff;
+
+    // Build Tallier and Domain_Transporter
+    auto sdp_tallier = cuda::shared_device_ptr<Tallier<Geometry>>(
+        d_tallier->device_instance());
+    d_transporter->set(sdp_tallier);
+    auto sdp_transporter =
+        cuda::shared_device_ptr<Domain_Transporter<Geometry>>(
+            d_transporter->device_instance());
 
     // Get number of particles in source
     size_type num_particles      = source->num_batch();
@@ -397,7 +402,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         // Build and execute kernel
         cudaDeviceSynchronize();
         start = std::chrono::high_resolution_clock::now();
-        Transport_Functor<Geometry> f( d_transporter.get_device_ptr(), 
+        Transport_Functor<Geometry> f(
+                sdp_transporter.get_device_ptr(), 
                 particles.data().get(),
                 indirection.data().get() );
         cuda::parallel_launch( f, launch_args );
@@ -490,8 +496,7 @@ void Source_Transporter<Geometry>::sample_fission_sites(
 {
     // set the transporter with the fission site container and the latest keff
     // iterate
-    d_transporter.get_host_ptr()->set(fis_sites, keff);
-    d_transporter.update_device();
+    d_transporter->set(fis_sites, keff);
 }
 
 //---------------------------------------------------------------------------//
@@ -510,10 +515,7 @@ void Source_Transporter<Geometry>::sample_fission_sites(
 template <class Geometry>
 int Source_Transporter<Geometry>::num_sampled_fission_sites()
 {
-    d_transporter.update_host();
-    int num_fission_sites =
-        d_transporter.get_host_ptr()->num_sampled_fission_sites();
-    return num_fission_sites;
+    return d_transporter->num_sampled_fission_sites();
 }
 
 

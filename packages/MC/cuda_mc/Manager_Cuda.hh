@@ -53,8 +53,8 @@ class Manager_Cuda : public mc::Manager_Base
     typedef std::shared_ptr<KCode_Solver_t>             SP_KCode_Solver;
     typedef Fixed_Source_Solver<Geom_t>                 Fixed_Source_Solver_t;
     typedef std::shared_ptr<Fixed_Source_Solver_t>      SP_Fixed_Source_Solver;
-    typedef Tallier<Geom_t>                             Tallier_t;
-    typedef std::shared_ptr<Tallier_t>                  SP_Tallier;
+    typedef Tallier_DMM<Geom_t>                         Tallier_DMM_t;
+    typedef std::shared_ptr<Tallier_DMM_t>              SP_Tallier_DMM;
     typedef cuda::Shared_Device_Ptr<Box_Shape>          SDP_Shape;
     typedef Source_Transporter<Geom_t>                  Transporter_t;
     typedef std::shared_ptr<Transporter_t>              SP_Transporter;
@@ -83,7 +83,7 @@ class Manager_Cuda : public mc::Manager_Base
     SDP_Shape d_shape;
 
     // Tallier
-    SP_Tallier d_tallier;
+    SP_Tallier_DMM d_tallier_dmm;
 
     // Solvers.
     SP_Solver              d_solver;

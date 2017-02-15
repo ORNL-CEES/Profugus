@@ -50,7 +50,7 @@ KCode_Solver<Geometry>::KCode_Solver(RCP_Std_DB db)
 template <class Geometry>
 void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
                                  SP_Fission_Source     source,
-                                 SP_Tallier            tallier)
+                                 SP_Tallier_DMM        tallier)
 {
     REQUIRE(d_build_phase == CONSTRUCTED);
     REQUIRE(transporter);
@@ -85,20 +85,18 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
     VALIDATE(d_cycles_per_batch>0,
         "Number of cycles per statistics batch must be positive.");
 
-    // get a reference to the tallier
-    b_tallier = cuda::Shared_Device_Ptr<Tallier_t>(tallier);
+    // assign base class pointer
+    b_tallier = tallier;
 
     // get initial k and build keff tally
     double init_keff = d_db->get("keff_init", 1.0);
     INSIST(init_keff >= 0., "Initial keff guess must be nonnegative.");
-    d_keff_tally_host = std::make_shared<Keff_Tally_t>(
+    d_keff_tally = std::make_shared<Keff_Tally_DMM_t>(
         init_keff, d_transporter->physics());
-    d_keff_tally = SDP_Keff_Tally( d_keff_tally_host );
 
     // create our "disabled" (inactive cycle) tallier
-    auto inactive_tallier = std::make_shared<Tallier_t>();
-    inactive_tallier->set(d_transporter->geometry(), d_transporter->physics());
-    d_inactive_tallier = cuda::Shared_Device_Ptr<Tallier_t>(inactive_tallier);
+    d_inactive_tallier = std::make_shared<Tallier_DMM_t>();
+    d_inactive_tallier->set(d_transporter->geometry(), d_transporter->physics());
 
     // Build fission site vector
     d_host_sites = std::make_shared<Host_Fission_Sites>();
@@ -106,10 +104,9 @@ void KCode_Solver<Geometry>::set(SP_Source_Transporter transporter,
 
     d_build_phase = ASSIGNED;
 
-    ENSURE(b_tallier.get_host_ptr());
-    ENSURE(b_tallier.get_device_ptr());
-    ENSURE(d_keff_tally_host);
-    ENSURE(d_keff_tally.get_device_ptr());
+    ENSURE(b_tallier);
+    ENSURE(d_inactive_tallier);
+    ENSURE(d_keff_tally);
     ENSURE(d_transporter);
 }
 
@@ -177,7 +174,7 @@ void KCode_Solver<Geometry>::solve()
             cout.setf(std::ios::internal);
 
             cout << fixed      << setw(4) << cycle << "   "
-                 << fixed      << setw(8) << d_keff_tally_host->latest() << "  "
+                 << fixed      << setw(8) << d_keff_tally->latest() << "  "
                  << scientific << setw(9) << cycle_timer.TIMER_CLOCK()
                  << endl;
         }
@@ -208,7 +205,7 @@ void KCode_Solver<Geometry>::solve()
 
         // End batch in tallier at specified interval
         if (cycle % d_cycles_per_batch == 0)
-            b_tallier.get_host_ptr()->end_batch(d_cycles_per_batch*d_Np);
+            b_tallier->end_batch(d_cycles_per_batch*d_Np);
 
         // Print diagnostic output
         if (!d_quiet)
@@ -217,9 +214,9 @@ void KCode_Solver<Geometry>::solve()
             cout.setf(std::ios::internal);
 
             cout << fixed      << setw(4)  << cycle << "   "
-                 << fixed      << setw(8)  << d_keff_tally_host->latest() << "  "
-                 << fixed      << setw(8)  << d_keff_tally_host->mean() << "  "
-                 << scientific << setw(11) << d_keff_tally_host->variance() << "  "
+                 << fixed      << setw(8)  << d_keff_tally->latest() << "  "
+                 << fixed      << setw(8)  << d_keff_tally->mean() << "  "
+                 << scientific << setw(11) << d_keff_tally->variance() << "  "
                  << scientific << setw(11) << cycle_timer.TIMER_CLOCK()
                  << endl;
         }
@@ -229,7 +226,7 @@ void KCode_Solver<Geometry>::solve()
     // End final batch for remaining odd cycles
     int extra_cycles = num_active % d_cycles_per_batch;
     if (extra_cycles > 0)
-        b_tallier.get_host_ptr()->end_batch(extra_cycles*d_Np);
+        b_tallier->end_batch(extra_cycles*d_Np);
 
     if (!d_quiet)
         cout << endl;
@@ -253,10 +250,8 @@ void KCode_Solver<Geometry>::reset()
             "Reset may be called only after finalizing.");
 
     // Reset tallies
-    b_tallier.get_host_ptr()->reset();
-    b_tallier.update_device();
-    d_inactive_tallier.get_host_ptr()->reset();
-    d_inactive_tallier.update_device();
+    b_tallier->reset();
+    d_inactive_tallier->reset();
 
     d_build_phase = ASSIGNED;
 }
@@ -286,15 +281,11 @@ void KCode_Solver<Geometry>::initialize()
             "initialize must be called only after calling set()");
 
     // Add the keff tally to the ACTIVE cycle tallier and build it
-    auto host_active_tallier = b_tallier.get_host_ptr();
-    host_active_tallier->add_keff_tally(d_keff_tally);
-    b_tallier.update_device();
+    b_tallier->add_keff_tally(d_keff_tally);
 
     // Create tallier for inactive cycles
     // Currentely only keff tally is enabled
-    auto host_inactive_tallier = d_inactive_tallier.get_host_ptr();
-    host_inactive_tallier->add_keff_tally(d_keff_tally);
-    d_inactive_tallier.update_device();
+    d_inactive_tallier->add_keff_tally(d_keff_tally);
 
     d_transporter->set(d_inactive_tallier);
 
@@ -306,7 +297,7 @@ void KCode_Solver<Geometry>::initialize()
 
     d_build_phase = INACTIVE_SOLVE;
 
-    ENSURE(d_keff_tally_host->cycle_count() == 0);
+    ENSURE(d_keff_tally->cycle_count() == 0);
     ENSURE(d_build_phase == INACTIVE_SOLVE);
 }
 
@@ -351,9 +342,9 @@ void KCode_Solver<Geometry>::iterate()
     d_dev_sites->resize(available_dev_sites);
 
     // initialize keff tally to the beginning of the cycle
-    double latest_keff = d_keff_tally_host->latest();
+    double latest_keff = d_keff_tally->latest();
 
-    b_tallier.get_host_ptr()->begin_cycle(this_batch_size);
+    b_tallier->begin_cycle(this_batch_size);
     d_source->set_batch_size(this_batch_size);
 
     size_type num_sites = 0;
@@ -421,7 +412,7 @@ void KCode_Solver<Geometry>::iterate()
     // total *requested* number of particles, not the actual number of
     // histories. Each processor adjusts the particle weights so that the
     // total weight emitted, summed over all processors, is d_Np.
-    b_tallier.get_host_ptr()->end_cycle(d_Np);
+    b_tallier->end_cycle(d_Np);
 
     // build a new source from the fission site distribution
     d_source->build_source(d_host_sites);
@@ -439,11 +430,8 @@ void KCode_Solver<Geometry>::iterate()
 template <class Geometry>
 void KCode_Solver<Geometry>::begin_active_cycles()
 {
-    //REQUIRE(b_tallier->is_built() && !b_tallier->is_finalized());
-    REQUIRE(d_inactive_tallier.get_host_ptr());
-    REQUIRE(d_inactive_tallier.get_device_ptr());
-    REQUIRE(b_tallier.get_host_ptr());
-    REQUIRE(b_tallier.get_device_ptr());
+    REQUIRE(d_inactive_tallier);
+    REQUIRE(b_tallier);
 
     // Finalize the inactive tallier (will set the state to FINALIZED, but
     // shouldn't do anything else unless the user has explicitly added a tally
@@ -452,11 +440,10 @@ void KCode_Solver<Geometry>::begin_active_cycles()
     // was already finalized" error instead of a more subtle error (viz.,
     // being normalized to the *active* particle count instead of the *active
     // + inactive* particle count).
-    d_inactive_tallier.get_host_ptr()->finalize(num_cycles() * d_Np);
+    d_inactive_tallier->finalize(num_cycles() * d_Np);
 
     // Tell all tallies to begin tallying active cycles
-    b_tallier.get_host_ptr()->begin_active_cycles();
-    b_tallier.update_device();
+    b_tallier->begin_active_cycles();
 
     d_transporter->set(b_tallier);
 
@@ -483,7 +470,7 @@ void KCode_Solver<Geometry>::finalize()
 
     // Finalize tallies using global number particles
     //CHECK(!b_tallier->is_finalized());
-    b_tallier.get_host_ptr()->finalize(num_cycles() * d_Np);
+    b_tallier->finalize(num_cycles() * d_Np);
 
     d_build_phase = FINALIZED;
 

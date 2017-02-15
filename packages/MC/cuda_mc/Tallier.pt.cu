@@ -15,8 +15,8 @@
 namespace cuda_mc
 {
 
-template class Tallier<cuda_profugus::Mesh_Geometry>;
-template class Tallier<cuda_profugus::Core>;
+template class Tallier_DMM<cuda_profugus::Mesh_Geometry>;
+template class Tallier_DMM<cuda_profugus::Core>;
 
 } // end namespace cuda_mc
 

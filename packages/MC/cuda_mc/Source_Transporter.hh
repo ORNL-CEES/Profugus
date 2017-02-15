@@ -32,8 +32,8 @@ namespace cuda_mc
 // Forward declarations to avoid including Cuda headers
 template <class Geom> class Particle;
 template <class Geom> class Physics;
-template <class Geom> class Domain_Transporter;
-template <class Geom> class Tallier;
+template <class Geom> class Domain_Transporter_DMM;
+template <class Geom> class Tallier_DMM;
 template <class Geom> class VR_Roulette;
 template <class Geom> class Source;
 class RNG_Control;
@@ -66,15 +66,15 @@ class Source_Transporter
     //! Typedefs.
     typedef Particle<Geometry>                            Particle_t;
     typedef Physics<Geometry>                             Physics_t;
-    typedef Domain_Transporter<Geometry>                  Transporter_t;
-    typedef Tallier<Geometry>                             Tallier_t;
+    typedef Domain_Transporter_DMM<Geometry>              Transporter_DMM_t;
+    typedef Tallier_DMM<Geometry>                         Tallier_DMM_t;
     typedef VR_Roulette<Geometry>                         VR_Roulette_t;
     typedef cuda::Shared_Device_Ptr<Geometry>             SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Particle_t>           SDP_Particle;
     typedef cuda::Shared_Device_Ptr<Physics_t>            SDP_Physics;
-    typedef cuda::Shared_Device_Ptr<Transporter_t>        SDP_Transporter;
-    typedef cuda::Shared_Device_Ptr<Tallier_t>            SDP_Tallier;
     typedef cuda::Shared_Device_Ptr<VR_Roulette_t>        SDP_VR;
+    typedef std::shared_ptr<Transporter_DMM_t>            SP_Transporter_DMM;
+    typedef std::shared_ptr<Tallier_DMM_t>                SP_Tallier_DMM;
     typedef std::shared_ptr<RNG_Control>                  SP_RNG_Control;
     typedef Teuchos::RCP<Teuchos::ParameterList>          RCP_Std_DB;
     typedef def::size_type                                size_type;
@@ -94,13 +94,13 @@ class Source_Transporter
     SDP_Physics d_physics;
 
     // Tally controller.
-    SDP_Tallier d_tallier;
+    SP_Tallier_DMM d_tallier;
 
     // Variance reduction.
     SDP_VR d_vr;
 
     // Domain transporter.
-    SDP_Transporter d_transporter;
+    SP_Transporter_DMM d_transporter;
 
     // RNG Control
     SP_RNG_Control d_rng_control;
@@ -123,7 +123,7 @@ class Source_Transporter
     }
 
     // Set tallier
-    void set(SDP_Tallier tallier);
+    void set(SP_Tallier_DMM tallier);
 
     // Solve the fixed-source problem.
     void solve(SP_Source source) const;
@@ -137,7 +137,7 @@ class Source_Transporter
     // >>> ACCESSORS
 
     //! Get the tallies.
-    SDP_Tallier tallier() const { return d_tallier; }
+    SP_Tallier_DMM tallier() const { return d_tallier; }
 
     //! Get the geometry.
     SDP_Geometry geometry() const { return d_geometry; }
@@ -146,7 +146,7 @@ class Source_Transporter
     SDP_Physics physics() const { return d_physics; }
 
     //! Get the transporter.
-    SDP_Transporter transporter() const { return d_transporter; }
+    SP_Transporter_DMM transporter() const { return d_transporter; }
 
   private:
     // >>> IMPLEMENTATION

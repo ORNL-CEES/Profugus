@@ -15,8 +15,8 @@
 namespace cuda_mc
 {
 
-template class Cell_Tally<cuda_profugus::Mesh_Geometry>;
-template class Cell_Tally<cuda_profugus::Core>;
+template class Cell_Tally_DMM<cuda_profugus::Mesh_Geometry>;
+template class Cell_Tally_DMM<cuda_profugus::Core>;
 
 } // end namespace cuda_mc
 

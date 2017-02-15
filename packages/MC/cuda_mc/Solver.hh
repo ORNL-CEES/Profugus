@@ -19,7 +19,7 @@ namespace cuda_mc
 {
 
 // Forward declare Tallier
-template <class Geom> class Tallier;
+template <class Geom> class Tallier_DMM;
 
 //===========================================================================//
 /*!
@@ -35,8 +35,8 @@ class Solver
     //@{
     //! Typedefs.
     typedef Geometry                            Geometry_t;
-    typedef Tallier<Geometry_t>                 Tallier_t;
-    typedef cuda::Shared_Device_Ptr<Tallier_t>  SDP_Tallier;
+    typedef Tallier_DMM<Geometry_t>             Tallier_DMM_t;
+    typedef std::shared_ptr<Tallier_DMM_t>      SP_Tallier_DMM;
     //@}
 
   protected:
@@ -44,7 +44,7 @@ class Solver
     // >>> DATA
 
     // Tally contoller.
-    SDP_Tallier b_tallier;
+    SP_Tallier_DMM b_tallier;
 
   public:
 
@@ -58,7 +58,7 @@ class Solver
     virtual void reset() = 0;
 
     //! Get tallies.
-    SDP_Tallier tallier() const { return b_tallier; }
+    SP_Tallier_DMM tallier() const { return b_tallier; }
 };
 
 } // end namespace cuda_mc

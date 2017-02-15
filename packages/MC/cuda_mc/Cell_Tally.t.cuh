@@ -33,17 +33,15 @@ namespace cuda_mc
  * \brief Constructor.
  */
 template <class Geometry>
-Cell_Tally<Geometry>::Cell_Tally(SDP_Geometry geometry,
-                                 SDP_Physics  physics)
-    : d_geometry_shared(geometry)
+Cell_Tally_DMM<Geometry>::Cell_Tally_DMM(SDP_Geometry geometry,
+                                         SDP_Physics  physics)
+    : d_geometry(geometry)
+    , d_physics(physics)
 {
-    REQUIRE(d_geometry_shared.get_host_ptr());
-    REQUIRE(d_geometry_shared.get_device_ptr());
-    REQUIRE(physics.get_host_ptr());
-    REQUIRE(physics.get_device_ptr());
-
-    d_geometry = geometry.get_device_ptr();
-    d_physics  = physics.get_device_ptr();
+    REQUIRE(d_geometry.get_host_ptr());
+    REQUIRE(d_geometry.get_device_ptr());
+    REQUIRE(d_physics.get_host_ptr());
+    REQUIRE(d_physics.get_device_ptr());
 }
 
 //---------------------------------------------------------------------------//
@@ -51,38 +49,34 @@ Cell_Tally<Geometry>::Cell_Tally(SDP_Geometry geometry,
  * \brief Do post-processing of tally
  */
 template <class Geometry>
-void Cell_Tally<Geometry>::set_cells(const std::vector<int>    &cells,
-                                     const std::vector<double> &all_volumes)
+void Cell_Tally_DMM<Geometry>::set_cells(const std::vector<int>    &cells,
+                                         const std::vector<double> &all_volumes)
 {
     REQUIRE( std::is_sorted(cells.begin(),cells.end()) );
 
     d_host_cells = cells;
 
-    d_num_cells = d_host_cells.size();
-    REQUIRE( d_num_cells > 0 );
+    auto num_cells = d_host_cells.size();
+    REQUIRE( num_cells > 0 );
 
     auto total_cells = all_volumes.size();
     for (const auto& cell : cells)
         INSIST(cell < total_cells, "Invalid cell id");
 
-    d_tally_vec.resize(d_num_cells,0.0);
+    d_tally.resize(num_cells,0.0);
 
     // Copy cells to device
-    d_cell_vec = d_host_cells;
-    CHECK(d_cell_vec.size()==d_num_cells);
-
-    // Extract pointers for on-device access
-    d_cells  = d_cell_vec.data().get();
-    d_tally  = d_tally_vec.data().get();
+    d_cells = d_host_cells;
+    CHECK(d_cells.size()==num_cells);
 
     // Compute volumes for tally cells
-    d_host_volumes.resize(d_num_cells);
-    for (int cell_id = 0; cell_id < d_num_cells; ++cell_id)
+    d_host_volumes.resize(num_cells);
+    for (int cell_id = 0; cell_id < num_cells; ++cell_id)
         d_host_volumes[cell_id] = all_volumes[cells[cell_id]];
 
     // Initilialize batch count
-    d_tally_sum.resize(d_num_cells,0.0);
-    d_tally_sum_sq.resize(d_num_cells,0.0);
+    d_tally_sum.resize(num_cells,0.0);
+    d_tally_sum_sq.resize(num_cells,0.0);
 }
 
 //---------------------------------------------------------------------------//
@@ -90,16 +84,18 @@ void Cell_Tally<Geometry>::set_cells(const std::vector<int>    &cells,
  * \brief End batch for statistics
  */
 template <class Geometry>
-void Cell_Tally<Geometry>::end_batch(double num_particles)
+void Cell_Tally_DMM<Geometry>::end_batch(double num_particles)
 {
+    auto num_cells = d_host_cells.size();
+
     // Copy results to host to normalize tally results
-    d_host_tally.resize(d_num_cells);
-    thrust::copy(d_tally_vec.begin(),d_tally_vec.end(),d_host_tally.begin());
+    d_host_tally.resize(num_cells);
+    thrust::copy(d_tally.begin(),d_tally.end(),d_host_tally.begin());
 
     // Global reduction on tally results
-    profugus::global_sum(&d_host_tally[0],d_num_cells);
+    profugus::global_sum(&d_host_tally[0],num_cells);
 
-    for (int cell = 0; cell < d_num_cells; ++cell)
+    for (int cell = 0; cell < num_cells; ++cell)
     {
         auto val = d_host_tally[cell];
         d_tally_sum[cell]    += val;
@@ -110,7 +106,7 @@ void Cell_Tally<Geometry>::end_batch(double num_particles)
 
     // Zero out tally for next cycle
     thrust::fill(d_host_tally.begin(),d_host_tally.end(),0.0);
-    d_tally_vec = d_host_tally;
+    d_tally = d_host_tally;
 }
 
 //---------------------------------------------------------------------------//
@@ -118,7 +114,7 @@ void Cell_Tally<Geometry>::end_batch(double num_particles)
  * \brief Do post-processing of tally
  */
 template <class Geometry>
-void Cell_Tally<Geometry>::finalize(double num_particles)
+void Cell_Tally_DMM<Geometry>::finalize(double num_particles)
 {
     REQUIRE(num_particles > 0);
 
@@ -132,10 +128,11 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
 
     double num_batches = static_cast<double>(d_batch_np.size());
 
-    d_host_std_dev.resize(d_num_cells,0.0);
+    auto num_cells = d_host_cells.size();
+    d_host_std_dev.resize(num_cells,0.0);
 
     // Now compute std dev and normalize tally
-    for (int cell = 0; cell < d_num_cells; ++cell)
+    for (int cell = 0; cell < num_cells; ++cell)
     {
         double tally_mean = d_tally_sum[cell] / num_particles;
         double var = (d_tally_sum_sq[cell] / num_particles) -
@@ -170,10 +167,10 @@ void Cell_Tally<Geometry>::finalize(double num_particles)
  * \brief Clear/re-initialize all tally values between solves.
  */
 template <class Geometry>
-void Cell_Tally<Geometry>::reset()
+void Cell_Tally_DMM<Geometry>::reset()
 {
     // Clear all current tally results (keep cell list)
-    thrust::fill(d_tally_vec.begin(),d_tally_vec.end(),0.0);
+    thrust::fill(d_tally.begin(),d_tally.end(),0.0);
     std::fill(d_tally_sum.begin(),d_tally_sum.end(),0.0);
     std::fill(d_tally_sum_sq.begin(),d_tally_sum_sq.end(),0.0);
     d_batch_np.clear();

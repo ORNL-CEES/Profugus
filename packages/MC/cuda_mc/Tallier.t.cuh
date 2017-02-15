@@ -16,20 +16,6 @@
 
 namespace cuda_mc
 {
-
-//---------------------------------------------------------------------------//
-// CONSTRUCTOR
-//---------------------------------------------------------------------------//
-/*!
- * \brief Constructor.
- */
-template <class Geometry>
-Tallier<Geometry>::Tallier()
-{
-    d_cell_tally = nullptr;
-    d_keff_tally = nullptr;
-}
-
 //---------------------------------------------------------------------------//
 // PUBLIC FUNCTIONS
 //---------------------------------------------------------------------------//
@@ -40,16 +26,13 @@ Tallier<Geometry>::Tallier()
  * \param physics
  */
 template <class Geometry>
-void Tallier<Geometry>::set(SDP_Geometry geometry,
-                            SDP_Physics  physics)
+void Tallier_DMM<Geometry>::set(SDP_Geometry geometry,
+                                SDP_Physics  physics)
 {
-    REQUIRE(geometry.get_host_ptr());
-    REQUIRE(geometry.get_device_ptr());
-    REQUIRE(physics.get_host_ptr());
-    REQUIRE(physics.get_device_ptr());
-
-    d_geometry = geometry.get_device_ptr();
-    d_physics  = physics.get_device_ptr();
+    d_geometry = geometry;
+    d_physics  = physics;
+    REQUIRE(d_geometry.get_device_ptr());
+    REQUIRE(d_physics.get_device_ptr());
 }
 
 //---------------------------------------------------------------------------//
@@ -57,18 +40,12 @@ void Tallier<Geometry>::set(SDP_Geometry geometry,
  * \brief Add a cell tally.
  */
 template <class Geometry>
-void Tallier<Geometry>::add_cell_tally(SDP_Cell_Tally tally)
+void Tallier_DMM<Geometry>::add_cell_tally(SP_Cell_Tally_DMM tally)
 {
-    REQUIRE(tally.get_host_ptr());
-    REQUIRE(tally.get_device_ptr());
+    REQUIRE(tally);
 
     // add the tally
-    d_cell_tally_host = tally;
-    d_cell_tally      = tally.get_device_ptr();
-
-    ENSURE( d_cell_tally_host.get_host_ptr() );
-    ENSURE( d_cell_tally_host.get_device_ptr() );
-    ENSURE( d_cell_tally );
+    d_cell_tally_dmm = tally;
 }
 
 //---------------------------------------------------------------------------//
@@ -76,18 +53,12 @@ void Tallier<Geometry>::add_cell_tally(SDP_Cell_Tally tally)
  * \brief Add a keff tally.
  */
 template <class Geometry>
-void Tallier<Geometry>::add_keff_tally(SDP_Keff_Tally tally)
+void Tallier_DMM<Geometry>::add_keff_tally(SP_Keff_Tally_DMM tally)
 {
-    REQUIRE(tally.get_host_ptr());
-    REQUIRE(tally.get_device_ptr());
+    REQUIRE(tally);
 
     // add the tally
-    d_keff_tally_host = tally;
-    d_keff_tally      = tally.get_device_ptr();
-
-    ENSURE( d_keff_tally_host.get_host_ptr() );
-    ENSURE( d_keff_tally_host.get_device_ptr() );
-    ENSURE( d_keff_tally );
+    d_keff_tally_dmm = tally;
 }
 
 //---------------------------------------------------------------------------//
@@ -95,13 +66,10 @@ void Tallier<Geometry>::add_keff_tally(SDP_Keff_Tally tally)
  * \brief Tell the tallies to begin active kcode cycles.
  */
 template <class Geometry>
-void Tallier<Geometry>::begin_active_cycles()
+void Tallier_DMM<Geometry>::begin_active_cycles()
 {
-    if( d_keff_tally_host.get_host_ptr() )
-    {
-        d_keff_tally_host.get_host_ptr()->begin_active_cycles();
-        d_keff_tally_host.update_device();
-    }
+    if (d_keff_tally_dmm)
+        d_keff_tally_dmm->begin_active_cycles();
 }
 
 //---------------------------------------------------------------------------//
@@ -109,13 +77,10 @@ void Tallier<Geometry>::begin_active_cycles()
  * \brief Tell the tallies to begin a new cycle in a kcode calculation.
  */
 template <class Geometry>
-void Tallier<Geometry>::begin_cycle(def::size_type num_particles)
+void Tallier_DMM<Geometry>::begin_cycle(def::size_type num_particles)
 {
-    if( d_keff_tally_host.get_host_ptr() )
-    {
-        d_keff_tally_host.get_host_ptr()->begin_cycle(num_particles);
-        d_keff_tally_host.update_device();
-    }
+    if (d_keff_tally_dmm)
+        d_keff_tally_dmm->begin_cycle(num_particles);
 }
 
 //---------------------------------------------------------------------------//
@@ -123,14 +88,10 @@ void Tallier<Geometry>::begin_cycle(def::size_type num_particles)
  * \brief Tell the tallies to end a cycle in a kcode calculation.
  */
 template <class Geometry>
-void Tallier<Geometry>::end_cycle(double num_particles)
+void Tallier_DMM<Geometry>::end_cycle(double num_particles)
 {
-    if( d_keff_tally_host.get_host_ptr() )
-    {
-        d_keff_tally_host.update_host();
-        d_keff_tally_host.get_host_ptr()->end_cycle(num_particles);
-        d_keff_tally_host.update_device();
-    }
+    if (d_keff_tally_dmm)
+        d_keff_tally_dmm->end_cycle(num_particles);
 }
 
 //---------------------------------------------------------------------------//
@@ -138,14 +99,10 @@ void Tallier<Geometry>::end_cycle(double num_particles)
  * \brief Tell the tallies to end a particle batch
  */
 template <class Geometry>
-void Tallier<Geometry>::end_batch(double num_particles)
+void Tallier_DMM<Geometry>::end_batch(double num_particles)
 {
-    if( d_cell_tally_host.get_host_ptr() )
-    {
-        d_cell_tally_host.update_host();
-        d_cell_tally_host.get_host_ptr()->end_batch(num_particles);
-        d_cell_tally_host.update_device();
-    }
+    if (d_cell_tally_dmm)
+        d_cell_tally_dmm->end_batch(num_particles);
 }
 
 //---------------------------------------------------------------------------//
@@ -156,18 +113,13 @@ void Tallier<Geometry>::end_batch(double num_particles)
  * normalization.
  */
 template <class Geometry>
-void Tallier<Geometry>::finalize(double num_particles)
+void Tallier_DMM<Geometry>::finalize(double num_particles)
 {
-    if( d_cell_tally_host.get_host_ptr() )
-    {
-        d_cell_tally_host.update_host();
-        d_cell_tally_host.get_host_ptr()->finalize(num_particles);
-    }
-    if( d_keff_tally_host.get_host_ptr() )
-    {
-        d_keff_tally_host.update_host();
-        d_keff_tally_host.get_host_ptr()->finalize(num_particles);
-    }
+    if (d_cell_tally_dmm)
+        d_cell_tally_dmm->finalize(num_particles);
+
+    if (d_keff_tally_dmm)
+        d_keff_tally_dmm->finalize(num_particles);
 }
 
 //---------------------------------------------------------------------------//
@@ -180,18 +132,13 @@ void Tallier<Geometry>::finalize(double num_particles)
  * fields.
  */
 template <class Geometry>
-void Tallier<Geometry>::reset()
+void Tallier_DMM<Geometry>::reset()
 {
-    if( d_cell_tally_host.get_host_ptr() )
-    {
-        d_cell_tally_host.get_host_ptr()->reset();
-        d_cell_tally_host.update_device();
-    }
-    if( d_keff_tally_host.get_host_ptr() )
-    {
-        d_keff_tally_host.get_host_ptr()->reset();
-        d_keff_tally_host.update_device();
-    }
+    if (d_cell_tally_dmm)
+        d_cell_tally_dmm->reset();
+
+    if (d_keff_tally_dmm)
+        d_keff_tally_dmm->reset();
 }
 
 } // end namespace cuda_mc

@@ -59,16 +59,14 @@ void Source_Transporter_Tester::test_transport(int num_groups)
 
     // Build cell tally
     std::cout << "Building Cell_Tally" << std::endl;
-    auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(
+    auto cell_tally = std::make_shared<Cell_Tally_DMM<Geom>>(
         sdp_geom,sdp_phys);
     std::vector<int> cells = {0, 1, 2, 3, 4, 5, 6, 7};
-    sp_cell_tally->set_cells(cells,geom_dmm->volumes());
-    cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
+    cell_tally->set_cells(cells,geom_dmm->volumes());
 
     std::cout << "Building Tallier" << std::endl;
-    auto sp_tallier = std::make_shared<Tallier<Geom> >();
+    auto sp_tallier = std::make_shared<Tallier_DMM<Geom> >();
     sp_tallier->add_cell_tally(cell_tally);
-    cuda::Shared_Device_Ptr<Tallier<Geom>> tallier(sp_tallier);
 
     // Build box shape for source
     std::vector<double> src_bounds = {edges.front(), edges.back(),
@@ -89,11 +87,11 @@ void Source_Transporter_Tester::test_transport(int num_groups)
     pl->set("sort_frequency",4);
     pl->set("verbosity",std::string("high"));
     Transporter trans(pl,sdp_geom,sdp_phys);
-    trans.set(tallier);
+    trans.set(sp_tallier);
     trans.solve(source_dmm);
 
     sp_tallier->finalize(Np);
-    auto tally = sp_cell_tally->results();
+    auto tally = cell_tally->results();
     std::cout << "Tally result: ";
     for( auto x : tally )
         std::cout << x << " ";

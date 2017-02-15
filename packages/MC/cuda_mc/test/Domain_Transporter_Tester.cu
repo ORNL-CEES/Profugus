@@ -25,6 +25,7 @@ typedef cuda_profugus::Mesh_Geometry_DMM  Geom_DMM;
 typedef cuda_mc::Uniform_Source<Geom>     Uniform_Src;
 typedef cuda_mc::Uniform_Source_DMM<Geom> Uniform_Src_DMM;
 typedef cuda_mc::Domain_Transporter<Geom> Transporter;
+typedef cuda_mc::Domain_Transporter_DMM<Geom> Transporter_DMM;
 
 __global__ void test_transport_kernel( Uniform_Src *source,
                                        Transporter *trans,
@@ -76,7 +77,8 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
     cuda::Shared_Device_Ptr<Physics<Geom> > sdp_phys(phys);
 
     // Build domain transporter
-    auto transp = cuda::shared_device_ptr<Transporter>(pl,sdp_geom,sdp_phys);
+    auto transp_dmm = std::make_shared<Transporter_DMM>(pl,sdp_geom,sdp_phys);
+    auto transp = cuda::shared_device_ptr<Transporter>(transp_dmm->device_instance());
 
     // Build box shape for source
     std::vector<double> src_bounds = {edges.front(), edges.back(),

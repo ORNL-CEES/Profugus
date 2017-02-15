@@ -46,8 +46,8 @@ class Fixed_Source_Solver : public Solver<Geometry>
     typedef Source_Transporter<Geometry_t>          Source_Transporter_t;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
     typedef std::shared_ptr<Source<Geometry>>       SP_Source;
-    typedef Tallier<Geometry>                       Tallier_t;
-    typedef std::shared_ptr<Tallier_t>              SP_Tallier;
+    typedef Tallier_DMM<Geometry>                   Tallier_DMM_t;
+    typedef std::shared_ptr<Tallier_DMM_t>          SP_Tallier_DMM;
     typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_Std_DB;
     typedef def::size_type                          size_type;
     //@}
@@ -70,7 +70,7 @@ class Fixed_Source_Solver : public Solver<Geometry>
     // Set the underlying source transporter and source.
     void set(SP_Source_Transporter transporter,
              SP_Source             source,
-             SP_Tallier            tallier);
+             SP_Tallier_DMM        tallier);
 
     // >>> INHERITED INTERFACE
 

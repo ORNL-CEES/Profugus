@@ -105,12 +105,12 @@ void Keff_Tally_Tester::test_tally(int num_groups)
 
     // Build cell tally
     std::cout << "Building Keff_Tally" << std::endl;
-    auto sp_tally = std::make_shared<Keff_Tally<Geom> >(1.0,sdp_phys);
-    cuda::Shared_Device_Ptr<Keff_Tally<Geom> > tally(sp_tally);
+    auto sp_tally = std::make_shared<Keff_Tally_DMM<Geom> >(1.0,sdp_phys);
 
     sp_tally->begin_active_cycles();
     sp_tally->begin_cycle(num_particles);
-    tally.update_device();
+    auto tally = cuda::shared_device_ptr<Keff_Tally<Geom>>(
+        sp_tally->device_instance());
 
     // Launch kernel
     std::cout << "Launching kernel" << std::endl;
@@ -138,7 +138,6 @@ void Keff_Tally_Tester::test_tally(int num_groups)
     REQUIRE( cudaGetLastError() == cudaSuccess );
     cudaDeviceSynchronize();
 
-    tally.update_host();
     sp_tally->end_cycle(num_particles);
 
     // Copy tally result to host

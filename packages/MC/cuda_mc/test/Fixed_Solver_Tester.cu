@@ -73,15 +73,14 @@ void Fixed_Solver_Tester::test_transport(int num_groups)
 
     // Build cell tally
     std::cout << "Building Cell_Tally" << std::endl;
-    auto sp_cell_tally = std::make_shared<Cell_Tally<Geom>>(
+    auto sp_cell_tally = std::make_shared<Cell_Tally_DMM<Geom>>(
         sdp_geom,sdp_phys);
     std::vector<int> cells = {0, 1, 2, 3, 4, 5, 6, 7};
     sp_cell_tally->set_cells(cells,geom_dmm->volumes());
-    cuda::Shared_Device_Ptr<Cell_Tally<Geom> > cell_tally(sp_cell_tally);
 
     std::cout << "Building Tallier" << std::endl;
-    auto tallier = std::make_shared<Tallier<Geom> >();
-    tallier->add_cell_tally(cell_tally);
+    auto tallier = std::make_shared<Tallier_DMM<Geom> >();
+    tallier->add_cell_tally(sp_cell_tally);
 
     // Build box shape for source
     std::vector<double> src_bounds = {edges.front(), edges.back(),

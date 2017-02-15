@@ -118,8 +118,8 @@ void Manager_Cuda<Geometry_DMM>::setup(RCP_ParameterList master)
     SCREEN_MSG("Building " << prob_type << " solver");
 
     // get the tallier
-    d_tallier = std::make_shared<Tallier<Geom_t>>();
-    d_tallier->set(d_geometry,d_physics);
+    d_tallier_dmm = std::make_shared<Tallier_DMM<Geom_t>>();
+    d_tallier_dmm->set(d_geometry,d_physics);
 
     if( d_db->isSublist("cell_tally_db") )
     {
@@ -129,14 +129,12 @@ void Manager_Cuda<Geometry_DMM>::setup(RCP_ParameterList master)
 
         auto cells = tally_db->get<Array_Int>("cells");
 
-        auto cell_tally_host = std::make_shared<Cell_Tally<Geom_t>>(
+        auto cell_tally_dmm = std::make_shared<Cell_Tally_DMM<Geom_t>>(
             d_geometry, d_physics);
-        cell_tally_host->set_cells(cells.toVector(),
-                                   d_geometry_dmm->volumes());
+        cell_tally_dmm->set_cells(cells.toVector(),
+                                  d_geometry_dmm->volumes());
 
-        auto cell_tally =
-            cuda::Shared_Device_Ptr<Cell_Tally<Geom_t>>(cell_tally_host);
-        d_tallier->add_cell_tally(cell_tally);
+        d_tallier_dmm->add_cell_tally(cell_tally_dmm);
     }
 
     // make the transporter
@@ -157,7 +155,7 @@ void Manager_Cuda<Geometry_DMM>::setup(RCP_ParameterList master)
             std::make_shared<KCode_Solver_t>(d_db);
 
         // set the solver
-        d_keff_solver->set(transporter, source, d_tallier);
+        d_keff_solver->set(transporter, source, d_tallier_dmm);
 
         // assign the base solver
         d_solver = d_keff_solver;
@@ -191,7 +189,7 @@ void Manager_Cuda<Geometry_DMM>::setup(RCP_ParameterList master)
         d_fixed_solver = std::make_shared<Fixed_Source_Solver_t>(d_db);
 
         // set it
-        d_fixed_solver->set(transporter, source, d_tallier);
+        d_fixed_solver->set(transporter, source, d_tallier_dmm);
 
         // assign the base solver
         d_solver = d_fixed_solver;

@@ -108,9 +108,10 @@ void Cell_Tally_Tester::test_tally(int num_batches)
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Build cell tally
-    auto sp_tally = std::make_shared<Cell_Tally<Geom> >(sdp_geom,sdp_phys);
-    sp_tally->set_cells(cells,geom_dmm->volumes());
-    cuda::Shared_Device_Ptr<Cell_Tally<Geom> > tally(sp_tally);
+    auto sp_tally_dmm = std::make_shared<Cell_Tally_DMM<Geom> >(sdp_geom,sdp_phys);
+    sp_tally_dmm->set_cells(cells,geom_dmm->volumes());
+    auto tally = cuda::shared_device_ptr<Cell_Tally<Geom>>(
+        sp_tally_dmm->device_instance());
 
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
@@ -130,20 +131,17 @@ void Cell_Tally_Tester::test_tally(int num_batches)
         REQUIRE( cudaGetLastError() == cudaSuccess );
         cudaDeviceSynchronize();
 
-        tally.update_host();
-        sp_tally->end_batch(num_particles);
-        tally.update_device();
+        sp_tally_dmm->end_batch(num_particles);
     }
 
-    tally.update_host();
-    sp_tally->finalize(num_particles*num_batches);
+    sp_tally_dmm->finalize(num_particles*num_batches);
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     // Get tally result
-    const auto &tally_result = sp_tally->results();
+    const auto &tally_result = sp_tally_dmm->results();
     EXPECT_EQ( tally_result.size(), cells.size() );
 
-    const auto &tally_std_dev = sp_tally->std_dev();
+    const auto &tally_std_dev = sp_tally_dmm->std_dev();
     EXPECT_EQ( tally_std_dev.size(), cells.size() );
 
     // Each value should be 1.5 within statistical noise

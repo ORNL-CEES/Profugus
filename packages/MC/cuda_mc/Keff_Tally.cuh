@@ -16,6 +16,7 @@
 #include "utils/Definitions.hh"
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
+#include "cuda_utils/Device_Memory_Manager.hh"
 #include "Physics.cuh"
 #include "Particle.cuh"
 
@@ -40,6 +41,46 @@ template <class Geometry>
 class Keff_Tally
 {
   public:
+
+    typedef Physics<Geometry>   Physics_t;
+    typedef Particle<Geometry>  Particle_t;
+
+  private:
+    // >>> DEVICE-SIDE DATA
+
+    Physics_t *d_physics;
+
+    double *d_thread_keff;
+
+  public:
+    // Kcode solver should construct this with initial keff estimate
+    Keff_Tally(Physics_t *physics,
+               double    *thread_keff)
+        : d_physics(physics)
+        , d_thread_keff(thread_keff)
+    {
+    }
+
+    // >>> ON-DEVICE INTERFACE
+
+    // Track particle and do tallying.
+    __device__ void accumulate(double step, const Particle_t &p);
+
+    // End history (null-op because we're only accumulating first moments)
+    __device__ void end_history(){}
+};
+
+//===========================================================================//
+/*!
+ * \class Keff_Tally_DMM
+ * \brief Device memory manager for Keff_Tally
+ */
+//===========================================================================//
+
+template <class Geometry>
+class Keff_Tally_DMM : public cuda::Device_Memory_Manager<Keff_Tally<Geometry>>
+{
+  public:
     typedef Physics<Geometry>                   Physics_t;
     typedef Particle<Geometry>                  Particle_t;
     typedef cuda::Shared_Device_Ptr<Physics_t>  SDP_Physics;
@@ -51,16 +92,13 @@ class Keff_Tally
     //@}
 
   private:
-    // >>> DEVICE-SIDE DATA
-
-    Physics_t *d_physics;
-
-    //! Number of active cycles completed so far
-    unsigned int d_cycle;
-
-    double *d_thread_keff;
 
     // >>> HOST-SIDE DATA
+
+    SDP_Physics d_physics;
+
+    // Current cycle
+    unsigned int d_cycle;
 
     //! Estimate of k-effective from this cycle
     // This should only be updated from host
@@ -80,15 +118,15 @@ class Keff_Tally
 
   public:
     // Kcode solver should construct this with initial keff estimate
-    Keff_Tally(double keff_init, SDP_Physics physics);
+    Keff_Tally_DMM(double keff_init, SDP_Physics physics);
 
-    // >>> ON-DEVICE INTERFACE
-
-    // Track particle and do tallying.
-    __device__ void accumulate(double step, const Particle_t &p);
-
-    // End history (null-op because we're only accumulating first moments)
-    __device__ void end_history(){}
+    // Memory manager interface
+    Keff_Tally<Geometry> device_instance()
+    {
+        Keff_Tally<Geometry> tally(d_physics.get_device_ptr(),
+                                   d_keff_data.data().get());
+        return tally;
+    }
 
     // >>> ACCESSORS
 

@@ -71,25 +71,22 @@ class KCode_Solver : public Solver<Geometry>
     typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_Std_DB;
     typedef std::shared_ptr<Source_Transporter_t>   SP_Source_Transporter;
     typedef Fission_Source_DMM<Geometry_t>          FS_t;
-    typedef Tallier<Geometry_t>                     Tallier_t;
-    typedef Keff_Tally<Geometry_t>                  Keff_Tally_t;
+    typedef Keff_Tally_DMM<Geometry_t>              Keff_Tally_DMM_t;
     typedef std::vector<Fission_Site>               Host_Fission_Sites;
     typedef thrust::device_vector<Fission_Site>     Dev_Fission_Sites;
     typedef std::shared_ptr<FS_t>                   SP_Fission_Source;
     typedef std::shared_ptr<Host_Fission_Sites>     SP_Host_Fission_Sites;
     typedef std::shared_ptr<Dev_Fission_Sites>      SP_Dev_Fission_Sites;
-    typedef std::shared_ptr<Tallier_t>              SP_Tallier;
-    typedef cuda::Shared_Device_Ptr<Tallier_t>      SDP_Tallier;
-    typedef std::shared_ptr<Keff_Tally_t>           SP_Keff_Tally;
-    typedef cuda::Shared_Device_Ptr<Keff_Tally_t>   SDP_Keff_Tally;
+    typedef std::shared_ptr<Keff_Tally_DMM_t>       SP_Keff_Tally_DMM;
+    typedef Tallier_DMM<Geometry_t>                 Tallier_DMM_t;
+    typedef std::shared_ptr<Tallier_DMM_t>          SP_Tallier_DMM;
     typedef def::size_type                          size_type;
 
   private:
 
     // >>> DATA
 
-    SDP_Keff_Tally d_keff_tally;
-    SP_Keff_Tally d_keff_tally_host;
+    SP_Keff_Tally_DMM d_keff_tally;
 
     // Problem database.
     RCP_Std_DB d_db;
@@ -103,7 +100,7 @@ class KCode_Solver : public Solver<Geometry>
     SP_Dev_Fission_Sites    d_dev_sites;
 
     // Inactive tallier
-    SDP_Tallier d_inactive_tallier;
+    SP_Tallier_DMM d_inactive_tallier;
 
   public:
 
@@ -113,18 +110,18 @@ class KCode_Solver : public Solver<Geometry>
     // Set the underlying fixed-source transporter and fission source.
     void set(SP_Source_Transporter transporter,
              SP_Fission_Source     source,
-             SP_Tallier            tallier);
+             SP_Tallier_DMM        tallier);
 
     // >>> ACCESSORS
 
     //! Number of (inactive or active) cycles run so far
     unsigned int num_cycles() const
     {
-        return d_keff_tally_host->cycle_count();
+        return d_keff_tally->cycle_count();
     }
 
     // Get keff value
-    double keff() const { return d_keff_tally_host->mean(); }
+    double keff() const { return d_keff_tally->mean(); }
 
     /*
      * \brief Access inactive tallier
@@ -132,10 +129,10 @@ class KCode_Solver : public Solver<Geometry>
      * This is provided (to be used before solve()) so that extra tallies
      * beside k-effective can be added to the inactive cycles.
      */
-    SDP_Tallier inactive_tallier()
+    SP_Tallier_DMM inactive_tallier()
     {
         REQUIRE(d_build_phase >= ASSIGNED);
-        REQUIRE(d_inactive_tallier.get_host_ptr());
+        REQUIRE(d_inactive_tallier);
         return d_inactive_tallier;
     }
 
