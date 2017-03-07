@@ -30,7 +30,7 @@ namespace cuda_mc
 {
 
 // Forward declarations to avoid including Cuda headers
-template <class Geom> class Particle;
+template <class Geom> class Particle_Vector_DMM;
 template <class Geom> class Physics;
 template <class Geom> class Domain_Transporter_DMM;
 template <class Geom> class Tallier_DMM;
@@ -64,13 +64,11 @@ class Source_Transporter
   public:
     //@{
     //! Typedefs.
-    typedef Particle<Geometry>                            Particle_t;
     typedef Physics<Geometry>                             Physics_t;
     typedef Domain_Transporter_DMM<Geometry>              Transporter_DMM_t;
     typedef Tallier_DMM<Geometry>                         Tallier_DMM_t;
     typedef VR_Roulette<Geometry>                         VR_Roulette_t;
     typedef cuda::Shared_Device_Ptr<Geometry>             SDP_Geometry;
-    typedef cuda::Shared_Device_Ptr<Particle_t>           SDP_Particle;
     typedef cuda::Shared_Device_Ptr<Physics_t>            SDP_Physics;
     typedef cuda::Shared_Device_Ptr<VR_Roulette_t>        SDP_VR;
     typedef std::shared_ptr<Transporter_DMM_t>            SP_Transporter_DMM;
@@ -82,6 +80,8 @@ class Source_Transporter
     typedef std::shared_ptr<Fission_Site_Vector>          SP_Fission_Site_Vec;
     typedef Source<Geometry>                              Source_t;
     typedef std::shared_ptr<Source_t>                     SP_Source;
+    typedef Particle_Vector_DMM<Geometry>                 Particle_Vector_DMM_t;
+    typedef std::shared_ptr<Particle_Vector_DMM_t>        SP_Particle_Vec_DMM;
     //@}
 
   private:
@@ -104,6 +104,9 @@ class Source_Transporter
 
     // RNG Control
     SP_RNG_Control d_rng_control;
+
+    // Particle_Vector
+    SP_Particle_Vec_DMM d_particle_vec;
 
   public:
     // Constructor.

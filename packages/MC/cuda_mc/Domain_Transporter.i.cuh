@@ -28,14 +28,15 @@ namespace cuda_mc
  */
 template <class Geometry>
 __device__
-void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
+void Domain_Transporter<Geometry>::transport(int                pid,
+                                             Particle_Vector_t &particles) const
 {
     DEVICE_REQUIRE(d_geometry);
     DEVICE_REQUIRE(d_physics);
-    DEVICE_REQUIRE(particle.alive());
+    DEVICE_REQUIRE(particles.alive(pid));
 
     // particle state
-    Geo_State_t &geo_state = particle.geo_state();
+    Geo_State_t &geo_state = particles.geo_state(pid);
 
     Step_Selector step;
     double dist_mfp, dist_col, dist_bnd, xs_tot;
@@ -46,14 +47,14 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
     // to the domain, so a particle leaving the domain would be no longer
     // alive wrt the current domain even though the particle might be alive to
     // another domain
-    while (particle.alive() && num_steps < d_max_steps)
+    while (particles.alive(pid) && num_steps < d_max_steps)
     {
         // calculate distance to collision in mean-free-paths
-        dist_mfp = -log(particle.ran());
+        dist_mfp = -log(particles.ran(pid));
 
         // while we are hitting boundaries, continue to transport until we get
         // to the collision site
-        particle.set_event(profugus::events::BOUNDARY);
+        particles.set_event(pid,profugus::events::BOUNDARY);
 
         // process particles through internal boundaries until it hits a
         // collision site or leaves the domain
@@ -65,13 +66,13 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
         // up with a small, negative distance to boundary mesh on the
         // subsequent step, but who cares)
         // >>>>>>>>>>>>-<<<<<<<<<<<<<
-        while (particle.event() == profugus::events::BOUNDARY)
+        while (particles.event(pid) == profugus::events::BOUNDARY)
         {
-            DEVICE_CHECK(particle.alive());
+            DEVICE_CHECK(particles.alive(pid));
             DEVICE_CHECK(dist_mfp > 0.0);
 
             // total interaction cross section
-            xs_tot = d_physics->total(profugus::physics::TOTAL, particle);
+            xs_tot = d_physics->total(profugus::physics::TOTAL, pid, particles);
             DEVICE_CHECK(xs_tot >= 0.0);
 
             // sample distance to next collision
@@ -89,20 +90,20 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
 
             // set the next event in the particle
             DEVICE_CHECK(step.tag() < profugus::events::END_EVENT);
-            particle.set_event(static_cast<profugus::events::Event>(
-                step.tag()));
+            particles.set_event(pid,
+                static_cast<profugus::events::Event>(step.tag()));
 
             // path-length tallies (the actual movement of the particle will
             // take place when we process the various events)
             if( d_tallier )
-                d_tallier->path_length(step.step(), particle);
+                d_tallier->path_length(step.step(), pid, particles);
 
             // update the mfp distance travelled
             dist_mfp -= step.step() * xs_tot;
 
             // process a particle through the geometric boundary
-            if (particle.event() == profugus::events::BOUNDARY)
-                process_boundary(particle);
+            if (particles.event(pid) == profugus::events::BOUNDARY)
+                process_boundary(pid,particles);
         }
 
         // we are done moving to a problem boundary, now process the
@@ -110,8 +111,8 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
         // in each of these calls
 
         // process particle at a collision
-        if (particle.event() == profugus::events::COLLISION)
-            process_collision(particle,step.step());
+        if (particles.event(pid) == profugus::events::COLLISION)
+            process_collision(pid,particles,step.step());
 
         // any future events go here ...
         num_steps++;
@@ -124,18 +125,19 @@ void Domain_Transporter<Geometry>::transport(Particle_t &particle) const
 
 template <class Geometry>
 __device__ void
-Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
+Domain_Transporter<Geometry>::process_boundary(
+        int pid, Particle_Vector_t &particles) const
 {
-    DEVICE_REQUIRE(particle.alive());
-    DEVICE_REQUIRE(particle.event() == profugus::events::BOUNDARY);
+    DEVICE_REQUIRE(particles.alive(pid));
+    DEVICE_REQUIRE(particles.event(pid) == profugus::events::BOUNDARY);
 
     // return if not a boundary event
 
     // move a particle to the surface and process the event through the surface
-    d_geometry->move_to_surface(particle.geo_state());
+    d_geometry->move_to_surface(particles.geo_state(pid));
 
     // get the in/out state of the particle
-    int state = d_geometry->boundary_state(particle.geo_state());
+    int state = d_geometry->boundary_state(particles.geo_state(pid));
 
     // process the boundary crossing based on the geometric state of the
     // particle
@@ -144,32 +146,33 @@ Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
         case profugus::geometry::OUTSIDE:
         {
             // the particle has left the problem geometry
-            particle.set_event(profugus::events::ESCAPE);
-            particle.kill();
+            particles.set_event(pid,profugus::events::ESCAPE);
+            particles.kill(pid);
 
-            DEVICE_ENSURE(particle.event() == profugus::events::ESCAPE);
+            DEVICE_ENSURE(particles.event(pid) == profugus::events::ESCAPE);
             break;
         }
         case profugus::geometry::REFLECT:
         {
             // the particle has hit a reflecting surface
-            bool reflected = d_geometry->reflect(particle.geo_state());
+            bool reflected = d_geometry->reflect(particles.geo_state(pid));
             DEVICE_CHECK(reflected);
 
-            DEVICE_ENSURE(particle.event() == profugus::events::BOUNDARY);
+            DEVICE_ENSURE(particles.event(pid) == profugus::events::BOUNDARY);
             break;
         }
         case profugus::geometry::INSIDE:
         {
             // otherwise the particle is at an internal geometry boundary;
             // update the material id of the region the particle has entered
-            particle.set_matid(d_geometry->matid(particle.geo_state()));
+            particles.set_matid(pid,
+                                d_geometry->matid(particles.geo_state(pid)));
 
             // add variance reduction at surface crossings
             if( d_vr )
-                d_vr->post_surface(particle);
+                d_vr->post_surface(pid, particles);
 
-            DEVICE_ENSURE(particle.event() == profugus::events::BOUNDARY);
+            DEVICE_ENSURE(particles.event(pid) == profugus::events::BOUNDARY);
             break;
 
         }
@@ -182,27 +185,28 @@ Domain_Transporter<Geometry>::process_boundary(Particle_t &particle) const
 
 template <class Geometry>
 __device__ void
-Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
-                                                double      dist) const
+Domain_Transporter<Geometry>::process_collision(int                pid,
+                                                Particle_Vector_t &particles,
+                                                double             dist) const
 {
-    DEVICE_REQUIRE(particle.event() == profugus::events::COLLISION);
+    DEVICE_REQUIRE(particles.event(pid) == profugus::events::COLLISION);
 
     // move the particle to the collision site
-    d_geometry->move_to_point(dist, particle.geo_state());
+    d_geometry->move_to_point(dist, particles.geo_state(pid));
 
     // sample fission sites
     if (d_sample_fission_sites)
     {
         DEVICE_CHECK(d_fission_sites);
         DEVICE_CHECK(d_keff > 0.0);
-        int num_sites = d_physics->sample_fission_site(particle, d_keff);
+        int num_sites = d_physics->sample_fission_site(pid, particles, d_keff);
 
         if( num_sites > 0 )
         {
             // Create fission site
             Fission_Site site;
-            site.m = particle.matid();
-            site.r = d_geometry->position(particle.geo_state());
+            site.m = particles.matid(pid);
+            site.r = d_geometry->position(particles.geo_state(pid));
 
             // Get index of first site to be written using an atomic
             int offset = atomicAdd(d_num_fission_sites,num_sites);
@@ -217,11 +221,11 @@ Domain_Transporter<Geometry>::process_collision(Particle_t &particle,
     }
 
     // use the physics package to process the collision
-    d_physics->collide(particle);
+    d_physics->collide(pid,particles);
 
     // apply weight windows
     if( d_vr )
-        d_vr->post_collision(particle);
+        d_vr->post_collision(pid,particles);
 }
 
 } // end namespace cuda_mc

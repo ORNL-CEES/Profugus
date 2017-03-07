@@ -30,17 +30,15 @@ namespace cuda_mc
  * \brief Get a particle from the source.
  */
 template <class Geometry>
-__device__ auto
-Uniform_Source<Geometry>::get_particle(std::size_t  tid,
-                                       RNG_State_t *rng) const -> Particle_t 
+__device__ void Uniform_Source<Geometry>::build_particle(
+        int                pid,
+        RNG_State_t       *rng,
+        Particle_Vector_t &particles) const
 {
     DEVICE_REQUIRE(d_geo_shape);
 
-    // make a particle
-    Particle_t p;
-
-    // Set 
-    p.set_rng(rng);
+    // Set rng
+    particles.set_rng(pid,rng);
 
     // material id
     int matid = 0;
@@ -56,28 +54,27 @@ Uniform_Source<Geometry>::get_particle(std::size_t  tid,
     r = d_geo_shape->sample(rng);
 
     // intialize the geometry state
-    d_geometry->initialize(r, omega, p.geo_state());
+    d_geometry->initialize(r, omega, particles.geo_state(pid));
 
     // get the material id
-    matid = d_geometry->matid(p.geo_state());
+    matid = d_geometry->matid(particles.geo_state(pid));
 
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
-        d_erg_cdf.size(), d_erg_cdf.begin(), p.ran());
+        d_erg_cdf.size(), d_erg_cdf.begin(), particles.ran(pid));
     DEVICE_CHECK(group < d_erg_cdf.size());
-    p.set_group(group);
+    particles.set_group(pid,group);
 
     // set the material id in the particle
-    p.set_matid(matid);
+    particles.set_matid(pid,matid);
 
     // set particle weight
-    p.set_wt(wt());
+    particles.set_wt(pid,wt());
 
     // make particle alive
-    p.live();
+    particles.live(pid);
 
-    DEVICE_ENSURE(p.matid() == matid);
-    return p;
+    DEVICE_ENSURE(particles.matid(pid) == matid);
 }
 
 } // end namespace cuda_mc

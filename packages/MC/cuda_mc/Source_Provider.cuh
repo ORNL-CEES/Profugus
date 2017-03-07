@@ -14,7 +14,7 @@
 #include <thrust/device_vector.h>
 #include "Definitions.hh"
 #include "Source.cuh"
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 #include "RNG_Control.cuh"
 
 namespace cuda_mc
@@ -48,22 +48,23 @@ class Source_Provider
 {
   public:
 
-    typedef Particle<Geometry>                  Particle_t;
-    typedef thrust::device_vector<Particle_t>   Particle_Vector;
-    typedef int                                 index;
-    typedef thrust::device_vector<index>        Index_Vector;
-    typedef std::shared_ptr<RNG_Control>        SP_RNG_Control;
-    typedef std::shared_ptr<Source<Geometry>>   SP_Source;
-    typedef def::size_type                      size_type;
+    typedef Particle_Vector<Geometry>               Particle_Vector_t;
+    typedef Particle_Vector_DMM<Geometry>           Particle_Vector_DMM_t;
+    typedef std::shared_ptr<Particle_Vector_DMM_t>  SP_Particle_Vector_DMM;
+    typedef int                                     index;
+    typedef thrust::device_vector<index>            Index_Vector;
+    typedef std::shared_ptr<RNG_Control>            SP_RNG_Control;
+    typedef std::shared_ptr<Source<Geometry>>       SP_Source;
+    typedef def::size_type                          size_type;
 
     //! Constructor
     Source_Provider(){}
 
     //! Get vector of particles
-    void get_particles( SP_Source           source,
-                        SP_RNG_Control      rng_control,
-                        Particle_Vector    &particles,
-                        const Index_Vector &indices ) const;
+    void get_particles( SP_Source               source,
+                        SP_RNG_Control          rng_control,
+                        SP_Particle_Vector_DMM  particles,
+                        const Index_Vector     &indices ) const;
 
   private:
 
@@ -71,7 +72,7 @@ class Source_Provider
     template <class Src_Type>
     void get_particles_impl( Src_Type                  &source,
                              SP_RNG_Control             rng_control,
-                             Particle_Vector           &particles,
+                             SP_Particle_Vector_DMM     particles,
                              const Index_Vector        &indices,
                              size_type                  Np) const;
                         

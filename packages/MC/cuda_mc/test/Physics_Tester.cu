@@ -22,10 +22,13 @@ using namespace cuda_mc;
 typedef cuda_profugus::Mesh_Geometry     Geom;
 typedef cuda_profugus::Mesh_Geometry_DMM Geom_DMM;
 typedef cuda_utils::Space_Vector         Space_Vector;
+typedef Particle_Vector<Geom>            Particle_Vector_t;
+typedef Particle_Vector_DMM<Geom>        Particle_Vector_DMM_t;
 
-__global__ void test_total_kernel( Physics<Geom> *phys,
-                                   double        *totals,
-                                   int            num_vals)
+__global__ void test_total_kernel( Physics<Geom>    *phys,
+                                   Particle_Vector_t particles,
+                                   double           *totals,
+                                   int               num_vals)
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
@@ -34,17 +37,17 @@ __global__ void test_total_kernel( Physics<Geom> *phys,
          int matid = tid % 2;
 
          // Create particle
-         Particle<Geom> p;
-         p.set_group(g);
-         p.set_matid(matid);
-         totals[tid] = phys->total(profugus::physics::TOTAL,p);
+         particles.set_group(tid,g);
+         particles.set_matid(tid,matid);
+         totals[tid] = phys->total(profugus::physics::TOTAL,tid,particles);
      }
 }
 
-__global__ void test_collide_kernel( Geom          *geom,
-                                     Physics<Geom> *phys,
-                                     int           *events,
-                                     int            num_particles)
+__global__ void test_collide_kernel( Geom               *geom,
+                                     Physics<Geom>      *phys,
+                                     Particle_Vector_t   particles,
+                                     int                *events,
+                                     int                 num_particles)
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_particles )
@@ -52,30 +55,29 @@ __global__ void test_collide_kernel( Geom          *geom,
          int g = tid % 5;
 
          // Create particle
-         Particle<Geom> p;
-         p.live();
-         p.set_group(g);
-         p.set_wt(1.0);
-         p.set_event(profugus::events::COLLISION);
+         particles.live(tid);
+         particles.set_group(tid,g);
+         particles.set_wt(tid,1.0);
+         particles.set_event(tid,profugus::events::COLLISION);
 
          // Create and initialize RNG state
          curandState_t rng_state;
          curand_init(tid,0,0,&rng_state);
-         p.set_rng(&rng_state);
+         particles.set_rng(tid,&rng_state);
 
          // Initialize geo state
          Space_Vector pos = {0.25, 0.75, 0.60};
          Space_Vector dir = {1.0, 0.0, 0.0};
-         geom->initialize(pos,dir,p.geo_state());
-         p.set_matid(geom->matid(p.geo_state()));
+         geom->initialize(pos,dir,particles.geo_state(tid));
+         particles.set_matid(tid,geom->matid(particles.geo_state(tid)));
 
          // Collide
-         phys->collide(p);
+         phys->collide(tid,particles);
 
-         events[tid] = p.event();
+         events[tid] = particles.event(tid);
 
          printf("Particle %i has event %i, group %i, and weight %e\n",
-                tid,p.event(),p.group(),p.wt());
+            tid,particles.event(tid),particles.group(tid),particles.wt(tid));
      }
 }
 
@@ -99,10 +101,15 @@ void Physics_Tester::test_total()
     phys->set_geometry(sdp_geom);
     auto sdp_phys = cuda::Shared_Device_Ptr<Physics<Geom> >(phys);
 
+    // Build particles
+    Particle_Vector_DMM_t particles;
+    particles.initialize(num_vals);
+
     // Allocate data on device
     thrust::device_vector<double> device_totals(num_vals);
 
     test_total_kernel<<<1,num_vals>>>( sdp_phys.get_device_ptr(),
+                                       particles.device_instance(),
                                        device_totals.data().get(),
                                        num_vals );
 
@@ -140,10 +147,15 @@ void Physics_Tester::test_collide()
     phys->set_geometry(sdp_geom);
     auto sdp_phys = cuda::Shared_Device_Ptr<Physics<Geom> >(phys);
 
+    // Build particles
+    Particle_Vector_DMM_t particles;
+    particles.initialize(num_particles);
+
     thrust::device_vector<int> device_events(num_particles);
 
     test_collide_kernel<<<1,num_particles>>>( sdp_geom.get_device_ptr(),
                                               sdp_phys.get_device_ptr(),
+                                              particles.device_instance(),
                                               device_events.data().get(),
                                               num_particles );
 

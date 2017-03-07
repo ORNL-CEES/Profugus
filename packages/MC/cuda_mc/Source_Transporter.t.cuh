@@ -30,7 +30,7 @@
 #include "comm/Timing.hh"
 #include "Source_Transporter.hh"
 
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 #include "Physics.cuh"
 #include "Domain_Transporter.cuh"
 #include "VR_Roulette.cuh"
@@ -48,99 +48,45 @@ class Transport_Functor
   public:
 
     typedef Domain_Transporter<Geometry>    Transporter_t;
-    typedef Particle<Geometry>              Particle_t;
+    typedef Particle_Vector<Geometry>       Particle_Vector_t;
 
     // Constructor
-    Transport_Functor( const Transporter_t *trans,
-                             Particle_t    *particles,
-                       const int           *inds )
-        : d_transporter( trans )
-        , d_particles( particles )
-        , d_inds( inds )
+    Transport_Functor( const Transporter_t     *trans,
+                             Particle_Vector_t  particles,
+                       const int               *inds )
+        : d_transporter(trans)
+        , d_particles(particles)
+        , d_inds(inds)
     {
     }
 
     // Operator apply for functor (transport 1 particle)
-    __device__ void operator()( std::size_t tid ) const
+    __device__ void operator()( std::size_t tid )
     {
-        // Get particle from source
-        auto &p = d_particles[d_inds[tid]];
-        DEVICE_CHECK( p.alive() );
+        // Get particle index
+        int pid = d_inds[tid];
+        DEVICE_CHECK(d_particles.alive(pid));
 
         // transport the particle through this (replicated) domain
-        d_transporter->transport(p);
+        d_transporter->transport(pid,d_particles);
     }
 
   private:
 
     // On-device pointers
     const Transporter_t *d_transporter;
-    Particle_t          *d_particles;
+    Particle_Vector_t    d_particles;
     const int           *d_inds;
 };
 
-template <class Particle>
-struct AliveComp
-{
-    __device__ bool operator()(const Particle &lhs, const Particle &rhs) const
-    {
-        return lhs.alive() && !rhs.alive();
-    }
-};
-
-template <class Particle>
-struct MatidComp 
-{
-    __device__ bool operator()(const Particle &lhs, const Particle &rhs) const
-    {
-        return comp(lhs,rhs) || ((lhs.alive() && rhs.alive()) &&
-               (lhs.matid() < rhs.matid()));
-    }
-
-    AliveComp<Particle> comp;
-};
-
-template <class Particle>
-struct GroupComp 
-{
-    __device__ bool operator()(const Particle &lhs, const Particle &rhs) const
-    {
-        return comp(lhs,rhs) || ((lhs.alive() && rhs.alive()) &&
-               (lhs.group() < rhs.group()));
-    }
-
-    AliveComp<Particle> comp;
-};
-
 template <class Geometry>
-struct CellComp 
-{
-    typedef Particle<Geometry> Particle_t;
-    __device__ bool operator()(const Particle_t &lhs, const Particle_t &rhs) const
-    {
-        return comp(lhs,rhs) || ((lhs.alive() && rhs.alive()) &&
-               (geom->cell(lhs.geo_state()) < geom->cell(rhs.geo_state())));
-    }
-
-    AliveComp<Particle_t> comp;
-    const Geometry *geom;
-};
-
-template <class Particle>
-struct IsAlive
-{
-    __host__ __device__ bool operator()(const Particle &p) const
-    {
-        return p.alive();
-    }
-};
-
-template <class Particle>
 struct GetAlive
 {
-    GetAlive(const Particle *particles,
-             const int      *indirection,
-                   int      *alive)
+    typedef Particle_Vector<Geometry> Particle_Vector_t;
+
+    GetAlive(const Particle_Vector_t  particles,
+             const int               *indirection,
+                   int               *alive)
         : d_particles(particles)
         , d_indirection(indirection)
         , d_alive(alive)
@@ -149,8 +95,8 @@ struct GetAlive
 
     __device__ void operator()(std::size_t tid)
     {
-        const auto &p = d_particles[d_indirection[tid]];
-        if (p.alive())
+        int pid = d_indirection[tid];
+        if (d_particles.alive(pid))
             d_alive[tid] = 1;
         else
             d_alive[tid] = INT_MAX;
@@ -158,18 +104,20 @@ struct GetAlive
 
   private:
 
-    const Particle *d_particles;
-    const int      *d_indirection;
-    int            *d_alive;
+    const Particle_Vector_t  d_particles;
+    const int               *d_indirection;
+    int                     *d_alive;
 
 };
 
-template <class Particle>
+template <class Geometry>
 struct GetMatid
 {
-    GetMatid(const Particle *particles,
-             const int      *indirection,
-                   int      *matids)
+    typedef Particle_Vector<Geometry> Particle_Vector_t;
+
+    GetMatid(const Particle_Vector_t particles,
+             const int              *indirection,
+                   int              *matids)
         : d_particles(particles)
         , d_indirection(indirection)
         , d_matids(matids)
@@ -178,27 +126,29 @@ struct GetMatid
 
     __device__ void operator()(std::size_t tid)
     {
-        const auto &p = d_particles[d_indirection[tid]];
-        if (p.alive())
-            d_matids[tid] = p.matid();
+        int pid = d_indirection[tid];
+        if (d_particles.alive(pid))
+            d_matids[tid] = d_particles.matid(pid);
         else
             d_matids[tid] = INT_MAX;
     }
 
   private:
 
-    const Particle *d_particles;
+    const Particle_Vector_t  d_particles;
     const int      *d_indirection;
     int            *d_matids;
 
 };
 
-template <class Particle>
+template <class Geometry>
 struct GetGroup
 {
-    GetGroup(const Particle *particles,
-             const int      *indirection,
-                   int      *groups)
+    typedef Particle_Vector<Geometry> Particle_Vector_t;
+
+    GetGroup(const Particle_Vector_t particles,
+             const int              *indirection,
+                   int              *groups)
         : d_particles(particles)
         , d_indirection(indirection)
         , d_groups(groups)
@@ -207,25 +157,27 @@ struct GetGroup
 
     __device__ void operator()(std::size_t tid)
     {
-        const auto &p = d_particles[d_indirection[tid]];
-        if (p.alive())
-            d_groups[tid] = p.group();
+        int pid = d_indirection[tid];
+        if (d_particles.alive(pid))
+            d_groups[tid] = d_particles.group(pid);
         else
             d_groups[tid] = INT_MAX;
     }
 
   private:
 
-    const Particle *d_particles;
-    const int      *d_indirection;
-    int            *d_groups;
+    const Particle_Vector_t  d_particles;
+    const int               *d_indirection;
+    int                     *d_groups;
 
 };
 
 template <class Geometry>
 struct GetCell
 {
-    GetCell(const Particle<Geometry> *particles,
+    typedef Particle_Vector<Geometry> Particle_Vector_t;
+
+    GetCell(const Particle_Vector_t   particles,
             const Geometry           *geometry,
             const int                *indirection,
                   int                *cells)
@@ -238,20 +190,19 @@ struct GetCell
 
     __device__ void operator()(std::size_t tid)
     {
-        const auto &p = d_particles[d_indirection[tid]];
-        if (p.alive())
-            d_cells[tid] = d_geometry->cell(p.geo_state());
+        int pid = d_indirection[tid];
+        if (d_particles.alive(pid))
+            d_cells[tid] = d_geometry->cell(d_particles.geo_state(pid));
         else
             d_cells[tid] = INT_MAX;
     }
 
   private:
 
-    const Particle<Geometry> *d_particles;
+    const Particle_Vector_t  d_particles;
     const Geometry           *d_geometry;
     const int                *d_indirection;
     int                      *d_cells;
-
 };
 
 
@@ -322,6 +273,9 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     // Build domain transporter
     d_transporter = std::make_shared<Transporter_DMM_t>(
         db, d_geometry, d_physics, d_vr );
+
+    // Build particle vector
+    d_particle_vec = std::make_shared<Particle_Vector_DMM_t>();
 }
 
 //---------------------------------------------------------------------------//
@@ -384,8 +338,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     // Get source particles
     start = std::chrono::high_resolution_clock::now();
     Source_Provider<Geometry> provider;
-    thrust::device_vector<Particle_t> particles;
-    provider.get_particles(source, d_rng_control, particles, indirection);
+    provider.get_particles(source, d_rng_control, d_particle_vec, indirection);
     cudaDeviceSynchronize();
     end = std::chrono::high_resolution_clock::now();
     diff = end - start;
@@ -404,7 +357,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         start = std::chrono::high_resolution_clock::now();
         Transport_Functor<Geometry> f(
                 sdp_transporter.get_device_ptr(), 
-                particles.data().get(),
+                d_particle_vec->device_instance(),
                 indirection.data().get() );
         cuda::parallel_launch( f, launch_args );
         REQUIRE(cudaSuccess == cudaGetLastError());
@@ -421,7 +374,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         {
             case ALIVE:
             {
-                GetAlive<Particle_t> alive_func(particles.data().get(),
+                GetAlive<Geometry> alive_func(
+                        d_particle_vec->device_instance(),
                         indirection.data().get(),
                         event.data().get());
                 cuda::parallel_launch( alive_func, launch_args );
@@ -429,7 +383,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
             }
             case MATID:
             {
-                GetMatid<Particle_t> matid_func(particles.data().get(),
+                GetMatid<Geometry> matid_func(
+                        d_particle_vec->device_instance(),
                         indirection.data().get(),
                         event.data().get());
                 cuda::parallel_launch( matid_func, launch_args );
@@ -437,7 +392,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
             }
             case GROUP:
             {
-                GetGroup<Particle_t> group_func(particles.data().get(),
+                GetGroup<Geometry> group_func(
+                        d_particle_vec->device_instance(),
                         indirection.data().get(),
                         event.data().get());
                 cuda::parallel_launch( group_func, launch_args );
@@ -445,7 +401,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
             }
             case CELL:
             {
-                GetCell<Geometry> cell_func(particles.data().get(),
+                GetCell<Geometry> cell_func(
+                        d_particle_vec->device_instance(),
                         d_geometry.get_device_ptr(),
                         indirection.data().get(),
                         event.data().get());

@@ -32,14 +32,16 @@ namespace cuda_mc
  * where \f$l\f$ is the step-length.
  */
 template <class Geometry>
-__device__ void Keff_Tally<Geometry>::accumulate(double            step,
-                                                 const Particle_t &p)
+__device__ void Keff_Tally<Geometry>::accumulate(
+        double                   step,
+        int                      pid,
+        const Particle_Vector_t &particles)
 {
     DEVICE_REQUIRE(d_physics);
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    d_thread_keff[tid] += p.wt() * step *
-        d_physics->total(profugus::physics::NU_FISSION, p);
+    d_thread_keff[tid] += particles.wt(tid) * step *
+        d_physics->total(profugus::physics::NU_FISSION, pid, particles);
 }
 
 } // end namespace cuda_mc

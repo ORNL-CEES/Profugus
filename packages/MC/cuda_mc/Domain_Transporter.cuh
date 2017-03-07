@@ -14,7 +14,7 @@
 #include <memory>
 #include <thrust/device_vector.h>
 
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 #include "Physics.cuh"
 #include "Step_Selector.cuh"
 #include "VR_Roulette.cuh"
@@ -49,7 +49,7 @@ class Domain_Transporter
     typedef Physics<Geometry_t>                        Physics_t;
     typedef cuda_utils::Space_Vector                   Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
-    typedef Particle<Geometry_t>                       Particle_t;
+    typedef Particle_Vector<Geometry_t>                Particle_Vector_t;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;
@@ -102,7 +102,7 @@ class Domain_Transporter
     }
 
     // Transport a particle through the domain.
-    __device__ void transport(Particle_t &particle) const;
+    __device__ void transport(int pid, Particle_Vector_t &particles) const;
 
     //! Return the number of sampled fission sites.
     __device__
@@ -127,8 +127,8 @@ class Domain_Transporter
     int d_max_steps;
 
     // Process collisions and boundaries.
-    __device__ void process_boundary(Particle_t &particle) const;
-    __device__ void process_collision(Particle_t &particle,
+    __device__ void process_boundary(int pid, Particle_Vector_t &particles) const;
+    __device__ void process_collision(int pid, Particle_Vector_t &particles,
                                       double      step) const;
 };
 
@@ -150,7 +150,6 @@ class Domain_Transporter_DMM :
     typedef Physics<Geometry_t>                        Physics_t;
     typedef cuda_utils::Space_Vector                   Space_Vector;
     typedef typename Geometry_t::Geo_State_t           Geo_State_t;
-    typedef Particle<Geometry_t>                       Particle_t;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;
@@ -162,7 +161,6 @@ class Domain_Transporter_DMM :
     //! Smart pointers.
     typedef cuda::Shared_Device_Ptr<Geometry_t>       SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>        SDP_Physics;
-    typedef cuda::Shared_Device_Ptr<Particle_t>       SDP_Particle;
     typedef cuda::Shared_Device_Ptr<VR_Roulette_t>    SDP_VR;
     typedef cuda::Shared_Device_Ptr<Tallier_t>        SDP_Tallier;
     //@}

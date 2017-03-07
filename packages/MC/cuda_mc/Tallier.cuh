@@ -12,7 +12,7 @@
 #define cuda_mc_Tallier_cuh
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 #include "Physics.cuh"
 #include "Cell_Tally.cuh"
 #include "Keff_Tally.cuh"
@@ -38,11 +38,11 @@ class Tallier
   public:
     //@{
     //! Typedefs.
-    typedef Geometry                Geometry_t;
-    typedef Physics<Geometry_t>     Physics_t;
-    typedef Particle<Geometry_t>    Particle_t;
-    typedef Cell_Tally<Geometry_t>  Cell_Tally_t;
-    typedef Keff_Tally<Geometry_t>  Keff_Tally_t;
+    typedef Geometry                    Geometry_t;
+    typedef Physics<Geometry_t>         Physics_t;
+    typedef Particle_Vector<Geometry_t> Particle_Vector_t;
+    typedef Cell_Tally<Geometry_t>      Cell_Tally_t;
+    typedef Keff_Tally<Geometry_t>      Keff_Tally_t;
     //@}
 
   private:
@@ -74,10 +74,11 @@ class Tallier
     // >>> DEVICE-SIDE TALLY OPERATIONS
 
     // Process path-length tally events.
-    __device__ void path_length(double step, const Particle_t &p);
+    __device__ void path_length(double step, int pid,
+                                const Particle_Vector_t &particles);
 
     // Tally any source events.
-    __device__ void source(const Particle_t &p);
+    __device__ void source(int pid, const Particle_Vector_t &particles);
 
     // Perform all end-history tally tasks.
     __device__ void end_history();

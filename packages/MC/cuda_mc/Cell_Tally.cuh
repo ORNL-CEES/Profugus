@@ -17,7 +17,7 @@
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "cuda_utils/Device_Memory_Manager.hh"
 #include "Physics.cuh"
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 
 namespace cuda_mc
 {
@@ -43,7 +43,7 @@ class Cell_Tally
     //! Typedefs.
     typedef Geometry                            Geometry_t;
     typedef Physics<Geometry>                   Physics_t;
-    typedef Particle<Geometry>                  Particle_t;
+    typedef Particle_Vector<Geometry>           Particle_Vector_t;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>  SDP_Physics;
     typedef thrust::device_vector<double>       Dev_Dbl;
@@ -86,7 +86,8 @@ class Cell_Tally
     // >>> ON-DEVICE FUNCTIONS
 
     // Accumulate tally for this history
-    __device__ void accumulate(double step, const Particle_t &p);
+    __device__ void accumulate(double step, int pid,
+                               const Particle_Vector_t &particles);
 
     // Finalize for history
     // Null-op here because we're not computing a variance
@@ -110,7 +111,6 @@ class Cell_Tally_DMM : public cuda::Device_Memory_Manager<Cell_Tally<Geometry>>
     //! Typedefs.
     typedef Geometry                            Geometry_t;
     typedef Physics<Geometry>                   Physics_t;
-    typedef Particle<Geometry>                  Particle_t;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>  SDP_Physics;
     typedef thrust::device_vector<double>       Dev_Dbl;

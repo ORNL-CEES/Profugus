@@ -22,14 +22,16 @@ namespace cuda_mc
  * \brief Track particle and tally..
  */
 template <class Geometry>
-__device__ void Cell_Tally<Geometry>::accumulate(double            step,
-                                                 const Particle_t &p)
+__device__ void Cell_Tally<Geometry>::accumulate(
+        double                   step,
+        int                      pid,
+        const Particle_Vector_t &particles)
 {
     DEVICE_REQUIRE( step >= 0.0 );
-    DEVICE_REQUIRE( p.alive() );
+    DEVICE_REQUIRE( particles.alive(pid) );
 
     // Get the cell index
-    int cell = d_geometry->cell(p.geo_state());
+    int cell = d_geometry->cell(particles.geo_state(pid));
 
     int ind = cuda::utility::lower_bound( d_cells, 
                                           d_cells+d_num_cells,
@@ -39,7 +41,8 @@ __device__ void Cell_Tally<Geometry>::accumulate(double            step,
     // for the particle's cell
     if( (ind < d_num_cells) && (d_cells[ind] == cell))
     {
-        cuda::utility::atomic_add_double( &d_tally[ind], p.wt() * step );
+        cuda::utility::atomic_add_double(&d_tally[ind],
+                                         particles.wt(pid) * step );
     }
 }
 

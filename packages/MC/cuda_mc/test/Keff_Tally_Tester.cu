@@ -22,9 +22,12 @@ using namespace cuda_mc;
 typedef cuda_profugus::Mesh_Geometry     Geom;
 typedef cuda_profugus::Mesh_Geometry_DMM Geom_DMM;
 typedef cuda_utils::Space_Vector         Space_Vector;
+typedef Particle_Vector<Geom>            Particle_Vector_t;
+typedef Particle_Vector_DMM<Geom>        Particle_Vector_DMM_t;
 
 __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
                                    Geom             *geom,
+                                   Particle_Vector_t particles,
                                    int               num_groups,
                                    int               num_vals)
 {
@@ -34,15 +37,14 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
     if( tid < num_vals )
     {
         // Create particle
-        Particle<Geom> p;
-        p.set_group(tid % num_groups);
-        p.set_matid(0);
-        p.set_wt(1.0);
+        particles.set_group(tid,tid % num_groups);
+        particles.set_matid(tid,0);
+        particles.set_wt(tid,1.0);
 
         // Create and initialize RNG state
         curandState_t rng_state;
         curand_init(tid,0,0,&rng_state);
-        p.set_rng(&rng_state);
+        particles.set_rng(tid,&rng_state);
 
         // Initialize particle uniformly on [0, 1]
         double x_loc = curand_uniform_double(&rng_state);
@@ -53,20 +55,20 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
         // Direction doesn't matter
         Space_Vector dir = {1.0, 0.0, 0.0};
 
-        geom->initialize(pos,dir,p.geo_state());
+        geom->initialize(pos,dir,particles.geo_state(tid));
 
         // Tally with step length of 1.0
-        tally->accumulate(1.0,p);
+        tally->accumulate(1.0,tid,particles);
 
         // Move particle to new location
         pos[I] = curand_uniform_double(&rng_state);
         pos[J] = curand_uniform_double(&rng_state);
         pos[K] = curand_uniform_double(&rng_state);
 
-        geom->initialize(pos,dir,p.geo_state());
+        geom->initialize(pos,dir,particles.geo_state(tid));
 
         // Tally with step length of 0.5
-        tally->accumulate(0.5,p);
+        tally->accumulate(0.5,tid,particles);
     }
 }
 
@@ -112,6 +114,10 @@ void Keff_Tally_Tester::test_tally(int num_groups)
     auto tally = cuda::shared_device_ptr<Keff_Tally<Geom>>(
         sp_tally->device_instance());
 
+    // Build particles
+    Particle_Vector_DMM_t particles;
+    particles.initialize(num_particles);
+
     // Launch kernel
     std::cout << "Launching kernel" << std::endl;
     int block_size = 256;
@@ -120,6 +126,7 @@ void Keff_Tally_Tester::test_tally(int num_groups)
     {
         test_tally_kernel<<<num_blocks,block_size>>>( tally.get_device_ptr(),
                                                       sdp_geom.get_device_ptr(),
+                                                      particles.device_instance(),
                                                       sp_phys->num_groups(),
                                                       num_particles );
     }
@@ -131,6 +138,7 @@ void Keff_Tally_Tester::test_tally(int num_groups)
     {
         test_tally_kernel<<<1,num_particles%block_size>>>( tally.get_device_ptr(),
                                                            sdp_geom.get_device_ptr(),
+                                                           particles.device_instance(),
                                                            sp_phys->num_groups(),
                                                            num_particles );
     }

@@ -34,17 +34,13 @@ namespace cuda_mc
 */
 template <class Geometry>
 __device__
-auto Fission_Source<Geometry>::get_particle(
-    std::size_t tid, RNG_State_t *rng) const -> Particle_t
+void Fission_Source<Geometry>::build_particle(
+    int pid, RNG_State_t *rng, Particle_Vector_t &particles) const
 {
     DEVICE_REQUIRE(d_wt > 0.0);
 
-    // particle
-    Particle_t p;
-    DEVICE_CHECK(!p.alive());
-
     // use the global rng on this domain for the random number generator
-    p.set_rng(rng);
+    particles.set_rng(pid,rng);
 
     // material id
     int matid = 0;
@@ -60,35 +56,34 @@ auto Fission_Source<Geometry>::get_particle(
     if (!is_initial_source())
     {
         // get the corresponding element in the site container
-        const Fission_Site &fs = d_fission_sites[tid];
+        const Fission_Site &fs = d_fission_sites[pid];
 
         // intialize the geometry state
-        d_geometry->initialize(fs.r, omega, p.geo_state());
+        d_geometry->initialize(fs.r, omega, particles.geo_state(pid));
 
         // get the material id
-        matid = d_geometry->matid(p.geo_state());
+        matid = d_geometry->matid(particles.geo_state(pid));
 
         // initialize the physics state at the fission site
-        bool sampled = d_physics->initialize_fission(fs, p);
+        bool sampled = d_physics->initialize_fission(fs, pid, particles);
         DEVICE_CHECK(sampled);
     }
     else
     {
         Space_Vector r;
-        matid = sample_geometry(r, omega, p, rng);
+        matid = sample_geometry(r, omega, pid, particles, rng);
     }
 
     // set the material id in the particle
-    p.set_matid(matid);
+    particles.set_matid(pid,matid);
 
     // set particle weight
-    p.set_wt(d_wt);
+    particles.set_wt(pid,d_wt);
 
     // make particle alive
-    p.live();
+    particles.live(pid);
 
-    DEVICE_ENSURE(p.matid() == matid);
-    return p;
+    DEVICE_ENSURE(particles.matid(pid) == matid);
 }
 
 //---------------------------------------------------------------------------//
@@ -99,7 +94,8 @@ template <class Geometry>
 __device__
 int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
                                               const Space_Vector &omega,
-                                              Particle_t         &p,
+                                              int                 pid,
+                                              Particle_Vector_t  &particles,
                                               RNG_State_t        *rng) const
 {
     using def::I; using def::J; using def::K;
@@ -124,14 +120,14 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
         r[K] = d_width[K] * curand_uniform_double(rng) + d_lower[K];
 
         // intialize the geometry state
-        d_geometry->initialize(r, omega, p.geo_state());
+        d_geometry->initialize(r, omega, particles.geo_state(pid));
 
         // get the material id
-        matid = d_geometry->matid(p.geo_state());
+        matid = d_geometry->matid(particles.geo_state(pid));
 
         // try initializing fission here, if it is successful we are
         // finished
-        if (d_physics->initialize_fission(matid, p))
+        if (d_physics->initialize_fission(matid, pid, particles))
         {
             sampled = true;
         }

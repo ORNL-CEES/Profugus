@@ -16,7 +16,7 @@
 #include "cuda_geometry/Cartesian_Mesh.hh"
 #include "Fission_Rebalance.hh"
 #include "Physics.cuh"
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 #include "RNG_Control.cuh"
 #include "Source.cuh"
 #include "Definitions.hh"
@@ -77,7 +77,7 @@ class Fission_Source
     typedef Geometry                                Geometry_t;
     typedef Physics<Geometry_t>                     Physics_t;
     typedef cuda::Device_View_Field<Fission_Site>   Fission_Site_View;
-    typedef Particle<Geometry_t>                    Particle_t;
+    typedef Particle_Vector<Geometry_t>             Particle_Vector_t;
     typedef cuda_utils::Space_Vector                Space_Vector;
     typedef RNG_Control::RNG_State_t                RNG_State_t;
     typedef def::size_type                          size_type;
@@ -129,8 +129,8 @@ class Fission_Source
     // >>> DERIVED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    __device__ inline Particle_t get_particle(
-        std::size_t idx, RNG_State_t *rng) const;
+    __device__ inline void build_particle(
+        int pid, RNG_State_t *rng, Particle_Vector_t &particles) const;
 
   private:
     // >>> IMPLEMENTATION
@@ -138,7 +138,7 @@ class Fission_Source
     // Sample the geometry.
     __device__ inline
     int sample_geometry(Space_Vector &r, const Space_Vector &omega,
-                        Particle_t &p, RNG_State_t *rng) const;
+                        int pid, Particle_Vector_t &p, RNG_State_t *rng) const;
 
 };
 
@@ -160,7 +160,6 @@ class Fission_Source_DMM : public Source<Geometry>,
     typedef Physics<Geometry_t>                     Physics_t;
     typedef std::vector<Fission_Site>               Host_Fission_Sites;
     typedef thrust::device_vector<Fission_Site>     Device_Fission_Sites;
-    typedef Particle<Geometry_t>                    Particle_t;
     typedef cuda_utils::Space_Vector                Space_Vector;
     typedef RNG_Control::RNG_State_t                RNG_State_t;
     typedef cuda::Shared_Device_Ptr<Geometry>       SDP_Geometry;

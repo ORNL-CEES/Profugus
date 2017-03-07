@@ -28,15 +28,15 @@ class Compute_Source
 {
   public:
 
-    typedef cuda_mc::RNG_State_t     RNG_State;
-    typedef Particle<Geometry>       Particle_t;
-    typedef def::size_type           size_type;
+    typedef cuda_mc::RNG_State_t        RNG_State;
+    typedef Particle_Vector<Geometry>   Particle_Vector_t;
+    typedef def::size_type              size_type;
 
-    Compute_Source( const Src_Type  source,
-                    RNG_State      *rngs,
-                    Particle_t     *particles,
-                    const int      *indices,
-                    size_type       num_particles)
+    Compute_Source( const Src_Type    source,
+                    RNG_State        *rngs,
+                    Particle_Vector_t particles,
+                    const int        *indices,
+                    size_type         num_particles)
         : d_source(source)
         , d_rngs(rngs)
         , d_particles(particles)
@@ -45,21 +45,21 @@ class Compute_Source
     {
     }
 
-    __device__ void operator()( std::size_t tid ) const
+    __device__ void operator()( std::size_t tid )
     {
-        DEVICE_REQUIRE(d_indices[tid] < d_num_particles);
-        d_particles[d_indices[tid]] =
-            d_source.get_particle(tid,&d_rngs[tid]);
-        DEVICE_ENSURE( d_particles[tid].alive() );
+        int pid = d_indices[tid];
+        DEVICE_REQUIRE(pid < d_num_particles);
+        d_source.build_particle(pid,&d_rngs[tid],d_particles);
+        DEVICE_ENSURE( d_particles.alive(pid) );
     }
 
   private:
 
-    const Src_Type  d_source;
-    RNG_State      *d_rngs;
-    Particle_t     *d_particles;
-    const int      *d_indices;
-    size_type       d_num_particles;
+    const Src_Type     d_source;
+    RNG_State         *d_rngs;
+    Particle_Vector_t  d_particles;
+    const int         *d_indices;
+    size_type          d_num_particles;
 };
     
 
@@ -69,12 +69,12 @@ class Compute_Source
 template <class Geometry>
 void Source_Provider<Geometry>::get_particles(
     SP_Source source, SP_RNG_Control rng_control, 
-    Particle_Vector &particles, const Index_Vector &indices) const
+    SP_Particle_Vector_DMM particles, const Index_Vector &indices) const
 {
     // Get particle count and set up RNG, particles, source batching
     size_type Np = std::min(source->num_left(),indices.size());
     rng_control->initialize(Np);
-    particles.resize(Np);
+    particles->initialize(Np);
     source->begin_batch(Np);
 
     // Determine type of source
@@ -119,7 +119,7 @@ template <class Src_Type>
 void Source_Provider<Geometry>::get_particles_impl(
         Src_Type                   &source,
         SP_RNG_Control              rng_control,
-        Particle_Vector             &particles,
+        SP_Particle_Vector_DMM      particles,
         const Index_Vector          &indices,
         size_type                    Np) const
 {
@@ -127,7 +127,7 @@ void Source_Provider<Geometry>::get_particles_impl(
     auto &rngs = rng_control->get_states();
     Compute_Source<Geometry,Src_Type> f( source,
                                          rngs.data().get(),
-                                         particles.data().get(),
+                                         particles->device_instance(),
                                          indices.data().get(),
                                          Np);
 

@@ -23,7 +23,7 @@
 #include "utils/Definitions.hh"
 #include "xs/XS.hh"
 #include "mc/Definitions.hh"
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 #include "Definitions.hh"
 
 namespace cuda_mc
@@ -58,9 +58,8 @@ class Physics
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
     typedef typename Geometry_t::Geo_State_t    Geo_State_t;
-    typedef Particle<Geometry_t>                Particle_t;
+    typedef Particle_Vector<Geometry_t>         Particle_Vector_t;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
-    typedef std::shared_ptr<Particle_t>         SP_Particle;
     typedef cuda_profugus::XS_Device            XS_Dev_t;
     typedef cuda::Shared_Device_Ptr<XS_Dev_t>   SDP_XS_Dev;
     typedef profugus::XS                        XS_t;
@@ -101,23 +100,27 @@ class Physics
     }
 
     // Get a total cross section from the physics library.
-    __device__ double total(Reaction_Type type, const Particle_t &p) const;
+    __device__ double total(Reaction_Type type, int pid,
+                            const Particle_Vector_t &particles) const;
 
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process a particle through a physical collision.
-    __device__ void collide(Particle_t &particle) const;
+    __device__ void collide(int pid, Particle_Vector_t &particles) const;
 
     // Sample fission site.
-    __device__ int sample_fission_site(const Particle_t   &p,
-                                             double        keff) const;
+    __device__ int sample_fission_site(int                        pid,
+                                       const Particle_Vector_t   &particles,
+                                             double               keff) const;
 
     // Sample fission spectrum and initialize the physics state.
-    __device__ bool initialize_fission(unsigned int matid, Particle_t &p) const;
+    __device__ bool initialize_fission(unsigned int matid, int pid,
+                                       Particle_Vector_t &particles) const;
 
     // Initialize a physics state at a fission site.
     __device__ bool initialize_fission(const Fission_Site &fs,
-                                             Particle_t   &p) const;
+                                       int                 pid,
+                                       Particle_Vector_t  &particles) const;
 
     // Return whether a given material is fissionable
     __device__ bool is_fissionable(unsigned int matid) const

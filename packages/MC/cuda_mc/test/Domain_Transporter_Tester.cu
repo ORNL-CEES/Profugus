@@ -22,15 +22,18 @@ using namespace cuda_mc;
 
 typedef cuda_profugus::Mesh_Geometry      Geom;
 typedef cuda_profugus::Mesh_Geometry_DMM  Geom_DMM;
-typedef cuda_mc::Uniform_Source<Geom>     Uniform_Src;
-typedef cuda_mc::Uniform_Source_DMM<Geom> Uniform_Src_DMM;
-typedef cuda_mc::Domain_Transporter<Geom> Transporter;
-typedef cuda_mc::Domain_Transporter_DMM<Geom> Transporter_DMM;
+typedef Uniform_Source<Geom>              Uniform_Src;
+typedef Uniform_Source_DMM<Geom>          Uniform_Src_DMM;
+typedef Domain_Transporter<Geom>          Transporter;
+typedef Domain_Transporter_DMM<Geom>      Transporter_DMM;
+typedef Particle_Vector<Geom>             Particle_Vector_t;
+typedef Particle_Vector_DMM<Geom>         Particle_Vector_DMM_t;
 
-__global__ void test_transport_kernel( Uniform_Src *source,
-                                       Transporter *trans,
-                                       int         *events,
-                                       int          num_particles )
+__global__ void test_transport_kernel( Uniform_Src       *source,
+                                       Transporter       *trans,
+                                       Particle_Vector_t  particles,
+                                       int               *events,
+                                       int                num_particles )
 {
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_particles )
@@ -40,13 +43,13 @@ __global__ void test_transport_kernel( Uniform_Src *source,
          curand_init(tid,0,0,&rng_state);
 
          // Get particle from source
-         auto p = source->get_particle(tid,&rng_state);
+         source->build_particle(tid,&rng_state,particles);
 
          // Transport particle
-         trans->transport(p);
+         trans->transport(tid,particles);
 
          // Get final event
-         events[tid] = p.event();
+         events[tid] = particles.event(tid);
      }
 }
 
@@ -95,11 +98,16 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
     auto sdp_source = cuda::shared_device_ptr<Uniform_Src>(
             sp_source->device_instance());
 
+    // Build particles
+    Particle_Vector_DMM_t particles;
+    particles.initialize(num_particles);
+
     // Allocate data on device
     thrust::device_vector<int> device_events(num_particles);
 
     test_transport_kernel<<<1,num_particles>>>( sdp_source.get_device_ptr(),
                                                 transp.get_device_ptr(),
+                                                particles.device_instance(),
                                                 device_events.data().get(),
                                                 num_particles );
 

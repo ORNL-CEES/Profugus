@@ -18,7 +18,7 @@
 #include "cuda_utils/Shared_Device_Ptr.hh"
 #include "cuda_utils/Device_Memory_Manager.hh"
 #include "Physics.cuh"
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 
 namespace cuda_mc
 {
@@ -42,8 +42,8 @@ class Keff_Tally
 {
   public:
 
-    typedef Physics<Geometry>   Physics_t;
-    typedef Particle<Geometry>  Particle_t;
+    typedef Physics<Geometry>           Physics_t;
+    typedef Particle_Vector<Geometry>   Particle_Vector_t;
 
   private:
     // >>> DEVICE-SIDE DATA
@@ -64,7 +64,8 @@ class Keff_Tally
     // >>> ON-DEVICE INTERFACE
 
     // Track particle and do tallying.
-    __device__ void accumulate(double step, const Particle_t &p);
+    __device__ void accumulate(double step, int pid,
+                               const Particle_Vector_t &particles);
 
     // End history (null-op because we're only accumulating first moments)
     __device__ void end_history(){}
@@ -82,7 +83,6 @@ class Keff_Tally_DMM : public cuda::Device_Memory_Manager<Keff_Tally<Geometry>>
 {
   public:
     typedef Physics<Geometry>                   Physics_t;
-    typedef Particle<Geometry>                  Particle_t;
     typedef cuda::Shared_Device_Ptr<Physics_t>  SDP_Physics;
 
     //@{

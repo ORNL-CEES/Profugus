@@ -25,16 +25,18 @@ namespace cuda_mc
  * \param p particle
  */
 template <class Geometry>
-__device__ void Tallier<Geometry>::path_length(double            step,
-                                               const Particle_t &p)
+__device__ void Tallier<Geometry>::path_length(
+        double                   step,
+        int                      pid,
+        const Particle_Vector_t &particles)
 {
     DEVICE_REQUIRE(step >= 0.0);
 
     // accumulate results for all pathlength tallies
     if (d_cell_tally)
-        d_cell_tally->accumulate(step, p);
+        d_cell_tally->accumulate(step, pid, particles);
     if (d_keff_tally)
-        d_keff_tally->accumulate(step, p);
+        d_keff_tally->accumulate(step, pid, particles);
 }
 
 //---------------------------------------------------------------------------//
@@ -44,7 +46,7 @@ __device__ void Tallier<Geometry>::path_length(double            step,
  * \param p particle
  */
 template <class Geometry>
-__device__ void Tallier<Geometry>::source(const Particle_t &p)
+__device__ void Tallier<Geometry>::source(int pid, const Particle_Vector_t &p)
 {
 }
 

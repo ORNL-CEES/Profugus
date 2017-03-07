@@ -25,9 +25,12 @@ typedef profugus::XS                        XS_t;
 typedef cuda_profugus::Mesh_Geometry        Geom;
 typedef cuda_profugus::Mesh_Geometry_DMM    Geom_DMM;
 typedef cuda_utils::Space_Vector            Space_Vector;
+typedef Particle_Vector<Geom>               Particle_Vector_t;
+typedef Particle_Vector_DMM<Geom>           Particle_Vector_DMM_t;
 
 __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
                                    Geom             *geom,
+                                   Particle_Vector_t particles,
                                    int               num_vals,
                                    int               seed)
 {
@@ -37,16 +40,15 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
      if( tid < num_vals )
      {
          // Create particle
-         Particle<Geom> p;
-         p.set_group(0);
-         p.set_matid(0);
-         p.set_wt(1.0);
-         p.live();
+         particles.set_group(tid,0);
+         particles.set_matid(tid,0);
+         particles.set_wt(tid,1.0);
+         particles.live(tid);
 
          // Create and initialize RNG state
          curandState_t rng_state;
          curand_init(seed,tid,0,&rng_state);
-         p.set_rng(&rng_state);
+         particles.set_rng(tid,&rng_state);
          
          // Initialize particle uniformly on [0, 1]
          double x_loc = curand_uniform_double(&rng_state);
@@ -57,20 +59,20 @@ __global__ void test_tally_kernel( Cell_Tally<Geom> *tally,
          // Direction doesn't matter
          Space_Vector dir = {1.0, 0.0, 0.0};
 
-         geom->initialize(pos,dir,p.geo_state());
+         geom->initialize(pos,dir,particles.geo_state(tid));
 
          // Tally with step length of 1.0
-         tally->accumulate(1.0,p);
+         tally->accumulate(1.0,tid,particles);
 
          // Move particle to new location
          pos[I] = curand_uniform_double(&rng_state);
          pos[J] = curand_uniform_double(&rng_state);
          pos[K] = curand_uniform_double(&rng_state);
 
-         geom->initialize(pos,dir,p.geo_state());
+         geom->initialize(pos,dir,particles.geo_state(tid));
 
          // Tally with step length of 0.5
-         tally->accumulate(0.5,p);
+         tally->accumulate(0.5,tid,particles);
      }
 }
 
@@ -113,6 +115,10 @@ void Cell_Tally_Tester::test_tally(int num_batches)
     auto tally = cuda::shared_device_ptr<Cell_Tally<Geom>>(
         sp_tally_dmm->device_instance());
 
+    // build particles
+    Particle_Vector_DMM_t particles;
+    particles.initialize(num_particles);
+
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     for (int batch = 0; batch < num_batches; ++batch)
@@ -125,6 +131,7 @@ void Cell_Tally_Tester::test_tally(int num_batches)
         {
             test_tally_kernel<<<num_blocks,block_size>>>(
                 tally.get_device_ptr(), sdp_geom.get_device_ptr(),
+                particles.device_instance(),
                 num_particles, batch);
         }
 

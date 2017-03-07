@@ -24,12 +24,13 @@ typedef cuda_profugus::Mesh_Geometry        Geometry;
 typedef cuda_profugus::Mesh_Geometry_DMM    Geometry_DMM;
 typedef Uniform_Source<Geometry>            Uniform_Src;
 typedef Uniform_Source_DMM<Geometry>        Uniform_Src_DMM;
-typedef Particle<Geometry>                  Particle_t;
+typedef Particle_Vector<Geometry>           Particle_Vector_t;
 
-__global__ void compute_source_kernel( Uniform_Src   source,
-                                       Space_Vector *pts,
-                                       Space_Vector *dirs,
-                                       int           num_vals )
+__global__ void compute_source_kernel( Uniform_Src       source,
+                                       Particle_Vector_t particles,
+                                       Space_Vector     *pts,
+                                       Space_Vector     *dirs,
+                                       int               num_vals )
 {
      using def::I; using def::J; using def::K;
 
@@ -39,16 +40,16 @@ __global__ void compute_source_kernel( Uniform_Src   source,
          curandState_t rng;
          curand_init( 345, tid, 0, &rng );
 
-         auto p = source.get_particle(tid,&rng);
+         source.build_particle(tid,&rng,particles);
 
-         auto geo_state = p.geo_state();
+         auto geo_state = particles.geo_state(tid);
          pts[tid]  = geo_state.d_r;
          dirs[tid] = geo_state.d_dir;
      }
 }
 
 // Extract data from particles
-__global__ void extract_data( Particle_t         *parts,
+__global__ void extract_data( Particle_Vector_t   parts,
                               Space_Vector       *pts,
                               Space_Vector       *dirs,
                               int                 N )
@@ -58,9 +59,7 @@ __global__ void extract_data( Particle_t         *parts,
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < N )
     {
-        auto p = parts[tid];
-
-        auto geo_state = p.geo_state();
+        auto geo_state = parts.geo_state(tid);
         pts[tid]  = geo_state.d_r;
         dirs[tid] = geo_state.d_dir;
     }
@@ -197,6 +196,10 @@ void Uniform_Source_Tester::test_source()
     Uniform_Src_DMM source(db,geom);
     source.build_source(src_shape);
 
+    // Build particle vector
+    Particle_Vector_DMM<Geometry> particles;
+    particles.initialize(Np);
+
     // Allocate device vectors
     thrust::device_vector<Space_Vector> device_pts(Np);
     thrust::device_vector<Space_Vector> device_dirs(Np);
@@ -204,6 +207,7 @@ void Uniform_Source_Tester::test_source()
     // Launch kernel
     std::cout << "Launching kernel with " << Np << " particles" << std::endl;
     compute_source_kernel<<<1,Np>>>(source.device_instance(),
+                                    particles.device_instance(),
                                     device_pts.data().get(),
                                     device_dirs.data().get(), Np);
     REQUIRE( cudaGetLastError() == cudaSuccess );
@@ -243,7 +247,8 @@ void Uniform_Source_Tester::test_host_api()
     auto rng_control = std::make_shared<cuda_mc::RNG_Control>(1234);
 
     // Get vector of particles from source
-    thrust::device_vector<Particle<Geometry>> particles;
+    auto particles = std::make_shared<Particle_Vector_DMM<Geometry>>();
+    particles->initialize(Np);
 
     cuda_mc::Source_Provider<Geometry> provider;
     thrust::device_vector<int> indices(Np);
@@ -251,14 +256,14 @@ void Uniform_Source_Tester::test_host_api()
     thrust::copy(cnt,cnt+indices.size(),indices.begin());
     provider.get_particles(source_host,rng_control,particles,indices);
 
-    EXPECT_EQ( particles.size(), Np );
+    EXPECT_EQ( particles->size(), Np );
     EXPECT_EQ( source_host->num_to_transport(), Np );
 
     // Extract data from particles
     thrust::device_vector<Space_Vector> pts(Np);
     thrust::device_vector<Space_Vector> dirs(Np);
 
-    extract_data<<<1,Np>>>( particles.data().get(),
+    extract_data<<<1,Np>>>( particles->device_instance(),
                             pts.data().get(),
                             dirs.data().get(),
                             Np );

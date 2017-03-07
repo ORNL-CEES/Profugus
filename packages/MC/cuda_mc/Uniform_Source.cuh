@@ -18,7 +18,7 @@
 #include "cuda_utils/Device_View_Field.hh"
 #include "Box_Shape.cuh"
 #include "Source.cuh"
-#include "Particle.cuh"
+#include "Particle_Vector.cuh"
 #include "Definitions.hh"
 
 #include "Teuchos_ParameterList.hpp"
@@ -58,7 +58,7 @@ class Uniform_Source
     //@{
     //! Typedefs.
     typedef Geometry                              Geometry_t;
-    typedef Particle<Geometry>                    Particle_t;
+    typedef Particle_Vector<Geometry>             Particle_Vector_t;
     typedef cuda_utils::Space_Vector              Space_Vector;
     typedef def::size_type                        size_type;
     typedef cuda::const_Device_View_Field<double> Double_View;
@@ -89,8 +89,8 @@ class Uniform_Source
     // >>> REQUIRED PUBLIC INTERFACE
 
     // Get a particle from the source.
-    __device__ inline Particle_t get_particle(
-        std::size_t idx, RNG_State_t *rng) const;
+    __device__ inline void build_particle(
+        int idx, RNG_State_t *rng, Particle_Vector_t &particles) const;
 
     // >>> CLASS ACCESSORS
 
@@ -115,12 +115,10 @@ class Uniform_Source_DMM : public Source<Geometry>,
     typedef Source<Geometry>                     Base;
     typedef Geometry                             Geometry_t;
     typedef Teuchos::RCP<Teuchos::ParameterList> RCP_Std_DB;
-    typedef Particle<Geometry>                   Particle_t;
     typedef cuda_utils::Space_Vector             Space_Vector;
     typedef std::shared_ptr<Box_Shape>           SP_Shape;
     typedef cuda::Shared_Device_Ptr<Box_Shape>   SDP_Shape;
     typedef cuda::Shared_Device_Ptr<Geometry_t>  SDP_Geometry;
-    typedef std::shared_ptr<Particle_t>          SP_Particle;
     typedef def::Vec_Dbl                         Vec_Dbl;
     typedef def::size_type                       size_type;
     typedef thrust::device_vector<double>        Device_Dbl;
