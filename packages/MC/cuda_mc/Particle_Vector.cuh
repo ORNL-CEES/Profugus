@@ -11,7 +11,7 @@
 #ifndef MC_cuda_mc_Particle_Vector_cuh
 #define MC_cuda_mc_Particle_Vector_cuh
 
-#define USE_AOS 1
+#define USE_AOS 0
 
 #if USE_AOS
 
@@ -28,6 +28,18 @@ using Particle_Vector_DMM = Particle_Vector_AOS_DMM<Geom>;
 } // end namespace mc
 
 #else
+
+#include "Particle_Vector_SOA.cuh"
+
+namespace cuda_mc
+{
+template <class Geom>
+using Particle_Vector = Particle_Vector_SOA<Geom>;
+
+template <class Geom>
+using Particle_Vector_DMM = Particle_Vector_SOA_DMM<Geom>;
+
+} // end namespace mc
 
 #endif
 
