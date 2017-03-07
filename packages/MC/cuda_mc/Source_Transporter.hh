@@ -25,12 +25,12 @@
 #include "cuda_utils/CudaDBC.hh"
 
 #include "Definitions.hh"
+#include "Particle_Vector.cuh"
 
 namespace cuda_mc
 {
 
 // Forward declarations to avoid including Cuda headers
-template <class Geom> class Particle_Vector_DMM;
 template <class Geom> class Physics;
 template <class Geom> class Domain_Transporter_DMM;
 template <class Geom> class Tallier_DMM;
