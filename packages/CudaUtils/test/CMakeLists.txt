@@ -47,6 +47,7 @@ IF(USE_CUDA)
     Stream_Test_Kernel.cu
     Texture_Vector_Test_Kernel.cu
     Utility_Functions_Tester.cu
+    Work_Pool_Tester.cu
     )
 
   PACKAGE_ADD_CUDA_LIBRARY(
@@ -86,6 +87,7 @@ ADD_UTILS_TEST(tstUtility_Functions.cc          NP 1 ${DEPS})
 IF(USE_CUDA)
   ADD_UTILS_TEST(tstBLAS_Handle.cc        NP 1        )
   ADD_UTILS_TEST(tstDevice_Vector_Lite.cc NP 1 ${DEPS})
+  ADD_UTILS_TEST(tstWork_Pool.cc          NP 1 ${DEPS})
 ENDIF()
 
 ##---------------------------------------------------------------------------##
