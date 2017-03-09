@@ -298,7 +298,6 @@ __device__ inline void cartesian_vector_transform(
     vector_normalize(vector);
 }
 
-
 /*!
  * \brief Perform warp-wide all-reduce sum.
  */
@@ -314,9 +313,38 @@ __device__ inline T warpAllReduceSum(T val)
  * \brief Perform warp-local broadcast
  */
 template <class T>
-__device__ inline void warpBroadcast(T &val)
+__device__ inline void warpBroadcast(T &val, int src = 0)
 {
-    val = __shfl(val, 0);
+    val = __shfl(val, src);
+}
+
+/*!
+ * \brief Perform warp-local exlusive prefix sum (scan) and overall sum
+ */
+template <class T>
+__device__ inline void warpScan(T oldval, T &newval, T &warpsum)
+{
+    int lane_id = threadIdx.x % warpSize;
+    newval = oldval;
+
+    // Now accumulate in log2(32) steps
+    for (int i = 1; i < warpSize; i*=2)
+    {
+        T tmpval = __shfl_up(newval, i);
+        if (lane_id >= i)
+            newval += tmpval;
+    }
+    // Currently we have an inclusive sum
+    // Final warp value is sum
+    warpsum = newval;
+    warpBroadcast(warpsum,warpSize-1);
+
+    // Now shuffle values up a lane
+    newval = __shfl_up(newval,1);
+
+    // Explicitly set lane 0 value to zero
+    if (lane_id == 0)
+        newval = 0;
 }
 
 } // end namespace utility
