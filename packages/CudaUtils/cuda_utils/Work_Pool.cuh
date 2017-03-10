@@ -92,8 +92,6 @@ class Work_Pool
     __device__ void consolidate()
     {
         // Perform warp scan on current active indices
-        int warp_id = threadIdx.x / warpSize;
-
         int lane = threadIdx.x % warpSize;
         int work_sum = 0;
         for (int i = 0; i < work_per_thread(); ++i)
