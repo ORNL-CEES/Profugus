@@ -24,6 +24,7 @@
 
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Launch_Args.t.cuh"
+#include "cuda_utils/Work_Pool.cuh"
 #include "harness/Diagnostics.hh"
 #include "utils/String_Functions.hh"
 #include "comm/global.hh"
@@ -53,22 +54,31 @@ class Transport_Functor
     // Constructor
     Transport_Functor( const Transporter_t     *trans,
                              Particle_Vector_t  particles,
-                       const int               *inds )
+                             cuda::Work_Pool    pool )
         : d_transporter(trans)
         , d_particles(particles)
-        , d_inds(inds)
+        , d_pool(pool)
     {
     }
 
     // Operator apply for functor (transport 1 particle)
     __device__ void operator()( std::size_t tid )
     {
-        // Get particle index
-        int pid = d_inds[tid];
-        DEVICE_CHECK(d_particles.alive(pid));
+        // Initialize work pool
+        d_pool.initialize();
 
-        // transport the particle through this (replicated) domain
-        d_transporter->transport(pid,d_particles);
+        for (int i = 0; i < d_pool.work_per_thread(); ++i)
+        {
+            // Get particle index
+            int pid = d_pool.work_id(i);
+            if (pid >= 0 && pid < d_particles.size())
+            {
+                DEVICE_CHECK(d_particles.alive(pid));
+
+                // transport the particle through this (replicated) domain
+                d_transporter->transport(pid,d_particles);
+            }
+        }
     }
 
   private:
@@ -76,7 +86,7 @@ class Transport_Functor
     // On-device pointers
     const Transporter_t *d_transporter;
     Particle_Vector_t    d_particles;
-    const int           *d_inds;
+    cuda::Work_Pool      d_pool;
 };
 
 template <class Geometry>
@@ -352,13 +362,16 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         launch_args.set_block_size(d_block_size);
         launch_args.set_num_elements(num_particles_left);
 
+        // Build work pool
+        cuda::Work_Pool_DMM pool(indirection);
+
         // Build and execute kernel
         cudaDeviceSynchronize();
         start = std::chrono::high_resolution_clock::now();
         Transport_Functor<Geometry> f(
                 sdp_transporter.get_device_ptr(), 
                 d_particle_vec->device_instance(),
-                indirection.data().get() );
+                pool.device_instance());
         cuda::parallel_launch( f, launch_args );
         REQUIRE(cudaSuccess == cudaGetLastError());
         cudaDeviceSynchronize();
@@ -418,6 +431,9 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         auto itr = thrust::find( event.begin(),
                 event.begin() + num_particles_left, INT_MAX);
         num_particles_left = itr - event.begin();
+
+        indirection.resize(num_particles_left);
+        event.resize(num_particles_left);
 
         cudaDeviceSynchronize();
         end = std::chrono::high_resolution_clock::now();
