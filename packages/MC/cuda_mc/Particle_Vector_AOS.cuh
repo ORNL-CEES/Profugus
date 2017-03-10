@@ -53,7 +53,7 @@ class Particle_Vector_AOS
     }
 
     // Number of particles currently allocated
-    int size() const {return d_particles.size();}
+    __device__ int size() const {return d_particles.size();}
 
     // >>> PARTICLE FUNCTIONS
 

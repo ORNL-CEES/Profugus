@@ -70,7 +70,7 @@ class Particle_Vector_SOA
     }
 
     // Number of particles currently allocated
-    int size() const {return d_matids.size();}
+    __device__ int size() const {return d_matids.size();}
 
     // >>> PARTICLE FUNCTIONS
 
