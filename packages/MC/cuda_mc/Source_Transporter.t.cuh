@@ -116,7 +116,7 @@ void Source_Transporter<Geometry>::solve()
     // is no need to communicate particles because the problem is replicated
     int num_alive = d_source->num_to_transport();
     int sort_size = d_vector_size;
-    while ( !d_source->empty() || (num_alive > 0) )
+    while ( !d_source->empty() || num_alive > 0 )
     {
         // Get the sort size.
         sort_size = (d_source->empty()) ? num_alive : d_vector_size;
@@ -131,12 +131,22 @@ void Source_Transporter<Geometry>::solve()
         transport_step_future.get();
         process_step_future.get();
 
+        // Before we sort, cultivate the dead particles if needed.
+        if ( d_source->empty() &&
+             num_alive < particles.get_host_ptr()->size() / 2 )
+        {
+            particles.get_host_ptr()->cultivate();
+        }
+
         // Sort the vector. This happens on the default stream and therefore
         // effectively synchronizes the device after events have run.
-        particles.get_host_ptr()->sort_by_event( sort_size );
+        {
+            SCOPED_TIMER("CUDA_MC::Particle_Vector.sort_by_event");
+            particles.get_host_ptr()->sort_by_event( sort_size );
+        }
 
         // Get the number of particles that are alive.
-        num_alive = d_vector_size -
+        num_alive = particles.get_host_ptr()->size() -
                     particles.get_host_ptr()->get_event_size( events::DEAD );
 
         // update the event counter
