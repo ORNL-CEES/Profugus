@@ -42,7 +42,9 @@
 namespace cuda_mc
 {
 
+//---------------------------------------------------------------------------//
 // Functor to transport source particles
+//---------------------------------------------------------------------------//
 template <class Geometry>
 class Transport_Functor
 {
@@ -67,17 +69,28 @@ class Transport_Functor
         // Initialize work pool
         d_pool.initialize();
 
-        for (int i = 0; i < d_pool.work_per_thread(); ++i)
+        while (d_pool.work_per_thread() > 0)
         {
-            // Get particle index
-            int pid = d_pool.work_id(i);
-            if (pid >= 0 && pid < d_particles.size())
+            for (int i = 0; i < d_pool.work_per_thread(); ++i)
             {
-                DEVICE_CHECK(d_particles.alive(pid));
+                // Get particle index
+                DEVICE_CHECK(i < d_pool.work_per_thread());
+                int pid = d_pool.work_id(i);
+                if (pid >= 0 && pid < d_particles.size())
+                {
+                    DEVICE_CHECK(d_particles.alive(pid));
 
-                // transport the particle through this (replicated) domain
-                d_transporter->transport(pid,d_particles);
+                    // transport the particle through this (replicated) domain
+                    d_transporter->transport(pid,d_particles);
+
+                    // Inactivate dead particles
+                    if (!d_particles.alive(pid))
+                        d_pool.set_inactive(i);
+                }
             }
+
+            // Consolidate
+            d_pool.consolidate();
         }
     }
 
@@ -89,14 +102,19 @@ class Transport_Functor
     cuda::Work_Pool      d_pool;
 };
 
+//---------------------------------------------------------------------------//
+// Functor for retrieving alive state of particle
+//---------------------------------------------------------------------------//
 template <class Geometry>
 struct GetAlive
 {
     typedef Particle_Vector<Geometry> Particle_Vector_t;
+    typedef cuda::const_Device_View_Field<int> const_Int_View;
+    typedef cuda::Device_View_Field<int>       Int_View;
 
     GetAlive(const Particle_Vector_t  particles,
-             const int               *indirection,
-                   int               *alive)
+             const_Int_View           indirection,
+                   Int_View           alive)
         : d_particles(particles)
         , d_indirection(indirection)
         , d_alive(alive)
@@ -105,29 +123,38 @@ struct GetAlive
 
     __device__ void operator()(std::size_t tid)
     {
-        int pid = d_indirection[tid];
-        if (d_particles.alive(pid))
-            d_alive[tid] = 1;
-        else
-            d_alive[tid] = INT_MAX;
+        if (tid < d_indirection.size())
+        {
+            int pid = d_indirection[tid];
+            DEVICE_CHECK(pid < d_particles.size());
+            if (d_particles.alive(pid))
+                d_alive[tid] = 1;
+            else
+                d_alive[tid] = INT_MAX;
+        }
     }
 
   private:
 
     const Particle_Vector_t  d_particles;
-    const int               *d_indirection;
-    int                     *d_alive;
+    const_Int_View           d_indirection;
+    Int_View                 d_alive;
 
 };
 
+//---------------------------------------------------------------------------//
+// Functor for retrieving matid of particle
+//---------------------------------------------------------------------------//
 template <class Geometry>
 struct GetMatid
 {
     typedef Particle_Vector<Geometry> Particle_Vector_t;
+    typedef cuda::const_Device_View_Field<int> const_Int_View;
+    typedef cuda::Device_View_Field<int>       Int_View;
 
     GetMatid(const Particle_Vector_t particles,
-             const int              *indirection,
-                   int              *matids)
+             const_Int_View          indirection, 
+                   Int_View          matids)
         : d_particles(particles)
         , d_indirection(indirection)
         , d_matids(matids)
@@ -136,29 +163,38 @@ struct GetMatid
 
     __device__ void operator()(std::size_t tid)
     {
-        int pid = d_indirection[tid];
-        if (d_particles.alive(pid))
-            d_matids[tid] = d_particles.matid(pid);
-        else
-            d_matids[tid] = INT_MAX;
+        if (tid < d_indirection.size())
+        {
+            int pid = d_indirection[tid];
+            DEVICE_CHECK(pid < d_particles.size());
+            if (d_particles.alive(pid))
+                d_matids[tid] = d_particles.matid(pid);
+            else
+                d_matids[tid] = INT_MAX;
+        }
     }
 
   private:
 
     const Particle_Vector_t  d_particles;
-    const int      *d_indirection;
-    int            *d_matids;
+    const_Int_View  d_indirection;
+    Int_View        d_matids;
 
 };
 
+//---------------------------------------------------------------------------//
+// Functor for retrieving group of particle
+//---------------------------------------------------------------------------//
 template <class Geometry>
 struct GetGroup
 {
     typedef Particle_Vector<Geometry> Particle_Vector_t;
+    typedef cuda::const_Device_View_Field<int> const_Int_View;
+    typedef cuda::Device_View_Field<int>       Int_View;
 
     GetGroup(const Particle_Vector_t particles,
-             const int              *indirection,
-                   int              *groups)
+             const_Int_View          indirection,
+                   Int_View          groups)
         : d_particles(particles)
         , d_indirection(indirection)
         , d_groups(groups)
@@ -167,30 +203,39 @@ struct GetGroup
 
     __device__ void operator()(std::size_t tid)
     {
-        int pid = d_indirection[tid];
-        if (d_particles.alive(pid))
-            d_groups[tid] = d_particles.group(pid);
-        else
-            d_groups[tid] = INT_MAX;
+        if (tid < d_indirection.size())
+        {
+            int pid = d_indirection[tid];
+            DEVICE_CHECK(pid < d_particles.size());
+            if (d_particles.alive(pid))
+                d_groups[tid] = d_particles.group(pid);
+            else
+                d_groups[tid] = INT_MAX;
+        }
     }
 
   private:
 
     const Particle_Vector_t  d_particles;
-    const int               *d_indirection;
-    int                     *d_groups;
+    const_Int_View           d_indirection;
+    Int_View                 d_groups;
 
 };
 
+//---------------------------------------------------------------------------//
+// Functor for retrieving cell of particle
+//---------------------------------------------------------------------------//
 template <class Geometry>
 struct GetCell
 {
     typedef Particle_Vector<Geometry> Particle_Vector_t;
+    typedef cuda::const_Device_View_Field<int> const_Int_View;
+    typedef cuda::Device_View_Field<int>       Int_View;
 
     GetCell(const Particle_Vector_t   particles,
             const Geometry           *geometry,
-            const int                *indirection,
-                  int                *cells)
+            const_Int_View            indirection,
+                  Int_View            cells)
         : d_particles(particles)
         , d_geometry(geometry)
         , d_indirection(indirection)
@@ -200,19 +245,23 @@ struct GetCell
 
     __device__ void operator()(std::size_t tid)
     {
-        int pid = d_indirection[tid];
-        if (d_particles.alive(pid))
-            d_cells[tid] = d_geometry->cell(d_particles.geo_state(pid));
-        else
-            d_cells[tid] = INT_MAX;
+        if (tid < d_indirection.size())
+        {
+            int pid = d_indirection[tid];
+            DEVICE_CHECK(pid < d_particles.size());
+            if (d_particles.alive(pid))
+                d_cells[tid] = d_geometry->cell(d_particles.geo_state(pid));
+            else
+                d_cells[tid] = INT_MAX;
+        }
     }
 
   private:
 
     const Particle_Vector_t  d_particles;
     const Geometry           *d_geometry;
-    const int                *d_indirection;
-    int                      *d_cells;
+    const_Int_View            d_indirection;
+    Int_View                  d_cells;
 };
 
 
@@ -360,7 +409,12 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         // Build launch args
         cuda::Launch_Args<cuda::arch::Device> launch_args;
         launch_args.set_block_size(d_block_size);
-        launch_args.set_num_elements(num_particles_left);
+
+        // Make launch a multiple of cuda warp size
+        int num_threads = num_particles_left;
+        if (num_threads % 32)
+            num_threads = (num_particles_left / 32 + 1) * 32;
+        launch_args.set_num_elements(num_threads);
 
         // Build work pool
         cuda::Work_Pool_DMM pool(indirection);
@@ -372,6 +426,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
                 sdp_transporter.get_device_ptr(), 
                 d_particle_vec->device_instance(),
                 pool.device_instance());
+
         cuda::parallel_launch( f, launch_args );
         REQUIRE(cudaSuccess == cudaGetLastError());
         cudaDeviceSynchronize();
@@ -389,8 +444,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
             {
                 GetAlive<Geometry> alive_func(
                         d_particle_vec->device_instance(),
-                        indirection.data().get(),
-                        event.data().get());
+                        cuda::make_view(indirection),
+                        cuda::make_view(event));
                 cuda::parallel_launch( alive_func, launch_args );
                 break;
             }
@@ -398,8 +453,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
             {
                 GetMatid<Geometry> matid_func(
                         d_particle_vec->device_instance(),
-                        indirection.data().get(),
-                        event.data().get());
+                        cuda::make_view(indirection),
+                        cuda::make_view(event));
                 cuda::parallel_launch( matid_func, launch_args );
                 break;
             }
@@ -407,8 +462,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
             {
                 GetGroup<Geometry> group_func(
                         d_particle_vec->device_instance(),
-                        indirection.data().get(),
-                        event.data().get());
+                        cuda::make_view(indirection),
+                        cuda::make_view(event));
                 cuda::parallel_launch( group_func, launch_args );
                 break;
             }
@@ -417,8 +472,8 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
                 GetCell<Geometry> cell_func(
                         d_particle_vec->device_instance(),
                         d_geometry.get_device_ptr(),
-                        indirection.data().get(),
-                        event.data().get());
+                        cuda::make_view(indirection),
+                        cuda::make_view(event));
                 cuda::parallel_launch( cell_func, launch_args );
                 break;
             }
