@@ -71,21 +71,18 @@ class Work_Pool
 
         // Get id of warp
         int tid = cuda::utility::thread_id();
-        int warp_id = tid / warpSize;
+        int warp_id    = tid     / warpSize;
+        int warp_start = warp_id * warpSize;
 
-        // Determine number of indices and offset for this warp
-        d_warp_num_work = d_indices.size() / num_warps;
-        int extra_work  = d_indices.size() % num_warps;
-        d_warp_begin = warp_id * d_warp_num_work;
-        if (warp_id < extra_work)
+        int num_work = d_indices.size();
+        d_warp_num_work = 0;
+        while (num_work > 0)
         {
-            d_warp_begin += warp_id;
-            d_warp_num_work++;
+            if (warp_start < num_work)
+                d_warp_num_work += min(warpSize,num_work-warp_start);
+            num_work -= num_threads;
         }
-        else
-        {
-            d_warp_begin += extra_work;
-        }
+        d_warp_begin = warp_id * warpSize * work_per_thread();
     }
 
     // Consolidate active indices
@@ -164,13 +161,15 @@ class Work_Pool
     // Get global index for this thread given a work index
     __device__ int work_id(int index) const
     {
-        DEVICE_REQUIRE(index < work_per_thread());
-
         int lane = threadIdx.x % warpSize;
         int work_id = lane + index * warpSize;
         int id = -1;
-        if (work_id < d_warp_num_work && d_active[work_id+d_warp_begin])
-            id = d_indices[work_id+d_warp_begin];
+        if ((work_id < d_warp_num_work))
+        {
+            DEVICE_CHECK(work_id+d_warp_begin < d_active.size());
+            if (d_active[work_id+d_warp_begin])
+                id = d_indices[work_id+d_warp_begin];
+        }
         return id;
     }
 };
