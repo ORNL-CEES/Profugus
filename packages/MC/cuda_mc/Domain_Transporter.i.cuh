@@ -117,6 +117,7 @@ void Domain_Transporter<Geometry>::transport(int                pid,
         // any future events go here ...
         num_steps++;
     }
+    DEVICE_ENSURE(!particles.alive(pid) || num_steps == d_max_steps);
 }
 
 //---------------------------------------------------------------------------//
