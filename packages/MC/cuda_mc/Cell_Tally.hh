@@ -68,26 +68,29 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Database
     RCP_Std_DB d_db;
 
+    // Storage for first and second moments of tally result
+    std::vector<double> d_first, d_second;
+
   public:
 
     // >>> HOST API
 
     // Constructor
     Cell_Tally( RCP_Std_DB db,
-                const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
+                const cuda_utils::Shared_Device_Ptr<Geometry>& geometry,
 		const int num_batch );
-    
+
     // Destructor.
     ~Cell_Tally();
 
     // Get the number of cells in the tally.
     int num_cells() const { return d_num_cells; }
-    
+
     // Get the number of batches in the tally.
     int num_batch() const { return d_num_batch; }
 
     // Tally the particles in a vector.
-    void accumulate( 
+    void accumulate(
 	const cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles ) override;
 
     // Query if this tally is on during inactive cycles.
@@ -95,6 +98,16 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
 
     // Finalize the tally.
     void finalize( double num_particles ) override;
+
+    // Copy the first and second tally moments from the device to the
+    // host. The moments are lazy-evaluated in this function and indexed by
+    // cell.
+    void copy_moments_to_host( Teuchos::Array<double>& first_moment,
+			       Teuchos::Array<double>& second_moment ) const
+    {
+        first_moment = d_first;
+        second_moment = d_second;
+    }
 };
 
 //---------------------------------------------------------------------------//

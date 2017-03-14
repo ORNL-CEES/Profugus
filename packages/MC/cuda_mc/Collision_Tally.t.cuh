@@ -26,11 +26,17 @@ namespace cuda_profugus
 //---------------------------------------------------------------------------//
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
+
+namespace
+{
+
 // Initialize the tally to zero
 __global__ void init_tally_kernel( const int size, double* tally )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) tally[idx] = 0.0;
+}
+
 }
 
 //---------------------------------------------------------------------------//

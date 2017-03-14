@@ -191,18 +191,19 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     physics_tester.sample_group( cdf );
     physics_tester.particle_tester().live();
     physics_tester.particle_tester().set_batch( 0 );
-    Teuchos::Array<cuda_profugus::events::Event> events( 
+    Teuchos::Array<cuda_profugus::events::Event> events(
         Np, cuda_profugus::events::TAKE_STEP );
     physics_tester.particle_tester().set_event( events );
     physics_tester.particle_tester().sort_by_event();
 
     // make a tallier
-    std::shared_ptr<Tallier_t> tallier = std::make_shared<Tallier_t>();    
+    std::shared_ptr<Tallier_t> tallier = std::make_shared<Tallier_t>();
 
     // add a cell tally
     int num_batch = 1;
-    std::shared_ptr<Cell_Tally_t> cell_tally = 
-        std::make_shared<Cell_Tally_t>( physics_tester.geometry(), num_batch );
+    std::shared_ptr<Cell_Tally_t> cell_tally =
+        std::make_shared<Cell_Tally_t>( this->db, physics_tester.geometry(),
+                                        num_batch );
     tallier->add_pathlength_tally( cell_tally );
     tallier->build();
 

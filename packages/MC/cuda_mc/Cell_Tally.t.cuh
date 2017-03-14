@@ -32,11 +32,17 @@ namespace cuda_profugus
 //---------------------------------------------------------------------------//
 // CUDA KERNELS
 //---------------------------------------------------------------------------//
+
+namespace
+{
+
 // Initialize the tally to zero
 __global__ void init_tally_kernel( const int size, double* tally )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size ) tally[idx] = 0.0;
+}
+
 }
 
 //---------------------------------------------------------------------------//
@@ -169,37 +175,37 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
     }    
 
     // Calculate the first moment.
-    std::vector<double> first( d_num_cells, 0.0 );
+    d_first.resize( d_num_cells, 0.0 );
     for ( int c = 0; c < d_num_cells; ++c )
     {
         for ( int b = 0; b < d_num_batch; ++b )
         {
-            first[ c ] += batch_results[ b * d_num_cells + c ];
+            d_first[ c ] += batch_results[ b * d_num_cells + c ];
         }
     }
-    profugus::global_sum(first.data(), first.size());
+    profugus::global_sum(d_first.data(), d_first.size());
     for ( int c = 0; c < d_num_cells; ++c )
       {
-        first[ c ] /= total_num_batch;
+        d_first[ c ] /= total_num_batch;
       }      
 
     // Calculate the second moment (standard deviation).
-    std::vector<double> second( d_num_cells, 0.0 );
+    d_second.resize( d_num_cells, 0.0 );
     for ( int c = 0; c < d_num_cells; ++c )
     {
         for ( int b = 0; b < d_num_batch; ++b )
         {
-            second[ c ] += batch_results[ b * d_num_cells + c ] *
+            d_second[ c ] += batch_results[ b * d_num_cells + c ] *
                            batch_results[ b * d_num_cells + c ];
         }
     }
-    profugus::global_sum(second.data(), second.size());
+    profugus::global_sum(d_second.data(), d_second.size());
     for ( int c = 0; c < d_num_cells; ++c )
     {
-      second[ c ] /= total_num_batch;
-      second[ c ] -= first[c]*first[c];
-      second[ c ] /= total_num_batch - 1;
-      second[ c ] = std::sqrt( second[ c ] );
+      d_second[ c ] /= total_num_batch;
+      d_second[ c ] -= d_first[c]*d_first[c];
+      d_second[ c ] /= total_num_batch - 1;
+      d_second[ c ] = std::sqrt( d_second[ c ] );
     }
     
     
@@ -223,14 +229,14 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
     // Reorder vectors
     {
         std::vector<int>    tmp_cells  = cells;
-        std::vector<double> tmp_first  = first;
-        std::vector<double> tmp_second = second;
+        std::vector<double> tmp_first  = d_first;
+        std::vector<double> tmp_second = d_second;
         for (int i = 0; i < cell_map.size(); ++i)
         {
             int ind = cell_map[i];
             cells[i]  = tmp_cells[ind];
-            first[i]  = tmp_first[ind];
-            second[i] = tmp_second[ind];
+            d_first[i]  = tmp_first[ind];
+            d_second[i] = tmp_second[ind];
         }
     }
 
@@ -241,8 +247,8 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
     profugus::Serial_HDF5_Writer writer;
     writer.open(filename);
     writer.write("cells",cells);
-    writer.write("flux_mean",first);
-    writer.write("flux_std_dev",second);
+    writer.write("flux_mean",d_first);
+    writer.write("flux_std_dev",d_second);
     writer.close();
 #endif
 }

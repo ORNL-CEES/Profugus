@@ -194,15 +194,16 @@ TYPED_TEST(SourceTransporterTest, fixed_source)
     auto vr = std::make_shared<VR_Roulette_t>( *(this->db) );
 
     // make a tallier
-    std::shared_ptr<Tallier_t> tallier = std::make_shared<Tallier_t>();    
+    std::shared_ptr<Tallier_t> tallier = std::make_shared<Tallier_t>();
 
     // add a cell tally
     int num_batch = 2;
-    auto cell_tally = 
-        std::make_shared<Cell_Tally_t>( physics_tester.geometry(), num_batch );
+    auto cell_tally =
+        std::make_shared<Cell_Tally_t>( this->db, physics_tester.geometry(),
+                                        num_batch );
     tallier->add_pathlength_tally( cell_tally );
     tallier->build();
-    
+
     // create a source.
     auto shape = physics_tester.source_shape();
     auto source = std::make_shared<Uniform_Source_t>( this->db,
@@ -213,7 +214,7 @@ TYPED_TEST(SourceTransporterTest, fixed_source)
 
     // create a source transporter
     profugus::Global_RNG::d_rng = this->rng;
-    Source_Transporter_t transporter( 
+    Source_Transporter_t transporter(
         this->db, physics_tester.geometry(), physics_tester.physics() );
     transporter.set( vr );
     transporter.set( tallier );
@@ -256,16 +257,16 @@ TYPED_TEST(SourceTransporterTest, fission_source)
     auto vr = std::make_shared<VR_Roulette_t>( *(this->db) );
 
     // make a tallier
-    std::shared_ptr<Tallier_t> tallier = std::make_shared<Tallier_t>();    
+    std::shared_ptr<Tallier_t> tallier = std::make_shared<Tallier_t>();
 
     // add a keff tally
     double keff_init = 1.01;
-    auto keff_tally = 
+    auto keff_tally =
         std::make_shared<Keff_Tally_t>( keff_init, physics_tester.physics(), vector_size);
     keff_tally->begin_active_cycles();
     tallier->add_pathlength_tally( keff_tally );
     tallier->build();
-    
+
     // create a source.
     auto shape = physics_tester.source_shape();
     auto source = std::make_shared<Fission_Source_t>( this->db,
@@ -279,7 +280,7 @@ TYPED_TEST(SourceTransporterTest, fission_source)
 
     // create a source transporter
     profugus::Global_RNG::d_rng = this->rng;
-    Source_Transporter_t transporter( 
+    Source_Transporter_t transporter(
         this->db, physics_tester.geometry(), physics_tester.physics() );
     transporter.set( vr );
     transporter.set( tallier );
@@ -298,7 +299,7 @@ TYPED_TEST(SourceTransporterTest, fission_source)
     // Look at fission sites.
     for ( auto fs : *fsites )
     {
-        std::cout << "Fsite: " << fs.m << ", " 
+        std::cout << "Fsite: " << fs.m << ", "
                   << fs.r.x << " "
                   << fs.r.y << " "
                   << fs.r.z << std::endl;

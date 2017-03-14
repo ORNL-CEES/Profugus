@@ -51,7 +51,8 @@ class CellTallyTest : public ::testing::Test
         build_geometry();
         build_physics();
 
-        tally = std::make_shared<Cell_Tally>(physics);
+        db->set<std::string>("problem_name",std::string("cell_tally_test"));
+        tally = std::make_shared<Cell_Tally>(db,physics);
     }
 
     void build_geometry()
