@@ -24,6 +24,7 @@
 #include "cuda_utils/Utility_Functions.hh"
 #include "cuda_utils/Definitions.hh"
 #include "comm/global.hh"
+#include "comm/Timing.hh"
 #include "mc/Global_RNG.hh"
 
 namespace cuda_profugus
@@ -469,6 +470,8 @@ void Fission_Source<Geometry>::get_particles(
     REQUIRE(d_wt > 0.0);
     REQUIRE( particles.get_host_ptr()->size() == d_vector_size );
 
+    SCOPED_TIMER("CUDA_MC::Fission_Source::get_particles");
+
     // do nothing if no source
     if (!d_np_left)
     {
@@ -510,6 +513,8 @@ void Fission_Source<Geometry>::get_particles(
 	sample_geometry(
 	    particles, num_to_create, num_blocks, threads_per_block );
     }
+
+    cudaStreamSynchronize(d_stream.handle());
 
     // update counters
     d_np_left -= num_to_create;

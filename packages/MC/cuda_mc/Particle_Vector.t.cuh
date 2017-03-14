@@ -263,6 +263,8 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
                                                           d_event_bounds,
                                                           d_event_bins,
                                                           d_lid );
+
+    cudaDeviceSynchronize();
 }
 
 //---------------------------------------------------------------------------//

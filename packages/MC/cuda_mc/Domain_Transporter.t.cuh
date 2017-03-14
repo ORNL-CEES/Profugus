@@ -14,6 +14,7 @@
 #include <cmath>
 
 #include "utils/Constants.hh"
+#include "comm/Timing.hh"
 #include "cuda_utils/CudaDBC.hh"
 #include "geometry/Definitions.hh"
 #include "cuda_utils/Hardware.hh"
@@ -284,6 +285,8 @@ void Domain_Transporter<Geometry>::transport_step(
     REQUIRE(d_geometry);
     REQUIRE(d_physics);
 
+    SCOPED_TIMER("CUDA_MC::Domain_Transporter::transport_step");
+
     // get the particles that will take a step
     int num_particle =
         particles.get_host_ptr()->get_event_size( events::TAKE_STEP );
@@ -301,6 +304,8 @@ void Domain_Transporter<Geometry>::transport_step(
         d_physics.get_device_ptr(),
         num_particle,
         particles.get_device_ptr() );
+
+    cudaStreamSynchronize(d_take_step_stream.handle());
 }
 
 //---------------------------------------------------------------------------//
@@ -314,6 +319,8 @@ void Domain_Transporter<Geometry>::process_step(
 {
     REQUIRE(d_tallier);
 
+    SCOPED_TIMER("CUDA_MC::Domain_Transporter::process_step");
+
     // Do pathlength tallies. This call blocks on this thread so we tally
     // before moving on to boundaries and collisions.
     d_tallier->path_length( particles );
@@ -323,6 +330,9 @@ void Domain_Transporter<Geometry>::process_step(
 
     // Process boundaries
     process_boundary( particles, bank );
+
+    cudaStreamSynchronize(d_collision_stream.handle());
+    cudaStreamSynchronize(d_boundary_stream.handle());
 }
 
 //---------------------------------------------------------------------------//

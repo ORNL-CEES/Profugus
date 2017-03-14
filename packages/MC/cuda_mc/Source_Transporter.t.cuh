@@ -130,6 +130,8 @@ void Source_Transporter<Geometry>::solve()
         // Wait on the events.
         for ( auto& f : futures ) f.get();
 
+        cudaDeviceSynchronize();
+
         // Sort the vector. This happens on the default stream and therefore
         // effectively synchronizes the device after events have run.
         particles.get_host_ptr()->sort_by_event( sort_size );
