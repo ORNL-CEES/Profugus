@@ -84,7 +84,7 @@ __global__ void initialize_kernel( const double* energy,
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
     // this kernel updates all particles
-    if ( idx < particles->original_size() )
+    if ( idx < particles->size() )
     {
 	// check to make sure the energy is in the group structure and get the
 	// group index

@@ -51,54 +51,40 @@ class Particle_Vector
   private:
     // >>> DATA
 
-    // Original number of particles in the vector.
-    int d_original_size;
-
-    // Current number of particles in the vector.
+    // Number of particles in the vector.
     int d_size;
 
     // Material id in current region.
-    thrust::device_vector<int> d_matid_vec;
     int* d_matid;
 
     // Particle group index.
-    thrust::device_vector<int> d_group_vec;
     int* d_group;
 
     // Particle weight.
-    thrust::device_vector<double> d_wt_vec;
     double* d_wt;
 
     // Random number generator.
-    thrust::device_vector<curandState> d_rng_vec;
     curandState* d_rng;
 
     // Alive/dead status.
-    thrust::device_vector<bool> d_alive_vec;
     bool* d_alive;
 
     // Particle geometric state.
-    thrust::device_vector<Geo_State_t> d_geo_state_vec;
     Geo_State_t* d_geo_state;
 
     // Latest particle event.
-    thrust::device_vector<Event_t> d_event_vec;
     Event_t* d_event;
 
     // Particle statistical batch id.
-    thrust::device_vector<int> d_batch_vec;
     int* d_batch;
 
     // Distance of last particle step.
-    thrust::device_vector<double> d_step_vec;
     double* d_step;
 
     // Distance to next collision in mean-free-paths.
-    thrust::device_vector<double> d_dist_mfp_vec;
     double* d_dist_mfp;
 
     // Event indices.
-    thrust::device_vector<int> d_event_indices_vec;
     int* d_event_indices;
 
     // Number of particles with a given event. Host only.
@@ -120,6 +106,9 @@ class Particle_Vector
     // Constructor
     Particle_Vector( const int num_particle, const profugus::RNG& rng );
     
+    // Destructor.
+    ~Particle_Vector();
+
     // Sort the local indices by event key, effectively sorting the vector
     // using the default stream.
     void sort_by_event( const int sort_size );
@@ -127,30 +116,25 @@ class Particle_Vector
     // Get the number of particles with a given event on the host.
     int get_event_size( const events::Event event ) const;
 
-    // Clear dead particles from the vector.
-    void cultivate();
-
-    //! Get the number of particles in the vector.
-    int size() const { return d_size; }
-
     // >>> DEVICE API
 
-    //! Get the original number of particles in the vector.
-    PROFUGUS_DEVICE_FUNCTION
-    int original_size() const { return d_original_size; }
+    //! Get the number of particles in the vector.
+    PROFUGUS_HOST_DEVICE_FUNCTION
+    int size() const { return d_size; }
 
     //! Get the particle indices with a given event.
     PROFUGUS_DEVICE_FUNCTION
     int* event_indices( const events::Event event ) const
     {
         REQUIRE( event < events::END_EVENT );
-        return d_event_indices + event*d_original_size;
+        return d_event_indices + event*d_size;
     }
 
     //! Get a uniform random number on [0,1] from a particle's RNG.
     PROFUGUS_DEVICE_FUNCTION
     double ran( const std::size_t i )
     {
+	REQUIRE( i < d_size );
 	return curand_uniform( &d_rng[i] );
     }
 
@@ -158,6 +142,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_wt( const std::size_t i, const double wt ) const 
     { 
+	REQUIRE( i < d_size );
 	d_wt[i] = wt; 
     }
 
@@ -165,6 +150,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void multiply_wt( const std::size_t i, const double wt ) const 
     { 
+	REQUIRE( i < d_size );
 	d_wt[i] *= wt; 
     }
 
@@ -172,6 +158,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     double wt( const std::size_t i ) const 
     { 
+	REQUIRE( i < d_size );
 	return d_wt[i]; 
     }
 
@@ -179,6 +166,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     int group( const std::size_t i ) const 
     { 
+	REQUIRE( i < d_size );
 	return d_group[i]; 
     }
 
@@ -186,6 +174,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_group( const std::size_t i, const int group )
     { 
+	REQUIRE( i < d_size );
 	d_group[i] = group; 
     }
 
@@ -193,6 +182,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     int matid( const std::size_t i ) const 
     { 
+	REQUIRE( i < d_size );
 	return d_matid[i]; 
     }
 
@@ -200,6 +190,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_matid( const std::size_t i, const int matid )
     { 
+	REQUIRE( i < d_size );
 	d_matid[i] = matid;
     }
 
@@ -207,6 +198,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     bool alive( const std::size_t i ) const 
     { 
+	REQUIRE( i < d_size );
 	return d_alive[i]; 
     }
 
@@ -214,6 +206,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void live( const std::size_t i )
     { 
+	REQUIRE( i < d_size );
 	d_alive[i] = true; 
     }
 
@@ -221,6 +214,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void kill( const std::size_t i )
     { 
+	REQUIRE( i < d_size );
 	d_alive[i] = false; 
     }
 
@@ -228,6 +222,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     Event_t event( const std::size_t i ) const 
     { 
+	REQUIRE( i < d_size );
 	return d_event[i];
     }
 
@@ -235,6 +230,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_event( const std::size_t i, const Event_t event )
     { 
+	REQUIRE( i < d_size );
 	d_event[i] = event; 
     }
 
@@ -242,11 +238,13 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     const Geo_State_t& geo_state( const std::size_t i ) const 
     { 
+	REQUIRE( i < d_size );
 	return d_geo_state[i]; 
     }
     PROFUGUS_DEVICE_FUNCTION
     Geo_State_t& geo_state( const std::size_t i )
     { 
+	REQUIRE( i < d_size );
 	return d_geo_state[i]; 
     }
     //@}
@@ -255,6 +253,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     int batch( const std::size_t i ) const
     {
+	REQUIRE( i < d_size );
 	return d_batch[i];
     }
 
@@ -262,6 +261,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_batch( const std::size_t i, const int batch )
     {
+	REQUIRE( i < d_size );
 	d_batch[i] = batch;
     }
 
@@ -269,6 +269,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     double step( const std::size_t i ) const
     {
+	REQUIRE( i < d_size );
 	return d_step[i];
     }
 
@@ -276,6 +277,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_step( const std::size_t i, const double step )
     {
+	REQUIRE( i < d_size );
 	d_step[i] = step;
     }
 
@@ -283,6 +285,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     double dist_mfp( const std::size_t i ) const
     {
+	REQUIRE( i < d_size );
 	return d_dist_mfp[i];
     }
 
@@ -290,6 +293,7 @@ class Particle_Vector
     PROFUGUS_DEVICE_FUNCTION
     void set_dist_mfp( const std::size_t i, const double dist_mfp )
     {
+	REQUIRE( i < d_size );
 	d_dist_mfp[i] = dist_mfp;
     }
 
@@ -303,7 +307,7 @@ class Particle_Vector
         PROFUGUS_HOST_DEVICE_FUNCTION
         int operator()(const Event_t e)
         { return (e == d_event) ? 1 : 0; }
-    };    
+    };
 };
 
 //---------------------------------------------------------------------------//

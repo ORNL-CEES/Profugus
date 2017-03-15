@@ -13,6 +13,7 @@
 #include "Particle_Vector.hh"
 
 #include "cuda_utils/Hardware.hh"
+#include "cuda_utils/Memory.cuh"
 
 #include "comm/Timing.hh"
 
@@ -22,7 +23,6 @@
 #include <thrust/transform.h>
 #include <thrust/reduce.h>
 #include <thrust/execution_policy.h>
-#include <thrust/remove.h>
 
 #include <cuda_runtime.h>
 
@@ -63,35 +63,25 @@ __global__ void init_event_kernel( const std::size_t size,
 template <class Geometry>
 Particle_Vector<Geometry>::Particle_Vector( const int num_particle, 
 					    const profugus::RNG& rng )
-    : d_original_size( num_particle )
-    , d_size( num_particle )
-    , d_matid_vec( d_size )
-    , d_matid( d_matid_vec.data().get() )
-    , d_group_vec( d_size )
-    , d_group( d_group_vec.data().get() )      
-    , d_wt_vec( d_size )
-    , d_wt( d_wt_vec.data().get() )
-    , d_rng_vec( d_size )
-    , d_rng( d_rng_vec.data().get() )
-    , d_alive_vec( d_size )
-    , d_alive( d_alive_vec.data().get() )
-    , d_geo_state_vec( d_size )
-    , d_geo_state( d_geo_state_vec.data().get() )
-    , d_event_vec( d_size )
-    , d_event( d_event_vec.data().get() )
-    , d_batch_vec( d_size )
-    , d_batch( d_batch_vec.data().get() )
-    , d_step_vec( d_size )
-    , d_step( d_step_vec.data().get() )
-    , d_dist_mfp_vec( d_size )
-    , d_dist_mfp( d_dist_mfp_vec.data().get() )
-    , d_event_indices_vec( events::END_EVENT*d_size )
-    , d_event_indices( d_event_indices_vec.data().get() )
+    : d_size( num_particle )
     , d_event_sizes( events::END_EVENT, 0 )
     , d_event_lid( d_size )
     , d_event_stencil( d_size )
     , d_event_steering( d_size )
 {
+    // Allocate data arrays.
+    cuda::memory::Malloc( d_matid, d_size );
+    cuda::memory::Malloc( d_group, d_size );
+    cuda::memory::Malloc( d_wt, d_size );
+    cuda::memory::Malloc( d_rng, d_size );
+    cuda::memory::Malloc( d_alive, d_size );
+    cuda::memory::Malloc( d_geo_state, d_size );
+    cuda::memory::Malloc( d_event, d_size );
+    cuda::memory::Malloc( d_batch, d_size );
+    cuda::memory::Malloc( d_step, d_size );
+    cuda::memory::Malloc( d_dist_mfp, d_size );
+    cuda::memory::Malloc( d_event_indices, events::END_EVENT*d_size );
+
     // Get CUDA launch parameters.
     REQUIRE( cuda::Hardware<cuda::arch::Device>::have_acquired() );
     unsigned int threads_per_block = 
@@ -104,11 +94,16 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     for ( auto& s : host_seeds ) s = rng.uniform<int>();
 
     // Copy the seeds to the device.
-    thrust::device_vector<int> device_seeds( host_seeds );
+    int* device_seeds = NULL;
+    cuda::memory::Malloc( device_seeds, d_size );
+    cuda::memory::Copy_To_Device( device_seeds, host_seeds.data(), d_size );
 
     // Initialize the generators.
     init_rng_kernel<<<num_blocks,threads_per_block>>>( 
-	d_size, device_seeds.data().get(), d_rng );
+	d_size, device_seeds, d_rng );
+
+    // Deallocate the device seeds.
+    cuda::memory::Free( device_seeds );
 
     // Initialize all particles to DEAD.
     init_event_kernel<<<num_blocks,threads_per_block>>>( 
@@ -119,10 +114,28 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Setup the local id vector for sorting.
     thrust::device_vector<int> lid( d_size, 1 );
-    thrust::exclusive_scan( lid.begin(), lid.begin() + d_size, d_event_lid.begin() );
+    thrust::exclusive_scan( lid.begin(), lid.end(), d_event_lid.begin() );
 
     // Do the first sort to initialize particle event state.
     sort_by_event( d_size );
+}
+    
+//---------------------------------------------------------------------------//
+// Destructor.
+template <class Geometry>
+Particle_Vector<Geometry>::~Particle_Vector()
+{
+    cuda::memory::Free( d_matid );
+    cuda::memory::Free( d_group );
+    cuda::memory::Free( d_wt );
+    cuda::memory::Free( d_rng );
+    cuda::memory::Free( d_alive );
+    cuda::memory::Free( d_geo_state );
+    cuda::memory::Free( d_event );
+    cuda::memory::Free( d_batch );
+    cuda::memory::Free( d_step );
+    cuda::memory::Free( d_dist_mfp );
+    cuda::memory::Free( d_event_indices );
 }
 
 //---------------------------------------------------------------------------//
@@ -130,8 +143,14 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 template <class Geometry>
 void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
 {
+    SCOPED_TIMER("CUDA_MC::Particle_Vector.sort_by_event");
+
     REQUIRE( sort_size <= d_size );
 
+    // Get pointers to the event array.
+    thrust::device_ptr<events::Event> event_begin( d_event );
+    thrust::device_ptr<events::Event> event_end( d_event + d_size );
+    
     // Create a stencil functor.
     Stencil_Functor stencil_functor;
 
@@ -141,15 +160,15 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
         // Create the stencil vector.
         stencil_functor.d_event = static_cast<events::Event>(e);
         thrust::transform( thrust::device,
-                           d_event_vec.begin(),
-                           d_event_vec.begin()+d_size, 
+                           event_begin, 
+                           event_end, 
                            d_event_stencil.begin(),
                            stencil_functor );
 
         // Get the number of particles with this event.
         d_event_sizes[e] = thrust::reduce( thrust::device,
                                            d_event_stencil.begin(),
-                                           d_event_stencil.begin() + d_size );
+                                           d_event_stencil.end() );
 
         // If some particles had this event then extract their indices.
         if ( d_event_sizes[e] > 0 )
@@ -157,19 +176,17 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
             // Create the steering vector.
             thrust::exclusive_scan( thrust::device,
                                     d_event_stencil.begin(),
-                                    d_event_stencil.begin() + d_size,
+                                    d_event_stencil.end(),
                                     d_event_steering.begin() );
 
-            // Scatter the particles into the event indices. Indices will
-            // always be strided by the original vector size to ensure
-            // consistency between host and device.
+            // Scatter the particles into the event indices.
             thrust::scatter_if(
                 thrust::device,
                 d_event_lid.begin(),
-                d_event_lid.begin() + d_size,
+                d_event_lid.end(),
                 d_event_steering.begin(),
                 d_event_stencil.begin(),
-                d_event_indices_vec.begin() + e*d_original_size );
+                thrust::device_ptr<int>(d_event_indices + e*d_size) );
         }
     }
 }
@@ -180,71 +197,6 @@ template<class Geometry>
 int Particle_Vector<Geometry>::get_event_size( const events::Event event ) const
 {
     return d_event_sizes[ event ];
-}
-
-//---------------------------------------------------------------------------//
-// Clear dead particles from the vector.
-template<class Geometry>
-void Particle_Vector<Geometry>::cultivate()
-{
-    // Create a stencil functor for dead particles.
-    Stencil_Functor dead_stencil;
-    dead_stencil.d_event = events::DEAD;
-
-    // Cultivate the dead.
-    thrust::remove_if( d_matid_vec.begin(), 
-                       d_matid_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_group_vec.begin(), 
-                       d_group_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_wt_vec.begin(), 
-                       d_wt_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_rng_vec.begin(), 
-                       d_rng_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_alive_vec.begin(), 
-                       d_alive_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_geo_state_vec.begin(), 
-                       d_geo_state_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_batch_vec.begin(), 
-                       d_batch_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_step_vec.begin(), 
-                       d_step_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    thrust::remove_if( d_dist_mfp_vec.begin(), 
-                       d_dist_mfp_vec.begin() + d_size, 
-                       d_event_vec.begin(), 
-                       dead_stencil );
-
-    // Events are last so we don't destroy the stencil until were are done
-    // with it.
-    auto event_it = thrust::remove_if( d_event_vec.begin(),
-                                       d_event_vec.begin() + d_size,
-                                       dead_stencil );
-    
-    // Update the current vector size.
-    d_size = thrust::distance( d_event_vec.begin(), event_it );
 }
 
 //---------------------------------------------------------------------------//
