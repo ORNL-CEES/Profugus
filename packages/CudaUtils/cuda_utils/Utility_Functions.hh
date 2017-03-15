@@ -36,6 +36,18 @@ struct less_than
 };
 
 //---------------------------------------------------------------------------//
+// Upper bound comparator
+template<class T>
+struct upper_bound_comp
+{
+    PROFUGUS_DEVICE_FUNCTION
+    bool operator() ( const T& a, const T& b ) const
+    {
+	return !(b < a);
+    }
+};
+
+//---------------------------------------------------------------------------//
 // Greater than comparator.
 template<class T>
 struct greater_than

@@ -48,15 +48,15 @@ __global__ void accumulate_kernel( const Physics<Geometry>* phyiscs,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int collision_start = particles->event_lower_bound( events::COLLISION );
-    int boundary_start = particles->event_lower_bound( events::BOUNDARY );
+    int* collision_indices = particles->event_indices( events::COLLISION );
+    int* boundary_indices = particles->event_indices( events::BOUNDARY );
 
     if ( idx < num_collision + num_boundary )
     {
 	// Get the particle index.
 	int pidx = ( idx < num_collision )
-		   ? idx + collision_start
-		   : idx - num_collision + boundary_start;
+		   ? collision_indices[idx]
+		   : boundary_indices[idx - num_collision];
     
 	// Tally keff
 	keff[idx] += particles->wt(pidx) * particles->step(pidx) *

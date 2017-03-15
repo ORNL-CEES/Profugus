@@ -99,8 +99,10 @@ void Source_Transporter<Geometry>::solve()
     cuda_utils::Shared_Device_Ptr<typename Transporter_t::Bank_t> bank;
 
     // make a particle vector
+    int solve_vector_size = std::min( static_cast<int>(d_vector_size), 
+                                      d_source->num_to_transport() );
     auto particles = cuda_utils::shared_device_ptr<Particle_Vector<Geometry> >(
-        d_vector_size, profugus::Global_RNG::d_rng );
+        solve_vector_size, profugus::Global_RNG::d_rng );
 
     // Create tasks.
     auto sample_source = [&](){ d_source->get_particles(particles); };
@@ -114,13 +116,13 @@ void Source_Transporter<Geometry>::solve()
     // particles in the vector. we know when all the particles are dead when
     // the starting point for dead events is at the front of the vector. there
     // is no need to communicate particles because the problem is replicated
-    int num_alive = d_vector_size;
-    int sort_size = d_vector_size;
+    int num_alive = solve_vector_size;
+    int sort_size = solve_vector_size;
     std::vector<std::future<void> > futures(3);
     while ( !d_source->empty() || !particles.get_host_ptr()->empty() )
     {
         // Get the sort size.
-        sort_size = (d_source->empty()) ? num_alive : d_vector_size;
+        sort_size = (d_source->empty()) ? num_alive : solve_vector_size;
 
         // Run the events.
         futures[0] = std::async( process_step );

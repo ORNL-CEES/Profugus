@@ -30,12 +30,12 @@ __global__ void post_collision_kernel( const int num_collision,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int collision_start = particles->event_lower_bound( events::COLLISION );
+    int *indices = particles->event_indices( events::COLLISION );
 
     if ( idx < num_collision )
     {
 	// Get the particle index.
-	int pidx = idx + collision_start;
+	int pidx = indices[idx];
 
 	if ( particles->alive(pidx) )
 	{

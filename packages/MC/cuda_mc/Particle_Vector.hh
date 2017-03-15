@@ -136,13 +136,20 @@ class Particle_Vector
         return d_event_bounds[ event ];
     }
 
+    //! Get the particle indices with a given event.
+    PROFUGUS_DEVICE_FUNCTION
+    int* event_indices( const events::Event event ) const
+    {
+        REQUIRE( event < events::END_EVENT );
+        return d_lid + event_lower_bound(event);
+    }
+
     //! Get a uniform random number on [0,1] from a particle's RNG.
     PROFUGUS_DEVICE_FUNCTION
     double ran( const int i )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return curand_uniform( &d_rng[ d_lid[i] ] );
+	return curand_uniform( &d_rng[i] );
     }
 
     //! Set the weight of a particle.
@@ -150,8 +157,7 @@ class Particle_Vector
     void set_wt( const int i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_wt[ d_lid[i] ] = wt; 
+	d_wt[i] = wt; 
     }
 
     //! Multiply the weight of a particle.
@@ -159,8 +165,7 @@ class Particle_Vector
     void multiply_wt( const int i, const double wt ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_wt[ d_lid[i] ] *= wt; 
+	d_wt[i] *= wt; 
     }
 
     //! Get the weight of a particle.
@@ -168,8 +173,7 @@ class Particle_Vector
     double wt( const int i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_wt[ d_lid[i] ]; 
+	return d_wt[i]; 
     }
 
     //! Get the group of a particle.
@@ -177,8 +181,7 @@ class Particle_Vector
     int group( const int i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_group[ d_lid[i] ]; 
+	return d_group[i];
     }
 
     //! Set the group of a particle.
@@ -186,8 +189,7 @@ class Particle_Vector
     void set_group( const int i, const int group )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_group[ d_lid[i] ] = group; 
+	d_group[i] = group; 
     }
 
     //! Get the matid of a particle.
@@ -195,8 +197,7 @@ class Particle_Vector
     int matid( const int i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_matid[ d_lid[i] ]; 
+	return d_matid[i]; 
     }
 
     //! Set the matid of a particle.
@@ -204,8 +205,7 @@ class Particle_Vector
     void set_matid( const int i, const int matid )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_matid[ d_lid[i] ] = matid;
+	d_matid[i] = matid;
     }
 
     //! Get the alive status of a particle.
@@ -213,8 +213,7 @@ class Particle_Vector
     bool alive( const int i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_alive[ d_lid[i] ]; 
+	return d_alive[i]; 
     }
 
     //! Set the particle status to alive.
@@ -222,8 +221,7 @@ class Particle_Vector
     void live( const int i )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_alive[ d_lid[i] ] = true; 
+	d_alive[i] = true; 
     }
 
     //! Kill a particle.
@@ -231,8 +229,7 @@ class Particle_Vector
     void kill( const int i )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_alive[ d_lid[i] ] = false; 
+	d_alive[i] = false; 
     }
 
     //! Get the event of a particle.
@@ -240,7 +237,7 @@ class Particle_Vector
     Event_t event( const int i ) const 
     { 
 	REQUIRE( i < d_size );
-	return d_event[ d_lid[i] ];
+	return d_event[i];
     }
 
     //! Set the event of a particle.
@@ -251,12 +248,12 @@ class Particle_Vector
 	REQUIRE( i < d_size );
 
         // Set the event.
-	d_event[ d_lid[i] ] = event;
+	d_event[i] = event;
 
         // Bin this particle with its event.
         int* address = &d_num_event[event];
         int bin_size = atomicAdd( address, 1 );
-        d_event_bins[ event*d_size + bin_size ] = d_lid[i];
+        d_event_bins[ event*d_size + bin_size ] = i;
 #endif
     }
 
@@ -265,15 +262,13 @@ class Particle_Vector
     const Geo_State_t& geo_state( const int i ) const 
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_geo_state[ d_lid[i] ]; 
+	return d_geo_state[i]; 
     }
     PROFUGUS_DEVICE_FUNCTION
     Geo_State_t& geo_state( const int i )
     { 
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_geo_state[ d_lid[i] ]; 
+	return d_geo_state[i]; 
     }
     //@}
 
@@ -282,8 +277,7 @@ class Particle_Vector
     int batch( const int i ) const
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_batch[ d_lid[i] ];
+	return d_batch[i];
     }
 
     //! Set the particle batch.
@@ -291,8 +285,7 @@ class Particle_Vector
     void set_batch( const int i, const int batch )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_batch[ d_lid[i] ] = batch;
+	d_batch[i] = batch;
     }
 
     //! Get the particle step.
@@ -300,8 +293,7 @@ class Particle_Vector
     double step( const int i ) const
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_step[ d_lid[i] ];
+	return d_step[i];
     }
 
     //! Set the particle step.
@@ -309,8 +301,7 @@ class Particle_Vector
     void set_step( const int i, const double step )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_step[ d_lid[i] ] = step;
+	d_step[i] = step;
     }
 
     //! Get the particle distance to collision.
@@ -318,8 +309,7 @@ class Particle_Vector
     double dist_mfp( const int i ) const
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	return d_dist_mfp[ d_lid[i] ];
+	return d_dist_mfp[i];
     }
 
     //! Set the particle distance to collision.
@@ -327,8 +317,7 @@ class Particle_Vector
     void set_dist_mfp( const int i, const double dist_mfp )
     {
 	REQUIRE( i < d_size );
-	REQUIRE( d_lid[i] < d_size );
-	d_dist_mfp[ d_lid[i] ] = dist_mfp;
+	d_dist_mfp[i] = dist_mfp;
     }
 };
 

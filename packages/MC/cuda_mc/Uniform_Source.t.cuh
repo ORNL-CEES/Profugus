@@ -47,12 +47,13 @@ void sample_source_kernel( const Geometry* geometry,
 {
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int start_idx = particles->event_lower_bound( events::DEAD );
+    int* indices = particles->event_indices( events::DEAD );
 
     if ( idx < num_particle )
     {
 	// Get the particle index.
-	int pidx = idx + start_idx;
+	int pidx = indices[idx];
+        CHECK( particles->event(pidx) == events::DEAD );
 
 	// sample the angle isotropically
 	cuda_utils::Space_Vector omega;

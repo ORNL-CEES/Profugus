@@ -14,6 +14,7 @@
 
 #include "cuda_utils/Hardware.hh"
 #include "cuda_utils/Memory.cuh"
+#include "cuda_utils/Utility_Functions.hh"
 
 #include "comm/Timing.hh"
 
@@ -68,19 +69,18 @@ __global__ void event_bounds_kernel( const int size,
     // Get the thread index.
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
 
-    // Get the lower bound.
-    event_bounds[idx] = 0;
-    for ( int i = 0; i < idx; ++i ) 
+    if ( idx < size )
     {
-        event_bounds[idx] += num_event[i];
+        // Get the lower bound.
+        event_bounds[idx] = 0;
+        for ( int i = 0; i < idx; ++i ) 
+        {
+            event_bounds[idx] += num_event[i];
+        }
+
+        // Clear the number of events.
+        num_event[idx] = 0;
     }
-
-    // Get the upper bound.
-    event_bounds[ events::END_EVENT + idx ] = 
-      event_bounds[idx] + num_event[idx];
-
-    // Clear the number of events.
-    num_event[idx] = 0;
 }
 
 //---------------------------------------------------------------------------//
@@ -89,32 +89,40 @@ __global__ void reorder_lid_kernel( const int sort_size,
                                     const int vector_size,
                                     const int* event_bounds,
                                     const int* event_bins,
+                                    const events::Event* events,
                                     int* lids )
 {
   REQUIRE( sort_size <= vector_size );
 
   // Get the thread index.
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  
+
   if ( idx < sort_size )
   {
-    // Get the event.
-    for ( int e = 0; e < events::END_EVENT; ++e )
-      {
-        if ( idx < event_bounds[events::END_EVENT + e] )
-          {
-            // Copy the local index from the event bins into the array.
-            lids[idx] = event_bins[ e*vector_size + idx - event_bounds[e] ];
-            break;
-          }
-      }
+      // Get the event corresponding to this vector index.
+      const int* event_lb = cuda_utils::utility::lower_bound(
+          event_bounds,
+          event_bounds + events::END_EVENT,
+          idx,
+          cuda_utils::utility::upper_bound_comp<int>() );
+
+      int event = event_lb - event_bounds - 1;
+      CHECK( event < events::END_EVENT );
+      CHECK( idx >= event_bounds[event] );
+
+      int local_bin_index = idx - event_bounds[event];
+      CHECK( local_bin_index < vector_size );
+
+      // Copy the particle index from the bin into the local index array.      
+      lids[idx] = event_bins[ event*vector_size + local_bin_index ];
+      CHECK( event == events[lids[idx]] );
   }
 }
 
 //---------------------------------------------------------------------------//
 // Clear the number of events on the device.
 __global__ void clear_num_event_kernel( const int size,
-                                         int* num_event )
+                                        int* num_event )
 {
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if ( idx < size )
@@ -147,7 +155,7 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
     cuda_utils::memory::Malloc( d_batch, d_size );
     cuda_utils::memory::Malloc( d_step, d_size );
     cuda_utils::memory::Malloc( d_dist_mfp, d_size );
-    cuda_utils::memory::Malloc( d_event_bounds, 2*events::END_EVENT );
+    cuda_utils::memory::Malloc( d_event_bounds, events::END_EVENT );
     cuda_utils::memory::Malloc( d_num_event, events::END_EVENT );
     cuda_utils::memory::Malloc( d_event_bins, events::END_EVENT*d_size );    
 
@@ -173,9 +181,6 @@ Particle_Vector<Geometry>::Particle_Vector( const int num_particle,
 
     // Deallocate the device seeds.
     cuda_utils::memory::Free( device_seeds );
-
-    // Create the local ids.
-    init_lid_kernel<<<num_blocks,threads_per_block>>>( d_size, d_lid );
 
     // Initialize the number of events.
     clear_num_event_kernel<<<1,events::END_EVENT>>>(
@@ -245,26 +250,26 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     unsigned int threads_per_block = 
 	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = sort_size / threads_per_block;
-    if ( d_size % threads_per_block > 0 ) ++num_blocks;
+    if ( sort_size % threads_per_block > 0 ) ++num_blocks;
 
     // Get the number of particles with each event.
     cuda_utils::memory::Copy_To_Host( d_event_sizes.getRawPtr(),
-                                d_num_event,
-                                events::END_EVENT );
+                                      d_num_event,
+                                      events::END_EVENT );
 
-    // Bin them.
-    event_bounds_kernel<<<1,events::END_EVENT>>>(
+    // Get the event bounds.
+    unsigned int num_bounds_blocks = events::END_EVENT / threads_per_block;
+    if ( events::END_EVENT % threads_per_block > 0 ) ++num_bounds_blocks;
+    event_bounds_kernel<<<num_bounds_blocks,threads_per_block>>>(
         static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
-      
 
     // Reorder the local ids.
     reorder_lid_kernel<<<num_blocks,threads_per_block>>>( sort_size,
                                                           d_size,
                                                           d_event_bounds,
                                                           d_event_bins,
+                                                          d_event,
                                                           d_lid );
-
-    cudaDeviceSynchronize();
 }
 
 //---------------------------------------------------------------------------//
