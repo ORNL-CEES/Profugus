@@ -115,7 +115,7 @@ __global__ void reorder_lid_kernel( const int sort_size,
 
       // Copy the particle index from the bin into the local index array.      
       lids[idx] = event_bins[ event*vector_size + local_bin_index ];
-      CHECK( event == events[lids[idx]] );
+      CHECK( event == events::DEAD || event == events[lids[idx]] );
   }
 }
 
