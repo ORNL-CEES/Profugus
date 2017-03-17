@@ -40,7 +40,7 @@ __device__ void Keff_Tally<Geometry>::accumulate(
     DEVICE_REQUIRE(d_physics);
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    d_thread_keff[tid] += particles.wt(tid) * step *
+    d_thread_keff[tid] += particles.wt(pid) * step *
         d_physics->total(profugus::physics::NU_FISSION, pid, particles);
 }
 

@@ -56,7 +56,7 @@ void Fission_Source<Geometry>::build_particle(
     if (!is_initial_source())
     {
         // get the corresponding element in the site container
-        const Fission_Site &fs = d_fission_sites[pid];
+        const Fission_Site &fs = d_fission_sites[cuda::utility::thread_id()];
 
         // intialize the geometry state
         d_geometry->initialize(fs.r, omega, particles.geo_state(pid));
