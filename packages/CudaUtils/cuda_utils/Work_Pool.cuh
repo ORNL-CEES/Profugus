@@ -47,42 +47,55 @@ class Work_Pool
     Int_View  d_indices;
     Bool_View d_active;
 
-    int d_warp_num_work;
-    int d_warp_begin;
+    Int_View d_warp_num_work;
+    Int_View d_warp_begin;
 
   public:
 
     // Constructor
     Work_Pool(Int_View  indices,
-              Bool_View active)
+              Bool_View active,
+              Int_View  warp_num_work,
+              Int_View  warp_begin)
       : d_indices(indices)
       , d_active(active)
+      , d_warp_num_work(warp_num_work)
+      , d_warp_begin(warp_begin)
     {
         REQUIRE(d_indices.size() == d_active.size());
     }
 
     __device__ void initialize()
     {
-        // Determine number of threads and number of warps
-        int num_threads = blockDim.x * gridDim.x;
-        int num_warps   = num_threads / warpSize;
-        if (num_threads % warpSize)
-            num_warps++;
-
-        // Get id of warp
-        int tid = cuda::utility::thread_id();
-        int warp_id    = tid     / warpSize;
-        int warp_start = warp_id * warpSize;
-
-        int num_work = d_indices.size();
-        d_warp_num_work = 0;
-        while (num_work > 0)
+        if (lane_id() == 0)
         {
-            if (warp_start < num_work)
-                d_warp_num_work += min(warpSize,num_work-warp_start);
-            num_work -= num_threads;
+            // Determine number of threads and number of warps
+            int num_threads = blockDim.x * gridDim.x;
+
+            int num_warps   = num_threads / warpSize;
+            if (num_threads % warpSize)
+                num_warps++;
+
+            DEVICE_CHECK(num_warps <= d_warp_num_work.size());
+            DEVICE_CHECK(num_warps <= d_warp_begin.size());
+
+            // Get id of warp
+            int tid = cuda::utility::thread_id();
+            int warp_start = warp_id() * warpSize;
+
+            int num_work = d_indices.size();
+            d_warp_num_work[warp_id()] = 0;
+            while (num_work > 0)
+            {
+                if (warp_start < num_work)
+                {
+                    d_warp_num_work[warp_id()] +=
+                        min(warpSize,num_work-warp_start);
+                }
+                num_work -= num_threads;
+            }
+            d_warp_begin[warp_id()] = warp_id() * warpSize * work_per_thread();
         }
-        d_warp_begin = warp_id * warpSize * work_per_thread();
     }
 
     // Consolidate active indices
@@ -97,8 +110,8 @@ class Work_Pool
 
             // Get thread-local value for scan
             int active = 0;
-            if (id < d_warp_num_work)
-                active = d_active[id+d_warp_begin];
+            if (id < work_per_warp())
+                active = d_active[id+warp_begin()];
 
             // Compute exclusive scan of thread-local values
             int val, tmp_sum;
@@ -112,8 +125,8 @@ class Work_Pool
                 
                 // This looks like a potential race condition, but is not
                 // because threads in a warp are always synchronized
-                d_indices[work_sum+val+d_warp_begin] =
-                    d_indices[id+d_warp_begin];
+                d_indices[work_sum+val+warp_begin()] =
+                    d_indices[id+warp_begin()];
             }
             work_sum += tmp_sum;
         }
@@ -122,15 +135,36 @@ class Work_Pool
         for (int i = 0; i < work_per_thread(); ++i)
         {
             int id = lane + i * warpSize;
-            if (id < d_warp_num_work)
+            if (id < work_per_warp())
             {
                 if (id < work_sum)
-                    d_active[id+d_warp_begin] = true;
+                    d_active[id+warp_begin()] = true;
                 else
-                    d_active[id+d_warp_begin] = false;
+                    d_active[id+warp_begin()] = false;
             }
         }
-        d_warp_num_work = work_sum;
+        if (lane_id() == 0)
+        {
+            d_warp_num_work[warp_id()] = work_sum;
+        }
+    }
+
+    // Global warp id
+    __device__ int warp_id() const
+    {
+        return cuda::utility::thread_id() / warpSize;
+    }
+
+    // Lane id (id within warp)
+    __device__ int lane_id() const
+    {
+        return threadIdx.x % warpSize;
+    }
+
+    // Starting work id for warp
+    __device__ int warp_begin() const
+    {
+        return d_warp_begin[warp_id()];
     }
 
     // Recompute active indices
@@ -140,20 +174,20 @@ class Work_Pool
 
         int lane = threadIdx.x % warpSize;
         int work_id = lane + index * warpSize;
-        d_active[work_id+d_warp_begin] = false;
+        d_active[work_id+warp_begin()] = false;
     }
 
     // Amount of work per warp
     __device__ int work_per_warp() const
     {
-        return d_warp_num_work;
+        return d_warp_num_work[warp_id()];
     }
 
     // Amount of work per thread
     __device__ int work_per_thread() const
     {
-        int work = d_warp_num_work / warpSize;
-        if (d_warp_num_work % warpSize)
+        int work = work_per_warp() / warpSize;
+        if (work_per_warp() % warpSize)
             work++;
         return work;
     }
@@ -164,11 +198,11 @@ class Work_Pool
         int lane = threadIdx.x % warpSize;
         int work_id = lane + index * warpSize;
         int id = -1;
-        if ((work_id < d_warp_num_work))
+        if ((work_id < work_per_warp()))
         {
-            DEVICE_CHECK(work_id+d_warp_begin < d_active.size());
-            if (d_active[work_id+d_warp_begin])
-                id = d_indices[work_id+d_warp_begin];
+            DEVICE_CHECK(work_id+warp_begin() < d_active.size());
+            if (d_active[work_id+warp_begin()])
+                id = d_indices[work_id+warp_begin()];
         }
         return id;
     }
@@ -189,20 +223,26 @@ class Work_Pool_DMM : public Device_Memory_Manager<Work_Pool>
 
       thrust::device_vector<int>  d_indices;
       thrust::device_vector<bool> d_active;
+      thrust::device_vector<int>  d_warp_num_work;
+      thrust::device_vector<int>  d_warp_begin;
 
   public:
 
-      Work_Pool_DMM(const thrust::device_vector<int> &indices)
+      Work_Pool_DMM(const thrust::device_vector<int> &indices, int num_warps)
       {
           d_indices.assign(indices.begin(),indices.end());
           d_active.resize(d_indices.size());
+          d_warp_num_work.resize(num_warps);
+          d_warp_begin.resize(num_warps);
       }
 
       Work_Pool device_instance()
       {
           thrust::fill(d_active.begin(),d_active.end(),true);
           Work_Pool pool(cuda::make_view(d_indices),
-                         cuda::make_view(d_active));
+                         cuda::make_view(d_active),
+                         cuda::make_view(d_warp_num_work),
+                         cuda::make_view(d_warp_begin));
           return pool;
       }
 };

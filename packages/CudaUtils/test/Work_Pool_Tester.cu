@@ -123,7 +123,7 @@ void Work_Pool_Tester::test_pool()
     indices.assign(it,it+total_work);
 
     std::cout << "Building work pool DMM" << std::endl;
-    cuda::Work_Pool_DMM mgr(indices);
+    cuda::Work_Pool_DMM mgr(indices,num_warps);
 
     int block_size = std::min(num_warps*32,256);
     int num_blocks = total_work / block_size / work_per_thread;
