@@ -161,6 +161,8 @@ class Source_Transporter
     int d_node, d_nodes;
     int d_block_size;
 
+    int d_np_per_thread;
+
     Sort_Type d_sort_type;
     Verbosity d_verbosity;
 

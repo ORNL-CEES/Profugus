@@ -56,7 +56,7 @@ class Transport_Functor
     // Constructor
     Transport_Functor( const Transporter_t     *trans,
                              Particle_Vector_t  particles,
-                             cuda::Work_Pool    pool )
+                             cuda::Work_Pool   *pool )
         : d_transporter(trans)
         , d_particles(particles)
         , d_pool(pool)
@@ -67,15 +67,14 @@ class Transport_Functor
     __device__ void operator()( std::size_t tid )
     {
         // Initialize work pool
-        d_pool.initialize();
+        d_pool->initialize();
 
-        while (d_pool.work_per_thread() > 0)
+        while (d_pool->work_per_thread() > 0)
         {
-            for (int i = 0; i < d_pool.work_per_thread(); ++i)
+            for (int i = 0; i < d_pool->work_per_thread(); ++i)
             {
                 // Get particle index
-                DEVICE_CHECK(i < d_pool.work_per_thread());
-                int pid = d_pool.work_id(i);
+                int pid = d_pool->work_id(i);
                 if (pid >= 0 && pid < d_particles.size())
                 {
                     DEVICE_CHECK(d_particles.alive(pid));
@@ -85,12 +84,12 @@ class Transport_Functor
 
                     // Inactivate dead particles
                     if (!d_particles.alive(pid))
-                        d_pool.set_inactive(i);
+                        d_pool->set_inactive(i);
                 }
             }
 
             // Consolidate
-            d_pool.consolidate();
+            d_pool->consolidate();
         }
     }
 
@@ -99,7 +98,7 @@ class Transport_Functor
     // On-device pointers
     const Transporter_t *d_transporter;
     Particle_Vector_t    d_particles;
-    cuda::Work_Pool      d_pool;
+    cuda::Work_Pool     *d_pool;
 };
 
 //---------------------------------------------------------------------------//
@@ -301,6 +300,8 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
 
     d_block_size = db->get("block_size",256);
 
+    d_np_per_thread = db->get("np_per_thread",1);
+
     std::string sort_type = profugus::to_lower(db->get<std::string>("sort_type",
             std::string("alive")));
     if (sort_type == "alive" )
@@ -410,14 +411,20 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         cuda::Launch_Args<cuda::arch::Device> launch_args;
         launch_args.set_block_size(d_block_size);
 
+        // Compute number of threads from surviving particle count
+        int num_threads = num_particles_left / d_np_per_thread;
+
         // Make launch a multiple of cuda warp size
-        int num_threads = num_particles_left;
         if (num_threads % 32)
             num_threads = (num_particles_left / 32 + 1) * 32;
         launch_args.set_num_elements(num_threads);
 
         // Build work pool
-        cuda::Work_Pool_DMM pool(indirection);
+        int warps_per_block = launch_args.block_size() / 32;
+        int num_warps = launch_args.grid_size() * warps_per_block;
+        cuda::Work_Pool_DMM pool_dmm(indirection,num_warps);
+        auto pool = cuda::shared_device_ptr<cuda::Work_Pool>(
+            pool_dmm.device_instance());
 
         // Build and execute kernel
         cudaDeviceSynchronize();
@@ -425,7 +432,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
         Transport_Functor<Geometry> f(
                 sdp_transporter.get_device_ptr(), 
                 d_particle_vec->device_instance(),
-                pool.device_instance());
+                pool.get_device_ptr());
 
         cuda::parallel_launch( f, launch_args );
         REQUIRE(cudaSuccess == cudaGetLastError());
