@@ -102,169 +102,6 @@ class Transport_Functor
 };
 
 //---------------------------------------------------------------------------//
-// Functor for retrieving alive state of particle
-//---------------------------------------------------------------------------//
-template <class Geometry>
-struct GetAlive
-{
-    typedef Particle_Vector<Geometry> Particle_Vector_t;
-    typedef cuda::const_Device_View_Field<int> const_Int_View;
-    typedef cuda::Device_View_Field<int>       Int_View;
-
-    GetAlive(const Particle_Vector_t  particles,
-             const_Int_View           indirection,
-                   Int_View           alive)
-        : d_particles(particles)
-        , d_indirection(indirection)
-        , d_alive(alive)
-    {
-    }
-
-    __device__ void operator()(std::size_t tid)
-    {
-        if (tid < d_indirection.size())
-        {
-            int pid = d_indirection[tid];
-            DEVICE_CHECK(pid < d_particles.size());
-            if (d_particles.alive(pid))
-                d_alive[tid] = 1;
-            else
-                d_alive[tid] = INT_MAX;
-        }
-    }
-
-  private:
-
-    const Particle_Vector_t  d_particles;
-    const_Int_View           d_indirection;
-    Int_View                 d_alive;
-
-};
-
-//---------------------------------------------------------------------------//
-// Functor for retrieving matid of particle
-//---------------------------------------------------------------------------//
-template <class Geometry>
-struct GetMatid
-{
-    typedef Particle_Vector<Geometry> Particle_Vector_t;
-    typedef cuda::const_Device_View_Field<int> const_Int_View;
-    typedef cuda::Device_View_Field<int>       Int_View;
-
-    GetMatid(const Particle_Vector_t particles,
-             const_Int_View          indirection, 
-                   Int_View          matids)
-        : d_particles(particles)
-        , d_indirection(indirection)
-        , d_matids(matids)
-    {
-    }
-
-    __device__ void operator()(std::size_t tid)
-    {
-        if (tid < d_indirection.size())
-        {
-            int pid = d_indirection[tid];
-            DEVICE_CHECK(pid < d_particles.size());
-            if (d_particles.alive(pid))
-                d_matids[tid] = d_particles.matid(pid);
-            else
-                d_matids[tid] = INT_MAX;
-        }
-    }
-
-  private:
-
-    const Particle_Vector_t  d_particles;
-    const_Int_View  d_indirection;
-    Int_View        d_matids;
-
-};
-
-//---------------------------------------------------------------------------//
-// Functor for retrieving group of particle
-//---------------------------------------------------------------------------//
-template <class Geometry>
-struct GetGroup
-{
-    typedef Particle_Vector<Geometry> Particle_Vector_t;
-    typedef cuda::const_Device_View_Field<int> const_Int_View;
-    typedef cuda::Device_View_Field<int>       Int_View;
-
-    GetGroup(const Particle_Vector_t particles,
-             const_Int_View          indirection,
-                   Int_View          groups)
-        : d_particles(particles)
-        , d_indirection(indirection)
-        , d_groups(groups)
-    {
-    }
-
-    __device__ void operator()(std::size_t tid)
-    {
-        if (tid < d_indirection.size())
-        {
-            int pid = d_indirection[tid];
-            DEVICE_CHECK(pid < d_particles.size());
-            if (d_particles.alive(pid))
-                d_groups[tid] = d_particles.group(pid);
-            else
-                d_groups[tid] = INT_MAX;
-        }
-    }
-
-  private:
-
-    const Particle_Vector_t  d_particles;
-    const_Int_View           d_indirection;
-    Int_View                 d_groups;
-
-};
-
-//---------------------------------------------------------------------------//
-// Functor for retrieving cell of particle
-//---------------------------------------------------------------------------//
-template <class Geometry>
-struct GetCell
-{
-    typedef Particle_Vector<Geometry> Particle_Vector_t;
-    typedef cuda::const_Device_View_Field<int> const_Int_View;
-    typedef cuda::Device_View_Field<int>       Int_View;
-
-    GetCell(const Particle_Vector_t   particles,
-            const Geometry           *geometry,
-            const_Int_View            indirection,
-                  Int_View            cells)
-        : d_particles(particles)
-        , d_geometry(geometry)
-        , d_indirection(indirection)
-        , d_cells(cells)
-    {
-    }
-
-    __device__ void operator()(std::size_t tid)
-    {
-        if (tid < d_indirection.size())
-        {
-            int pid = d_indirection[tid];
-            DEVICE_CHECK(pid < d_particles.size());
-            if (d_particles.alive(pid))
-                d_cells[tid] = d_geometry->cell(d_particles.geo_state(pid));
-            else
-                d_cells[tid] = INT_MAX;
-        }
-    }
-
-  private:
-
-    const Particle_Vector_t  d_particles;
-    const Geometry           *d_geometry;
-    const_Int_View            d_indirection;
-    Int_View                  d_cells;
-};
-
-
-//---------------------------------------------------------------------------//
 // CONSTRUCTOR
 //---------------------------------------------------------------------------//
 /*!
@@ -278,7 +115,6 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     , d_physics(physics)
     , d_node(profugus::node())
     , d_nodes(profugus::nodes())
-    , d_sort_time(0.0)
     , d_transport_time(0.0)
     , d_source_time(0.0)
 {
@@ -301,19 +137,6 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     d_block_size = db->get("block_size",256);
 
     d_np_per_thread = db->get("np_per_thread",1);
-
-    std::string sort_type = profugus::to_lower(db->get<std::string>("sort_type",
-            std::string("alive")));
-    if (sort_type == "alive" )
-        d_sort_type = ALIVE;
-    else if (sort_type == "matid")
-        d_sort_type = MATID;
-    else if (sort_type == "group")
-        d_sort_type = GROUP;
-    else if (sort_type == "cell")
-        d_sort_type = CELL;
-    else
-        INSIST(false,"Invalid sort type.");
 
     std::string verb = profugus::to_lower(db->get<std::string>("verbosity",
         std::string("none")));
@@ -404,110 +227,39 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     diff = end - start;
     d_source_time += diff.count();
 
-    // Loop until all particles have died
-    while (num_particles_left>0)
-    {
-        // Build launch args
-        cuda::Launch_Args<cuda::arch::Device> launch_args;
-        launch_args.set_block_size(d_block_size);
+    // Build launch args
+    cuda::Launch_Args<cuda::arch::Device> launch_args;
+    launch_args.set_block_size(d_block_size);
 
-        // Compute number of threads from surviving particle count
-        int num_threads = num_particles_left / d_np_per_thread;
+    // Compute number of threads from surviving particle count
+    int num_threads = num_particles_left / d_np_per_thread;
 
-        // Make launch a multiple of cuda warp size
-        if (num_threads % 32)
-            num_threads = (num_particles_left / 32 + 1) * 32;
-        launch_args.set_num_elements(num_threads);
+    // Make launch a multiple of cuda warp size
+    if (num_threads % 32)
+        num_threads = (num_particles_left / 32 + 1) * 32;
+    launch_args.set_num_elements(num_threads);
 
-        // Build work pool
-        int warps_per_block = launch_args.block_size() / 32;
-        int num_warps = launch_args.grid_size() * warps_per_block;
-        cuda::Work_Pool_DMM pool_dmm(indirection,num_warps);
-        auto pool = cuda::shared_device_ptr<cuda::Work_Pool>(
-            pool_dmm.device_instance());
+    // Build work pool
+    int warps_per_block = launch_args.block_size() / 32;
+    int num_warps = launch_args.grid_size() * warps_per_block;
+    cuda::Work_Pool_DMM pool_dmm(indirection,num_warps);
+    auto pool = cuda::shared_device_ptr<cuda::Work_Pool>(
+        pool_dmm.device_instance());
 
-        // Build and execute kernel
-        cudaDeviceSynchronize();
-        start = std::chrono::high_resolution_clock::now();
-        Transport_Functor<Geometry> f(
-                sdp_transporter.get_device_ptr(), 
-                d_particle_vec->device_instance(),
-                pool.get_device_ptr());
+    // Build and execute kernel
+    cudaDeviceSynchronize();
+    start = std::chrono::high_resolution_clock::now();
+    Transport_Functor<Geometry> f(
+            sdp_transporter.get_device_ptr(), 
+            d_particle_vec->device_instance(),
+            pool.get_device_ptr());
 
-        cuda::parallel_launch( f, launch_args );
-        REQUIRE(cudaSuccess == cudaGetLastError());
-        cudaDeviceSynchronize();
-        end = std::chrono::high_resolution_clock::now();
-        diff = end - start;
-        d_transport_time += diff.count();
-
-        // Sort particles to put active particles up front
-        start = std::chrono::high_resolution_clock::now();
-        REQUIRE(cudaSuccess == cudaGetLastError());
-
-        switch (d_sort_type)
-        {
-            case ALIVE:
-            {
-                GetAlive<Geometry> alive_func(
-                        d_particle_vec->device_instance(),
-                        cuda::make_view(indirection),
-                        cuda::make_view(event));
-                cuda::parallel_launch( alive_func, launch_args );
-                break;
-            }
-            case MATID:
-            {
-                GetMatid<Geometry> matid_func(
-                        d_particle_vec->device_instance(),
-                        cuda::make_view(indirection),
-                        cuda::make_view(event));
-                cuda::parallel_launch( matid_func, launch_args );
-                break;
-            }
-            case GROUP:
-            {
-                GetGroup<Geometry> group_func(
-                        d_particle_vec->device_instance(),
-                        cuda::make_view(indirection),
-                        cuda::make_view(event));
-                cuda::parallel_launch( group_func, launch_args );
-                break;
-            }
-            case CELL:
-            {
-                GetCell<Geometry> cell_func(
-                        d_particle_vec->device_instance(),
-                        d_geometry.get_device_ptr(),
-                        cuda::make_view(indirection),
-                        cuda::make_view(event));
-                cuda::parallel_launch( cell_func, launch_args );
-                break;
-            }
-        }
-        cudaDeviceSynchronize();
-
-        thrust::stable_sort_by_key(event.begin(),
-                                   event.begin()+num_particles_left,
-                                   indirection.begin());
-        auto itr = thrust::find( event.begin(),
-                event.begin() + num_particles_left, INT_MAX);
-        num_particles_left = itr - event.begin();
-
-        indirection.resize(num_particles_left);
-        event.resize(num_particles_left);
-
-        cudaDeviceSynchronize();
-        end = std::chrono::high_resolution_clock::now();
-        diff = end - start;
-        d_sort_time += diff.count();
-
-        if (d_verbosity >= HIGH)
-        {
-            std::cout << num_particles_left << " still alive on node "
-                << profugus::node() << std::endl;
-        }
-    }
+    cuda::parallel_launch( f, launch_args );
+    REQUIRE(cudaSuccess == cudaGetLastError());
+    cudaDeviceSynchronize();
+    end = std::chrono::high_resolution_clock::now();
+    diff = end - start;
+    d_transport_time += diff.count();
 
     // increment the particle counter
     DIAGNOSTICS_ONE(integers["particles_transported"] += num_particles);

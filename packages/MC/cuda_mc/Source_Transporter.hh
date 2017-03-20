@@ -119,9 +119,8 @@ class Source_Transporter
         if (d_verbosity >= LOW)
         {
             std::cout << "ST spent " << d_source_time
-                << " generating source particles, " << d_transport_time
-                << " transporting particles and " << d_sort_time
-                << " sorting particles" << std::endl;
+                << " generating source particles " << d_transport_time
+                << " and transporting particles" << std::endl;
         }
     }
 
@@ -154,7 +153,6 @@ class Source_Transporter
   private:
     // >>> IMPLEMENTATION
 
-    enum Sort_Type {ALIVE, MATID, GROUP, CELL};
     enum Verbosity {NONE, LOW, MEDIUM, HIGH};
 
     // Nodes and node id.
@@ -163,10 +161,9 @@ class Source_Transporter
 
     int d_np_per_thread;
 
-    Sort_Type d_sort_type;
     Verbosity d_verbosity;
 
-    mutable double d_source_time, d_sort_time, d_transport_time;
+    mutable double d_source_time, d_transport_time;
 };
 
 } // end namespace cuda_mc
