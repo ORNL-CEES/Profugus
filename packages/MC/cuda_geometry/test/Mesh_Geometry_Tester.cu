@@ -16,23 +16,12 @@
 #include "../Mesh_Geometry.hh"
 #include "Mesh_Geometry_Tester.hh"
 
-typedef profugus::geometry::cell_type  cell_type;
-typedef cuda_utils::Space_Vector       Point;
-typedef cuda_utils::Coordinates        Coords;
-typedef cuda_profugus::Mesh_Geometry   Mesh_Geometry;
-
-// Get volume from the mesh for each specified cell
-__global__ void compute_volumes_kernel(Mesh_Geometry    mesh,
-                                       int              num_points,
-                                       const cell_type *cells,
-                                       double          *volumes)
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    if( tid < num_points )
-    {
-        volumes[tid] = mesh.volume(cells[tid]);
-    }
-}
+typedef profugus::geometry::cell_type       cell_type;
+typedef profugus::geometry::matid_type      matid_type;
+typedef cuda_utils::Space_Vector            Point;
+typedef cuda_utils::Coordinates             Coords;
+typedef cuda_profugus::Mesh_Geometry        Mesh_Geometry;
+typedef cuda_profugus::Mesh_Geometry_DMM    Mesh_Geometry_DMM;
 
 // Compute the matid for particle at each specified spatial location
 __global__ void compute_matids_kernel(Mesh_Geometry   mesh,
@@ -128,13 +117,13 @@ namespace
 {
 
 // Build Mesh_Geometry
-std::shared_ptr<Mesh_Geometry> get_mesh()
+std::shared_ptr<Mesh_Geometry_DMM> get_mesh()
 {
     std::vector<double> x_edges = {0.0, 0.1, 0.6, 0.9, 1.0};
     std::vector<double> y_edges = {-1.0, -0.6, 0.0};
     std::vector<double> z_edges = {2.0, 2.6, 3.4, 4.0};
     
-    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
     return mesh;
 }
 
@@ -147,32 +136,21 @@ void Mesh_Geometry_Tester::test_volume()
 {
     auto mesh = get_mesh();
 
-    std::vector<cell_type> host_cells = {4, 1, 22, 11};
-    int num_points = host_cells.size();
+    std::vector<cell_type> cells = {4, 1, 22, 11};
+    int num_cells = cells.size();
 
-    // Create memory on device
-    thrust::device_vector<cell_type> device_cells(host_cells);
-    thrust::device_vector<double> device_volumes(num_points);
+    const auto& all_volumes = mesh->volumes();
+    std::vector<double> cell_volumes(num_cells);
 
-    // Execute kernel
-    compute_volumes_kernel<<<1,num_points>>>( *mesh,
-                                               num_points,
-                                               device_cells.data().get(),
-                                               device_volumes.data().get());
-
-    REQUIRE( cudaGetLastError() == cudaSuccess );
-
-    // Copy volumes back to host
-    std::vector<double> host_volumes(num_points);
-    thrust::copy(device_volumes.begin(),device_volumes.end(),
-                 host_volumes.begin());
+    for (int cellid = 0; cellid < num_cells; ++cellid)
+        cell_volumes[cellid] = all_volumes[cells[cellid]];
 
     std::vector<double> expected_volumes = {0.1 * 0.6 * 0.6,
                                             0.5 * 0.4 * 0.6,
                                             0.3 * 0.6 * 0.6,
                                             0.1 * 0.4 * 0.8};
 
-    EXPECT_VEC_SOFT_EQ( expected_volumes, host_volumes );
+    EXPECT_VEC_SOFT_EQ( expected_volumes, cell_volumes );
 }
 
 //---------------------------------------------------------------------------//
@@ -182,12 +160,12 @@ void Mesh_Geometry_Tester::test_matid()
 {
     auto mesh = get_mesh();
 
-    std::vector<profugus::geometry::matid_type> all_matids = {1, 3, 2, 0,
-                                                              3, 1, 4, 1,
-                                                              2, 5, 2, 1,
-                                                              0, 1, 2, 3,
-                                                              1, 2, 3, 4,
-                                                              2, 3, 4, 5};
+    std::vector<int> all_matids = {1, 3, 2, 0,
+                                   3, 1, 4, 1,
+                                   2, 5, 2, 1,
+                                   0, 1, 2, 3,
+                                   1, 2, 3, 4,
+                                   2, 3, 4, 5};
 
     std::vector<Point> host_points = {{0.7,  -0.9,  2.1},
                                       {0.5,  -0.5,  2.5},
@@ -205,7 +183,7 @@ void Mesh_Geometry_Tester::test_matid()
 
     // Execute kernel
     compute_matids_kernel<<<1,num_points>>>(
-            *mesh,
+             mesh->device_instance(),
              num_points,
              device_points.data().get(),
              device_cell_matids.data().get());
@@ -227,11 +205,13 @@ void Mesh_Geometry_Tester::test_matid()
 //---------------------------------------------------------------------------//
 void Mesh_Geometry_Tester::test_dist_to_bdry()
 {
+    using def::I;  using def::J; using def::K;
+
     // Build mesh
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
     auto z_edges = {-0.1, 0.0, 0.15, 0.50};
-    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
 
 
     double sqrt_half = sqrt(0.5);
@@ -250,7 +230,7 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
 
     // Execute kernel
     distance_kernel<<<1,num_points>>>(
-            *mesh,
+             mesh->device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs.data().get(),
@@ -271,12 +251,12 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
 
     EXPECT_VEC_SOFT_EQ(expected_distances, host_distances);
-    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
-    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
-    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
-    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
-    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
-    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+    EXPECT_EQ(expected_coords[0][I], host_coords[0][I]);
+    EXPECT_EQ(expected_coords[0][J], host_coords[0][J]);
+    EXPECT_EQ(expected_coords[0][K], host_coords[0][K]);
+    EXPECT_EQ(expected_coords[1][I], host_coords[1][I]);
+    EXPECT_EQ(expected_coords[1][J], host_coords[1][J]);
+    EXPECT_EQ(expected_coords[1][K], host_coords[1][K]);
 }
 
 //---------------------------------------------------------------------------//
@@ -284,11 +264,13 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
 //---------------------------------------------------------------------------//
 void Mesh_Geometry_Tester::test_move_to_surf()
 {
+    using def::I;  using def::J; using def::K;
+
     // Build mesh
     auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
     auto y_edges = {0.0, 0.20, 0.40, 0.50};
     auto z_edges = {-0.1, 0.0, 0.15, 0.50};
-    auto mesh = std::make_shared<Mesh_Geometry>(x_edges,y_edges,z_edges);
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
 
     double sqrt_half = sqrt(0.5);
     std::vector<Point> host_points = {{0.01, 0.01, -0.01},
@@ -305,7 +287,7 @@ void Mesh_Geometry_Tester::test_move_to_surf()
 
     // Execute kernel
     move_to_surf_kernel<<<1,num_points>>>(
-            *mesh,
+             mesh->device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs.data().get(),
@@ -320,12 +302,126 @@ void Mesh_Geometry_Tester::test_move_to_surf()
 
     std::vector<Coords> expected_coords = {{1, 0, 0}, {3, 1, 0}};
 
-    EXPECT_EQ(expected_coords[0].i, host_coords[0].i);
-    EXPECT_EQ(expected_coords[0].j, host_coords[0].j);
-    EXPECT_EQ(expected_coords[0].k, host_coords[0].k);
-    EXPECT_EQ(expected_coords[1].i, host_coords[1].i);
-    EXPECT_EQ(expected_coords[1].j, host_coords[1].j);
-    EXPECT_EQ(expected_coords[1].k, host_coords[1].k);
+    EXPECT_EQ(expected_coords[0][I], host_coords[0][I]);
+    EXPECT_EQ(expected_coords[0][J], host_coords[0][J]);
+    EXPECT_EQ(expected_coords[0][K], host_coords[0][K]);
+    EXPECT_EQ(expected_coords[1][I], host_coords[1][I]);
+    EXPECT_EQ(expected_coords[1][J], host_coords[1][J]);
+    EXPECT_EQ(expected_coords[1][K], host_coords[1][K]);
+}
+
+//---------------------------------------------------------------------------//
+// Test reflection
+//---------------------------------------------------------------------------//
+void Mesh_Geometry_Tester::test_reflect()
+{
+    using def::I;  using def::J; using def::K;
+    typedef cuda_profugus::Mesh_State Geo_State_t;
+
+    // Build mesh
+    auto x_edges = {0.0, 0.10, 0.25, 0.30, 0.42};
+    auto y_edges = {0.0, 0.20, 0.40, 0.50};
+    auto z_edges = {-0.1, 0.0, 0.15, 0.50};
+    auto mesh = std::make_shared<Mesh_Geometry_DMM>(x_edges,y_edges,z_edges);
+
+    std::vector<int> refl = {1, 0, 0, 0, 1, 1};
+    mesh->set_reflecting(refl);
+
+    std::vector<Point> host_points = {{0.05, 0.42, 0.10},
+                                      {0.20, 0.45, 0.35}};
+    std::vector<Point> host_dirs   = {{-4.0, 0.1, -0.5},
+                                      {-1.0, 2.0, 1.0}};
+    // Normalize directions
+    double nrm = std::sqrt(host_dirs[0][I]*host_dirs[0][I] +
+                           host_dirs[0][J]*host_dirs[0][J] +
+                           host_dirs[0][K]*host_dirs[0][K]);
+    host_dirs[0][I] /= nrm;
+    host_dirs[0][J] /= nrm;
+    host_dirs[0][K] /= nrm;
+
+    nrm = std::sqrt(host_dirs[1][I]*host_dirs[1][I] +
+                    host_dirs[1][J]*host_dirs[1][J] +
+                    host_dirs[1][K]*host_dirs[1][K]);
+    host_dirs[1][I] /= nrm;
+    host_dirs[1][J] /= nrm;
+    host_dirs[1][K] /= nrm;
+
+    int num_points = host_points.size();
+
+    // Create memory on device
+    thrust::device_vector<Point> device_points(host_points);
+    thrust::device_vector<Point> device_dirs_in(host_dirs);
+    thrust::device_vector<Point>  device_dirs_out(num_points);
+    thrust::device_vector<Coords> device_ijk_out(num_points);
+    thrust::device_vector<int> device_exit_face(num_points);
+    thrust::device_vector<int> device_refl_face(num_points);
+    thrust::device_vector<int> device_reflected(num_points);
+
+    // Execute kernel
+    reflect_kernel<<<1,num_points>>>(
+             mesh->device_instance(),
+             num_points,
+             device_points.data().get(),
+             device_dirs_in.data().get(),
+             device_reflected.data().get(),
+             device_dirs_out.data().get(),
+             device_ijk_out.data().get(),
+             device_exit_face.data().get(),
+             device_refl_face.data().get());
+
+    REQUIRE( cudaGetLastError() == cudaSuccess );
+
+    // Test reflected directions
+    std::vector<Point> host_dirs_out(num_points);
+    thrust::copy(device_dirs_out.begin(),device_dirs_out.end(),
+                 host_dirs_out.begin());
+    std::vector<Point> expected_dirs = {{-host_dirs[0][I],
+                                         host_dirs[0][J],
+                                         host_dirs[0][K]},
+                                        {host_dirs[1][I],
+                                         host_dirs[1][J],
+                                         host_dirs[1][K]}};
+    EXPECT_SOFT_EQ(expected_dirs[0][I], host_dirs_out[0][I]);
+    EXPECT_SOFT_EQ(expected_dirs[0][J], host_dirs_out[0][J]);
+    EXPECT_SOFT_EQ(expected_dirs[0][K], host_dirs_out[0][K]);
+    EXPECT_SOFT_EQ(expected_dirs[1][I], host_dirs_out[1][I]);
+    EXPECT_SOFT_EQ(expected_dirs[1][J], host_dirs_out[1][J]);
+    EXPECT_SOFT_EQ(expected_dirs[1][K], host_dirs_out[1][K]);
+
+    // Test reflected cell indices
+    std::vector<Coords> host_ijk_out(num_points);
+    thrust::copy(device_ijk_out.begin(),device_ijk_out.end(),
+                 host_ijk_out.begin());
+    std::vector<Coords> expected_ijk = {{0, 2, 1}, {1, 3, 2}};
+    EXPECT_EQ(expected_ijk[0][I], host_ijk_out[0][I]);
+    EXPECT_EQ(expected_ijk[0][J], host_ijk_out[0][J]);
+    EXPECT_EQ(expected_ijk[0][K], host_ijk_out[0][K]);
+    EXPECT_EQ(expected_ijk[1][I], host_ijk_out[1][I]);
+    EXPECT_EQ(expected_ijk[1][J], host_ijk_out[1][J]);
+    EXPECT_EQ(expected_ijk[1][K], host_ijk_out[1][K]);
+
+    // Test reflected flag
+    std::vector<int> host_reflected(num_points);
+    thrust::copy(device_reflected.begin(),device_reflected.end(),
+                 host_reflected.begin());
+    std::vector<int> expected_reflected= {1, 0};
+    EXPECT_VEC_EQ(expected_reflected, host_reflected);
+
+    // Test exiting faces
+    std::vector<int> host_exit_face(num_points);
+    thrust::copy(device_exit_face.begin(),device_exit_face.end(),
+                 host_exit_face.begin());
+    std::vector<int> expected_exit_face = {Geo_State_t::MINUS_X,
+                                           Geo_State_t::PLUS_Y};
+    EXPECT_VEC_EQ(expected_exit_face, host_exit_face);
+
+    // Test reflecting faces
+    std::vector<int> host_refl_face(num_points);
+    thrust::copy(device_refl_face.begin(),device_refl_face.end(),
+                 host_refl_face.begin());
+    std::vector<int> expected_refl_face = {Geo_State_t::MINUS_X,
+                                           Geo_State_t::NONE};
+    EXPECT_VEC_EQ(expected_refl_face, host_refl_face);
 }
 
 //---------------------------------------------------------------------------//

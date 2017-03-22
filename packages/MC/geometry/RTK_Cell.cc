@@ -696,7 +696,8 @@ int RTK_Cell::region(double x,
  * \param xc x-coordinate of cell origin relative to vessel origin
  * \param yc y-coordinate of cell origin relative to vessel origin
  */
-bool RTK_Cell::vessel_data(double &R0,
+bool RTK_Cell::vessel_data(int    &id,
+                           double &R0,
                            double &R1,
                            double &xc,
                            double &yc) const
@@ -704,12 +705,14 @@ bool RTK_Cell::vessel_data(double &R0,
     // return if no vessel
     if (!d_vessel)
     {
+        id = -1;
         R0 = -1.0;
         R1 = -1.0;
         return false;
     }
 
     // assign the data describing the vessel
+    id = d_vessel_id;
     R0 = d_R0;
     R1 = d_R1;
     xc = d_offsets[0];

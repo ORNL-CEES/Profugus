@@ -1,7 +1,7 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
  * \file   CudaUtils/cuda_utils/Utility_Functions.hh
- * \author Steven Hamilton
+ * \author Steven Hamilton and Tom Evans
  * \date   Tue Dec 15 16:25:39 2015
  * \brief  Utility_Functions class declaration.
  * \note   Copyright (c) 2015 Oak Ridge National Laboratory, UT-Battelle, LLC.
@@ -11,6 +11,7 @@
 #ifndef CudaUtils_cuda_utils_Utility_Functions_hh
 #define CudaUtils_cuda_utils_Utility_Functions_hh
 
+#include "Device_Vector_Lite.hh"
 #include "Definitions.hh"
 #include "CudaDBC.hh"
 #include "CudaMacros.hh"
@@ -62,7 +63,7 @@ struct greater_than
 //---------------------------------------------------------------------------//
 // On-device lower bound binary search with general binary comparator
 template <class T, class C>
-PROFUGUS_DEVICE_FUNCTION 
+PROFUGUS_DEVICE_FUNCTION
 const T * lower_bound(const T *first,
 		      const T *last,
 		      const T &val,
@@ -91,12 +92,72 @@ const T * lower_bound(const T *first,
 //---------------------------------------------------------------------------//
 // On-device lower bound binary search with default comparator.
 template <class T>
-PROFUGUS_DEVICE_FUNCTION 
+PROFUGUS_DEVICE_FUNCTION
 const T * lower_bound(const T *first,
 		      const T *last,
 		      const T &val)
 {
     return lower_bound( first, last, val, less_than<T>() );
+}
+
+/*!
+ * \brief Return a thread id.
+ *
+ * The global thread id in a grid can be defined in 2 ways:
+ *
+ * \arg threads are given a global index based on their global \e (i,j,k)
+ * indices that is \e independent of the number of blocks (only dependent on
+ * the number of global threads in each dimension).
+ *
+ * \arg threads are ordered by block such that \e [0,...,N) are the global
+ * indices of block 0, \e [N,N+1,...,2N) are the global indices on on block 1,
+ * etc and \e N is the number of threads per block.
+ *
+ * Since the blocks can be run independently (concurrently) we choose the
+ * second method for better cache efficiency (blocks will operate on data that
+ * is contiguous).  The global thread id is given by
+ * \f[
+ *   t_\mathrm{id} = n + Nb_\mathrm{id}
+ * \f]
+ * where \e N is the number of threads per block:
+ * \f[
+ *   N =
+ *     \mathrm{blockDim.x}\times\mathrm{blockDim.y}\times\mathrm{blockDim.z}
+ * \f]
+ * The block id is (grids can have 2D arrays of blocks):
+ * \f[
+ *   b_\mathrm{id} = \mathrm{blockIdx.x} +
+ *                   \mathrm{gridDim.x}\times\mathrm{blockIdx.y}
+ * \f]
+ * Finally, \e n is the block-local thread id that is defined on a 3D thread
+ * block
+ * \f[
+ *   n = \mathrm{threadIdx.x} +
+ *       \mathrm{blockDim.x}\times(\mathrm{threadIdx.y} +
+ *       \mathrm{blockDim.y}\times(\mathrm{threadIdx.z}))
+ * \f]
+ *
+ * The CUDA variables are:
+ *
+ * \arg \c (threadIdx.x,threadIdx.y,threadIdx.z) : local indices of thread in
+ * a block in each dimension
+ *
+ * \arg \c (blockDim.x,blockDim.y,blockDim.z) : number of threads per block in
+ * each dimension
+ *
+ * \arg \c (blockIdx.x,blockIdx.y) : indices of block in a grid in each
+ * dimension
+ *
+ * \arg \c (gridDim.x,gridDim.y) : number of blocks in a grid in each
+ * dimension
+ */
+PROFUGUS_DEVICE_FUNCTION
+int thread_id()
+{
+    return threadIdx.x + blockDim.x *
+        (threadIdx.y + blockDim.y * (threadIdx.z)) +
+        (blockDim.x * blockDim.y * blockDim.z) *
+        (blockIdx.x + gridDim.x * blockIdx.y);
 }
 
 //---------------------------------------------------------------------------//
@@ -136,7 +197,7 @@ int sample_discrete_CDF(int nb, const T *c, const T ran)
 
 //---------------------------------------------------------------------------//
 // Sample an angle isotropically.
-PROFUGUS_DEVICE_FUNCTION 
+PROFUGUS_DEVICE_FUNCTION
 void sample_angle( cuda_utils::Space_Vector& omega,
 		   const double ran1,
 		   const double ran2 )
@@ -152,6 +213,7 @@ void sample_angle( cuda_utils::Space_Vector& omega,
 // SPACE_VECTOR FUNCTIONS
 //---------------------------------------------------------------------------//
 
+// DEVICE_VECTOR_LITE FUNCTIONS
 //---------------------------------------------------------------------------//
 /*!
  * \brief Calculate the magnitude of a space-vector.
@@ -163,12 +225,13 @@ void sample_angle( cuda_utils::Space_Vector& omega,
  *
  * \return vector magnitude
  */
-PROFUGUS_DEVICE_FUNCTION 
-double vector_magnitude(const cuda_utils::Space_Vector &vector)
+PROFUGUS_DEVICE_FUNCTION
+__device__ inline double vector_magnitude(
+    const cuda_utils::Space_Vector &vector)
 {
-    return sqrt(vector.x * vector.x +
-                vector.y * vector.y +
-                vector.z * vector.z);
+    return sqrt(vector[0] * vector[0] +
+                vector[1] * vector[1] +
+                vector[2] * vector[2]);
 }
 
 //---------------------------------------------------------------------------//
@@ -182,11 +245,11 @@ double vector_magnitude(const cuda_utils::Space_Vector &vector)
  *
  * \return dot product
  */
-PROFUGUS_DEVICE_FUNCTION 
+PROFUGUS_DEVICE_FUNCTION
 double dot_product(const cuda_utils::Space_Vector &v,
 		   const cuda_utils::Space_Vector &w)
 {
-    return v.x*w.x + v.y*w.y + v.z*w.z;
+    return v[0]*w[0] + v[1]*w[1] + v[2]*w[2];
 }
 
 //---------------------------------------------------------------------------//
@@ -201,17 +264,18 @@ double dot_product(const cuda_utils::Space_Vector &v,
  * This function is unrolled for efficiency, which is why we don't have a
  * general normalize function.
  */
-PROFUGUS_DEVICE_FUNCTION 
+PROFUGUS_DEVICE_FUNCTION
 void vector_normalize(cuda_utils::Space_Vector &vector)
 {
     double norm     = 1.0 / vector_magnitude(vector);
-    vector.x *= norm;
-    vector.y *= norm;
-    vector.z *= norm;
+    vector[0] *= norm;
+    vector[1] *= norm;
+    vector[2] *= norm;
 
-    ENSURE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
+    DEVICE_ENSURE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 }
 
+//---------------------------------------------------------------------------//
 /*!
  * \brief Transform a space-vector from \f$\Omega\rightarrow\Omega'\f$ through
  * \f$(\theta, \phi)\f$ in cartesian space.
@@ -246,11 +310,11 @@ void vector_normalize(cuda_utils::Space_Vector &vector)
  *
  * \pre the vector must be a unit-vector (magnitude == 1)
  */
-PROFUGUS_DEVICE_FUNCTION 
+PROFUGUS_DEVICE_FUNCTION
 void cartesian_vector_transform(double costheta, double phi,
 				cuda_utils::Space_Vector &vector)
 {
-    REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
+    DEVICE_REQUIRE(soft_equiv(vector_magnitude(vector), 1.0, 1.0e-6));
 
     // cos/sin factors
     const double cosphi   = cos(phi);
@@ -261,14 +325,14 @@ void cartesian_vector_transform(double costheta, double phi,
     cuda_utils::Space_Vector old = vector;
 
     // calculate alpha
-    const double alpha = sqrt(1.0 - old.z * old.z);
+    const double alpha = sqrt(1.0 - old[2] * old[2]);
 
     // now transform into new cooordinate direction; degenerate case first
     if (alpha < 1.e-6)
     {
-        vector.x = sintheta * cosphi;
-        vector.y = sintheta * sinphi;
-        vector.z = (old.z < 0.0 ? -1.0 : 1.0) * costheta;
+        vector[0] = sintheta * cosphi;
+        vector[1] = sintheta * sinphi;
+        vector[2] = (old[2] < 0.0 ? -1.0 : 1.0) * costheta;
     }
 
     // do standard transformation
@@ -278,24 +342,22 @@ void cartesian_vector_transform(double costheta, double phi,
         const double inv_alpha = 1.0 / alpha;
 
         // calculate new z-direction
-        vector.z = old.z * costheta - alpha * sintheta * cosphi;
+        vector[2] = old[2] * costheta - alpha * sintheta * cosphi;
 
         // calculate new x-direction
-        vector.x = old.x * costheta + inv_alpha * (
-            old.x * old.z * sintheta * cosphi - old.y * sintheta * sinphi);
+        vector[0] = old[0] * costheta + inv_alpha * (
+            old[0] * old[2] * sintheta * cosphi - old[1] * sintheta * sinphi);
 
         // calculate new y-direction
-        vector.y = old.y * costheta + inv_alpha * (
-            old.y * old.z * sintheta * cosphi + old.x * sintheta * sinphi);
+        vector[1] = old[1] * costheta + inv_alpha * (
+            old[1] * old[2] * sintheta * cosphi + old[0] * sintheta * sinphi);
     }
 
     // normalize the particle to avoid roundoff errors
     vector_normalize(vector);
-
 }
 
 //---------------------------------------------------------------------------//
-
 } // end namespace utility
 
 } // end namespace cuda_utils

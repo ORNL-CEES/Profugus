@@ -14,14 +14,15 @@
 #include <math_constants.h>
 
 #include <vector>
-#include <memory>
+#include <thrust/device_vector.h>
 
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/CudaMacros.hh"
 #include "cuda_utils/Definitions.hh"
-#include "cuda_utils/Device_Vector.hh"
 #include "cuda_utils/Utility_Functions.hh"
 #include "cuda_utils/Host_Vector.hh"
+#include "cuda_utils/Device_Memory_Manager.hh"
+#include "cuda_utils/Device_View_Field.hh"
 #include "geometry/Definitions.hh"
 #include "utils/Definitions.hh"
 
@@ -47,37 +48,23 @@ class Cartesian_Mesh
   public:
     //@{
     //! Mesh typedefs
-    typedef int                           dim_type;
-    typedef size_t                        size_type;
-    typedef profugus::geometry::cell_type cell_type;
-    typedef cuda_utils::Space_Vector            Space_Vector;
-    typedef cuda_utils::Coordinates             Coordinates;
-    typedef std::vector<double>           Vec_Dbl;
-
-    template <class T>
-    using Device_Vector = cuda_utils::Device_Vector<cuda_utils::arch::Device,T>;
-
-    template <class T>
-    using Host_Vector = cuda_utils::Host_Vector<T>;
-
-    template <class T>
-    using SP = std::shared_ptr<T>;
+    typedef int                                   dim_type;
+    typedef size_t                                size_type;
+    typedef profugus::geometry::cell_type         cell_type;
+    typedef cuda_utils::Space_Vector              Space_Vector;
+    typedef cuda_utils::Coordinates               Coordinates;
+    typedef cuda::const_Device_View_Field<double> Double_View;
     //@}
 
   private:
     // >>> DATA
 
-    // Cell edges.
-    Device_Vector<double> d_x_edges_vec;
-    Device_Vector<double> d_y_edges_vec;
-    Device_Vector<double> d_z_edges_vec;
+    // Device views
+    Double_View d_x_edges;
+    Double_View d_y_edges;
+    Double_View d_z_edges;
 
-    // On-device pointers
-    double *dd_x_edges;
-    double *dd_y_edges;
-    double *dd_z_edges;
-
-    // Number of cells along each dimension
+    // Number cells in each dimension
     int d_cells_x;
     int d_cells_y;
     int d_cells_z;
@@ -88,88 +75,92 @@ class Cartesian_Mesh
     // Dimensionality (always 3 for now)
     dim_type d_dimension;
 
-    // Cell volumes
-    SP<Device_Vector<double> > d_volumes_vec;
-    SP<Host_Vector<double> > d_volumes_vec_host;
-
-    // On-device pointer
-    double *dd_volumes;
-
   public:
 
     // Construct from xyz edges.
-    Cartesian_Mesh(const Vec_Dbl& x_edges, const Vec_Dbl& y_edges,
-                   const Vec_Dbl& z_edges);
+    Cartesian_Mesh(Double_View x_edges,
+                   Double_View y_edges,
+                   Double_View z_edges)
+      : d_x_edges(x_edges)
+      , d_y_edges(y_edges)
+      , d_z_edges(z_edges)
+      , d_dimension(3)
+    {
+        d_cells_x = d_x_edges.size()-1;
+        d_cells_y = d_y_edges.size()-1;
+        d_cells_z = d_z_edges.size()-1;
+        d_num_cells = d_cells_x * d_cells_y * d_cells_z;
+    }
 
     // >>> ACCESSORS
 
     //! Get number of cells.
-    PROFUGUS_HOST_DEVICE_FUNCTION 
+    PROFUGUS_HOST_DEVICE_FUNCTION
     cell_type num_cells() const { return d_num_cells; }
 
     //! Number of cells along an axis
-    PROFUGUS_HOST_DEVICE_FUNCTION 
+    PROFUGUS_HOST_DEVICE_FUNCTION
     dim_type num_cells_along(dim_type d) const
     {
-        REQUIRE( d>=0 && d<=3 );
+        DEVICE_REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
-            return d_cells_x;
+            return d_x_edges.size()-1;
         else if( d == def::J )
-            return d_cells_y;
+            return d_y_edges.size()-1;
         else if( d == def::K )
-            return d_cells_z;
+            return d_z_edges.size()-1;
         return -1;
     }
 
     //! Dimension of mesh.
-    PROFUGUS_HOST_DEVICE_FUNCTION 
+    PROFUGUS_HOST_DEVICE_FUNCTION
     dim_type dimension() const { return d_dimension; }
 
     //! Return cell edges along a given direction.
-    PROFUGUS_DEVICE_FUNCTION 
-    double * edges(dim_type d) const
+    PROFUGUS_DEVICE_FUNCTION
+    Double_View edges(dim_type d) const
     {
-        REQUIRE( d>=0 && d<=3 );
+        DEVICE_REQUIRE( d>=0 && d<=3 );
         if( d == def::I )
-            return dd_x_edges;
+            return d_x_edges;
         else if( d == def::J )
-            return dd_y_edges;
+            return d_y_edges;
         else if( d == def::K )
-            return dd_z_edges;
-        return 0;
+            return d_z_edges;
+        return Double_View();
     }
 
     // >>> INDEX CONVERSION
 
     // Convert cardinal index to (i,j) or (i,j,k).
-    PROFUGUS_HOST_DEVICE_FUNCTION 
+    PROFUGUS_HOST_DEVICE_FUNCTION
     void cardinal(
         cell_type cell, dim_type& i, dim_type& j, dim_type& k) const
     {
-        REQUIRE( cell < d_num_cells );
+        DEVICE_REQUIRE( cell < d_num_cells );
         k = cell / (d_cells_x * d_cells_y);
-        ENSURE( k < d_cells_z );
+        DEVICE_ENSURE( k < d_cells_z );
         cell = cell % (d_cells_x * d_cells_y);
         j = cell / d_cells_x;
-        ENSURE( j < d_cells_y );
+        DEVICE_ENSURE( j < d_cells_y );
         i = cell % d_cells_x;
-        ENSURE( i < d_cells_x );
+        DEVICE_ENSURE( i < d_cells_x );
     }
 
     // Convert (i,j,k) to cell index
-    PROFUGUS_HOST_DEVICE_FUNCTION 
+    PROFUGUS_HOST_DEVICE_FUNCTION
     bool index(dim_type   i,
 	       dim_type   j,
 	       dim_type   k,
 	       cell_type &cell) const
     {
-        REQUIRE( i < d_cells_x );
-        REQUIRE( j < d_cells_y );
-        REQUIRE( k < d_cells_z );
+        DEVICE_REQUIRE( i < d_cells_x );
+        DEVICE_REQUIRE( j < d_cells_y );
+        DEVICE_REQUIRE( k < d_cells_z );
         if( i < d_cells_x && j < d_cells_y && k < d_cells_z )
         {
             cell = i + d_cells_x * (j + d_cells_y * k);
-            ENSURE( cell < d_num_cells );
+            DEVICE_ENSURE( cell < d_num_cells );
             return true;
         }
         cell = static_cast<cell_type>(-1);
@@ -179,7 +170,7 @@ class Cartesian_Mesh
     // >>> VOLUME CALCULATION
 
     //! Calculate volume from the global cell id on the device.
-    PROFUGUS_DEVICE_FUNCTION 
+    PROFUGUS_DEVICE_FUNCTION
     double volume(cell_type global_cell ) const
     {
         REQUIRE( global_cell < d_num_cells );
@@ -196,94 +187,120 @@ class Cartesian_Mesh
     // >>> SPATIAL LOCATION
 
     // Locate the positon's ijk coordinates with upper edges begin "inside"
-    PROFUGUS_DEVICE_FUNCTION 
+    PROFUGUS_DEVICE_FUNCTION
     void find_upper(const Space_Vector &r, Coordinates &ijk ) const
     {
-        ijk.i = find_upper(r.x, def::I);
-        ijk.j = find_upper(r.y, def::J);
-        ijk.k = find_upper(r.z, def::K);
+        using def::I; using def::J; using def::K;
+        ijk[I] = find_upper(r[I], I);
+        ijk[J] = find_upper(r[J], J);
+        ijk[K] = find_upper(r[K], K);
     }
 
     // Locate a coordinate along a single axis
-    PROFUGUS_DEVICE_FUNCTION 
+    PROFUGUS_DEVICE_FUNCTION
     dim_type find_upper(
         double r, dim_type axis) const
     {
-        REQUIRE( 0 <= axis && axis < d_dimension );
+        DEVICE_REQUIRE( 0 <= axis && axis < d_dimension );
         const double *edges_start;
         const double *edges_end;
         if( axis == def::I )
         {
-            edges_start = dd_x_edges;
-            edges_end   = dd_x_edges+d_cells_x+1;
+            edges_start = d_x_edges.begin();
+            edges_end   = d_x_edges.end();
         }
         if( axis == def::J )
         {
-            edges_start = dd_y_edges;
-            edges_end   = dd_y_edges+d_cells_y+1;
+            edges_start = d_y_edges.begin();
+            edges_end   = d_y_edges.end();
         }
         if( axis == def::K )
         {
-            edges_start = dd_z_edges;
-            edges_end   = dd_z_edges+d_cells_z+1;
+            edges_start = d_z_edges.begin();
+            edges_end   = d_z_edges.end();
         }
         return cuda_utils::utility::lower_bound(edges_start,edges_end,r)
             - edges_start - 1;
     }
+};
 
-  //! Get lower corner of domain
-  Space_Vector lower() const
-  {
-    Space_Vector xyz;
+//===========================================================================//
+/*!
+ * \class Cartesian_Mesh_DMM
+ * \brief Device memory manager for Cartesian_Mesh
+ */
+//===========================================================================//
 
-    cudaMemcpy(&xyz.x, dd_x_edges, sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&xyz.y, dd_y_edges, sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&xyz.z, dd_z_edges, sizeof(double), cudaMemcpyDeviceToHost);
+class Cartesian_Mesh_DMM : public cuda::Device_Memory_Manager<Cartesian_Mesh>
+{
+  public:
+    //@{
+    //! Mesh typedefs
+    typedef int                           dim_type;
+    typedef size_t                        size_type;
+    typedef profugus::geometry::cell_type cell_type;
+    typedef cuda_utils::Space_Vector      Space_Vector;
+    typedef cuda_utils::Coordinates       Coordinates;
+    typedef std::vector<double>           Vec_Dbl;
+    //@}
 
-    return xyz;
-  }
+  private:
+    // >>> DATA
 
-  //! Get high corner of domain
-  Space_Vector upper() const
-  {
-    Space_Vector xyz;
+    // Cell edges.
+    thrust::device_vector<double> d_x_edges;
+    thrust::device_vector<double> d_y_edges;
+    thrust::device_vector<double> d_z_edges;
 
-    cudaMemcpy(&xyz.x, dd_x_edges+d_cells_x, sizeof(double),
-               cudaMemcpyDeviceToHost);
-    cudaMemcpy(&xyz.y, dd_y_edges+d_cells_y, sizeof(double),
-               cudaMemcpyDeviceToHost);
-    cudaMemcpy(&xyz.z, dd_z_edges+d_cells_z, sizeof(double),
-               cudaMemcpyDeviceToHost);
+    // Dimensionality (always 3 for now)
+    dim_type d_dimension;
 
-    return xyz;
-  }
+    // Cell volumes
+    std::vector<double> d_volumes;
 
-    //! Low corner of mesh in \e (i,j,k) direction.
-    PROFUGUS_DEVICE_FUNCTION 
-    double low_corner(dim_type d) const
+    // Extents
+    def::Space_Vector d_lower;
+    def::Space_Vector d_upper;
+
+  public:
+
+    // Construct from xyz edges.
+    Cartesian_Mesh_DMM(const Vec_Dbl& x_edges, const Vec_Dbl& y_edges,
+                       const Vec_Dbl& z_edges);
+
+    Cartesian_Mesh device_instance()
     {
-        REQUIRE( d>=0 && d<=3 );
-	REQUIRE( d == def::I || d == def::J || d == def::K );
-        if( d == def::I )
-            return dd_x_edges[0];
-        else if( d == def::J )
-            return dd_y_edges[0];
-        else
-            return dd_z_edges[0];
+        Cartesian_Mesh mesh(cuda::make_view(d_x_edges),
+                            cuda::make_view(d_y_edges),
+                            cuda::make_view(d_z_edges));
+        return mesh;
     }
 
-    //! High corner of mesh in \e (i,j,k) direction.
-    PROFUGUS_DEVICE_FUNCTION 
-    double high_corner(dim_type d) const
+    // >>> ACCESSORS
+
+    //! Number of cells in mesh
+    size_type num_cells() const {return d_volumes.size();}
+
+    // >>> VOLUME CALCULATION
+
+    //! Get all volumes on host
+    const std::vector<double>& volumes() const
     {
-        REQUIRE( d>=0 && d<=3 );
-	REQUIRE( d == def::I || d == def::J || d == def::K );
-        if( d == def::I )
-            return dd_x_edges[d_cells_x];
-        else if( d == def::J )
-            return dd_y_edges[d_cells_y];
-        else
-            return dd_z_edges[d_cells_z];
+        return d_volumes;
+    }
+
+    //! Get lower corner of domain
+    def::Space_Vector lower() const
+    {
+        return d_lower;
+    }
+
+    //! Get high corner of domain
+    def::Space_Vector upper() const
+    {
+        return d_upper;
+    }
+
     }
 };
 

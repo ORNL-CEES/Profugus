@@ -165,6 +165,9 @@ IF(USE_CUDA)
   SET(CUDA_GEOMETRY_SOURCES
     cuda_geometry/Cartesian_Mesh.cu
     cuda_geometry/Mesh_Geometry.cu
+    cuda_rtk/RTK_Cell.cu
+    cuda_rtk/RTK_Array.cu
+    cuda_rtk/RTK_Geometry.cu
     )
   LIST(APPEND CUDA_HEADERS ${CUDA_GEOMETRY_HEADERS})
   LIST(APPEND CUDA_SOURCES ${CUDA_GEOMETRY_SOURCES})
@@ -249,7 +252,8 @@ TRIBITS_ADD_TEST_DIRECTORIES(
 IF(USE_CUDA)
   TRIBITS_ADD_TEST_DIRECTORIES(
     cuda_geometry/test
-    cuda_mc/test)
+    cuda_mc/test
+    cuda_rtk/test)
 ENDIF()
 
 ##---------------------------------------------------------------------------##

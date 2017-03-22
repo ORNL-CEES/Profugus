@@ -44,6 +44,17 @@ typename RTK_Array<T>::Object_t& RTK_Array<T>::object(int index) const
 
 //---------------------------------------------------------------------------//
 /*!
+ * \brief Query object existence.
+ */
+template<class T>
+bool RTK_Array<T>::has_object(int index) const
+{
+    REQUIRE(index >= 0 && index < d_objects.size());
+    return static_cast<bool>(d_objects[index]);
+}
+
+//---------------------------------------------------------------------------//
+/*!
  * \brief Return the cardinal index given logical indices in the array.
  */
 template<class T>
@@ -157,8 +168,8 @@ RTK_Array<T>::object(const Geo_State_t &state) const
     using def::X; using def::Y; using def::Z;
     REQUIRE(d_completed);
     ENSURE(d_objects[d_layout[index(state.level_coord[d_level][X],
-                                     state.level_coord[d_level][Y],
-                                     state.level_coord[d_level][Z])]]);
+                                    state.level_coord[d_level][Y],
+                                    state.level_coord[d_level][Z])]]);
     return d_objects[d_layout[index(state.level_coord[d_level][X],
                                     state.level_coord[d_level][Y],
                                     state.level_coord[d_level][Z])]];
@@ -248,6 +259,21 @@ void RTK_Array<T>::add_vessel_to_object(int    i,
     // for nested array objects, this is just a pass-through (RTK_Cells
     // require specialization)
     object->add_vessel(R0, R1, xoff, yoff, vid);
+}
+
+//---------------------------------------------------------------------------//
+/*!
+ * \brief Return the array edges.
+ */
+template<class T>
+const typename RTK_Array<T>::Vec_Dbl&
+RTK_Array<T>::edges(int dim) const
+{
+    if (dim == 0)
+        return d_x;
+    else if (dim == 1)
+        return d_y;
+    return d_z;
 }
 
 //---------------------------------------------------------------------------//

@@ -17,6 +17,8 @@
 #include "utils/View_Field.hh"
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Definitions.hh"
+#include "cuda_utils/Device_Memory_Manager.hh"
+#include "cuda_utils/Device_View_Field.hh"
 #include "cuda_utils/Utility_Functions.hh"
 #include "geometry/Definitions.hh"
 #include "geometry/Bounding_Box.hh"
@@ -44,56 +46,21 @@ class Mesh_Geometry
 {
   public:
 
-    typedef size_t                               size_type;
-    typedef profugus::geometry::cell_type        cell_type;
-    typedef profugus::geometry::matid_type       matid_type;
-    typedef std::vector<double>                  Vec_Dbl;
-    typedef std::vector<int>                     Vec_Int;
-    typedef std::vector<matid_type>              Vec_Matids;
-    typedef cuda_utils::arch::Device                   Arch;
-    typedef thrust::device_vector<double>        Dev_Dbl_Vec;
-    typedef thrust::device_vector<int>           Dev_Int_Vec;
-    typedef cuda_utils::Coordinates              Coordinates;
-    typedef cuda_utils::Space_Vector             Space_Vector;
-    typedef Mesh_State                           Geo_State_t;
+    typedef size_t                                size_type;
+    typedef profugus::geometry::cell_type         cell_type;
+    typedef cuda_utils::Space_Vector              Space_Vector;
+    typedef Mesh_State                            Geo_State_t;
+    typedef cuda::const_Device_View_Field<int>    Int_View;
+    typedef cuda::const_Device_View_Field<double> Double_View;
 
     //! Constructor
-    Mesh_Geometry(const Vec_Dbl &x_edges,
-                  const Vec_Dbl &y_edges,
-                  const Vec_Dbl &z_edges);
-
-    // >>> HOST API
-
-    //! Set materials
-    void set_matids(const Vec_Matids& matids)
-    {
-        REQUIRE( matids.size() == num_cells() );
-        d_matid_vec = matids;
-        d_matids = d_matid_vec.data().get();
-    }
-
-    //! Set reflecting boundaries
-    void set_reflecting(const Vec_Int &reflecting_faces)
-    {
-        REQUIRE( reflecting_faces.size() == 6 );
-        d_reflect_vec = reflecting_faces;
-        d_reflect = d_reflect_vec.data().get();
-    }
-
-    //! Access the underlying mesh directly
-    const Cartesian_Mesh& mesh() const { return d_mesh; }
-
-    //! Low corner of problem domain
-    Space_Vector lower() const
-    {
-        return d_mesh.lower();
-    }
-
-    //! High corner of problem domain
-    Space_Vector upper() const
-    {
-        return d_mesh.upper();
-    }
+    Mesh_Geometry(Cartesian_Mesh mesh,
+                  Int_View       matids,
+                  Int_View       reflect)
+      : d_mesh(mesh)
+      , d_matids(matids)
+      , d_reflect(reflect)
+    {}
 
     // >>> DEVICE API
 
@@ -111,9 +78,6 @@ class Mesh_Geometry
         move(state.next_dist, state);
 
         using def::I; using def::J; using def::K;
-        const double *x_edges = d_mesh.edges(I);
-        const double *y_edges = d_mesh.edges(J);
-        const double *z_edges = d_mesh.edges(K);
 
         const int num_cells_x = d_mesh.num_cells_along(I);
         const int num_cells_y = d_mesh.num_cells_along(J);
@@ -122,37 +86,37 @@ class Mesh_Geometry
         constexpr int face_start = Geo_State_t::MINUS_X;
         state.exiting_face    = Geo_State_t::NONE;
         state.reflecting_face = Geo_State_t::NONE;
-        if( state.next_ijk.i < 0 )
+        if( state.next_ijk[I] < 0 )
         {
             state.exiting_face = Geo_State_t::MINUS_X;
             if( d_reflect[Geo_State_t::MINUS_X-face_start] )
                 state.reflecting_face = Geo_State_t::MINUS_X;
         }
-        else if( state.next_ijk.i == num_cells_x )
+        else if( state.next_ijk[I] == num_cells_x )
         {
             state.exiting_face = Geo_State_t::PLUS_X;
             if( d_reflect[Geo_State_t::PLUS_X-face_start] )
                 state.reflecting_face = Geo_State_t::PLUS_X;
         }
-        else if( state.next_ijk.j < 0 )
+        else if( state.next_ijk[J] < 0 )
         {
             state.exiting_face = Geo_State_t::MINUS_Y;
             if( d_reflect[Geo_State_t::MINUS_Y-face_start] )
                 state.reflecting_face = Geo_State_t::MINUS_Y;
         }
-        else if( state.next_ijk.j == num_cells_y )
+        else if( state.next_ijk[J] == num_cells_y )
         {
             state.exiting_face = Geo_State_t::PLUS_Y;
             if( d_reflect[Geo_State_t::PLUS_Y-face_start] )
                 state.reflecting_face = Geo_State_t::PLUS_Y;
         }
-        else if( state.next_ijk.k < 0 )
+        else if( state.next_ijk[K] < 0 )
         {
             state.exiting_face = Geo_State_t::MINUS_Z;
             if( d_reflect[Geo_State_t::MINUS_Z-face_start] )
                 state.reflecting_face = Geo_State_t::MINUS_Z;
         }
-        else if( state.next_ijk.k == num_cells_z )
+        else if( state.next_ijk[K] == num_cells_z )
         {
             state.exiting_face = Geo_State_t::PLUS_Z;
             if( d_reflect[Geo_State_t::PLUS_Z-face_start] )
@@ -173,7 +137,7 @@ class Mesh_Geometry
     }
 
     //! Number of cells (excluding "outside" cell)
-    __host__ __device__ cell_type num_cells() const
+    __device__ cell_type num_cells() const
     {
         return d_mesh.num_cells();
     }
@@ -181,20 +145,20 @@ class Mesh_Geometry
     //! Return the current cell ID, valid only when inside the mesh
     __device__ cell_type cell(const Geo_State_t& state) const
     {
-        REQUIRE(boundary_state(state) != profugus::geometry::OUTSIDE);
+        DEVICE_REQUIRE(boundary_state(state) != profugus::geometry::OUTSIDE);
 
         using def::I; using def::J; using def::K;
         cell_type c = num_cells();
-        bool found = d_mesh.index(state.ijk.i, state.ijk.j, state.ijk.k, c);
+        bool found = d_mesh.index(state.ijk[I], state.ijk[J], state.ijk[K], c);
 
-        ENSURE(found);
+        DEVICE_ENSURE(found);
         return c;
     }
 
     //! Return the current material ID
-    __device__ matid_type matid(const Geo_State_t& state) const
+    __device__ int matid(const Geo_State_t& state) const
     {
-        REQUIRE(cell(state) < num_cells());
+        DEVICE_REQUIRE(cell(state) < num_cells());
 
         return d_matids[cell(state)];
     }
@@ -209,12 +173,12 @@ class Mesh_Geometry
         {
             return profugus::geometry::REFLECT;
         }
-        else if (   (state.ijk.i == -1)
-                 || (state.ijk.j == -1)
-                 || (state.ijk.k == -1)
-                 || (state.ijk.i == d_mesh.num_cells_along(I))
-                 || (state.ijk.j == d_mesh.num_cells_along(J))
-                 || (state.ijk.k == d_mesh.num_cells_along(K)))
+        else if (   (state.ijk[I] == -1)
+                 || (state.ijk[J] == -1)
+                 || (state.ijk[K] == -1)
+                 || (state.ijk[I] == d_mesh.num_cells_along(I))
+                 || (state.ijk[J] == d_mesh.num_cells_along(J))
+                 || (state.ijk[K] == d_mesh.num_cells_along(K)))
         {
             return profugus::geometry::OUTSIDE;
         }
@@ -256,12 +220,6 @@ class Mesh_Geometry
     //! Return the outward normal at the location dictated by the state.
     __device__ inline Space_Vector normal(const Geo_State_t& state) const;
 
-    //! Get cell volume
-    __device__ double volume(size_type cell) const
-    {
-        return d_mesh.volume(cell);
-    }
-
   private:
 
     // >>> IMPLEMENTATION
@@ -278,24 +236,98 @@ class Mesh_Geometry
     //! Move a particle a distance \e d in the current direction.
     __device__ void move(double dist, Geo_State_t &state) const
     {
-        REQUIRE(dist >= 0.0);
-        REQUIRE(cuda_utils::utility::soft_equiv(
-                    cuda_utils::utility::vector_magnitude(state.d_dir),
-                        1.0, 1.0e-6));
+        DEVICE_REQUIRE(dist >= 0.0);
+        DEVICE_REQUIRE(cuda::utility::soft_equiv(
+                       cuda::utility::vector_magnitude(state.d_dir),
+                       1.0, 1.0e-6));
 
-        // advance the particle (unrolled loop)
-        state.d_r.x += dist * state.d_dir.x;
-        state.d_r.y += dist * state.d_dir.y;
-        state.d_r.z += dist * state.d_dir.z;
+        // advance the particle
+        using def::I; using def::J; using def::K;
+        for (int dim : {I, J, K})
+            state.d_r[dim] += dist * state.d_dir[dim];
     }
 
     Cartesian_Mesh d_mesh;
 
-    thrust::device_vector<matid_type> d_matid_vec;
-    thrust::device_vector<int> d_reflect_vec;
+    Int_View d_matids;
+    Int_View d_reflect;
+};
 
-    matid_type *d_matids;
-    int *d_reflect;
+//===========================================================================//
+/*!
+ * \class Mesh_Geometry_DMM
+ * \brief Device memory manager for Mesh_Geometry
+ */
+//===========================================================================//
+
+class Mesh_Geometry_DMM : public cuda::Device_Memory_Manager<Mesh_Geometry>
+{
+  public:
+
+    typedef Mesh_Geometry                        Geometry_t;
+    typedef size_t                               size_type;
+    typedef profugus::geometry::cell_type        cell_type;
+    typedef std::vector<double>                  Vec_Dbl;
+    typedef std::vector<int>                     Vec_Int;
+    typedef thrust::device_vector<double>        Dev_Dbl_Vec;
+    typedef thrust::device_vector<int>           Dev_Int_Vec;
+
+    //! Constructor
+    Mesh_Geometry_DMM(const Vec_Dbl &x_edges,
+                      const Vec_Dbl &y_edges,
+                      const Vec_Dbl &z_edges);
+
+    // DMM Interface
+    Mesh_Geometry device_instance()
+    {
+        Mesh_Geometry geom(d_mesh.device_instance(),
+                           cuda::make_view(d_matids),
+                           cuda::make_view(d_reflect));
+        return geom;
+    }
+
+    // Number of mesh cells in geometry
+    size_type num_cells() const
+    {
+        return d_mesh.num_cells();
+    }
+
+    //! Set materials
+    void set_matids(const Vec_Int& matids)
+    {
+        DEVICE_REQUIRE(matids.size() == d_mesh.num_cells());
+        d_matids = matids;
+    }
+
+    //! Set reflecting boundaries
+    void set_reflecting(const Vec_Int &reflecting_faces)
+    {
+        DEVICE_REQUIRE( reflecting_faces.size() == 6 );
+        d_reflect = reflecting_faces;
+    }
+
+    //! Access the underlying mesh directly
+    const Cartesian_Mesh_DMM& mesh() const {return d_mesh;}
+
+    //! Low corner of problem domain
+    def::Space_Vector lower() const
+    {
+        return d_mesh.lower();
+    }
+
+    //! High corner of problem domain
+    def::Space_Vector upper() const
+    {
+        return d_mesh.upper();
+    }
+
+    //! All cell volumes
+    const std::vector<double>& volumes() const {return d_mesh.volumes();}
+
+    Cartesian_Mesh_DMM d_mesh;
+
+    thrust::device_vector<int> d_matids;
+    thrust::device_vector<int> d_reflect;
 };
 
 //---------------------------------------------------------------------------//

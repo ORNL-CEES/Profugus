@@ -422,7 +422,7 @@ TEST(Core, Reflecting)
     }
 
     EXPECT_TRUE(face_bin[0] + face_bin[1] + face_bin[2] +
-              face_bin[3] + face_bin[4] + face_bin[5] == Np);
+                face_bin[3] + face_bin[4] + face_bin[5] == Np);
 
     EXPECT_EQ(0, face_bin[0]);
     EXPECT_EQ(0, refl_bin[1]);

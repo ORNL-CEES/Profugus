@@ -280,8 +280,8 @@ auto Geometry_Builder<profugus::Core>::build_axial_lattice(
 auto Geometry_Builder<profugus::Mesh_Geometry>::build(
     RCP_ParameterList master) -> SP_Geometry
 {
-    auto mesh_db = Teuchos::sublist(master, "MESH");
     auto problem_db = Teuchos::sublist(master, "PROBLEM");
+    auto mesh_db    = Teuchos::sublist(master, "MESH");
 
     // Ensure all required parameters are present
     REQUIRE( mesh_db->isParameter("x_edges") );

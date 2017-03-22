@@ -12,14 +12,14 @@
 
 namespace cuda_profugus
 {
+
 //---------------------------------------------------------------------------//
-Mesh_Geometry::Mesh_Geometry(const Vec_Dbl &x_edges,
-                             const Vec_Dbl &y_edges,
-                             const Vec_Dbl &z_edges)
+Mesh_Geometry_DMM::Mesh_Geometry_DMM(const Vec_Dbl &x_edges,
+                                     const Vec_Dbl &y_edges,
+                                     const Vec_Dbl &z_edges)
     : d_mesh(x_edges,y_edges,z_edges)
-    , d_reflect_vec(6,0)
+    , d_reflect(6,0)
 {
-    d_reflect = d_reflect_vec.data().get();
 }
 
 //---------------------------------------------------------------------------//

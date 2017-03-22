@@ -28,7 +28,7 @@ namespace cuda_utils
 class SerialDenseDeviceVector
 {
   public:
-    
+
     // Device data constructor. Device-only for wrapping of data on-device.
     PROFUGUS_DEVICE_FUNCTION
     SerialDenseDeviceVector( const int size,
@@ -45,10 +45,10 @@ class SerialDenseDeviceVector
 
     // Get the number of rows. Host-accesible.
     PROFUGUS_DEVICE_FUNCTION
-    int size() const 
-    { 
+    int size() const
+    {
 	PROFUGUS_INSIST_ON_DEVICE;
-	return d_size; 
+	return d_size;
     }
 
     // Const value accessor. Device-only.
@@ -56,7 +56,7 @@ class SerialDenseDeviceVector
     const double& operator()( const int i ) const
     {
 	PROFUGUS_INSIST_ON_DEVICE;
-	REQUIRE( i < d_size );
+	DEVICE_REQUIRE( i < d_size );
 	return d_data[i];
     }
 
@@ -65,10 +65,10 @@ class SerialDenseDeviceVector
     double& operator()( const int i )
     {
 	PROFUGUS_INSIST_ON_DEVICE;
-	REQUIRE( i < d_size );
+	DEVICE_REQUIRE( i < d_size );
 	return d_data[i];
     }
-    
+
   private:
 
     // Length of vector.

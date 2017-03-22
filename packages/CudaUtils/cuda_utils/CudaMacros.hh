@@ -32,7 +32,7 @@
 #define PROFUGUS_INSIST_ON_DEVICE
 #else
 #define PROFUGUS_INSIST_ON_DEVICE \
-    do { INSIST(false,"Calling device code from host!"); } while(0)
+    do { DEVICE_INSIST(false,"Calling device code from host!"); } while(0)
 #endif
 
 //---------------------------------------------------------------------------//

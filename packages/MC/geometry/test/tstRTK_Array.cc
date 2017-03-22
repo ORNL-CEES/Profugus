@@ -1058,7 +1058,6 @@ TEST(Reflecting, all)
             EXPECT_EQ(State::PLUS_Z, state.exiting_face);
         }
     }
-
 }
 
 //---------------------------------------------------------------------------//

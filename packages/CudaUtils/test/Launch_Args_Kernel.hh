@@ -35,7 +35,7 @@ class Functor
 
     __host__ __device__ void operator()( const std::size_t idx )
     {
-        INSIST( idx < d_data_size, "Testing INSIST" );
+        DEVICE_INSIST( idx < d_data_size, "Testing INSIST" );
         d_device_data[idx] += static_cast<double>(idx);
     }
 

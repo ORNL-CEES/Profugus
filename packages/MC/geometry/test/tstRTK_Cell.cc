@@ -1245,6 +1245,7 @@ TEST(Vessel, Add)
     }
     EXPECT_TRUE(caught);
 
+    int   vid = 0;
     double R0 = 0.0, R1 = 0.0, xc = 0.0, yc = 0.0;
 
     x_off = 21.62 * 5.0;
@@ -1252,7 +1253,7 @@ TEST(Vessel, Add)
 
     RTK_Cell vessel1(10, 21.62, 30.0, 14.28, 140.0, 158.0, x_off, y_off, 101);
     EXPECT_TRUE(vessel1.has_vessel());
-    EXPECT_TRUE(vessel1.vessel_data(R0, R1, xc, yc));
+    EXPECT_TRUE(vessel1.vessel_data(vid, R0, R1, xc, yc));
     EXPECT_EQ(140.0, R0);
     EXPECT_EQ(-1, R1);
     EXPECT_SOFTEQ(118.91, xc, 1.0e-12);
@@ -1263,7 +1264,7 @@ TEST(Vessel, Add)
 
     RTK_Cell vessel2(10, 21.62, 30.0, 14.28, 120.0, 157.0, x_off, y_off, 101);
     EXPECT_TRUE(vessel2.has_vessel());
-    EXPECT_TRUE(vessel2.vessel_data(R0, R1, xc, yc));
+    EXPECT_TRUE(vessel2.vessel_data(vid, R0, R1, xc, yc));
     EXPECT_EQ(-1, R0);
     EXPECT_EQ(157, R1);
     EXPECT_SOFTEQ(-118.91, xc, 1.0e-12);
@@ -1274,7 +1275,7 @@ TEST(Vessel, Add)
 
     RTK_Cell vessel3(10, 21.62, 30.0, 14.28, 130.0, 150.0, x_off, y_off, 101);
     EXPECT_TRUE(vessel3.has_vessel());
-    EXPECT_TRUE(vessel3.vessel_data(R0, R1, xc, yc));
+    EXPECT_TRUE(vessel3.vessel_data(vid, R0, R1, xc, yc));
     EXPECT_EQ(130.0, R0);
     EXPECT_EQ(150.0, R1);
     EXPECT_SOFTEQ(118.91, xc, 1.0e-12);
@@ -1285,7 +1286,7 @@ TEST(Vessel, Add)
 
     RTK_Cell vessel4(10, 21.62, 30.0, 14.28, 130.0, 150.0, x_off, y_off, 101);
     EXPECT_TRUE(vessel4.has_vessel());
-    EXPECT_TRUE(vessel4.vessel_data(R0, R1, xc, yc));
+    EXPECT_TRUE(vessel4.vessel_data(vid, R0, R1, xc, yc));
     EXPECT_EQ(130.0, R0);
     EXPECT_EQ(150.0, R1);
     EXPECT_SOFTEQ(-118.91, xc, 1.0e-12);
