@@ -27,7 +27,7 @@ void kernel(int *tx,
             int *bx,
             int *by)
 {
-    auto tid = cuda::utility::thread_id();
+    auto tid = cuda_utils::utility::thread_id();
     tx[tid]  = threadIdx.x;
     ty[tid]  = threadIdx.y;
     tz[tid]  = threadIdx.z;

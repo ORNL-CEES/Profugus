@@ -202,11 +202,11 @@ void sample_angle( cuda_utils::Space_Vector& omega,
 		   const double ran1,
 		   const double ran2 )
 {
-    omega.z = 1.0 - 2.0 * ran1;
-    double phi = 4.0 * std::asin(1.0) * ran2;
-    double sintheta = std::sqrt(1.0 - omega.z * omega.z);
-    omega.x = sintheta * std::cos(phi);
-    omega.y = sintheta * std::sin(phi);
+    omega[2] = 1.0 - 2.0 * ran1;
+    double phi = 4.0 * asin(1.0) * ran2;
+    double sintheta = sqrt(1.0 - omega[2] * omega[2]);
+    omega[0] = sintheta * cos(phi);
+    omega[1] = sintheta * sin(phi);
 }
 
 //---------------------------------------------------------------------------//
@@ -226,7 +226,7 @@ void sample_angle( cuda_utils::Space_Vector& omega,
  * \return vector magnitude
  */
 PROFUGUS_DEVICE_FUNCTION
-__device__ inline double vector_magnitude(
+double vector_magnitude(
     const cuda_utils::Space_Vector &vector)
 {
     return sqrt(vector[0] * vector[0] +

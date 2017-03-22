@@ -245,7 +245,7 @@ void test_one_level(const host::Zoo &zoo)
 void test_two_level(const std::shared_ptr<host::Zoo> &zoo)
 {
     device::Zoo_Host_Manager zoo_manager(zoo);
-    auto zoo_ptr = cuda::shared_device_ptr<device::Zoo>(
+    auto zoo_ptr = cuda_utils::shared_device_ptr<device::Zoo>(
         zoo_manager.device_instance());
 
     thrust::device_vector<int> ids(5, -1);
