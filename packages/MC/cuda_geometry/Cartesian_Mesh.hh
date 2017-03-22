@@ -167,23 +167,6 @@ class Cartesian_Mesh
         return false;
     }
 
-    // >>> VOLUME CALCULATION
-
-    //! Calculate volume from the global cell id on the device.
-    PROFUGUS_DEVICE_FUNCTION
-    double volume(cell_type global_cell ) const
-    {
-        REQUIRE( global_cell < d_num_cells );
-        return dd_volumes[global_cell];
-    }
-
-    //! Calculate volume from the global cell id on the host.
-    double volume_host(cell_type global_cell ) const
-    {
-        REQUIRE( global_cell < d_num_cells );
-        return (*d_volumes_vec_host)[global_cell];
-    }
-
     // >>> SPATIAL LOCATION
 
     // Locate the positon's ijk coordinates with upper edges begin "inside"
@@ -299,8 +282,6 @@ class Cartesian_Mesh_DMM : public cuda::Device_Memory_Manager<Cartesian_Mesh>
     def::Space_Vector upper() const
     {
         return d_upper;
-    }
-
     }
 };
 

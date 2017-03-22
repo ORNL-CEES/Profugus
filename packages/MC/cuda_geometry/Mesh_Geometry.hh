@@ -237,8 +237,8 @@ class Mesh_Geometry
     __device__ void move(double dist, Geo_State_t &state) const
     {
         DEVICE_REQUIRE(dist >= 0.0);
-        DEVICE_REQUIRE(cuda::utility::soft_equiv(
-                       cuda::utility::vector_magnitude(state.d_dir),
+        DEVICE_REQUIRE(cuda_utils::utility::soft_equiv(
+                       cuda_utils::utility::vector_magnitude(state.d_dir),
                        1.0, 1.0e-6));
 
         // advance the particle

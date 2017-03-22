@@ -31,7 +31,7 @@ inline void RTK_Geometry::initialize(
     state.d_dir = direction;
 
     // normalize the direction
-    cuda::utility::vector_normalize(state.d_dir);
+    cuda_utils::utility::vector_normalize(state.d_dir);
 
     // initialize the array with the current position
     d_array.initialize(state.d_r, state);
@@ -84,8 +84,8 @@ inline bool RTK_Geometry::reflect(
     using def::X; using def::Y; using def::Z;
 
     DEVICE_REQUIRE(
-        cuda::utility::soft_equiv(
-            cuda::utility::vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+        cuda_utils::utility::soft_equiv(
+        cuda_utils::utility::vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
     // get the outward normal
     Space_Vector n = normal(state);
@@ -102,8 +102,8 @@ inline bool RTK_Geometry::reflect(
         state.d_dir[Z] -= 2.0 * n[Z] * dot;
 
         DEVICE_ENSURE(
-            cuda::utility::soft_equiv(
-                cuda::utility::vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+            cuda_utils::utility::soft_equiv(
+            cuda_utils::utility::vector_magnitude(state.d_dir), 1.0, 1.0e-6));
         return true;
     }
 

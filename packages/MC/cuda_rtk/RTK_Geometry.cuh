@@ -130,14 +130,14 @@ class RTK_Geometry
         state.d_dir = new_direction;
 
         // normalize the direction
-        cuda::utility::vector_normalize(state.d_dir);
+        cuda_utils::utility::vector_normalize(state.d_dir);
     }
 
     // Change the direction through angles \f$(\theta,\phi)\f$.
     __device__
     void change_direction(double costheta, double phi, Geo_State_t &state) const
     {
-        cuda::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
+        cuda_utils::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
     }
 
     // Reflect the direction at a reflecting surface.
@@ -156,9 +156,9 @@ class RTK_Geometry
     void move(double d, Geo_State_t &state) const
     {
         DEVICE_REQUIRE(d >= 0.0);
-        DEVICE_REQUIRE(cuda::utility::soft_equiv(
-                           cuda::utility::vector_magnitude(state.d_dir),
-                           1.0, 1.0e-6));
+        DEVICE_REQUIRE(cuda_utils::utility::soft_equiv(
+                       cuda_utils::utility::vector_magnitude(state.d_dir),
+                       1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
         state.d_r[def::X] += d * state.d_dir[def::X];

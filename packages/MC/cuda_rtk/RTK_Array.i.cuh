@@ -207,11 +207,11 @@ int RTK_Array<T>::find_object(
     View_Dbl::const_pointer itr, jtr, ktr;
 
     // find the logical indices of the object in the array
-    itr = cuda::utility::lower_bound(d_x.begin(), d_x.end(), r[X]);
+    itr = cuda_utils::utility::lower_bound(d_x.begin(), d_x.end(), r[X]);
     i   = itr - d_x.begin() - 1;
-    jtr = cuda::utility::lower_bound(d_y.begin(), d_y.end(), r[Y]);
+    jtr = cuda_utils::utility::lower_bound(d_y.begin(), d_y.end(), r[Y]);
     j   = jtr - d_y.begin() - 1;
-    ktr = cuda::utility::lower_bound(d_z.begin(), d_z.end(), r[Z]);
+    ktr = cuda_utils::utility::lower_bound(d_z.begin(), d_z.end(), r[Z]);
     k   = ktr - d_z.begin() - 1;
 
     // check for particles on the low face of the array
@@ -273,7 +273,7 @@ int RTK_Array<T>::find_object_on_boundary(
     // face dimension as this is known
     if (face_type != X)
     {
-        itr = cuda::utility::lower_bound(d_x.begin(), d_x.end(), r[X]);
+        itr = cuda_utils::utility::lower_bound(d_x.begin(), d_x.end(), r[X]);
         i   = itr - d_x.begin() - 1;
         DEVICE_CHECK(d_x[i] <= r[X] && d_x[i+1] >= r[X]);
     }
@@ -285,7 +285,7 @@ int RTK_Array<T>::find_object_on_boundary(
 
     if (face_type != Y)
     {
-        jtr = cuda::utility::lower_bound(d_y.begin(), d_y.end(), r[Y]);
+        jtr = cuda_utils::utility::lower_bound(d_y.begin(), d_y.end(), r[Y]);
         j   = jtr - d_y.begin() - 1;
         DEVICE_CHECK(d_y[j] <= r[Y] && d_y[j+1] >= r[Y]);
     }
@@ -297,7 +297,7 @@ int RTK_Array<T>::find_object_on_boundary(
 
     if (face_type != Z)
     {
-        ktr = cuda::utility::lower_bound(d_z.begin(), d_z.end(), r[Z]);
+        ktr = cuda_utils::utility::lower_bound(d_z.begin(), d_z.end(), r[Z]);
         k   = ktr - d_z.begin() - 1;
         DEVICE_CHECK(d_z[k] <= r[Z] && d_z[k+1] >= r[Z]);
     }
@@ -376,7 +376,7 @@ RTK_Array<T>::transform(
     const Geo_State_t  &state) const
 {
     using def::X; using def::Y; using def::Z;
-    using cuda::utility::soft_equiv;
+    using cuda_utils::utility::soft_equiv;
 
     DEVICE_REQUIRE(r[X] > d_corner[X] || soft_equiv(r[X], d_corner[X]));
     DEVICE_REQUIRE(r[X] < d_corner[X] + d_length[X] ||
@@ -578,7 +578,7 @@ RTK_Array<RTK_Cell>::transform(
     const Geo_State_t  &state) const
 {
     using def::X; using def::Y; using def::Z;
-    using cuda::utility::soft_equiv;
+    using cuda_utils::utility::soft_equiv;
     using std::fabs;
 
     DEVICE_REQUIRE(d_level == 0);

@@ -135,8 +135,8 @@ void RTK_Cell::distance_to_boundary(
     Geo_State_t        &state) const
 {
     using def::X; using def::Y; using def::Z;
-    using cuda::utility::vector_magnitude;
-    using cuda::utility::soft_equiv;
+    using cuda_utils::utility::vector_magnitude;
+    using cuda_utils::utility::soft_equiv;
 
     DEVICE_REQUIRE(!d_vessel ? state.region >= 0 && state.region < d_num_regions
                    : state.region == Geo_State_t::MODERATOR ||
@@ -293,7 +293,7 @@ int RTK_Cell::region(
     double y) const
 {
     using def::X; using def::Y;
-    using cuda::utility::soft_equiv;
+    using cuda_utils::utility::soft_equiv;
 
     DEVICE_REQUIRE(d_num_regions > 0);
     DEVICE_REQUIRE(x > d_extent[0][LO] || soft_equiv(x, d_extent[0][LO]));

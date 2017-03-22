@@ -158,8 +158,8 @@ __device__
 bool Mesh_Geometry::reflect(Geo_State_t& state) const
 {
     using def::I; using def::J; using def::K;
-    using cuda::utility::soft_equiv;
-    using cuda::utility::vector_magnitude;
+    using cuda_utils::utility::soft_equiv;
+    using cuda_utils::utility::vector_magnitude;
     DEVICE_REQUIRE(soft_equiv(vector_magnitude(state.d_dir), 1.0, 1.0e-6));
 
     // If we're not in a reflecting state, return
