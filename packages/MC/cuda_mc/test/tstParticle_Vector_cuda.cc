@@ -111,8 +111,8 @@ TEST(Particle_Vector, construction)
     for ( int i = 0; i < num_particle; ++i )
     {
 	// Evens scatter, odds absorb
-	host_events[i] = ( i % 2 == 0 ) 
-			 ? cuda_profugus::events::SCATTER 
+	host_events[i] = ( i % 2 == 0 )
+			 ? cuda_profugus::events::SCATTER
 			 : cuda_profugus::events::ABSORPTION;
     }
 
@@ -155,21 +155,21 @@ TEST(Particle_Vector, construction)
     typedef typename Particle_Vector_Tester::Geo_State_t Geo_State_t;
     Geo_State_t geo_state;
 
-    geo_state.ijk.i = 2.3;
-    geo_state.ijk.j = 1.3;
-    geo_state.ijk.k = 3.3;
+    geo_state.ijk[0] = 2.3;
+    geo_state.ijk[1] = 1.3;
+    geo_state.ijk[2] = 3.3;
 
-    geo_state.d_r.x = 2.4;
-    geo_state.d_r.y = 1.4;
-    geo_state.d_r.z = 3.4;
+    geo_state.d_r[0] = 2.4;
+    geo_state.d_r[1] = 1.4;
+    geo_state.d_r[2] = 3.4;
 
-    geo_state.d_dir.x = 2.5;
-    geo_state.d_dir.y = 1.5;
-    geo_state.d_dir.z = 3.5;
+    geo_state.d_dir[0] = 2.5;
+    geo_state.d_dir[1] = 1.5;
+    geo_state.d_dir[2] = 3.5;
 
-    geo_state.next_ijk.i = 2.6;
-    geo_state.next_ijk.j = 1.6;
-    geo_state.next_ijk.k = 3.6;
+    geo_state.next_ijk[0] = 2.6;
+    geo_state.next_ijk[1] = 1.6;
+    geo_state.next_ijk[2] = 3.6;
 
     geo_state.next_dist = 4.3;
 
@@ -178,21 +178,21 @@ TEST(Particle_Vector, construction)
     Teuchos::Array<Geo_State_t> states = tester.geo_state();
     for ( auto& s : states )
     {
-	EXPECT_EQ( geo_state.ijk.i, s.ijk.i );
-	EXPECT_EQ( geo_state.ijk.j, s.ijk.j );
-	EXPECT_EQ( geo_state.ijk.k, s.ijk.k );
+	EXPECT_EQ( geo_state.ijk[0], s.ijk[0] );
+	EXPECT_EQ( geo_state.ijk[1], s.ijk[1] );
+	EXPECT_EQ( geo_state.ijk[2], s.ijk[2] );
 
-	EXPECT_EQ( geo_state.d_r.x, s.d_r.x );
-	EXPECT_EQ( geo_state.d_r.y, s.d_r.y );
-	EXPECT_EQ( geo_state.d_r.z, s.d_r.z );
+	EXPECT_EQ( geo_state.d_r[0], s.d_r[0] );
+	EXPECT_EQ( geo_state.d_r[1], s.d_r[1] );
+	EXPECT_EQ( geo_state.d_r[2], s.d_r[2] );
 
-	EXPECT_EQ( geo_state.d_dir.x, s.d_dir.x );
-	EXPECT_EQ( geo_state.d_dir.y, s.d_dir.y );
-	EXPECT_EQ( geo_state.d_dir.z, s.d_dir.z );
+	EXPECT_EQ( geo_state.d_dir[0], s.d_dir[0] );
+	EXPECT_EQ( geo_state.d_dir[1], s.d_dir[1] );
+	EXPECT_EQ( geo_state.d_dir[2], s.d_dir[2] );
 
-	EXPECT_EQ( geo_state.next_ijk.i, s.next_ijk.i );
-	EXPECT_EQ( geo_state.next_ijk.j, s.next_ijk.j );
-	EXPECT_EQ( geo_state.next_ijk.k, s.next_ijk.k );
+	EXPECT_EQ( geo_state.next_ijk[0], s.next_ijk[0] );
+	EXPECT_EQ( geo_state.next_ijk[1], s.next_ijk[1] );
+	EXPECT_EQ( geo_state.next_ijk[2], s.next_ijk[2] );
 
 	EXPECT_EQ( geo_state.next_dist, s.next_dist );
     }
@@ -213,7 +213,7 @@ TEST(Particle_Vector, construction)
     for ( auto& s : steps )
     {
 	EXPECT_EQ( s, step );
-    }    
+    }
 }
 
 //---------------------------------------------------------------------------//

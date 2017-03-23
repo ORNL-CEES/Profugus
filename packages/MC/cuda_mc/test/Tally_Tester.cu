@@ -77,8 +77,9 @@ Tally_Tester::Tally_Tester(  const std::vector<double>& x_edges,
     cuda_utils::Hardware<cuda_utils::arch::Device>::acquire();
 
     // Create the geometry.
-    d_geometry = cuda_utils::shared_device_ptr<Geometry>( x_edges, y_edges, z_edges );
-    int num_cells = d_geometry.get_host_ptr()->num_cells();
+    auto geom_dmm = std::make_shared<Geometry_DMM>(x_edges,y_edges,z_edges);
+    d_geometry = cuda_utils::shared_device_ptr<Geometry>(geom_dmm->device_instance());
+    int num_cells = geom_dmm->num_cells();
 
     // Create the particle vector.
     d_particles = cuda_utils::shared_device_ptr<Particle_Vector>( num_particle, rng );
@@ -153,16 +154,24 @@ Tally_Tester::Tally_Tester(  const std::vector<double>& x_edges,
 
     // Set the geometry state. One particle per cell per batch.
     Teuchos::Array<Geo_State_t> geo_state( num_particle );
+    int cells_x = x_edges.size()-1;
+    int cells_y = y_edges.size()-1;
+    int cells_z = z_edges.size()-1;
     for ( int b = 0; b < num_batch; ++b )
     {
-	for ( int c = 0; c < num_cells; ++c )
-	{
-	    int i, j, k;
-	    d_geometry.get_host_ptr()->mesh().cardinal( c, i, j, k );
-	    geo_state[ b*num_cells + c ].ijk.i = i;
-	    geo_state[ b*num_cells + c ].ijk.j = j;
-	    geo_state[ b*num_cells + c ].ijk.k = k;
-	}
+        for (int k = 0; k < cells_z; ++k)
+        {
+            for (int j = 0; j < cells_y; ++j)
+            {
+                for (int i = 0; i < cells_x; ++i)
+                {
+                    int c = i + cells_x * (j + cells_y * k);
+                    geo_state[ b*num_cells + c ].ijk[0] = i;
+                    geo_state[ b*num_cells + c ].ijk[1] = j;
+                    geo_state[ b*num_cells + c ].ijk[2] = k;
+                }
+            }
+        }
     }
     Geo_State_t* device_geo_state;
     cudaMalloc( (void**) &device_geo_state, num_particle * sizeof(Geo_State_t) );

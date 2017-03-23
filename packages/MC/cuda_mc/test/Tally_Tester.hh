@@ -24,6 +24,7 @@ class Tally_Tester
 {
   public:
 
+    typedef cuda_profugus::Mesh_Geometry_DMM Geometry_DMM;
     typedef cuda_profugus::Mesh_Geometry Geometry;
     typedef cuda_profugus::Particle_Vector<Geometry> Particle_Vector;
     typedef typename Particle_Vector::Event_t Event_t;
@@ -33,20 +34,20 @@ class Tally_Tester
     Tally_Tester( const std::vector<double>& x_edges,
 			    const std::vector<double>& y_edges,
 			    const std::vector<double>& z_edges,
-			    const int num_particle, 
+			    const int num_particle,
 			    const profugus::RNG& rng,
 			    const int num_batch );
 
     // Get the geometry.
-    cuda_utils::Shared_Device_Ptr<Geometry> geometry() const 
+    cuda_utils::Shared_Device_Ptr<Geometry> geometry() const
     { return d_geometry; }
 
     // Get the particles
-    cuda_utils::Shared_Device_Ptr<Particle_Vector> particles() const 
+    cuda_utils::Shared_Device_Ptr<Particle_Vector> particles() const
     { return d_particles; }
 
   private:
-    
+
     cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
     cuda_utils::Shared_Device_Ptr<Particle_Vector> d_particles;
 };

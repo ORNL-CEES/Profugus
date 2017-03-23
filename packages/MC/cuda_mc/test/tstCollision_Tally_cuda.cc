@@ -45,12 +45,12 @@ TEST(Collision_Tally, construction)
     profugus::RNG_Control control( 3420239343 );
 
     // Create the tally tester.
-    Tally_Tester tester( 
+    Tally_Tester tester(
 	x_edges, y_edges, z_edges, num_particle, control.rng(), num_batch );
 
     // Create a tally.
-    cuda_profugus::Collision_Tally<cuda_profugus::Mesh_Geometry> 
-	tally( tester.geometry(), num_batch );
+    cuda_profugus::Collision_Tally<cuda_profugus::Mesh_Geometry>
+	tally( tester.geometry(), num_batch, num_cells );
 
     // check sizes
     EXPECT_EQ( tally.num_cells(), num_cells );

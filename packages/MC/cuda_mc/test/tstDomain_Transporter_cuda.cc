@@ -180,12 +180,12 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
 
     // initialize the particles
     Space_Vector r, d;
-    r.x = 50.0;
-    r.y = 50.0;
-    r.z = 50.0;
-    d.x = 1.0;
-    d.y = 1.0;
-    d.z = 1.0;
+    r[0] = 50.0;
+    r[1] = 50.0;
+    r[2] = 50.0;
+    d[0] = 1.0;
+    d[1] = 1.0;
+    d[2] = 1.0;
     physics_tester.geometry_initialize( r, d, 0 );
     std::vector<double> cdf = {0.2, 0.4, 0.6, 0.8, 1.0};
     physics_tester.sample_group( cdf );
@@ -201,9 +201,10 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
 
     // add a cell tally
     int num_batch = 1;
+    std::vector<double> volumes(5*5*5,20.0*20.0*20.0);
     std::shared_ptr<Cell_Tally_t> cell_tally =
         std::make_shared<Cell_Tally_t>( this->db, physics_tester.geometry(),
-                                        num_batch );
+                volumes, num_batch );
     tallier->add_pathlength_tally( cell_tally );
     tallier->build();
 

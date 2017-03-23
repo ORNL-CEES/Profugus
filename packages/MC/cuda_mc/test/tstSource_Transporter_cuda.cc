@@ -198,9 +198,10 @@ TYPED_TEST(SourceTransporterTest, fixed_source)
 
     // add a cell tally
     int num_batch = 2;
+    std::vector<double> volumes(5*5*5,20.0*20.0*20.0);
     auto cell_tally =
         std::make_shared<Cell_Tally_t>( this->db, physics_tester.geometry(),
-                                        num_batch );
+                                        volumes, num_batch );
     tallier->add_pathlength_tally( cell_tally );
     tallier->build();
 
@@ -261,17 +262,22 @@ TYPED_TEST(SourceTransporterTest, fission_source)
 
     // add a keff tally
     double keff_init = 1.01;
+    std::vector<double> volumes(5*5*5,20.0*20.0*20.0);
     auto keff_tally =
-        std::make_shared<Keff_Tally_t>( keff_init, physics_tester.physics(), vector_size);
+        std::make_shared<Keff_Tally_t>( keff_init, physics_tester.physics(),
+                                        vector_size);
     keff_tally->begin_active_cycles();
     tallier->add_pathlength_tally( keff_tally );
     tallier->build();
 
     // create a source.
     auto shape = physics_tester.source_shape();
+    def::Space_Vector lower = {0, 0, 0};
+    def::Space_Vector upper = {100, 100, 100};
     auto source = std::make_shared<Fission_Source_t>( this->db,
                                                       physics_tester.geometry(),
-                                                      physics_tester.physics() );
+                                                      physics_tester.physics(),
+                                                      volumes, lower, upper );
     Teuchos::Array<double> density( physics_tester.geometry().get_host_ptr()->num_cells(),
                                     10*this->db->get<int>("Np") );
     Teuchos::ArrayView<const double> dens_view = density();
@@ -300,9 +306,9 @@ TYPED_TEST(SourceTransporterTest, fission_source)
     for ( auto fs : *fsites )
     {
         std::cout << "Fsite: " << fs.m << ", "
-                  << fs.r.x << " "
-                  << fs.r.y << " "
-                  << fs.r.z << std::endl;
+                  << fs.r[0] << " "
+                  << fs.r[1] << " "
+                  << fs.r[2] << std::endl;
     }
 }
 

@@ -27,6 +27,7 @@ class Uniform_Source_Tester
 {
   public:
 
+    typedef cuda_profugus::Mesh_Geometry_DMM Geometry_DMM;
     typedef cuda_profugus::Mesh_Geometry Geometry;
     typedef cuda_profugus::Particle_Vector<Geometry> Particle_Vector;
     typedef typename Particle_Vector::Event_t Event_t;
@@ -42,11 +43,11 @@ class Uniform_Source_Tester
 			   const int num_group );
 
     // Get the geometry.
-    cuda_utils::Shared_Device_Ptr<Geometry> geometry() const 
+    cuda_utils::Shared_Device_Ptr<Geometry> geometry() const
     { return d_geometry; }
 
     // Get the source shape.
-    cuda_utils::Shared_Device_Ptr<Shape> shape() const 
+    cuda_utils::Shared_Device_Ptr<Shape> shape() const
     { return d_shape; }
 
     // Get the particles
@@ -75,7 +76,7 @@ class Uniform_Source_Tester
     void kill_particles();
 
   private:
-    
+
     int d_size;
     cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
     cuda_utils::Shared_Device_Ptr<Shape> d_shape;

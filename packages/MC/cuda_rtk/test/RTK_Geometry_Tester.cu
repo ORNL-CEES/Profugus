@@ -41,7 +41,7 @@ void heuristic_kernel(
     int             *bins)
 {
     // Get the thread id
-    auto tid = cuda::utility::thread_id();
+    auto tid = cuda_utils::utility::thread_id();
 
     // Initialize the random number states
     curand_init(dseeds[tid], 0, 0, rngs + tid);
@@ -111,7 +111,7 @@ void reflecting_kernel(
     int             *refl_bin)
 {
     // Get the thread id
-    auto tid = cuda::utility::thread_id();
+    auto tid = cuda_utils::utility::thread_id();
 
     // Initialize the random number states
     curand_init(dseeds[tid], 0, 0, rngs + tid);
@@ -211,7 +211,7 @@ void Core::heuristic()
     Device_Geometry_Manager dmm(*geometry);
 
     // Get the host object
-    auto device_geo = cuda::shared_device_ptr<Device_Geometry>(
+    auto device_geo = cuda_utils::shared_device_ptr<Device_Geometry>(
         dmm.device_instance());
 
     // Send over random number seeds and states
@@ -298,7 +298,7 @@ void Core::reflecting()
     Device_Geometry_Manager dmm(*geometry);
 
     // Get the host object
-    auto device_geo = cuda::shared_device_ptr<Device_Geometry>(
+    auto device_geo = cuda_utils::shared_device_ptr<Device_Geometry>(
         dmm.device_instance());
 
     // Send over random number seeds and states

@@ -165,12 +165,12 @@ TYPED_TEST(PhysicsTest, Collisions_no_capture)
 
     // initialize particles with the geometry and set to collide.
     Space_Vector r, d;
-    r.x = 50.0;
-    r.y = 50.0;
-    r.z = 50.0;
-    d.x = 1.0;
-    d.y = 1.0;
-    d.z = 1.0;
+    r[0] = 50.0;
+    r[1] = 50.0;
+    r[2] = 50.0;
+    d[0] = 1.0;
+    d[1] = 1.0;
+    d[2] = 1.0;
     physics_tester.geometry_initialize( r, d, 0 );
 
     // check distributions from analog collisions
@@ -220,11 +220,11 @@ TYPED_TEST(PhysicsTest, Collisions_no_capture)
 	    Space_Vector omega = geo_state[i].d_dir;
 
 	    // check octant distribution (isotropic scattering)
-	    if (omega.z > 0.0)
+	    if (omega[2] > 0.0)
 	    {
-		if (omega.y > 0.0)
+		if (omega[1] > 0.0)
 		{
-		    if (omega.x > 0.0)
+		    if (omega[0] > 0.0)
 		    {
 			octant[0]++;
 		    }
@@ -235,7 +235,7 @@ TYPED_TEST(PhysicsTest, Collisions_no_capture)
 		}
 		else
 		{
-		    if (omega.x > 0.0)
+		    if (omega[0] > 0.0)
 		    {
 			octant[2]++;
 		    }
@@ -247,9 +247,9 @@ TYPED_TEST(PhysicsTest, Collisions_no_capture)
 	    }
 	    else
 	    {
-		if (omega.y > 0.0)
+		if (omega[1] > 0.0)
 		{
-		    if (omega.x > 0.0)
+		    if (omega[0] > 0.0)
 		    {
 			octant[4]++;
 		    }
@@ -260,7 +260,7 @@ TYPED_TEST(PhysicsTest, Collisions_no_capture)
 		}
 		else
 		{
-		    if (omega.x > 0.0)
+		    if (omega[0] > 0.0)
 		    {
 			octant[6]++;
 		    }
@@ -361,14 +361,14 @@ TYPED_TEST(PhysicsTest, Collisions_with_capture)
 
     // initialize particles with the geometry and set to collide.
     Space_Vector r, d;
-    r.x = 50.0;
-    r.y = 50.0;
-    r.z = 50.0;
-    d.x = 1.0;
-    d.y = 1.0;
-    d.z = 1.0;
+    r[0] = 50.0;
+    r[1] = 50.0;
+    r[2] = 50.0;
+    d[0] = 1.0;
+    d[1] = 1.0;
+    d[2] = 1.0;
     physics_tester.geometry_initialize( r, d, 0 );
-    
+
     // check distributions from implicit-capture collisions
     std::vector<double> c = {0.5000, 0.7281, 0.7527, 0.5953, 0.4396};
 
@@ -407,11 +407,11 @@ TYPED_TEST(PhysicsTest, Collisions_with_capture)
 	const Space_Vector &omega =geo_state[n].d_dir;
 
 	// check octant distribution (isotropic scattering)
-	if (omega.z > 0.0)
+	if (omega[2] > 0.0)
 	{
-	    if (omega.y > 0.0)
+	    if (omega[1] > 0.0)
 	    {
-		if (omega.x > 0.0)
+		if (omega[0] > 0.0)
 		{
 		    octant[0]++;
 		}
@@ -422,7 +422,7 @@ TYPED_TEST(PhysicsTest, Collisions_with_capture)
 	    }
 	    else
 	    {
-		if (omega.x > 0.0)
+		if (omega[0] > 0.0)
 		{
 		    octant[2]++;
 		}
@@ -434,9 +434,9 @@ TYPED_TEST(PhysicsTest, Collisions_with_capture)
 	}
 	else
 	{
-	    if (omega.y > 0.0)
+	    if (omega[1] > 0.0)
 	    {
-		if (omega.x > 0.0)
+		if (omega[0] > 0.0)
 		{
 		    octant[4]++;
 		}
@@ -447,7 +447,7 @@ TYPED_TEST(PhysicsTest, Collisions_with_capture)
 	    }
 	    else
 	    {
-		if (omega.x > 0.0)
+		if (omega[0] > 0.0)
 		{
 		    octant[6]++;
 		}
@@ -551,11 +551,11 @@ TYPED_TEST(PhysicsTest, initialization)
 
     // Create initializization energies.
     std::vector<double> energy =
-	{ 100.0, 99.99, 
-	  10.01, 10.0, 9.99, 
+	{ 100.0, 99.99,
+	  10.01, 10.0, 9.99,
 	  1.01, 1.0, 0.99,
 	  0.101, 0.1, 0.099,
-	  0.011, 0.01, 0.0099, 
+	  0.011, 0.01, 0.0099,
 	  0.0011, 0.001 };
 
     // Initialize the particles.
@@ -604,12 +604,12 @@ TYPED_TEST(PhysicsTest, fission_sampling)
 
     // initialize particles with the geometry and set to collide.
     Space_Vector r, d;
-    r.x = 1.1;
-    r.y = 0.5;
-    r.z = 6.2;
-    d.x = 1.0;
-    d.y = 1.0;
-    d.z = 1.0;
+    r[0] = 1.1;
+    r[1] = 0.5;
+    r[2] = 6.2;
+    d[0] = 1.0;
+    d[1] = 1.0;
+    d[2] = 1.0;
     physics_tester.geometry_initialize( r, d, 1 );
 
     // initialize fission sites.
@@ -625,27 +625,27 @@ TYPED_TEST(PhysicsTest, fission_sampling)
 
     // first site
     EXPECT_EQ(1, fsites[0].m);
-    EXPECT_EQ(1.1, fsites[0].r.x);
-    EXPECT_EQ(0.5, fsites[0].r.y);
-    EXPECT_EQ(6.2, fsites[0].r.z);
+    EXPECT_EQ(1.1, fsites[0].r[0]);
+    EXPECT_EQ(0.5, fsites[0].r[1]);
+    EXPECT_EQ(6.2, fsites[0].r[2]);
 
     // second site
     EXPECT_EQ(1, fsites[1].m);
-    EXPECT_EQ(1.1, fsites[1].r.x);
-    EXPECT_EQ(0.5, fsites[1].r.y);
-    EXPECT_EQ(6.2, fsites[1].r.z);
+    EXPECT_EQ(1.1, fsites[1].r[0]);
+    EXPECT_EQ(0.5, fsites[1].r[1]);
+    EXPECT_EQ(6.2, fsites[1].r[2]);
 
     // third site
     EXPECT_EQ(1, fsites[2].m);
-    EXPECT_EQ(1.1, fsites[2].r.x);
-    EXPECT_EQ(0.5, fsites[2].r.y);
-    EXPECT_EQ(6.2, fsites[2].r.z);
+    EXPECT_EQ(1.1, fsites[2].r[0]);
+    EXPECT_EQ(0.5, fsites[2].r[1]);
+    EXPECT_EQ(6.2, fsites[2].r[2]);
 
     // fourth site
     EXPECT_EQ(1, fsites[3].m);
-    EXPECT_EQ(1.1, fsites[2].r.x);
-    EXPECT_EQ(0.5, fsites[2].r.y);
-    EXPECT_EQ(6.2, fsites[2].r.z);
+    EXPECT_EQ(1.1, fsites[2].r[0]);
+    EXPECT_EQ(0.5, fsites[2].r[1]);
+    EXPECT_EQ(6.2, fsites[2].r[2]);
 
     // test fission spectrum sample
     int group = -1;
@@ -662,12 +662,12 @@ TYPED_TEST(PhysicsTest, fission_sampling)
     EXPECT_EQ(0, group);
 
     // Check site access.
-    EXPECT_EQ(1.1, physics_tester.physics().get_host_ptr()->fission_site(fsites[0]).x);
-    EXPECT_EQ(0.5, physics_tester.physics().get_host_ptr()->fission_site(fsites[0]).y);
-    EXPECT_EQ(6.2, physics_tester.physics().get_host_ptr()->fission_site(fsites[0]).z);
-    EXPECT_EQ(1.1, physics_tester.physics().get_host_ptr()->fission_site(fsites[1]).x);
-    EXPECT_EQ(0.5, physics_tester.physics().get_host_ptr()->fission_site(fsites[1]).y);
-    EXPECT_EQ(6.2, physics_tester.physics().get_host_ptr()->fission_site(fsites[1]).z);
+    EXPECT_EQ(1.1, physics_tester.physics().get_host_ptr()->fission_site(fsites[0])[0]);
+    EXPECT_EQ(0.5, physics_tester.physics().get_host_ptr()->fission_site(fsites[0])[1]);
+    EXPECT_EQ(6.2, physics_tester.physics().get_host_ptr()->fission_site(fsites[0])[2]);
+    EXPECT_EQ(1.1, physics_tester.physics().get_host_ptr()->fission_site(fsites[1])[0]);
+    EXPECT_EQ(0.5, physics_tester.physics().get_host_ptr()->fission_site(fsites[1])[1]);
+    EXPECT_EQ(6.2, physics_tester.physics().get_host_ptr()->fission_site(fsites[1])[2]);
 
     EXPECT_EQ(sizeof(fsites[0]), physics_tester.physics().get_host_ptr()->fission_site_bytes());
 
@@ -689,21 +689,21 @@ TYPED_TEST(PhysicsTest, fission_sampling)
 
         EXPECT_EQ(4, ufsc.size());
         EXPECT_EQ(1, ufsc[0].m);
-        EXPECT_EQ(1.1, ufsc[0].r.x);
-        EXPECT_EQ(0.5, ufsc[0].r.y);
-        EXPECT_EQ(6.2, ufsc[0].r.z);
+        EXPECT_EQ(1.1, ufsc[0].r[0]);
+        EXPECT_EQ(0.5, ufsc[0].r[1]);
+        EXPECT_EQ(6.2, ufsc[0].r[2]);
         EXPECT_EQ(1, ufsc[1].m);
-        EXPECT_EQ(1.1, ufsc[1].r.x);
-        EXPECT_EQ(0.5, ufsc[1].r.y);
-        EXPECT_EQ(6.2, ufsc[1].r.z);
+        EXPECT_EQ(1.1, ufsc[1].r[0]);
+        EXPECT_EQ(0.5, ufsc[1].r[1]);
+        EXPECT_EQ(6.2, ufsc[1].r[2]);
         EXPECT_EQ(1, ufsc[2].m);
-        EXPECT_EQ(1.1, ufsc[2].r.x);
-        EXPECT_EQ(0.5, ufsc[2].r.y);
-        EXPECT_EQ(6.2, ufsc[2].r.z);
+        EXPECT_EQ(1.1, ufsc[2].r[0]);
+        EXPECT_EQ(0.5, ufsc[2].r[1]);
+        EXPECT_EQ(6.2, ufsc[2].r[2]);
         EXPECT_EQ(1, ufsc[3].m);
-        EXPECT_EQ(1.1, ufsc[3].r.x);
-        EXPECT_EQ(0.5, ufsc[3].r.y);
-        EXPECT_EQ(6.2, ufsc[3].r.z);
+        EXPECT_EQ(1.1, ufsc[3].r[0]);
+        EXPECT_EQ(0.5, ufsc[3].r[1]);
+        EXPECT_EQ(6.2, ufsc[3].r[2]);
     }
 
     // test null ops for no fission

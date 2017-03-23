@@ -33,6 +33,7 @@ class Physics_Tester
   public:
 
     typedef cuda_profugus::Cartesian_Mesh Cartesian_Mesh;
+    typedef cuda_profugus::Mesh_Geometry_DMM Geometry_DMM;
     typedef cuda_profugus::Mesh_Geometry Geometry;
     typedef cuda_profugus::Particle_Vector<Geometry> Particle_Vector;
     typedef typename Particle_Vector::Event_t Event_t;
@@ -102,17 +103,17 @@ class Physics_Tester
 				       bool& sampled ) const;
 
     // Get the source shape.
-    cuda_utils::Shared_Device_Ptr<Shape> source_shape() const 
+    cuda_utils::Shared_Device_Ptr<Shape> source_shape() const
     { return d_shape; }
 
   private:
-    
+
     cuda_utils::Shared_Device_Ptr<Physics> d_physics;
     cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
     cuda_utils::Shared_Device_Ptr<Cartesian_Mesh> d_cart_mesh;
     cuda_utils::Shared_Device_Ptr<Shape> d_shape;
     Particle_Vector_Tester d_particle_tester;
-    int d_size;    
+    int d_size;
 };
 
 //---------------------------------------------------------------------------//
