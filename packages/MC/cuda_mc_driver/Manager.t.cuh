@@ -39,8 +39,8 @@ namespace cuda_mc
 /*!
  * \brief Constructor.
  */
-template <class Geometry>
-Manager<Geometry>::Manager()
+template <class Geometry_DMM>
+Manager<Geometry_DMM>::Manager()
     : d_node(profugus::node())
     , d_nodes(profugus::nodes())
 {
@@ -54,8 +54,8 @@ Manager<Geometry>::Manager()
  * \brief Setup the problem.
  * \param master Problem parameters.
  */
-template <class Geometry>
-void Manager<Geometry>::setup(RCP_ParameterList master)
+template <class Geometry_DMM>
+void Manager<Geometry_DMM>::setup(RCP_ParameterList master)
 {
     SCOPED_TIMER("Manager.setup");
 
@@ -75,8 +75,10 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     d_db->setName(d_problem_name + "-PROBLEM");
 
     // get the geometry and physics
-    d_geometry = builder.get_geometry();
-    d_physics  = builder.get_physics();
+    d_geometry_dmm = builder.get_geometry_dmm();
+    d_geometry     = builder.get_geometry();
+    d_physics      = builder.get_physics();
+    CHECK(d_geometry_dmm);
     CHECK(d_geometry);
     CHECK(d_physics);
 
@@ -116,7 +118,9 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     {
         // make the fission source
         SP_Fission_Source source(
-            std::make_shared<Fission_Source_t>(d_db, d_geometry, d_physics) );
+            std::make_shared<Fission_Source_t>(d_db, d_geometry, d_physics,
+                d_geometry_dmm->volumes(),
+                d_geometry_dmm->lower(), d_geometry_dmm->upper()));
 
         // >>> determine eigensolver
 
@@ -139,8 +143,8 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
     else if (prob_type == "fixed")
     {
         // make the uniform source
-        std::shared_ptr<cuda_profugus::Uniform_Source<Geometry,cuda_profugus::Box_Shape> > source =
-            std::make_shared<cuda_profugus::Uniform_Source<Geometry,cuda_profugus::Box_Shape> >(
+        std::shared_ptr<cuda_profugus::Uniform_Source<Geom_t,cuda_profugus::Box_Shape> > source =
+            std::make_shared<cuda_profugus::Uniform_Source<Geom_t,cuda_profugus::Box_Shape> >(
                 d_db, 
                 d_geometry, 
                 d_physics.get_host_ptr()->num_groups(), 
@@ -171,8 +175,8 @@ void Manager<Geometry>::setup(RCP_ParameterList master)
 /*!
  * \brief Solve the problem.
  */
-template <class Geometry>
-void Manager<Geometry>::solve()
+template <class Geometry_DMM>
+void Manager<Geometry_DMM>::solve()
 {
     if (d_db->template get<bool>("do_transport", true))
     {
@@ -203,8 +207,8 @@ void Manager<Geometry>::solve()
 /*!
  * \brief Do output.
  */
-template <class Geometry>
-void Manager<Geometry>::output()
+template <class Geometry_DMM>
+void Manager<Geometry_DMM>::output()
 {
     using std::string;
 

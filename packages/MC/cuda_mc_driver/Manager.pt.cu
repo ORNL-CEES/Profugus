@@ -14,7 +14,7 @@
 namespace cuda_mc
 {
 
-template class Manager<cuda_profugus::Mesh_Geometry>;
+template class Manager<cuda_profugus::Mesh_Geometry_DMM>;
 
 } // end namespace cuda_mc
 

@@ -33,17 +33,18 @@ namespace cuda_mc
  */
 //===========================================================================//
 
-template <class Geometry>
+template <class Geometry_DMM>
 class Manager : public Manager_Base
 {
   private:
     // Typedefs.
     typedef Manager_Base                               Base;
-    typedef Geometry                                   Geom_t;
-    typedef Problem_Builder<Geometry>                  Prob_Builder;
+    typedef typename Geometry_DMM::Geometry_t          Geom_t;
+    typedef Problem_Builder<Geometry_DMM>              Prob_Builder;
     typedef typename Base::RCP_ParameterList           RCP_ParameterList;
     typedef typename Prob_Builder::SDP_Physics         SDP_Physics;
     typedef typename Prob_Builder::SDP_Geometry        SDP_Geometry;
+    typedef typename Prob_Builder::SP_Geometry_DMM     SP_Geometry_DMM;
     typedef cuda_profugus::Solver<Geom_t>              Solver_t;
     typedef std::shared_ptr<Solver_t>                  SP_Solver;
     typedef cuda_profugus::Keff_Solver<Geom_t>         Keff_Solver_t;
@@ -63,6 +64,9 @@ class Manager : public Manager_Base
 
     // Problem database.
     RCP_ParameterList d_db;
+
+    // Geometry memory manager.
+    SP_Geometry_DMM d_geometry_dmm;
 
     // Geometry.
     SDP_Geometry d_geometry;

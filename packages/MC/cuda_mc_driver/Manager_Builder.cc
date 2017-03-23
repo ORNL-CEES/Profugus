@@ -36,7 +36,7 @@ auto Manager_Builder::build(const std::string &xml_file) -> SP_Manager_Base
     // If "MESH" db is present, we're building a Mesh_Geometry
     if( master->isSublist("MESH") )
     {
-        manager = std::make_shared<Manager<cuda_profugus::Mesh_Geometry> >();
+        manager = std::make_shared<Manager<cuda_profugus::Mesh_Geometry_DMM>>();
     }
     // No other options currently
     else

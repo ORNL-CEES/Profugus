@@ -39,8 +39,8 @@ namespace cuda_mc
 /*!
  * \brief Constructor.
  */
-template <class Geometry>
-Problem_Builder<Geometry>::Problem_Builder()
+template <class Geometry_DMM>
+Problem_Builder<Geometry_DMM>::Problem_Builder()
 {
 }
 
@@ -50,8 +50,8 @@ Problem_Builder<Geometry>::Problem_Builder()
 /*!
  * \brief Setup the problem.
  */
-template <class Geometry>
-void Problem_Builder<Geometry>::setup(RCP_ParameterList master)
+template <class Geometry_DMM>
+void Problem_Builder<Geometry_DMM>::setup(RCP_ParameterList master)
 {
     // validate the parameter list
     INSIST(master->isSublist("MATERIAL"),
@@ -103,8 +103,10 @@ void Problem_Builder<Geometry>::setup(RCP_ParameterList master)
     }
 
     // build the geometry
-    Geometry_Builder<Geometry> geom_builder;
-    d_geometry = geom_builder.build(master);
+    Geometry_Builder<Geometry_DMM> geom_builder;
+    d_geometry_dmm = geom_builder.build(master);
+    d_geometry = cuda_utils::shared_device_ptr<Geom_t>(
+        d_geometry_dmm->device_instance());
 
     // build build physics
     build_physics();
@@ -137,8 +139,8 @@ void Problem_Builder<Geometry>::setup(RCP_ParameterList master)
  * For now, we build all the cross sections in the problem on every domain.
  * For the mini-app, this is not expected to be an overburdening cost.
  */
-template <class Geometry>
-void Problem_Builder<Geometry>::build_physics()
+template <class Geometry_DMM>
+void Problem_Builder<Geometry_DMM>::build_physics()
 {
     typedef profugus::XS_Builder::Matid_Map Matid_Map;
     typedef profugus::XS_Builder::RCP_XS    RCP_XS;
@@ -195,8 +197,8 @@ void Problem_Builder<Geometry>::build_physics()
 /*!
  * \brief Build the variance reduction.
  */
-template <class Geometry>
-void Problem_Builder<Geometry>::build_var_reduction()
+template <class Geometry_DMM>
+void Problem_Builder<Geometry_DMM>::build_var_reduction()
 {
     using profugus::to_lower;
 
@@ -233,8 +235,8 @@ void Problem_Builder<Geometry>::build_var_reduction()
  *
  *\param source_db
  */
-template <class Geometry>
-void Problem_Builder<Geometry>::build_source(const ParameterList &source_db)
+template <class Geometry_DMM>
+void Problem_Builder<Geometry_DMM>::build_source(const ParameterList &source_db)
 {
     REQUIRE(source_db.isParameter("box"));
     REQUIRE(source_db.isParameter("spectrum"));
@@ -262,11 +264,9 @@ void Problem_Builder<Geometry>::build_source(const ParameterList &source_db)
 /*!
  * \brief Build the tallies.
  */
-template <class Geometry>
-void Problem_Builder<Geometry>::build_tallies()
+template <class Geometry_DMM>
+void Problem_Builder<Geometry_DMM>::build_tallies()
 {
-    using cuda_profugus::Mesh_Geometry;
-
     // make the tallier
     d_tallier = std::make_shared<Tallier_t>();
 
@@ -274,8 +274,8 @@ void Problem_Builder<Geometry>::build_tallies()
     if ( d_db->isSublist("cell_tally_db") )
     {
         int num_batch = d_db->get<int>("num_batch",1);
-        auto cell_tally = std::make_shared<cuda_profugus::Cell_Tally<Geometry> >(
-            d_db, d_geometry, num_batch );
+        auto cell_tally = std::make_shared<cuda_profugus::Cell_Tally<Geom_t> >(
+            d_db, d_geometry, d_geometry_dmm->volumes(), num_batch );
         d_tallier->add_pathlength_tally( cell_tally );
     }
 
@@ -286,8 +286,8 @@ void Problem_Builder<Geometry>::build_tallies()
 /*!
  * \build the SPN problem
  */
-template <class Geometry>
-void Problem_Builder<Geometry>::build_spn_problem()
+template <class Geometry_DMM>
+void Problem_Builder<Geometry_DMM>::build_spn_problem()
 { /* ... */ }
 
 } // end namespace cuda_mc

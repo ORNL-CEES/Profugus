@@ -32,12 +32,12 @@ namespace cuda_mc
  * \brief Build profugus Geometry
  */
 //===========================================================================//
-template <class Geometry>
+template <class Geometry_DMM>
 class Geometry_Builder
 {
   public:
 
-    typedef cuda_utils::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> SDP_Geometry;
+    typedef std::shared_ptr<Geometry_DMM>         SP_Geometry_DMM;
     typedef Teuchos::RCP<Teuchos::ParameterList>  RCP_ParameterList;
 
     Geometry_Builder()
@@ -45,25 +45,22 @@ class Geometry_Builder
         VALIDATE(false,"Missing a specialization");
     }
 
-    SDP_Geometry build(RCP_ParameterList master)
-    {
-        return SDP_Geometry();
-    }
-
+    SP_Geometry_DMM build(RCP_ParameterList master);
 };
 
 // Specialization for Mesh_Geometry
 template <>
-class Geometry_Builder<cuda_profugus::Mesh_Geometry>
+class Geometry_Builder<cuda_profugus::Mesh_Geometry_DMM>
 {
   public:
 
-    typedef cuda_utils::Shared_Device_Ptr<cuda_profugus::Mesh_Geometry> SDP_Geometry;
-    typedef Teuchos::RCP<Teuchos::ParameterList>                  RCP_ParameterList;
-    typedef Teuchos::Array<int>                                   OneDArray_int;
-    typedef Teuchos::Array<double>                                OneDArray_dbl;
+    typedef cuda_profugus::Mesh_Geometry_DMM        Geometry_DMM;
+    typedef std::shared_ptr<Geometry_DMM>           SP_Geometry_DMM;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_ParameterList;
+    typedef Teuchos::Array<int>                     OneDArray_int;
+    typedef Teuchos::Array<double>                  OneDArray_dbl;
 
-    SDP_Geometry build(RCP_ParameterList master);
+    SP_Geometry_DMM build(RCP_ParameterList master);
 };
 
 } // end namespace cuda_mc

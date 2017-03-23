@@ -17,8 +17,8 @@
 namespace cuda_mc
 {
 
-auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
-    RCP_ParameterList master) -> SDP_Geometry
+auto Geometry_Builder<cuda_profugus::Mesh_Geometry_DMM>::build(
+    RCP_ParameterList master) -> SP_Geometry_DMM
 {
     auto mesh_db = Teuchos::sublist(master, "MESH");
     auto problem_db = Teuchos::sublist(master, "PROBLEM");
@@ -35,17 +35,16 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
     auto matids  = mesh_db->get<OneDArray_int>("matids");
 
     // Build Mesh
-    auto geom = std::make_shared<cuda_profugus::Mesh_Geometry>(
+    auto geom = std::make_shared<cuda_profugus::Mesh_Geometry_DMM>(
         x_edges.toVector(),y_edges.toVector(),z_edges.toVector());
 
-    // Convert matids to SP<Vec_Int> and pass to geometry
-    typename cuda_profugus::Mesh_Geometry::Vec_Matids 
-        sp_matids(matids.begin(),matids.end());
+    // Convert matids to Vec_Int and pass to geometry
+    auto matids_vec = matids.toVector();
 
-    REQUIRE( sp_matids.size() == ( (x_edges.size()-1) *
-                                   (y_edges.size()-1) *
-                                   (z_edges.size()-1) ) );
-    geom->set_matids(sp_matids);
+    REQUIRE( matids_vec.size() == ( (x_edges.size()-1) *
+                                    (y_edges.size()-1) *
+                                    (z_edges.size()-1) ) );
+    geom->set_matids(matids_vec);
 
     // set the boundary conditions
     def::Vec_Int boundary(6, 0);
@@ -59,7 +58,7 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry>::build(
     }
     geom->set_reflecting(boundary);
 
-    return SDP_Geometry(geom);
+    return geom;
 }
 
 } // end namespace cuda_mc

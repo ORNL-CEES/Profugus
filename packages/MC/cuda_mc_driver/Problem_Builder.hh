@@ -37,13 +37,13 @@ namespace cuda_mc
  */
 //===========================================================================//
 
-template <class Geometry>
+template <class Geometry_DMM>
 class Problem_Builder
 {
   public:
     //@{
     //! Typedefs.
-    typedef Geometry                                          Geom_t;
+    typedef typename Geometry_DMM::Geometry_t                 Geom_t;
     typedef Teuchos::ParameterList                            ParameterList;
     typedef Teuchos::RCP<ParameterList>                       RCP_ParameterList;
     typedef cuda_profugus::Physics<Geom_t>                    Physics_t;
@@ -52,6 +52,7 @@ class Problem_Builder
     typedef cuda_utils::Shared_Device_Ptr<Geom_t>                   SDP_Geometry;
     typedef cuda_utils::Shared_Device_Ptr<cuda_profugus::Box_Shape> SDP_Shape;
     typedef cuda_profugus::Variance_Reduction<Geom_t>         VR_t;
+    typedef std::shared_ptr<Geometry_DMM>                     SP_Geometry_DMM;
     typedef std::shared_ptr<VR_t>                             SP_Var_Reduction;
     typedef std::shared_ptr<Tallier_t>                        SP_Tallier;
     typedef typename Tallier_t::SP_Tally                      SP_Tally;
@@ -66,6 +67,9 @@ class Problem_Builder
     // Physics and geometry.
     SDP_Physics  d_physics;
     SDP_Geometry d_geometry;
+
+    // Geometry memory manager
+    SP_Geometry_DMM d_geometry_dmm;
 
     // Variance reduction.
     SP_Var_Reduction d_var_reduction;
@@ -87,6 +91,9 @@ class Problem_Builder
 
     //! Get problem database.
     RCP_ParameterList problem_db() const { return d_db; }
+
+    //! Get the geometry memory manager.
+    SP_Geometry_DMM get_geometry_dmm() const { return d_geometry_dmm; }
 
     //! Get the geometry.
     SDP_Geometry get_geometry() const { return d_geometry; }

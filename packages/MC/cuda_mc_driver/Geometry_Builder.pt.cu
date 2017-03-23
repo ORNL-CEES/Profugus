@@ -15,7 +15,7 @@
 namespace cuda_mc
 {
 
-template class Geometry_Builder<cuda_profugus::Mesh_Geometry>;
+template class Geometry_Builder<cuda_profugus::Mesh_Geometry_DMM>;
 
 } // end namespace cuda_mc
 

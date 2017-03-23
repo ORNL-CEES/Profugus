@@ -15,7 +15,7 @@
 namespace cuda_mc
 {
 
-template class Problem_Builder<cuda_profugus::Mesh_Geometry>;
+template class Problem_Builder<cuda_profugus::Mesh_Geometry_DMM>;
 
 } // end namespace cuda_mc
 
