@@ -269,11 +269,12 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&          db,
                                          const SDP_Geometry&        geometry,
                                          const SDP_Physics&         physics,
                                          const std::vector<double>& volumes,
-                                         const Space_Vector&        low_edge,
-                                         const Space_Vector&        high_edge)
+                                         const def::Space_Vector&   low_edge,
+                                         const def::Space_Vector&   high_edge)
     : d_geometry(geometry)
     , d_physics(physics)
     , d_fission_rebalance(std::make_shared<Fission_Rebalance_t>())
+    , d_volumes(volumes)
     , d_np_requested(0)
     , d_np_total(0)
     , d_np_domain(0)

@@ -76,13 +76,13 @@ class Fission_Source : public Source<Geometry>
     //! Typedefs.
     typedef Geometry                                    Geometry_t;
     typedef Physics<Geometry_t>                         Physics_t;
-    typedef Teuchos::ParameterList			ParameterList_t;
-    typedef Teuchos::RCP<ParameterList_t>		RCP_Std_DB;
+    typedef Teuchos::ParameterList			            ParameterList_t;
+    typedef Teuchos::RCP<ParameterList_t>		        RCP_Std_DB;
     typedef typename Physics_t::Fission_Site            Fission_Site;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container;
     typedef typename Geometry_t::Space_Vector           Space_Vector;
-    typedef cuda_utils::Shared_Device_Ptr<Geometry>           SDP_Geometry;
-    typedef cuda_utils::Shared_Device_Ptr<Physics_t>          SDP_Physics;
+    typedef cuda_utils::Shared_Device_Ptr<Geometry>     SDP_Geometry;
+    typedef cuda_utils::Shared_Device_Ptr<Physics_t>    SDP_Physics;
     typedef std::shared_ptr<Fission_Site_Container>     SP_Fission_Sites;
     typedef Fission_Rebalance<Geometry_t>               Fission_Rebalance_t;
     typedef std::shared_ptr<Fission_Rebalance_t>        SP_Fission_Rebalance;
@@ -95,11 +95,11 @@ class Fission_Source : public Source<Geometry>
   public:
     // Constructor.
     Fission_Source(const RCP_Std_DB& db,
-		   const SDP_Geometry& geometry,
-		   const SDP_Physics& physics,
-           const std::vector<double>& volumes,
-           const Space_Vector& low_edge,
-           const Space_Vector& high_edge);
+                   const SDP_Geometry& geometry,
+                   const SDP_Physics& physics,
+                   const std::vector<double>& volumes,
+                   const def::Space_Vector& low_edge,
+                   const def::Space_Vector& high_edge);
 
     // Destructor.
     ~Fission_Source();
