@@ -62,7 +62,7 @@ __device__ int sample_group( const XS_Device* xs,
         if (rnd <= cdf)
             return gp;
     }
-    CHECK( cuda_utils::utility::soft_equiv(
+    DEVICE_CHECK( cuda_utils::utility::soft_equiv(
         cdf+scat_matrix(num_groups-1,g)*total, 1.0) );
 
     // we are in the last group.
@@ -118,12 +118,12 @@ __global__ void collide_kernel(	const int num_particle,
 	// get the particle index
 	int pidx = indices[idx];
 	
-	REQUIRE(geometry);
-	REQUIRE(particles->event(pidx) == events::COLLISION);
+	DEVICE_REQUIRE(geometry);
+	DEVICE_REQUIRE(particles->event(pidx) == events::COLLISION);
 
 	// get the material id of the current region
 	int matid = particles->matid(pidx);
-	CHECK(geometry->matid(particles->geo_state(pidx)) == matid);
+	DEVICE_CHECK(geometry->matid(particles->geo_state(pidx)) == matid);
 
 	// get the group index
 	int group = particles->group(pidx);
@@ -134,7 +134,7 @@ __global__ void collide_kernel(	const int num_particle,
 	// calculate the scattering cross section ratio
 	double c = scatter[matid_g2l[matid]*xs->num_groups() + group] /
 		   xs->vector(matid, profugus::XS::TOTAL)(group);
-	CHECK(!implicit_capture ? c <= 1.0 : c >= 0.0);
+	DEVICE_CHECK(!implicit_capture ? c <= 1.0 : c >= 0.0);
 
 	// we need to do analog transport if the particles->is c = 0.0
 	// regardless of whether implicit capture is on or not
@@ -166,7 +166,7 @@ __global__ void collide_kernel(	const int num_particle,
 	    // determine new group of particle
 	    group = sample_group(xs, scatter, matid_g2l,
 				 matid, group, particles->ran(pidx));
-	    CHECK(group >= 0 && group < xs->num_groups());
+	    DEVICE_CHECK(group >= 0 && group < xs->num_groups());
 
 	    // set the group
 	    particles->set_group(pidx,group);
@@ -207,8 +207,8 @@ __global__ void sample_fission_site_kernel(
 	// get the particle index
 	int pidx = indices[idx];
 
-	REQUIRE(geometry);
-	REQUIRE(particles->event(pidx) == events::COLLISION);
+	DEVICE_REQUIRE(geometry);
+	DEVICE_REQUIRE(particles->event(pidx) == events::COLLISION);
 
 	// material id
 	unsigned int matid = particles->matid(pidx);

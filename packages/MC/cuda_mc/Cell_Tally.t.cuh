@@ -69,10 +69,10 @@ __global__ void tally_kernel( const Geometry* geometry,
 		   : boundary_indices[idx - num_collision];
     
 	// Accumulate the particle in its batch and cell.
-	REQUIRE( particles->alive(pidx) );
+	DEVICE_REQUIRE( particles->alive(pidx) );
 	int tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
-	CHECK( tally_idx < num_batch * num_cell );
+	DEVICE_CHECK( tally_idx < num_batch * num_cell );
 	cuda_utils::Atomic_Add<cuda_utils::arch::Device>::fetch_add( 
 	    &tally[tally_idx], particles->wt(pidx) * particles->step(pidx) );
     }
@@ -86,10 +86,12 @@ template <class Geometry>
 Cell_Tally<Geometry>::Cell_Tally( 
     RCP_Std_DB db,
     const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
+    const std::vector<double>& volumes,
     const int num_batch )
     : d_geometry( geometry )
+    , d_volumes( volumes )
     , d_num_batch( num_batch )
-    , d_num_cells( d_geometry.get_host_ptr()->num_cells() )
+    , d_num_cells( volumes.size() )
     , d_db(db)
 {
     // Allocate the tally.
@@ -169,8 +171,7 @@ void Cell_Tally<Geometry>::finalize( double num_particles )
         for ( int b = 0; b < d_num_batch; ++b )
         {
             batch_results[ b * d_num_cells + c ] /= 
-              particles_per_batch * 
-              d_geometry.get_host_ptr()->mesh().volume_host( c );
+              particles_per_batch * d_volumes[c];
         }
     }    
 

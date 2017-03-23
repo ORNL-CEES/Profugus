@@ -41,7 +41,7 @@ __global__ void take_step_kernel( const Geometry* geometry,
     {
 	// Get the particle index.
 	int pidx = indices[idx];
-        CHECK( events::TAKE_STEP == particles->event(pidx) );
+        DEVICE_CHECK( events::TAKE_STEP == particles->event(pidx) );
 
 	// Get the total cross section.
 	double xs_tot = physics->total( physics::TOTAL,
@@ -89,7 +89,7 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
 	int pidx = indices[idx];
         if ( !( events::BOUNDARY == particles->event(pidx) ))
             printf( "BAD PT %d %d %d\n", particles->event(pidx), idx, num_particles );
-        CHECK( events::BOUNDARY == particles->event(pidx) );
+        DEVICE_CHECK( events::BOUNDARY == particles->event(pidx) );
 
 	// move the particle to the surface.
 	geometry->move_to_surface( particles->geo_state(pidx) );
@@ -126,7 +126,7 @@ __global__ void process_boundary_kernel( const Geometry* geometry,
                 break;
 
 	    default:
-		CHECK(0);
+		DEVICE_CHECK(0);
 	}
     }
 }				  
@@ -146,7 +146,7 @@ __global__ void move_to_collision_kernel( const Geometry* geometry,
     {
 	// Get the particle index.
 	int pidx = indices[idx];
-        CHECK( events::COLLISION == particles->event(pidx) );
+        DEVICE_CHECK( events::COLLISION == particles->event(pidx) );
 
 	// move the particle to the collision site
 	geometry->move_to_point( particles->step(pidx), 
@@ -172,7 +172,7 @@ __global__ void set_next_step_kernel(const events::Event event,
     {
 	// Get the particle index.
 	int pidx = indices[idx];
-        CHECK( event == particles->event(pidx) );
+        DEVICE_CHECK( event == particles->event(pidx) );
 
         // Set survivors to take another step.
         if ( particles->alive(pidx) )

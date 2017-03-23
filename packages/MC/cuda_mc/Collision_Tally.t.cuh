@@ -59,10 +59,10 @@ __global__ void tally_kernel( const Geometry* geometry,
 	int pidx = indices[idx];
 
 	// Accumulate the particle in its batch and cell.
-	REQUIRE( particles->alive(pidx) );
+	DEVICE_REQUIRE( particles->alive(pidx) );
 	int tally_idx = particles->batch( pidx ) * num_cell +
 				geometry->cell( particles->geo_state(pidx) );
-	CHECK( tally_idx < num_batch * num_cell );
+	DEVICE_CHECK( tally_idx < num_batch * num_cell );
 	cuda_utils::Atomic_Add<cuda_utils::arch::Device>::fetch_add( 
 	    &tally[tally_idx], particles->wt(pidx) );
     }
@@ -100,7 +100,7 @@ __global__ void moments_kernel( const int num_batch,
 	for ( int b = 0; b < num_batch; ++b )
 	{
 	    tally_idx = b * num_cell + cell_idx;
-	    CHECK( tally_idx < num_batch * num_cell );
+	    DEVICE_CHECK( tally_idx < num_batch * num_cell );
 	    first_moment[cell_idx] += tally[ tally_idx ];
 	}
 	first_moment[cell_idx] /= num_batch;
@@ -110,7 +110,7 @@ __global__ void moments_kernel( const int num_batch,
 	for ( int b = 0; b < num_batch; ++b )
 	{
 	    tally_idx = b * num_cell + cell_idx;
-	    CHECK( tally_idx < num_batch * num_cell );
+	    DEVICE_CHECK( tally_idx < num_batch * num_cell );
 	    second_moment[cell_idx] += 
 		tally[ tally_idx ] * tally[ tally_idx ] -
 		first_moment[cell_idx] * first_moment[cell_idx];
@@ -126,10 +126,10 @@ __global__ void moments_kernel( const int num_batch,
 template <class Geometry>
 Collision_Tally<Geometry>::Collision_Tally( 
     const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
-    const int num_batch )
+    const int num_batch, const int num_cells )
     : d_geometry( geometry )
     , d_num_batch( num_batch )
-    , d_num_cells( d_geometry.get_host_ptr()->num_cells() )
+    , d_num_cells( num_cells )
 {
     // Allocate the tally.
     int size = d_num_batch * d_num_cells;

@@ -63,20 +63,20 @@ class Collision_Tally
     // >>> HOST API
 
     // Constructor
-    Collision_Tally( const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
-		     const int num_batch );
-    
+    Collision_Tally( const cuda_utils::Shared_Device_Ptr<Geometry>& geometry,
+		     const int num_batch, const int num_cells );
+
     // Destructor.
     ~Collision_Tally();
 
     // Get the number of cells in the tally.
     int num_cells() const { return d_num_cells; }
-    
+
     // Get the number of batches in the tally.
     int num_batch() const { return d_num_batch; }
 
     // Tally the particles in a vector.
-    void accumulate( 
+    void accumulate(
 	const cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles );
 
     // Finalize the tally.

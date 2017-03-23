@@ -46,9 +46,9 @@ __global__ void post_collision_kernel( const int num_collision,
 	    if (orig_weight < w_c)
 	    {
 		// calculate survival probablity
-		CHECK(w_s >= w_c);
+		DEVICE_CHECK(w_s >= w_c);
 		const double survival = orig_weight / w_s;
-		CHECK(survival < 1.0);
+		DEVICE_CHECK(survival < 1.0);
 
 		// particle survives roulette
 		if (particles->ran(pidx) < survival)
@@ -65,7 +65,7 @@ __global__ void post_collision_kernel( const int num_collision,
 		}
 	    }
 
-	    ENSURE(particles->wt(pidx) >= orig_weight);
+	    DEVICE_ENSURE(particles->wt(pidx) >= orig_weight);
 	}
     }
 }

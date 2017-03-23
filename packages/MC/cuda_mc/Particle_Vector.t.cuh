@@ -92,7 +92,7 @@ __global__ void reorder_lid_kernel( const int sort_size,
                                     const events::Event* events,
                                     int* lids )
 {
-  REQUIRE( sort_size <= vector_size );
+  DEVICE_REQUIRE( sort_size <= vector_size );
 
   // Get the thread index.
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -107,15 +107,15 @@ __global__ void reorder_lid_kernel( const int sort_size,
           cuda_utils::utility::upper_bound_comp<int>() );
 
       int event = event_lb - event_bounds - 1;
-      CHECK( event < events::END_EVENT );
-      CHECK( idx >= event_bounds[event] );
+      DEVICE_CHECK( event < events::END_EVENT );
+      DEVICE_CHECK( idx >= event_bounds[event] );
 
       int local_bin_index = idx - event_bounds[event];
-      CHECK( local_bin_index < vector_size );
+      DEVICE_CHECK( local_bin_index < vector_size );
 
       // Copy the particle index from the bin into the local index array.      
       lids[idx] = event_bins[ event*vector_size + local_bin_index ];
-      CHECK( event == events::DEAD || event == events[lids[idx]] );
+      DEVICE_CHECK( event == events::DEAD || event == events[lids[idx]] );
   }
 }
 

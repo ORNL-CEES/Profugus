@@ -53,7 +53,7 @@ void sample_source_kernel( const Geometry* geometry,
     {
 	// Get the particle index.
 	int pidx = indices[idx];
-        CHECK( particles->event(pidx) == events::DEAD );
+    DEVICE_CHECK( particles->event(pidx) == events::DEAD );
 
 	// sample the angle isotropically
 	cuda_utils::Space_Vector omega;
@@ -73,7 +73,7 @@ void sample_source_kernel( const Geometry* geometry,
 	// initialize the physics state by manually sampling the group
 	int group = cuda_utils::utility::sample_discrete_CDF(
 	    num_group, erg_cdf, particles->ran(pidx) );
-	CHECK( group < num_group );
+	DEVICE_CHECK( group < num_group );
 	particles->set_group( pidx, group );
 
 	// set the material id in the particle
@@ -89,8 +89,8 @@ void sample_source_kernel( const Geometry* geometry,
 	int batch = (num_run + idx) / batch_size;
 	particles->set_batch( pidx, batch );
 
-        // sample the initial distance to collision
-        particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
+    // sample the initial distance to collision
+    particles->set_dist_mfp( pidx, -std::log(particles->ran(pidx)) );
 
 	// make particle alive
 	particles->live( pidx );

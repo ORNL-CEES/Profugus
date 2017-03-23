@@ -71,6 +71,9 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Storage for first and second moments of tally result
     std::vector<double> d_first, d_second;
 
+    // Volume of tally cells
+    std::vector<double> d_volumes;
+
   public:
 
     // >>> HOST API
@@ -78,7 +81,8 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Constructor
     Cell_Tally( RCP_Std_DB db,
                 const cuda_utils::Shared_Device_Ptr<Geometry>& geometry,
-		const int num_batch );
+                const std::vector<double>& volumes,
+                const int num_batch );
 
     // Destructor.
     ~Cell_Tally();

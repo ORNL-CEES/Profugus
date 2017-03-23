@@ -183,15 +183,15 @@ template<class T>
 PROFUGUS_DEVICE_FUNCTION
 int sample_discrete_CDF(int nb, const T *c, const T ran)
 {
-    REQUIRE(nb > 0);
-    REQUIRE(soft_equiv(static_cast<double>(c[nb - 1]), 1.0, 1.0e-6));
-    REQUIRE(ran >= 0 && ran <= 1);
+    DEVICE_REQUIRE(nb > 0);
+    DEVICE_REQUIRE(soft_equiv(static_cast<double>(c[nb - 1]), 1.0, 1.0e-6));
+    DEVICE_REQUIRE(ran >= 0 && ran <= 1);
 
     // do a binary search on the CDF
     const T *ptr = lower_bound(c, c + nb, ran);
 
     // return the value
-    ENSURE(ptr - c >= 0 && ptr - c < nb);
+    DEVICE_ENSURE(ptr - c >= 0 && ptr - c < nb);
     return ptr - c;
 }
 

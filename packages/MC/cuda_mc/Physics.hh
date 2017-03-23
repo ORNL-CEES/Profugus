@@ -84,7 +84,7 @@ class Physics
         Space_Vector r;
 	int          n;
     };
-    
+
   private:
     // >>> DATA
 
@@ -114,7 +114,7 @@ class Physics
     cuda_utils::Shared_Device_Ptr<Geometry> get_geometry() const { return d_geometry; }
 
     // Initialize the physics state.
-    void initialize( const std::vector<double>& energy, 
+    void initialize( const std::vector<double>& energy,
 		     cuda_utils::Shared_Device_Ptr<Particle_Vector_t>& particles );
 
     // Get a total cross section from the physics library.
@@ -175,7 +175,7 @@ class Physics
 			    int& group,
 			    bool& sampled) const
     {
-	REQUIRE( is_fissionable(fs.m) );
+	DEVICE_REQUIRE( is_fissionable(fs.m) );
 	group = sample_fission_group( fs.m, ran );
 	sampled = true;
     }
@@ -244,7 +244,7 @@ class Physics
 
     // Host fission site work vector.
     std::vector<Device_Fission_Site> d_host_sites;
-    
+
     // Device fission sites work vector.
     Device_Fission_Site* d_device_sites;
 

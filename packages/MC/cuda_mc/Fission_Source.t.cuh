@@ -79,9 +79,9 @@ __global__ void sample_mesh_kernel( const Geometry* geometry,
 	while (!sampled)
 	{
 	    // sample a point in the geometry
-	    r.x = (xdims[1] - xdims[0]) * particles->ran(pidx) + xdims[0];
-	    r.y = (ydims[1] - ydims[0]) * particles->ran(pidx) + ydims[0];
-	    r.z = (zdims[1] - zdims[0]) * particles->ran(pidx) + zdims[0];
+	    r[0] = (xdims[1] - xdims[0]) * particles->ran(pidx) + xdims[0];
+	    r[1] = (ydims[1] - ydims[0]) * particles->ran(pidx) + ydims[0];
+	    r[2] = (zdims[1] - zdims[0]) * particles->ran(pidx) + zdims[0];
 
 	    // initialize the geometry state
 	    geometry->initialize( r, omega, particles->geo_state(pidx) );
@@ -153,9 +153,9 @@ __global__ void sample_geometry_kernel( const Geometry* geometry,
 	while (!sampled)
 	{
 	    // sample a point in the geometry
-	    r.x = width.x * particles->ran(pidx) + lower.x;
-	    r.y = width.y * particles->ran(pidx) + lower.y;
-	    r.z = width.z * particles->ran(pidx) + lower.z;
+	    r[0] = width[0] * particles->ran(pidx) + lower[0];
+	    r[1] = width[1] * particles->ran(pidx) + lower[1];
+	    r[2] = width[2] * particles->ran(pidx) + lower[2];
 
 	    // initialize the geometry state
 	    geometry->initialize( r, omega, particles->geo_state(pidx) );
@@ -265,9 +265,12 @@ __global__ void sample_fission_sites_kernel(
  * \brief Constructor.
  */
 template <class Geometry>
-Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
-                                         const SDP_Geometry&   geometry,
-                                         const SDP_Physics&    physics)
+Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&          db,
+                                         const SDP_Geometry&        geometry,
+                                         const SDP_Physics&         physics,
+                                         const std::vector<double>& volumes,
+                                         const Space_Vector&        low_edge,
+                                         const Space_Vector&        high_edge)
     : d_geometry(geometry)
     , d_physics(physics)
     , d_fission_rebalance(std::make_shared<Fission_Rebalance_t>())
@@ -293,30 +296,26 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&     db,
 
     extents = db->get("init_fission_src", extents);
 
-    // get the low and upper bounds of the geometry
-    const cuda_utils::Space_Vector &low_edge  = d_geometry.get_host_ptr()->lower();
-    const cuda_utils::Space_Vector &high_edge = d_geometry.get_host_ptr()->upper();
-
     double lower_x = extents[2 * I];
     double upper_x = extents[2 * I + 1];
-    lower_x = std::max(lower_x, low_edge.x);
-    upper_x = std::min(upper_x, high_edge.x);
-    d_lower.x = lower_x;
-    d_width.x = upper_x - lower_x;
+    lower_x = std::max(lower_x, low_edge[0]);
+    upper_x = std::min(upper_x, high_edge[0]);
+    d_lower[0] = lower_x;
+    d_width[0] = upper_x - lower_x;
 
     double lower_y = extents[2 * J];
     double upper_y = extents[2 * J + 1];
-    lower_y = std::max(lower_y, low_edge.y);
-    upper_y = std::min(upper_y, high_edge.y);
-    d_lower.y = lower_y;
-    d_width.y = upper_y - lower_y;
+    lower_y = std::max(lower_y, low_edge[1]);
+    upper_y = std::min(upper_y, high_edge[1]);
+    d_lower[1] = lower_y;
+    d_width[1] = upper_y - lower_y;
 
     double lower_z = extents[2 * K];
     double upper_z = extents[2 * K + 1];
-    lower_z = std::max(lower_z, low_edge.z);
-    upper_z = std::min(upper_z, high_edge.z);
-    d_lower.z = lower_z;
-    d_width.z = upper_z - lower_z;
+    lower_z = std::max(lower_z, low_edge[2]);
+    upper_z = std::min(upper_z, high_edge[2]);
+    d_lower[2] = lower_z;
+    d_width[2] = upper_z - lower_z;
 
     // store the total number of requested particles per active_cycle
     d_np_requested = static_cast<int>(db->get("Np", 1000));
@@ -557,7 +556,7 @@ void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
         double fissions = 0.0;
         for (int cell = 0; cell < num_cells; ++cell)
         {
-            fissions += fis_dens[cell] * mesh.get_host_ptr()->volume_host(cell);
+            fissions += fis_dens[cell] * d_volumes[cell];
         }
         CHECK(fissions > 0.0);
         // allocate fission distribution
@@ -569,8 +568,7 @@ void Fission_Source<Geometry>::build_DR(const SDP_Cart_Mesh& mesh,
         for (int cell = 0; cell < num_cells; ++cell)
         {
             // calculate the expected number of sites in this cell
-            nu = fis_dens[cell] * d_np_domain * 
-		 mesh.get_host_ptr()->volume_host(cell) / fissions;
+            nu = fis_dens[cell] * d_np_domain * d_volumes[cell] / fissions;
 
             // there can be n or n+1 sites; with probability n+1-nu there will
             // be n sites, with probability nu-n there will be n+1 sites

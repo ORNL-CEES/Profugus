@@ -54,7 +54,7 @@ class Box_Shape
     double d_Dx, d_Dy, d_Dz;
 
   public:
-    
+
     // Constructor.
     Box_Shape(double lox, double hix, double loy,
               double hiy, double loz, double hiz)
@@ -76,9 +76,9 @@ class Box_Shape
     Space_Vector low_corner() const
     {
 	Space_Vector r;
-	r.x = d_lox;
-	r.y = d_loy;
-	r.z = d_loz;
+	r[0] = d_lox;
+	r[1] = d_loy;
+	r[2] = d_loz;
 	return r;
     }
 
@@ -87,9 +87,9 @@ class Box_Shape
     Space_Vector high_corner() const
     {
 	Space_Vector r;
-	r.x = d_lox + d_Dx;
-	r.y = d_loy + d_Dy;
-	r.z = d_loz + d_Dz;
+	r[0] = d_lox + d_Dx;
+	r[1] = d_loy + d_Dy;
+	r[2] = d_loz + d_Dz;
 	return r;
     }
 
@@ -99,10 +99,10 @@ class Box_Shape
     Space_Vector sample(const double ran1, const double ran2, const double ran3 ) const
     {
         Space_Vector point;
-	point.x = d_Dx * ran1 + d_lox;
-	point.y = d_Dy * ran2 + d_loy;
-	point.z = d_Dz * ran3 + d_loz;
-        ENSURE(is_point_inside(point));
+        point[0] = d_Dx * ran1 + d_lox;
+        point[1] = d_Dy * ran2 + d_loy;
+        point[2] = d_Dz * ran3 + d_loz;
+        DEVICE_ENSURE(is_point_inside(point));
         return point;
     }
 
@@ -114,21 +114,21 @@ class Box_Shape
     PROFUGUS_HOST_DEVICE_FUNCTION
     bool is_point_inside(const Space_Vector& r) const
     {
-	return (r.x >= d_lox && r.x <= d_lox + d_Dx) &&
-	    (r.y >= d_loy && r.y <= d_loy + d_Dy) &&
-	    (r.z >= d_loz && r.z <= d_loz + d_Dz);
-    } 
+	return (r[0] >= d_lox && r[0] <= d_lox + d_Dx) &&
+	    (r[1] >= d_loy && r[1] <= d_loy + d_Dy) &&
+	    (r[2] >= d_loz && r[2] <= d_loz + d_Dz);
+    }
 
     // Get the bounding box
     PROFUGUS_HOST_DEVICE_FUNCTION
     void get_bbox( Space_Vector& low_corner, Space_Vector& high_corner) const
     {
-	low_corner.x = d_lox;
-	low_corner.y = d_loy;
-	low_corner.z = d_loz;
-	high_corner.x = d_lox + d_Dx;
-	high_corner.y = d_loy + d_Dy;
-	high_corner.z = d_loz + d_Dz;
+	low_corner[0] = d_lox;
+	low_corner[1] = d_loy;
+	low_corner[2] = d_loz;
+	high_corner[0] = d_lox + d_Dx;
+	high_corner[1] = d_loy + d_Dy;
+	high_corner[2] = d_loz + d_Dz;
     }
 };
 

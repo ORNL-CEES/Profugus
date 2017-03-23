@@ -94,9 +94,12 @@ class Fission_Source : public Source<Geometry>
 
   public:
     // Constructor.
-    Fission_Source(const RCP_Std_DB& db, 
-		   const SDP_Geometry& geometry, 
-		   const SDP_Physics& physics );
+    Fission_Source(const RCP_Std_DB& db,
+		   const SDP_Geometry& geometry,
+		   const SDP_Physics& physics,
+           const std::vector<double>& volumes,
+           const Space_Vector& low_edge,
+           const Space_Vector& high_edge);
 
     // Destructor.
     ~Fission_Source();
@@ -105,7 +108,7 @@ class Fission_Source : public Source<Geometry>
     void build_initial_source();
 
     // Build the initial source from a mesh distribution.
-    void build_initial_source( const SDP_Cart_Mesh& mesh, 
+    void build_initial_source( const SDP_Cart_Mesh& mesh,
 			       Const_Array_View& fis_dens);
 
     // Build a source from a fission site container.
@@ -120,7 +123,7 @@ class Fission_Source : public Source<Geometry>
     // >>> DERIVED PUBLIC INTERFACE
 
     //! Get particles from the source.
-    void get_particles( 
+    void get_particles(
 	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
 
     //! Boolean operator for source (true when source still has particles).
@@ -231,6 +234,9 @@ class Fission_Source : public Source<Geometry>
     int			d_current_cell;
     Vec_Int		d_fis_dist;
     SDP_Cart_Mesh	d_fis_mesh;
+
+    // Mesh cell volumes
+    std::vector<double> d_volumes;
 
     // Size of the particle vector.
     int d_vector_size;

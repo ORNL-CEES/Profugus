@@ -53,7 +53,7 @@ class Group_Bounds
 
     // Bounds. On device.
     double* d_bounds;
-    
+
     // Size of bounds.
     int d_size;
 
@@ -79,24 +79,24 @@ class Group_Bounds
     PROFUGUS_DEVICE_FUNCTION
     void get_energy(int group_index, double &lower, double &upper) const
     {
-	REQUIRE(group_index + 1 < d_size );
+	DEVICE_REQUIRE(group_index + 1 < d_size );
 	upper = d_bounds[group_index];
 	lower = d_bounds[group_index + 1];
-	ENSURE(lower < upper);
+	DEVICE_ENSURE(lower < upper);
     }
-    
+
     // Get the linearized group index for a particle at a given energy
     PROFUGUS_DEVICE_FUNCTION
     bool find(const double energy, int &group_index) const
     {
-	REQUIRE(energy >= 0.);
+	DEVICE_REQUIRE(energy >= 0.);
 
 	if ((energy > d_bounds[0]) || (energy < d_bounds[d_size-1]))
 	    return false;
 
 	// Find the group index; use std::greater because it's in descending
 	// order
-	group_index = 
+	group_index =
 	    cuda_utils::utility::lower_bound( d_bounds, (d_bounds + d_size), energy,
 					cuda_utils::utility::greater_than<double>() )
 	    - d_bounds - 1;
@@ -104,8 +104,8 @@ class Group_Bounds
 	if (group_index == -1)
 	    ++group_index;
 
-	CHECK(group_index >= 0);
-	CHECK(group_index < d_size - 1);
+	DEVICE_CHECK(group_index >= 0);
+	DEVICE_CHECK(group_index < d_size - 1);
 	return true;
     }
 };
