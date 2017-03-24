@@ -88,20 +88,26 @@ Uniform_Source_Tester::Uniform_Source_Tester(
     // Acquire hardware for the test.
     cuda_utils::Hardware<cuda_utils::arch::Device>::acquire();
 
-    // Create the geometry host .
-    std::shared_ptr<Geometry_DMM> host_geom = 
-	std::make_shared<Geometry_DMM>( x_edges, y_edges, z_edges );
-    int num_cells = host_geom->num_cells();
+    // Create the geometry memory manager.
+    d_host_geom = std::make_shared<Geometry_DMM>( x_edges, y_edges, z_edges );
+    int num_cells = d_host_geom->num_cells();
 
     // Set matids with the geometry on the host.
     std::vector<int> matids( num_cells, matid );
-    host_geom->set_matids( matids );
+    d_host_geom->set_matids( matids );
 
     // Create a device copy of the geometry.
-    d_geometry = cuda_utils::shared_device_ptr<Geometry>(host_geom->device_instance() );
+    d_geometry = cuda_utils::shared_device_ptr<Geometry>(
+        d_host_geom->device_instance() );
+
+    cudaDeviceSynchronize();
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     // Create the particle vector.
     d_particles = cuda_utils::shared_device_ptr<Particle_Vector>( vector_size, rng );
+
+    cudaDeviceSynchronize();
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     // Create the source shape.
     d_shape = cuda_utils::shared_device_ptr<Shape>( 
@@ -123,10 +129,16 @@ Teuchos::Array<double> Uniform_Source_Tester::wt()
     int num_block = d_size / num_threads;
     wt_kernel<<<num_block,num_threads>>>( 
 	d_particles.get_device_ptr(), device_wt );
+    
+    cudaDeviceSynchronize();
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     Teuchos::Array<double> host_wt( d_size );
     cudaMemcpy( host_wt.getRawPtr(), device_wt, d_size * sizeof(double),
 		cudaMemcpyDeviceToHost );
+
+    cudaDeviceSynchronize();
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     cudaFree( device_wt );
     return host_wt;
@@ -143,10 +155,15 @@ Teuchos::Array<int> Uniform_Source_Tester::matid()
 
     matid_kernel<<<num_block,num_threads>>>( 
 	d_particles.get_device_ptr(), device_matid );
+    cudaDeviceSynchronize();
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     Teuchos::Array<int> host_matid( d_size );
     cudaMemcpy( host_matid.getRawPtr(), device_matid, d_size * sizeof(int),
 		cudaMemcpyDeviceToHost );
+
+    cudaDeviceSynchronize();
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     cudaFree( device_matid );
     return host_matid;

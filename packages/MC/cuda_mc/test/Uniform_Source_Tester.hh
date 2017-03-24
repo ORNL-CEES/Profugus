@@ -78,6 +78,7 @@ class Uniform_Source_Tester
   private:
 
     int d_size;
+    std::shared_ptr<Geometry_DMM> d_host_geom;
     cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
     cuda_utils::Shared_Device_Ptr<Shape> d_shape;
     cuda_utils::Shared_Device_Ptr<Particle_Vector> d_particles;

@@ -56,15 +56,15 @@ TEST(Uniform_Source, construction)
     db->set( "spectral_shape", spectral_shape );
 
     // Create the source tester.
-    Uniform_Source_Tester tester( x_edges, y_edges, z_edges, matid, 
+    Uniform_Source_Tester tester( x_edges, y_edges, z_edges, matid,
 				  vector_size, control.rng(),
 				  num_group );
 
     // Create a source.
     cuda_profugus::Uniform_Source<cuda_profugus::Mesh_Geometry,
-				  cuda_profugus::Box_Shape> 
+				  cuda_profugus::Box_Shape>
 	source( db, tester.geometry(), num_group, num_batch );
-    
+
     // Build the source.
     source.build_source( tester.shape() );
 

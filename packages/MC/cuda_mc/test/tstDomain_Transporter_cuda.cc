@@ -221,6 +221,8 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     cuda_utils::Shared_Device_Ptr<Bank_t> bank;
     transporter.transport_step( physics_tester.particles(), bank );
 
+    cudaDeviceSynchronize();
+
     // Sort the particles.
     physics_tester.particle_tester().sort_by_event();
 
@@ -233,7 +235,11 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     }
 
     // Post-process the step.
+    cudaDeviceSynchronize();
+
     transporter.process_step( physics_tester.particles(), bank );
+
+    cudaDeviceSynchronize();
 
     // Sort the particles.
     physics_tester.particle_tester().sort_by_event();

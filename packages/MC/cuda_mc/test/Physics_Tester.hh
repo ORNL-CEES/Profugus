@@ -108,6 +108,7 @@ class Physics_Tester
 
   private:
 
+    std::shared_ptr<Geometry_DMM> d_host_geom;
     cuda_utils::Shared_Device_Ptr<Physics> d_physics;
     cuda_utils::Shared_Device_Ptr<Geometry> d_geometry;
     cuda_utils::Shared_Device_Ptr<Cartesian_Mesh> d_cart_mesh;
