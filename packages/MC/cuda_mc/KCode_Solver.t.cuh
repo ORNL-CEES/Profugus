@@ -341,15 +341,23 @@ void KCode_Solver<Geometry>::iterate()
     // quantities if the source changes from cycle-to-cycle)
     d_transporter->assign_source(d_source);
 
+    REQUIRE(cudaSuccess == cudaGetLastError());
+
     // set the solver to sample fission sites
     d_transporter->sample_fission_sites(d_fission_sites,
                                         b_keff_tally->latest());
 
+    REQUIRE(cudaSuccess == cudaGetLastError());
+
     // initialize keff tally to the beginning of the cycle
     b_tallier->begin_cycle();
 
+    REQUIRE(cudaSuccess == cudaGetLastError());
+
     // solve the fixed source problem using the transporter
     d_transporter->solve();
+
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     // do end-of-cycle tally processing including global sum Note: this is the
     // total *requested* number of particles, not the actual number of
@@ -357,8 +365,12 @@ void KCode_Solver<Geometry>::iterate()
     // total weight emitted, summed over all processors, is d_Np.
     b_tallier->end_cycle(d_Np);
 
+    REQUIRE(cudaSuccess == cudaGetLastError());
+
     // build a new source from the fission site distribution
     d_source->build_source(d_fission_sites);
+
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     ENSURE(d_fission_sites);
     ENSURE(d_fission_sites->empty());

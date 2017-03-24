@@ -485,40 +485,43 @@ void Fission_Source<Geometry>::get_particles(
     // Calculate the total number of particles we will create.
     int num_to_create = std::min( d_np_left, num_particle );
 
-    // Get CUDA launch parameters.
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = num_to_create / threads_per_block;
-    if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
-
-    // Sample the fission sites if we have them.
-    if ( d_fission_sites )
+    if (num_to_create > 0)
     {
-	sample_fission_sites(
-	    particles, num_to_create, num_blocks, threads_per_block );
+        // Get CUDA launch parameters.
+        REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+        unsigned int threads_per_block = 
+        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
+        unsigned int num_blocks = num_to_create / threads_per_block;
+        if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
+
+        // Sample the fission sites if we have them.
+        if ( d_fission_sites )
+        {
+        sample_fission_sites(
+            particles, num_to_create, num_blocks, threads_per_block );
+        }
+
+        // If this is an initial source and we have a fission mesh, sample that.
+        else if ( d_fis_mesh )
+        {
+        sample_mesh(
+            particles, num_to_create, num_blocks, threads_per_block );
+        }
+
+        // Otherwise this is an initial source and we have no mesh so sample the
+        // geometry.
+        else
+        {
+        sample_geometry(
+            particles, num_to_create, num_blocks, threads_per_block );
+        }
+
+        cudaStreamSynchronize(d_stream.handle());
+
+        // update counters
+        d_np_left -= num_to_create;
+        d_np_run += num_to_create;
     }
-
-    // If this is an initial source and we have a fission mesh, sample that.
-    else if ( d_fis_mesh )
-    {
-	sample_mesh(
-	    particles, num_to_create, num_blocks, threads_per_block );
-    }
-
-    // Otherwise this is an initial source and we have no mesh so sample the
-    // geometry.
-    else
-    {
-	sample_geometry(
-	    particles, num_to_create, num_blocks, threads_per_block );
-    }
-
-    cudaStreamSynchronize(d_stream.handle());
-
-    // update counters
-    d_np_left -= num_to_create;
-    d_np_run += num_to_create;
 }
 
 //---------------------------------------------------------------------------//

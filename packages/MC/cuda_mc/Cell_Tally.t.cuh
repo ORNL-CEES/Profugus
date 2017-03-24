@@ -96,6 +96,7 @@ Cell_Tally<Geometry>::Cell_Tally(
 {
     // Allocate the tally.
     int size = d_num_batch * d_num_cells;
+    REQUIRE(size > 0);
     cuda_utils::memory::Malloc( d_tally, size );
 
     // Get CUDA launch parameters.
@@ -133,24 +134,28 @@ void Cell_Tally<Geometry>::accumulate(
 
     // Calculate the launch parameters.
     int num_particle = num_collision + num_boundary;
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = num_particle / threads_per_block;
-    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+    if (num_particle > 0)
+    {
+        REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+        unsigned int threads_per_block = 
+        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
+        unsigned int num_blocks = num_particle / threads_per_block;
+        if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
-    // Tally the particles.
-    tally_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>( 
-        d_geometry.get_device_ptr(),
-        particles.get_device_ptr(),
-        num_collision,
-        num_boundary,
-        d_num_batch,
-        d_num_cells,
-        d_tally );
+        // Tally the particles.
+        tally_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>( 
+            d_geometry.get_device_ptr(),
+            particles.get_device_ptr(),
+            num_collision,
+            num_boundary,
+            d_num_batch,
+            d_num_cells,
+            d_tally );
 
-    // Synchronize after tally.
-    d_stream.synchronize();
+        // Synchronize after tally.
+        d_stream.synchronize();
+        REQUIRE(cudaSuccess == cudaGetLastError());
+    }
 }
 
 //---------------------------------------------------------------------------//

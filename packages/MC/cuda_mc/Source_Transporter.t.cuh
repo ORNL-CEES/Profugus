@@ -133,10 +133,14 @@ void Source_Transporter<Geometry>::solve()
         for ( auto& f : futures ) f.get();
 
         cudaDeviceSynchronize();
+        REQUIRE(cudaSuccess == cudaGetLastError());
 
         // Sort the vector. This happens on the default stream and therefore
         // effectively synchronizes the device after events have run.
         particles.get_host_ptr()->sort_by_event( sort_size );
+
+        cudaDeviceSynchronize();
+        REQUIRE(cudaSuccess == cudaGetLastError());
 
         // Get the number of particles that are alive.
         num_alive = particles.get_host_ptr()->num_alive();

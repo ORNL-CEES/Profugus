@@ -296,22 +296,23 @@ void Domain_Transporter<Geometry>::transport_step(
     // get the particles that will take a step
     int num_particle =
         particles.get_host_ptr()->get_event_size( events::TAKE_STEP );
-    
-    // get CUDA launch parameters
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = num_particle / threads_per_block;
-    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
-    // move the particles a step
-    take_step_kernel<<<num_blocks,threads_per_block,0,d_take_step_stream.handle()>>>(
-        d_geometry.get_device_ptr(),
-        d_physics.get_device_ptr(),
-        num_particle,
-        particles.get_device_ptr() );
+    if (num_particle > 0)
+    {
+        // get CUDA launch parameters
+        REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+        unsigned int threads_per_block = 
+            cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
+        unsigned int num_blocks = num_particle / threads_per_block;
+        if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
-    cudaStreamSynchronize(d_take_step_stream.handle());
+        // move the particles a step
+        take_step_kernel<<<num_blocks,threads_per_block,0,d_take_step_stream.handle()>>>(
+            d_geometry.get_device_ptr(),
+            d_physics.get_device_ptr(),
+            num_particle,
+            particles.get_device_ptr() );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -339,6 +340,7 @@ void Domain_Transporter<Geometry>::process_step(
 
     cudaStreamSynchronize(d_collision_stream.handle());
     cudaStreamSynchronize(d_boundary_stream.handle());
+    REQUIRE(cudaSuccess == cudaGetLastError());
 }
 
 //---------------------------------------------------------------------------//
@@ -354,24 +356,27 @@ void Domain_Transporter<Geometry>::process_boundary(
     int num_particle =
         particles.get_host_ptr()->get_event_size( events::BOUNDARY );
 
-    // get CUDA launch parameters
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = num_particle / threads_per_block;
-    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+    if (num_particle > 0)
+    {
+        // get CUDA launch parameters
+        REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+        unsigned int threads_per_block = 
+        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
+        unsigned int num_blocks = num_particle / threads_per_block;
+        if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
-    // process the boundary
-    process_boundary_kernel<<<num_blocks,threads_per_block,0,d_boundary_stream.handle()>>>(
-	d_geometry.get_device_ptr(),
-	num_particle,
-	particles.get_device_ptr() );
+        // process the boundary
+        process_boundary_kernel<<<num_blocks,threads_per_block,0,d_boundary_stream.handle()>>>(
+        d_geometry.get_device_ptr(),
+        num_particle,
+        particles.get_device_ptr() );
 
-    // take any surviving particles and set them to take another step    
-    set_next_step_kernel<<<num_blocks,threads_per_block,0,d_boundary_stream.handle()>>>(
-        events::BOUNDARY,
-	num_particle,
-	particles.get_device_ptr() );
+        // take any surviving particles and set them to take another step    
+        set_next_step_kernel<<<num_blocks,threads_per_block,0,d_boundary_stream.handle()>>>(
+            events::BOUNDARY,
+        num_particle,
+        particles.get_device_ptr() );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -390,40 +395,43 @@ void Domain_Transporter<Geometry>::process_collision(
     // get the particles that will have a collision
     int num_particle =
         particles.get_host_ptr()->get_event_size( events::COLLISION );
-    
-    // get CUDA launch parameters
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = num_particle / threads_per_block;
-    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
-    // Move particles to the collision site
-    move_to_collision_kernel<<<num_blocks,threads_per_block,0,d_collision_stream.handle()>>>(
-	d_geometry.get_device_ptr(),
-	num_particle,
-	particles.get_device_ptr() );
-
-    // sample fission sites
-    if (d_sample_fission_sites)
+    if (num_particle > 0)
     {
-        CHECK(d_fission_sites);
-        CHECK(d_keff > 0.0);
-        d_physics.get_host_ptr()->sample_fission_site(
-            particles, *d_fission_sites, d_keff, d_collision_stream );
+        // get CUDA launch parameters
+        REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+        unsigned int threads_per_block = 
+        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
+        unsigned int num_blocks = num_particle / threads_per_block;
+        if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+
+        // Move particles to the collision site
+        move_to_collision_kernel<<<num_blocks,threads_per_block,0,d_collision_stream.handle()>>>(
+        d_geometry.get_device_ptr(),
+        num_particle,
+        particles.get_device_ptr() );
+
+        // sample fission sites
+        if (d_sample_fission_sites)
+        {
+            CHECK(d_fission_sites);
+            CHECK(d_keff > 0.0);
+            d_physics.get_host_ptr()->sample_fission_site(
+                particles, *d_fission_sites, d_keff, d_collision_stream );
+        }
+
+        // process the collision
+        d_physics.get_host_ptr()->collide(particles, d_collision_stream );
+
+        // apply weight windows
+        d_var_reduction->post_collision(particles, bank, d_collision_stream );
+
+        // take any surviving particles and set them to take another step    
+        set_next_step_kernel<<<num_blocks,threads_per_block,0,d_collision_stream.handle()>>>(
+            events::COLLISION,
+        num_particle,
+        particles.get_device_ptr() );
     }
-
-    // process the collision
-    d_physics.get_host_ptr()->collide(particles, d_collision_stream );
-
-    // apply weight windows
-    d_var_reduction->post_collision(particles, bank, d_collision_stream );
-
-    // take any surviving particles and set them to take another step    
-    set_next_step_kernel<<<num_blocks,threads_per_block,0,d_collision_stream.handle()>>>(
-        events::COLLISION,
-	num_particle,
-	particles.get_device_ptr() );
 }
 
 //---------------------------------------------------------------------------//

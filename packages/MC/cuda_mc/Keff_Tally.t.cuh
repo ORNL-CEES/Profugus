@@ -183,19 +183,22 @@ void Keff_Tally<Geometry>::accumulate(
 
     // Calculate the launch parameters.
     std::size_t num_particle = num_collision + num_boundary;
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = num_particle / threads_per_block;
-    if ( num_particle % threads_per_block > 0 ) ++num_blocks;
+    if (num_particle > 0)
+    {
+        REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+        unsigned int threads_per_block = 
+        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
+        unsigned int num_blocks = num_particle / threads_per_block;
+        if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
-    // Process the tallies.
-    accumulate_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
-	d_physics.get_device_ptr(),
-	particles.get_device_ptr(),
-	num_collision,
-	num_boundary,
-	d_keff_device );
+        // Process the tallies.
+        accumulate_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+        d_physics.get_device_ptr(),
+        particles.get_device_ptr(),
+        num_collision,
+        num_boundary,
+        d_keff_device );
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -246,6 +249,7 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
 
     // Synchronize on this thread.
     d_stream.synchronize();
+    REQUIRE(cudaSuccess == cudaGetLastError());
 
     // Add them to cycle tally.
     for ( int n = 0; n < d_vector_size; ++n )
@@ -273,6 +277,7 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
         cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = d_vector_size / threads_per_block;
     if ( d_vector_size % threads_per_block > 0 ) ++num_blocks;
+
     reset_keff_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
         d_vector_size,
         d_keff_device );

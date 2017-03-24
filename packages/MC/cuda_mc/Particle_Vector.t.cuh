@@ -263,13 +263,16 @@ void Particle_Vector<Geometry>::sort_by_event( const int sort_size )
     event_bounds_kernel<<<num_bounds_blocks,threads_per_block>>>(
         static_cast<int>(events::END_EVENT), d_num_event, d_event_bounds );
 
-    // Reorder the local ids.
-    reorder_lid_kernel<<<num_blocks,threads_per_block>>>( sort_size,
-                                                          d_size,
-                                                          d_event_bounds,
-                                                          d_event_bins,
-                                                          d_event,
-                                                          d_lid );
+    if (sort_size > 0)
+    {
+        // Reorder the local ids.
+        reorder_lid_kernel<<<num_blocks,threads_per_block>>>( sort_size,
+                                                              d_size,
+                                                              d_event_bounds,
+                                                              d_event_bins,
+                                                              d_event,
+                                                              d_lid );
+    }
 }
 
 //---------------------------------------------------------------------------//
