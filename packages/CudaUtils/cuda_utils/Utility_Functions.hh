@@ -154,7 +154,7 @@ const T * lower_bound(const T *first,
 PROFUGUS_DEVICE_FUNCTION
 int thread_id()
 {
-#ifdef CUDA_ARCH
+#ifdef __CUDA_ARCH__
     return threadIdx.x + blockDim.x *
         (threadIdx.y + blockDim.y * (threadIdx.z)) +
         (blockDim.x * blockDim.y * blockDim.z) *
