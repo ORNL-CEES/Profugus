@@ -10,11 +10,13 @@
 
 #include "Fixed_Source_Solver.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class Fixed_Source_Solver<Mesh_Geometry>;
+template class Fixed_Source_Solver<Core>;
 
 } // end namespace cuda_profugus
 

@@ -9,11 +9,13 @@
 
 #include "Keff_Tally.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class Keff_Tally<Mesh_Geometry>;
+template class Keff_Tally<Core>;
 
 } // end namespace profugus
 

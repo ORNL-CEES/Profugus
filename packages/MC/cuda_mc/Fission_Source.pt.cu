@@ -10,11 +10,13 @@
 
 #include "Fission_Source.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class Fission_Source<Mesh_Geometry>;
+template class Fission_Source<Core>;
 
 } // end namespace cuda_profugus
 

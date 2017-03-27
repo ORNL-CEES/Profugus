@@ -9,11 +9,13 @@
 
 #include "VR_Roulette.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class VR_Roulette<Mesh_Geometry>;
+template class VR_Roulette<Core>;
 
 } // end namespace profugus
 

@@ -9,11 +9,13 @@
 
 #include "Bank.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class Bank<Mesh_Geometry>;
+template class Bank<Core>;
 
 } // end namespace profugus
 

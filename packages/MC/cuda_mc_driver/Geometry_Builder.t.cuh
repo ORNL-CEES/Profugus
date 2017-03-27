@@ -14,6 +14,11 @@
 #include "Geometry_Builder.hh"
 #include "cuda_utils/CudaDBC.hh"
 
+#include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
+#include "geometry/RTK_Geometry.hh"
+#include "mc_driver/Geometry_Builder.hh"
+
 namespace cuda_mc
 {
 
@@ -57,6 +62,19 @@ auto Geometry_Builder<cuda_profugus::Mesh_Geometry_DMM>::build(
         std::copy(bnd_array.begin(), bnd_array.end(), boundary.begin());
     }
     geom->set_reflecting(boundary);
+
+    return geom;
+}
+
+auto Geometry_Builder<cuda_profugus::Core_DMM>::build(
+    RCP_ParameterList master) -> SP_Geometry_DMM
+{
+    // Build host geometry
+    mc::Geometry_Builder<profugus::Core> host_builder;
+    auto host_geom = host_builder.build(master);
+
+    // Build DMM
+    auto geom = std::make_shared<cuda_profugus::Core_DMM>(*host_geom);
 
     return geom;
 }

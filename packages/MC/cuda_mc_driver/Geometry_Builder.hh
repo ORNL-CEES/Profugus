@@ -15,6 +15,7 @@
 #include <unordered_map>
 
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 #include "cuda_utils/Shared_Device_Ptr.hh"
 
@@ -59,6 +60,19 @@ class Geometry_Builder<cuda_profugus::Mesh_Geometry_DMM>
     typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_ParameterList;
     typedef Teuchos::Array<int>                     OneDArray_int;
     typedef Teuchos::Array<double>                  OneDArray_dbl;
+
+    SP_Geometry_DMM build(RCP_ParameterList master);
+};
+
+// Specialization for RTK_Geometry
+template <>
+class Geometry_Builder<cuda_profugus::Core_DMM>
+{
+  public:
+
+    typedef cuda_profugus::Core_DMM                 Geometry_DMM;
+    typedef std::shared_ptr<Geometry_DMM>           SP_Geometry_DMM;
+    typedef Teuchos::RCP<Teuchos::ParameterList>    RCP_ParameterList;
 
     SP_Geometry_DMM build(RCP_ParameterList master);
 };

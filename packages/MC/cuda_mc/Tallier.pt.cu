@@ -10,11 +10,13 @@
 
 #include "Tallier.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class Tallier<Mesh_Geometry>;
+template class Tallier<Core>;
 
 } // end namespace cuda_profugus
 

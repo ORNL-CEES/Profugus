@@ -10,11 +10,13 @@
 #include "Uniform_Source.t.cuh"
 #include "Box_Shape.hh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class Uniform_Source<Mesh_Geometry,Box_Shape>;
+template class Uniform_Source<Core,Box_Shape>;
 
 } // end namespace profugus
 

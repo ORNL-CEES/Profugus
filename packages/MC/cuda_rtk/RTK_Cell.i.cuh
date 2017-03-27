@@ -11,6 +11,8 @@
 #ifndef MC_cuda_rtk_RTK_Cell_i_cuh
 #define MC_cuda_rtk_RTK_Cell_i_cuh
 
+#ifdef __CUDA_ARCH__
+
 namespace cuda_profugus
 {
 
@@ -673,7 +675,7 @@ double RTK_Cell::dist_to_shell(
     if (discriminant >= 0.0)
     {
         // calculate the sqrt of the discriminant and denominator once
-        double sqr_root    = std::sqrt(discriminant);
+        double sqr_root    = sqrt(discriminant);
         double denominator = 0.5 / a;
 
         // calculate the roots of the equation
@@ -734,6 +736,8 @@ double RTK_Cell::check_shell(
 }
 
 } // end namespace cuda_profugus
+
+#endif // __CUDA_ARCH__
 
 #endif // MC_cuda_rtk_RTK_Cell_i_cuh
 

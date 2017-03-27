@@ -12,6 +12,7 @@
 #include "Manager.hh"
 
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 #include "Teuchos_DefaultComm.hpp"
 #include "Teuchos_XMLParameterListHelpers.hpp"
@@ -38,10 +39,9 @@ auto Manager_Builder::build(const std::string &xml_file) -> SP_Manager_Base
     {
         manager = std::make_shared<Manager<cuda_profugus::Mesh_Geometry_DMM>>();
     }
-    // No other options currently
     else
     {
-        VALIDATE(false,"MESH db must be present.");
+        manager = std::make_shared<Manager<cuda_profugus::Core_DMM>>();
     }
 
     ENSURE( manager );

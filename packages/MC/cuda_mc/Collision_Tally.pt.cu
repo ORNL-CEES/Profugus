@@ -9,11 +9,13 @@
 
 #include "Collision_Tally.t.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
+#include "cuda_rtk/RTK_Geometry.cuh"
 
 namespace cuda_profugus
 {
 
 template class Collision_Tally<Mesh_Geometry>;
+template class Collision_Tally<Core>;
 
 } // end namespace profugus
 
