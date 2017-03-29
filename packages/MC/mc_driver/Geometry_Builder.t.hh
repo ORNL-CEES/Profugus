@@ -215,6 +215,10 @@ auto Geometry_Builder<profugus::Core>::build_axial_lattice(
                 // get the pin pitch and overall pin matid
                 double pitch  = pindb.get<double>("pitch");
                 int pin_matid = pindb.get<int>("matid");
+                int num_segments = 1;
+                if (pindb.isType<int>("num segments"))
+                    num_segments = pindb.get<int>("num segments");
+                CHECK(num_segments == 1 || num_segments == 4);
 
                 // make empty inner cylinders
                 Pin_Cell_t::Vec_Dbl r;
@@ -237,7 +241,7 @@ auto Geometry_Builder<profugus::Core>::build_axial_lattice(
 
                 // build the pin
                 SP_Pin_Cell pin(std::make_shared<Pin_Cell_t>(
-                                    ids, r, pin_matid, pitch, height));
+                    ids, r, pin_matid, pitch, height, num_segments));
 
                 // add it
                 pins.emplace(pid, pin);
