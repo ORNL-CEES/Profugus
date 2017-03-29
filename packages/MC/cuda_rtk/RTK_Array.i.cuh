@@ -606,6 +606,22 @@ RTK_Array<RTK_Cell>::transform(
 }
 
 //---------------------------------------------------------------------------//
+/*!
+ * \brief Return the current cell id.
+ */
+template<>
+__device__
+inline int RTK_Array<RTK_Cell>::cellid(
+    const Geo_State_t &state) const
+{
+    DEVICE_REQUIRE(d_level == 0);
+    return object(state).cell(state.region,state.segment) +
+            d_cell_offsets[index(state.level_coord[d_level][0],
+                                 state.level_coord[d_level][1],
+                                 state.level_coord[d_level][2])];
+}
+
+//---------------------------------------------------------------------------//
 
 template<>
 __device__
