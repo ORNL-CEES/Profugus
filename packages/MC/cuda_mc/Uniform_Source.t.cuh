@@ -157,7 +157,7 @@ Uniform_Source<Geometry,Shape>::Uniform_Source(
     // with no source will not make this timer otherwise
 #if UTILS_TIMING > 0
     profugus::Timing_Diagnostics::update_timer(
-        "cuda_profugus::Uniform_Source.get_particles", 0.0);
+        "CUDA_MC::Uniform_Source.get_particles", 0.0);
 #endif
 }
 
@@ -214,7 +214,7 @@ void Uniform_Source<Geometry,Shape>::get_particles(
         return;
     }
 
-    SCOPED_TIMER_2("MC::Uniform_Source.get_particle");
+    SCOPED_TIMER("CUDA_MC::Uniform_Source.get_particles");
 
     // Get the particles that are dead.
     int num_particle = particles.get_host_ptr()->get_event_size( events::DEAD );
@@ -222,28 +222,34 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     // Calculate the total number of particles we will create.
     int num_to_create = std::min( d_np_left, num_particle );
 
-    // Get CUDA launch parameters.
-    REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
-    unsigned int threads_per_block = 
-	cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
-    unsigned int num_blocks = num_to_create / threads_per_block;
-    if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
+    if (num_to_create > 0)
+    {
+        // Get CUDA launch parameters.
+        REQUIRE( cuda_utils::Hardware<cuda_utils::arch::Device>::have_acquired() );
+        unsigned int threads_per_block = 
+        cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
+        unsigned int num_blocks = num_to_create / threads_per_block;
+        if ( num_to_create % threads_per_block > 0 ) ++num_blocks;
 
-    // Create the particles.
-    sample_source_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
-    	d_geometry.get_device_ptr(),
-    	d_shape.get_device_ptr(),
-    	num_to_create,
-    	d_wt,
-    	d_erg_cdf,
-    	d_num_groups,
-    	d_np_run,
-    	d_batch_size,
-    	particles.get_device_ptr() );
+        // Create the particles.
+        sample_source_kernel<<<num_blocks,threads_per_block>>>(
+            d_geometry.get_device_ptr(),
+            d_shape.get_device_ptr(),
+            num_to_create,
+            d_wt,
+            d_erg_cdf,
+            d_num_groups,
+            d_np_run,
+            d_batch_size,
+            particles.get_device_ptr() );
 
-    // update counters
-    d_np_left -= num_to_create;
-    d_np_run += num_to_create;
+        cudaDeviceSynchronize();
+        CHECK(cudaSuccess == cudaGetLastError());
+
+        // update counters
+        d_np_left -= num_to_create;
+        d_np_run += num_to_create;
+    }
 }
 
 //---------------------------------------------------------------------------//

@@ -516,7 +516,7 @@ void Fission_Source<Geometry>::get_particles(
             particles, num_to_create, num_blocks, threads_per_block );
         }
 
-        cudaStreamSynchronize(d_stream.handle());
+        cudaDeviceSynchronize();
 
         // update counters
         d_np_left -= num_to_create;
@@ -613,17 +613,16 @@ void Fission_Source<Geometry>::sample_fission_sites(
 {
     // Extract the fission sites.
     int copy_start = d_fission_sites->size() - num_particle;
-    cuda_utils::memory::Copy_To_Device_Async( d_fission_sites_device,
+    cuda_utils::memory::Copy_To_Device( d_fission_sites_device,
                                         d_fission_sites->data() + copy_start,
-                                        num_particle,
-                                        d_stream );
+                                        num_particle);
 
     // Remove the fission sites from the host that we just copied to the
     // device.
     d_fission_sites->resize( copy_start );
 
     // Launch the kernel.
-    sample_fission_sites_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+    sample_fission_sites_kernel<<<num_blocks,threads_per_block>>>(
 	d_geometry.get_device_ptr(),
 	d_physics.get_device_ptr(),
 	num_particle,
@@ -665,13 +664,12 @@ void Fission_Source<Geometry>::sample_mesh(
     }
 
     // Copy the fission cells to the device.
-    cuda_utils::memory::Copy_To_Device_Async( d_fission_cells_device,
+    cuda_utils::memory::Copy_To_Device( d_fission_cells_device,
                                         fission_cells.data(),
-                                        num_particle,
-                                        d_stream );
+                                        num_particle);
 
     // Launch the kernel.
-    sample_mesh_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+    sample_mesh_kernel<<<num_blocks,threads_per_block>>>(
 	d_geometry.get_device_ptr(),
 	d_physics.get_device_ptr(),
 	d_fis_mesh.get_device_ptr(),
@@ -694,7 +692,7 @@ void Fission_Source<Geometry>::sample_geometry(
     const unsigned int threads_per_block )
 {
     // Launch the kernel.
-    sample_geometry_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+    sample_geometry_kernel<<<num_blocks,threads_per_block>>>(
     	d_geometry.get_device_ptr(),
     	d_physics.get_device_ptr(),
     	num_particle,

@@ -109,7 +109,7 @@ void VR_Roulette<Geometry>::post_collision(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // do roulette
-    post_collision_kernel<<<num_blocks,threads_per_block,0,stream.handle()>>>( 
+    post_collision_kernel<<<num_blocks,threads_per_block>>>( 
 	num_particle,
 	d_Wc,
 	d_Ws,

@@ -97,7 +97,7 @@ Keff_Tally<Geometry>::Keff_Tally(
         cuda_utils::Hardware<cuda_utils::arch::Device>::default_block_size();
     unsigned int num_blocks = d_vector_size / threads_per_block;
     if ( d_vector_size % threads_per_block > 0 ) ++num_blocks;
-    reset_keff_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+    reset_keff_kernel<<<num_blocks,threads_per_block>>>(
         d_vector_size,
         d_keff_device );
 }
@@ -192,7 +192,7 @@ void Keff_Tally<Geometry>::accumulate(
         if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
         // Process the tallies.
-        accumulate_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+        accumulate_kernel<<<num_blocks,threads_per_block>>>(
         d_physics.get_device_ptr(),
         particles.get_device_ptr(),
         num_collision,
@@ -244,11 +244,11 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
     REQUIRE(num_particles > 0.);
 
     // Pull tallies off the device.
-    cuda_utils::memory::Copy_To_Host_Async( 
-	d_keff_host.data(), d_keff_device, d_vector_size, d_stream );
+    cuda_utils::memory::Copy_To_Host( 
+	d_keff_host.data(), d_keff_device, d_vector_size );
 
     // Synchronize on this thread.
-    d_stream.synchronize();
+    cudaDeviceSynchronize();
     REQUIRE(cudaSuccess == cudaGetLastError());
 
     // Add them to cycle tally.
@@ -278,7 +278,7 @@ void Keff_Tally<Geometry>::end_cycle(double num_particles)
     unsigned int num_blocks = d_vector_size / threads_per_block;
     if ( d_vector_size % threads_per_block > 0 ) ++num_blocks;
 
-    reset_keff_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>(
+    reset_keff_kernel<<<num_blocks,threads_per_block>>>(
         d_vector_size,
         d_keff_device );
 }

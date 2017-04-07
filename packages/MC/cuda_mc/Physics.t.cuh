@@ -425,7 +425,7 @@ void Physics<Geometry>::collide(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Process the collisions.
-    collide_kernel<<<num_blocks,threads_per_block,0,stream.handle()>>>(
+    collide_kernel<<<num_blocks,threads_per_block>>>(
 	num_particle,
 	d_geometry.get_device_ptr(),
 	d_mat.get_device_ptr(),
@@ -433,6 +433,8 @@ void Physics<Geometry>::collide(
 	d_scatter,
 	d_implicit_capture,
 	particles.get_device_ptr() );
+
+    cudaDeviceSynchronize();
 }
 
 //---------------------------------------------------------------------------//
@@ -485,7 +487,7 @@ void Physics<Geometry>::sample_fission_site(
     if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
     // Sample the fission sites.
-    sample_fission_site_kernel<<<num_blocks,threads_per_block,0,stream.handle()>>>(
+    sample_fission_site_kernel<<<num_blocks,threads_per_block>>>(
 	num_particle,
 	d_geometry.get_device_ptr(),
 	d_mat.get_device_ptr(),
@@ -496,11 +498,11 @@ void Physics<Geometry>::sample_fission_site(
 	d_device_sites );
 
     // Pull the fission sites off of the device.
-    cuda_utils::memory::Copy_To_Host_Async(
-	d_host_sites.data(), d_device_sites, num_particle, stream );
+    cuda_utils::memory::Copy_To_Host(
+	d_host_sites.data(), d_device_sites, num_particle );
 
     // Synchronize on this thread after copy.
-    stream.synchronize();
+    cudaDeviceSynchronize();
 
     // Add the fission sites to the fission container.
     for ( int p = 0; p < num_particle; ++p )

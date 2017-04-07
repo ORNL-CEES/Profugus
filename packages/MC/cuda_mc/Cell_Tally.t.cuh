@@ -143,7 +143,7 @@ void Cell_Tally<Geometry>::accumulate(
         if ( num_particle % threads_per_block > 0 ) ++num_blocks;
 
         // Tally the particles.
-        tally_kernel<<<num_blocks,threads_per_block,0,d_stream.handle()>>>( 
+        tally_kernel<<<num_blocks,threads_per_block>>>( 
             d_geometry.get_device_ptr(),
             particles.get_device_ptr(),
             num_collision,
@@ -153,7 +153,7 @@ void Cell_Tally<Geometry>::accumulate(
             d_tally );
 
         // Synchronize after tally.
-        d_stream.synchronize();
+        cudaDeviceSynchronize();
         REQUIRE(cudaSuccess == cudaGetLastError());
     }
 }

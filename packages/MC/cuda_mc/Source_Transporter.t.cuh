@@ -105,12 +105,12 @@ void Source_Transporter<Geometry>::solve()
         solve_vector_size, profugus::Global_RNG::d_rng );
 
     // Create tasks.
+    /*
     auto sample_source = [&](){ d_source->get_particles(particles); };
     auto transport_step = [&](){ d_transporter.transport_step(particles,bank); };
     auto process_step = [&](){ d_transporter.process_step(particles,bank); };
+    */
 
-    // START PROFILING
-    cudaProfilerStart();
 
     // run all the local histories while the source exists and there are live
     // particles in the vector. we know when all the particles are dead when
@@ -124,13 +124,22 @@ void Source_Transporter<Geometry>::solve()
         // Get the sort size.
         sort_size = (d_source->empty()) ? num_alive : solve_vector_size;
 
+        std::cout << "Starting iteration with " << sort_size << " particles"
+            << std::endl;
+
         // Run the events.
+        /*
         futures[0] = std::async( process_step );
         futures[1] = std::async( transport_step );
         futures[2] = std::async( sample_source );
 
         // Wait on the events.
         for ( auto& f : futures ) f.get();
+        */
+
+        d_source->get_particles(particles);
+        d_transporter.transport_step(particles,bank);
+        d_transporter.process_step(particles,bank);
 
         cudaDeviceSynchronize();
         REQUIRE(cudaSuccess == cudaGetLastError());
@@ -163,9 +172,6 @@ void Source_Transporter<Geometry>::solve()
 
     // barrier at the end
     profugus::global_barrier();
-
-    // STOP PROFILING
-    cudaProfilerStop();
 }
 
 //---------------------------------------------------------------------------//
