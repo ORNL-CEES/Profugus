@@ -111,6 +111,7 @@ void Source_Transporter<Geometry>::solve()
     auto process_step = [&](){ d_transporter.process_step(particles,bank); };
     */
 
+    int num_collisions = 0;
 
     // run all the local histories while the source exists and there are live
     // particles in the vector. we know when all the particles are dead when
@@ -124,8 +125,8 @@ void Source_Transporter<Geometry>::solve()
         // Get the sort size.
         sort_size = (d_source->empty()) ? num_alive : solve_vector_size;
 
-        std::cout << "Starting iteration with " << sort_size << " particles"
-            << std::endl;
+        //std::cout << "Starting iteration with " << sort_size << " particles"
+        //    << std::endl;
 
         // Run the events.
         /*
@@ -136,6 +137,8 @@ void Source_Transporter<Geometry>::solve()
         // Wait on the events.
         for ( auto& f : futures ) f.get();
         */
+        num_collisions +=
+            particles.get_host_ptr()->get_event_size( events::COLLISION );
 
         d_source->get_particles(particles);
         d_transporter.transport_step(particles,bank);
@@ -169,6 +172,8 @@ void Source_Transporter<Geometry>::solve()
                  << d_node << endl;
         }
     }
+
+    std::cout << "Processed " << num_collisions << " collisions" << std::endl;
 
     // barrier at the end
     profugus::global_barrier();
