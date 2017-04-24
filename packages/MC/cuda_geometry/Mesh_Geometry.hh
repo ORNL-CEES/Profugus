@@ -23,6 +23,7 @@
 #include "geometry/Definitions.hh"
 #include "geometry/Bounding_Box.hh"
 #include "Mesh_State.hh"
+#include "Mesh_State_Vector.cuh"
 #include "Cartesian_Mesh.hh"
 
 namespace cuda_profugus
@@ -50,6 +51,7 @@ class Mesh_Geometry
     typedef profugus::geometry::cell_type         cell_type;
     typedef cuda_utils::Space_Vector              Space_Vector;
     typedef Mesh_State                            Geo_State_t;
+    typedef Mesh_State_Vector                     Geo_State_Vector_t;
     typedef cuda::const_Device_View_Field<int>    Int_View;
     typedef cuda::const_Device_View_Field<double> Double_View;
 
@@ -65,17 +67,19 @@ class Mesh_Geometry
     // >>> DEVICE API
 
     //! Initialize track.
-    __device__ inline void initialize(const Space_Vector& r,
-                                      const Space_Vector& direction,
-                                            Geo_State_t&  state) const;
+    __device__ inline void initialize(const Space_Vector&        r,
+                                      const Space_Vector&        direction,
+                                            Geo_State_Vector_t&  state_vector,
+                                            int                  pid) const;
 
     //! Get distance to next boundary
-    __device__ inline double distance_to_boundary(Geo_State_t& state) const;
+    __device__ inline double distance_to_boundary(Geo_State_Vectort& state_vector,
+                                                  int                pid) const;
 
     //! Move to and cross a surface in the current direction.
-    __device__ void move_to_surface(Geo_State_t& state) const
+    __device__ void move_to_surface(Geo_State_Vector_t& state, int pid) const
     {
-        move(state.next_dist, state);
+        move(state_vector.next_dist(pid), state_vector, pid);
 
         using def::I; using def::J; using def::K;
 
@@ -84,56 +88,61 @@ class Mesh_Geometry
         const int num_cells_z = d_mesh.num_cells_along(K);
 
         constexpr int face_start = Geo_State_t::MINUS_X;
-        state.exiting_face    = Geo_State_t::NONE;
-        state.reflecting_face = Geo_State_t::NONE;
-        if( state.next_ijk[I] < 0 )
+        auto& exiting_face    = state.exiting_face(pid);
+        auto& reflecting_face = state.reflecting_face(pid);
+        auto& next_ijk = state.next_ijk(pid);
+        exiting_face    = Geo_State_t::NONE;
+        reflecting_face = Geo_State_t::NONE;
+        if( next_ijk[I] < 0 )
         {
-            state.exiting_face = Geo_State_t::MINUS_X;
+            exiting_face = Geo_State_t::MINUS_X;
             if( d_reflect[Geo_State_t::MINUS_X-face_start] )
-                state.reflecting_face = Geo_State_t::MINUS_X;
+                reflecting_face = Geo_State_t::MINUS_X;
         }
-        else if( state.next_ijk[I] == num_cells_x )
+        else if( next_ijk[I] == num_cells_x )
         {
-            state.exiting_face = Geo_State_t::PLUS_X;
+            exiting_face = Geo_State_t::PLUS_X;
             if( d_reflect[Geo_State_t::PLUS_X-face_start] )
-                state.reflecting_face = Geo_State_t::PLUS_X;
+                reflecting_face = Geo_State_t::PLUS_X;
         }
-        else if( state.next_ijk[J] < 0 )
+        else if( next_ijk[J] < 0 )
         {
-            state.exiting_face = Geo_State_t::MINUS_Y;
+            exiting_face = Geo_State_t::MINUS_Y;
             if( d_reflect[Geo_State_t::MINUS_Y-face_start] )
-                state.reflecting_face = Geo_State_t::MINUS_Y;
+                reflecting_face = Geo_State_t::MINUS_Y;
         }
-        else if( state.next_ijk[J] == num_cells_y )
+        else if( next_ijk[J] == num_cells_y )
         {
-            state.exiting_face = Geo_State_t::PLUS_Y;
+            exiting_face = Geo_State_t::PLUS_Y;
             if( d_reflect[Geo_State_t::PLUS_Y-face_start] )
-                state.reflecting_face = Geo_State_t::PLUS_Y;
+                reflecting_face = Geo_State_t::PLUS_Y;
         }
-        else if( state.next_ijk[K] < 0 )
+        else if( next_ijk[K] < 0 )
         {
-            state.exiting_face = Geo_State_t::MINUS_Z;
+            exiting_face = Geo_State_t::MINUS_Z;
             if( d_reflect[Geo_State_t::MINUS_Z-face_start] )
-                state.reflecting_face = Geo_State_t::MINUS_Z;
+                reflecting_face = Geo_State_t::MINUS_Z;
         }
-        else if( state.next_ijk[K] == num_cells_z )
+        else if( next_ijk[K] == num_cells_z )
         {
-            state.exiting_face = Geo_State_t::PLUS_Z;
+            exiting_face = Geo_State_t::PLUS_Z;
             if( d_reflect[Geo_State_t::PLUS_Z-face_start] )
-                state.reflecting_face = Geo_State_t::PLUS_Z;
+                reflecting_face = Geo_State_t::PLUS_Z;
         }
 
         // If we're not reflecting, update cell index
-        if( state.reflecting_face == Geo_State_t::NONE )
-            state.ijk = state.next_ijk;
+        if( reflecting_face == Geo_State_t::NONE )
+            state_vector.ijk(pid) = state.next_ijk(pid);
     }
 
     //! Move a distance \e d to a point in the current direction.
-    __device__ void move_to_point(double d, Geo_State_t& state) const
+    __device__ void move_to_point(double              d,
+                                  Geo_State_Vector_t& state_vector,
+                                  int                 pid) const
     {
-        move(d, state);
+        move(d, state_vector, pid);
 
-        update_state(state);
+        update_state(state_vector, pid);
     }
 
     //! Number of cells (excluding "outside" cell)
@@ -143,42 +152,45 @@ class Mesh_Geometry
     }
 
     //! Return the current cell ID, valid only when inside the mesh
-    __device__ cell_type cell(const Geo_State_t& state) const
+    __device__ cell_type cell(const Geo_State_Vector_t& state_vector,
+                              int                       pid) const
     {
         DEVICE_REQUIRE(boundary_state(state) != profugus::geometry::OUTSIDE);
 
         using def::I; using def::J; using def::K;
         cell_type c = num_cells();
-        bool found = d_mesh.index(state.ijk[I], state.ijk[J], state.ijk[K], c);
+        const auto& ijk = state_vector.ijk(pid);
+        bool found = d_mesh.index(ijk[I], ijk[J], ijk[K], c);
 
         DEVICE_ENSURE(found);
         return c;
     }
 
     //! Return the current material ID
-    __device__ int matid(const Geo_State_t& state) const
+    __device__ int matid(const Geo_State_Vector_t& state_vector, int pid) const
     {
-        DEVICE_REQUIRE(cell(state) < num_cells());
+        DEVICE_REQUIRE(cell(state_vector,pid) < num_cells());
 
-        return d_matids[cell(state)];
+        return d_matids[cell(state_vector,pid)];
     }
 
     //! Return the state with respect to outer geometry boundary
     __device__ profugus::geometry::Boundary_State boundary_state(
-        const Geo_State_t& state) const
+        const Geo_State_Vectort& state_vector, int pid) const
     {
         using def::I; using def::J; using def::K;
 
-        if (state.reflecting_face != Geo_State_t::NONE)
+        const auto& ijk = state_vector.ijk(pid);
+        if (state_vector.reflecting_face(pid) != Geo_State_t::NONE)
         {
             return profugus::geometry::REFLECT;
         }
-        else if (   (state.ijk[I] == -1)
-                 || (state.ijk[J] == -1)
-                 || (state.ijk[K] == -1)
-                 || (state.ijk[I] == d_mesh.num_cells_along(I))
-                 || (state.ijk[J] == d_mesh.num_cells_along(J))
-                 || (state.ijk[K] == d_mesh.num_cells_along(K)))
+        else if (   (ijk[I] == -1)
+                 || (ijk[J] == -1)
+                 || (ijk[K] == -1)
+                 || (ijk[I] == d_mesh.num_cells_along(I))
+                 || (ijk[J] == d_mesh.num_cells_along(J))
+                 || (ijk[K] == d_mesh.num_cells_along(K)))
         {
             return profugus::geometry::OUTSIDE;
         }
@@ -186,64 +198,76 @@ class Mesh_Geometry
     }
 
     //! Return the current position.
-    __device__ Space_Vector position(const Geo_State_t& state) const
+    __device__ Space_Vector position(const Geo_State_Vector_t& state_vector,
+                                     int                       pid) const
     {
-        return state.d_r;
+        return state_vector.pos(pid);
     }
 
     //! Return the current direction.
-    __device__ Space_Vector direction(const Geo_State_t& state) const
+    __device__ Space_Vector direction(const Geo_State_Vector_t& state_vector,
+                                      int                       pid) const
     {
-        return state.d_dir;
+        return state_vector.dir(pid);
     }
 
     //! Change the direction to \p new_direction.
-    __device__ void change_direction( const Space_Vector& new_direction,
-                                            Geo_State_t&  state) const
+    __device__ void change_direction( const Space_Vector&        new_direction,
+                                            Geo_State_Vector_t&  state_vector,
+                                            int                  pid) const
     {
         // update and normalize the direction
-        state.d_dir = new_direction;
-        cuda::utility::vector_normalize(state.d_dir);
+        state_vector.dir(pid) = new_direction;
+        cuda::utility::vector_normalize(state_vector.dir(pid));
     }
 
     //! Change the direction through an angle
-    __device__ void change_direction( double       costheta,
-                                      double       phi,
-                                      Geo_State_t& state) const
+    __device__ void change_direction( double               costheta,
+                                      double               phi,
+                                      Geo_State_Vector_t&  state_vector,
+                                      int                  pid) const
     {
-        cuda::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
+        cuda::utility::cartesian_vector_transform(costheta, phi,
+                                                  state_vector.dir(pid));
     }
 
     //! Reflect the direction at a reflecting surface.
-    __device__ inline bool reflect(Geo_State_t& state) const;
+    __device__ inline bool reflect(Geo_State_Vector_t& state_vector,
+                                   int                 pid) const;
 
     //! Return the outward normal at the location dictated by the state.
-    __device__ inline Space_Vector normal(const Geo_State_t& state) const;
+    __device__ inline Space_Vector normal(const Geo_State_Vector_t& state_vector,
+                                          int                       pid) const;
 
   private:
 
     // >>> IMPLEMENTATION
 
     // Update state tracking information
-    __device__ void update_state(Geo_State_t &state) const
+    __device__ void update_state(Geo_State_Vector_t &state_vector,
+                                 int                 pid) const
     {
         // Find the logical indices of the cell along each axis
-        d_mesh.find_upper(state.d_r, state.ijk);
+        d_mesh.find_upper(state_vector.pos(pid), state_vector.ijk(pid));
     }
 
     //! Move a particle a distance \e d in the current direction.
-    __device__ void move(double dist, Geo_State_t &state) const
+    __device__ void move(double              dist,
+                         Geo_State_Vector_t &state_vector,
+                         int                 pid) const
     {
         using def::I; using def::J; using def::K;
 
+        auto &pos       = state_vector.pos(pid);
+        const auto &dir = state_vector.dir(pid);
+
         DEVICE_REQUIRE(dist >= 0.0);
         DEVICE_REQUIRE(cuda::utility::soft_equiv(
-                    cuda::utility::vector_magnitude(state.d_dir),
-                        1.0, 1.0e-6));
+                       cuda::utility::vector_magnitude(dir, 1.0, 1.0e-6));
 
         // advance the particle
         for (int dim : {I, J, K})
-            state.d_r[dim] += dist * state.d_dir[dim];
+            pos[dim] += dist * dir[dim];
     }
 
     Cartesian_Mesh d_mesh;

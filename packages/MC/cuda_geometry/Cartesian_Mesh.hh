@@ -142,9 +142,9 @@ class Cartesian_Mesh
 
     // Convert (i,j,k) to cell index
     __device__ inline bool index(dim_type   i,
-                                          dim_type   j,
-                                          dim_type   k,
-                                          cell_type &cell) const
+                                 dim_type   j,
+                                 dim_type   k,
+                                 cell_type &cell) const
     {
         DEVICE_REQUIRE( i < d_cells_x );
         DEVICE_REQUIRE( j < d_cells_y );
