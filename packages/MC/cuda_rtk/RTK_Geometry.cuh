@@ -13,6 +13,7 @@
 
 #include "MC/geometry/RTK_Geometry.hh"
 #include "RTK_Array.cuh"
+#include "RTK_State_Vector.cuh"
 
 namespace cuda_profugus
 {
@@ -37,10 +38,11 @@ class RTK_Geometry
 {
   public:
     //@{
-    using Array_t        = Core_Array;
-    using Geo_State_t    = RTK_State;
-    using Space_Vector   = Geo_State_t::Space_Vector;
-    using Boundary_State = profugus::geometry::Boundary_State;
+    using Array_t            = Core_Array;
+    using Geo_State_t        = RTK_State;
+    using Geo_State_Vector_t = RTK_State_Vector;
+    using Space_Vector       = Geo_State_t::Space_Vector;
+    using Boundary_State     = profugus::geometry::Boundary_State;
     //@}
 
   private:
@@ -63,107 +65,123 @@ class RTK_Geometry
     // Initialize a track.
     __device__
     inline void initialize(const Space_Vector &r, const Space_Vector &direction,
-                           Geo_State_t &state) const;
+                           Geo_State_Vector_t &state_vector) const;
 
     //! Get distance to next boundary.
     __device__
-    double distance_to_boundary(Geo_State_t &state) const
+    double distance_to_boundary(Geo_State_Vector_t &state_vector, int pid) const
     {
-        d_array.distance_to_boundary(state.d_r, state.d_dir, state);
-        return state.dist_to_next_region;
+        d_array.distance_to_boundary(state_vector.pos(pid),
+                                     state_vector.dir(pid),
+                                     state_vector, pid);
+        return state_vector.dist_to_next_region(pid);
     }
 
     //! Move to and cross a cell surface.
     __device__
-    void move_to_surface(Geo_State_t &state) const
+    void move_to_surface(Geo_State_Vector_t &state_vector, pid) const
     {
         // move the particle
-        move(state.dist_to_next_region, state);
+        move(state_vector.dist_to_next_region(pid), state_vector, pid);
 
         // process the particle through the surface
-        d_array.cross_surface(state.d_r, state);
+        d_array.cross_surface(state_vector.pos(pid), state_vector, pid);
     }
 
     //! Move the particle to a point in the current direction.
     __device__
-    void move_to_point(double d, Geo_State_t &state) const
+    void move_to_point(double d, Geo_State_Vector_t &state_vector, pid) const
     {
         // move the particle
-        move(d, state);
+        move(d, state_vector, pid);
 
-        // update the array state to clear any surface tags
-        d_array.update_state(state);
+        // update the array state_vector to clear any surface tags
+        d_array.update_state_vector(state_vector, pid);
     }
 
     //! Return the current material ID.
     __device__
-    int matid(const Geo_State_t &state) const
+    int matid(const Geo_State_Vector_t &state_vector, int pid) const
     {
-        return d_array.matid(state);
+        return d_array.matid(state_vector, pid);
     }
 
     //! Return the current cell ID.
     __device__
-    int cell(const Geo_State_t &state) const
+    int cell(const Geo_State_Vector_t &state_vector, int pid) const
     {
-        return d_array.cellid(state);
+        return d_array.cellid(state_vector, pid);
     }
 
     // Return the state with respect to outer geometry boundary.
     __device__
-    inline Boundary_State boundary_state(const Geo_State_t &state) const;
+    inline Boundary_State boundary_state(const Geo_State_Vector_t &state_vector,
+                                         int pid) const;
 
     //! Return the current position.
     __device__
-    Space_Vector position(const Geo_State_t &state) const { return state.d_r; }
+    Space_Vector position(const Geo_State_Vector_t &state_vector, int pid) const
+    {
+        return state_vector.pos(pid);
+    }
 
     //! Return the current direction.
     __device__
-    Space_Vector direction(const Geo_State_t &state) const {return state.d_dir;}
+    Space_Vector direction(const Geo_State_Vector_t &state_vector,
+                           int                       pid) const
+    {
+        return state_vector.dir(pid);
+    }
 
     //! Change the particle direction.
     __device__
-    void change_direction(const Space_Vector &new_direction,
-                                Geo_State_t  &state) const
+    void change_direction(const Space_Vector        &new_direction,
+                                Geo_State_Vector_t  &state_vector,
+                                int                  pid) const
     {
         // update the direction
-        state.d_dir = new_direction;
+        state_vector.dir(pid) = new_direction;
 
         // normalize the direction
-        cuda::utility::vector_normalize(state.d_dir);
+        cuda::utility::vector_normalize(state_vector.dir(pid));
     }
 
     // Change the direction through angles \f$(\theta,\phi)\f$.
     __device__
-    void change_direction(double costheta, double phi, Geo_State_t &state) const
+    void change_direction(double              costheta,
+                          double              phi,
+                          Geo_State_Vector_t &state_vector,
+                          int                 pid) const
     {
-        cuda::utility::cartesian_vector_transform(costheta, phi, state.d_dir);
+        cuda::utility::cartesian_vector_transform(costheta, phi,
+            state_vector.dir(pid));
     }
 
     // Reflect the direction at a reflecting surface.
     __device__
-    inline bool reflect(Geo_State_t &state) const;
+    inline bool reflect(Geo_State_Vector_t &state_vector, int pid) const;
 
     // Return the outward normal.
     __device__
-    inline Space_Vector normal(const Geo_State_t &state) const;
+    inline Space_Vector normal(const Geo_State_Vector_t &state_vector,
+                               int                       pid) const;
 
   private:
     // >>> IMPLEMENTATION
 
     //! Move a particle a distance \e d in the current direction.
     __device__
-    void move(double d, Geo_State_t &state) const
+    void move(double d, Geo_State_Vector_t &state_vector, int pid) const
     {
         DEVICE_REQUIRE(d >= 0.0);
         DEVICE_REQUIRE(cuda::utility::soft_equiv(
-                           cuda::utility::vector_magnitude(state.d_dir),
-                           1.0, 1.0e-6));
+                       cuda::utility::vector_magnitude(state_vector.dir(pid)),
+                       1.0, 1.0e-6));
 
         // advance the particle (unrolled loop)
-        state.d_r[def::X] += d * state.d_dir[def::X];
-        state.d_r[def::Y] += d * state.d_dir[def::Y];
-        state.d_r[def::Z] += d * state.d_dir[def::Z];
+        state_vector.pos(pid)[def::X] += d * state_vector.dir(pid)[def::X];
+        state_vector.pos(pid)[def::Y] += d * state_vector.dir(pid)[def::Y];
+        state_vector.pos(pid)[def::Z] += d * state_vector.dir(pid)[def::Z];
     }
 };
 

@@ -21,6 +21,7 @@
 #include "CudaUtils/cuda_utils/Utility_Functions.hh"
 #include "MC/geometry/RTK_Cell.hh"
 #include "RTK_State.cuh"
+#include "RTK_State_Vector.cuh"
 
 namespace cuda_profugus
 {
@@ -42,8 +43,9 @@ class RTK_Cell
   public:
     //@{
     //! Types.
-    using Geo_State_t  = RTK_State;
-    using Space_Vector = Geo_State_t::Space_Vector;
+    using Geo_State_t         = RTK_State;
+    using Geo_State_Vector_t  = RTK_State_Vector;
+    using Space_Vector        = Geo_State_t::Space_Vector;
     //@}
 
   private:
@@ -77,21 +79,24 @@ class RTK_Cell
 
     // Initialize a state.
     __device__
-    inline void initialize(const Space_Vector &r, Geo_State_t &state) const;
+    inline void initialize(const Space_Vector &r,
+                           Geo_State_Vector_t& state_vector,
+                           int pid) const;
 
     // Track to next boundary.
     __device__
     inline void distance_to_boundary(const Space_Vector &r,
                                      const Space_Vector &omega,
-                                     Geo_State_t &state) const;
+                                     Geo_State_Vector_t &state_vector,
+                                     int pid) const;
 
     // Update a state at collision sites.
     __device__
-    inline void update_state(Geo_State_t &state) const;
+    inline void update_state(Geo_State_Vector_t &state_vector, int pid) const;
 
     // Cross a surface.
     __device__
-    inline void cross_surface(Geo_State_t &state) const;
+    inline void cross_surface(Geo_State_Vector_t &state_vector, int pid) const;
 
     // Query to find region.
     __device__
@@ -107,7 +112,7 @@ class RTK_Cell
 
     // Get cellid from state
     __device__
-    inline int cellid(const Geo_State_t& state) const;
+    inline int cellid(const Geo_State_Vector_t& state_vector, int pid) const;
 
     // Get extents of this geometry element in the parent reference frame
     __device__
@@ -155,20 +160,22 @@ class RTK_Cell
     // Intersections with shells.
     __device__
     inline void calc_shell_db(const Space_Vector &r, const Space_Vector &omega,
-                              Geo_State_t &state) const;
+                              Geo_State_Vector_t &state_vector,int pid) const;
 
     // Distance to external surface.
     __device__
     inline void dist_to_radial_face(int axis, double p, double dir,
-                                    Geo_State_t &state) const;
+                                    Geo_State_Vector_t &state_vector,
+                                    int pid) const;
     __device__
     inline void dist_to_axial_face(double p, double dir,
-                                   Geo_State_t &state) const;
+                                   Geo_State_Vector_t &state_vector,
+                                   int pid) const;
 
     // Distance to vessel.
     __device__
     inline void dist_to_vessel(const Space_Vector &r, const Space_Vector &omega,
-                               Geo_State_t &state) const;
+                               Geo_State_Vector_t &state_vector, int pid) const;
 
     // Distance to a shell.
     __device__
@@ -180,7 +187,8 @@ class RTK_Cell
     __device__
     inline double check_shell(const Space_Vector &r, const Space_Vector &omega,
                               int shell, int face, int next_region,
-                              int next_face, Geo_State_t &state) const;
+                              int next_face, Geo_State_Vector_t &state_vector,
+                              int pid) const;
 
     // Transform to vessel coordinates.
     __host__ __device__

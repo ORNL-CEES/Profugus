@@ -24,17 +24,18 @@ __device__
 inline void RTK_Geometry::initialize(
     const Space_Vector &r,
     const Space_Vector &direction,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     // add position and direction to the state
-    state.d_r   = r;
-    state.d_dir = direction;
+    state_vector.pos(pid) = r;
+    state_vector.dir(pid) = direction;
 
     // normalize the direction
-    cuda::utility::vector_normalize(state.d_dir);
+    cuda::utility::vector_normalize(state_vector.dir(pid));
 
     // initialize the array with the current position
-    d_array.initialize(state.d_r, state);
+    d_array.initialize(state_vector.pos(pid), state_vector, pid);
 }
 
 //---------------------------------------------------------------------------//
@@ -44,17 +45,17 @@ inline void RTK_Geometry::initialize(
 __device__
 inline profugus::geometry::Boundary_State
 RTK_Geometry::boundary_state(
-    const Geo_State_t &state) const
+    const Geo_State_Vector_t &state_vector, int pid) const
 {
-    if (state.escaping_face != Geo_State_t::NONE)
+    if (state_vector.escaping_face(pid) != Geo_State_t::NONE)
     {
         // if the particle has escaped indicate that the particle
         // is outside the geometry
-        DEVICE_CHECK(state.exiting_level[d_level]
-                     || state.next_face == Geo_State_t::NONE);
+        DEVICE_CHECK(state_vector.exiting_level(pid)[d_level] ||
+                     state_vector.next_face(pid) == Geo_State_t::NONE);
         return profugus::geometry::OUTSIDE;
     }
-    else if (state.reflecting_face != Geo_State_t::NONE)
+    else if (state_vector.reflecting_face(pid) != Geo_State_t::NONE)
     {
         // test of reflection on the given face
         return profugus::geometry::REFLECT;
@@ -79,31 +80,32 @@ RTK_Geometry::boundary_state(
  */
 __device__
 inline bool RTK_Geometry::reflect(
-    Geo_State_t &state) const
+    Geo_State_Vector_t &state_vector, int pid) const
 {
     using def::X; using def::Y; using def::Z;
 
     DEVICE_REQUIRE(
         cuda::utility::soft_equiv(
-            cuda::utility::vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+            cuda::utility::vector_magnitude(state_vector.dir(pid)), 1.0, 1.0e-6));
 
     // get the outward normal
-    Space_Vector n = normal(state);
+    Space_Vector n = normal(state_vector, pid);
 
     // calculate the dot-product of the incoming angle and outward normal
-    double dot = state.d_dir[X]*n[X] + state.d_dir[Y]*n[Y] +
-                 state.d_dir[Z]*n[Z];
+    double dot = state_vector.dir(pid)[X]*n[X] + state_vector.dir(pid)[Y]*n[Y] +
+                 state_vector.dir(pid)[Z]*n[Z];
 
     // if the dot-product != 0 then calculate the reflected angle
     if (dot != 0.0)
     {
-        state.d_dir[X] -= 2.0 * n[X] * dot;
-        state.d_dir[Y] -= 2.0 * n[Y] * dot;
-        state.d_dir[Z] -= 2.0 * n[Z] * dot;
+        state_vector.dir(pid)[X] -= 2.0 * n[X] * dot;
+        state_vector.dir(pid)[Y] -= 2.0 * n[Y] * dot;
+        state_vector.dir(pid)[Z] -= 2.0 * n[Z] * dot;
 
         DEVICE_ENSURE(
             cuda::utility::soft_equiv(
-                cuda::utility::vector_magnitude(state.d_dir), 1.0, 1.0e-6));
+                cuda::utility::vector_magnitude(state_vector.dir(pid)),
+                1.0, 1.0e-6));
         return true;
     }
 
@@ -118,11 +120,11 @@ inline bool RTK_Geometry::reflect(
 __device__
 inline RTK_Geometry::Space_Vector
 RTK_Geometry::normal(
-    const Geo_State_t &state) const
+    const Geo_State_Vector_t &state_vector, int pid) const
 {
     // query is based on position of particle on a face; otherwise we return a
     // zero vector
-    switch (state.exiting_face)
+    switch (state_vector.exiting_face(pid))
     {
         case Geo_State_t::MINUS_X:
             return Space_Vector{-1.0, 0.0, 0.0};

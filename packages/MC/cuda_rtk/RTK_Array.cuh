@@ -25,6 +25,7 @@
 #include "MC/geometry/RTK_Array.hh"
 #include "RTK_Cell.cuh"
 #include "RTK_State.cuh"
+#include "RTK_State_Vector.cuh"
 
 namespace cuda_profugus
 {
@@ -47,11 +48,12 @@ class RTK_Array
   public:
     //@{
     //! Types.
-    using Object_t         = T;
-    using Geo_State_t      = RTK_State;
-    using Space_Vector     = Geo_State_t::Space_Vector;
-    using Dim_Vector       = cuda_utils::Device_Vector_Lite<int, 3>;
-    using Reflecting_Faces = cuda_utils::Device_Vector_Lite<int, 6>;
+    using Object_t           = T;
+    using Geo_State_t        = RTK_State;
+    using Geo_State_Vector_t = RTK_State_Vector;
+    using Space_Vector       = Geo_State_t::Space_Vector;
+    using Dim_Vector         = cuda_utils::Device_Vector_Lite<int, 3>;
+    using Reflecting_Faces   = cuda_utils::Device_Vector_Lite<int, 6>;
     //@}
 
   private:
@@ -104,28 +106,33 @@ class RTK_Array
 
     // Initialize a state.
     __device__
-    inline void initialize(const Space_Vector &r, Geo_State_t &state) const;
+    inline void initialize(const Space_Vector &r, Geo_State_Vector_t &state_vector,
+                           int pid) const;
 
     // Track to next boundary.
     __device__
     inline void distance_to_boundary(const Space_Vector &r,
                                      const Space_Vector &omega,
-                                     Geo_State_t &state) const;
+                                     Geo_State_Vector_t &state_vector,
+                                     int pid) const;
 
     // Update a state at collision sites.
     __device__
-    inline void update_state(Geo_State_t &state) const;
+    inline void update_state(Geo_State_Vector_t &state_vector, int pid) const;
 
     // Cross a surface.
     __device__
-    inline void cross_surface(const Space_Vector &r, Geo_State_t &state) const;
+    inline void cross_surface(const Space_Vector &r, Geo_State_Vector_t &state_vector,
+                              int pid) const;
 
     // Find the object a point is in.
     __device__
-    inline int find_object(const Space_Vector &r, Geo_State_t &state) const;
+    inline int find_object(const Space_Vector &r, Geo_State_Vector_t &state_vector,
+                           int pid) const;
     __device__
     inline int find_object_on_boundary(const Space_Vector &r, int face,
-                                       int face_type, Geo_State_t &state) const;
+                                       int face_type, Geo_State_Vector_t &state_vector,
+                                       int pid) const;
 
     // >>> ACCESSORS
 
@@ -139,11 +146,11 @@ class RTK_Array
 
     // Return the current material id.
     __device__
-    inline int matid(const Geo_State_t &state) const;
+    inline int matid(const Geo_State_Vector_t &state_vector, int pid) const;
 
     // Current cell id
     __device__
-    inline int cellid(const Geo_State_t &state) const;
+    inline int cellid(const Geo_State_Vector_t &state_vector, int pid) const;
 
   private:
     // >>> IMPLEMENTATION
@@ -154,27 +161,35 @@ class RTK_Array
     // Transform to object coordinate system.
     __device__
     inline Space_Vector transform(const Space_Vector &r,
-                                  const Geo_State_t &state) const;
+                                  const Geo_State_Vector_t &state_vector,
+                                  int pid) const;
 
     // Get object.
     __device__
-    inline const Object_t& object(const Geo_State_t &state) const;
+    inline const Object_t& object(const Geo_State_Vector_t &state_vector,
+                                  int pid) const;
 
     // Determine boundary crossings at each level in the array.
     __device__
-    inline void determine_boundary_crossings(Geo_State_t &state) const;
+    inline void determine_boundary_crossings(Geo_State_Vector_t &state_vector,
+                                             int pid) const;
 
     // Update the coordinates of each level in the array.
     __device__
     inline void update_coordinates(const Space_Vector &r,
-                                   Geo_State_t &state) const;
+                                   Geo_State_Vector_t &state_vector,
+                                   int pid) const;
 
     // Cross surface into next array element.
     __device__
-    inline void calc_high_face(Geo_State_t &state, int face_type,
+    inline void calc_high_face(Geo_State_Vector_t &state_vector,
+                               int pid,
+                               int face_type,
                                int exiting_face) const;
     __device__
-    inline void calc_low_face(Geo_State_t &state, int face_type,
+    inline void calc_low_face(Geo_State_Vector_t &state_vector,
+                              int pid,
+                              int face_type,
                               int exiting_face) const;
 };
 

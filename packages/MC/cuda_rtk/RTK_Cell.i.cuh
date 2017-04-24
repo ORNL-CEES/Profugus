@@ -42,9 +42,10 @@ int RTK_Cell::cell(
  * \brief Find the cell for a point.
  */
 __device__
-inline int RTK_Cell::cellid(const Geo_State_t& state) const
+inline int RTK_Cell::cellid(const Geo_State_Vector_t& state_vector,
+                            int                       pid) const
 {
-    return cell(state.region,state.segment);
+    return cell(state_vector.region(pid),state_vector.segment(pid));
 }
 
 //---------------------------------------------------------------------------//
@@ -101,7 +102,8 @@ void RTK_Cell::get_extents(
 __device__
 void RTK_Cell::initialize(
     const Space_Vector &r,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     DEVICE_REQUIRE(r[0] >= d_extent[0][LO]);
     DEVICE_REQUIRE(r[0] <= d_extent[0][HI]);
@@ -111,17 +113,17 @@ void RTK_Cell::initialize(
     DEVICE_REQUIRE(r[2] <= d_z);
 
     // get the current region
-    state.region = region(r[0], r[1]);
+    state_vector.region(pid) = region(r[0], r[1]);
 
     // get the current segment
-    state.segment = segment(r[0], r[1]);
+    state_vector.segment(pid) = segment(r[0], r[1]);
 
     // initialize to no-face (this should probably be fixed to allow particle
     // born on a face)
-    state.face = Geo_State_t::NONE;
+    state_vector.face(pid) = Geo_State_t::NONE;
 
     // we are not on an exiting face
-    state.exiting_face = Geo_State_t::NONE;
+    state_vector.exiting_face(pid) = Geo_State_t::NONE;
 }
 
 //---------------------------------------------------------------------------//
@@ -132,15 +134,17 @@ __device__
 void RTK_Cell::distance_to_boundary(
     const Space_Vector &r,
     const Space_Vector &omega,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     using def::X; using def::Y; using def::Z;
     using cuda::utility::vector_magnitude;
     using cuda::utility::soft_equiv;
 
-    DEVICE_REQUIRE(!d_vessel ? state.region >= 0 && state.region < d_num_regions
-                   : state.region == Geo_State_t::MODERATOR ||
-                   state.region == Geo_State_t::VESSEL);
+    DEVICE_REQUIRE(!d_vessel ? state_vector.region(pid) >= 0 &&
+                               state_vector.region(pid) < d_num_regions
+                   : state_vector.region(pid) == Geo_State_t::MODERATOR ||
+                     state_vector.region(pid) == Geo_State_t::VESSEL);
     DEVICE_REQUIRE(soft_equiv(vector_magnitude(omega), 1., 1.e-6));
     DEVICE_REQUIRE(omega[X]<0.0            ?
                    r[X] >= d_extent[X][LO] :
@@ -156,26 +160,26 @@ void RTK_Cell::distance_to_boundary(
     double db                 = profugus::constants::huge;
     int    face               = 0;
     int    segment            = 0;
-    state.dist_to_next_region = db;
-    state.next_segment        = state.segment;
+    state_vector.dist_to_next_region(pid) = db;
+    state_vector.next_segment(pid)        = state_vector.segment(pid);
 
     // >>> CHECK FOR INTERSECTIONS WITH OUTSIDE BOX
 
     // check radial surfaces of box
-    dist_to_radial_face(X, r[X], omega[X], state);
-    dist_to_radial_face(Y, r[Y], omega[Y], state);
+    dist_to_radial_face(X, r[X], omega[X], state_vector, pid);
+    dist_to_radial_face(Y, r[Y], omega[Y], state_vector, pid);
 
     // check axial surface
-    dist_to_axial_face(r[Z], omega[Z], state);
+    dist_to_axial_face(r[Z], omega[Z], state_vector, pid);
 
     // >>> CHECK FOR INTERSECTIONS WITH RADIAL SHELLS
     if (d_num_shells > 0)
     {
-        calc_shell_db(r, omega, state);
+        calc_shell_db(r, omega, state_vector, pid);
     }
 
     // >>> CHECK FOR INTERSECTIONS WITH VESSEL
-    dist_to_vessel(r, omega, state);
+    dist_to_vessel(r, omega, state_vector, pid);
 
     // >>> CHECK FOR SEGMENT INTERSECTIONS
 
@@ -186,69 +190,75 @@ void RTK_Cell::distance_to_boundary(
         db = profugus::constants::huge;
 
         // check for intersection with x segment planes
-        if (state.face != d_num_shells)
+        if (state_vector.face(pid) != d_num_shells)
         {
             if (omega[X] > 0.0 && r[X] < 0.0)
             {
                 db      = -r[X] / omega[X];
                 face    = d_num_shells;
-                segment = state.segment - 1;
+                segment = state_vector.segment(pid) - 1;
             }
             else if (omega[X] < 0.0 && r[X] > 0.0)
             {
                 db      = -r[X] / omega[X];
                 face    = d_num_shells;
-                segment = state.segment + 1;
+                segment = state_vector.segment(pid) + 1;
             }
 
             // update distance to boundary info
-            if (db < state.dist_to_next_region)
+            if (db < state_vector.dist_to_next_region)
             {
-                state.dist_to_next_region = db;
-                state.exiting_face        = Geo_State_t::INTERNAL;
-                state.next_face           = face;
-                state.next_region         = state.region;
-                state.next_segment        = segment;
+                state_vector.dist_to_next_region(pid) = db;
+                state_vector.exiting_face(pid)        = Geo_State_t::INTERNAL;
+                state_vector.next_face(pid)           = face;
+                state_vector.next_region(pid)         =
+                    state_vector.region(pid);
+                state_vector.next_segment(pid)        = segment;
             }
         }
 
         // check for intersection with y segment planes
-        if (state.face != d_num_shells + 1)
+        if (state_vector.face(pid) != d_num_shells + 1)
         {
             if (omega[Y] > 0.0 && r[Y] < 0.0)
             {
                 db      = -r[Y] / omega[Y];
                 face    = d_num_shells + 1;
-                segment = state.segment - 2;
+                segment = state_vector.segment(pid) - 2;
             }
             else if (omega[Y] < 0.0 && r[Y] > 0.0)
             {
                 db      = -r[Y] / omega[Y];
                 face    = d_num_shells + 1;
-                segment = state.segment + 2;
+                segment = state_vector.segment(pid) + 2;
             }
 
             // update distance to boundary info
-            if (db < state.dist_to_next_region)
+            if (db < state_vector.dist_to_next_region(pid))
             {
-                state.dist_to_next_region = db;
-                state.exiting_face        = Geo_State_t::INTERNAL;
-                state.next_face           = face;
-                state.next_region         = state.region;
-                state.next_segment        = segment;
+                state_vector.dist_to_next_region(pid) = db;
+                state_vector.exiting_face(pid)        = Geo_State_t::INTERNAL;
+                state_vector.next_face(pid)           = face;
+                state_vector.next_region(pid)         =
+                    state_vector.region(pid);
+                state_vector.next_segment(pid)        = segment;
             }
         }
     }
 
-    DEVICE_ENSURE(state.dist_to_next_region >= 0.0);
-    DEVICE_ENSURE(state.exiting_face == Geo_State_t::INTERNAL ?
-                  state.next_region >= 0 : true);
-    DEVICE_ENSURE(state.exiting_face == Geo_State_t::INTERNAL && !d_vessel ?
-                  state.next_region >= 0 && state.next_region < d_num_regions :
+    DEVICE_ENSURE(state_vector.dist_to_next_region(pid) >= 0.0);
+    DEVICE_ENSURE(state_vector.exiting_face(pid) == Geo_State_t::INTERNAL ?
+                  state_vector.next_region(pid) >= 0 : true);
+    DEVICE_ENSURE(state_vector.exiting_face(pid) == Geo_State_t::INTERNAL && 
+                  !d_vessel ?
+                  state_vector.next_region(pid) >= 0 &&
+                  state_vector.next_region(pid) < d_num_regions :
                   true);
-    DEVICE_ENSURE(state.exiting_face == Geo_State_t::INTERNAL && !d_vessel ?
-                  state.next_face < d_num_int_faces : true);
-    DEVICE_ENSURE(state.next_segment >= 0 && state.next_segment < d_segments);
+    DEVICE_ENSURE(state_vector.exiting_face(pid) == Geo_State_t::INTERNAL &&
+                  !d_vessel ?
+                  state_vector.next_face(pid) < d_num_int_faces : true);
+    DEVICE_ENSURE(state_vector.next_segment(pid) >= 0 &&
+                  state_vector.next_segment(pid) < d_segments);
 }
 
 //---------------------------------------------------------------------------//
@@ -257,10 +267,10 @@ void RTK_Cell::distance_to_boundary(
  */
 __device__
 void RTK_Cell::update_state(
-    Geo_State_t &state) const
+    Geo_State_Vector_t &state_vector, int pid) const
 {
     // move the ray off a face
-    state.face = Geo_State_t::NONE;
+    state_vector.face(pid) = Geo_State_t::NONE;
 }
 
 //---------------------------------------------------------------------------//
@@ -269,18 +279,18 @@ void RTK_Cell::update_state(
  */
 __device__
 void RTK_Cell::cross_surface(
-    Geo_State_t &state) const
+    Geo_State_Vector_t &state_vector, int pid) const
 {
-    DEVICE_REQUIRE(state.exiting_face == Geo_State_t::INTERNAL);
+    DEVICE_REQUIRE(state_vector.exiting_face(pid) == Geo_State_t::INTERNAL);
 
     // update the current face of the particle
-    state.face = state.next_face;
+    state_vector.face(pid) = state_vector.next_face(pid);
 
     // update the region of the cell that is being entered
-    state.region = state.next_region;
+    state_vector.region(pid) = state_vector.next_region(pid);
 
     // update the segment
-    state.segment = state.next_segment;
+    state_vector.segment(pid) = state_vector.next_segment(pid);
 }
 
 //---------------------------------------------------------------------------//
@@ -406,45 +416,54 @@ __device__
 void RTK_Cell::calc_shell_db(
     const Space_Vector &r,
     const Space_Vector &omega,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     DEVICE_REQUIRE(d_num_shells > 0);
 
     double db = profugus::constants::huge;
 
     // if we are on a face then check both bounding faces
-    if (state.face < d_num_shells)
+    if (state_vector.face(pid) < d_num_shells)
     {
         // check to see if we hit the current shell we are on, which means
         // that we would traverse through that shells region on entrance
-        if (state.region == state.face)
+        if (state_vector.region == state_vector.face)
         {
-            db = check_shell(r, omega, state.face, state.face,
-                             state.region + 1, state.face, state);
+            db = check_shell(r, omega,
+                             state_vector.face(pid),
+                             state_vector.face(pid),
+                             state_vector.region(pid) + 1,
+                             state_vector.face(pid),
+                             state_vector, pid);
 
             // if we can't hit the shell because of a glancing shot + floating
             // point error, update the region since we won't traverse the
             // shell
             if (db < 0.0)
             {
-                ++state.region;
+                ++state_vector.region(pid);
             }
         }
 
         // now check for hitting shells greater than the current shell as long
         // as we aren't on the last face
-        if (state.face < d_num_shells - 1)
+        if (state_vector.face(pid) < d_num_shells - 1)
         {
-            check_shell(r, omega, state.face + 1, Geo_State_t::NONE,
-                        state.region + 1, state.face + 1, state);
+            check_shell(r, omega, state_vector.face(pid) + 1, Geo_State_t::NONE,
+                        state_vector.region(pid) + 1,
+                        state_vector.face(pid) + 1,
+                        state_vector, pid);
         }
 
         // now check for hitting shells less than the current shell as long as
         // we aren't on the first face
-        if (state.face > 0)
+        if (state_vector.face(pid) > 0)
         {
-            check_shell(r, omega, state.face - 1, Geo_State_t::NONE,
-                        state.region - 1, state.face - 1, state);
+            check_shell(r, omega, state_vector.face(pid) - 1, Geo_State_t::NONE,
+                        state_vector.region(pid) - 1,
+                        state_vector.face(pid) - 1,
+                        state_vector(pid));
         }
     }
 
@@ -452,32 +471,44 @@ void RTK_Cell::calc_shell_db(
     else
     {
         // check for hitting lowest shell
-        if (state.region == 0)
+        if (state_vector.region(pid) == 0)
         {
             // we can only hit the lowest shell
-            check_shell(r, omega, 0, Geo_State_t::NONE, 1, 0, state);
+            check_shell(r, omega, 0, Geo_State_t::NONE, 1, 0, state_vector, pid);
         }
 
         // check for hitting highest shell
-        else if (state.region == d_mod_region)
+        else if (state_vector.region(pid) == d_mod_region)
         {
             // we can only hit the outer shell
-            check_shell(r, omega, d_num_shells - 1, Geo_State_t::NONE,
-                        d_num_shells - 1, d_num_shells - 1, state);
+            check_shell(r, omega,
+                        d_num_shells - 1,
+                        Geo_State_t::NONE,
+                        d_num_shells - 1,
+                        d_num_shells - 1,
+                        state_vector, pid);
         }
 
         // otherwise we are between shells
         else
         {
-            DEVICE_CHECK(state.region - 1 >= 0);
+            DEVICE_CHECK(state_vector.region(pid) - 1 >= 0);
 
             // check hitting lower shell
-            check_shell(r, omega, state.region - 1, Geo_State_t::NONE,
-                        state.region - 1, state.region - 1, state);
+            check_shell(r, omega,
+                        state_vector.region(pid) - 1,
+                        Geo_State_t::NONE,
+                        state_vector.region(pid) - 1,
+                        state_vector.region(pid) - 1,
+                        state_vector, pid);
 
             // check hitting higher shell
-            check_shell(r, omega, state.region, Geo_State_t::NONE,
-                        state.region + 1, state.region, state);
+            check_shell(r, omega,
+                        state_vector.region,
+                        Geo_State_t::NONE,
+                        state_vector.region(pid) + 1,
+                        state_vector.region(pid),
+                        state_vector, pid);
         }
     }
 }
@@ -488,10 +519,11 @@ void RTK_Cell::calc_shell_db(
  */
 __device__
 void RTK_Cell::dist_to_radial_face(
-    int          axis,
-    double       p,
-    double       dir,
-    Geo_State_t &state) const
+    int                 axis,
+    double              p,
+    double              dir,
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     double db = profugus::constants::huge;
     int face  = 0;
@@ -510,11 +542,11 @@ void RTK_Cell::dist_to_radial_face(
     DEVICE_CHECK(db >= 0.0);
 
     // updated distance to boundary info
-    if (db < state.dist_to_next_region)
+    if (db < state_vector.dist_to_next_region(pid))
     {
-        state.dist_to_next_region = db;
-        state.exiting_face        = face;
-        state.next_face           = Geo_State_t::NONE;
+        state_vector.dist_to_next_region(pid) = db;
+        state_vector.exiting_face(pid)        = face;
+        state_vector.next_face(pid)           = Geo_State_t::NONE;
     }
 }
 
@@ -524,9 +556,10 @@ void RTK_Cell::dist_to_radial_face(
  */
 __device__
 void RTK_Cell::dist_to_axial_face(
-    double       p,
-    double       dir,
-    Geo_State_t &state) const
+    double              p,
+    double              dir,
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     double db = profugus::constants::huge;
     int face  = 0;
@@ -545,11 +578,11 @@ void RTK_Cell::dist_to_axial_face(
     DEVICE_CHECK(db >= 0.0);
 
     // updated distance to boundary info
-    if (db < state.dist_to_next_region)
+    if (db < state_vector.dist_to_next_region(pid))
     {
-        state.dist_to_next_region = db;
-        state.exiting_face        = face;
-        state.next_face           = Geo_State_t::NONE;
+        state_vector.dist_to_next_region(pid) = db;
+        state_vector.exiting_face(pid)        = face;
+        state_vector.next_face(pid)           = Geo_State_t::NONE;
     }
 }
 
@@ -561,7 +594,8 @@ __device__
 void RTK_Cell::dist_to_vessel(
     const Space_Vector &r,
     const Space_Vector &omega,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     using def::X; using def::Y;
 
@@ -583,7 +617,7 @@ void RTK_Cell::dist_to_vessel(
     if (d_inner)
     {
         // only check if we aren't currently on the vessel face
-        if (state.face != Geo_State_t::R0_VESSEL)
+        if (state_vector.face(pid) != Geo_State_t::R0_VESSEL)
         {
             db = dist_to_shell(
                 l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R0,
@@ -593,11 +627,11 @@ void RTK_Cell::dist_to_vessel(
         // update the distance to boundary
         if (db > 0.0)
         {
-            if (db < state.dist_to_next_region)
+            if (db < state_vector.dist_to_next_region(pid))
             {
-                state.dist_to_next_region = db;
-                state.next_face           = Geo_State_t::R0_VESSEL;
-                state.exiting_face        = Geo_State_t::INTERNAL;
+                state_vector.dist_to_next_region(pid) = db;
+                state_vector.next_face(pid)           = Geo_State_t::R0_VESSEL;
+                state_vector.exiting_face(pid)        = Geo_State_t::INTERNAL;
                 hit                       = true;
             }
         }
@@ -607,7 +641,7 @@ void RTK_Cell::dist_to_vessel(
     if (d_outer)
     {
         // only check if we aren't currently on the vessel face
-        if (state.face != Geo_State_t::R1_VESSEL)
+        if (state_vector.face(pid) != Geo_State_t::R1_VESSEL)
         {
             db = dist_to_shell(
                 l2g(r[X], X), l2g(r[Y], Y), omega[X], omega[Y], d_R1,
@@ -617,11 +651,11 @@ void RTK_Cell::dist_to_vessel(
         // update the distance to boundary
         if (db > 0.0)
         {
-            if (db < state.dist_to_next_region)
+            if (db < state_vector.dist_to_next_region(pid))
             {
-                state.dist_to_next_region = db;
-                state.next_face           = Geo_State_t::R1_VESSEL;
-                state.exiting_face        = Geo_State_t::INTERNAL;
+                state_vector.dist_to_next_region(pid) = db;
+                state_vector.next_face(pid)           = Geo_State_t::R1_VESSEL;
+                state_vector.exiting_face(pid)        = Geo_State_t::INTERNAL;
                 hit                       = true;
             }
         }
@@ -631,13 +665,13 @@ void RTK_Cell::dist_to_vessel(
     // otherwise we enter the vessel
     if (hit)
     {
-        if (state.region == Geo_State_t::VESSEL)
+        if (state_vector.region(pid) == Geo_State_t::VESSEL)
         {
-            state.next_region = Geo_State_t::MODERATOR;
+            state_vector.next_region(pid) = Geo_State_t::MODERATOR;
         }
         else
         {
-            state.next_region = Geo_State_t::VESSEL;
+            state_vector.next_region(pid) = Geo_State_t::VESSEL;
         }
     }
 }
@@ -707,7 +741,8 @@ double RTK_Cell::check_shell(
     int                 face,
     int                 next_region,
     int                 next_face,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -721,12 +756,12 @@ double RTK_Cell::check_shell(
     //    b) if it is the smallest distance
     if (db > 0.0)
     {
-        if (db < state.dist_to_next_region)
+        if (db < state_vector.dist_to_next_region(pid))
         {
-            state.dist_to_next_region = db;
-            state.next_region         = next_region;
-            state.next_face           = next_face;
-            state.exiting_face        = Geo_State_t::INTERNAL;
+            state_vector.dist_to_next_region(pid) = db;
+            state_vector.next_region(pid)         = next_region;
+            state_vector.next_face(pid)           = next_face;
+            state_vector.exiting_face(pid)        = Geo_State_t::INTERNAL;
         }
     }
 

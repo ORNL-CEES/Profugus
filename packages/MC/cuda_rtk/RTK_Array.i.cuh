@@ -28,23 +28,24 @@ template<class T>
 __device__
 void RTK_Array<T>::initialize(
     const Space_Vector &r,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     // initialize state
-    state.escaping_face   = Geo_State_t::NONE;
-    state.reflecting_face = Geo_State_t::NONE;
-    state.face            = Geo_State_t::NONE;
-    state.region          = Geo_State_t::NONE;
-    state.exiting_level   = {0, 0, 0};
+    state_vector.escaping_face(pid)   = Geo_State_t::NONE;
+    state_vector.reflecting_face(pid) = Geo_State_t::NONE;
+    state_vector.face(pid)            = Geo_State_t::NONE;
+    state_vector.region(pid)          = Geo_State_t::NONE;
+    state_vector.exiting_level(pid)   = {0, 0, 0};
 
     // find the object that this point is in
-    int id = d_layout[find_object(r, state)];
+    int id = d_layout[find_object(r, state_vector, pid)];
 
     // Transformed coordinates.
-    Space_Vector tr = transform(r, state);
+    Space_Vector tr = transform(r, state_vector, pid);
 
     // initialize the state by diving into the object
-    d_objects[id].initialize(tr, state);
+    d_objects[id].initialize(tr, state_vector, pid);
 }
 
 //---------------------------------------------------------------------------//
@@ -56,16 +57,18 @@ __device__
 void RTK_Array<T>::distance_to_boundary(
     const Space_Vector &r,
     const Space_Vector &omega,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     // Clear reflecting face indicator
-    state.reflecting_face = Geo_State_t::NONE;
+    state_vector.reflecting_face(pid) = Geo_State_t::NONE;
 
     // Transformed coordinates.
-    Space_Vector tr = transform(r, state);
+    Space_Vector tr = transform(r, state_vector, pid);
 
     // Dive through objects until we hit the pin-cell
-    object(state).distance_to_boundary(tr, omega, state);
+    object(state_vector, pid).distance_to_boundary(
+        tr, omega, state_vector, pid);
 }
 
 //---------------------------------------------------------------------------//
@@ -75,15 +78,15 @@ void RTK_Array<T>::distance_to_boundary(
 template<class T>
 __device__
 void RTK_Array<T>::update_state(
-    Geo_State_t &state) const
+    Geo_State_Vector_t &state_vector, int pid) const
 {
     // clear reflecting face indicator
-    state.reflecting_face = Geo_State_t::NONE;
+    state_vector.reflecting_face(pid) = Geo_State_t::NONE;
 
     // update the state of the current object if it has not escaped
-    if (state.escaping_face == Geo_State_t::NONE)
+    if (state_vector.escaping_face(pid) == Geo_State_t::NONE)
     {
-        object(state).update_state(state);
+        object(state_vector, pid).update_state(state_vector, pid);
     }
 }
 
@@ -95,38 +98,40 @@ template<class T>
 __device__
 void RTK_Array<T>::cross_surface(
     const Space_Vector &r,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     using def::X; using def::Y; using def::Z;
 
     // initialize exiting level flag
-    state.exiting_level = {0, 0, 0};
+    state_vector.exiting_level(pid) = {0, 0, 0};
 
     // determine the surface crossings in each level
-    determine_boundary_crossings(state);
+    determine_boundary_crossings(state_vector, pid);
 
     // simply return if we are at an internal pin face as everything should be
     // correctly set
-    if (state.exiting_face == Geo_State_t::INTERNAL)
+    if (state_vector.exiting_face(pid) == Geo_State_t::INTERNAL)
     {
-        DEVICE_CHECK(!state.exiting_level[d_level]);
+        DEVICE_CHECK(!state_vector.exiting_level(pid)[d_level]);
         return;
     }
 
     // update all of the downstream levels state assuming we haven't left the
     // geometry
-    else if (!state.exiting_level[d_level])
+    else if (!state_vector.exiting_level(pid)[d_level])
     {
-        update_coordinates(r, state);
+        update_coordinates(r, state_vector, pid);
     }
 
     // otherwise, the particle has escaped the geometry, record the state
     else
     {
-        DEVICE_CHECK(state.exiting_level[d_level]);
-        DEVICE_CHECK(state.exiting_face > Geo_State_t::INTERNAL);
+        DEVICE_CHECK(state_vector.exiting_level(pid)[d_level]);
+        DEVICE_CHECK(state_vector.exiting_face(pid) > Geo_State_t::INTERNAL);
 
-        int refl_face_index = state.exiting_face - Geo_State_t::MINUS_X;
+        int refl_face_index = state_vector.exiting_face(pid) -
+                              Geo_State_t::MINUS_X;
         DEVICE_CHECK(refl_face_index >= 0 && refl_face_index < 6);
 
         // if this is a reflecting face, then reflect the particle and add 1
@@ -134,15 +139,15 @@ void RTK_Array<T>::cross_surface(
         if (d_reflect[refl_face_index])
         {
             // store the reflecting face
-            state.reflecting_face = state.exiting_face;
+            state_vector.reflecting_face(pid) = state_vector.exiting_face(pid);
 
             // set the face to none representing an external pin face
-            state.face = Geo_State_t::NONE;
+            state_vector.face(pid) = Geo_State_t::NONE;
 
             // get correction for logical coordinates of objects in each level
             Geo_State_t::Coordinates reflect = {0, 0, 0};
 
-            switch (state.reflecting_face)
+            switch (state_vector.reflecting_face(pid))
             {
                 case Geo_State_t::MINUS_X:
                     reflect[X] = 1;
@@ -170,16 +175,16 @@ void RTK_Array<T>::cross_surface(
             // back into the geometry
             for (int l = 0; l <= d_level; ++l)
             {
-                state.level_coord[l][0] += reflect[0];
-                state.level_coord[l][1] += reflect[1];
-                state.level_coord[l][2] += reflect[2];
+                state_vector.level_coord(pid,l)[0] += reflect[0];
+                state_vector.level_coord(pid,l)[1] += reflect[1];
+                state_vector.level_coord(pid,l)[2] += reflect[2];
             }
         }
 
         // otherwise, the particle has left the geometry
         else
         {
-            state.escaping_face = state.exiting_face;
+            state_vector.escaping_face(pid) = state_vector.exiting_face(pid);
         }
     }
 }
@@ -194,7 +199,8 @@ template<class T>
 __device__
 int RTK_Array<T>::find_object(
     const Space_Vector &r,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -244,9 +250,9 @@ int RTK_Array<T>::find_object(
     DEVICE_ENSURE(d_x[i] <= r[X] && d_x[i+1] >= r[X]);
     DEVICE_ENSURE(d_y[j] <= r[Y] && d_y[j+1] >= r[Y]);
     DEVICE_ENSURE(d_z[k] <= r[Z] && d_z[k+1] >= r[Z]);
-    state.level_coord[d_level][X] = i;
-    state.level_coord[d_level][Y] = j;
-    state.level_coord[d_level][Z] = k;
+    state_vector.level_coord(pid,d_level)[X] = i;
+    state_vector.level_coord(pid,d_level)[Y] = j;
+    state_vector.level_coord(pid,d_level)[Z] = k;
 
     return index(i, j, k);
 }
@@ -261,7 +267,8 @@ int RTK_Array<T>::find_object_on_boundary(
     const Space_Vector &r,
     int                 face,
     int                 face_type,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     using def::X; using def::Y; using def::Z;
 
@@ -311,9 +318,9 @@ int RTK_Array<T>::find_object_on_boundary(
     DEVICE_ENSURE(j >= 0 && j < d_N[Y]);
     DEVICE_ENSURE(k >= 0 && k < d_N[Z]);
 
-    state.level_coord[d_level][X] = i;
-    state.level_coord[d_level][Y] = j;
-    state.level_coord[d_level][Z] = k;
+    state_vector.level_coord(pid,d_level)[X] = i;
+    state_vector.level_coord(pid,d_level)[Y] = j;
+    state_vector.level_coord(pid,d_level)[Z] = k;
 
     return index(i, j, k);
 }
@@ -342,9 +349,9 @@ int RTK_Array<T>::index(
 template<class T>
 __device__
 int RTK_Array<T>::matid(
-    const Geo_State_t &state) const
+    const Geo_State_Vector_t &state_vector, int pid) const
 {
-    return object(state).matid(state);
+    return object(state_vector, pid).matid(state_vector, pid);
 }
 
 //---------------------------------------------------------------------------//
@@ -354,12 +361,12 @@ int RTK_Array<T>::matid(
 template<class T>
 __device__
 int RTK_Array<T>::cellid(
-    const Geo_State_t &state) const
+    const Geo_State_Vector_t &state_vector, int pid) const
 {
-    return object(state).cellid(state) +
-           d_cell_offsets[index(state.level_coord[d_level][0],
-                                state.level_coord[d_level][1],
-                                state.level_coord[d_level][2])];
+    return object(state_vector, pid).cellid(state_vector, pid) +
+           d_cell_offsets[index(state_vector.level_coord(pid,d_level)[0],
+                                state_vector.level_coord(pid,d_level)[1],
+                                state_vector.level_coord(pid,d_level)[2])];
 }
 
 //---------------------------------------------------------------------------//
@@ -372,8 +379,9 @@ template<class T>
 __device__
 typename RTK_Array<T>::Space_Vector
 RTK_Array<T>::transform(
-    const Space_Vector &r,
-    const Geo_State_t  &state) const
+    const Space_Vector         &r,
+    const Geo_State_Vector_t   &state_vector,
+    int                         pid) const
 {
     using def::X; using def::Y; using def::Z;
     using cuda::utility::soft_equiv;
@@ -394,9 +402,9 @@ RTK_Array<T>::transform(
     Space_Vector tr;
 
     // transform the coordinates to the nested array
-    tr[X] = (r[X] - d_x[state.level_coord[d_level][X]]);
-    tr[Y] = (r[Y] - d_y[state.level_coord[d_level][Y]]);
-    tr[Z] = (r[Z] - d_z[state.level_coord[d_level][Z]]);
+    tr[X] = (r[X] - d_x[state_vector.level_coord(pid,d_level)[X]]);
+    tr[Y] = (r[Y] - d_y[state_vector.level_coord(pid,d_level)[Y]]);
+    tr[Z] = (r[Z] - d_z[state_vector.level_coord(pid,d_level)[Z]]);
 
     return tr;
 }
@@ -409,12 +417,12 @@ template<class T>
 __device__
 const typename RTK_Array<T>::Object_t&
 RTK_Array<T>::object(
-    const Geo_State_t &state) const
+    const Geo_State_Vector_t &state_vector, int pid) const
 {
     using def::X; using def::Y; using def::Z;
-    return d_objects[d_layout[index(state.level_coord[d_level][X],
-                                    state.level_coord[d_level][Y],
-                                    state.level_coord[d_level][Z])]];
+    return d_objects[d_layout[index(state_vector.level_coord(pid,d_level)[X],
+                                    state_vector.level_coord(pid,d_level)[Y],
+                                    state_vector.level_coord(pid,d_level)[Z])]];
 }
 
 
@@ -425,38 +433,38 @@ RTK_Array<T>::object(
 template<class T>
 __device__
 void RTK_Array<T>::determine_boundary_crossings(
-    Geo_State_t &state) const
+    Geo_State_Vector_t &state_vector, int pid) const
 {
     using def::X; using def::Y; using def::Z;
 
     DEVICE_REQUIRE(d_level > 0);
 
     // dive into the object and see if it crosses a boundary
-    object(state).determine_boundary_crossings(state);
+    object(state_vector, pid).determine_boundary_crossings(state_vector, pid);
 
     // process particles that cross an array boundary on the previous level,
     // they may cross a boundary at this level as well
-    if (state.exiting_level[d_level - 1])
+    if (state_vector.exiting_level[d_level - 1])
     {
-        switch (state.exiting_face)
+        switch (state_vector.exiting_face(pid))
         {
             case Geo_State_t::MINUS_X:
-                calc_low_face(state, X, Geo_State_t::MINUS_X);
+                calc_low_face(state_vector, pid, X, Geo_State_t::MINUS_X);
                 break;
             case Geo_State_t::PLUS_X:
-                calc_high_face(state, X, Geo_State_t::PLUS_X);
+                calc_high_face(state_vector, pid, X, Geo_State_t::PLUS_X);
                 break;
             case Geo_State_t::MINUS_Y:
-                calc_low_face(state, Y, Geo_State_t::MINUS_Y);
+                calc_low_face(state_vector, pid, Y, Geo_State_t::MINUS_Y);
                 break;
             case Geo_State_t::PLUS_Y:
-                calc_high_face(state, Y, Geo_State_t::PLUS_Y);
+                calc_high_face(state_vector, pid, Y, Geo_State_t::PLUS_Y);
                 break;
             case Geo_State_t::MINUS_Z:
-                calc_low_face(state, Z, Geo_State_t::MINUS_Z);
+                calc_low_face(state_vector, pid, Z, Geo_State_t::MINUS_Z);
                 break;
             case Geo_State_t::PLUS_Z:
-                calc_high_face(state, Z, Geo_State_t::PLUS_Z);
+                calc_high_face(state_vector, pid, Z, Geo_State_t::PLUS_Z);
                 break;
             default:
                 DEVICE_INSIST(
@@ -474,50 +482,51 @@ template<class T>
 __device__
 void RTK_Array<T>::update_coordinates(
     const Space_Vector &r,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     using def::X; using def::Y; using def::Z;
 
     DEVICE_REQUIRE(d_level > 0);
 
     // transform coordinates into object's coordinate system
-    Space_Vector tr = transform(r, state);
+    Space_Vector tr = transform(r, state_vector, pid);
 
     // if the child object has exited the level, then update the coordinates
-    if (state.exiting_level[d_level - 1])
+    if (state_vector.exiting_level(pid)[d_level - 1])
     {
-        switch (state.exiting_face)
+        switch (state_vector.exiting_face(pid))
         {
             // update the coordinates of the object across the given face
             case Geo_State_t::MINUS_X:
-                object(state).find_object_on_boundary(
-                    tr, Geo_State_t::PLUS_X, X, state);
+                object(state_vector, pid).find_object_on_boundary(
+                    tr, Geo_State_t::PLUS_X, X, state_vector, pid);
                 break;
             case Geo_State_t::PLUS_X:
-                object(state).find_object_on_boundary(
-                    tr, Geo_State_t::MINUS_X, X, state);
+                object(state_vector, pid).find_object_on_boundary(
+                    tr, Geo_State_t::MINUS_X, X, state_vector, pid);
                 break;
             case Geo_State_t::MINUS_Y:
-                object(state).find_object_on_boundary(
-                    tr, Geo_State_t::PLUS_Y, Y, state);
+                object(state_vector, pid).find_object_on_boundary(
+                    tr, Geo_State_t::PLUS_Y, Y, state_vector, pid);
                 break;
             case Geo_State_t::PLUS_Y:
-                object(state).find_object_on_boundary(
-                    tr, Geo_State_t::MINUS_Y, Y, state);
+                object(state_vector, pid).find_object_on_boundary(
+                    tr, Geo_State_t::MINUS_Y, Y, state_vector, pid);
                 break;
             case Geo_State_t::MINUS_Z:
-                object(state).find_object_on_boundary(
-                    tr, Geo_State_t::PLUS_Z, Z, state);
+                object(state_vector, pid).find_object_on_boundary(
+                    tr, Geo_State_t::PLUS_Z, Z, state_vector, pid);
                 break;
             case Geo_State_t::PLUS_Z:
-                object(state).find_object_on_boundary(
-                    tr, Geo_State_t::MINUS_Z, Z, state);
+                object(state_vector, pid).find_object_on_boundary(
+                    tr, Geo_State_t::MINUS_Z, Z, state_vector, pid);
                 break;
         }
     }
 
     // go to child object and recursively update all coordinates
-    object(state).update_coordinates(tr, state);
+    object(state_vector, pid).update_coordinates(tr, state_vector, pid);
 }
 
 //---------------------------------------------------------------------------//
@@ -527,19 +536,20 @@ void RTK_Array<T>::update_coordinates(
 template<class T>
 __device__
 void RTK_Array<T>::calc_low_face(
-    Geo_State_t &state,
-    int          face_type,
-    int          exiting_face) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid
+    int                 face_type,
+    int                 exiting_face) const
 {
     // update the coordinates in this array
-    --state.level_coord[d_level][face_type];
+    --state_vector.level_coord(pid,d_level)[face_type];
 
     // check to see if the particle has crossed this level boundary
-    if (state.level_coord[d_level][face_type] < 0)
+    if (state_vector.level_coord(pid,d_level)[face_type] < 0)
     {
         // flag indicating that the particle has crossed the low boundary of
         // this level
-        state.exiting_level[d_level] = exiting_face;
+        state_vector.exiting_level(pid)[d_level] = exiting_face;
     }
 }
 
@@ -550,19 +560,20 @@ void RTK_Array<T>::calc_low_face(
 template<class T>
 __device__
 void RTK_Array<T>::calc_high_face(
-    Geo_State_t &state,
-    int          face_type,
-    int          exiting_face) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid
+    int                 face_type,
+    int                 exiting_face) const
 {
     // update the coordinates in this array
-    ++state.level_coord[d_level][face_type];
+    ++state_vector.level_coord(pid,d_level)[face_type];
 
     // check to see if the particle has crossed this level boundary
-    if (state.level_coord[d_level][face_type] > d_N[face_type] - 1)
+    if (state_vector.level_coord(pid,d_level)[face_type] > d_N[face_type] - 1)
     {
         // flag indicating that the particle has crossed the high boundary of
         // this level
-        state.exiting_level[d_level] = exiting_face;
+        state_vector.exiting_level(pid)[d_level] = exiting_face;
     }
 }
 
@@ -574,8 +585,9 @@ template<>
 __device__
 inline RTK_Array<RTK_Cell>::Space_Vector
 RTK_Array<RTK_Cell>::transform(
-    const Space_Vector &r,
-    const Geo_State_t  &state) const
+    const Space_Vector        &r,
+    const Geo_State_Vector_t  &state_vector,
+    int                        pid) const
 {
     using def::X; using def::Y; using def::Z;
     using cuda::utility::soft_equiv;
@@ -587,14 +599,14 @@ RTK_Array<RTK_Cell>::transform(
     Space_Vector tr, lower, upper;
 
     // get the extents (we only need the lower)
-    object(state).get_extents(lower, upper);
+    object(state_vector, pid).get_extents(lower, upper);
     DEVICE_CHECK(lower[X] < 0.0);
     DEVICE_CHECK(lower[Y] < 0.0);
 
     // transform the coordinates to the pin cell
-    tr[X] = (r[X] - d_x[state.level_coord[0][X]]) + lower[X];
-    tr[Y] = (r[Y] - d_y[state.level_coord[0][Y]]) + lower[Y];
-    tr[Z] = (r[Z] - d_z[state.level_coord[0][Z]]);
+    tr[X] = (r[X] - d_x[state_vector.level_coord(pid,0)[X]]) + lower[X];
+    tr[Y] = (r[Y] - d_y[state_vector.level_coord(pid,0)[Y]]) + lower[Y];
+    tr[Z] = (r[Z] - d_z[state_vector.level_coord(pid,0)[Z]]);
 
     DEVICE_ENSURE((tr[X] > lower[X] && tr[X] < upper[X]) ||
                   (soft_equiv(tr[X], lower[X], 1.0e-6 * fabs(lower[X])) ||
@@ -612,13 +624,14 @@ RTK_Array<RTK_Cell>::transform(
 template<>
 __device__
 inline int RTK_Array<RTK_Cell>::cellid(
-    const Geo_State_t &state) const
+    const Geo_State_Vector_t &state_vector, int pid) const
 {
     DEVICE_REQUIRE(d_level == 0);
-    return object(state).cell(state.region,state.segment) +
-            d_cell_offsets[index(state.level_coord[d_level][0],
-                                 state.level_coord[d_level][1],
-                                 state.level_coord[d_level][2])];
+    return object(state_vector, pid).cell(state_vector.region(pid),
+                                          state_vector.segment(pid)) +
+            d_cell_offsets[index(state_vector.level_coord(pid,d_level)[0],
+                                 state_vector.level_coord(pid,d_level)[1],
+                                 state_vector.level_coord(pid,d_level)[2])];
 }
 
 //---------------------------------------------------------------------------//
@@ -626,10 +639,10 @@ inline int RTK_Array<RTK_Cell>::cellid(
 template<>
 __device__
 inline int RTK_Array<RTK_Cell>::matid(
-    const Geo_State_t &state) const
+    const Geo_State_Vector_t &state_vector, int pid) const
 {
     DEVICE_REQUIRE(d_level == 0);
-    return object(state).matid(state.region);
+    return object(state_vector, pid).matid(state_vector.region(pid));
 }
 
 //---------------------------------------------------------------------------//
@@ -639,38 +652,38 @@ inline int RTK_Array<RTK_Cell>::matid(
 template<>
 __device__
 inline void RTK_Array<RTK_Cell>::determine_boundary_crossings(
-    Geo_State_t &state) const
+    Geo_State_Vector_t &state_vector, int pid) const
 {
     using def::X; using def::Y; using def::Z;
 
     DEVICE_REQUIRE(d_level == 0);
 
-    switch (state.exiting_face)
+    switch (state_vector.exiting_face(pid))
     {
         // process internal pin-cell surface crossings
         case Geo_State_t::INTERNAL:
             // call the pin-cell surface crossing routine for internal surfaces
-            object(state).cross_surface(state);
+            object(state_vector, pid).cross_surface(state_vector, pid);
             break;
         // otherwise process particles leaving the pin cell by updating the
         // region id to the moderator region in the next pin cell
         case Geo_State_t::MINUS_X:
-            calc_low_face(state, X, Geo_State_t::MINUS_X);
+            calc_low_face(state_vector, pid, X, Geo_State_t::MINUS_X);
             break;
         case Geo_State_t::PLUS_X:
-            calc_high_face(state, X, Geo_State_t::PLUS_X);
+            calc_high_face(state_vector, pid, X, Geo_State_t::PLUS_X);
             break;
         case Geo_State_t::MINUS_Y:
-            calc_low_face(state, Y, Geo_State_t::MINUS_Y);
+            calc_low_face(state_vector, pid, Y, Geo_State_t::MINUS_Y);
             break;
         case Geo_State_t::PLUS_Y:
-            calc_high_face(state, Y, Geo_State_t::PLUS_Y);
+            calc_high_face(state_vector, pid, Y, Geo_State_t::PLUS_Y);
             break;
         case Geo_State_t::MINUS_Z:
-            calc_low_face(state, Z, Geo_State_t::MINUS_Z);
+            calc_low_face(state_vector, pid, Z, Geo_State_t::MINUS_Z);
             break;
         case Geo_State_t::PLUS_Z:
-            calc_high_face(state, Z, Geo_State_t::PLUS_Z);
+            calc_high_face(state_vector, pid, Z, Geo_State_t::PLUS_Z);
             break;
         default:
             // otherwise we aren't at a surface crossing at all!
@@ -686,41 +699,45 @@ inline void RTK_Array<RTK_Cell>::determine_boundary_crossings(
 template<>
 inline void RTK_Array<RTK_Cell>::update_coordinates(
     const Space_Vector &r,
-    Geo_State_t        &state) const
+    Geo_State_Vector_t &state_vector,
+    int                 pid) const
 {
     DEVICE_REQUIRE(d_level == 0);
 
     // if we exited the last pin-cell array, set the region coordinates in the
     // new array; for radial entrance (x,y), we must be entering the moderator
     // region
-    if (state.exiting_face != Geo_State_t::INTERNAL)
+    if (state_vector(pid).exiting_face != Geo_State_t::INTERNAL)
     {
-        DEVICE_CHECK(state.exiting_face != Geo_State_t::NONE);
-        DEVICE_CHECK(state.region == Geo_State_t::VESSEL ?
-                     object(state).has_vessel() : true);
+        DEVICE_CHECK(state_vector(pid).exiting_face != Geo_State_t::NONE);
+        DEVICE_CHECK(state_vector.region(pid) == Geo_State_t::VESSEL ?
+                     object(state_vector, pid).has_vessel() : true);
 
         // update the face of the state
-        state.face = Geo_State_t::NONE;
+        state_vector.face(pid) = Geo_State_t::NONE;
 
         // set to moderator in the pin cell
-        state.region = object(state).num_regions() - 1;
+        state_vector.region(pid) = object(state_vector, pid).num_regions() - 1;
 
         // need to transport into coordinate system of pin cell
-        Space_Vector tr = transform(r, state);
+        Space_Vector tr = transform(r, state_vector, pid);
 
         // calculate the segment in the new pin-cell
-        state.segment = object(state).segment(tr[0], tr[1]);
-        DEVICE_CHECK(state.segment < object(state).num_segments());
+        state_vector.segment(pid) =
+            object(state_vector, pid).segment(tr[0], tr[1]);
+        DEVICE_CHECK(state_vector.segment(pid) <
+                     object(state_vector, pid).num_segments());
 
         // update if crossing into pin cell from high or low Z-face or if the
         // adjoining cell has a vessel
-        if (state.exiting_face == Geo_State_t::MINUS_Z ||
-            state.exiting_face == Geo_State_t::PLUS_Z  ||
-            object(state).has_vessel())
+        if (state_vector.exiting_face(pid) == Geo_State_t::MINUS_Z ||
+            state_vector.exiting_face(pid) == Geo_State_t::PLUS_Z  ||
+            object(state_vector, pid).has_vessel())
         {
             // determine the region of the point entering the pin-cell through
             // the Z-face
-            state.region = object(state).region(tr[0], tr[1]);
+            state_vector.region(pid) =
+                object(state_vector, pid).region(tr[0], tr[1]);
         }
     }
 }
