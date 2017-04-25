@@ -28,6 +28,9 @@ using Core_Manager    = cuda_profugus::Core_Array_DMM;
 using Core_Array      = cuda_profugus::Core_Array;
 using Vector          = Lattice_Array::Space_Vector;
 using State           = Lattice_Array::Geo_State_t;
+using State_Vec       = cuda_profugus::RTK_State_Vector;
+using State_Vec_DMM   = cuda_profugus::RTK_State_Vector_DMM;
+
 
 //---------------------------------------------------------------------------//
 // CORE
@@ -36,90 +39,92 @@ using State           = Lattice_Array::Geo_State_t;
 __global__
 void regcoreA_kernel(
     Core_Array  core,
+    State_Vec   states,
     int        *ints,
     double     *dbls)
 {
     using def::X; using def::Y; using def::Z;
 
-    State state;
+    int tid = cuda::utility::thread_id();
+
     Vector r, omega;
     int m = 0, n = 0;
     double d = 0.0;
 
     r     = {  0.044859500000,   5.638180000000,   7.185140000000};
     omega = {  0.994391000000,   0.099447500000,  -0.036019600000};
-    core.initialize(r, state);
-    core.distance_to_boundary(r, omega, state);
+    core.initialize(r, states, tid);
+    core.distance_to_boundary(r, omega, states, tid);
 
-    d = state.dist_to_next_region;
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
     // process surface
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
     // next step
-    core.distance_to_boundary(r, omega, state);
-    d = state.dist_to_next_region;
+    core.distance_to_boundary(r, omega, states, tid);
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
     // process surface
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
     // next step
-    core.distance_to_boundary(r, omega, state);
-    d = state.dist_to_next_region;
+    core.distance_to_boundary(r, omega, states, tid);
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
-    ints[n++] = state.escaping_face;
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
+    ints[n++] = states.escaping_face(tid);
 }
 
 //---------------------------------------------------------------------------//
@@ -127,12 +132,14 @@ void regcoreA_kernel(
 __global__
 void regcoreB_kernel(
     Core_Array  core,
+    State_Vec   states,
     int        *ints,
     double     *dbls)
 {
     using def::X; using def::Y; using def::Z;
 
-    State state;
+    int tid = cuda::utility::thread_id();
+
     Vector r, omega;
     int m = 0, n = 0;
     double d = 0.0;
@@ -140,155 +147,155 @@ void regcoreB_kernel(
     r     = {  4.202350000000,   2.820900000000,  18.507800000000};
     omega = {  0.098705500000,   0.137387000000,  -0.985587000000};
 
-    core.initialize(r, state);
-    core.distance_to_boundary(r, omega, state);
+    core.initialize(r, states, tid);
+    core.distance_to_boundary(r, omega, states, tid);
 
-    d = state.dist_to_next_region;
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
     // process surface
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
     // next step
-    core.distance_to_boundary(r, omega, state);
-    d = state.dist_to_next_region;
+    core.distance_to_boundary(r, omega, states, tid);
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_face;
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_face(tid);
 
     // process surface
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
-    ints[n++] = state.face;
+    core.cross_surface(r, states, tid);
+    ints[n++] = states.face(tid);
 
     // next step
-    core.distance_to_boundary(r, omega, state);
-    d = state.dist_to_next_region;
+    core.distance_to_boundary(r, omega, states, tid);
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
     // process surface
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
     // next step
-    core.distance_to_boundary(r, omega, state);
-    d = state.dist_to_next_region;
+    core.distance_to_boundary(r, omega, states, tid);
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
     // process surface
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
     // next step
-    core.distance_to_boundary(r, omega, state);
-    d = state.dist_to_next_region;
+    core.distance_to_boundary(r, omega, states, tid);
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
     // process surface
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
     // next step
-    core.distance_to_boundary(r, omega, state);
-    d = state.dist_to_next_region;
+    core.distance_to_boundary(r, omega, states, tid);
+    d = states.dist_to_next_region(tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
 
-    ints[n++] = state.region;
-    ints[n++] = core.matid(state);
+    ints[n++] = states.region(tid);
+    ints[n++] = core.matid(states, tid);
     dbls[m++] = d;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.exiting_face(tid);
 
     // escape
     r[0] = r[0] + d * omega[0];
     r[1] = r[1] + d * omega[1];
     r[2] = r[2] + d * omega[2];
 
-    core.cross_surface(r, state);
+    core.cross_surface(r, states, tid);
 
-    ints[n++] = state.level_coord[1][X];
-    ints[n++] = state.level_coord[1][Y];
-    ints[n++] = state.level_coord[1][Z];
-    ints[n++] = state.level_coord[0][X];
-    ints[n++] = state.level_coord[0][Y];
-    ints[n++] = state.level_coord[0][Z];
-    ints[n++] = state.escaping_face;
+    ints[n++] = states.level_coord(tid,1)[X];
+    ints[n++] = states.level_coord(tid,1)[Y];
+    ints[n++] = states.level_coord(tid,1)[Z];
+    ints[n++] = states.level_coord(tid,0)[X];
+    ints[n++] = states.level_coord(tid,0)[Y];
+    ints[n++] = states.level_coord(tid,0)[Z];
+    ints[n++] = states.escaping_face(tid);
 }
 
 //---------------------------------------------------------------------------//
@@ -304,7 +311,11 @@ void RegCore::run_test()
     thrust::device_vector<int>    ints(75, -1);
     thrust::device_vector<double> dbls(50, -1);
 
-    regcoreA_kernel<<<1,1>>>(array, ints.data().get(), dbls.data().get());
+    State_Vec_DMM states;
+    states.initialize(1);
+
+    regcoreA_kernel<<<1,1>>>(array, states.device_instance(),
+                             ints.data().get(), dbls.data().get());
 
     int m = 0, n = 0;
     double eps = 1.0e-6;
@@ -356,7 +367,8 @@ void RegCore::run_test()
     EXPECT_EQ(0, rints[n++]);
     EXPECT_EQ(State::PLUS_X, rints[n++]);
 
-    regcoreB_kernel<<<1,1>>>(array, ints.data().get(), dbls.data().get());
+    regcoreB_kernel<<<1,1>>>(array, states.device_instance(),
+                             ints.data().get(), dbls.data().get());
 
     rints = thrust::host_vector<int>(ints.begin(), ints.end());
     rdbls = thrust::host_vector<double>(dbls.begin(), dbls.end());

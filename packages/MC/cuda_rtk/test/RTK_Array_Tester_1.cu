@@ -26,6 +26,8 @@ using Core_Manager    = cuda_profugus::Core_Array_DMM;
 using Core_Array      = cuda_profugus::Core_Array;
 using Vector          = Lattice_Array::Space_Vector;
 using State           = Lattice_Array::Geo_State_t;
+using State_Vec       = cuda_profugus::RTK_State_Vector;
+using State_Vec_DMM   = cuda_profugus::RTK_State_Vector_DMM;
 
 //---------------------------------------------------------------------------//
 // SIMPLELATTICE
@@ -34,61 +36,63 @@ using State           = Lattice_Array::Geo_State_t;
 __global__
 void lattice_kernel(
     Lattice_Array  array,
+    State_Vec      states,
     int           *ints)
 {
-    State state;
+    int tid = cuda::utility::thread_id();
+
     Vector r;
     int m = 0;
 
     r = {1.261, 2.44, 12.1};
-    array.initialize(r, state);
+    array.initialize(r, states, tid);
 
-    ints[m++] = state.level_coord[0][0];
-    ints[m++] = state.level_coord[0][1];
-    ints[m++] = state.level_coord[0][2];
-    ints[m++] = state.region;
-    ints[m++] = array.matid(state);
-    ints[m++] = array.cellid(state);
+    ints[m++] = states.level_coord(tid,0)[0];
+    ints[m++] = states.level_coord(tid,0)[1];
+    ints[m++] = states.level_coord(tid,0)[2];
+    ints[m++] = states.region(tid);
+    ints[m++] = array.matid(states, tid);
+    ints[m++] = array.cellid(states, tid);
 
     r = {1.259, 1.27, 1.1};
-    array.initialize(r, state);
+    array.initialize(r, states, tid);
 
-    ints[m++] = state.level_coord[0][0];
-    ints[m++] = state.level_coord[0][1];
-    ints[m++] = state.level_coord[0][2];
-    ints[m++] = state.region;
-    ints[m++] = array.matid(state);
-    ints[m++] = array.cellid(state);
+    ints[m++] = states.level_coord(tid,0)[0];
+    ints[m++] = states.level_coord(tid,0)[1];
+    ints[m++] = states.level_coord(tid,0)[2];
+    ints[m++] = states.region(tid);
+    ints[m++] = array.matid(states, tid);
+    ints[m++] = array.cellid(states, tid);
 
     r = {3.560000,   2.239887,   1.300000};
-    array.initialize(r, state);
+    array.initialize(r, states, tid);
 
-    ints[m++] = state.level_coord[0][0];
-    ints[m++] = state.level_coord[0][1];
-    ints[m++] = state.level_coord[0][2];
-    ints[m++] = state.region;
-    ints[m++] = array.matid(state);
-    ints[m++] = array.cellid(state);
+    ints[m++] = states.level_coord(tid,0)[0];
+    ints[m++] = states.level_coord(tid,0)[1];
+    ints[m++] = states.level_coord(tid,0)[2];
+    ints[m++] = states.region(tid);
+    ints[m++] = array.matid(states, tid);
+    ints[m++] = array.cellid(states, tid);
 
     r = {1.570000,   0.931993,   2.700000};
-    array.initialize(r, state);
+    array.initialize(r, states, tid);
 
-    ints[m++] = state.level_coord[0][0];
-    ints[m++] = state.level_coord[0][1];
-    ints[m++] = state.level_coord[0][2];
-    ints[m++] = state.region;
-    ints[m++] = array.matid(state);
-    ints[m++] = array.cellid(state);
+    ints[m++] = states.level_coord(tid,0)[0];
+    ints[m++] = states.level_coord(tid,0)[1];
+    ints[m++] = states.level_coord(tid,0)[2];
+    ints[m++] = states.region(tid);
+    ints[m++] = array.matid(states, tid);
+    ints[m++] = array.cellid(states, tid);
 
     r = {1.300000,   2.044919,   3.800000};
-    array.initialize(r, state);
+    array.initialize(r, states, tid);
 
-    ints[m++] = state.level_coord[0][0];
-    ints[m++] = state.level_coord[0][1];
-    ints[m++] = state.level_coord[0][2];
-    ints[m++] = state.region;
-    ints[m++] = array.matid(state);
-    ints[m++] = array.cellid(state);
+    ints[m++] = states.level_coord(tid,0)[0];
+    ints[m++] = states.level_coord(tid,0)[1];
+    ints[m++] = states.level_coord(tid,0)[2];
+    ints[m++] = states.region(tid);
+    ints[m++] = array.matid(states, tid);
+    ints[m++] = array.cellid(states, tid);
 }
 
 //---------------------------------------------------------------------------//
@@ -103,7 +107,10 @@ void SimpleLattice::run_test()
 
     thrust::device_vector<int> ints(30, -1);
 
-    lattice_kernel<<<1,1>>>(array, ints.data().get());
+    State_Vec_DMM states;
+    states.initialize(1);
+
+    lattice_kernel<<<1,1>>>(array, states.device_instance(), ints.data().get());
 
     int m = 0;
 
@@ -152,35 +159,37 @@ void SimpleLattice::run_test()
 __global__
 void core_kernel(
     Core_Array  array,
+    State_Vec   states,
     int        *ints)
 {
-    State state;
+    int tid = cuda::utility::thread_id();
+
     Vector r;
     int m = 0;
 
     r = {1.2, 0.2, 4.5};
-    array.initialize(r, state);
+    array.initialize(r, states, tid);
 
-    ints[m++] = state.level_coord[1][0];
-    ints[m++] = state.level_coord[1][1];
-    ints[m++] = state.level_coord[1][2];
-    ints[m++] = state.level_coord[0][0];
-    ints[m++] = state.level_coord[0][1];
-    ints[m++] = state.level_coord[0][2];
-    ints[m++] = state.region;
-    ints[m++] = array.cellid(state);
+    ints[m++] = states.level_coord(tid,1)[0];
+    ints[m++] = states.level_coord(tid,1)[1];
+    ints[m++] = states.level_coord(tid,1)[2];
+    ints[m++] = states.level_coord(tid,0)[0];
+    ints[m++] = states.level_coord(tid,0)[1];
+    ints[m++] = states.level_coord(tid,0)[2];
+    ints[m++] = states.region(tid);
+    ints[m++] = array.cellid(states, tid);
 
     r = {8.34, 2.3, -3.1};
-    array.initialize(r, state);
+    array.initialize(r, states, tid);
 
-    ints[m++] = state.level_coord[1][0];
-    ints[m++] = state.level_coord[1][1];
-    ints[m++] = state.level_coord[1][2];
-    ints[m++] = state.level_coord[0][0];
-    ints[m++] = state.level_coord[0][1];
-    ints[m++] = state.level_coord[0][2];
-    ints[m++] = state.region;
-    ints[m++] = array.cellid(state);
+    ints[m++] = states.level_coord(tid,1)[0];
+    ints[m++] = states.level_coord(tid,1)[1];
+    ints[m++] = states.level_coord(tid,1)[2];
+    ints[m++] = states.level_coord(tid,0)[0];
+    ints[m++] = states.level_coord(tid,0)[1];
+    ints[m++] = states.level_coord(tid,0)[2];
+    ints[m++] = states.region(tid);
+    ints[m++] = array.cellid(states, tid);
 }
 
 //---------------------------------------------------------------------------//
@@ -195,7 +204,10 @@ void SimpleCore::run_test()
 
     thrust::device_vector<int> ints(16, -1);
 
-    core_kernel<<<1,1>>>(array, ints.data().get());
+    State_Vec_DMM states;
+    states.initialize(1);
+
+    core_kernel<<<1,1>>>(array, states.device_instance(), ints.data().get());
 
     int m = 0;
 

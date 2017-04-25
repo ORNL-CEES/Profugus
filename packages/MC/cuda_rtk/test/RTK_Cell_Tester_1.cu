@@ -16,18 +16,22 @@
 
 #include "RTK_Cell_Tester.hh"
 #include "../RTK_Cell.cuh"
+#include "../RTK_State_Vector.cuh"
+#include "../RTK_State.cuh"
 
 //---------------------------------------------------------------------------//
 // TYPES
 //---------------------------------------------------------------------------//
 
-using Device_Cell = cuda_profugus::RTK_Cell;
-using Device_View = cuda::Device_View<Device_Cell>;
-using Manager     = cuda_profugus::RTK_Cell_DMM;
-using Managers    = Device_View::Managers;
-using DVF         = Device_View::DVF;
-using Vector      = Device_Cell::Space_Vector;
-using State       = Device_Cell::Geo_State_t;
+using Device_Cell   = cuda_profugus::RTK_Cell;
+using Device_View   = cuda::Device_View<Device_Cell>;
+using Manager       = cuda_profugus::RTK_Cell_DMM;
+using Managers      = Device_View::Managers;
+using DVF           = Device_View::DVF;
+using Vector        = Device_Cell::Space_Vector;
+using State         = cuda_profugus::RTK_State;
+using State_Vec     = cuda_profugus::RTK_State_Vector;
+using State_Vec_DMM = cuda_profugus::RTK_State_Vector_DMM;
 
 using def::X; using def::Y; using def::Z;
 
@@ -37,10 +41,11 @@ using def::X; using def::Y; using def::Z;
 
 __global__
 void single_shell_kernel1(
-    DVF     pins,
-    int    *ints,
-    double *dbls,
-    Vector *svs)
+    DVF          pins,
+    State_Vec    states,
+    int         *ints,
+    double      *dbls,
+    Vector      *svs)
 {
     auto &pin = pins[0];
 
@@ -61,20 +66,21 @@ void single_shell_kernel1(
         pin.get_extents(svs[0], svs[1]);
     }
 
+    int tid = cuda::utility::thread_id();
+
     // Make the state and initialize
-    State state;
     {
-        pin.initialize({0.0, 0.53, 0.0}, state);
-        ints[6] = state.region;
-        ints[7] = state.segment;
-        pin.initialize({0.0, 0.54, 0.0}, state);
-        ints[8]  = state.region;
-        ints[9]  = state.segment;
-        ints[10] = pin.cell(state.region, state.segment);
-        pin.initialize({0.0, 0.55, 0.0}, state);
-        ints[11] = state.region;
-        ints[12] = state.segment;
-        ints[13] = pin.cell(state.region, state.segment);
+        pin.initialize({0.0, 0.53, 0.0}, states, tid);
+        ints[6] = states.region(tid);
+        ints[7] = states.segment(tid);
+        pin.initialize({0.0, 0.54, 0.0}, states, tid);
+        ints[8]  = states.region(tid);
+        ints[9]  = states.segment(tid);
+        ints[10] = pin.cell(states.region(tid), states.segment(tid));
+        pin.initialize({0.0, 0.55, 0.0}, states, tid);
+        ints[11] = states.region(tid);
+        ints[12] = states.segment(tid);
+        ints[13] = pin.cell(states.region(tid), states.segment(tid));
     }
 
     // Distance-to-boundary box-boundary tests
@@ -82,22 +88,22 @@ void single_shell_kernel1(
     {
         r     = {0.0, 0.59, 0.0};
         omega = {1.0, 0.0, 0.0};
-        pin.initialize(r, state);
-        pin.distance_to_boundary(r, omega, state);
+        pin.initialize(r, states, tid);
+        pin.distance_to_boundary(r, omega, states, tid);
 
-        dbls[3]  = state.dist_to_next_region;
-        ints[14] = state.exiting_face;
-        ints[15] = state.region;
+        dbls[3]  = states.dist_to_next_region(tid);
+        ints[14] = states.exiting_face(tid);
+        ints[15] = states.region(tid);
     }
     {
         r     = {0.0, 0.59, 0.0};
         omega = {-1.0, 0.0, 0.0};
-        pin.initialize(r, state);
-        pin.distance_to_boundary(r, omega, state);
+        pin.initialize(r, states, tid);
+        pin.distance_to_boundary(r, omega, states, tid);
 
-        dbls[4]  = state.dist_to_next_region;
-        ints[16] = state.exiting_face;
-        ints[17] = state.region;
+        dbls[4]  = states.dist_to_next_region(tid);
+        ints[16] = states.exiting_face(tid);
+        ints[17] = states.region(tid);
     }
 
     // Should not have vessel
@@ -109,114 +115,116 @@ void single_shell_kernel1(
 __global__
 void single_shell_kernel2(
     Device_Cell  pin,
+    State_Vec    states,
     int         *ints,
     double      *dbls)
 {
     DEVICE_REQUIRE(ints[0] == -1);
     DEVICE_REQUIRE(dbls[0] == -1.0);
 
-    State  state;
     Vector r, omega;
     int    n = 0, m = 0;
+
+    int tid = cuda::utility::thread_id();
 
     // Pin intersection tests
     {
         r     = {  0.43,   0.51,   1.20};
         omega = { -0.07450781,  -0.17272265,   0.98214840};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.next_region;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.next_region(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = {  0.43,   0.51,   1.20};
         omega = {  0.01923789,  -0.98113214,  -0.19237885};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.next_region;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.next_region(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = { -0.49,   0.10,   1.20};
         omega = {  0.04377546,  -0.01122448,   0.99897834};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.next_region;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.next_region(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = { -0.31,  -0.46,   1.20};
         omega = { -0.01642565,   0.05812155,   0.99817438};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.next_region;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.next_region(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = {  0.21,  -0.56,   1.20};
         omega = { -0.03911234,   0.07065454,   0.99673375};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.next_region;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.next_region(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = {  0.21,  -0.56,  14.20};
         omega = {  0.021262916894,   0.051770580263,   0.998432619351};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
 
     {
         r     = {  0.42,   0.10,  14.20};
         omega = { -0.262232636986,  -0.030141682412,  -0.964533837188};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.next_region;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.next_region(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = {  0.10,   0.30,  12.10};
         omega = {  0.408248290464,   0.163299316186,  -0.898146239020};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.next_region;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.next_region(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = {  0.10,   0.30,  12.10};
         omega = {  0.011875513070,   0.004750205228,  -0.999918200524};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
     {
         r     = {  0.10,   0.30,  12.10};
         omega = {  0.072244077132,   0.028897630853,   0.996968264415};
-        pin.initialize(r, state);
-        ints[n++] = state.region;
-        pin.distance_to_boundary(r, omega, state);
-        ints[n++] = state.exiting_face;
-        dbls[m++] = state.dist_to_next_region;
+        pin.initialize(r, states, tid);
+        ints[n++] = states.region(tid);
+        pin.distance_to_boundary(r, omega, states, tid);
+        ints[n++] = states.exiting_face(tid);
+        dbls[m++] = states.dist_to_next_region(tid);
     }
 }
 
@@ -232,8 +240,12 @@ void Single_Shell::construct()
     thrust::device_vector<double> dbls(50, -1);
     thrust::device_vector<Vector> svs(20);
 
+    State_Vec_DMM states;
+    states.initialize(1);
+
     single_shell_kernel1<<<1,1>>>(
-        dv.get_view(), ints.data().get(), dbls.data().get(), svs.data().get());
+        dv.get_view(), states.device_instance(), ints.data().get(),
+        dbls.data().get(), svs.data().get());
 
     thrust::host_vector<int>    rints(ints.begin(), ints.end());
     thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
@@ -288,8 +300,11 @@ void Single_Shell::track()
     thrust::device_vector<int>    ints(50, -1);
     thrust::device_vector<double> dbls(50, -1);
 
+    State_Vec_DMM states;
+    states.initialize(1);
+
     single_shell_kernel2<<<1,1>>>(
-        pin, ints.data().get(), dbls.data().get());
+        pin, states.device_instance(), ints.data().get(), dbls.data().get());
 
     thrust::host_vector<int>    rints(ints.begin(), ints.end());
     thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
@@ -383,78 +398,80 @@ void multi_shell_kernel1(
 __global__
 void multi_shell_kernel2(
     Device_Cell  pin,
+    State_Vec    states,
     int         *ints,
     double      *dbls)
 {
     int n = 0, m = 0;
 
-    State  state;
     Vector r, omega;
+
+    int tid = cuda::utility::thread_id();
 
     // Tracking tests
     r     = {  0.50,   0.30,  12.10};
     omega = { -0.740797197487,  -0.642024237822,   0.197545919330};
-    pin.initialize(r, state);
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
-    ints[n++] = state.next_region;
+    pin.initialize(r, states, tid);
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.next_region(tid);
 
-    pin.cross_surface(state);
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
-
-    for (int i = 0; i < 3; ++i)
-        r[i] += state.dist_to_next_region * omega[i];
-
-    pin.distance_to_boundary(r, omega, state);
-
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
-    ints[n++] = state.next_region;
-
-    pin.cross_surface(state);
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
+    pin.cross_surface(states, tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
 
     for (int i = 0; i < 3; ++i)
-        r[i] += state.dist_to_next_region * omega[i];
+        r[i] += states.dist_to_next_region(tid) * omega[i];
 
-    pin.distance_to_boundary(r, omega, state);
+    pin.distance_to_boundary(r, omega, states, tid);
 
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
-    ints[n++] = state.next_region;
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.next_region(tid);
 
-    pin.cross_surface(state);
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
-
-    for (int i = 0; i < 3; ++i)
-        r[i] += state.dist_to_next_region * omega[i];
-
-    pin.distance_to_boundary(r, omega, state);
-
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
-    ints[n++] = state.next_region;
-
-    pin.cross_surface(state);
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
+    pin.cross_surface(states, tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
 
     for (int i = 0; i < 3; ++i)
-        r[i] += state.dist_to_next_region * omega[i];
+        r[i] += states.dist_to_next_region(tid) * omega[i];
 
-    pin.distance_to_boundary(r, omega, state);
+    pin.distance_to_boundary(r, omega, states, tid);
 
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.exiting_face;
-    ints[n++] = state.region;
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.next_region(tid);
+
+    pin.cross_surface(states, tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
+
+    for (int i = 0; i < 3; ++i)
+        r[i] += states.dist_to_next_region(tid) * omega[i];
+
+    pin.distance_to_boundary(r, omega, states, tid);
+
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.next_region(tid);
+
+    pin.cross_surface(states, tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
+
+    for (int i = 0; i < 3; ++i)
+        r[i] += states.dist_to_next_region(tid) * omega[i];
+
+    pin.distance_to_boundary(r, omega, states, tid);
+
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.exiting_face(tid);
+    ints[n++] = states.region(tid);
 }
 
 //---------------------------------------------------------------------------//
@@ -508,8 +525,11 @@ void Multi_Shell::track()
     thrust::device_vector<int>    ints(50, -1);
     thrust::device_vector<double> dbls(50, -1);
 
+    State_Vec_DMM states;
+    states.initialize(1);
+
     multi_shell_kernel2<<<1,1>>>(
-        pin, ints.data().get(), dbls.data().get());
+        pin, states.device_instance(), ints.data().get(), dbls.data().get());
 
     thrust::host_vector<int>    rints(ints.begin(), ints.end());
     thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
@@ -599,224 +619,226 @@ void multi_shell_kernel3(
 __global__
 void multi_shell_kernel4(
     Device_Cell  pin,
+    State_Vec    states,
     int         *ints,
     double      *dbls)
 {
     int n = 0, m = 0;
 
-    State  state;
     Vector r, omega;
+
+    int tid = cuda::utility::thread_id();
 
     // test tracking
     r     = {  0.43,   0.51,   1.20};
     omega = { -0.267261241912,  -0.534522483825,   0.801783725737};
 
     // initialize
-    pin.initialize(r, state);
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.face;
+    pin.initialize(r, states, tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.next_region;
-    ints[n++] = state.next_segment;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.next_region(tid);
+    ints[n++] = states.next_segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // move to surface
-    r[0] += omega[0] * state.dist_to_next_region;
-    r[1] += omega[1] * state.dist_to_next_region;
-    r[2] += omega[2] * state.dist_to_next_region;
+    r[0] += omega[0] * states.dist_to_next_region(tid);
+    r[1] += omega[1] * states.dist_to_next_region(tid);
+    r[2] += omega[2] * states.dist_to_next_region(tid);
 
     // cross the surface
-    pin.cross_surface(state);
+    pin.cross_surface(states, tid);
 
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.exiting_face;
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.exiting_face(tid);
 
     // get distance to boundary
-    pin.distance_to_boundary(r, omega, state);
-    dbls[m++] = state.dist_to_next_region;
-    ints[n++] = state.face;
-    ints[n++] = state.region;
-    ints[n++] = state.segment;
-    ints[n++] = state.next_face;
-    ints[n++] = state.exiting_face;
+    pin.distance_to_boundary(r, omega, states, tid);
+    dbls[m++] = states.dist_to_next_region(tid);
+    ints[n++] = states.face(tid);
+    ints[n++] = states.region(tid);
+    ints[n++] = states.segment(tid);
+    ints[n++] = states.next_face(tid);
+    ints[n++] = states.exiting_face(tid);
 }
 
 //---------------------------------------------------------------------------//
@@ -879,8 +901,11 @@ void Multi_Shell::multiseg_track()
     thrust::device_vector<int>    ints(100, -1);
     thrust::device_vector<double> dbls(100, -1);
 
+    State_Vec_DMM states;
+    states.initialize(1);
+
     multi_shell_kernel4<<<1,1>>>(
-        pin, ints.data().get(), dbls.data().get());
+        pin, states.device_instance(), ints.data().get(), dbls.data().get());
 
     thrust::host_vector<int>    rints(ints.begin(), ints.end());
     thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
@@ -1019,6 +1044,7 @@ void Multi_Shell::multiseg_track()
 __global__
 void empty_kernel1(
     Device_Cell  box,
+    State_Vec    states,
     int         *ints,
     double      *dbls)
 {
@@ -1032,70 +1058,71 @@ void empty_kernel1(
 
     ints[n++] = box.matid(0);
 
-    State  state;
+    int tid = cuda::utility::thread_id();
+
     Vector r, omega;
     {
         r     = {0.0, 0.59, 0.0};
         omega = {1.0, 0.0, 0.0};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = {0.0, 0.59, 0.0};
         omega = {-1.0, 0.0, 0.0};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = {  0.23,  -0.63,  12.10};
         omega = { -0.591113929288,   0.783346101414,   0.192232172126};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = {  0.45,  -0.62,  12.10};
         omega = { -0.628969195431,   0.754763034517,   0.186361243091};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = { -0.12,  -0.38,  12.10};
         omega = {  0.810238620974,  -0.492497985298,   0.317740635676};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = { -0.12,  -0.38,  12.10};
         omega = {  0.097437248619,  -0.059226562886,   0.993477829058};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = { -0.12,  -0.38,   2.10};
         omega = {  0.080591552144,  -0.048987021891,  -0.995542702956};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
 }
 
@@ -1104,6 +1131,7 @@ void empty_kernel1(
 __global__
 void empty_kernel2(
     Device_Cell  box,
+    State_Vec    states,
     int         *ints,
     double      *dbls)
 {
@@ -1120,43 +1148,44 @@ void empty_kernel2(
     dbls[m++] = box.pitch(0);
     dbls[m++] = box.pitch(1);
 
-    State  state;
+    int tid = cuda::utility::thread_id();
+
     Vector r, omega;
     {
         r     = {0.0, 0.59, 0.0};
         omega = {1.0, 0.0, 0.0};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = {0.0, 0.59, 0.0};
         omega = {-1.0, 0.0, 0.0};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = {  0.123,  -0.63,  12.10};
         omega = { -0.556102184819,   0.807165237093,   0.198077358796};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
     {
         r     = {  0.045,  -0.62,  12.10};
         omega = { -0.080640139920,   0.967681679037,   0.238933747910};
-        box.initialize(r, state);
-        box.distance_to_boundary(r, omega, state);
-        dbls[m++] = state.dist_to_next_region;
-        ints[n++] = state.exiting_face;
-        ints[n++] = state.region;
+        box.initialize(r, states, tid);
+        box.distance_to_boundary(r, omega, states, tid);
+        dbls[m++] = states.dist_to_next_region(tid);
+        ints[n++] = states.exiting_face(tid);
+        ints[n++] = states.region(tid);
     }
 }
 
@@ -1171,8 +1200,11 @@ void Empty::square()
     thrust::device_vector<int>    ints(50, -1);
     thrust::device_vector<double> dbls(50, -1);
 
+    State_Vec_DMM states;
+    states.initialize(1);
+
     empty_kernel1<<<1,1>>>(
-        pin, ints.data().get(), dbls.data().get());
+        pin, states.device_instance(), ints.data().get(), dbls.data().get());
 
     thrust::host_vector<int>    rints(ints.begin(), ints.end());
     thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());
@@ -1228,8 +1260,11 @@ void Empty::rectangle()
     thrust::device_vector<int>    ints(50, -1);
     thrust::device_vector<double> dbls(50, -1);
 
+    State_Vec_DMM states;
+    states.initialize(1);
+
     empty_kernel2<<<1,1>>>(
-        pin, ints.data().get(), dbls.data().get());
+        pin, states.device_instance(), ints.data().get(), dbls.data().get());
 
     thrust::host_vector<int>    rints(ints.begin(), ints.end());
     thrust::host_vector<double> rdbls(dbls.begin(), dbls.end());

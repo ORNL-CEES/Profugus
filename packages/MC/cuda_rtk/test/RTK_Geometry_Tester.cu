@@ -28,6 +28,8 @@ using Device_Geometry         = cuda_profugus::Core;
 using Device_Geometry_Manager = cuda_profugus::Core_DMM;
 using State                   = Device_Geometry::Geo_State_t;
 using Space_Vector            = Device_Geometry::Space_Vector;
+using State_Vec               = cuda_profugus::RTK_State_Vector;
+using State_Vec_DMM           = cuda_profugus::RTK_State_Vector_DMM;
 
 //---------------------------------------------------------------------------//
 // CORE
@@ -38,6 +40,7 @@ void heuristic_kernel(
     unsigned long   *dseeds,
     curandState_t   *rngs,
     Device_Geometry *geometry,
+    State_Vec        states,
     int             *bins)
 {
     // Get the thread id
@@ -52,7 +55,6 @@ void heuristic_kernel(
     // geometry variables
     double       costheta, sintheta, phi;
     Space_Vector r, omega;
-    State        state;
 
     double two_pi = 6.283185307179586;
 
@@ -74,28 +76,29 @@ void heuristic_kernel(
         omega[2] = costheta;
 
         // initialize track
-        geometry->initialize(r, omega, state);
+        geometry->initialize(r, omega, states, tid);
 
-        while (geometry->boundary_state(state) == profugus::geometry::INSIDE)
+        while (geometry->boundary_state(states, tid) ==
+               profugus::geometry::INSIDE)
         {
             // get distance-to-boundary
-            geometry->distance_to_boundary(state);
+            geometry->distance_to_boundary(states, tid);
 
             // update position of particle and cross the surface
-            geometry->move_to_surface(state);
+            geometry->move_to_surface(states, tid);
         }
 
-        if (state.escaping_face == State::MINUS_X)
+        if (states.escaping_face(tid) == State::MINUS_X)
             ++bins[0 + 6 * tid];
-        else if (state.escaping_face == State::PLUS_X)
+        else if (states.escaping_face(tid) == State::PLUS_X)
             ++bins[1 + 6 * tid];
-        else if (state.escaping_face == State::MINUS_Y)
+        else if (states.escaping_face(tid) == State::MINUS_Y)
             ++bins[2 + 6 * tid];
-        else if (state.escaping_face == State::PLUS_Y)
+        else if (states.escaping_face(tid) == State::PLUS_Y)
             ++bins[3 + 6 * tid];
-        else if (state.escaping_face == State::MINUS_Z)
+        else if (states.escaping_face(tid) == State::MINUS_Z)
             ++bins[4 + 6 * tid];
-        else if (state.escaping_face == State::PLUS_Z)
+        else if (states.escaping_face(tid) == State::PLUS_Z)
             ++bins[5 + 6 * tid];
     }
 }
@@ -107,6 +110,7 @@ void reflecting_kernel(
     unsigned long   *dseeds,
     curandState_t   *rngs,
     Device_Geometry *geometry,
+    State_Vec        states,
     int             *face_bin,
     int             *refl_bin)
 {
@@ -122,7 +126,6 @@ void reflecting_kernel(
     // geometry variables
     double       costheta, sintheta, phi;
     Space_Vector r, omega;
-    State        state;
 
     double two_pi = 6.283185307179586;
 
@@ -144,7 +147,7 @@ void reflecting_kernel(
         omega[2] = costheta;
 
         // initialize track
-        geometry->initialize(r, omega, state);
+        geometry->initialize(r, omega, states, tid);
 
         // continue flag
         bool done = false;
@@ -152,49 +155,51 @@ void reflecting_kernel(
         while (!done)
         {
             // get distance-to-boundary
-            geometry->distance_to_boundary(state);
+            geometry->distance_to_boundary(states, tid);
 
             // update position of particle to the surface and process it through
-            geometry->move_to_surface(state);
+            geometry->move_to_surface(states, tid);
 
             // if the particle is reflected then do the reflection
-            if (geometry->boundary_state(state) == profugus::geometry::REFLECT)
+            if (geometry->boundary_state(states, tid) ==
+                profugus::geometry::REFLECT)
             {
-                if (state.exiting_face == State::MINUS_X)
+                if (states.exiting_face(tid) == State::MINUS_X)
                     ++refl_bin[0 + 6 * tid];
-                else if (state.exiting_face == State::PLUS_X)
+                else if (states.exiting_face(tid) == State::PLUS_X)
                     ++refl_bin[1 + 6 * tid];
-                else if (state.exiting_face == State::MINUS_Y)
+                else if (states.exiting_face(tid) == State::MINUS_Y)
                     ++refl_bin[2 + 6 * tid];
-                else if (state.exiting_face == State::PLUS_Y)
+                else if (states.exiting_face(tid) == State::PLUS_Y)
                     ++refl_bin[3 + 6 * tid];
-                else if (state.exiting_face == State::MINUS_Z)
+                else if (states.exiting_face(tid) == State::MINUS_Z)
                     ++refl_bin[4 + 6 * tid];
-                else if (state.exiting_face == State::PLUS_Z)
+                else if (states.exiting_face(tid) == State::PLUS_Z)
                     ++refl_bin[5 + 6 * tid];
 
                 // reflect the particle
-                geometry->reflect(state);
+                geometry->reflect(states, tid);
             }
 
             // terminate on escape
-            if (geometry->boundary_state(state) == profugus::geometry::OUTSIDE)
+            if (geometry->boundary_state(states, tid) ==
+                profugus::geometry::OUTSIDE)
             {
                 done = true;
             }
         }
 
-        if (state.escaping_face == State::MINUS_X)
+        if (states.escaping_face(tid) == State::MINUS_X)
             ++face_bin[0 + 6 * tid];
-        else if (state.escaping_face == State::PLUS_X)
+        else if (states.escaping_face(tid) == State::PLUS_X)
             ++face_bin[1 + 6 * tid];
-        else if (state.escaping_face == State::MINUS_Y)
+        else if (states.escaping_face(tid) == State::MINUS_Y)
             ++face_bin[2 + 6 * tid];
-        else if (state.escaping_face == State::PLUS_Y)
+        else if (states.escaping_face(tid) == State::PLUS_Y)
             ++face_bin[3 + 6 * tid];
-        else if (state.escaping_face == State::MINUS_Z)
+        else if (states.escaping_face(tid) == State::MINUS_Z)
             ++face_bin[4 + 6 * tid];
-        else if (state.escaping_face == State::PLUS_Z)
+        else if (states.escaping_face(tid) == State::PLUS_Z)
             ++face_bin[5 + 6 * tid];
     }
 }
@@ -221,11 +226,15 @@ void Core::heuristic()
     // Testing data
     thrust::device_vector<int> bins(num_threads * num_blocks * 6, 0);
 
+    State_Vec_DMM states;
+    states.initialize(num_blocks*num_threads);
+
     dim3 blocks  = {num_blocks};
     dim3 threads = {num_threads};
     heuristic_kernel<<<blocks,threads>>>(dseeds.data().get(),
                                          rngs.data().get(),
                                          device_geo.get_device_ptr(),
+                                         states.device_instance(),
                                          bins.data().get());
     cudaDeviceSynchronize();
 
@@ -309,11 +318,15 @@ void Core::reflecting()
     thrust::device_vector<int> face_bins(num_threads * num_blocks * 6, 0);
     thrust::device_vector<int> refl_bins(num_threads * num_blocks * 6, 0);
 
+    State_Vec_DMM states;
+    states.initialize(num_blocks*num_threads);
+
     dim3 blocks  = {num_blocks};
     dim3 threads = {num_threads};
     reflecting_kernel<<<blocks,threads>>>(dseeds.data().get(),
                                           rngs.data().get(),
                                           device_geo.get_device_ptr(),
+                                          states.device_instance(),
                                           face_bins.data().get(),
                                           refl_bins.data().get());
 

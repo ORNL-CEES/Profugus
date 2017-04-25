@@ -37,7 +37,7 @@ class RTK_State_Vector_AOS
   private:
 
     // >>> DATA
-    State_Vector d_states;
+    State_View d_states;
 
   public:
 

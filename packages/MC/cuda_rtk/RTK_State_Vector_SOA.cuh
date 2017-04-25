@@ -76,6 +76,7 @@ class RTK_State_Vector_SOA
         Int_View            next_face,
         Double_View         dist_to_next_region)
       : d_r(r)
+      , d_dir(dir)
       , d_exiting_face(exiting_face)
       , d_escaping_face(escaping_face)
       , d_reflecting_face(reflecting_face)
