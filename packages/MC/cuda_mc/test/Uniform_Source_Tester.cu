@@ -42,9 +42,9 @@ __global__ void compute_source_kernel( Uniform_Src       source,
 
          source.build_particle(tid,&rng,particles);
 
-         auto geo_state = particles.geo_state(tid);
-         pts[tid]  = geo_state.d_r;
-         dirs[tid] = geo_state.d_dir;
+         auto geo_states = particles.geo_states();
+         pts[tid]  = geo_states.pos(tid);
+         dirs[tid] = geo_states.dir(tid);
      }
 }
 
@@ -59,9 +59,9 @@ __global__ void extract_data( Particle_Vector_t   parts,
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < N )
     {
-        auto geo_state = parts.geo_state(tid);
-        pts[tid]  = geo_state.d_r;
-        dirs[tid] = geo_state.d_dir;
+        auto geo_states = parts.geo_states();
+        pts[tid]  = geo_states.pos(tid);
+        dirs[tid] = geo_states.dir(tid);
     }
 }
 

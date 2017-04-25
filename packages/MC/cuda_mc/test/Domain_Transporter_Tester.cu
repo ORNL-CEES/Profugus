@@ -46,7 +46,9 @@ __global__ void test_transport_kernel( Uniform_Src       *source,
          source->build_particle(tid,&rng_state,particles);
 
          // Transport particle
-         trans->transport(tid,particles);
+         while (particles.event(tid) == profugus::events::COLLISION ||
+                particles.event(tid) == profugus::events::BOUNDARY)
+             trans->transport(tid,particles);
 
          // Get final event
          events[tid] = particles.event(tid);
@@ -115,6 +117,11 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
     REQUIRE( cudaGetLastError() == cudaSuccess );
 
     thrust::host_vector<int> host_events = device_events;
+
+    std::cout << "Events: ";
+    for (auto e : host_events)
+        std::cout << e << " ";
+    std::cout << std::endl;
 
     int num_absorptions = std::count_if(host_events.begin(),host_events.end(),
             [](int e){return e == profugus::events::ABSORPTION;});

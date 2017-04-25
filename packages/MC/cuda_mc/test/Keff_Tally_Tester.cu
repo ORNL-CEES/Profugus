@@ -55,7 +55,7 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
         // Direction doesn't matter
         Space_Vector dir = {1.0, 0.0, 0.0};
 
-        geom->initialize(pos,dir,particles.geo_state(tid));
+        geom->initialize(pos,dir,particles.geo_states(),tid);
 
         // Tally with step length of 1.0
         tally->accumulate(1.0,tid,particles);
@@ -65,7 +65,7 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
         pos[J] = curand_uniform_double(&rng_state);
         pos[K] = curand_uniform_double(&rng_state);
 
-        geom->initialize(pos,dir,particles.geo_state(tid));
+        geom->initialize(pos,dir,particles.geo_states(),tid);
 
         // Tally with step length of 0.5
         tally->accumulate(0.5,tid,particles);

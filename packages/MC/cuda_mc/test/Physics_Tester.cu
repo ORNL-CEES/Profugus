@@ -68,8 +68,8 @@ __global__ void test_collide_kernel( Geom               *geom,
          // Initialize geo state
          Space_Vector pos = {0.25, 0.75, 0.60};
          Space_Vector dir = {1.0, 0.0, 0.0};
-         geom->initialize(pos,dir,particles.geo_state(tid));
-         particles.set_matid(tid,geom->matid(particles.geo_state(tid)));
+         geom->initialize(pos,dir,particles.geo_states(),tid);
+         particles.set_matid(tid,geom->matid(particles.geo_states(),tid));
 
          // Collide
          phys->collide(tid,particles);
