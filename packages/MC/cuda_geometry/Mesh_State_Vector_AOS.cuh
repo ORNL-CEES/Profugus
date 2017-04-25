@@ -31,6 +31,8 @@ class Mesh_State_Vector_AOS
     //@{
     //! Typedefs
     typedef cuda::Device_View_Field<Mesh_State> State_View;
+    typedef cuda_utils::Coordinates             Coordinates;
+    typedef cuda_utils::Space_Vector            Space_Vector;
     //@}
 
   private:

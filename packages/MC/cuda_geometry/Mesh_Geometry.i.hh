@@ -45,7 +45,6 @@ __device__ void Mesh_Geometry::initialize(
 
     update_state(state_vector,pid);
 
-
     DEVICE_ENSURE(state_vector.ijk(pid)[I] >= -1 &&
                   state_vector.ijk(pid)[I] <= d_mesh.num_cells_along(I));
     DEVICE_ENSURE(state_vector.ijk(pid)[J] >= -1 &&

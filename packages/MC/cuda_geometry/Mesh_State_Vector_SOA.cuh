@@ -62,7 +62,7 @@ class Mesh_State_Vector_SOA
       : d_ijk(ijk)
       , d_r(r)
       , d_dir(dir)
-      , d_next_ijk(ijk)
+      , d_next_ijk(next_ijk)
       , d_next_dist(next_dist)
       , d_exiting_face(exiting_face)
       , d_reflecting_face(reflecting_face)

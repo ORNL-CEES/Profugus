@@ -14,6 +14,7 @@
 #include "cuda_utils/CudaDBC.hh"
 
 #include "../Mesh_Geometry.hh"
+#include "../Mesh_State_Vector.cuh"
 #include "Mesh_Geometry_Tester.hh"
 
 typedef profugus::geometry::cell_type       cell_type;
@@ -23,93 +24,96 @@ typedef cuda_utils::Coordinates             Coords;
 typedef cuda_profugus::Mesh_Geometry        Mesh_Geometry;
 typedef cuda_profugus::Mesh_Geometry_DMM    Mesh_Geometry_DMM;
 
+using cuda_profugus::Mesh_State_Vector;
+using cuda_profugus::Mesh_State_Vector_DMM;
+
 // Compute the matid for particle at each specified spatial location
-__global__ void compute_matids_kernel(Mesh_Geometry   mesh,
-                                      int             num_points,
-                                      const Point    *points,
-                                      int            *matids)
+__global__ void compute_matids_kernel(Mesh_Geometry     mesh,
+                                      Mesh_State_Vector states,
+                                      int               num_points,
+                                      const Point      *points,
+                                      int              *matids)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
     {
         // Create and initialize state on each thread
         // We're only testing matids so direction doesn't matter
-        cuda_profugus::Mesh_State state;
         Point dir = {1.0, 0.0, 0.0};
-        mesh.initialize(points[tid],dir,state);
+        mesh.initialize(points[tid],dir,states,tid);
 
         // Get matid
-        matids[tid] = mesh.matid(state);
+        matids[tid] = mesh.matid(states,tid);
     }
 }
 
 // Compute the distance to boundary
-__global__ void distance_kernel(Mesh_Geometry   mesh,
-                                int             num_points,
-                                const Point    *points,
-                                        const Point    *dirs,
-                                        double         *distances,
-                                        Coords         *next_ijk)
+__global__ void distance_kernel(Mesh_Geometry     mesh,
+                                Mesh_State_Vector states,
+                                int               num_points,
+                                const Point      *points,
+                                const Point      *dirs,
+                                double           *distances,
+                                Coords           *next_ijk)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
     {
         // Create and initialize state on each thread
-        cuda_profugus::Mesh_State state;
-        mesh.initialize(points[tid],dirs[tid],state);
+        mesh.initialize(points[tid],dirs[tid],states,tid);
 
-        distances[tid] = mesh.distance_to_boundary(state);
-        next_ijk[tid] = state.next_ijk;
+        distances[tid] = mesh.distance_to_boundary(states,tid);
+        next_ijk[tid] = states.next_ijk(tid);
     }
 }
 
 // Compute the distance to boundary
-__global__ void move_to_surf_kernel(Mesh_Geometry   mesh,
-                                    int             num_points,
-                                    const Point    *points,
-                                    const Point    *dirs,
-                                    Coords         *ijk)
+__global__ void move_to_surf_kernel(Mesh_Geometry     mesh,
+                                    Mesh_State_Vector states,
+                                    int               num_points,
+                                    const Point      *points,
+                                    const Point      *dirs,
+                                    Coords           *ijk)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
     {
         // Create and initialize state on each thread
-        cuda_profugus::Mesh_State state;
-        mesh.initialize(points[tid],dirs[tid],state);
+        mesh.initialize(points[tid],dirs[tid],states,tid);
 
-        mesh.distance_to_boundary(state);
-        mesh.move_to_surface(state);
-        ijk[tid] = state.ijk;
+        mesh.distance_to_boundary(states,tid);
+        mesh.move_to_surface(states,tid);
+        ijk[tid] = states.ijk(tid);
     }
 }
 
 // Compute the distance to boundary
-__global__ void reflect_kernel(Mesh_Geometry   mesh,
-                               int             num_points,
-                               const Point    *points,
-                               const Point    *dirs_in,
-                               int            *reflected,
-                               Point          *dirs_out,
-                               Coords         *ijk_out,
-                               int            *exit_face,
-                               int            *refl_face)
+__global__ void reflect_kernel(Mesh_Geometry     mesh,
+                               Mesh_State_Vector states,
+                               int               num_points,
+                               const Point      *points,
+                               const Point      *dirs_in,
+                               int              *reflected,
+                               Point            *dirs_out,
+                               Coords           *ijk_out,
+                               int              *exit_face,
+                               int              *refl_face)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     if( tid < num_points )
     {
         // Create and initialize state on each thread
-        cuda_profugus::Mesh_State state;
-        mesh.initialize(points[tid],dirs_in[tid],state);
+        mesh.initialize(points[tid],dirs_in[tid],states,tid);
 
         // Move particle to boundary and reflect
-        mesh.distance_to_boundary(state);
-        mesh.move_to_surface(state);
-        reflected[tid] = mesh.reflect(state);
+        mesh.distance_to_boundary(states,tid);
+        mesh.move_to_surface(states,tid);
+        reflected[tid] = mesh.reflect(states,tid);
 
-        dirs_out[tid] = state.d_dir;
-        ijk_out[tid]  = state.ijk;
-        exit_face[tid] = state.exiting_face;
-        refl_face[tid] = state.reflecting_face;
+        dirs_out[tid] = states.dir(tid);
+        ijk_out[tid]  = states.ijk(tid);
+        exit_face[tid] = states.exiting_face(tid);
+        refl_face[tid] = states.reflecting_face(tid);
     }
 }
 
@@ -181,9 +185,14 @@ void Mesh_Geometry_Tester::test_matid()
     thrust::device_vector<Point> device_points(host_points);
     thrust::device_vector<int> device_cell_matids(num_points);
 
+    // Build states
+    Mesh_State_Vector_DMM state_vec;
+    state_vec.initialize(num_points);
+
     // Execute kernel
     compute_matids_kernel<<<1,num_points>>>(
              mesh->device_instance(),
+             state_vec.device_instance(),
              num_points,
              device_points.data().get(),
              device_cell_matids.data().get());
@@ -228,9 +237,14 @@ void Mesh_Geometry_Tester::test_dist_to_bdry()
     thrust::device_vector<double> device_distances(num_points);
     thrust::device_vector<Coords> device_coords(num_points);
 
+    // Build states
+    Mesh_State_Vector_DMM state_vec;
+    state_vec.initialize(num_points);
+
     // Execute kernel
     distance_kernel<<<1,num_points>>>(
              mesh->device_instance(),
+             state_vec.device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs.data().get(),
@@ -285,9 +299,14 @@ void Mesh_Geometry_Tester::test_move_to_surf()
     thrust::device_vector<Point> device_dirs(host_dirs);
     thrust::device_vector<Coords> device_coords(num_points);
 
+    // Build states
+    Mesh_State_Vector_DMM state_vec;
+    state_vec.initialize(num_points);
+
     // Execute kernel
     move_to_surf_kernel<<<1,num_points>>>(
              mesh->device_instance(),
+             state_vec.device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs.data().get(),
@@ -356,9 +375,14 @@ void Mesh_Geometry_Tester::test_reflect()
     thrust::device_vector<int> device_refl_face(num_points);
     thrust::device_vector<int> device_reflected(num_points);
 
+    // Build states
+    Mesh_State_Vector_DMM state_vec;
+    state_vec.initialize(num_points);
+
     // Execute kernel
     reflect_kernel<<<1,num_points>>>(
              mesh->device_instance(),
+             state_vec.device_instance(),
              num_points,
              device_points.data().get(),
              device_dirs_in.data().get(),
