@@ -11,7 +11,7 @@
 #ifndef MC_cuda_mc_Particle_Vector_cuh
 #define MC_cuda_mc_Particle_Vector_cuh
 
-#define USE_AOS 0
+#define USE_AOS 1
 
 #if USE_AOS
 

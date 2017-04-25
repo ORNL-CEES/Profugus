@@ -35,9 +35,6 @@ void Domain_Transporter<Geometry>::transport(int                pid,
     DEVICE_REQUIRE(d_physics);
     DEVICE_REQUIRE(particles.alive(pid));
 
-    // particle state
-    Geo_State_t &geo_state = particles.geo_state(pid);
-
     Step_Selector step;
     double dist_mfp, dist_col, dist_bnd, xs_tot;
 
@@ -85,7 +82,8 @@ void Domain_Transporter<Geometry>::transport(int                pid,
             step.initialize(dist_col, profugus::events::COLLISION);
 
             // calculate distance to next geometry boundary
-            dist_bnd = d_geometry->distance_to_boundary(geo_state);
+            dist_bnd = d_geometry->distance_to_boundary(particles.geo_states(),
+                                                        pid);
             step.submit(dist_bnd, profugus::events::BOUNDARY);
 
             // set the next event in the particle
@@ -134,10 +132,10 @@ Domain_Transporter<Geometry>::process_boundary(
     // return if not a boundary event
 
     // move a particle to the surface and process the event through the surface
-    d_geometry->move_to_surface(particles.geo_state(pid));
+    d_geometry->move_to_surface(particles.geo_states(),pid);
 
     // get the in/out state of the particle
-    int state = d_geometry->boundary_state(particles.geo_state(pid));
+    int state = d_geometry->boundary_state(particles.geo_states(),pid);
 
     // process the boundary crossing based on the geometric state of the
     // particle
@@ -155,7 +153,7 @@ Domain_Transporter<Geometry>::process_boundary(
         case profugus::geometry::REFLECT:
         {
             // the particle has hit a reflecting surface
-            bool reflected = d_geometry->reflect(particles.geo_state(pid));
+            bool reflected = d_geometry->reflect(particles.geo_states(),pid);
             DEVICE_CHECK(reflected);
 
             DEVICE_ENSURE(particles.event(pid) == profugus::events::BOUNDARY);
@@ -166,7 +164,7 @@ Domain_Transporter<Geometry>::process_boundary(
             // otherwise the particle is at an internal geometry boundary;
             // update the material id of the region the particle has entered
             particles.set_matid(pid,
-                                d_geometry->matid(particles.geo_state(pid)));
+                                d_geometry->matid(particles.geo_states(),pid));
 
             // add variance reduction at surface crossings
             if( d_vr )
@@ -192,7 +190,7 @@ Domain_Transporter<Geometry>::process_collision(int                pid,
     DEVICE_REQUIRE(particles.event(pid) == profugus::events::COLLISION);
 
     // move the particle to the collision site
-    d_geometry->move_to_point(dist, particles.geo_state(pid));
+    d_geometry->move_to_point(dist, particles.geo_states(),pid);
 
     // sample fission sites
     if (d_sample_fission_sites)
@@ -206,7 +204,7 @@ Domain_Transporter<Geometry>::process_collision(int                pid,
             // Create fission site
             Fission_Site site;
             site.m = particles.matid(pid);
-            site.r = d_geometry->position(particles.geo_state(pid));
+            site.r = d_geometry->position(particles.geo_states(),pid);
 
             // Get index of first site to be written using an atomic
             int offset = atomicAdd(d_num_fission_sites,num_sites);

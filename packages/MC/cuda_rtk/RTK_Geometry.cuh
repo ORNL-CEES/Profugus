@@ -38,11 +38,12 @@ class RTK_Geometry
 {
   public:
     //@{
-    using Array_t            = Core_Array;
-    using Geo_State_t        = RTK_State;
-    using Geo_State_Vector_t = RTK_State_Vector;
-    using Space_Vector       = Geo_State_t::Space_Vector;
-    using Boundary_State     = profugus::geometry::Boundary_State;
+    using Array_t                = Core_Array;
+    using Geo_State_t            = RTK_State;
+    using Geo_State_Vector_t     = RTK_State_Vector;
+    using Geo_State_Vector_DMM_t = RTK_State_Vector_DMM;
+    using Space_Vector           = Geo_State_t::Space_Vector;
+    using Boundary_State         = profugus::geometry::Boundary_State;
     //@}
 
   private:
@@ -65,7 +66,7 @@ class RTK_Geometry
     // Initialize a track.
     __device__
     inline void initialize(const Space_Vector &r, const Space_Vector &direction,
-                           Geo_State_Vector_t &state_vector) const;
+                           Geo_State_Vector_t &state_vector, int pid) const;
 
     //! Get distance to next boundary.
     __device__
@@ -79,7 +80,7 @@ class RTK_Geometry
 
     //! Move to and cross a cell surface.
     __device__
-    void move_to_surface(Geo_State_Vector_t &state_vector, pid) const
+    void move_to_surface(Geo_State_Vector_t &state_vector, int pid) const
     {
         // move the particle
         move(state_vector.dist_to_next_region(pid), state_vector, pid);
@@ -90,13 +91,13 @@ class RTK_Geometry
 
     //! Move the particle to a point in the current direction.
     __device__
-    void move_to_point(double d, Geo_State_Vector_t &state_vector, pid) const
+    void move_to_point(double d, Geo_State_Vector_t &state_vector, int pid) const
     {
         // move the particle
         move(d, state_vector, pid);
 
         // update the array state_vector to clear any surface tags
-        d_array.update_state_vector(state_vector, pid);
+        d_array.update_state(state_vector, pid);
     }
 
     //! Return the current material ID.

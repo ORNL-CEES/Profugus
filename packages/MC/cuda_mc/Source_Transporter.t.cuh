@@ -192,7 +192,7 @@ struct GetCell
     {
         int pid = d_indirection[tid];
         if (d_particles.alive(pid))
-            d_cells[tid] = d_geometry->cell(d_particles.geo_state(pid));
+            d_cells[tid] = d_geometry->cell(d_particles.geo_states(),pid);
         else
             d_cells[tid] = INT_MAX;
     }

@@ -52,6 +52,7 @@ class Mesh_Geometry
     typedef cuda_utils::Space_Vector              Space_Vector;
     typedef Mesh_State                            Geo_State_t;
     typedef Mesh_State_Vector                     Geo_State_Vector_t;
+    typedef Mesh_State_Vector_DMM                 Geo_State_Vector_DMM_t;
     typedef cuda::const_Device_View_Field<int>    Int_View;
     typedef cuda::const_Device_View_Field<double> Double_View;
 
@@ -73,11 +74,12 @@ class Mesh_Geometry
                                             int                  pid) const;
 
     //! Get distance to next boundary
-    __device__ inline double distance_to_boundary(Geo_State_Vectort& state_vector,
-                                                  int                pid) const;
+    __device__ inline double distance_to_boundary(
+        Geo_State_Vector_t& state_vector, int pid) const;
 
     //! Move to and cross a surface in the current direction.
-    __device__ void move_to_surface(Geo_State_Vector_t& state, int pid) const
+    __device__ void move_to_surface(Geo_State_Vector_t& state_vector,
+                                    int                 pid) const
     {
         move(state_vector.next_dist(pid), state_vector, pid);
 
@@ -88,9 +90,9 @@ class Mesh_Geometry
         const int num_cells_z = d_mesh.num_cells_along(K);
 
         constexpr int face_start = Geo_State_t::MINUS_X;
-        auto& exiting_face    = state.exiting_face(pid);
-        auto& reflecting_face = state.reflecting_face(pid);
-        auto& next_ijk = state.next_ijk(pid);
+        auto& exiting_face    = state_vector.exiting_face(pid);
+        auto& reflecting_face = state_vector.reflecting_face(pid);
+        auto& next_ijk = state_vector.next_ijk(pid);
         exiting_face    = Geo_State_t::NONE;
         reflecting_face = Geo_State_t::NONE;
         if( next_ijk[I] < 0 )
@@ -132,7 +134,7 @@ class Mesh_Geometry
 
         // If we're not reflecting, update cell index
         if( reflecting_face == Geo_State_t::NONE )
-            state_vector.ijk(pid) = state.next_ijk(pid);
+            state_vector.ijk(pid) = state_vector.next_ijk(pid);
     }
 
     //! Move a distance \e d to a point in the current direction.
@@ -155,7 +157,8 @@ class Mesh_Geometry
     __device__ cell_type cell(const Geo_State_Vector_t& state_vector,
                               int                       pid) const
     {
-        DEVICE_REQUIRE(boundary_state(state) != profugus::geometry::OUTSIDE);
+        DEVICE_REQUIRE(boundary_state(state_vector,pid) !=
+                       profugus::geometry::OUTSIDE);
 
         using def::I; using def::J; using def::K;
         cell_type c = num_cells();
@@ -176,7 +179,7 @@ class Mesh_Geometry
 
     //! Return the state with respect to outer geometry boundary
     __device__ profugus::geometry::Boundary_State boundary_state(
-        const Geo_State_Vectort& state_vector, int pid) const
+        const Geo_State_Vector_t& state_vector, int pid) const
     {
         using def::I; using def::J; using def::K;
 
@@ -263,7 +266,7 @@ class Mesh_Geometry
 
         DEVICE_REQUIRE(dist >= 0.0);
         DEVICE_REQUIRE(cuda::utility::soft_equiv(
-                       cuda::utility::vector_magnitude(dir, 1.0, 1.0e-6));
+                       cuda::utility::vector_magnitude(dir), 1.0, 1.0e-6));
 
         // advance the particle
         for (int dim : {I, J, K})

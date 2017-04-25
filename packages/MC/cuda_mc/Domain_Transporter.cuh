@@ -48,7 +48,6 @@ class Domain_Transporter
     typedef Geometry                                   Geometry_t;
     typedef Physics<Geometry_t>                        Physics_t;
     typedef cuda_utils::Space_Vector                   Space_Vector;
-    typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef Particle_Vector<Geometry_t>                Particle_Vector_t;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
@@ -149,7 +148,6 @@ class Domain_Transporter_DMM :
     typedef Geometry                                   Geometry_t;
     typedef Physics<Geometry_t>                        Physics_t;
     typedef cuda_utils::Space_Vector                   Space_Vector;
-    typedef typename Geometry_t::Geo_State_t           Geo_State_t;
     typedef VR_Roulette<Geometry_t>                    VR_Roulette_t;
     typedef Tallier<Geometry_t>                        Tallier_t;
     typedef Teuchos::RCP<Teuchos::ParameterList>       RCP_Std_DB;

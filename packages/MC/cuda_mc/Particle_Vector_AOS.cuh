@@ -32,23 +32,27 @@ class Particle_Vector_AOS
   public:
     //@{
     //! Typedefs
-    typedef cuda_utils::Space_Vector            Space_Vector;
-    typedef profugus::events::Event             Event_Type;
-    typedef typename Geometry::Geo_State_t      Geo_State_t;
-    typedef Particle<Geometry>                  Particle_t;
-    typedef cuda::Device_View_Field<Particle_t> Particle_View;
+    typedef cuda_utils::Space_Vector                Space_Vector;
+    typedef profugus::events::Event                 Event_Type;
+    typedef typename Geometry::Geo_State_Vector_t   Geo_State_Vector_t;
+    typedef Particle<Geometry>                      Particle_t;
+    typedef cuda::Device_View_Field<Particle_t>     Particle_View;
     //@}
 
   private:
 
     // >>> DATA
-    Particle_View d_particles;
+    Particle_View       d_particles;
+    Geo_State_Vector_t  d_geo_state_vec;
+    
 
   public:
 
     // Constructor
-    Particle_Vector_AOS(Particle_View particles)
+    Particle_Vector_AOS(Particle_View      particles,
+                        Geo_State_Vector_t geo_states)
       : d_particles(particles)
+      , d_geo_state_vec(geo_states)
     {
     }
 
@@ -115,15 +119,13 @@ class Particle_Vector_AOS
 
     //@{
     //! Get a handle to the geometric state of the particle.
-    __device__ Geo_State_t& geo_state(int ind)
+    __device__ Geo_State_Vector_t& geo_states()
     {
-        DEVICE_REQUIRE(ind < d_particles.size());
-        return d_particles[ind].geo_state();
+        return d_geo_state_vec;
     }
-    __device__ const Geo_State_t& geo_state(int ind) const
+    __device__ const Geo_State_Vector_t& geo_states() const
     {
-        DEVICE_REQUIRE(ind < d_particles.size());
-        return d_particles[ind].geo_state();
+        return d_geo_state_vec;
     }
     //@}
 
@@ -181,8 +183,10 @@ class Particle_Vector_AOS_DMM :
 {
   public:
 
-    typedef Particle_Vector_AOS<Geometry> Particle_Vector_AOS_t;
-    typedef Particle<Geometry>            Particle_t;
+    typedef Particle_Vector_AOS<Geometry>             Particle_Vector_AOS_t;
+    typedef Particle<Geometry>                        Particle_t;
+    typedef typename Geometry::Geo_State_Vector_t     Geo_State_Vector_t;
+    typedef typename Geometry::Geo_State_Vector_DMM_t Geo_State_Vector_DMM_t;
 
     // Constructor
     Particle_Vector_AOS_DMM(){}
@@ -193,7 +197,8 @@ class Particle_Vector_AOS_DMM :
     // Memory manager interface
     Particle_Vector_AOS_t device_instance()
     {
-        return Particle_Vector_AOS_t(cuda::make_view(d_particles));
+        return Particle_Vector_AOS_t(cuda::make_view(d_particles),
+                                     d_geo_state_vec_dmm.device_instance());
     }
 
     // Initialize vector for specified number of states
@@ -201,11 +206,13 @@ class Particle_Vector_AOS_DMM :
     {
         REQUIRE(num_states > 0);
         d_particles.resize(num_states);
+        d_geo_state_vec_dmm.initialize(num_states);
     }
 
   private:
 
     thrust::device_vector<Particle_t> d_particles;
+    Geo_State_Vector_DMM_t            d_geo_state_vec_dmm;
 
 };
 

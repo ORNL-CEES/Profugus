@@ -57,7 +57,6 @@ class Physics
     //@{
     //! Useful typedefs.
     typedef Geometry                            Geometry_t;
-    typedef typename Geometry_t::Geo_State_t    Geo_State_t;
     typedef Particle_Vector<Geometry_t>         Particle_Vector_t;
     typedef cuda::Shared_Device_Ptr<Geometry_t> SDP_Geometry;
     typedef cuda_profugus::XS_Device            XS_Dev_t;

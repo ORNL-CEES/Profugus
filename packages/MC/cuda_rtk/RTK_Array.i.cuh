@@ -36,7 +36,9 @@ void RTK_Array<T>::initialize(
     state_vector.reflecting_face(pid) = Geo_State_t::NONE;
     state_vector.face(pid)            = Geo_State_t::NONE;
     state_vector.region(pid)          = Geo_State_t::NONE;
-    state_vector.exiting_level(pid)   = {0, 0, 0};
+    state_vector.exiting_level(pid,0) = 0;
+    state_vector.exiting_level(pid,1) = 0;
+    state_vector.exiting_level(pid,2) = 0;
 
     // find the object that this point is in
     int id = d_layout[find_object(r, state_vector, pid)];
@@ -104,7 +106,9 @@ void RTK_Array<T>::cross_surface(
     using def::X; using def::Y; using def::Z;
 
     // initialize exiting level flag
-    state_vector.exiting_level(pid) = {0, 0, 0};
+    state_vector.exiting_level(pid,0) = 0;
+    state_vector.exiting_level(pid,1) = 0;
+    state_vector.exiting_level(pid,2) = 0;
 
     // determine the surface crossings in each level
     determine_boundary_crossings(state_vector, pid);
@@ -113,13 +117,13 @@ void RTK_Array<T>::cross_surface(
     // correctly set
     if (state_vector.exiting_face(pid) == Geo_State_t::INTERNAL)
     {
-        DEVICE_CHECK(!state_vector.exiting_level(pid)[d_level]);
+        DEVICE_CHECK(!state_vector.exiting_level(pid,d_level));
         return;
     }
 
     // update all of the downstream levels state assuming we haven't left the
     // geometry
-    else if (!state_vector.exiting_level(pid)[d_level])
+    else if (!state_vector.exiting_level(pid,d_level))
     {
         update_coordinates(r, state_vector, pid);
     }
@@ -127,7 +131,7 @@ void RTK_Array<T>::cross_surface(
     // otherwise, the particle has escaped the geometry, record the state
     else
     {
-        DEVICE_CHECK(state_vector.exiting_level(pid)[d_level]);
+        DEVICE_CHECK(state_vector.exiting_level(pid,d_level));
         DEVICE_CHECK(state_vector.exiting_face(pid) > Geo_State_t::INTERNAL);
 
         int refl_face_index = state_vector.exiting_face(pid) -
@@ -444,7 +448,7 @@ void RTK_Array<T>::determine_boundary_crossings(
 
     // process particles that cross an array boundary on the previous level,
     // they may cross a boundary at this level as well
-    if (state_vector.exiting_level[d_level - 1])
+    if (state_vector.exiting_level(pid,d_level - 1))
     {
         switch (state_vector.exiting_face(pid))
         {
@@ -493,7 +497,7 @@ void RTK_Array<T>::update_coordinates(
     Space_Vector tr = transform(r, state_vector, pid);
 
     // if the child object has exited the level, then update the coordinates
-    if (state_vector.exiting_level(pid)[d_level - 1])
+    if (state_vector.exiting_level(pid,d_level - 1))
     {
         switch (state_vector.exiting_face(pid))
         {
@@ -537,7 +541,7 @@ template<class T>
 __device__
 void RTK_Array<T>::calc_low_face(
     Geo_State_Vector_t &state_vector,
-    int                 pid
+    int                 pid,
     int                 face_type,
     int                 exiting_face) const
 {
@@ -549,7 +553,7 @@ void RTK_Array<T>::calc_low_face(
     {
         // flag indicating that the particle has crossed the low boundary of
         // this level
-        state_vector.exiting_level(pid)[d_level] = exiting_face;
+        state_vector.exiting_level(pid,d_level) = exiting_face;
     }
 }
 
@@ -561,7 +565,7 @@ template<class T>
 __device__
 void RTK_Array<T>::calc_high_face(
     Geo_State_Vector_t &state_vector,
-    int                 pid
+    int                 pid,
     int                 face_type,
     int                 exiting_face) const
 {
@@ -573,7 +577,7 @@ void RTK_Array<T>::calc_high_face(
     {
         // flag indicating that the particle has crossed the high boundary of
         // this level
-        state_vector.exiting_level(pid)[d_level] = exiting_face;
+        state_vector.exiting_level(pid,d_level) = exiting_face;
     }
 }
 
@@ -707,9 +711,9 @@ inline void RTK_Array<RTK_Cell>::update_coordinates(
     // if we exited the last pin-cell array, set the region coordinates in the
     // new array; for radial entrance (x,y), we must be entering the moderator
     // region
-    if (state_vector(pid).exiting_face != Geo_State_t::INTERNAL)
+    if (state_vector.exiting_face(pid) != Geo_State_t::INTERNAL)
     {
-        DEVICE_CHECK(state_vector(pid).exiting_face != Geo_State_t::NONE);
+        DEVICE_CHECK(state_vector.exiting_face(pid) != Geo_State_t::NONE);
         DEVICE_CHECK(state_vector.region(pid) == Geo_State_t::VESSEL ?
                      object(state_vector, pid).has_vessel() : true);
 

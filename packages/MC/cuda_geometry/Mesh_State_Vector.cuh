@@ -11,32 +11,35 @@
 #ifndef MC_cuda_geometry_Mesh_State_Vector_cuh
 #define MC_cuda_geometry_Mesh_State_Vector_cuh
 
-#define USE_AOS 0
+#define USE_MESH_AOS 0
 
-#if USE_AOS
+#if USE_MESH_AOS
 
-#include "Particle_Vector_AOS.cuh"
+#include "Mesh_State_Vector_AOS.cuh"
 
 namespace cuda_profugus
 {
 
-using Mesh_State_Vector = Mesh_State_Vector_AOS;
+using Mesh_State_Vector     = Mesh_State_Vector_AOS;
+using Mesh_State_Vector_DMM = Mesh_State_Vector_AOS_DMM;
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda_profugus
 
 #else
 
-#include "Particle_Vector_SOA.cuh"
+#include "Mesh_State_Vector_SOA.cuh"
 
 namespace cuda_profugus
 {
 
-using Mesh_State_Vector = Mesh_State_Vector_SOA;
+using Mesh_State_Vector     = Mesh_State_Vector_SOA;
+using Mesh_State_Vector_DMM = Mesh_State_Vector_SOA_DMM;
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda_profugus
 
+#endif // USE_MESH_AOS
 
 //---------------------------------------------------------------------------//
 #endif // MC_cuda_geometry_Mesh_State_Vector_cuh

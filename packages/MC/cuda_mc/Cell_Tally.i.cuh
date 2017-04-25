@@ -31,7 +31,7 @@ __device__ void Cell_Tally<Geometry>::accumulate(
     DEVICE_REQUIRE( particles.alive(pid) );
 
     // Get the cell index
-    int cell = d_geometry->cell(particles.geo_state(pid));
+    int cell = d_geometry->cell(particles.geo_states(),pid);
 
     int ind = cuda::utility::lower_bound( d_cells, 
                                           d_cells+d_num_cells,

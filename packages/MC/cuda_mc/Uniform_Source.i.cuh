@@ -54,10 +54,10 @@ __device__ void Uniform_Source<Geometry>::build_particle(
     r = d_geo_shape->sample(rng);
 
     // intialize the geometry state
-    d_geometry->initialize(r, omega, particles.geo_state(pid));
+    d_geometry->initialize(r, omega, particles.geo_states(),pid);
 
     // get the material id
-    matid = d_geometry->matid(particles.geo_state(pid));
+    matid = d_geometry->matid(particles.geo_states(),pid);
 
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(

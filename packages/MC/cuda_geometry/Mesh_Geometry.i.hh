@@ -66,7 +66,7 @@ double Mesh_Geometry::distance_to_boundary(Geo_State_Vector_t& state_vector,
     using cuda::utility::soft_equiv;
     using cuda::utility::vector_magnitude;
 
-    DEVICE_REQUIRE(soft_equiv(vector_magnitude(state_vector.dir(pid),
+    DEVICE_REQUIRE(soft_equiv(vector_magnitude(state_vector.dir(pid)),
                               1.0, 1.e-5));
 
     const Double_View& edges_x = d_mesh.edges(I);
@@ -178,7 +178,7 @@ bool Mesh_Geometry::reflect(Geo_State_Vector_t& state_vector, int pid) const
         return false;
 
     // get the outward normal
-    Space_Vector n = normal(state);
+    Space_Vector n = normal(state_vector,pid);
 
     // calculate the dot-product of the incoming angle and outward normal
     double dot = dir[I]*n[I] +

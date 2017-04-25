@@ -33,9 +33,9 @@ class Particle_Vector_SOA
   public:
     //@{
     //! Typedefs
-    typedef cuda_utils::Space_Vector            Space_Vector;
-    typedef profugus::events::Event             Event_Type;
-    typedef typename Geometry::Geo_State_t      Geo_State_t;
+    typedef cuda_utils::Space_Vector                Space_Vector;
+    typedef profugus::events::Event                 Event_Type;
+    typedef typename Geometry::Geo_State_Vector_t   Geo_State_Vector_t;
     //@}
 
   private:
@@ -47,7 +47,7 @@ class Particle_Vector_SOA
     cuda::Device_View_Field<RNG_State_t*> d_rngs;
     cuda::Device_View_Field<bool>         d_alive;
     cuda::Device_View_Field<Event_Type>   d_events;
-    cuda::Device_View_Field<Geo_State_t>  d_geo_states;
+    Geo_State_Vector_t                    d_geo_state_vec;
 
   public:
 
@@ -58,14 +58,14 @@ class Particle_Vector_SOA
                         cuda::Device_View_Field<RNG_State_t*> rngs,
                         cuda::Device_View_Field<bool> alive,
                         cuda::Device_View_Field<Event_Type> events,
-                        cuda::Device_View_Field<Geo_State_t> geo_states)
+                        Geo_State_Vector_t geo_state_vec)
       : d_matids(matids)
       , d_groups(groups)
       , d_wts(wts)
       , d_rngs(rngs)
       , d_alive(alive)
       , d_events(events)
-      , d_geo_states(geo_states)
+      , d_geo_state_vec(geo_state_vec)
     {
     }
 
@@ -132,15 +132,13 @@ class Particle_Vector_SOA
 
     //@{
     //! Get a handle to the geometric state of the particle.
-    __device__ Geo_State_t& geo_state(int ind)
+    __device__ Geo_State_Vector_t& geo_states()
     {
-        DEVICE_REQUIRE(ind < d_geo_states.size());
-        return d_geo_states[ind];
+        return d_geo_state_vec;
     }
-    __device__ const Geo_State_t& geo_state(int ind) const
+    __device__ const Geo_State_Vector_t& geo_states() const
     {
-        DEVICE_REQUIRE(ind < d_geo_states.size());
-        return d_geo_states[ind];
+        return d_geo_state_vec;
     }
     //@}
 
@@ -198,9 +196,10 @@ class Particle_Vector_SOA_DMM :
 {
   public:
 
-    typedef Particle_Vector_SOA<Geometry>  Particle_Vector_SOA_t;
-    typedef profugus::events::Event        Event_Type;
-    typedef typename Geometry::Geo_State_t Geo_State_t;
+    typedef Particle_Vector_SOA<Geometry>             Particle_Vector_SOA_t;
+    typedef profugus::events::Event                   Event_Type;
+    typedef typename Geometry::Geo_State_Vector_t     Geo_State_Vector_t;
+    typedef typename Geometry::Geo_State_Vector_DMM_t Geo_State_Vector_DMM_t;
 
     // Constructor
     Particle_Vector_SOA_DMM(){}
@@ -217,7 +216,7 @@ class Particle_Vector_SOA_DMM :
                                      cuda::make_view(d_rngs),
                                      cuda::make_view(d_alive),
                                      cuda::make_view(d_events),
-                                     cuda::make_view(d_geo_states));
+                                     d_geo_states_dmm.device_instance());
     }
 
     // Initialize vector for specified number of states
@@ -230,7 +229,7 @@ class Particle_Vector_SOA_DMM :
         d_rngs.resize(      num_states);
         d_alive.resize(     num_states);
         d_events.resize(    num_states);
-        d_geo_states.resize(num_states);
+        d_geo_states_dmm.initialize(num_states);
     }
 
   private:
@@ -241,7 +240,7 @@ class Particle_Vector_SOA_DMM :
     thrust::device_vector<RNG_State_t*> d_rngs;
     thrust::device_vector<bool>         d_alive;
     thrust::device_vector<Event_Type>   d_events;
-    thrust::device_vector<Geo_State_t>  d_geo_states;
+    Geo_State_Vector_DMM_t              d_geo_states_dmm;
 };
 
 //---------------------------------------------------------------------------//

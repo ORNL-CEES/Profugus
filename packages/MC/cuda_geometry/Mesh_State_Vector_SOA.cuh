@@ -34,7 +34,7 @@ class Mesh_State_Vector_SOA
     typedef cuda::Device_View_Field<int>            Int_View;
     typedef cuda::Device_View_Field<double>         Double_View;
     typedef cuda::Device_View_Field<Coordinates>    Coordinate_View;
-    typedef cuda::Device_View_Field<Coordinates>    Space_Vector_View;
+    typedef cuda::Device_View_Field<Space_Vector>   Space_Vector_View;
     //@}
 
   private:
@@ -178,7 +178,7 @@ class Mesh_State_Vector_SOA_DMM :
     typedef thrust::device_vector<int>          Int_Vector;
     typedef thrust::device_vector<double>       Double_Vector;
     typedef thrust::device_vector<Coordinates>  Coordinate_Vector;
-    typedef thrust::device_vector<Coordinates>  Space_Vector_Vector;
+    typedef thrust::device_vector<Space_Vector> Space_Vector_Vector;
 
     // Constructor
     Mesh_State_Vector_SOA_DMM(){}

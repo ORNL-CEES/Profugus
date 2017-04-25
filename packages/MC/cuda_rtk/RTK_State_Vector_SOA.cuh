@@ -34,7 +34,7 @@ class RTK_State_Vector_SOA
     typedef cuda::Device_View_Field<int>            Int_View;
     typedef cuda::Device_View_Field<double>         Double_View;
     typedef cuda::Device_View_Field<Coordinates>    Coordinate_View;
-    typedef cuda::Device_View_Field<Coordinates>    Space_Vector_View;
+    typedef cuda::Device_View_Field<Space_Vector>   Space_Vector_View;
     //@}
 
   private:
@@ -45,8 +45,8 @@ class RTK_State_Vector_SOA
     Int_View          d_exiting_face;
     Int_View          d_escaping_face;
     Int_View          d_reflecting_face;
-    Coordinate_View   d_level_coord;  // Sized 3x state vector length
-    Coordinate_View   d_exiting_level;
+    Coordinate_View   d_level_coord;   // Sized 3x state vector length
+    Int_View          d_exiting_level; // Sized 3x state vector length
 
     // Pincell stuff
     Int_View    d_region;
@@ -67,7 +67,7 @@ class RTK_State_Vector_SOA
         Int_View            escaping_face,
         Int_View            reflecting_face,
         Coordinate_View     level_coord,
-        Coordinate_View     exiting_level,
+        Int_View            exiting_level,
         Int_View            region,
         Int_View            segment,
         Int_View            face,
@@ -243,13 +243,13 @@ class RTK_State_Vector_SOA
     {
         DEVICE_REQUIRE(pid<size());
         DEVICE_REQUIRE(level<3);
-        return d_exiting_level[pid][level];
+        return d_exiting_level[pid + level*size()];
     }
     __device__ const int& exiting_level(int pid, int level) const 
     {
         DEVICE_REQUIRE(pid<size());
         DEVICE_REQUIRE(level<3);
-        return d_exiting_level[pid][level];
+        return d_exiting_level[pid + level*size()];
     }
 
     // Level coordinates
@@ -288,7 +288,7 @@ class RTK_State_Vector_SOA_DMM :
     typedef thrust::device_vector<int>          Int_Vector;
     typedef thrust::device_vector<double>       Double_Vector;
     typedef thrust::device_vector<Coordinates>  Coordinate_Vector;
-    typedef thrust::device_vector<Coordinates>  Space_Vector_Vector;
+    typedef thrust::device_vector<Space_Vector> Space_Vector_Vector;
 
     // Constructor
     RTK_State_Vector_SOA_DMM(){}
@@ -325,7 +325,7 @@ class RTK_State_Vector_SOA_DMM :
         d_escaping_face.resize(num_states);
         d_reflecting_face.resize(num_states);
         d_level_coord.resize(3*num_states);
-        d_exiting_level.resize(num_states);
+        d_exiting_level.resize(3*num_states);
         d_region.resize(num_states);
         d_segment.resize(num_states);
         d_face.resize(num_states);
@@ -343,8 +343,8 @@ class RTK_State_Vector_SOA_DMM :
     Int_Vector          d_exiting_face;
     Int_Vector          d_escaping_face;
     Int_Vector          d_reflecting_face;
-    Coordinate_Vector   d_level_coord;  // Sized 3x state vector length
-    Coordinate_Vector   d_exiting_level;
+    Coordinate_Vector   d_level_coord;   // Sized 3x state vector length
+    Int_Vector          d_exiting_level; // Sized 3x state vector length
 
     // Pincell stuff
     Int_Vector    d_region;

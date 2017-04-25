@@ -42,7 +42,7 @@ void Physics<Geometry>::collide(int pid, Particle_Vector_t &particles) const
     // get the material id of the current region
     int matid = particles.matid(pid);
     DEVICE_CHECK(matid < d_Nm);
-    DEVICE_CHECK(d_geometry->matid(particles.geo_state(pid)) == matid);
+    DEVICE_CHECK(d_geometry->matid(particles.geo_states(),pid) == matid);
 
     // get the group index
     int group = particles.group(pid);
@@ -100,7 +100,7 @@ void Physics<Geometry>::collide(int pid, Particle_Vector_t &particles) const
         double phi      = 2.0 * cuda::constants::pi * particles.ran(pid);
 
         // update the direction of the particle in the geometry-tracker state
-        d_geometry->change_direction(costheta, phi, particles.geo_state(pid));
+        d_geometry->change_direction(costheta, phi, particles.geo_states(),pid);
     }
 }
 

@@ -11,32 +11,35 @@
 #ifndef MC_cuda_rtk_RTK_State_Vector_cuh
 #define MC_cuda_rtk_RTK_State_Vector_cuh
 
-#define USE_AOS 0
+#define USE_RTK_AOS 0
 
-#if USE_AOS
+#if USE_RTK_AOS
 
-#include "Particle_Vector_AOS.cuh"
+#include "RTK_State_Vector_AOS.cuh"
 
 namespace cuda_profugus
 {
 
-using RTK_State_Vector = RTK_State_Vector_AOS;
+using RTK_State_Vector     = RTK_State_Vector_AOS;
+using RTK_State_Vector_DMM = RTK_State_Vector_AOS_DMM;
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda_profugus
 
 #else
 
-#include "Particle_Vector_SOA.cuh"
+#include "RTK_State_Vector_SOA.cuh"
 
 namespace cuda_profugus
 {
 
-using RTK_State_Vector = RTK_State_Vector_SOA;
+using RTK_State_Vector     = RTK_State_Vector_SOA;
+using RTK_State_Vector_DMM = RTK_State_Vector_SOA_DMM;
 
 //---------------------------------------------------------------------------//
 } // end namespace cuda_profugus
 
+#endif // USE_RTK_AOS
 
 //---------------------------------------------------------------------------//
 #endif // MC_cuda_rtk_RTK_State_Vector_cuh

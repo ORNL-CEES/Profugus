@@ -206,7 +206,7 @@ void RTK_Cell::distance_to_boundary(
             }
 
             // update distance to boundary info
-            if (db < state_vector.dist_to_next_region)
+            if (db < state_vector.dist_to_next_region(pid))
             {
                 state_vector.dist_to_next_region(pid) = db;
                 state_vector.exiting_face(pid)        = Geo_State_t::INTERNAL;
@@ -428,7 +428,7 @@ void RTK_Cell::calc_shell_db(
     {
         // check to see if we hit the current shell we are on, which means
         // that we would traverse through that shells region on entrance
-        if (state_vector.region == state_vector.face)
+        if (state_vector.region(pid) == state_vector.face(pid))
         {
             db = check_shell(r, omega,
                              state_vector.face(pid),
@@ -463,7 +463,7 @@ void RTK_Cell::calc_shell_db(
             check_shell(r, omega, state_vector.face(pid) - 1, Geo_State_t::NONE,
                         state_vector.region(pid) - 1,
                         state_vector.face(pid) - 1,
-                        state_vector(pid));
+                        state_vector, pid);
         }
     }
 
@@ -504,7 +504,7 @@ void RTK_Cell::calc_shell_db(
 
             // check hitting higher shell
             check_shell(r, omega,
-                        state_vector.region,
+                        state_vector.region(pid),
                         Geo_State_t::NONE,
                         state_vector.region(pid) + 1,
                         state_vector.region(pid),

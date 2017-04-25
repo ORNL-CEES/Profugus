@@ -59,10 +59,10 @@ void Fission_Source<Geometry>::build_particle(
         const Fission_Site &fs = d_fission_sites[cuda::utility::thread_id()];
 
         // intialize the geometry state
-        d_geometry->initialize(fs.r, omega, particles.geo_state(pid));
+        d_geometry->initialize(fs.r, omega, particles.geo_states(),pid);
 
         // get the material id
-        matid = d_geometry->matid(particles.geo_state(pid));
+        matid = d_geometry->matid(particles.geo_states(),pid);
 
         // initialize the physics state at the fission site
         bool sampled = d_physics->initialize_fission(fs, pid, particles);
@@ -120,10 +120,10 @@ int Fission_Source<Geometry>::sample_geometry(Space_Vector       &r,
         r[K] = d_width[K] * curand_uniform_double(rng) + d_lower[K];
 
         // intialize the geometry state
-        d_geometry->initialize(r, omega, particles.geo_state(pid));
+        d_geometry->initialize(r, omega, particles.geo_states(),pid);
 
         // get the material id
-        matid = d_geometry->matid(particles.geo_state(pid));
+        matid = d_geometry->matid(particles.geo_states(),pid);
 
         // try initializing fission here, if it is successful we are
         // finished

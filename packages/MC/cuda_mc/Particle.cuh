@@ -41,7 +41,6 @@ class Particle
     //! Typedefs.
     typedef cuda_utils::Space_Vector        Space_Vector;
     typedef profugus::events::Event         Event_Type;
-    typedef typename Geometry::Geo_State_t  Geo_State_t;
     //@}
 
   private:
@@ -64,9 +63,6 @@ class Particle
 
     // Latest particle event.
     Event_Type d_event;
-
-    // Particle geometric state.
-    Geo_State_t d_geo_state;
 
   public:
     // Constructor
@@ -99,12 +95,6 @@ class Particle
 
     //! Set particle status to alive.
     __device__ void live() { d_alive = true; }
-
-    //@{
-    //! Get a handle to the geometric state of the particle.
-    __device__ Geo_State_t& geo_state() { return d_geo_state; }
-    __device__ const Geo_State_t& geo_state() const { return d_geo_state; }
-    //@}
 
     //@{
     //! Access particle data.
