@@ -78,6 +78,7 @@ class Source_Transporter
     typedef std::shared_ptr<Fission_Site_Vector>          SP_Fission_Site_Vec;
     typedef Source<Geometry>                              Source_t;
     typedef std::shared_ptr<Source_t>                     SP_Source;
+    typedef Particle_Vector<Geometry>                     Particle_Vector_t;
     typedef Particle_Vector_DMM<Geometry>                 Particle_Vector_DMM_t;
     typedef std::shared_ptr<Particle_Vector_DMM_t>        SP_Particle_Vec_DMM;
     //@}

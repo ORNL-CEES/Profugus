@@ -103,6 +103,12 @@ class Launch_Args
             d_grid_size++;
     }
 
+    //! Set amount of shared memory (bytes)
+    void set_shared_mem(std::size_t mem)
+    {
+        d_shared_mem = mem;
+    }
+
     // >>> ACCESSORS
 
     //! Get block size
