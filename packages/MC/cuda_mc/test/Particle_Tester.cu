@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "Particle_Tester.hh"
+#include "../Particle.cuh"
 #include "../Particle_Vector.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "gtest/Gtest_Functions.hh"

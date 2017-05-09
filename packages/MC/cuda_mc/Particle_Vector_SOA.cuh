@@ -15,6 +15,7 @@
 #include "MC/mc/Definitions.hh"
 #include "CudaUtils/cuda_utils/Device_View_Field.hh"
 #include "CudaUtils/cuda_utils/Device_Memory_Manager.hh"
+#include "CudaUtils/cuda_utils/Utility_Functions.hh"
 #include "Definitions.hh"
 #include "RNG_Control.cuh"
 
@@ -195,7 +196,9 @@ class Particle_Vector_SOA_DMM :
     typedef typename Geometry::Geo_State_Vector_DMM_t Geo_State_Vector_DMM_t;
 
     // Constructor
-    Particle_Vector_SOA_DMM(){}
+    Particle_Vector_SOA_DMM(int rng_seed)
+      : d_rng_control(rng_seed)
+    {}
 
     // Number of particles currently allocated
     int size() const {return d_matids.size();}
