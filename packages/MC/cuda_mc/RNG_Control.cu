@@ -20,8 +20,8 @@ class RNG_Init
 {
   public:
 
-    typedef RNG_Control::seed_type   seed_type;
-    typedef RNG_Control::RNG_State_t RNG_State_t;
+    typedef RNG_Control_DMM::seed_type   seed_type;
+    typedef RNG_Control_DMM::RNG_State_t RNG_State_t;
 
     RNG_Init( RNG_State_t *rngs, seed_type *seeds )
       : d_rngs(rngs)
@@ -44,7 +44,7 @@ class RNG_Init
 //---------------------------------------------------------------------------//
 
 
-void RNG_Control::initialize( int num_streams )
+void RNG_Control_DMM::initialize( int num_streams )
 {
     int current_streams = d_rng_states.size();
     int new_streams = num_streams - current_streams;

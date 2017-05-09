@@ -17,7 +17,6 @@
 #include "Fission_Rebalance.hh"
 #include "Physics.cuh"
 #include "Particle_Vector.cuh"
-#include "RNG_Control.cuh"
 #include "Source.cuh"
 #include "Definitions.hh"
 
@@ -79,7 +78,6 @@ class Fission_Source
     typedef cuda::Device_View_Field<Fission_Site>   Fission_Site_View;
     typedef Particle_Vector<Geometry_t>             Particle_Vector_t;
     typedef cuda_utils::Space_Vector                Space_Vector;
-    typedef RNG_Control::RNG_State_t                RNG_State_t;
     typedef def::size_type                          size_type;
     //@}
 
@@ -130,7 +128,7 @@ class Fission_Source
 
     // Get a particle from the source.
     __device__ inline void build_particle(
-        int pid, RNG_State_t *rng, Particle_Vector_t &particles) const;
+        int pid, Particle_Vector_t &particles) const;
 
   private:
     // >>> IMPLEMENTATION
@@ -138,7 +136,7 @@ class Fission_Source
     // Sample the geometry.
     __device__ inline
     int sample_geometry(Space_Vector &r, const Space_Vector &omega,
-                        int pid, Particle_Vector_t &p, RNG_State_t *rng) const;
+                        int pid, Particle_Vector_t &p) const;
 
 };
 
@@ -161,7 +159,6 @@ class Fission_Source_DMM : public Source<Geometry>,
     typedef std::vector<Fission_Site>               Host_Fission_Sites;
     typedef thrust::device_vector<Fission_Site>     Device_Fission_Sites;
     typedef cuda_utils::Space_Vector                Space_Vector;
-    typedef RNG_Control::RNG_State_t                RNG_State_t;
     typedef cuda::Shared_Device_Ptr<Geometry>       SDP_Geometry;
     typedef cuda::Shared_Device_Ptr<Physics_t>      SDP_Physics;
     typedef std::shared_ptr<Fission_Rebalance>      SP_Fission_Rebalance;

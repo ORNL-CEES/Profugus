@@ -206,9 +206,9 @@ bool Physics<Geometry>::initialize_fission(unsigned int       matid,
  */
 template <class Geometry>
 __device__
-int Physics<Geometry>::sample_fission_site(int                      pid,
-                                           const Particle_Vector_t &particles,
-                                           double                   keff) const
+int Physics<Geometry>::sample_fission_site(int                pid,
+                                           Particle_Vector_t &particles,
+                                           double             keff) const
 {
     DEVICE_REQUIRE(d_geometry);
     DEVICE_REQUIRE(particles.matid(pid) < d_mat->num_mat() );

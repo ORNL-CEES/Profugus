@@ -36,7 +36,6 @@ template <class Geom> class Domain_Transporter_DMM;
 template <class Geom> class Tallier_DMM;
 template <class Geom> class VR_Roulette;
 template <class Geom> class Source;
-class RNG_Control;
 
 //===========================================================================//
 /*!
@@ -73,7 +72,6 @@ class Source_Transporter
     typedef cuda::Shared_Device_Ptr<VR_Roulette_t>        SDP_VR;
     typedef std::shared_ptr<Transporter_DMM_t>            SP_Transporter_DMM;
     typedef std::shared_ptr<Tallier_DMM_t>                SP_Tallier_DMM;
-    typedef std::shared_ptr<RNG_Control>                  SP_RNG_Control;
     typedef Teuchos::RCP<Teuchos::ParameterList>          RCP_Std_DB;
     typedef def::size_type                                size_type;
     typedef thrust::device_vector<Fission_Site>           Fission_Site_Vector;
@@ -101,9 +99,6 @@ class Source_Transporter
 
     // Domain transporter.
     SP_Transporter_DMM d_transporter;
-
-    // RNG Control
-    SP_RNG_Control d_rng_control;
 
     // Particle_Vector
     SP_Particle_Vec_DMM d_particle_vec;

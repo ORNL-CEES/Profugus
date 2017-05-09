@@ -9,27 +9,22 @@
 //---------------------------------------------------------------------------//
 
 #include "Particle_Tester.hh"
-#include "../Particle.cuh"
+#include "../Particle_Vector.cuh"
 #include "cuda_geometry/Mesh_Geometry.hh"
 #include "gtest/Gtest_Functions.hh"
 
 using namespace cuda_mc;
 
- __global__ void compute_randoms_kernel( double *randoms, int num_vals )
- {
+__global__ void compute_randoms_kernel(
+        Particle_Vector<cuda_profugus::Mesh_Geometry> particles,
+        double *randoms, int num_vals )
+
+{
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
      {
-         // Create and initialize RNG state
-         curandState_t rng_state;
-         curand_init(tid,0,0,&rng_state);
-
-         // Create particle and assign RNG
-         Particle<cuda_profugus::Mesh_Geometry> p;
-         p.set_rng(&rng_state);
-
          // Generate random
-         randoms[tid] = p.ran();
+         randoms[tid] = particles.ran(tid);
      }
 }
 
@@ -71,7 +66,10 @@ void Particle_Tester::test_randoms()
     {
         thrust::device_vector<double> device_rands(num_vals);
 
-        compute_randoms_kernel<<<1,num_vals>>>(device_rands.data().get(),
+        Particle_Vector_DMM<cuda_profugus::Mesh_Geometry> particles(1234);
+
+        compute_randoms_kernel<<<1,num_vals>>>(particles.device_instance(),
+                                               device_rands.data().get(),
                                                num_vals );
 
         REQUIRE( cudaGetLastError() == cudaSuccess );

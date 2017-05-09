@@ -38,12 +38,8 @@ __global__ void test_transport_kernel( Uniform_Src       *source,
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_particles )
      {
-         // Create and initialize RNG state
-         curandState_t rng_state;
-         curand_init(tid,0,0,&rng_state);
-
          // Get particle from source
-         source->build_particle(tid,&rng_state,particles);
+         source->build_particle(tid,particles);
 
          // Transport particle
          while (particles.event(tid) == profugus::events::COLLISION ||
@@ -101,7 +97,7 @@ void Domain_Transporter_Tester::test_transport(int num_groups)
             sp_source->device_instance());
 
     // Build particles
-    Particle_Vector_DMM_t particles;
+    Particle_Vector_DMM_t particles(1234);
     particles.initialize(num_particles);
 
     // Allocate data on device

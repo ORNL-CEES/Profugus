@@ -13,8 +13,10 @@
 
 #include <thrust/device_vector.h>
 #include "Particle.cuh"
+#include "RNG_Control.cuh"
 #include "CudaUtils/cuda_utils/Device_View_Field.hh"
 #include "CudaUtils/cuda_utils/Device_Memory_Manager.hh"
+#include "CudaUtils/cuda_utils/Utility_Functions.hh"
 
 namespace cuda_mc
 {
@@ -44,15 +46,17 @@ class Particle_Vector_AOS
     // >>> DATA
     Particle_View       d_particles;
     Geo_State_Vector_t  d_geo_state_vec;
-    
+    RNG_Control         d_rng_control;
 
   public:
 
     // Constructor
     Particle_Vector_AOS(Particle_View      particles,
-                        Geo_State_Vector_t geo_states)
+                        Geo_State_Vector_t geo_states,
+                        RNG_Control        rng_control)
       : d_particles(particles)
       , d_geo_state_vec(geo_states)
+      , d_rng_control(rng_control)
     {
     }
 
@@ -80,13 +84,6 @@ class Particle_Vector_AOS
     {
         DEVICE_REQUIRE(ind < d_particles.size());
         d_particles[ind].multiply_wt(wt);
-    }
-
-    //! Set a new random number generator.
-    __device__ void set_rng(int ind, RNG_State_t *rng)
-    {
-        DEVICE_REQUIRE(ind < d_particles.size());
-        d_particles[ind].set_rng(rng);
     }
 
     //! Set the particle event flag.
@@ -141,15 +138,15 @@ class Particle_Vector_AOS
         DEVICE_REQUIRE(ind < d_particles.size());
         return d_particles[ind].wt();
     }
-    __device__ RNG_State_t * rng(int ind) const
+    __device__ RNG_State_t * rng(int ind)
     {
-        DEVICE_REQUIRE(ind < d_particles.size());
-        return d_particles[ind].rng();
+        // Ignore index provided, use thread id
+        return d_rng_control.get_state(cuda::utility::thread_id());
     }
-    __device__ double ran(int ind) const
+    __device__ double ran(int ind)
     {
-        DEVICE_REQUIRE(ind < d_particles.size());
-        return d_particles[ind].ran();
+        return curand_uniform_double(rng(ind));
+
     }
     __device__ Event_Type event(int ind) const
     {
@@ -189,7 +186,9 @@ class Particle_Vector_AOS_DMM :
     typedef typename Geometry::Geo_State_Vector_DMM_t Geo_State_Vector_DMM_t;
 
     // Constructor
-    Particle_Vector_AOS_DMM(){}
+    Particle_Vector_AOS_DMM(int rng_seed)
+      : d_rng_control(rng_seed)
+    {}
 
     // Number of particles currently allocated
     int size() const {return d_particles.size();}
@@ -198,7 +197,8 @@ class Particle_Vector_AOS_DMM :
     Particle_Vector_AOS_t device_instance()
     {
         return Particle_Vector_AOS_t(cuda::make_view(d_particles),
-                                     d_geo_state_vec_dmm.device_instance());
+                                     d_geo_state_vec_dmm.device_instance(),
+                                     d_rng_control.device_instance());
     }
 
     // Initialize vector for specified number of states
@@ -207,12 +207,14 @@ class Particle_Vector_AOS_DMM :
         REQUIRE(num_states > 0);
         d_particles.resize(num_states);
         d_geo_state_vec_dmm.initialize(num_states);
+        d_rng_control.initialize(num_states);
     }
 
   private:
 
     thrust::device_vector<Particle_t> d_particles;
     Geo_State_Vector_DMM_t            d_geo_state_vec_dmm;
+    RNG_Control_DMM                   d_rng_control;
 
 };
 

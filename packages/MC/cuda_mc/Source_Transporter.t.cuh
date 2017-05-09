@@ -238,8 +238,6 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
         d_vr = cuda::shared_device_ptr<VR_Roulette_t>(db);
     }
 
-    int seed = db->get("seed",1234);
-
     d_block_size = db->get("block_size",256);
 
     std::string sort_type = profugus::to_lower(db->get<std::string>("sort_type",
@@ -268,14 +266,13 @@ Source_Transporter<Geometry>::Source_Transporter(RCP_Std_DB   db,
     else
         INSIST(false,"Invalid verbosity.");
 
-    d_rng_control = std::make_shared<RNG_Control>(seed);
-
     // Build domain transporter
     d_transporter = std::make_shared<Transporter_DMM_t>(
         db, d_geometry, d_physics, d_vr );
 
     // Build particle vector
-    d_particle_vec = std::make_shared<Particle_Vector_DMM_t>();
+    int seed = db->get("seed",1234);
+    d_particle_vec = std::make_shared<Particle_Vector_DMM_t>(seed);
 }
 
 //---------------------------------------------------------------------------//
@@ -338,7 +335,7 @@ void Source_Transporter<Geometry>::solve(SP_Source source) const
     // Get source particles
     start = std::chrono::high_resolution_clock::now();
     Source_Provider<Geometry> provider;
-    provider.get_particles(source, d_rng_control, d_particle_vec, indirection);
+    provider.get_particles(source, d_particle_vec, indirection);
     cudaDeviceSynchronize();
     end = std::chrono::high_resolution_clock::now();
     diff = end - start;

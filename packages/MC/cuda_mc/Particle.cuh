@@ -55,9 +55,6 @@ class Particle
     // Particle weight.
     double d_wt;
 
-    // Curand state
-    RNG_State_t *d_rng;
-
     // Alive/dead status.
     bool d_alive;
 
@@ -81,9 +78,6 @@ class Particle
     //! Multiply weight.
     __device__ void multiply_wt(double wt) { d_wt *= wt; }
 
-    //! Set a new random number generator.
-    __device__ void set_rng(RNG_State_t *rng) { d_rng = rng; }
-
     //! Set the particle event flag.
     __device__ void set_event(Event_Type event) { d_event = event; }
 
@@ -100,11 +94,6 @@ class Particle
     //! Access particle data.
     __device__ bool alive() const { return d_alive; }
     __device__ double wt() const { return d_wt; }
-    __device__ RNG_State_t * rng() const { return d_rng; }
-    __device__ double ran() const
-    {
-        return curand_uniform_double(d_rng);
-    }
     __device__ Event_Type event() const { return d_event; }
     __device__ int matid() const { return d_matid; }
     __device__ int group() const { return d_group; }

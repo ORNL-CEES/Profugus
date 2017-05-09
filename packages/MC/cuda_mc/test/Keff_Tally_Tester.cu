@@ -41,15 +41,10 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
         particles.set_matid(tid,0);
         particles.set_wt(tid,1.0);
 
-        // Create and initialize RNG state
-        curandState_t rng_state;
-        curand_init(tid,0,0,&rng_state);
-        particles.set_rng(tid,&rng_state);
-
         // Initialize particle uniformly on [0, 1]
-        double x_loc = curand_uniform_double(&rng_state);
-        double y_loc = curand_uniform_double(&rng_state);
-        double z_loc = curand_uniform_double(&rng_state);
+        double x_loc = particles.ran(tid);
+        double y_loc = particles.ran(tid);
+        double z_loc = particles.ran(tid);
         Space_Vector pos = {x_loc, y_loc, z_loc};
 
         // Direction doesn't matter
@@ -61,9 +56,9 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
         tally->accumulate(1.0,tid,particles);
 
         // Move particle to new location
-        pos[I] = curand_uniform_double(&rng_state);
-        pos[J] = curand_uniform_double(&rng_state);
-        pos[K] = curand_uniform_double(&rng_state);
+        pos[I] = particles.ran(tid);
+        pos[J] = particles.ran(tid);
+        pos[K] = particles.ran(tid);
 
         geom->initialize(pos,dir,particles.geo_states(),tid);
 
@@ -115,7 +110,7 @@ void Keff_Tally_Tester::test_tally(int num_groups)
         sp_tally->device_instance());
 
     // Build particles
-    Particle_Vector_DMM_t particles;
+    Particle_Vector_DMM_t particles(1234);
     particles.initialize(num_particles);
 
     // Launch kernel

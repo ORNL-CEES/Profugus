@@ -16,6 +16,7 @@
 #include "CudaUtils/cuda_utils/Device_View_Field.hh"
 #include "CudaUtils/cuda_utils/Device_Memory_Manager.hh"
 #include "Definitions.hh"
+#include "RNG_Control.cuh"
 
 namespace cuda_mc
 {
@@ -44,10 +45,10 @@ class Particle_Vector_SOA
     cuda::Device_View_Field<int>          d_matids;
     cuda::Device_View_Field<int>          d_groups;
     cuda::Device_View_Field<double>       d_wts;
-    cuda::Device_View_Field<RNG_State_t*> d_rngs;
     cuda::Device_View_Field<bool>         d_alive;
     cuda::Device_View_Field<Event_Type>   d_events;
     Geo_State_Vector_t                    d_geo_state_vec;
+    RNG_Control                           d_rng_control;
 
   public:
 
@@ -55,17 +56,17 @@ class Particle_Vector_SOA
     Particle_Vector_SOA(cuda::Device_View_Field<int> matids,
                         cuda::Device_View_Field<int> groups,
                         cuda::Device_View_Field<double> wts,
-                        cuda::Device_View_Field<RNG_State_t*> rngs,
                         cuda::Device_View_Field<bool> alive,
                         cuda::Device_View_Field<Event_Type> events,
-                        Geo_State_Vector_t geo_state_vec)
+                        Geo_State_Vector_t geo_state_vec,
+                        RNG_Control rng_control)
       : d_matids(matids)
       , d_groups(groups)
       , d_wts(wts)
-      , d_rngs(rngs)
       , d_alive(alive)
       , d_events(events)
       , d_geo_state_vec(geo_state_vec)
+      , d_rng_control(rng_control)
     {
     }
 
@@ -93,13 +94,6 @@ class Particle_Vector_SOA
     {
         DEVICE_REQUIRE(ind < d_wts.size());
         d_wts[ind] *= wt;
-    }
-
-    //! Set a new random number generator.
-    __device__ void set_rng(int ind, RNG_State_t *rng)
-    {
-        DEVICE_REQUIRE(ind < d_rngs.size());
-        d_rngs[ind] = rng;
     }
 
     //! Set the particle event flag.
@@ -154,15 +148,14 @@ class Particle_Vector_SOA
         DEVICE_REQUIRE(ind < d_wts.size());
         return d_wts[ind];
     }
-    __device__ RNG_State_t * rng(int ind) const
+    __device__ RNG_State_t * rng(int ind)
     {
-        DEVICE_REQUIRE(ind < d_rngs.size());
-        return d_rngs[ind];
+        // Ignore index provided, use thread id
+        return d_rng_control.get_state(cuda::utility::thread_id());
     }
-    __device__ double ran(int ind) const
+    __device__ double ran(int ind)
     {
-        DEVICE_REQUIRE(ind < d_rngs.size());
-        return curand_uniform_double(d_rngs[ind]);
+        return curand_uniform_double(rng(ind));
     }
     __device__ Event_Type event(int ind) const
     {
@@ -213,10 +206,10 @@ class Particle_Vector_SOA_DMM :
         return Particle_Vector_SOA_t(cuda::make_view(d_matids),
                                      cuda::make_view(d_groups),
                                      cuda::make_view(d_wts),
-                                     cuda::make_view(d_rngs),
                                      cuda::make_view(d_alive),
                                      cuda::make_view(d_events),
-                                     d_geo_states_dmm.device_instance());
+                                     d_geo_states_dmm.device_instance(),
+                                     d_rng_control.device_instance());
     }
 
     // Initialize vector for specified number of states
@@ -226,10 +219,10 @@ class Particle_Vector_SOA_DMM :
         d_matids.resize(    num_states);
         d_groups.resize(    num_states);
         d_wts.resize(       num_states);
-        d_rngs.resize(      num_states);
         d_alive.resize(     num_states);
         d_events.resize(    num_states);
         d_geo_states_dmm.initialize(num_states);
+        d_rng_control.initialize(num_states);
     }
 
   private:
@@ -237,10 +230,10 @@ class Particle_Vector_SOA_DMM :
     thrust::device_vector<int>          d_matids;
     thrust::device_vector<int>          d_groups;
     thrust::device_vector<double>       d_wts;
-    thrust::device_vector<RNG_State_t*> d_rngs;
     thrust::device_vector<bool>         d_alive;
     thrust::device_vector<Event_Type>   d_events;
     Geo_State_Vector_DMM_t              d_geo_states_dmm;
+    RNG_Control_DMM                     d_rng_control;
 };
 
 //---------------------------------------------------------------------------//

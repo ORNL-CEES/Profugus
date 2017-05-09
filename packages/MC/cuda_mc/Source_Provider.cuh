@@ -15,7 +15,6 @@
 #include "Definitions.hh"
 #include "Source.cuh"
 #include "Particle_Vector.cuh"
-#include "RNG_Control.cuh"
 
 namespace cuda_mc
 {
@@ -53,7 +52,6 @@ class Source_Provider
     typedef std::shared_ptr<Particle_Vector_DMM_t>  SP_Particle_Vector_DMM;
     typedef int                                     index;
     typedef thrust::device_vector<index>            Index_Vector;
-    typedef std::shared_ptr<RNG_Control>            SP_RNG_Control;
     typedef std::shared_ptr<Source<Geometry>>       SP_Source;
     typedef def::size_type                          size_type;
 
@@ -62,7 +60,6 @@ class Source_Provider
 
     //! Get vector of particles
     void get_particles( SP_Source               source,
-                        SP_RNG_Control          rng_control,
                         SP_Particle_Vector_DMM  particles,
                         const Index_Vector     &indices ) const;
 
@@ -71,7 +68,6 @@ class Source_Provider
     // Implementation of get_particles for particular source type
     template <class Src_Type>
     void get_particles_impl( Src_Type                  &source,
-                             SP_RNG_Control             rng_control,
                              SP_Particle_Vector_DMM     particles,
                              const Index_Vector        &indices,
                              size_type                  Np) const;

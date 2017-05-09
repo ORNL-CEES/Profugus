@@ -108,9 +108,9 @@ class Physics
     __device__ void collide(int pid, Particle_Vector_t &particles) const;
 
     // Sample fission site.
-    __device__ int sample_fission_site(int                        pid,
-                                       const Particle_Vector_t   &particles,
-                                             double               keff) const;
+    __device__ int sample_fission_site(int                  pid,
+                                       Particle_Vector_t   &particles,
+                                       double               keff) const;
 
     // Sample fission spectrum and initialize the physics state.
     __device__ bool initialize_fission(unsigned int matid, int pid,

@@ -18,6 +18,8 @@
 
 #include "comm/Functions.hh"
 #include "harness/DBC.hh"
+#include "cuda_utils/Device_View_Field.hh"
+#include "cuda_utils/Device_Memory_Manager.hh"
 
 namespace cuda_mc
 {
@@ -25,6 +27,37 @@ namespace cuda_mc
 //===========================================================================//
 /*!
  * \class RNG_Control
+ * \brief Manage RNG states.
+ */
+//===========================================================================//
+
+class RNG_Control
+{
+  public:
+      typedef curandState_t RNG_State_t;
+      typedef cuda::Device_View_Field<RNG_State_t> RNG_State_View;
+
+  private:
+
+      RNG_State_View d_states;
+
+  public:
+
+      RNG_Control(RNG_State_View states)
+        : d_states(states)
+      {
+      }
+
+      __device__ RNG_State_t* get_state(int i)
+      {
+          DEVICE_REQUIRE(i < d_states.size());
+          return &d_states[i];
+      }
+};
+
+//===========================================================================//
+/*!
+ * \class RNG_Control_DMM
  * \brief Manage creation and seeding of RNG states.
  *
  * The use of cuRAND random number generators requires careful managing of
@@ -41,11 +74,10 @@ namespace cuda_mc
  * (and seeding them) appropriately.  This guarantees that RNGs generated
  * in one cycle are independent of other cycles.
  *
- * \sa RNG_Control.cc for detailed descriptions.
+ * \sa RNG_Control.cu for detailed descriptions.
  */
 //===========================================================================//
-
-class RNG_Control
+class RNG_Control_DMM : public cuda::Device_Memory_Manager<RNG_Control>
 {
   public:
 
@@ -55,7 +87,7 @@ class RNG_Control
       typedef thrust::device_vector<RNG_State_t>    RNG_Vector;
 
       //!\brief Constructor.
-      RNG_Control( int host_seed )
+      RNG_Control_DMM( int host_seed )
           : d_gen(host_seed+profugus::node())
           , d_dist(limits::min(),limits::max())
       {
@@ -68,14 +100,9 @@ class RNG_Control
        */
       void initialize( int num_streams );
 
-      /*!\brief Get device pointer to current states.
-       *
-       * The number of valid states is guaranteed to be at least as large
-       * as the most recent call to initialize.
-       */
-      RNG_Vector & get_states()
+      RNG_Control device_instance()
       {
-          return d_rng_states;
+          return RNG_Control(cuda::make_view(d_rng_states));
       }
 
   private:

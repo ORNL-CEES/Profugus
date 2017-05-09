@@ -60,11 +60,6 @@ __global__ void test_collide_kernel( Geom               *geom,
          particles.set_wt(tid,1.0);
          particles.set_event(tid,profugus::events::COLLISION);
 
-         // Create and initialize RNG state
-         curandState_t rng_state;
-         curand_init(tid,0,0,&rng_state);
-         particles.set_rng(tid,&rng_state);
-
          // Initialize geo state
          Space_Vector pos = {0.25, 0.75, 0.60};
          Space_Vector dir = {1.0, 0.0, 0.0};
@@ -102,7 +97,7 @@ void Physics_Tester::test_total()
     auto sdp_phys = cuda::Shared_Device_Ptr<Physics<Geom> >(phys);
 
     // Build particles
-    Particle_Vector_DMM_t particles;
+    Particle_Vector_DMM_t particles(1234);
     particles.initialize(num_vals);
 
     // Allocate data on device
@@ -148,7 +143,7 @@ void Physics_Tester::test_collide()
     auto sdp_phys = cuda::Shared_Device_Ptr<Physics<Geom> >(phys);
 
     // Build particles
-    Particle_Vector_DMM_t particles;
+    Particle_Vector_DMM_t particles(1234);
     particles.initialize(num_particles);
 
     thrust::device_vector<int> device_events(num_particles);

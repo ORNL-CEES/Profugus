@@ -32,13 +32,9 @@ namespace cuda_mc
 template <class Geometry>
 __device__ void Uniform_Source<Geometry>::build_particle(
         int                pid,
-        RNG_State_t       *rng,
         Particle_Vector_t &particles) const
 {
     DEVICE_REQUIRE(d_geo_shape);
-
-    // Set rng
-    particles.set_rng(pid,rng);
 
     // material id
     int matid = 0;
@@ -47,11 +43,11 @@ __device__ void Uniform_Source<Geometry>::build_particle(
     cuda_utils::Space_Vector r, omega;
 
     // sample the angle isotropically
-    sampler::sample_isotropic(omega, rng);
+    sampler::sample_isotropic(omega, particles.rng(pid));
 
     // sample the geometry shape-->we should not get here if there are no
     // particles on this domain
-    r = d_geo_shape->sample(rng);
+    r = d_geo_shape->sample(particles.rng(pid));
 
     // intialize the geometry state
     d_geometry->initialize(r, omega, particles.geo_states(),pid);

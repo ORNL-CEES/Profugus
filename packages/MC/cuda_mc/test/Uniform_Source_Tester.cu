@@ -37,10 +37,7 @@ __global__ void compute_source_kernel( Uniform_Src       source,
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
      {
-         curandState_t rng;
-         curand_init( 345, tid, 0, &rng );
-
-         source.build_particle(tid,&rng,particles);
+         source.build_particle(tid,particles);
 
          auto geo_states = particles.geo_states();
          pts[tid]  = geo_states.pos(tid);
@@ -197,7 +194,7 @@ void Uniform_Source_Tester::test_source()
     source.build_source(src_shape);
 
     // Build particle vector
-    Particle_Vector_DMM<Geometry> particles;
+    Particle_Vector_DMM<Geometry> particles(1234);
     particles.initialize(Np);
 
     // Allocate device vectors
@@ -243,18 +240,15 @@ void Uniform_Source_Tester::test_host_api()
     auto source_host = std::make_shared<Uniform_Src_DMM>(db,geom);
     source_host->build_source(src_shape);
 
-    // Initialize RNG
-    auto rng_control = std::make_shared<cuda_mc::RNG_Control>(1234);
-
     // Get vector of particles from source
-    auto particles = std::make_shared<Particle_Vector_DMM<Geometry>>();
+    auto particles = std::make_shared<Particle_Vector_DMM<Geometry>>(1234);
     particles->initialize(Np);
 
     cuda_mc::Source_Provider<Geometry> provider;
     thrust::device_vector<int> indices(Np);
     thrust::counting_iterator<int> cnt(0);
     thrust::copy(cnt,cnt+indices.size(),indices.begin());
-    provider.get_particles(source_host,rng_control,particles,indices);
+    provider.get_particles(source_host,particles,indices);
 
     EXPECT_EQ( particles->size(), Np );
     EXPECT_EQ( source_host->num_to_transport(), Np );

@@ -90,7 +90,7 @@ class Uniform_Source
 
     // Get a particle from the source.
     __device__ inline void build_particle(
-        int idx, RNG_State_t *rng, Particle_Vector_t &particles) const;
+        int idx, Particle_Vector_t &particles) const;
 
     // >>> CLASS ACCESSORS
 
