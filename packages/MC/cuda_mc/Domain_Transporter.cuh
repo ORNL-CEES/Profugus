@@ -101,7 +101,7 @@ class Domain_Transporter
     }
 
     // Transport a particle through the domain.
-    __device__ void transport(int pid, Particle_Vector_t &particles) const;
+    __device__ void transport(int pid, Particle_Vector_t *particles) const;
 
     //! Return the number of sampled fission sites.
     __device__
@@ -126,8 +126,8 @@ class Domain_Transporter
     int d_max_steps;
 
     // Process collisions and boundaries.
-    __device__ void process_boundary(int pid, Particle_Vector_t &particles) const;
-    __device__ void process_collision(int pid, Particle_Vector_t &particles,
+    __device__ void process_boundary(int pid, Particle_Vector_t *particles) const;
+    __device__ void process_collision(int pid, Particle_Vector_t *particles,
                                       double      step) const;
 };
 

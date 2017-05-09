@@ -37,7 +37,7 @@ __global__ void compute_source_kernel( Uniform_Src       source,
      int tid = threadIdx.x + blockIdx.x * blockDim.x;
      if( tid < num_vals )
      {
-         source.build_particle(tid,particles);
+         source.build_particle(tid,&particles);
 
          auto geo_states = particles.geo_states();
          pts[tid]  = geo_states.pos(tid);

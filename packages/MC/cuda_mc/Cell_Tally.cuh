@@ -87,7 +87,7 @@ class Cell_Tally
 
     // Accumulate tally for this history
     __device__ void accumulate(double step, int pid,
-                               const Particle_Vector_t &particles);
+                               const Particle_Vector_t *particles);
 
     // Finalize for history
     // Null-op here because we're not computing a variance

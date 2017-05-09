@@ -75,10 +75,10 @@ class Tallier
 
     // Process path-length tally events.
     __device__ void path_length(double step, int pid,
-                                const Particle_Vector_t &particles);
+                                const Particle_Vector_t *particles);
 
     // Tally any source events.
-    __device__ void source(int pid, const Particle_Vector_t &particles);
+    __device__ void source(int pid, const Particle_Vector_t *particles);
 
     // Perform all end-history tally tasks.
     __device__ void end_history();

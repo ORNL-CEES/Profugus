@@ -53,7 +53,7 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
         geom->initialize(pos,dir,particles.geo_states(),tid);
 
         // Tally with step length of 1.0
-        tally->accumulate(1.0,tid,particles);
+        tally->accumulate(1.0,tid,&particles);
 
         // Move particle to new location
         pos[I] = particles.ran(tid);
@@ -63,7 +63,7 @@ __global__ void test_tally_kernel( Keff_Tally<Geom> *tally,
         geom->initialize(pos,dir,particles.geo_states(),tid);
 
         // Tally with step length of 0.5
-        tally->accumulate(0.5,tid,particles);
+        tally->accumulate(0.5,tid,&particles);
     }
 }
 

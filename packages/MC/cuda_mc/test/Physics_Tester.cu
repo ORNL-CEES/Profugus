@@ -39,7 +39,7 @@ __global__ void test_total_kernel( Physics<Geom>    *phys,
          // Create particle
          particles.set_group(tid,g);
          particles.set_matid(tid,matid);
-         totals[tid] = phys->total(profugus::physics::TOTAL,tid,particles);
+         totals[tid] = phys->total(profugus::physics::TOTAL,tid,&particles);
      }
 }
 
@@ -67,7 +67,7 @@ __global__ void test_collide_kernel( Geom               *geom,
          particles.set_matid(tid,geom->matid(particles.geo_states(),tid));
 
          // Collide
-         phys->collide(tid,particles);
+         phys->collide(tid,&particles);
 
          events[tid] = particles.event(tid);
 

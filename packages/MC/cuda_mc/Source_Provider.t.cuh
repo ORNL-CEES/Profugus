@@ -46,7 +46,7 @@ class Compute_Source
     {
         int pid = d_indices[tid];
         DEVICE_REQUIRE(pid < d_num_particles);
-        d_source.build_particle(pid,d_particles);
+        d_source.build_particle(pid,&d_particles);
         DEVICE_ENSURE( d_particles.alive(pid) );
     }
 

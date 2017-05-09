@@ -32,7 +32,7 @@ namespace cuda_mc
 template <class Geometry>
 __device__ void Uniform_Source<Geometry>::build_particle(
         int                pid,
-        Particle_Vector_t &particles) const
+        Particle_Vector_t *particles) const
 {
     DEVICE_REQUIRE(d_geo_shape);
 
@@ -43,34 +43,34 @@ __device__ void Uniform_Source<Geometry>::build_particle(
     cuda_utils::Space_Vector r, omega;
 
     // sample the angle isotropically
-    sampler::sample_isotropic(omega, particles.rng(pid));
+    sampler::sample_isotropic(omega, particles->rng(pid));
 
     // sample the geometry shape-->we should not get here if there are no
     // particles on this domain
-    r = d_geo_shape->sample(particles.rng(pid));
+    r = d_geo_shape->sample(particles->rng(pid));
 
     // intialize the geometry state
-    d_geometry->initialize(r, omega, particles.geo_states(),pid);
+    d_geometry->initialize(r, omega, particles->geo_states(),pid);
 
     // get the material id
-    matid = d_geometry->matid(particles.geo_states(),pid);
+    matid = d_geometry->matid(particles->geo_states(),pid);
 
     // initialize the physics state by manually sampling the group
     int group = sampler::sample_discrete_CDF(
-        d_erg_cdf.size(), d_erg_cdf.begin(), particles.ran(pid));
+        d_erg_cdf.size(), d_erg_cdf.begin(), particles->ran(pid));
     DEVICE_CHECK(group < d_erg_cdf.size());
-    particles.set_group(pid,group);
+    particles->set_group(pid,group);
 
     // set the material id in the particle
-    particles.set_matid(pid,matid);
+    particles->set_matid(pid,matid);
 
     // set particle weight
-    particles.set_wt(pid,wt());
+    particles->set_wt(pid,wt());
 
     // make particle alive
-    particles.live(pid);
+    particles->live(pid);
 
-    DEVICE_ENSURE(particles.matid(pid) == matid);
+    DEVICE_ENSURE(particles->matid(pid) == matid);
 }
 
 } // end namespace cuda_mc

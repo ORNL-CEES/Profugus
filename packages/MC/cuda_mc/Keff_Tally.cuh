@@ -65,7 +65,7 @@ class Keff_Tally
 
     // Track particle and do tallying.
     __device__ void accumulate(double step, int pid,
-                               const Particle_Vector_t &particles);
+                               const Particle_Vector_t *particles);
 
     // End history (null-op because we're only accumulating first moments)
     __device__ void end_history(){}

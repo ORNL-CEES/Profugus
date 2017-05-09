@@ -25,13 +25,13 @@ template <class Geometry>
 __device__ void Cell_Tally<Geometry>::accumulate(
         double                   step,
         int                      pid,
-        const Particle_Vector_t &particles)
+        const Particle_Vector_t *particles)
 {
     DEVICE_REQUIRE( step >= 0.0 );
-    DEVICE_REQUIRE( particles.alive(pid) );
+    DEVICE_REQUIRE( particles->alive(pid) );
 
     // Get the cell index
-    int cell = d_geometry->cell(particles.geo_states(),pid);
+    int cell = d_geometry->cell(particles->geo_states(),pid);
 
     int ind = cuda::utility::lower_bound( d_cells, 
                                           d_cells+d_num_cells,
@@ -42,7 +42,7 @@ __device__ void Cell_Tally<Geometry>::accumulate(
     if( (ind < d_num_cells) && (d_cells[ind] == cell))
     {
         cuda::utility::atomic_add_double(&d_tally[ind],
-                                         particles.wt(pid) * step );
+                                         particles->wt(pid) * step );
     }
 }
 

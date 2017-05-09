@@ -30,22 +30,22 @@ namespace cuda_mc
  */
 template <class Geometry>
 __device__
-void Physics<Geometry>::collide(int pid, Particle_Vector_t &particles) const
+void Physics<Geometry>::collide(int pid, Particle_Vector_t *particles) const
 {
     DEVICE_REQUIRE(d_geometry);
-    DEVICE_REQUIRE(particles.event(pid) == profugus::events::COLLISION);
+    DEVICE_REQUIRE(particles->event(pid) == profugus::events::COLLISION);
     DEVICE_REQUIRE(d_mat);
     DEVICE_REQUIRE(d_mat->num_mat() == d_Nm);
     DEVICE_REQUIRE(d_mat->num_groups() == d_Ng);
-    DEVICE_REQUIRE(particles.group(pid) < d_Ng);
+    DEVICE_REQUIRE(particles->group(pid) < d_Ng);
 
     // get the material id of the current region
-    int matid = particles.matid(pid);
+    int matid = particles->matid(pid);
     DEVICE_CHECK(matid < d_Nm);
-    DEVICE_CHECK(d_geometry->matid(particles.geo_states(),pid) == matid);
+    DEVICE_CHECK(d_geometry->matid(particles->geo_states(),pid) == matid);
 
     // get the group index
-    int group = particles.group(pid);
+    int group = particles->group(pid);
 
     // calculate the scattering cross section ratio
     double c = d_scatter[group_mat_index(group,matid)] /
@@ -59,10 +59,10 @@ void Physics<Geometry>::collide(int pid, Particle_Vector_t &particles) const
     if (d_implicit_capture && c > 0.0)
     {
         // set the event
-        particles.set_event(pid,profugus::events::IMPLICIT_CAPTURE);
+        particles->set_event(pid,profugus::events::IMPLICIT_CAPTURE);
 
         // do implicit absorption
-        particles.multiply_wt(pid,c);
+        particles->multiply_wt(pid,c);
     }
 
 
@@ -70,37 +70,37 @@ void Physics<Geometry>::collide(int pid, Particle_Vector_t &particles) const
     else
     {
         // sample the interaction type
-        if (particles.ran(pid) > c)
+        if (particles->ran(pid) > c)
         {
             // set event indicator
-            particles.set_event(pid,profugus::events::ABSORPTION);
+            particles->set_event(pid,profugus::events::ABSORPTION);
 
             // kill particle
-            particles.kill(pid);
+            particles->kill(pid);
         }
         else
         {
             // set event indicator
-            particles.set_event(pid,profugus::events::SCATTER);
+            particles->set_event(pid,profugus::events::SCATTER);
         }
     }
 
     // process scattering events
-    if (particles.event(pid) != profugus::events::ABSORPTION)
+    if (particles->event(pid) != profugus::events::ABSORPTION)
     {
         // determine new group of particle
-        group = sample_group(matid, group, particles.ran(pid));
+        group = sample_group(matid, group, particles->ran(pid));
         DEVICE_CHECK(group >= 0 && group < d_Ng);
 
         // set the group
-        particles.set_group(pid,group);
+        particles->set_group(pid,group);
 
         // sample isotropic scattering event
-        double costheta = 1.0 - 2.0 * particles.ran(pid);
-        double phi      = 2.0 * cuda::constants::pi * particles.ran(pid);
+        double costheta = 1.0 - 2.0 * particles->ran(pid);
+        double phi      = 2.0 * cuda::constants::pi * particles->ran(pid);
 
         // update the direction of the particle in the geometry-tracker state
-        d_geometry->change_direction(costheta, phi, particles.geo_states(),pid);
+        d_geometry->change_direction(costheta, phi, particles->geo_states(),pid);
     }
 }
 
@@ -112,30 +112,30 @@ template <class Geometry>
 __device__
 double Physics<Geometry>::total(Reaction_Type            type,
                                 int                      pid,
-                                const Particle_Vector_t &particles) const
+                                const Particle_Vector_t *particles) const
 {
     DEVICE_REQUIRE(d_mat->num_mat() == d_Nm);
     DEVICE_REQUIRE(d_mat->num_groups() == d_Ng);
-    DEVICE_REQUIRE(particles.group(pid) < d_Ng);
+    DEVICE_REQUIRE(particles->group(pid) < d_Ng);
 
     // get the matid from the particle
-    unsigned int matid = particles.matid(pid);
+    unsigned int matid = particles->matid(pid);
     DEVICE_CHECK( matid < d_mat->num_mat() );
 
     // return the approprate reaction type
     switch (type)
     {
         case profugus::physics::TOTAL:
-            return d_mat->vector(matid, XS_t::TOTAL)(particles.group(pid));
+            return d_mat->vector(matid, XS_t::TOTAL)(particles->group(pid));
 
         case profugus::physics::SCATTERING:
-            return d_scatter[group_mat_index(particles.group(pid),matid)];
+            return d_scatter[group_mat_index(particles->group(pid),matid)];
 
         case profugus::physics::FISSION:
-            return d_mat->vector(matid, XS_t::SIG_F)(particles.group(pid));
+            return d_mat->vector(matid, XS_t::SIG_F)(particles->group(pid));
 
         case profugus::physics::NU_FISSION:
-            return d_mat->vector(matid, XS_t::NU_SIG_F)(particles.group(pid));
+            return d_mat->vector(matid, XS_t::NU_SIG_F)(particles->group(pid));
 
         default:
             return 0.0;
@@ -158,7 +158,7 @@ template <class Geometry>
 __device__
 bool Physics<Geometry>::initialize_fission(unsigned int       matid,
                                            int                pid,
-                                           Particle_Vector_t &particles) const
+                                           Particle_Vector_t *particles) const
 {
     DEVICE_REQUIRE( matid < d_mat->num_mat() );
 
@@ -169,11 +169,11 @@ bool Physics<Geometry>::initialize_fission(unsigned int       matid,
     if (is_fissionable(matid))
     {
         // sample the fission group
-        int group = sample_fission_group(matid,particles.ran(pid));
+        int group = sample_fission_group(matid,particles->ran(pid));
         sampled   = true;
 
         // set the group
-        particles.set_group(pid,group);
+        particles->set_group(pid,group);
     }
 
     // return the sampled flag
@@ -207,29 +207,29 @@ bool Physics<Geometry>::initialize_fission(unsigned int       matid,
 template <class Geometry>
 __device__
 int Physics<Geometry>::sample_fission_site(int                pid,
-                                           Particle_Vector_t &particles,
+                                           Particle_Vector_t *particles,
                                            double             keff) const
 {
     DEVICE_REQUIRE(d_geometry);
-    DEVICE_REQUIRE(particles.matid(pid) < d_mat->num_mat() );
+    DEVICE_REQUIRE(particles->matid(pid) < d_mat->num_mat() );
 
     // material id
-    unsigned int matid = particles.matid(pid);
+    unsigned int matid = particles->matid(pid);
 
     // if the material is not fissionable exit
     if (!is_fissionable(matid))
         return 0;
 
     // get the group from the particle
-    int group = particles.group(pid);
+    int group = particles->group(pid);
 
     // calculate the number of fission sites (random number samples to nearest
     // integer)
     int n = static_cast<int>(
-        particles.wt(pid) *
+        particles->wt(pid) *
         d_mat->vector(matid, XS_t::NU_SIG_F)(group) /
         d_mat->vector(matid, XS_t::TOTAL)(group) /
-        keff + particles.ran(pid));
+        keff + particles->ran(pid));
 
     // NOTE: Unlike cpu version, we put creation of actual fission site
     // into Domain_Transporter
@@ -254,17 +254,17 @@ template <class Geometry>
 __device__
 bool Physics<Geometry>::initialize_fission(const Fission_Site &fs,
                                            int                 pid,
-                                           Particle_Vector_t  &particles) const
+                                           Particle_Vector_t  *particles) const
 {
     DEVICE_REQUIRE(fs.m < d_mat->num_mat());
     DEVICE_REQUIRE(is_fissionable(fs.m));
 
     // sample the fission group
-    int group = sample_fission_group(fs.m, particles.ran(pid));
+    int group = sample_fission_group(fs.m, particles->ran(pid));
     DEVICE_CHECK(group < d_Ng);
 
     // set the particle group
-    particles.set_group(pid,group);
+    particles->set_group(pid,group);
 
     // we successfully initialized the state
     return true;

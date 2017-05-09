@@ -25,19 +25,19 @@ namespace cuda_mc
 template <class Geometry>
 __device__
 void VR_Roulette<Geometry>::post_collision(int                pid,
-                                           Particle_Vector_t& particles) const
+                                           Particle_Vector_t* particles) const
 {
-    if (!particles.alive(pid))
+    if (!particles->alive(pid))
         return;
 
     // get the particle weight
-    const double orig_weight = particles.wt(pid);
+    const double orig_weight = particles->wt(pid);
 
     // if the particle weight is below the cutoff do roulette
     if (orig_weight < d_Wc)
     {
         // the particle should always be alive if it gets here
-        DEVICE_CHECK(particles.alive(pid));
+        DEVICE_CHECK(particles->alive(pid));
         DEVICE_CHECK(d_Ws >= d_Wc);
 
         // calculate survival probablity
@@ -45,28 +45,28 @@ void VR_Roulette<Geometry>::post_collision(int                pid,
         DEVICE_CHECK(survival < 1.0);
 
         // particle survives roulette
-        if (particles.ran(pid) < survival)
+        if (particles->ran(pid) < survival)
         {
             // set the new weight of the surviving particle
-            particles.set_wt(pid,d_Ws);
-            DEVICE_CHECK(particles.wt(pid) == d_Ws);
+            particles->set_wt(pid,d_Ws);
+            DEVICE_CHECK(particles->wt(pid) == d_Ws);
 
             // update the event
-            particles.set_event(pid,profugus::events::ROULETTE_SURVIVE);
+            particles->set_event(pid,profugus::events::ROULETTE_SURVIVE);
         }
 
         // otherwise the particle dies
         else
         {
             // kill the particle
-            particles.kill(pid);
+            particles->kill(pid);
 
             // update the event
-            particles.set_event(pid,profugus::events::ROULETTE_KILLED);
+            particles->set_event(pid,profugus::events::ROULETTE_KILLED);
         }
     }
 
-    DEVICE_ENSURE(particles.wt(pid) >= orig_weight);
+    DEVICE_ENSURE(particles->wt(pid) >= orig_weight);
 }
 
 } // end namespace cuda_mc 

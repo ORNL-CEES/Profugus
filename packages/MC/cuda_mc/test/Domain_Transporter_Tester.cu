@@ -39,12 +39,12 @@ __global__ void test_transport_kernel( Uniform_Src       *source,
      if( tid < num_particles )
      {
          // Get particle from source
-         source->build_particle(tid,particles);
+         source->build_particle(tid,&particles);
 
          // Transport particle
          while (particles.event(tid) == profugus::events::COLLISION ||
                 particles.event(tid) == profugus::events::BOUNDARY)
-             trans->transport(tid,particles);
+             trans->transport(tid,&particles);
 
          // Get final event
          events[tid] = particles.event(tid);

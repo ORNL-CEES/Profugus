@@ -28,7 +28,7 @@ template <class Geometry>
 __device__ void Tallier<Geometry>::path_length(
         double                   step,
         int                      pid,
-        const Particle_Vector_t &particles)
+        const Particle_Vector_t *particles)
 {
     DEVICE_REQUIRE(step >= 0.0);
 
@@ -46,7 +46,7 @@ __device__ void Tallier<Geometry>::path_length(
  * \param p particle
  */
 template <class Geometry>
-__device__ void Tallier<Geometry>::source(int pid, const Particle_Vector_t &p)
+__device__ void Tallier<Geometry>::source(int pid, const Particle_Vector_t *p)
 {
 }
 

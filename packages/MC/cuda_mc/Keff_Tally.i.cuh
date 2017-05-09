@@ -35,12 +35,12 @@ template <class Geometry>
 __device__ void Keff_Tally<Geometry>::accumulate(
         double                   step,
         int                      pid,
-        const Particle_Vector_t &particles)
+        const Particle_Vector_t *particles)
 {
     DEVICE_REQUIRE(d_physics);
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    d_thread_keff[tid] += particles.wt(pid) * step *
+    d_thread_keff[tid] += particles->wt(pid) * step *
         d_physics->total(profugus::physics::NU_FISSION, pid, particles);
 }
 

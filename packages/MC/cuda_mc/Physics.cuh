@@ -100,26 +100,26 @@ class Physics
 
     // Get a total cross section from the physics library.
     __device__ double total(Reaction_Type type, int pid,
-                            const Particle_Vector_t &particles) const;
+                            const Particle_Vector_t *particles) const;
 
     // >>> TYPE-CONCEPT INTERFACE
 
     // Process a particle through a physical collision.
-    __device__ void collide(int pid, Particle_Vector_t &particles) const;
+    __device__ void collide(int pid, Particle_Vector_t *particles) const;
 
     // Sample fission site.
     __device__ int sample_fission_site(int                  pid,
-                                       Particle_Vector_t   &particles,
+                                       Particle_Vector_t   *particles,
                                        double               keff) const;
 
     // Sample fission spectrum and initialize the physics state.
     __device__ bool initialize_fission(unsigned int matid, int pid,
-                                       Particle_Vector_t &particles) const;
+                                       Particle_Vector_t *particles) const;
 
     // Initialize a physics state at a fission site.
     __device__ bool initialize_fission(const Fission_Site &fs,
                                        int                 pid,
-                                       Particle_Vector_t  &particles) const;
+                                       Particle_Vector_t  *particles) const;
 
     // Return whether a given material is fissionable
     __device__ bool is_fissionable(unsigned int matid) const

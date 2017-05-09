@@ -128,7 +128,7 @@ class Fission_Source
 
     // Get a particle from the source.
     __device__ inline void build_particle(
-        int pid, Particle_Vector_t &particles) const;
+        int pid, Particle_Vector_t *particles) const;
 
   private:
     // >>> IMPLEMENTATION
@@ -136,7 +136,7 @@ class Fission_Source
     // Sample the geometry.
     __device__ inline
     int sample_geometry(Space_Vector &r, const Space_Vector &omega,
-                        int pid, Particle_Vector_t &p) const;
+                        int pid, Particle_Vector_t *p) const;
 
 };
 

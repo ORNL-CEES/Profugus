@@ -81,11 +81,11 @@ class VR_Roulette
     // >>> VARIANCE REDUCTION INTERFACE
 
     //! Do nothing at surfaces
-    __device__ void post_surface(int pid, Particle_Vector_t& particle) const { /* * */ }
+    __device__ void post_surface(int pid, Particle_Vector_t* particle) const { /* * */ }
 
     // Do weight roulette at collisions
     __device__ inline void post_collision(int                pid,
-                                          Particle_Vector_t& particle) const;
+                                          Particle_Vector_t* particle) const;
 
     __host__ __device__ bool uses_splitting() const { return false; }
 
