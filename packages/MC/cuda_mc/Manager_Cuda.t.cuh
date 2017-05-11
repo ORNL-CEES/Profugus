@@ -90,6 +90,9 @@ void Manager_Cuda<Geometry_DMM>::setup(RCP_ParameterList master)
     err = cudaSetDevice(device_id);
     CHECK( cudaSuccess == err );
 
+    // Set preference to L1 cache
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+
     // get the geometry
     build_geometry(master);
     CHECK(d_geometry_dmm);
