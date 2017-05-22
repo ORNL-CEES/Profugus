@@ -10,7 +10,9 @@
 
 #include "RNG_Control.cuh"
 
+#include "Utils/comm/Timing.hh"
 #include "cuda_utils/Launch_Args.t.cuh"
+#include "cuda_utils/Hardware.hh"
 
 namespace cuda_mc
 {
@@ -30,7 +32,7 @@ class RNG_Init
 
     __device__ void operator()( std::size_t tid ) const
     {
-        curand_init(d_seeds[tid],0,0,d_rngs+tid);
+        curand_init(d_seeds[blockIdx.x],threadIdx.x,0,d_rngs+tid);
     }
 
   private:
@@ -46,6 +48,8 @@ class RNG_Init
 
 void RNG_Control_DMM::initialize( int num_streams )
 {
+    SCOPED_TIMER("MC::RNG_Control::initialize");
+
     int current_streams = d_rng_states.size();
     int new_streams = num_streams - current_streams;
 
@@ -54,8 +58,15 @@ void RNG_Control_DMM::initialize( int num_streams )
     {
         d_rng_states.resize(num_streams);
 
+        int block_size =
+            cuda::Hardware<cuda::arch::Device>::default_block_size();
+
+        int num_blocks = new_streams / block_size;
+        if (new_streams % block_size)
+            num_blocks++;
+
         // Create seeds on host
-        thrust::host_vector<seed_type> seeds_host(new_streams);
+        thrust::host_vector<seed_type> seeds_host(num_blocks,12345);
         for( auto &s : seeds_host )
             s = d_dist(d_gen);
 

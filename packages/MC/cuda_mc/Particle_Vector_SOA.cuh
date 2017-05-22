@@ -13,6 +13,7 @@
 
 #include <thrust/device_vector.h>
 #include "MC/mc/Definitions.hh"
+#include "Utils/comm/Timing.hh"
 #include "CudaUtils/cuda_utils/Device_View_Field.hh"
 #include "CudaUtils/cuda_utils/Device_Memory_Manager.hh"
 #include "CudaUtils/cuda_utils/Utility_Functions.hh"
@@ -218,6 +219,7 @@ class Particle_Vector_SOA_DMM :
     // Initialize vector for specified number of states
     void initialize(int num_states)
     {
+        SCOPED_TIMER("MC::Particle_Vector::initialize");
         REQUIRE(num_states > 0);
         d_matids.resize(    num_states);
         d_groups.resize(    num_states);

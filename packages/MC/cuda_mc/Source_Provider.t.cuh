@@ -67,6 +67,8 @@ void Source_Provider<Geometry>::get_particles(
     SP_Source source,
     SP_Particle_Vector_DMM particles, const Index_Vector &indices) const
 {
+    SCOPED_TIMER("MC::Source_Provider::get_particles");
+
     // Get particle count and set up RNG, particles, source batching
     size_type Np = std::min(source->num_left(),indices.size());
     particles->initialize(Np);
