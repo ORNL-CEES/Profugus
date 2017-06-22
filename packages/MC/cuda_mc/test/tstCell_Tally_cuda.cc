@@ -52,7 +52,10 @@ TEST(Cell_Tally, construction)
     Teuchos::RCP<Teuchos::ParameterList> pl(new Teuchos::ParameterList());
     pl->set<std::string>("problem_name",std::string("cell_tally_test"));
     cuda_profugus::Cell_Tally<cuda_profugus::Mesh_Geometry>
-	tally( pl, tester.geometry(), {1, 1, 1, 1, 1, 1, 1, 1}, num_batch );
+	tally( pl, tester.geometry(), num_batch );
+
+    tally.set_cells({0, 1, 2, 3, 4, 5, 6, 7}, {1, 1, 1, 1, 1, 1, 1, 1});
+
 
     // check sizes
     EXPECT_EQ( tally.num_cells(), num_cells );

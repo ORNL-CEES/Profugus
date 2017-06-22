@@ -274,8 +274,13 @@ void Problem_Builder<Geometry_DMM>::build_tallies()
     if ( d_db->isSublist("cell_tally_db") )
     {
         int num_batch = d_db->get<int>("num_batch",1);
+        auto cell_tally_db = Teuchos::sublist(d_db, "cell_tally_db");
+        VALIDATE(cell_tally_db->isType<OneDArray_int>("cells"),
+                 "Must provide cell list to enable cell tally.");
+        const auto& cell_list = cell_tally_db->get<OneDArray_int>("cells");
         auto cell_tally = std::make_shared<cuda_profugus::Cell_Tally<Geom_t> >(
-            d_db, d_geometry, d_geometry_dmm->volumes(), num_batch );
+            d_db, d_geometry, num_batch );
+        cell_tally->set_cells(cell_list.toVector(),d_geometry_dmm->volumes());
         d_tallier->add_pathlength_tally( cell_tally );
     }
 

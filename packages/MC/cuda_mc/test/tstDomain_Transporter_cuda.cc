@@ -204,7 +204,11 @@ TYPED_TEST(DomainTransporterTest, take_step_roulette)
     std::vector<double> volumes(5*5*5,20.0*20.0*20.0);
     std::shared_ptr<Cell_Tally_t> cell_tally =
         std::make_shared<Cell_Tally_t>( this->db, physics_tester.geometry(),
-                volumes, num_batch );
+                num_batch );
+    std::vector<int> cells(5*5*5);
+    for (int cell = 0; cell < 5*5*5; ++cell)
+        cells[cell] = cell;
+    cell_tally->set_cells(cells,volumes);
     tallier->add_pathlength_tally( cell_tally );
     tallier->build();
 

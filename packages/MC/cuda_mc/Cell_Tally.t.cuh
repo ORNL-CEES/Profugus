@@ -14,6 +14,7 @@
 #include "cuda_utils/Memory.cuh"
 #include "cuda_utils/CudaDBC.hh"
 #include "cuda_utils/Atomic_Add.cuh"
+#include "cuda_utils/Utility_Functions.hh"
 
 #include "utils/Serial_HDF5_Writer.hh"
 
@@ -50,10 +51,11 @@ __global__ void init_tally_kernel( const int size, double* tally )
 template<class Geometry>
 __global__ void tally_kernel( const Geometry* geometry,
 			      const Particle_Vector<Geometry>* particles,
-			      const int num_collision,
-			      const int num_boundary,
-			      const int num_batch,
-			      const int num_cell,
+			      const int  num_collision,
+			      const int  num_boundary,
+			      const int  num_batch,
+			      const int  num_cell,
+                  const int* cells,
 			      double* tally )
 {
     // Get the thread index.
@@ -63,18 +65,29 @@ __global__ void tally_kernel( const Geometry* geometry,
 
     if ( idx < num_collision + num_boundary )
     {
-	// Get the particle index.
-	int pidx = ( idx < num_collision )
-		   ? collision_indices[idx]
-		   : boundary_indices[idx - num_collision];
-    
-	// Accumulate the particle in its batch and cell.
-	DEVICE_REQUIRE( particles->alive(pidx) );
-	int tally_idx = particles->batch( pidx ) * num_cell +
-				geometry->cell( particles->geo_state(pidx) );
-	DEVICE_CHECK( tally_idx < num_batch * num_cell );
-	cuda_utils::Atomic_Add<cuda_utils::arch::Device>::fetch_add( 
-	    &tally[tally_idx], particles->wt(pidx) * particles->step(pidx) );
+        // Get the particle index.
+        int pidx = ( idx < num_collision )
+            ? collision_indices[idx]
+            : boundary_indices[idx - num_collision];
+
+        // Look for particle's cell in cell list
+        int cell = geometry->cell(particles->geo_state(pidx));
+        int cell_ind = cuda_utils::utility::lower_bound(cells,
+                                                        cells+num_cell,
+                                                        cell) - cells;
+
+        // See if this is a valid index and if it exactly matches
+        // the particle's cell
+        if (cell_ind < num_cell && cells[cell_ind] == cell)
+        {
+            // Accumulate the particle in its batch and cell.
+            DEVICE_REQUIRE( particles->alive(pidx) );
+            int tally_idx = particles->batch( pidx ) * num_cell + cell_ind;
+            DEVICE_CHECK( tally_idx < num_batch * num_cell );
+            cuda_utils::Atomic_Add<cuda_utils::arch::Device>::fetch_add( 
+                &tally[tally_idx],
+                particles->wt(pidx) * particles->step(pidx) );
+        }
     }
 }
 
@@ -86,14 +99,27 @@ template <class Geometry>
 Cell_Tally<Geometry>::Cell_Tally( 
     RCP_Std_DB db,
     const cuda_utils::Shared_Device_Ptr<Geometry>& geometry, 
-    const std::vector<double>& volumes,
     const int num_batch )
     : d_geometry( geometry )
-    , d_volumes( volumes )
     , d_num_batch( num_batch )
-    , d_num_cells( volumes.size() )
     , d_db(db)
 {
+}
+
+
+// Set cells to tally
+template <class Geometry>
+void Cell_Tally<Geometry>::set_cells(const std::vector<int>    &cells,
+                                     const std::vector<double> &all_volumes)
+{
+    REQUIRE (std::is_sorted(cells.begin(),cells.end()));
+
+    d_num_cells = cells.size();
+
+    // Allocate the cell list on device
+    cuda_utils::memory::Malloc(d_cells,d_num_cells);
+    cuda_utils::memory::Copy_To_Device(d_cells,cells.data(),d_num_cells);
+
     // Allocate the tally.
     int size = d_num_batch * d_num_cells;
     REQUIRE(size > 0);
@@ -108,6 +134,11 @@ Cell_Tally<Geometry>::Cell_Tally(
 
     // Initialize the tally to zero.
     init_tally_kernel<<<num_blocks,threads_per_block>>>( size, d_tally );
+
+    // Compute volumes of tally cells
+    d_volumes.resize(d_num_cells);
+    for (int ind = 0; ind < d_num_cells; ++ind)
+        d_volumes[ind] = all_volumes[cells[ind]];
 }
     
 //---------------------------------------------------------------------------//
@@ -150,6 +181,7 @@ void Cell_Tally<Geometry>::accumulate(
             num_boundary,
             d_num_batch,
             d_num_cells,
+            d_cells,
             d_tally );
 
         // Synchronize after tally.

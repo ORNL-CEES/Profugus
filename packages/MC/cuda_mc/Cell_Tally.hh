@@ -62,6 +62,9 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Cell tallies. Indexed as d_tally[batch][cell]. On-device.
     double* d_tally;
 
+    // Cell list, size d_num_cells.  On-device.
+    int* d_cells;
+
     // Execution stream.
     cuda_utils::Stream<cuda_utils::arch::Device> d_stream;
 
@@ -81,8 +84,11 @@ class Cell_Tally : public Pathlength_Tally<Geometry>
     // Constructor
     Cell_Tally( RCP_Std_DB db,
                 const cuda_utils::Shared_Device_Ptr<Geometry>& geometry,
-                const std::vector<double>& volumes,
                 const int num_batch );
+
+    // Set tally cells
+    void set_cells(const std::vector<int>    &cells,
+                   const std::vector<double> &all_volumes);
 
     // Destructor.
     ~Cell_Tally();
