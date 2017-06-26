@@ -134,9 +134,9 @@ class Fission_Rebalance
     typedef typename Physics_t::Fission_Site            Fission_Site_t;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container_t;
     typedef typename Physics_t::Space_Vector            Space_Vector;
-    typedef def::Vec_Int                                Vec_Int;
     typedef def::size_type                              size_type;
-    typedef std::pair<int, int>                         Array_Bnds;
+    typedef std::vector<size_type>                      Vec_Size_Type;
+    typedef std::pair<size_type, size_type>             Array_Bnds;
     //@}
 
   public:
@@ -206,7 +206,7 @@ class Fission_Rebalance
     size_type d_target_set;
 
     // Number of fission sites on each set.
-    Vec_Int d_sites_set;
+    Vec_Size_Type d_sites_set;
 
     // Current global fission bank array bounds on this set.
     Array_Bnds d_bnds;
