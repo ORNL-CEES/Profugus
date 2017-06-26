@@ -31,32 +31,34 @@ class Source
 {
   public:
 
+    typedef def::size_type size_type;
+
     //! Virtual destructor.
     virtual ~Source() { /* ... */ };
 
     // >>> VIRTUAL PUBLIC INTERFACE
 
     //! Get particles from the source.
-    virtual void get_particles( 
+    virtual void get_particles(
 	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) = 0;
 
     //! Whether the source has finished emitting all its particles.
     virtual bool empty() const = 0;
 
     //! Number of particles to transport in the source on the current domain.
-    virtual int num_to_transport() const = 0;
+    virtual size_type num_to_transport() const = 0;
 
     //! Total number of particles to transport in the entire problem/cycle.
-    virtual int total_num_to_transport() const = 0;
+    virtual size_type total_num_to_transport() const = 0;
 
     //! Total number of requested particles.
-    virtual int Np() const = 0;
+    virtual size_type Np() const = 0;
 
     //! Number transported so far on this domain.
-    virtual int num_run() const = 0;
+    virtual size_type num_run() const = 0;
 
     //! Number left to transport on this domain.
-    virtual int num_left() const = 0;
+    virtual size_type num_left() const = 0;
 };
 
 } // end namespace cuda_profugus

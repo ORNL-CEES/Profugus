@@ -319,7 +319,13 @@ Fission_Source<Geometry>::Fission_Source(const RCP_Std_DB&          db,
     d_width[2] = upper_z - lower_z;
 
     // store the total number of requested particles per active_cycle
-    d_np_requested = static_cast<int>(db->get("Np", 1000));
+    d_np_requested = 1000;
+    if (db->isType<int>("Np"))
+        d_np_requested = db->get<int>("Np");
+    else if (db->isType<size_type>("Np"))
+        d_np_requested = db->get<size_type>("Np");
+    else if (db->isParameter("Np"))
+        VALIDATE(false,"Unrecognized type for parameter Np.");
 
     // initialize the total for the first active_cycle
     d_np_total = d_np_requested;
@@ -479,11 +485,11 @@ void Fission_Source<Geometry>::get_particles(
     }
 
     // Get the particles that are dead.
-    int num_particle =
+    size_type num_particle =
         particles.get_host_ptr()->get_event_size( events::DEAD );
 
     // Calculate the total number of particles we will create.
-    int num_to_create = std::min( d_np_left, num_particle );
+    size_type num_to_create = std::min( d_np_left, num_particle );
 
     if (num_to_create > 0)
     {

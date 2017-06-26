@@ -90,6 +90,7 @@ class Fission_Source : public Source<Geometry>
     typedef Teuchos::ArrayView<const double>            Const_Array_View;
     typedef def::Vec_Dbl                                Vec_Dbl;
     typedef def::Vec_Int                                Vec_Int;
+    typedef def::size_type                              size_type;
     //@}
 
   public:
@@ -130,19 +131,19 @@ class Fission_Source : public Source<Geometry>
     bool empty() const override { return d_np_left == 0; }
 
     //! Number of particles to transport in the source on the current domain.
-    int num_to_transport() const override { return d_np_domain; }
+    size_type num_to_transport() const override { return d_np_domain; }
 
     //! Total number of particles to transport in the entire problem/cycle.
-    int total_num_to_transport() const override { return d_np_total; }
+    size_type total_num_to_transport() const override { return d_np_total; }
 
     //! Total number of requested particles per cycle.
-    int Np() const override { return d_np_requested; }
+    size_type Np() const override { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    int num_run() const override { return d_np_run; }
+    size_type num_run() const override { return d_np_run; }
 
     //! Number left to transport on this domain.
-    int num_left() const override { return d_np_left; }
+    size_type num_left() const override { return d_np_left; }
 
     // >>> CLASS ACCESSORS
 
@@ -161,7 +162,7 @@ class Fission_Source : public Source<Geometry>
     const Space_Vector& width() const { return d_width; }
 
     //! Set a new number per cycle.
-    void update_Np(int np) { d_np_requested = np; }
+    void update_Np(size_type np) { d_np_requested = np; }
 
   private:
     // >>> IMPLEMENTATION
@@ -213,19 +214,19 @@ class Fission_Source : public Source<Geometry>
     Space_Vector d_width;
 
     // Requested particles per cycle.
-    int d_np_requested;
+    size_type d_np_requested;
 
     // Number of particles: total, domain
-    int d_np_total, d_np_domain;
+    size_type d_np_total, d_np_domain;
 
     // Particle weight.
     double d_wt;
 
     // Number of source particles left in the current domain.
-    int d_np_left;
+    size_type d_np_left;
 
     // Number of particles run on the current domain.
-    int d_np_run;
+    size_type d_np_run;
 
     // Dummy fission site container.
     Fission_Site_Container d_dummy_container;

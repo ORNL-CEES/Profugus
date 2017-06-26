@@ -61,6 +61,7 @@ class Uniform_Source : public Source<Geometry>
     typedef Teuchos::RCP<ParameterList_t>       RCP_Std_DB;
     typedef typename Geometry_t::Space_Vector   Space_Vector;
     typedef events::Event                       Event_t;
+    typedef def::size_type                      size_type;
     //@}
 
   private:
@@ -85,9 +86,9 @@ class Uniform_Source : public Source<Geometry>
     double* d_erg_cdf;
 
   public:
-    
+
     // Constructor.
-    Uniform_Source( const RCP_Std_DB& db, 
+    Uniform_Source( const RCP_Std_DB& db,
 		    const cuda_utils::Shared_Device_Ptr<Geometry>& geometry,
 		    const int num_groups,
 		    const int num_batch );
@@ -101,7 +102,7 @@ class Uniform_Source : public Source<Geometry>
     // >>> HOST-API
 
     // Get particles from the source.
-    void get_particles( 
+    void get_particles(
 	cuda_utils::Shared_Device_Ptr<Particle_Vector<Geometry> >& particles ) override;
 
     //! Boolean operator for source (true when source still has particles).
@@ -111,21 +112,21 @@ class Uniform_Source : public Source<Geometry>
     int num_batch() const { return d_num_batch; }
 
     //! Number of particles to transport in the source on the current domain.
-    int num_to_transport() const override { return d_np_domain; }
+    size_type num_to_transport() const override { return d_np_domain; }
 
     //! Total number of particles to transport in the entire problem/cycle.
-    int total_num_to_transport() const override { return d_np_total; }
+    size_type total_num_to_transport() const override { return d_np_total; }
 
     // >>> CLASS ACCESSORS
 
     //! Total number of requested particles.
-    int Np() const override { return d_np_requested; }
+    size_type Np() const override { return d_np_requested; }
 
     //! Number transported so far on this domain.
-    int num_run() const override { return d_np_run; }
+    size_type num_run() const override { return d_np_run; }
 
     //! Number left to transport on this domain.
-    int num_left() const override { return d_np_left; }
+    size_type num_left() const override { return d_np_left; }
 
   private:
     // >>> IMPLEMENTATION
@@ -139,20 +140,20 @@ class Uniform_Source : public Source<Geometry>
     cuda_utils::Stream<cuda_utils::arch::Device> d_stream;
 
     // Requested particles.
-    int d_np_requested;
+    size_type d_np_requested;
 
     // Number of particles: total, domain
-    int d_np_total;
-    int d_np_domain;
+    size_type d_np_total;
+    size_type d_np_domain;
 
     // Particle weight.
     double d_wt;
 
     // Number of source particles left in the current domain.
-    int d_np_left;
+    size_type d_np_left;
 
     // Number of particles run on the current domain.
-    int d_np_run;
+    size_type d_np_run;
 };
 
 } // end namespace cuda_profugus

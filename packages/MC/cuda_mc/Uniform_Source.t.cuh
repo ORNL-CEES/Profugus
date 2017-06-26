@@ -122,8 +122,13 @@ Uniform_Source<Geometry,Shape>::Uniform_Source(
     REQUIRE(!db.is_null());
 
     // store the total number of requested particles
-    d_np_requested = static_cast<int>(db->get("Np", 1000));
-    CHECK( d_np_requested > 0 );
+    d_np_requested = 1000;
+    if (db->isType<int>("Np"))
+        d_np_requested = db->get<int>("Np");
+    else if (db->isType<size_type>("Np"))
+        d_np_requested = db->get<size_type>("Np");
+    else if (db->isParameter("Np"))
+        VALIDATE(false,"Unrecognized type for parameter Np.");
 
     // initialize the total
     d_np_total = d_np_requested;
@@ -217,10 +222,10 @@ void Uniform_Source<Geometry,Shape>::get_particles(
     SCOPED_TIMER("CUDA_MC::Uniform_Source.get_particles");
 
     // Get the particles that are dead.
-    int num_particle = particles.get_host_ptr()->get_event_size( events::DEAD );
+    size_type num_particle = particles.get_host_ptr()->get_event_size( events::DEAD );
 
     // Calculate the total number of particles we will create.
-    int num_to_create = std::min( d_np_left, num_particle );
+    size_type num_to_create = std::min( d_np_left, num_particle );
 
     if (num_to_create > 0)
     {
