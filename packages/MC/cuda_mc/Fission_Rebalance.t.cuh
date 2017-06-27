@@ -161,7 +161,9 @@ void Fission_Rebalance<Geometry>::fission_bank_parameters(
     calc_num_sites(fission_bank);
 
     // determine the global number of fission sites
-    d_num_global = std::accumulate(d_sites_set.begin(), d_sites_set.end(), 0);
+    d_num_global = 0;
+    for (const auto &sites : d_sites_set)
+        d_num_global += sites;
     CHECK(d_num_global > 0);
 
     // calculate the target number of fission sites on this set
@@ -211,42 +213,50 @@ void Fission_Rebalance<Geometry>::communicate(
     REQUIRE(d_recv_right.empty());
 
     // send/receive from right/left
-    size_type num_send_left  = 0;
-    size_type num_send_right = 0;
-    size_type num_recv_left  = 0;
-    size_type num_recv_right = 0;
+    int num_send_left  = 0;
+    int num_send_right = 0;
+    int num_recv_left  = 0;
+    int num_recv_right = 0;
 
     // calculate the number of sites to send/recv; sends are constrained by
     // the number of sites currently on the set
+
+    constexpr long maxval = std::numeric_limits<int>::max();
 
     // determine the number to send to the left
     if (d_bnds.first < d_target_bnds.first)
     {
         CHECK(d_left != -1);
-        num_send_left = std::min(d_target_bnds.first - d_bnds.first,
-                                 d_sites_set[d_set]);
+        size_type tmp_send_left = d_target_bnds.first - d_bnds.first;
+        INSIST(tmp_send_left < maxval,"Overflowing 32 bit integer.");
+        num_send_left = static_cast<int>(tmp_send_left);
+        num_send_left = std::min(num_send_left,d_sites_set[d_set]);
     }
     else if (d_bnds.first > d_target_bnds.first)
     {
         CHECK(d_left != -1);
-        num_recv_left = std::min(d_bnds.first - d_target_bnds.first,
-                                 d_sites_set[d_set - 1]);
+        size_type tmp_recv_left = d_bnds.first - d_target_bnds.first;
+        INSIST(tmp_recv_left < maxval,"Overflowing 32 bit integer.");
+        num_recv_left = static_cast<int>(tmp_recv_left);
+        num_recv_left = std::min(num_recv_left,d_sites_set[d_set-1]);
     }
 
     // determine the number to send to the right
     if (d_bnds.second > d_target_bnds.second)
     {
         CHECK(d_right != -1);
-        num_send_right = std::min(d_bnds.second - d_target_bnds.second,
-                                  d_sites_set[d_set]);
+        size_type tmp_send_right = d_bnds.second - d_target_bnds.second;
+        INSIST(tmp_send_right < maxval,"Overflowing 32 bit integer.");
+        num_send_right = static_cast<int>(tmp_send_right);
+        num_send_right = std::min(num_send_right,d_sites_set[d_set]);
     }
-
-    // determine the number we receive from the right
     else if (d_bnds.second < d_target_bnds.second)
     {
         CHECK(d_right != -1);
-        num_recv_right = std::min(d_target_bnds.second - d_bnds.second,
-                                  d_sites_set[d_set + 1]);
+        size_type tmp_recv_right = d_target_bnds.second - d_bnds.second;
+        INSIST(tmp_recv_right < maxval,"Overflowing 32 bit integer.");
+        num_recv_right = static_cast<int>(tmp_recv_right);
+        num_recv_right = std::min(num_recv_right,d_sites_set[d_set+1]);
     }
 
     CHECK(num_send_left >= 0 && num_send_left <= d_sites_set[d_set]);
@@ -292,7 +302,9 @@ void Fission_Rebalance<Geometry>::calc_num_sites(
     profugus::global_sum(&d_sites_set[0], d_num_sets);
 
     // make the array bounds on this set --> the array bounds are (first,last)
-    d_bnds.first  = std::accumulate(&d_sites_set[0], &d_sites_set[0]+d_set, 0);
+    d_bnds.first = 0;
+    for (int set = 0; set < d_set; ++set)
+        d_bnds.first += d_sites_set[set];
     d_bnds.second = d_bnds.first + d_sites_set[d_set] - 1;
     CHECK(d_bnds.second - d_bnds.first + 1 == d_sites_set[d_set]);
 }
@@ -303,7 +315,7 @@ void Fission_Rebalance<Geometry>::calc_num_sites(
  */
 template <class Geometry>
 void Fission_Rebalance<Geometry>::post_receives(
-        size_type                 num_recv,
+        int                       num_recv,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
         profugus::Request         &handle,
@@ -334,7 +346,7 @@ void Fission_Rebalance<Geometry>::post_receives(
  */
 template <class Geometry>
 void Fission_Rebalance<Geometry>::send(
-        size_type                 num_send,
+        int                       num_send,
         Fission_Site_Container_t &bank,
         int                       destination,
         int                       tag)
@@ -355,7 +367,7 @@ void Fission_Rebalance<Geometry>::send(
         handle.wait();
 
         // pop sites off the bank that have been sent
-        for (size_type n = 0; n < num_send; ++n)
+        for (int n = 0; n < num_send; ++n)
         {
             CHECK(!bank.empty());
             bank.pop_back();
@@ -372,7 +384,7 @@ void Fission_Rebalance<Geometry>::send(
  */
 template <class Geometry>
 void Fission_Rebalance<Geometry>::receive(
-        size_type                 num_recv,
+        int                       num_recv,
         Fission_Site_Container_t &bank,
         Fission_Site_Container_t &recv_bank,
         int                       destination,
