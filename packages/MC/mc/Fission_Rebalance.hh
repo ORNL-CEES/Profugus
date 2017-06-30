@@ -134,8 +134,8 @@ class Fission_Rebalance
     typedef typename Physics_t::Fission_Site            Fission_Site_t;
     typedef typename Physics_t::Fission_Site_Container  Fission_Site_Container_t;
     typedef typename Physics_t::Space_Vector            Space_Vector;
-    typedef def::size_type                              size_type;
-    typedef std::vector<size_type>                      Vec_Size_Type;
+    typedef std::vector<int>                            Vec_Int;
+    typedef long                                        size_type;
     typedef std::pair<size_type, size_type>             Array_Bnds;
     //@}
 
@@ -158,10 +158,10 @@ class Fission_Rebalance
     const Array_Bnds& target_array_bnds() const { return d_target_bnds; }
 
     //! Return number of sends during a rebalance step on this set.
-    size_type num_sends() const { return d_num_send; }
+    int num_sends() const { return d_num_send; }
 
     //! Return number of receives during a rebalance step on this set.
-    size_type num_receives() const { return d_num_recv; }
+    int num_receives() const { return d_num_recv; }
 
     //! Return number of iterations for this rebalance.
     int num_iterations() const { return d_num_iter; }
@@ -179,15 +179,15 @@ class Fission_Rebalance
     void calc_num_sites(const Fission_Site_Container_t &fission_bank);
 
     // Post receives.
-    void post_receives(size_type num_recv, Fission_Site_Container_t &recv_bank,
+    void post_receives(int num_recv, Fission_Site_Container_t &recv_bank,
                        int destination, profugus::Request &handle, int tag);
 
     // Send.
-    void send(size_type num_send, Fission_Site_Container_t &bank, int destination,
+    void send(int num_send, Fission_Site_Container_t &bank, int destination,
               int tag);
 
     // Receive.
-    void receive(size_type num_recv, Fission_Site_Container_t &bank,
+    void receive(int num_recv, Fission_Site_Container_t &bank,
                  Fission_Site_Container_t &recv_bank, int destination,
                  profugus::Request &handle, int tag);
 
@@ -206,7 +206,7 @@ class Fission_Rebalance
     size_type d_target_set;
 
     // Number of fission sites on each set.
-    Vec_Size_Type d_sites_set;
+    Vec_Int d_sites_set;
 
     // Current global fission bank array bounds on this set.
     Array_Bnds d_bnds;
@@ -222,7 +222,7 @@ class Fission_Rebalance
     Fission_Site_Container_t d_recv_left, d_recv_right;
 
     // Counters for send/receive diagnostics.
-    size_type d_num_recv, d_num_send, d_num_iter;
+    int d_num_recv, d_num_send, d_num_iter;
 
     // Receive handles.
     profugus::Request d_handle_left, d_handle_right;
