@@ -198,9 +198,15 @@ int RTK_Array<T>::find_object(
 {
     using def::X; using def::Y; using def::Z;
 
-    DEVICE_REQUIRE(r[X] >= d_x.front()); DEVICE_REQUIRE(r[X] <= d_x.back());
-    DEVICE_REQUIRE(r[Y] >= d_y.front()); DEVICE_REQUIRE(r[Y] <= d_y.back());
-    DEVICE_REQUIRE(r[Z] >= d_z.front()); DEVICE_REQUIRE(r[Z] <= d_z.back());
+    DEVICE_REQUIRE(r[X] >= d_x.front()); 
+    DEVICE_REQUIRE(r[Y] >= d_y.front()); 
+    DEVICE_REQUIRE(r[Z] >= d_z.front()); 
+
+#if 0
+    DEVICE_REQUIRE(r[X] <= d_x.back());
+    DEVICE_REQUIRE(r[Y] <= d_y.back());
+    DEVICE_REQUIRE(r[Z] <= d_z.back());
+#endif
 
     // iterators
     int                     i,j,k;
@@ -236,6 +242,14 @@ int RTK_Array<T>::find_object(
         // reset index
         k = 0;
     }
+
+    // Numerical roundoff fixup
+    if (i == d_N[X])
+        i--;
+    if (j == d_N[Y])
+        j--;
+    if (k == d_N[Z])
+        k--;
 
     DEVICE_CHECK(i >= 0 && i < d_N[X]);
     DEVICE_CHECK(j >= 0 && j < d_N[Y]);
