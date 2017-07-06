@@ -37,7 +37,7 @@ scientists (listed alphabetically)
 
 * Tom Evans <evanstm@ornl.gov>
 
-* Steven Hamilton <hamiltonsr@ornl.gov>
+* Steven Hamilton <hamiltonsp@ornl.gov>
 
 * Seth Johnson <johnsonsr@ornl.gov>
 
@@ -51,7 +51,7 @@ Profugus is developed and maintained by the following team:
 
 * Tom Evans <evanstm@ornl.gov>
 
-* Steven Hamilton <hamiltonsr@ornl.gov>
+* Steven Hamilton <hamiltonsp@ornl.gov>
 
 * Stuart Slattery <slatterysr@ornl.gov>
 
