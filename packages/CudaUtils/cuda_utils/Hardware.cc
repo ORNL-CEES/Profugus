@@ -85,8 +85,8 @@ void Hardware<Device>::acquire(Acquire_Method method)
     int num_devices = -1;
     CudaCall(cudaGetDeviceCount(&num_devices));
 
-    int best_value = -1;
-    int this_value = -1;
+    long long best_value = -1;
+    long long this_value = -1;
     for (int device = 0; device < num_devices; ++device)
     {
         CudaCall(cudaGetDeviceProperties(&prop, device));
@@ -98,9 +98,9 @@ void Hardware<Device>::acquire(Acquire_Method method)
         switch (method)
         {
             case HIGHEST_FLOPS:
-                this_value = prop.multiProcessorCount
-                             * num_cores_per_mp(prop.major, prop.minor)
-                             * prop.clockRate;
+                this_value = prop.multiProcessorCount;
+                this_value *= num_cores_per_mp(prop.major, prop.minor);
+                this_value *= prop.clockRate;
                 break;
             case HIGHEST_COMPUTE:
                 this_value = (prop.major << 4) + prop.minor;
