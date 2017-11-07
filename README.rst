@@ -78,6 +78,14 @@ that are used by the mini-apps.  These are:
 **Matprop**
    Data structures for storing material properties (cross-sections).
 
+**Minisweep**
+    Although contained in a separate code repository, the Profugus project
+    also includes the Minisweep application developed by Wayne Joubert
+    <joubert@ornl.gov>.  Minisweep is a deterministic Sn radiation transport
+    miniapp used for performance optimization and performance model
+    evaluation on HPC architectures.  The Minisweep repository can be found
+    at https://github.com/wdj/minisweep.
+
 Profugus is designed to build and run with a minimum of dependencies.
 However, there are some requirements.  The third-party software (TPLs)
 necessary to build Profugus is all open-source and freely available.
