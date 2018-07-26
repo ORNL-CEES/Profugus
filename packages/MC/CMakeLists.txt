@@ -115,7 +115,7 @@ SET(MC_SOURCES
   mc/Particle_Metaclass.pt.cc
   mc/Physics.pt.cc
   mc/Sampler.cc
-  #mc/Single_Pin_Conduction.cc
+  mc/Single_Pin_Conduction.cc
   mc/Single_Pin_Subchannel.cc
   mc/Solver.pt.cc
   mc/Source.pt.cc
