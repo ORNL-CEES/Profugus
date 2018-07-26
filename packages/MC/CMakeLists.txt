@@ -116,7 +116,7 @@ SET(MC_SOURCES
   mc/Physics.pt.cc
   mc/Sampler.cc
   #mc/Single_Pin_Conduction.cc
-  #mc/Single_Pin_Subchannel.cc
+  mc/Single_Pin_Subchannel.cc
   mc/Solver.pt.cc
   mc/Source.pt.cc
   mc/Source_Diagnostic_Tally.pt.cc
