@@ -123,6 +123,7 @@ SET(MC_SOURCES
   mc/Source_Transporter.pt.cc
   mc/Tallier.pt.cc
   mc/Tally.pt.cc
+  mc/TwoGroupCrossSections.cc
   mc/Uniform_Source.pt.cc
   mc/VR_Roulette.pt.cc
   mc/Water_Properties.cc
