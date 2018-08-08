@@ -30,7 +30,7 @@ class SinglePinSubchannelTest : public ::testing::Test
         params->set("max_iters", 10);
         params->set("verbosity", std::string("high"));
 
-        std::vector<double> dz(10, 0.36);
+        std::vector<double> dz(10, 36.0);
 
         d_solver = std::make_shared<Single_Pin_Subchannel>(params, dz);
     }
@@ -46,7 +46,7 @@ class SinglePinSubchannelTest : public ::testing::Test
 
 TEST_F(SinglePinSubchannelTest, standard)
 {
-    double area = 0.0126*0.0126 - 3.1415926 * 0.00475 * 0.00475;
+    double area = 1.26*1.26 - 3.1415926 * 0.475 * 0.475;
     d_solver->set_channel_area(area);
     d_solver->set_mass_flow_rate(0.35);
     d_solver->set_inlet_temperature(565.0);
@@ -73,8 +73,8 @@ TEST_F(SinglePinSubchannelTest, standard)
     EXPECT_VEC_SOFTEQ(ref_temp, temperature, 1.0e-6);
 
     std::vector<double> ref_dens =
-        {740.84773, 733.08312, 725.11111, 716.92592, 708.52217,
-         699.89494, 691.03975, 681.95270, 672.63047, 663.07039};
+        {0.74084773, 0.73308312, 0.72511111, 0.71692592, 0.70852217,
+         0.69989494, 0.69103975, 0.68195270, 0.67263047, 0.66307039};
     EXPECT_VEC_SOFTEQ(ref_dens, density, 1.0e-5);
 }
 

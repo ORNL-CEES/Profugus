@@ -74,11 +74,12 @@ class Single_Pin_Subchannel
     Single_Pin_Subchannel(RCP_PL&                    parameters,
                           const std::vector<double>& delta_z);
 
-    // Set channel area (m^2)
+    // Set channel area (cm^2)
     void set_channel_area(double area)
     {
+        // Channel area internally is needed in m^2
         REQUIRE(area > 0.0);
-        d_area = area;
+        d_area = 1e-4 * area;
     }
 
     // Set mass flow rate (kg/s)

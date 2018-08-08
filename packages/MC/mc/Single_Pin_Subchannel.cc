@@ -32,6 +32,10 @@ Single_Pin_Subchannel::Single_Pin_Subchannel(
     d_tol = parameters->get("tolerance", 1.0e-6);
     d_max_iters = parameters->get("max_iters", 100);
 
+    // Convert dz from cm to m
+    for (auto& val : d_delta_z)
+        val *= 1e-2;
+
     auto verb =
         profugus::lower(parameters->get("verbosity", std::string("none")));
     if (verb == "none")
@@ -46,6 +50,10 @@ Single_Pin_Subchannel::Single_Pin_Subchannel(
 
 //---------------------------------------------------------------------------//
 // Solve for temperature and density in subchannel
+//
+// Note that the subchannel solver internally works with density in units
+// of kg/m^3 (to facilitate use of water material property correlations),
+// but is converted to g/cm^3 upon output.
 //---------------------------------------------------------------------------//
 void Single_Pin_Subchannel::solve(const std::vector<double>& power,
                                   std::vector<double>&       temperature,
@@ -141,6 +149,9 @@ void Single_Pin_Subchannel::solve(const std::vector<double>& power,
         }
     }
 
+    // Conversion from kg/m^3 to g/cm^3
+    constexpr double kgm3_2_gcm3 = 0.001;
+
     // Compute temperature and density from enthalpy and pressure
     for (int k = 0; k < num_regions; ++k)
     {
@@ -149,7 +160,7 @@ void Single_Pin_Subchannel::solve(const std::vector<double>& power,
         double p_mean = 0.5 * (p[k] + p[k+1]);
 
         temperature[k] = Water_Properties::Temperature(h_mean, p_mean);
-        density[k]     = Water_Properties::Density(h_mean, p_mean);
+        density[k] = kgm3_2_gcm3 * Water_Properties::Density(h_mean, p_mean);
     }
 }
 
