@@ -11,6 +11,10 @@
 #ifndef MC_mc_Assembly_Model_hh
 #define MC_mc_Assembly_Model_hh
 
+#include <vector>
+
+#include "Utils/harness/DBC.hh"
+
 namespace mc
 {
 
@@ -29,10 +33,6 @@ namespace mc
 class Assembly_Model
 {
   public:
-    //@{
-    //! Typedefs
-    <++>
-    //@}
 
     enum PIN_TYPE {FUEL, GUIDE};
 
@@ -76,7 +76,7 @@ class Assembly_Model
     void set_guide_radius(double gr)
     {
         REQUIRE(gr > 0);
-        d_guidel_radius = gr;
+        d_guide_radius = gr;
     }
 
     // Accessors
@@ -85,6 +85,9 @@ class Assembly_Model
     double guide_radius() const {return d_guide_radius;}
     const std::vector<double>& x_edges() const {return d_x_edges;}
     const std::vector<double>& y_edges() const {return d_y_edges;}
+    int num_pins_x() const {return d_Nx;}
+    int num_pins_y() const {return d_Ny;}
+    int num_pins() const {return d_Nx * d_Ny;}
 
     // Convert (i,j) to cardinal pin index
     int pin_id(int i, int j) const
