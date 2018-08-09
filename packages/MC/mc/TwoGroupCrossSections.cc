@@ -18,9 +18,9 @@ namespace mc
 // Get interpolated cross section data
 //---------------------------------------------------------------------------//
 auto TwoGroupCrossSections::get_data(
-        XS_Type type,
-        double  T,
-        double  rho) -> XS_Data
+        Assembly_Model::PIN_TYPE type,
+        double                   T,
+        double                   rho) -> XS_Data
 {
     REQUIRE(T > 273);
     REQUIRE(T < 3000);
@@ -32,7 +32,7 @@ auto TwoGroupCrossSections::get_data(
 
     XS_Data data;
 
-    if (type == FUEL)
+    if (type == Assembly_Model::FUEL)
     {
         // XS Data (mean value, temperature slope, density slope
         constexpr double D0[3]       = {0.6109,  -3.45e-7,   -0.5895};
@@ -59,7 +59,7 @@ auto TwoGroupCrossSections::get_data(
         data.nu_fission[0] = nu_sigf0[0];
         data.nu_fission[1] = nu_sigf1[0];
     }
-    else if (type == GUIDE)
+    else if (type == Assembly_Model::GUIDE)
     {
         // XS Data (mean value, temperature slope, density slope
         constexpr double D0[2]       = {0.4916,    -0.7582};

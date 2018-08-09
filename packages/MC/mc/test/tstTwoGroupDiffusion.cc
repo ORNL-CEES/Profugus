@@ -26,6 +26,7 @@ class TwoGroupDiffusionTest : public ::testing::Test
     // >>> TYPEDEFS
     using Diff = TwoGroupDiffusion;
     using XS   = mc::TwoGroupCrossSections;
+    using AM   = mc::Assembly_Model;
 
   protected:
     void SetUp()
@@ -39,24 +40,30 @@ class TwoGroupDiffusionTest : public ::testing::Test
 
 TEST_F(TwoGroupDiffusionTest, infhommed)
 {
-    std::vector<double> dx(3,1.26);
-    std::vector<double> dy(3,1.26);
+    auto x_edges =  {0.0, 1.26, 2.52, 3.78};
+    auto y_edges =  {0.0, 1.26, 2.52, 3.78};
     std::vector<double> dz(2,1.26);
     dz[0] = 1.0;
     dz[1] = 4.0;
 
-    std::vector<XS::XS_Type> pins =
-        {XS::FUEL, XS::FUEL, XS::FUEL,
-         XS::FUEL, XS::FUEL, XS::FUEL,
-         XS::FUEL, XS::FUEL, XS::FUEL};
+    double height = 360.0;
+
+    std::vector<AM::PIN_TYPE> pins =
+        {AM::FUEL, AM::FUEL, AM::FUEL,
+         AM::FUEL, AM::FUEL, AM::FUEL,
+         AM::FUEL, AM::FUEL, AM::FUEL};
+    auto assembly = std::make_shared<AM>(pins, x_edges, y_edges, height);
+
     std::vector<Diff::BC_TYPE> bcs =
         {Diff::REFLECT, Diff::REFLECT,
          Diff::REFLECT, Diff::REFLECT,
          Diff::REFLECT, Diff::REFLECT};
     auto diff_solver = std::make_shared<Diff>(
-        dx, dy, dz, pins, bcs);
+        assembly, dz, bcs);
 
-    auto N = dx.size() * dy.size() * dz.size();
+    int Nx = assembly->num_pins_x();
+    int Ny = assembly->num_pins_y();
+    auto N = Nx * Ny * dz.size();
     std::vector<double> temperatures(N, 1200.0);
     std::vector<double> densities(N, 0.7);
     std::vector<double> powers(N, 0.7);
@@ -64,7 +71,7 @@ TEST_F(TwoGroupDiffusionTest, infhommed)
     diff_solver->solve(temperatures, densities, powers);
 
     auto ref = powers[0];
-    auto Nxy = dx.size() * dy.size();
+    auto Nxy = Nx * Ny;
     for (int ij = 0; ij < Nxy; ++ij)
         EXPECT_SOFTEQ(ref, powers[ij], 1e-4);
 
@@ -86,18 +93,22 @@ TEST_F(TwoGroupDiffusionTest, infhommed)
 
 TEST_F(TwoGroupDiffusionTest, singlepin_symmetry)
 {
-    std::vector<double> dx(1,  1.26);
-    std::vector<double> dy(1,  1.26);
     std::vector<double> dz(20, 18.0);
+    auto x_edges = {0.0, 1.26};
+    auto y_edges = {0.0, 1.26};
 
-    std::vector<XS::XS_Type> pins =
-        {XS::FUEL};
+    double height = 360.0;
+
+    std::vector<AM::PIN_TYPE> pins =
+        {AM::FUEL};
+    auto assembly = std::make_shared<AM>(pins, x_edges, y_edges, height);
+
     std::vector<Diff::BC_TYPE> bcs =
         {Diff::REFLECT, Diff::REFLECT,
          Diff::REFLECT, Diff::REFLECT,
          Diff::VACUUM,  Diff::VACUUM};
     auto diff_solver = std::make_shared<Diff>(
-        dx, dy, dz, pins, bcs);
+        assembly, dz, bcs);
 
     std::vector<double> temperatures(20, 1200.0);
     std::vector<double> densities(20, 0.7);
@@ -124,18 +135,21 @@ TEST_F(TwoGroupDiffusionTest, singlepin_symmetry)
 
 TEST_F(TwoGroupDiffusionTest, singlepin_multitemp)
 {
-    std::vector<double> dx(1,  1.26);
-    std::vector<double> dy(1,  1.26);
+    auto x_edges = {0.0, 1.26};
+    auto y_edges = {0.0, 1.26};
     std::vector<double> dz(30, 12.0);
 
-    std::vector<XS::XS_Type> pins =
-        {XS::FUEL};
+    std::vector<AM::PIN_TYPE> pins =
+        {AM::FUEL};
+    double height = 360.0;
+    auto assembly = std::make_shared<AM>(pins, x_edges, y_edges, height);
+
     std::vector<Diff::BC_TYPE> bcs =
         {Diff::REFLECT, Diff::REFLECT,
          Diff::REFLECT, Diff::REFLECT,
          Diff::VACUUM,  Diff::VACUUM};
     auto diff_solver = std::make_shared<Diff>(
-        dx, dy, dz, pins, bcs);
+        assembly, dz, bcs);
 
     auto Nz = dz.size();
     std::vector<double> temperatures(Nz, 1000);
@@ -178,14 +192,19 @@ TEST_F(TwoGroupDiffusionTest, assembly)
 {
     SKIP_TEST("Performance evaluation only");
 
-    std::vector<double> dx(17, 1.26);
-    std::vector<double> dy(17, 1.26);
+    std::vector<double> x_edges(18, 0.0);
+    std::vector<double> y_edges(18, 0.0);
+    for (int i = 0; i < 17; ++i)
+    {
+        x_edges[i+1] = x_edges[i] + 1.26;
+        y_edges[i+1] = y_edges[i] + 1.26;
+    }
     std::vector<double> dz(60, 6.0);
 
-    constexpr auto F = XS::FUEL;
-    constexpr auto G = XS::GUIDE;
+    constexpr auto F = AM::FUEL;
+    constexpr auto G = AM::GUIDE;
 
-    std::vector<XS::XS_Type> pins =
+    std::vector<AM::PIN_TYPE> pins =
         {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,
          F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,
          F, F, F, F, F, G, F, F, G, F, F, G, F, F, F, F, F,
@@ -203,21 +222,25 @@ TEST_F(TwoGroupDiffusionTest, assembly)
          F, F, F, F, F, G, F, F, G, F, F, G, F, F, F, F, F,
          F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,
          F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F};
+    double height = 360.0;
+    auto assembly = std::make_shared<AM>(pins, x_edges, y_edges, height);
+
     std::vector<Diff::BC_TYPE> bcs =
         {Diff::REFLECT, Diff::REFLECT,
          Diff::REFLECT, Diff::REFLECT,
          Diff::VACUUM,  Diff::VACUUM};
     auto diff_solver = std::make_shared<Diff>(
-        dx, dy, dz, pins, bcs);
+        assembly, dz, bcs);
 
-    auto N = dx.size() * dy.size() * dz.size();
+    auto Nx = assembly->num_pins_x();
+    auto Ny = assembly->num_pins_y();
+    auto N = Nx * Ny * dz.size();
     std::vector<double> temperatures(N, 1000);
     std::vector<double> densities(N, 0.7);
     std::vector<double> powers(N, 0.0);
 
     diff_solver->solve(temperatures, densities, powers);
 }
-
 
 //---------------------------------------------------------------------------//
 // end of MC/mc/test/tstTwoGroupDiffusion.cc

@@ -11,6 +11,8 @@
 #ifndef MC_mc_TwoGroupCrossSections_hh
 #define MC_mc_TwoGroupCrossSections_hh
 
+#include "Assembly_Model.hh"
+
 namespace mc
 {
 
@@ -32,8 +34,6 @@ class TwoGroupCrossSections
 {
   public:
 
-    enum XS_Type {FUEL, GUIDE};
-
     struct XS_Data
     {
         double diffusion[2];
@@ -51,7 +51,7 @@ class TwoGroupCrossSections
     TwoGroupCrossSections(){}
 
     // Get XS data at given temperature and density
-    XS_Data get_data(XS_Type type, double T, double rho);
+    XS_Data get_data(Assembly_Model::PIN_TYPE type, double T, double rho);
 };
 
 //---------------------------------------------------------------------------//

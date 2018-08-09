@@ -15,6 +15,7 @@
 
 #include "Utils/harness/DBC.hh"
 #include "Utils/comm/global.hh"
+#include "Assembly_Model.hh"
 #include "TwoGroupCrossSections.hh"
 
 // Trilinos includes
@@ -51,26 +52,29 @@ class TwoGroupDiffusion
 
     //@{
     //! Typedefs
-    using XS      = mc::TwoGroupCrossSections;
-    using XS_Data = XS::XS_Data;
-    using Vec_Dbl = std::vector<double>;
-    using Vec_Int = std::vector<int>;
-    using Vec_BC  = std::vector<BC_TYPE>;
-    using Pin_Map = std::vector<XS::XS_Type>;
-    using ST = double;
-    using LO = int;
-    using GO = int;
-    using NODE   = KokkosClassic::DefaultNode::DefaultNodeType;
-    using MV     = Tpetra::MultiVector<ST,LO,GO,NODE>;
-    using VECTOR = Tpetra::Vector<ST,LO,GO,NODE>;
-    using OP     = Tpetra::Operator<ST,LO,GO,NODE>;
-    using MAP    = Tpetra::Map<LO,GO,NODE>;
-    using MATRIX = Tpetra::CrsMatrix<ST,LO,GO,NODE>;
-    using GRAPH  = Tpetra::CrsGraph<LO,GO,NODE>;
+    using XS          = mc::TwoGroupCrossSections;
+    using XS_Data     = XS::XS_Data;
+    using Vec_Dbl     = std::vector<double>;
+    using Vec_Int     = std::vector<int>;
+    using Vec_BC      = std::vector<BC_TYPE>;
+    using SP_Assembly = std::shared_ptr<Assembly_Model>;
+    using Pin_Map     = std::vector<Assembly_Model::PIN_TYPE>;
+    using ST          = double;
+    using LO          = int;
+    using GO          = int;
+    using NODE        = KokkosClassic::DefaultNode::DefaultNodeType;
+    using MV          = Tpetra::MultiVector<ST,LO,GO,NODE>;
+    using VECTOR      = Tpetra::Vector<ST,LO,GO,NODE>;
+    using OP          = Tpetra::Operator<ST,LO,GO,NODE>;
+    using MAP         = Tpetra::Map<LO,GO,NODE>;
+    using MATRIX      = Tpetra::CrsMatrix<ST,LO,GO,NODE>;
+    using GRAPH       = Tpetra::CrsGraph<LO,GO,NODE>;
     //@}
 
   private:
     // >>> DATA
+    SP_Assembly d_assembly;
+
     Vec_Dbl d_dx;
     Vec_Dbl d_dy;
     Vec_Dbl d_dz;
@@ -95,10 +99,8 @@ class TwoGroupDiffusion
   public:
 
     // Constructor
-    TwoGroupDiffusion(const Vec_Dbl& dx,
-                      const Vec_Dbl& dy,
+    TwoGroupDiffusion(SP_Assembly    assembly,
                       const Vec_Dbl& dz,
-                      const Pin_Map& map,
                       const Vec_BC&  bcs);
 
     // Solve

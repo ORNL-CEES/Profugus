@@ -9,6 +9,7 @@
 //---------------------------------------------------------------------------//
 
 #include "../TwoGroupCrossSections.hh"
+#include "../Assembly_Model.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
 
@@ -22,6 +23,7 @@ class TwoGroupCrossSectionsTest : public ::testing::Test
   protected:
     // >>> TYPEDEFS
     using XS = TwoGroupCrossSections;
+    using AM = mc::Assembly_Model;
 
   protected:
     void SetUp()
@@ -43,7 +45,7 @@ TEST_F(TwoGroupCrossSectionsTest, basic)
     // At reference temp/density
     //
 
-    auto data = xs_calc.get_data(XS::FUEL, 1000.0, 0.75);
+    auto data = xs_calc.get_data(AM::FUEL, 1000.0, 0.75);
     EXPECT_SOFT_EQ(0.6109,  data.diffusion[0]);
     EXPECT_SOFT_EQ(0.2164,  data.diffusion[1]);
     EXPECT_SOFT_EQ(0.01607, data.absorption[0]);
@@ -52,7 +54,7 @@ TEST_F(TwoGroupCrossSectionsTest, basic)
     EXPECT_SOFT_EQ(0.01191, data.nu_fission[0]);
     EXPECT_SOFT_EQ(0.5007,  data.nu_fission[1]);
 
-    data = xs_calc.get_data(XS::GUIDE, 1000.0, 0.75);
+    data = xs_calc.get_data(AM::GUIDE, 1000.0, 0.75);
     EXPECT_SOFT_EQ(0.4916,    data.diffusion[0]);
     EXPECT_SOFT_EQ(0.1718,    data.diffusion[1]);
     EXPECT_SOFT_EQ(0.0005049, data.absorption[0]);
@@ -62,7 +64,7 @@ TEST_F(TwoGroupCrossSectionsTest, basic)
     EXPECT_SOFT_EQ(0.0,       data.nu_fission[1]);
 
     // At elevated temp, reduced density
-    data = xs_calc.get_data(XS::FUEL, 1200.0, 0.70);
+    data = xs_calc.get_data(AM::FUEL, 1200.0, 0.70);
     EXPECT_SOFT_EQ(0.6109,     data.diffusion[0]);
     EXPECT_SOFT_EQ(0.2164,     data.diffusion[1]);
     EXPECT_SOFT_EQ(0.01586313, data.absorption[0]);
@@ -71,7 +73,7 @@ TEST_F(TwoGroupCrossSectionsTest, basic)
     EXPECT_SOFT_EQ(0.01191,    data.nu_fission[0]);
     EXPECT_SOFT_EQ(0.5007,     data.nu_fission[1]);
 
-    data = xs_calc.get_data(XS::GUIDE, 1200.0, 0.70);
+    data = xs_calc.get_data(AM::GUIDE, 1200.0, 0.70);
     EXPECT_SOFT_EQ(0.4916,    data.diffusion[0]);
     EXPECT_SOFT_EQ(0.1718,    data.diffusion[1]);
     EXPECT_SOFT_EQ(4.6913e-4, data.absorption[0]);

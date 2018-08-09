@@ -25,22 +25,28 @@ namespace mc
 //---------------------------------------------------------------------------//
 // Constructor
 //---------------------------------------------------------------------------//
-TwoGroupDiffusion::TwoGroupDiffusion(const Vec_Dbl& dx,
-                                     const Vec_Dbl& dy,
+TwoGroupDiffusion::TwoGroupDiffusion(SP_Assembly    assembly,
                                      const Vec_Dbl& dz,
-                                     const Pin_Map& pin_map,
                                      const Vec_BC&  bcs)
-    : d_dx(dx)
-    , d_dy(dy)
+    : d_assembly(assembly)
     , d_dz(dz)
-    , d_pin_map(pin_map)
     , d_bcs(bcs)
 {
-    d_Nx = dx.size();
-    d_Ny = dy.size();
-    d_Nz = dz.size();
+    const auto& x_edges = d_assembly->x_edges();
+    const auto& y_edges = d_assembly->y_edges();
+
+    d_Nx = x_edges.size()-1;
+    d_Ny = y_edges.size()-1;
+    d_Nz = d_dz.size();
     d_num_cells = d_Nx * d_Ny * d_Nz;
-    REQUIRE(d_pin_map.size() == d_Nx * d_Ny);
+
+    d_dx.resize(d_Nx);
+    for (int ix = 0; ix < d_Nx; ++ix)
+        d_dx[ix] = x_edges[ix+1] - x_edges[ix];
+
+    d_dy.resize(d_Ny);
+    for (int iy = 0; iy < d_Ny; ++iy)
+        d_dy[iy] = y_edges[iy+1] - y_edges[iy];
 
     // Solve parameters
     d_tol = 1e-4;
@@ -139,7 +145,7 @@ void TwoGroupDiffusion::solve(const Vec_Dbl& temperatures,
                 int pin  = cellid(ix, iy, 0);
 
                 xs_data[cell] = d_xs.get_data(
-                    d_pin_map[pin],
+                    d_assembly->pin_type(ix, iy),
                     temperatures[cell],
                     densities[cell]);
             }
