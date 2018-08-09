@@ -10,6 +10,8 @@
 
 #include "Multi_Pin_Conduction.hh"
 
+#include "Utils/harness/Soft_Equivalence.hh"
+
 namespace mc
 {
 //---------------------------------------------------------------------------//
@@ -32,7 +34,7 @@ Multi_Pin_Conduction::Multi_Pin_Conduction(
     d_pin_conduction->set_clad_radius(d_assembly->clad_radius());
 
     double height = std::accumulate(dz.begin(), dz.end(), 0.0);
-    CHECK(height == d_assembly->height());
+    CHECK(profugus::soft_equiv(height, d_assembly->height()));
 }
 
 //---------------------------------------------------------------------------//
