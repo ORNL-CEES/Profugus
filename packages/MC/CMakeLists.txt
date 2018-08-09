@@ -90,6 +90,7 @@ FILE(GLOB MC_HEADERS mesh/*.hh)
 SET(MC_SOURCES
   mc/Anderson_Operator.pt.cc
   mc/Anderson_Solver.pt.cc
+  mc/Assembly_Model.cc
   mc/Axial_KDE_Kernel.pt.cc
   mc/Box_Shape.cc
   mc/Cell_Tally.pt.cc
@@ -111,6 +112,7 @@ SET(MC_SOURCES
   mc/KDE_Kernel.pt.cc
   mc/Keff_Tally.pt.cc
   mc/Mesh_Tally.pt.cc
+  mc/Multi_Pin_Conduction.cc
   mc/Particle.pt.cc
   mc/Particle_Metaclass.pt.cc
   mc/Physics.pt.cc
