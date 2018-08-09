@@ -26,9 +26,6 @@ class SinglePinConductionTest : public ::testing::Test
     void SetUp()
     {
         auto params = Teuchos::rcp(new Teuchos::ParameterList("params"));
-        params->set("tolerance", 1.0e-6);
-        params->set("max_iters", 10);
-        params->set("verbosity", std::string("high"));
         params->set("fuel_conductivity", 0.0287);
         params->set("clad_conductivity", 0.215);
         params->set("delta_r_fuel", 0.05);

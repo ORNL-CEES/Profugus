@@ -30,8 +30,6 @@ Single_Pin_Conduction::Single_Pin_Conduction(
     , d_delta_z(delta_z)
 {
     // Read parameters from parameter list
-    d_tol       = parameters->get("tolerance", 1.0e-6);
-    d_max_iters = parameters->get("max_iters", 100);
     d_delta_r_fuel = parameters->get("delta_r_fuel", 0.05);
     d_delta_r_clad = parameters->get("delta_r_clad", 0.02);
     d_k_fuel = parameters->get("fuel_conductivity", 0.0287);

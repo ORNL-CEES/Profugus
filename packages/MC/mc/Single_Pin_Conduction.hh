@@ -56,10 +56,6 @@ class Single_Pin_Conduction
 
     // >>> DATA
 
-    // Solve parameters
-    double d_tol;
-    int d_max_iters;
-
     // Geometry
     double d_fuel_radius;
     double d_clad_radius;
