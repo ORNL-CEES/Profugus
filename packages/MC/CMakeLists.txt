@@ -114,6 +114,7 @@ SET(MC_SOURCES
   mc/Mesh_Tally.pt.cc
   mc/Multi_Pin_Conduction.cc
   mc/Multi_Pin_Subchannel.cc
+  mc/Multiphysics_Driver.cc
   mc/Particle.pt.cc
   mc/Particle_Metaclass.pt.cc
   mc/Physics.pt.cc
