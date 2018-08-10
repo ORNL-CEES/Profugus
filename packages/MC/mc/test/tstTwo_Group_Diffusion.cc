@@ -1,31 +1,31 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/test/tstTwoGroupDiffusion.cc
+ * \file   MC/mc/test/tstTwo_Group_Diffusion.cc
  * \author Steven Hamilton
  * \date   Tue Aug 07 14:34:50 2018
- * \brief  Tests for class TwoGroupDiffusion.
+ * \brief  Tests for class Two_Group_Diffusion.
  * \note   Copyright (c) 2018 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
 #include <cmath>
 
-#include "../TwoGroupDiffusion.hh"
-#include "../TwoGroupCrossSections.hh"
+#include "../Two_Group_Diffusion.hh"
+#include "../Two_Group_Cross_Sections.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
 
-using mc::TwoGroupDiffusion;
+using mc::Two_Group_Diffusion;
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-class TwoGroupDiffusionTest : public ::testing::Test
+class Two_Group_DiffusionTest : public ::testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    using Diff = TwoGroupDiffusion;
-    using XS   = mc::TwoGroupCrossSections;
+    using Diff = Two_Group_Diffusion;
+    using XS   = mc::Two_Group_Cross_Sections;
     using AM   = mc::Assembly_Model;
 
   protected:
@@ -38,7 +38,7 @@ class TwoGroupDiffusionTest : public ::testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(TwoGroupDiffusionTest, infhommed)
+TEST_F(Two_Group_DiffusionTest, infhommed)
 {
     auto x_edges =  {0.0, 1.26, 2.52, 3.78};
     auto y_edges =  {0.0, 1.26, 2.52, 3.78};
@@ -91,7 +91,7 @@ TEST_F(TwoGroupDiffusionTest, infhommed)
     std::cout << std::endl;
 }
 
-TEST_F(TwoGroupDiffusionTest, singlepin_symmetry)
+TEST_F(Two_Group_DiffusionTest, singlepin_symmetry)
 {
     std::vector<double> dz(20, 18.0);
     auto x_edges = {0.0, 1.26};
@@ -133,7 +133,7 @@ TEST_F(TwoGroupDiffusionTest, singlepin_symmetry)
     EXPECT_SOFTEQ(1.0, nrm, 1e-8);
 }
 
-TEST_F(TwoGroupDiffusionTest, singlepin_multitemp)
+TEST_F(Two_Group_DiffusionTest, singlepin_multitemp)
 {
     auto x_edges = {0.0, 1.26};
     auto y_edges = {0.0, 1.26};
@@ -188,7 +188,7 @@ TEST_F(TwoGroupDiffusionTest, singlepin_multitemp)
     EXPECT_VEC_SOFTEQ(ref, powers, 2e-4);
 }
 
-TEST_F(TwoGroupDiffusionTest, assembly)
+TEST_F(Two_Group_DiffusionTest, assembly)
 {
     SKIP_TEST("Performance evaluation only");
 
@@ -243,5 +243,5 @@ TEST_F(TwoGroupDiffusionTest, assembly)
 }
 
 //---------------------------------------------------------------------------//
-// end of MC/mc/test/tstTwoGroupDiffusion.cc
+// end of MC/mc/test/tstTwo_Group_Diffusion.cc
 //---------------------------------------------------------------------------//

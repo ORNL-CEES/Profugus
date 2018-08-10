@@ -1,14 +1,14 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/TwoGroupDiffusion.cc
+ * \file   MC/mc/Two_Group_Diffusion.cc
  * \author Steven Hamilton
  * \date   Tue Aug 07 10:31:04 2018
- * \brief  TwoGroupDiffusion class definitions.
+ * \brief  Two_Group_Diffusion class definitions.
  * \note   Copyright (c) 2018 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "TwoGroupDiffusion.hh"
+#include "Two_Group_Diffusion.hh"
 
 // Trilinos stuff
 #include "Teuchos_RCP.hpp"
@@ -25,7 +25,7 @@ namespace mc
 //---------------------------------------------------------------------------//
 // Constructor
 //---------------------------------------------------------------------------//
-TwoGroupDiffusion::TwoGroupDiffusion(SP_Assembly    assembly,
+Two_Group_Diffusion::Two_Group_Diffusion(SP_Assembly    assembly,
                                      const Vec_Dbl& dz,
                                      const Vec_BC&  bcs)
     : d_assembly(assembly)
@@ -125,7 +125,7 @@ TwoGroupDiffusion::TwoGroupDiffusion(SP_Assembly    assembly,
 //---------------------------------------------------------------------------//
 // Solve problem given fuel temperatures and moderator densities
 //---------------------------------------------------------------------------//
-void TwoGroupDiffusion::solve(const Vec_Dbl& temperatures,
+void Two_Group_Diffusion::solve(const Vec_Dbl& temperatures,
                               const Vec_Dbl& densities,
                                     Vec_Dbl& powers)
 {
@@ -285,7 +285,7 @@ void TwoGroupDiffusion::solve(const Vec_Dbl& temperatures,
 //---------------------------------------------------------------------------//
 // Build matrices for diffusion equation
 //---------------------------------------------------------------------------//
-void TwoGroupDiffusion::build_matrices(const std::vector<XS_Data>& xs_data)
+void Two_Group_Diffusion::build_matrices(const std::vector<XS_Data>& xs_data)
 {
     REQUIRE(xs_data.size() == d_num_cells);
 
@@ -537,5 +537,5 @@ void TwoGroupDiffusion::build_matrices(const std::vector<XS_Data>& xs_data)
 } // end namespace mc
 
 //---------------------------------------------------------------------------//
-// end of MC/mc/TwoGroupDiffusion.cc
+// end of MC/mc/Two_Group_Diffusion.cc
 //---------------------------------------------------------------------------//

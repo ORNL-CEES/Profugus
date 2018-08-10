@@ -126,8 +126,8 @@ SET(MC_SOURCES
   mc/Source_Transporter.pt.cc
   mc/Tallier.pt.cc
   mc/Tally.pt.cc
-  mc/TwoGroupDiffusion.cc 
-  mc/TwoGroupCrossSections.cc
+  mc/Two_Group_Diffusion.cc 
+  mc/Two_Group_Cross_Sections.cc
   mc/Uniform_Source.pt.cc
   mc/VR_Roulette.pt.cc
   mc/Water_Properties.cc

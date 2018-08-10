@@ -1,14 +1,14 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/TwoGroupCrossSections.cc
+ * \file   MC/mc/Two_Group_Cross_Sections.cc
  * \author Steven Hamilton
  * \date   Mon Aug 06 14:37:36 2018
- * \brief  TwoGroupCrossSections class definitions.
+ * \brief  Two_Group_Cross_Sections class definitions.
  * \note   Copyright (c) 2018 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "TwoGroupCrossSections.hh"
+#include "Two_Group_Cross_Sections.hh"
 
 #include "Utils/harness/DBC.hh"
 
@@ -17,7 +17,7 @@ namespace mc
 //---------------------------------------------------------------------------//
 // Get interpolated cross section data
 //---------------------------------------------------------------------------//
-auto TwoGroupCrossSections::get_data(
+auto Two_Group_Cross_Sections::get_data(
         Assembly_Model::PIN_TYPE type,
         double                   T,
         double                   rho) -> XS_Data
@@ -90,5 +90,5 @@ auto TwoGroupCrossSections::get_data(
 } // end namespace mc
 
 //---------------------------------------------------------------------------//
-// end of MC/mc/TwoGroupCrossSections.cc
+// end of MC/mc/Two_Group_Cross_Sections.cc
 //---------------------------------------------------------------------------//

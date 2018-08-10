@@ -1,28 +1,28 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/test/tstTwoGroupCrossSections.cc
+ * \file   MC/mc/test/tstTwo_Group_Cross_Sections.cc
  * \author Steven Hamilton
  * \date   Tue Aug 07 10:06:57 2018
- * \brief  Tests for class TwoGroupCrossSections.
+ * \brief  Tests for class Two_Group_Cross_Sections.
  * \note   Copyright (c) 2018 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#include "../TwoGroupCrossSections.hh"
+#include "../Two_Group_Cross_Sections.hh"
 #include "../Assembly_Model.hh"
 
 #include "Utils/gtest/utils_gtest.hh"
 
-using mc::TwoGroupCrossSections;
+using mc::Two_Group_Cross_Sections;
 
 //---------------------------------------------------------------------------//
 // Test fixture
 //---------------------------------------------------------------------------//
-class TwoGroupCrossSectionsTest : public ::testing::Test
+class Two_Group_Cross_SectionsTest : public ::testing::Test
 {
   protected:
     // >>> TYPEDEFS
-    using XS = TwoGroupCrossSections;
+    using XS = Two_Group_Cross_Sections;
     using AM = mc::Assembly_Model;
 
   protected:
@@ -39,7 +39,7 @@ class TwoGroupCrossSectionsTest : public ::testing::Test
 // TESTS
 //---------------------------------------------------------------------------//
 
-TEST_F(TwoGroupCrossSectionsTest, basic)
+TEST_F(Two_Group_Cross_SectionsTest, basic)
 {
     //
     // At reference temp/density
@@ -84,5 +84,5 @@ TEST_F(TwoGroupCrossSectionsTest, basic)
 }
 
 //---------------------------------------------------------------------------//
-// end of MC/mc/test/tstTwoGroupCrossSections.cc
+// end of MC/mc/test/tstTwo_Group_Cross_Sections.cc
 //---------------------------------------------------------------------------//

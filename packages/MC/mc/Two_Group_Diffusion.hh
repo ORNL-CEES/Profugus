@@ -1,22 +1,22 @@
 //---------------------------------*-C++-*-----------------------------------//
 /*!
- * \file   MC/mc/TwoGroupDiffusion.hh
+ * \file   MC/mc/Two_Group_Diffusion.hh
  * \author Steven Hamilton
  * \date   Tue Aug 07 10:31:04 2018
- * \brief  TwoGroupDiffusion class declaration.
+ * \brief  Two_Group_Diffusion class declaration.
  * \note   Copyright (c) 2018 Oak Ridge National Laboratory, UT-Battelle, LLC.
  */
 //---------------------------------------------------------------------------//
 
-#ifndef MC_mc_TwoGroupDiffusion_hh
-#define MC_mc_TwoGroupDiffusion_hh
+#ifndef MC_mc_Two_Group_Diffusion_hh
+#define MC_mc_Two_Group_Diffusion_hh
 
 #include <vector>
 
 #include "Utils/harness/DBC.hh"
 #include "Utils/comm/global.hh"
 #include "Assembly_Model.hh"
-#include "TwoGroupCrossSections.hh"
+#include "Two_Group_Cross_Sections.hh"
 
 // Trilinos includes
 #include "Teuchos_RCP.hpp"
@@ -33,17 +33,17 @@ namespace mc
 
 //===========================================================================//
 /*!
- * \class TwoGroupDiffusion
+ * \class Two_Group_Diffusion
  * \brief Two-group, 3D neutron diffusion solver.
  */
 /*!
- * \example mc/test/tstTwoGroupDiffusion.cc
+ * \example mc/test/tstTwo_Group_Diffusion.cc
  *
- * Test of TwoGroupDiffusion.
+ * Test of Two_Group_Diffusion.
  */
 //===========================================================================//
 
-class TwoGroupDiffusion
+class Two_Group_Diffusion
 {
   public:
 
@@ -52,7 +52,7 @@ class TwoGroupDiffusion
 
     //@{
     //! Typedefs
-    using XS          = mc::TwoGroupCrossSections;
+    using XS          = mc::Two_Group_Cross_Sections;
     using XS_Data     = XS::XS_Data;
     using Vec_Dbl     = std::vector<double>;
     using Vec_Int     = std::vector<int>;
@@ -99,7 +99,7 @@ class TwoGroupDiffusion
   public:
 
     // Constructor
-    TwoGroupDiffusion(SP_Assembly    assembly,
+    Two_Group_Diffusion(SP_Assembly    assembly,
                       const Vec_Dbl& dz,
                       const Vec_BC&  bcs);
 
@@ -147,8 +147,8 @@ class TwoGroupDiffusion
 } // end namespace mc
 
 //---------------------------------------------------------------------------//
-#endif // MC_mc_TwoGroupDiffusion_hh
+#endif // MC_mc_Two_Group_Diffusion_hh
 
 //---------------------------------------------------------------------------//
-// end of MC/mc/TwoGroupDiffusion.hh
+// end of MC/mc/Two_Group_Diffusion.hh
 //---------------------------------------------------------------------------//
