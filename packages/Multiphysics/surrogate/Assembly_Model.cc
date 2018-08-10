@@ -43,11 +43,12 @@ double Assembly_Model::flow_area(int i, int j) const
     double dy = d_y_edges[j+1] - d_y_edges[j];
 
     auto type = pin_type(i,j);
-    double r;
+    double r = 0.0;
     if (type == FUEL)
         r = d_clad_radius;
     else if (type == GUIDE)
         r = d_guide_radius;
+    CHECK(r > 0.0);
 
     double area = dx * dy - profugus::constants::pi * r * r;
     ENSURE(area > 0);
