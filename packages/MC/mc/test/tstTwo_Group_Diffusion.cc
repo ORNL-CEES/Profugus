@@ -25,7 +25,6 @@ class Two_Group_DiffusionTest : public ::testing::Test
   protected:
     // >>> TYPEDEFS
     using Diff = Two_Group_Diffusion;
-    using XS   = mc::Two_Group_Cross_Sections;
     using AM   = mc::Assembly_Model;
 
   protected:
