@@ -65,8 +65,8 @@ TEST_F(Two_Group_Cross_SectionsTest, basic)
 
     // At elevated temp, reduced density
     data = xs_calc.get_data(AM::FUEL, 1200.0, 0.70);
-    EXPECT_SOFT_EQ(0.6109,     data.diffusion[0]);
-    EXPECT_SOFT_EQ(0.2164,     data.diffusion[1]);
+    EXPECT_SOFT_EQ(0.640306,   data.diffusion[0]);
+    EXPECT_SOFT_EQ(0.2291041,  data.diffusion[1]);
     EXPECT_SOFT_EQ(0.01586313, data.absorption[0]);
     EXPECT_SOFT_EQ(0.3107921,  data.absorption[1]);
     EXPECT_SOFT_EQ(0.01055124, data.scatter);
