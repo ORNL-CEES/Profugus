@@ -91,6 +91,24 @@ TEST_F(MultiphysicsDriverTest, single_pin)
             assembly, params, dz, bcs);
 
     driver->solve();
+
+    std::cout << std::endl;
+    std::cout << "Power: ";
+    for (auto val : driver->power())
+        std::cout << val << " ";
+    std::cout << std::endl << std::endl;
+    std::cout << "Fuel temp: ";
+    for (auto val : driver->fuel_temperature())
+        std::cout << val << " ";
+    std::cout << std::endl << std::endl;
+    std::cout << "Coolant temp: ";
+    for (auto val : driver->coolant_temperature())
+        std::cout << val << " ";
+    std::cout << std::endl << std::endl;
+    std::cout << "Coolant density: ";
+    for (auto val : driver->coolant_density())
+        std::cout << val << " ";
+    std::cout << std::endl;
 }
 
 TEST_F(MultiphysicsDriverTest, assembly)

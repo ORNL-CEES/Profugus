@@ -81,6 +81,12 @@ class Multiphysics_Driver
 
     // Solve problem
     void solve();
+
+    // Accessors
+    const Vec_Dbl& power()               const {return d_power;}
+    const Vec_Dbl& fuel_temperature()    const {return d_fuel_temperature;}
+    const Vec_Dbl& coolant_temperature() const {return d_coolant_temperature;}
+    const Vec_Dbl& coolant_density()     const {return d_coolant_density;}
 };
 
 //---------------------------------------------------------------------------//
