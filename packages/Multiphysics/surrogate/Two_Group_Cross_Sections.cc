@@ -51,8 +51,8 @@ auto Two_Group_Cross_Sections::get_data(
         };
 
         // Don't correct D and nu-fission
-        data.diffusion[0]  = D0[0];
-        data.diffusion[1]  = D1[0];
+        data.diffusion[0]  = interp(D0);
+        data.diffusion[1]  = interp(D1);
         data.absorption[0] = interp(siga0);
         data.absorption[1] = interp(siga1);
         data.scatter       = interp(sigs01);
