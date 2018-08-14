@@ -126,8 +126,8 @@ Two_Group_Diffusion::Two_Group_Diffusion(SP_Assembly    assembly,
 // Solve problem given fuel temperatures and moderator densities
 //---------------------------------------------------------------------------//
 void Two_Group_Diffusion::solve(const Vec_Dbl& temperatures,
-                              const Vec_Dbl& densities,
-                                    Vec_Dbl& powers)
+                                const Vec_Dbl& densities,
+                                      Vec_Dbl& powers)
 {
     REQUIRE(temperatures.size() == d_num_cells);
     REQUIRE(densities.size()    == d_num_cells);
@@ -185,21 +185,20 @@ void Two_Group_Diffusion::solve(const Vec_Dbl& temperatures,
 
     Teuchos::ArrayRCP<double> fission(d_num_cells);
     Teuchos::ArrayRCP<double> fission_diff(d_num_cells);
+    std::copy(powers.begin(), powers.end(), fission().begin());
 
-    // Set initial guess
-    std::fill(x_fast_data.begin(),  x_fast_data.end(),  1.0);
-    std::fill(x_therm_data.begin(), x_therm_data.end(), 1.0);
+    // Set initial guess for fluxes
+    std::fill(x_fast_data.begin(),  x_fast_data.end(),  0.0);
+    std::fill(x_therm_data.begin(), x_therm_data.end(), 0.0);
 
-    // Compute initial fission source
-    for (int cell = 0; cell < d_num_cells; ++cell)
-    {
-        fission[cell] = xs_data[cell].nu_fission[0] * x_fast_data[cell] +
-                        xs_data[cell].nu_fission[1] * x_therm_data[cell];
-    }
-
-    // Normalize
+    // Normalize, if starting vector is zero then set to constant
     double old_fisn_nrm;
     double fisn_nrm = vec_norm(fission);
+    if (fisn_nrm == 0.0)
+    {
+        std::fill(fission.begin(), fission.end(), 1.0);
+        fisn_nrm = std::sqrt(static_cast<double>(d_num_cells));
+    }
     CHECK(fisn_nrm > 0.0);
     scale_vec(fission, 1.0 / fisn_nrm);
 
